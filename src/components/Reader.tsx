@@ -12,7 +12,6 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [progress, setProgress] = useState({
-    chapter: 0,
     book: 0,
   });
   const { toast } = useToast();
@@ -96,48 +95,21 @@ const Reader = ({ metadata }: ReaderProps) => {
       newRendition.display();
     }
 
-    let currentChapterId = '';
-
     newRendition.on("relocated", (location: any) => {
       const cfi = location.start.cfi;
       setCurrentLocation(cfi);
       saveProgress(cfi);
 
-      // Get current chapter information
-      const currentSpineItem = book.spine.get(location.start.cfi);
-      const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
-      const totalChapters = book.spine.spineItems.length;
-      
-      // Check if we've moved to a new chapter
-      const newChapterId = currentSpineItem?.idref || '';
-      if (currentChapterId !== newChapterId) {
-        currentChapterId = newChapterId;
-        setProgress(prev => ({ ...prev, chapter: 0 }));
-      }
-
-      // Calculate chapter progress using the percentage within the current section
-      const chapterProgress = Math.round((location.start.percentage || 0) * 100);
-      
-      // Calculate book progress based on spine position
-      let bookProgress = 0;
-      if (totalChapters > 0) {
-        // Calculate progress as a combination of completed chapters and progress in current chapter
-        const chapterWeight = 1 / totalChapters;
-        const completedChaptersProgress = spineIndex * chapterWeight;
-        const currentChapterProgress = (location.start.percentage || 0) * chapterWeight;
-        bookProgress = Math.round((completedChaptersProgress + currentChapterProgress) * 100);
-      }
+      // Calculate book progress based on location
+      const percentage = location.start.percentage || 0;
+      const bookProgress = Math.round(percentage * 100);
 
       console.log('Progress Update:', {
-        chapter: chapterProgress,
         book: bookProgress,
-        spineIndex,
-        totalChapters,
         percentage: location.start.percentage
       });
 
       setProgress({
-        chapter: Math.min(100, Math.max(0, chapterProgress)),
         book: Math.min(100, Math.max(0, bookProgress))
       });
     });
@@ -166,11 +138,6 @@ const Reader = ({ metadata }: ReaderProps) => {
               coverUrl={metadata?.coverUrl}
             />
             <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Chapter Progress</span>
-                <span>{progress.chapter}%</span>
-              </div>
-              <Progress value={progress.chapter} className="h-2" />
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Book Progress</span>
                 <span>{progress.book}%</span>
