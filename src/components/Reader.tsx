@@ -34,7 +34,6 @@ const Reader = ({ metadata }: ReaderProps) => {
       const newBook = ePub(bookData);
       setBook(newBook);
 
-      // Load saved progress after book is loaded
       const savedCfi = await loadProgress();
       if (savedCfi) {
         setCurrentLocation(savedCfi);
@@ -91,46 +90,53 @@ const Reader = ({ metadata }: ReaderProps) => {
       height: "100%",
     });
 
-    // Restore previous location if available
     if (currentLocation) {
       newRendition.display(currentLocation);
     } else {
       newRendition.display();
     }
 
-    let currentChapterHref = '';
+    let currentChapterId = '';
 
-    // Track reading progress
     newRendition.on("relocated", (location: any) => {
-      // Save current position
       const cfi = location.start.cfi;
       setCurrentLocation(cfi);
       saveProgress(cfi);
 
-      // Check if we've moved to a new chapter
-      if (currentChapterHref !== location.start.href) {
-        currentChapterHref = location.start.href;
-        // Reset chapter progress when entering a new chapter
-        setProgress(prev => ({ ...prev, chapter: 0 }));
-      }
-
-      // Ensure we have a valid percentage for chapter progress
-      const chapterPercentage = location.start.percentage || 0;
-      const chapterProgress = Math.round(chapterPercentage * 100);
-
-      // Calculate book progress
+      // Get current chapter information
       const currentSpineItem = book.spine.get(location.start.cfi);
-      const currentSpineIndex = book.spine.spineItems.indexOf(currentSpineItem);
+      const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
       const totalSpineItems = book.spine.spineItems.length;
 
-      // Calculate overall book progress (0-100)
+      // Check if we've moved to a new chapter
+      const newChapterId = currentSpineItem?.idref || '';
+      if (currentChapterId !== newChapterId) {
+        currentChapterId = newChapterId;
+      }
+
+      // Calculate chapter progress (0-100)
+      // Use the provided percentage or calculate it from CFI positions
+      const chapterPercentage = Math.max(0, Math.min(1, location.start.percentage || 0));
+      const chapterProgress = Math.round(chapterPercentage * 100);
+
+      // Calculate book progress (0-100)
+      // Consider both the chapter position and progress within the chapter
+      const chapterWeight = 1 / totalSpineItems;
       const bookProgress = Math.round(
-        ((currentSpineIndex + chapterPercentage) / totalSpineItems) * 100
+        ((spineIndex * chapterWeight) + (chapterWeight * chapterPercentage)) * 100
       );
+
+      console.log('Progress Update:', {
+        chapter: chapterProgress,
+        book: bookProgress,
+        chapterPercentage,
+        spineIndex,
+        totalSpineItems
+      });
 
       setProgress({
         chapter: chapterProgress,
-        book: bookProgress,
+        book: Math.min(100, Math.max(0, bookProgress))
       });
     });
 
