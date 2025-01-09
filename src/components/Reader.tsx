@@ -122,26 +122,18 @@ const Reader = ({ metadata }: ReaderProps) => {
       const locationProgress = location.start.percentage || 0;
       const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
 
-      console.log('Progress Update:', {
-        book: Math.round(overallProgress),
-        spineIndex,
-        totalSpineItems,
-        locationProgress,
-        percentage: location.start.percentage
-      });
-
       setProgress({
         book: Math.min(100, Math.max(0, Math.round(overallProgress)))
       });
 
-      // Update current page number and chapter pages
-      const currentPage = book.locations.locationFrom(cfi);
-      const chapterPages = currentSpineItem.pages || 1;
+      // Calculate current page based on percentage through the book
+      const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
+      const chapterPages = Math.ceil(currentSpineItem.length / 1024) || 1;
       const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
       
       setPageInfo(prev => ({
         ...prev,
-        current: currentPage || 1,
+        current: currentPage,
         chapterCurrent: currentChapterPage,
         chapterTotal: chapterPages
       }));
