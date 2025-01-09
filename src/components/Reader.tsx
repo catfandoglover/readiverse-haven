@@ -20,6 +20,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     setCurrentLocation,
     progress,
     pageInfo,
+    setPageInfo,
     loadProgress,
     handleLocationChange
   } = useBookProgress();

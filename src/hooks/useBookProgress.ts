@@ -69,6 +69,7 @@ export const useBookProgress = () => {
     setCurrentLocation,
     progress,
     pageInfo,
+    setPageInfo,
     loadProgress,
     handleLocationChange
   };
