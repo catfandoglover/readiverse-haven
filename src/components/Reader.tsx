@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ePub from "epubjs";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
@@ -9,7 +9,6 @@ const Reader = () => {
   const [book, setBook] = useState<any>(null);
   const [rendition, setRendition] = useState<any>(null);
   const [fontSize, setFontSize] = useState(100);
-  const viewerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,13 +21,6 @@ const Reader = () => {
         const bookData = e.target?.result;
         const newBook = ePub(bookData);
         setBook(newBook);
-
-        const newRendition = newBook.renderTo(viewerRef.current!, {
-          width: "100%",
-          height: "100%",
-        });
-        setRendition(newRendition);
-        await newRendition.display();
       };
       reader.readAsArrayBuffer(file);
 
@@ -78,6 +70,28 @@ const Reader = () => {
     return () => window.removeEventListener("keyup", handleKeyPress);
   }, [rendition]);
 
+  // Set up rendition when book changes and container exists
+  useEffect(() => {
+    if (!book) return;
+
+    const container = document.querySelector(".epub-view");
+    if (!container) return;
+
+    const newRendition = book.renderTo(container, {
+      width: "100%",
+      height: "100%",
+    });
+
+    setRendition(newRendition);
+    newRendition.display();
+
+    return () => {
+      if (newRendition) {
+        newRendition.destroy();
+      }
+    };
+  }, [book]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="reader-container">
@@ -119,7 +133,7 @@ const Reader = () => {
                 />
               </div>
             </div>
-            <div ref={viewerRef} className="epub-view" />
+            <div className="epub-view" />
           </>
         )}
       </div>
