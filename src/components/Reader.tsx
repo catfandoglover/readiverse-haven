@@ -100,17 +100,26 @@ const Reader = ({ metadata }: ReaderProps) => {
       setCurrentLocation(cfi);
       saveProgress(cfi);
 
-      // Calculate book progress based on location
-      const percentage = location.start.percentage || 0;
-      const bookProgress = Math.round(percentage * 100);
+      // Get the current spine item and total number of spine items
+      const currentSpineItem = book.spine.get(location.start.cfi);
+      const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
+      const totalSpineItems = book.spine.spineItems.length;
+
+      // Calculate progress based on spine position and current location
+      const spineProgress = spineIndex / totalSpineItems;
+      const locationProgress = location.start.percentage || 0;
+      const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
 
       console.log('Progress Update:', {
-        book: bookProgress,
+        book: Math.round(overallProgress),
+        spineIndex,
+        totalSpineItems,
+        locationProgress,
         percentage: location.start.percentage
       });
 
       setProgress({
-        book: Math.min(100, Math.max(0, bookProgress))
+        book: Math.min(100, Math.max(0, Math.round(overallProgress)))
       });
     });
 
