@@ -98,7 +98,7 @@ const Reader = ({ metadata }: ReaderProps) => {
       newRendition.display();
     }
 
-    let lastChapterHref = '';
+    let currentChapterHref = '';
 
     // Track reading progress
     newRendition.on("relocated", (location: any) => {
@@ -107,25 +107,25 @@ const Reader = ({ metadata }: ReaderProps) => {
       setCurrentLocation(cfi);
       saveProgress(cfi);
 
-      // Reset chapter progress if we've moved to a new chapter
-      if (lastChapterHref !== location.start.href) {
-        lastChapterHref = location.start.href;
+      // Check if we've moved to a new chapter
+      if (currentChapterHref !== location.start.href) {
+        currentChapterHref = location.start.href;
+        // Reset chapter progress when entering a new chapter
+        setProgress(prev => ({ ...prev, chapter: 0 }));
       }
 
-      // Calculate chapter progress (0-100)
-      const chapterProgress = Math.round(
-        (location.start.percentage || 0) * 100
-      );
+      // Ensure we have a valid percentage for chapter progress
+      const chapterPercentage = location.start.percentage || 0;
+      const chapterProgress = Math.round(chapterPercentage * 100);
 
-      // Get current spine item and its index
+      // Calculate book progress
       const currentSpineItem = book.spine.get(location.start.cfi);
       const currentSpineIndex = book.spine.spineItems.indexOf(currentSpineItem);
       const totalSpineItems = book.spine.spineItems.length;
 
       // Calculate overall book progress (0-100)
-      // This takes into account both the current chapter index and progress within the chapter
       const bookProgress = Math.round(
-        ((currentSpineIndex + location.start.percentage) / totalSpineItems) * 100
+        ((currentSpineIndex + chapterPercentage) / totalSpineItems) * 100
       );
 
       setProgress({
