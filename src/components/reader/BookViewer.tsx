@@ -58,6 +58,11 @@ const BookViewer = ({
       onLocationChange(location);
     });
 
+    // Get computed styles from the root element
+    const computedStyle = getComputedStyle(document.documentElement);
+    const backgroundColor = computedStyle.getPropertyValue('--background').trim();
+    const textColor = computedStyle.getPropertyValue('--foreground').trim();
+
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -65,18 +70,19 @@ const BookViewer = ({
         "column-rule": isMobile ? "none" : "1px solid var(--border)",
         padding: "1em",
         "text-align": textAlign,
-        "color": `hsl(var(--foreground))`,
-        "background-color": `hsl(var(--background))`,
+        "color": `hsl(${textColor})`,
+        "background-color": `hsl(${backgroundColor})`,
         "font-family": "system-ui, -apple-system, sans-serif",
       },
       "p": {
         "margin-bottom": "1em",
+        "color": `hsl(${textColor})`,
       },
       "a": {
         "color": `hsl(var(--primary))`,
       },
       "h1, h2, h3, h4, h5, h6": {
-        "color": `hsl(var(--primary))`,
+        "color": `hsl(${textColor})`,
         "margin": "1em 0 0.5em 0",
       }
     });
