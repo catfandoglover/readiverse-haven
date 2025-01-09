@@ -6,9 +6,10 @@ interface BookViewerProps {
   currentLocation: string | null;
   onLocationChange: (location: any) => void;
   fontSize: number;
+  onRenditionReady?: (rendition: Rendition) => void;
 }
 
-const BookViewer = ({ book, currentLocation, onLocationChange, fontSize }: BookViewerProps) => {
+const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRenditionReady }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
 
   useEffect(() => {
@@ -31,6 +32,9 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize }: BookV
     });
 
     setRendition(newRendition);
+    if (onRenditionReady) {
+      onRenditionReady(newRendition);
+    }
 
     return () => {
       if (newRendition) {

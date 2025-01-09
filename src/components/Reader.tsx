@@ -6,10 +6,11 @@ import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import type { ReaderProps } from "@/types/reader";
-import type { Book } from "epubjs";
+import type { Book, Rendition } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [book, setBook] = useState<Book | null>(null);
+  const [rendition, setRendition] = useState<Rendition | null>(null);
   const [fontSize, setFontSize] = useState(100);
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [progress, setProgress] = useState({
@@ -99,13 +100,19 @@ const Reader = ({ metadata }: ReaderProps) => {
   };
 
   const handlePrevPage = () => {
-    if (!book?.rendition) return;
-    book.rendition.prev();
+    if (rendition) {
+      rendition.prev();
+    }
   };
 
   const handleNextPage = () => {
-    if (!book?.rendition) return;
-    book.rendition.next();
+    if (rendition) {
+      rendition.next();
+    }
+  };
+
+  const handleRenditionReady = (newRendition: Rendition) => {
+    setRendition(newRendition);
   };
 
   useEffect(() => {
@@ -119,7 +126,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
     window.addEventListener("keyup", handleKeyPress);
     return () => window.removeEventListener("keyup", handleKeyPress);
-  }, [book]);
+  }, [rendition]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -144,6 +151,7 @@ const Reader = ({ metadata }: ReaderProps) => {
               currentLocation={currentLocation}
               onLocationChange={handleLocationChange}
               fontSize={fontSize}
+              onRenditionReady={handleRenditionReady}
             />
           </>
         )}
