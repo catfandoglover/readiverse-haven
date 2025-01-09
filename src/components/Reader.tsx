@@ -105,17 +105,19 @@ const Reader = ({ metadata }: ReaderProps) => {
       setCurrentLocation(cfi);
       saveProgress(cfi);
 
-      // Calculate progress
-      const currentChapter = book.spine.spineItems.findIndex(
-        (item: any) => item.href === location.start.href
-      );
-      const totalChapters = book.spine.spineItems.length;
-
+      // Calculate chapter progress
       const chapterProgress = Math.round(
         (location.start.percentage || 0) * 100
       );
+
+      // Calculate book progress
+      const currentSpineItem = book.spine.get(location.start.cfi);
+      const currentSpineIndex = book.spine.spineItems.indexOf(currentSpineItem);
+      const totalSpineItems = book.spine.spineItems.length;
+      
+      // Calculate overall book progress considering both chapter position and progress within chapter
       const bookProgress = Math.round(
-        ((currentChapter + (location.start.percentage || 0)) / totalChapters) * 100
+        ((currentSpineIndex + (location.start.percentage || 0)) / totalSpineItems) * 100
       );
 
       setProgress({
