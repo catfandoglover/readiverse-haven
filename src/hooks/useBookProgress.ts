@@ -46,19 +46,14 @@ export const useBookProgress = () => {
       book: Math.min(100, Math.max(0, Math.round(overallProgress)))
     });
 
-    // Calculate chapter pages
-    if (currentSpineItem) {
-      const chapterHref = currentSpineItem.href;
-      const chapterDoc = currentSpineItem.document;
-      
-      if (chapterDoc) {
-        // Calculate total pages in chapter based on content length
-        const contentLength = chapterDoc.documentElement.textContent?.length || 0;
-        const CHARS_PER_PAGE = 1000; // Approximate characters per page
-        const totalPages = Math.max(1, Math.ceil(contentLength / CHARS_PER_PAGE));
-        
-        // Calculate current page in chapter
-        const currentPage = Math.max(1, Math.ceil(location.start.percentage * totalPages));
+    // Calculate chapter pages based on the rendition's layout
+    if (currentSpineItem && location.start.displayed) {
+      const rendition = (book as any).rendition;
+      if (rendition && rendition.manager) {
+        // Get the total number of spreads (pages) in the current chapter
+        const totalPages = location.start.displayed.total || 1;
+        // Get the current page number within the chapter
+        const currentPage = location.start.displayed.page || 1;
 
         setPageInfo(prev => ({
           ...prev,
