@@ -5,6 +5,7 @@ import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
+import ThemeSwitcher from "./reader/ThemeSwitcher";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -80,6 +81,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 textAlign={textAlign}
                 onRenditionReady={handleRenditionReady}
               />
+              <ThemeSwitcher />
               <div 
                 style={{ 
                   position: 'fixed',
