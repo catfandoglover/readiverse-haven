@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface BookViewerProps {
   book: Book;
@@ -20,6 +21,7 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const handleResize = () => {
@@ -63,6 +65,8 @@ const BookViewer = ({
         "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
         padding: "1em",
         "text-align": textAlign,
+        color: theme.text,
+        background: theme.background,
       }
     });
 
@@ -76,7 +80,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign]);
+  }, [book, isMobile, textAlign, theme]);
 
   useEffect(() => {
     if (rendition) {
@@ -85,7 +89,13 @@ const BookViewer = ({
   }, [fontSize, rendition]);
 
   return (
-    <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg" />
+    <div 
+      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
+      style={{ 
+        background: theme.background,
+        color: theme.text,
+      }}
+    />
   );
 };
 
