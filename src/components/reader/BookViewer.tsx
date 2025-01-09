@@ -6,10 +6,18 @@ interface BookViewerProps {
   currentLocation: string | null;
   onLocationChange: (location: any) => void;
   fontSize: number;
+  textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
 }
 
-const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRenditionReady }: BookViewerProps) => {
+const BookViewer = ({ 
+  book, 
+  currentLocation, 
+  onLocationChange, 
+  fontSize,
+  textAlign = 'left',
+  onRenditionReady 
+}: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
@@ -26,7 +34,6 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
-    // Cleanup previous rendition before creating a new one
     if (rendition) {
       rendition.destroy();
     }
@@ -36,7 +43,7 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
       height: "100%",
       flow: "paginated",
       spread: isMobile ? "none" : "auto",
-      minSpreadWidth: 800, // Only show spreads on wider screens
+      minSpreadWidth: 800,
     });
 
     if (currentLocation) {
@@ -49,13 +56,13 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
       onLocationChange(location);
     });
 
-    // Apply the column layout based on screen size
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
         "column-gap": "2em",
         "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
         padding: "1em",
+        "text-align": textAlign,
       }
     });
 
@@ -69,7 +76,7 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
         newRendition.destroy();
       }
     };
-  }, [book, isMobile]); // Re-render when book or screen size changes
+  }, [book, isMobile, textAlign]);
 
   useEffect(() => {
     if (rendition) {

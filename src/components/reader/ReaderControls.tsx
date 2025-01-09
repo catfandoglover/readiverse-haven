@@ -1,7 +1,13 @@
-import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify } from "lucide-react";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -9,6 +15,8 @@ interface ReaderControlsProps {
   onPrevPage: () => void;
   onNextPage: () => void;
   coverUrl?: string;
+  textAlign?: 'left' | 'justify' | 'center';
+  onTextAlignChange?: (align: 'left' | 'justify' | 'center') => void;
 }
 
 const ReaderControls = ({
@@ -17,6 +25,8 @@ const ReaderControls = ({
   onPrevPage,
   onNextPage,
   coverUrl,
+  textAlign = 'left',
+  onTextAlignChange,
 }: ReaderControlsProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -78,6 +88,29 @@ const ReaderControls = ({
             <Maximize2 className="h-4 w-4" />
           )}
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              {textAlign === 'left' && <AlignLeft className="h-4 w-4" />}
+              {textAlign === 'center' && <AlignCenter className="h-4 w-4" />}
+              {textAlign === 'justify' && <AlignJustify className="h-4 w-4" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => onTextAlignChange?.('left')}>
+              <AlignLeft className="mr-2 h-4 w-4" />
+              Left
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTextAlignChange?.('center')}>
+              <AlignCenter className="mr-2 h-4 w-4" />
+              Center
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onTextAlignChange?.('justify')}>
+              <AlignJustify className="mr-2 h-4 w-4" />
+              Justify
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="flex items-center gap-4">
         <span className="text-sm text-gray-500">Font Size</span>
