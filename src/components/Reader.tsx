@@ -97,18 +97,9 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     let currentChapterId = '';
-    let chapterStartPage = 0;
-    let currentPage = 0;
-    let pagesInCurrentChapter = 0;
+    let totalChapters = book.spine.spineItems.length;
 
-    // Function to calculate pages in current chapter
-    const calculateChapterPages = async (spineItem: any) => {
-      if (!spineItem) return 0;
-      const pages = await newRendition.manager.layout.calculatePages(spineItem.href);
-      return pages;
-    };
-
-    newRendition.on("relocated", async (location: any) => {
+    newRendition.on("relocated", (location: any) => {
       const cfi = location.start.cfi;
       setCurrentLocation(cfi);
       saveProgress(cfi);
@@ -116,37 +107,26 @@ const Reader = ({ metadata }: ReaderProps) => {
       // Get current chapter information
       const currentSpineItem = book.spine.get(location.start.cfi);
       const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
-      const totalSpineItems = book.spine.spineItems.length;
       
       // Check if we've moved to a new chapter
       const newChapterId = currentSpineItem?.idref || '';
       if (currentChapterId !== newChapterId) {
-        // We've entered a new chapter
         currentChapterId = newChapterId;
-        chapterStartPage = currentPage;
-        pagesInCurrentChapter = await calculateChapterPages(currentSpineItem);
         setProgress(prev => ({ ...prev, chapter: 0 }));
       }
 
-      // Update current page
-      currentPage = location.start.location;
+      // Calculate chapter progress using the percentage within the current section
+      const chapterProgress = Math.round((location.start.percentage || 0) * 100);
       
-      // Calculate chapter progress
-      const pagesIntoChapter = currentPage - chapterStartPage;
-      const chapterProgress = Math.round((pagesIntoChapter / Math.max(1, pagesInCurrentChapter)) * 100);
-      
-      // Calculate book progress
-      const bookProgress = Math.round((spineIndex / totalSpineItems) * 100);
+      // Calculate book progress based on spine position and current percentage
+      const bookProgress = Math.round(((spineIndex + (location.start.percentage || 0)) / totalChapters) * 100);
 
       console.log('Progress Update:', {
         chapter: chapterProgress,
         book: bookProgress,
-        pagesIntoChapter,
-        pagesInCurrentChapter,
-        currentPage,
-        chapterStartPage,
         spineIndex,
-        totalSpineItems
+        totalChapters,
+        percentage: location.start.percentage
       });
 
       setProgress({
