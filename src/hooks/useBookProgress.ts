@@ -31,12 +31,13 @@ export const useBookProgress = () => {
 
     if (!book) return;
 
+    // Get current spine item (chapter)
     const currentSpineItem = book.spine.get(location.start.cfi);
-    // Access spine items through type assertion
     const spineItems = (book.spine as any).spineItems;
     const spineIndex = spineItems.indexOf(currentSpineItem);
     const totalSpineItems = spineItems.length;
 
+    // Calculate overall book progress
     const spineProgress = spineIndex / totalSpineItems;
     const locationProgress = location.start.percentage || 0;
     const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
@@ -45,21 +46,27 @@ export const useBookProgress = () => {
       book: Math.min(100, Math.max(0, Math.round(overallProgress)))
     });
 
-    // Calculate pages based on percentage
-    const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
-    
-    // Type assertion for contents property
-    const contents = (currentSpineItem?.contents as any);
-    const chapterLength = contents?.length || 0;
-    const chapterPages = Math.ceil(chapterLength / 1024) || 1;
-    const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
-    
-    setPageInfo(prev => ({
-      ...prev,
-      current: currentPage,
-      chapterCurrent: currentChapterPage,
-      chapterTotal: chapterPages
-    }));
+    // Calculate chapter pages
+    if (currentSpineItem) {
+      const chapterHref = currentSpineItem.href;
+      const chapterDoc = currentSpineItem.document;
+      
+      if (chapterDoc) {
+        // Calculate total pages in chapter based on content length
+        const contentLength = chapterDoc.documentElement.textContent?.length || 0;
+        const CHARS_PER_PAGE = 1000; // Approximate characters per page
+        const totalPages = Math.max(1, Math.ceil(contentLength / CHARS_PER_PAGE));
+        
+        // Calculate current page in chapter
+        const currentPage = Math.max(1, Math.ceil(location.start.percentage * totalPages));
+
+        setPageInfo(prev => ({
+          ...prev,
+          chapterCurrent: currentPage,
+          chapterTotal: totalPages
+        }));
+      }
+    }
   };
 
   return {
