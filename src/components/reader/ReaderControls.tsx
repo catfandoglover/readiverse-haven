@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify, Sun } from "lucide-react";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { useState, useEffect } from "react";
@@ -17,6 +17,8 @@ interface ReaderControlsProps {
   coverUrl?: string;
   textAlign?: 'left' | 'justify' | 'center';
   onTextAlignChange?: (align: 'left' | 'justify' | 'center') => void;
+  brightness?: number;
+  onBrightnessChange?: (value: number[]) => void;
 }
 
 const ReaderControls = ({
@@ -27,6 +29,8 @@ const ReaderControls = ({
   coverUrl,
   textAlign = 'left',
   onTextAlignChange,
+  brightness = 1,
+  onBrightnessChange,
 }: ReaderControlsProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -113,15 +117,28 @@ const ReaderControls = ({
         </DropdownMenu>
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-500">Font Size</span>
-        <Slider
-          value={[fontSize]}
-          onValueChange={onFontSizeChange}
-          min={50}
-          max={200}
-          step={10}
-          className="w-32"
-        />
+        <div className="flex items-center gap-2">
+          <Sun className="h-4 w-4 text-gray-500" />
+          <Slider
+            value={[brightness]}
+            onValueChange={onBrightnessChange}
+            min={0.2}
+            max={1}
+            step={0.1}
+            className="w-24"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Font Size</span>
+          <Slider
+            value={[fontSize]}
+            onValueChange={onFontSizeChange}
+            min={50}
+            max={200}
+            step={10}
+            className="w-32"
+          />
+        </div>
       </div>
     </div>
   );

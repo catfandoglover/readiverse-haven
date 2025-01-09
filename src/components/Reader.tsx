@@ -12,6 +12,7 @@ import { useNavigation } from "@/hooks/useNavigation";
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
+  const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
   
   const {
@@ -39,6 +40,10 @@ const Reader = ({ metadata }: ReaderProps) => {
     setFontSize(value[0]);
   };
 
+  const handleBrightnessChange = (value: number[]) => {
+    setBrightness(value[0]);
+  };
+
   const handleRenditionReady = (newRendition: Rendition) => {
     setRendition(newRendition);
   };
@@ -58,6 +63,8 @@ const Reader = ({ metadata }: ReaderProps) => {
               coverUrl={metadata?.coverUrl}
               textAlign={textAlign}
               onTextAlignChange={setTextAlign}
+              brightness={brightness}
+              onBrightnessChange={handleBrightnessChange}
             />
             <ProgressTracker 
               bookProgress={progress.book}
@@ -70,6 +77,16 @@ const Reader = ({ metadata }: ReaderProps) => {
               fontSize={fontSize}
               textAlign={textAlign}
               onRenditionReady={handleRenditionReady}
+            />
+            <div 
+              style={{ 
+                position: 'fixed',
+                inset: 0,
+                pointerEvents: 'none',
+                backgroundColor: 'black',
+                opacity: 1 - brightness,
+                zIndex: 50
+              }} 
             />
           </>
         )}
