@@ -94,7 +94,7 @@ const Reader = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="reader-container">
+      <div className="reader-container p-4 max-w-4xl mx-auto">
         {!book ? (
           <div className="flex flex-col items-center justify-center min-h-[80vh] border-2 border-dashed border-gray-300 rounded-lg">
             <label className="cursor-pointer">
@@ -133,7 +133,7 @@ const Reader = () => {
                 />
               </div>
             </div>
-            <div className="epub-view" />
+            <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden" />
           </>
         )}
       </div>
