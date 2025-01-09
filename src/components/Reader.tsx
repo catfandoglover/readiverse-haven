@@ -79,9 +79,10 @@ const Reader = ({ metadata }: ReaderProps) => {
 
     // Calculate pages based on percentage
     const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
-    const chapterLength = typeof currentSpineItem?.contents?.length === 'number' 
-      ? currentSpineItem.contents.length 
-      : 0;
+    
+    // Type assertion for contents property
+    const contents = (currentSpineItem?.contents as any);
+    const chapterLength = contents?.length || 0;
     const chapterPages = Math.ceil(chapterLength / 1024) || 1;
     const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
     
