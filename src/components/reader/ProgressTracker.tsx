@@ -21,8 +21,7 @@ const ProgressTracker = ({ bookProgress, pageInfo }: ProgressTrackerProps) => {
         </div>
         <Progress value={bookProgress} className="h-2" />
       </div>
-      <div className="mt-4 flex justify-between text-sm text-gray-500">
-        <span>Page {pageInfo.current} of {pageInfo.total}</span>
+      <div className="mt-4 text-sm text-gray-500">
         <span>Chapter Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}</span>
       </div>
     </>
