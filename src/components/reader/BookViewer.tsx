@@ -11,6 +11,16 @@ interface BookViewerProps {
 
 const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRenditionReady }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const container = document.querySelector(".epub-view");
@@ -25,7 +35,8 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
       width: "100%",
       height: "100%",
       flow: "paginated",
-      spread: "none"
+      spread: isMobile ? "none" : "auto",
+      minSpreadWidth: 800, // Only show spreads on wider screens
     });
 
     if (currentLocation) {
@@ -38,6 +49,16 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
       onLocationChange(location);
     });
 
+    // Apply the column layout based on screen size
+    newRendition.themes.default({
+      body: {
+        "column-count": isMobile ? "1" : "2",
+        "column-gap": "2em",
+        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+        padding: "1em",
+      }
+    });
+
     setRendition(newRendition);
     if (onRenditionReady) {
       onRenditionReady(newRendition);
@@ -48,7 +69,7 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
         newRendition.destroy();
       }
     };
-  }, [book]); // Only re-run when book changes
+  }, [book, isMobile]); // Re-render when book or screen size changes
 
   useEffect(() => {
     if (rendition) {
