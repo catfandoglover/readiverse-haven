@@ -61,6 +61,6 @@
   }
 
   .epub-view {
-    @apply min-h-[80vh] bg-white shadow-lg rounded-lg p-8;
+    @apply bg-white shadow-lg rounded-lg;
   }
 }
