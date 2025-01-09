@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify, Sun, Moon, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify, Sun } from "lucide-react";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { useState, useEffect } from "react";
@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from "../ui/dropdown-menu";
-import { useTheme } from "@/contexts/ThemeContext";
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -34,7 +33,6 @@ const ReaderControls = ({
   onBrightnessChange,
 }: ReaderControlsProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   const handleFullscreen = async () => {
     try {
@@ -114,27 +112,6 @@ const ReaderControls = ({
             <DropdownMenuItem onClick={() => onTextAlignChange?.('justify')}>
               <AlignJustify className="mr-2 h-4 w-4" />
               Justify
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Palette className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setTheme('light')}>
-              <Sun className="mr-2 h-4 w-4" />
-              Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('dark')}>
-              <Moon className="mr-2 h-4 w-4" />
-              Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('sepia')}>
-              <Palette className="mr-2 h-4 w-4" />
-              Sepia
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
