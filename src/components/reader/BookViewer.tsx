@@ -16,9 +16,16 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
+    // Cleanup previous rendition before creating a new one
+    if (rendition) {
+      rendition.destroy();
+    }
+
     const newRendition = book.renderTo(container, {
       width: "100%",
       height: "100%",
+      flow: "paginated",
+      spread: "none"
     });
 
     if (currentLocation) {
@@ -41,7 +48,7 @@ const BookViewer = ({ book, currentLocation, onLocationChange, fontSize, onRendi
         newRendition.destroy();
       }
     };
-  }, [book, currentLocation]);
+  }, [book]); // Only re-run when book changes
 
   useEffect(() => {
     if (rendition) {
