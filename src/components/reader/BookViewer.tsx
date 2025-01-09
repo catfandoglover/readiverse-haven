@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface BookViewerProps {
   book: Book;
@@ -20,6 +21,7 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const handleResize = () => {
@@ -60,9 +62,22 @@ const BookViewer = ({
       body: {
         "column-count": isMobile ? "1" : "2",
         "column-gap": "2em",
-        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+        "column-rule": isMobile ? "none" : "1px solid var(--border)",
         padding: "1em",
         "text-align": textAlign,
+        "color": `hsl(var(--foreground))`,
+        "background-color": `hsl(var(--background))`,
+        "font-family": "system-ui, -apple-system, sans-serif",
+      },
+      "p": {
+        "margin-bottom": "1em",
+      },
+      "a": {
+        "color": `hsl(var(--primary))`,
+      },
+      "h1, h2, h3, h4, h5, h6": {
+        "color": `hsl(var(--primary))`,
+        "margin": "1em 0 0.5em 0",
       }
     });
 
@@ -76,7 +91,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign]);
+  }, [book, isMobile, textAlign, theme]);
 
   useEffect(() => {
     if (rendition) {
@@ -85,7 +100,7 @@ const BookViewer = ({
   }, [fontSize, rendition]);
 
   return (
-    <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg" />
+    <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-background shadow-lg" />
   );
 };
 
