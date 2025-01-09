@@ -3,12 +3,13 @@ import ePub from "epubjs";
 import { useToast } from "./ui/use-toast";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
-import { Progress } from "./ui/progress";
+import BookViewer from "./reader/BookViewer";
+import ProgressTracker from "./reader/ProgressTracker";
 import type { ReaderProps } from "@/types/reader";
+import type { Book } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
-  const [book, setBook] = useState<any>(null);
-  const [rendition, setRendition] = useState<any>(null);
+  const [book, setBook] = useState<Book | null>(null);
   const [fontSize, setFontSize] = useState(100);
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [progress, setProgress] = useState({
@@ -39,9 +40,7 @@ const Reader = ({ metadata }: ReaderProps) => {
       const newBook = ePub(bookData);
       setBook(newBook);
 
-      // Generate page numbers
       await newBook.locations.generate(1024);
-      // Get total locations using the length of locations array
       const totalLocations = newBook.locations.length();
       setPageInfo(prev => ({ ...prev, total: totalLocations }));
 
@@ -57,23 +56,50 @@ const Reader = ({ metadata }: ReaderProps) => {
     reader.readAsArrayBuffer(file);
   };
 
+  const handleLocationChange = (location: any) => {
+    const cfi = location.start.cfi;
+    setCurrentLocation(cfi);
+    saveProgress(cfi);
+
+    if (!book) return;
+
+    const currentSpineItem = book.spine.get(location.start.cfi);
+    const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
+    const totalSpineItems = book.spine.spineItems.length;
+
+    const spineProgress = spineIndex / totalSpineItems;
+    const locationProgress = location.start.percentage || 0;
+    const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
+
+    setProgress({
+      book: Math.min(100, Math.max(0, Math.round(overallProgress)))
+    });
+
+    const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
+    const chapterPages = Math.ceil(currentSpineItem.length / 1024) || 1;
+    const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
+    
+    setPageInfo(prev => ({
+      ...prev,
+      current: currentPage,
+      chapterCurrent: currentChapterPage,
+      chapterTotal: chapterPages
+    }));
+  };
+
+  const handleFontSizeChange = (value: number[]) => {
+    setFontSize(value[0]);
+  };
+
   const handlePrevPage = () => {
-    if (rendition) {
-      rendition.prev();
+    if (book) {
+      book.rendition.prev();
     }
   };
 
   const handleNextPage = () => {
-    if (rendition) {
-      rendition.next();
-    }
-  };
-
-  const handleFontSizeChange = (value: number[]) => {
-    const newSize = value[0];
-    setFontSize(newSize);
-    if (rendition) {
-      rendition.themes.fontSize(`${newSize}%`);
+    if (book) {
+      book.rendition.next();
     }
   };
 
@@ -88,64 +114,6 @@ const Reader = ({ metadata }: ReaderProps) => {
 
     window.addEventListener("keyup", handleKeyPress);
     return () => window.removeEventListener("keyup", handleKeyPress);
-  }, [rendition]);
-
-  useEffect(() => {
-    if (!book) return;
-
-    const container = document.querySelector(".epub-view");
-    if (!container) return;
-
-    const newRendition = book.renderTo(container, {
-      width: "100%",
-      height: "100%",
-    });
-
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
-
-    newRendition.on("relocated", (location: any) => {
-      const cfi = location.start.cfi;
-      setCurrentLocation(cfi);
-      saveProgress(cfi);
-
-      // Get the current spine item and total number of spine items
-      const currentSpineItem = book.spine.get(location.start.cfi);
-      const spineIndex = book.spine.spineItems.indexOf(currentSpineItem);
-      const totalSpineItems = book.spine.spineItems.length;
-
-      // Calculate progress based on spine position and current location
-      const spineProgress = spineIndex / totalSpineItems;
-      const locationProgress = location.start.percentage || 0;
-      const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
-
-      setProgress({
-        book: Math.min(100, Math.max(0, Math.round(overallProgress)))
-      });
-
-      // Calculate current page based on percentage through the book
-      const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
-      const chapterPages = Math.ceil(currentSpineItem.length / 1024) || 1;
-      const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
-      
-      setPageInfo(prev => ({
-        ...prev,
-        current: currentPage,
-        chapterCurrent: currentChapterPage,
-        chapterTotal: chapterPages
-      }));
-    });
-
-    setRendition(newRendition);
-
-    return () => {
-      if (newRendition) {
-        newRendition.destroy();
-      }
-    };
   }, [book]);
 
   return (
@@ -162,18 +130,16 @@ const Reader = ({ metadata }: ReaderProps) => {
               onNextPage={handleNextPage}
               coverUrl={metadata?.coverUrl}
             />
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Book Progress</span>
-                <span>{progress.book}%</span>
-              </div>
-              <Progress value={progress.book} className="h-2" />
-            </div>
-            <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg" />
-            <div className="mt-4 flex justify-between text-sm text-gray-500">
-              <span>Page {pageInfo.current} of {pageInfo.total}</span>
-              <span>Chapter Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}</span>
-            </div>
+            <ProgressTracker 
+              bookProgress={progress.book}
+              pageInfo={pageInfo}
+            />
+            <BookViewer
+              book={book}
+              currentLocation={currentLocation}
+              onLocationChange={handleLocationChange}
+              fontSize={fontSize}
+            />
           </>
         )}
       </div>
