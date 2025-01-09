@@ -41,7 +41,8 @@ const Reader = ({ metadata }: ReaderProps) => {
 
       // Generate page numbers
       await newBook.locations.generate(1024);
-      const totalLocations = newBook.locations.total;
+      // Get total locations using the length of locations array
+      const totalLocations = newBook.locations.length();
       setPageInfo(prev => ({ ...prev, total: totalLocations }));
 
       const savedCfi = await loadProgress();
