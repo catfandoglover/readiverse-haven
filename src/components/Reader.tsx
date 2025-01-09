@@ -15,8 +15,10 @@ const Reader = ({ metadata }: ReaderProps) => {
     book: 0,
   });
   const [pageInfo, setPageInfo] = useState({
-    current: 0,
-    total: 0
+    current: 1,
+    total: 0,
+    chapterCurrent: 1,
+    chapterTotal: 0
   });
   const { toast } = useToast();
 
@@ -37,9 +39,10 @@ const Reader = ({ metadata }: ReaderProps) => {
       const newBook = ePub(bookData);
       setBook(newBook);
 
-      // Get total pages
-      const totalPages = await newBook.locations.generate(1024);
-      setPageInfo(prev => ({ ...prev, total: totalPages }));
+      // Generate page numbers
+      await newBook.locations.generate(1024);
+      const totalLocations = newBook.locations.total;
+      setPageInfo(prev => ({ ...prev, total: totalLocations }));
 
       const savedCfi = await loadProgress();
       if (savedCfi) {
@@ -130,9 +133,17 @@ const Reader = ({ metadata }: ReaderProps) => {
         book: Math.min(100, Math.max(0, Math.round(overallProgress)))
       });
 
-      // Update current page number
-      const currentPage = book.locations.locationFromCfi(cfi);
-      setPageInfo(prev => ({ ...prev, current: currentPage }));
+      // Update current page number and chapter pages
+      const currentPage = book.locations.locationFrom(cfi);
+      const chapterPages = currentSpineItem.pages || 1;
+      const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
+      
+      setPageInfo(prev => ({
+        ...prev,
+        current: currentPage || 1,
+        chapterCurrent: currentChapterPage,
+        chapterTotal: chapterPages
+      }));
     });
 
     setRendition(newRendition);
@@ -166,8 +177,9 @@ const Reader = ({ metadata }: ReaderProps) => {
               <Progress value={progress.book} className="h-2" />
             </div>
             <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg" />
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Page {pageInfo.current} of {pageInfo.total}
+            <div className="mt-4 flex justify-between text-sm text-gray-500">
+              <span>Page {pageInfo.current} of {pageInfo.total}</span>
+              <span>Chapter Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}</span>
             </div>
           </>
         )}
