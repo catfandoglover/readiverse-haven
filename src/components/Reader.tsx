@@ -14,6 +14,10 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [progress, setProgress] = useState({
     book: 0,
   });
+  const [pageInfo, setPageInfo] = useState({
+    current: 0,
+    total: 0
+  });
   const { toast } = useToast();
 
   const saveProgress = (cfi: string) => {
@@ -32,6 +36,10 @@ const Reader = ({ metadata }: ReaderProps) => {
       const bookData = e.target?.result;
       const newBook = ePub(bookData);
       setBook(newBook);
+
+      // Get total pages
+      const totalPages = await newBook.locations.generate(1024);
+      setPageInfo(prev => ({ ...prev, total: totalPages }));
 
       const savedCfi = await loadProgress();
       if (savedCfi) {
@@ -121,6 +129,10 @@ const Reader = ({ metadata }: ReaderProps) => {
       setProgress({
         book: Math.min(100, Math.max(0, Math.round(overallProgress)))
       });
+
+      // Update current page number
+      const currentPage = book.locations.locationFromCfi(cfi);
+      setPageInfo(prev => ({ ...prev, current: currentPage }));
     });
 
     setRendition(newRendition);
@@ -154,6 +166,9 @@ const Reader = ({ metadata }: ReaderProps) => {
               <Progress value={progress.book} className="h-2" />
             </div>
             <div className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg" />
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Page {pageInfo.current} of {pageInfo.total}
+            </div>
           </>
         )}
       </div>
