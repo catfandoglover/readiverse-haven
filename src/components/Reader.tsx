@@ -64,8 +64,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book) return;
 
     const currentSpineItem = book.spine.get(location.start.cfi);
-    // Access spine items through the spine property
-    const spineItems = book.spine.spineItems;
+    // Access spine items through type assertion
+    const spineItems = (book.spine as any).spineItems;
     const spineIndex = spineItems.indexOf(currentSpineItem);
     const totalSpineItems = spineItems.length;
 
@@ -79,7 +79,10 @@ const Reader = ({ metadata }: ReaderProps) => {
 
     // Calculate pages based on percentage
     const currentPage = Math.ceil((book.locations.length() * location.start.percentage) || 1);
-    const chapterPages = Math.ceil((currentSpineItem?.contents?.length || 0) / 1024) || 1;
+    const chapterLength = typeof currentSpineItem?.contents?.length === 'number' 
+      ? currentSpineItem.contents.length 
+      : 0;
+    const chapterPages = Math.ceil(chapterLength / 1024) || 1;
     const currentChapterPage = Math.ceil(location.start.percentage * chapterPages);
     
     setPageInfo(prev => ({
