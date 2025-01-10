@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -141,7 +142,7 @@ const ReaderControls = ({
                   const icon = React.createElement(BookOpen, { 
                     className: "h-4 w-4 text-gray-400" 
                   });
-                  React.render(icon, BookOpenIcon);
+                  ReactDOM.render(icon, BookOpenIcon);
                 }
               }}
             />
