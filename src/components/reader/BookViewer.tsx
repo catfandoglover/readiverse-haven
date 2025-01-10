@@ -42,12 +42,23 @@ const BookViewer = ({
 
     const initializeBook = async () => {
       try {
-        // Wait for the book to be fully loaded
+        // First, ensure the book is ready
         await book.ready;
-        // Wait for the metadata to be loaded
-        await book.loaded.metadata;
-        // Wait for the spine to be loaded
-        await book.loaded.spine;
+        
+        // Then load all necessary book components sequentially
+        await Promise.all([
+          book.loaded.metadata,
+          book.loaded.spine,
+          book.loaded.manifest,
+          book.loaded.cover,
+          book.loaded.resources
+        ]);
+
+        // Generate locations if needed
+        if (!book.locations.length()) {
+          await book.locations.generate(1024);
+        }
+
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
