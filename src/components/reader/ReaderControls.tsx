@@ -130,7 +130,11 @@ const ReaderControls = (props: ReaderControlsProps) => {
       onClick={handleBookmarkClick}
       className="text-red-500 hover:text-red-600"
     >
-      <Bookmark className="h-4 w-4" fill={isBookmarked ? "currentColor" : "none"} />
+      <Bookmark 
+        className="h-4 w-4" 
+        fill={isBookmarked ? "currentColor" : "white"} 
+        stroke={isBookmarked ? "currentColor" : "currentColor"}
+      />
     </Button>
   );
 
