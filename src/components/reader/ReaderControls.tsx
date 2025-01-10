@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -9,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight, BookOpen, Menu } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -126,30 +125,6 @@ const ReaderControls = ({
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center">
-          {coverUrl ? (
-            <img 
-              src={coverUrl} 
-              alt="Book cover" 
-              className="h-4 w-4 object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  const BookOpenIcon = document.createElement('div');
-                  parent.appendChild(BookOpenIcon);
-                  const icon = React.createElement(BookOpen, { 
-                    className: "h-4 w-4 text-gray-400" 
-                  });
-                  ReactDOM.render(icon, BookOpenIcon);
-                }
-              }}
-            />
-          ) : (
-            <BookOpen className="h-4 w-4 text-gray-400" />
-          )}
-        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={onPrevPage}>
             <ChevronLeft className="h-4 w-4" />
