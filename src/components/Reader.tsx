@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import type { Rendition } from "epubjs";
 import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
@@ -30,8 +30,6 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const readerContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     book,
@@ -70,39 +68,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     };
   }, [book, currentLocation, saveProgress]);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F11') {
-        e.preventDefault();
-        handleFullscreen();
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const handleFullscreen = async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (err) {
-      console.error('Error toggling fullscreen:', err);
-    }
-  };
-
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
   };
@@ -127,7 +92,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50 relative" ref={readerContainerRef}>
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
@@ -145,8 +110,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                 currentLocation={currentLocation}
                 onBookmarkClick={() => setShowBookmarkDialog(true)}
                 onLocationChange={handleLocationSelect}
-                isFullscreen={isFullscreen}
-                onFullscreenToggle={handleFullscreen}
               />
               
               <ProgressTracker 
