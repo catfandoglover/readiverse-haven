@@ -14,6 +14,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import BookmarksMenu from './BookmarksMenu';
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -26,6 +27,7 @@ interface ReaderControlsProps {
   onBrightnessChange: (value: number[]) => void;
   currentLocation: string | null;
   onBookmarkClick: () => void;
+  onLocationChange?: (location: string) => void;
 }
 
 const ControlPanel = ({
@@ -154,8 +156,9 @@ const BookmarkButton = ({ currentLocation, onBookmarkClick }: Pick<ReaderControl
 const ReaderControls = (props: ReaderControlsProps) => {
   return (
     <>
-      {/* Desktop bookmark button in top right corner */}
-      <div className="hidden md:block fixed top-4 right-4 z-50">
+      {/* Desktop bookmark controls in top right corner */}
+      <div className="hidden md:flex fixed top-4 right-4 z-50 items-center gap-2">
+        <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
         <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
       </div>
 
@@ -176,8 +179,11 @@ const ReaderControls = (props: ReaderControlsProps) => {
             </DrawerContent>
           </Drawer>
           
-          {/* Mobile bookmark button remains in the original position */}
-          <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+          {/* Mobile bookmark controls */}
+          <div className="flex items-center gap-2">
+            <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+            <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+          </div>
         </div>
       </div>
     </>

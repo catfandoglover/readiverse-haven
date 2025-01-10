@@ -84,6 +84,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     setRendition(newRendition);
   };
 
+  const handleLocationSelect = (location: string) => {
+    if (rendition) {
+      rendition.display(location);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -103,6 +109,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onBrightnessChange={handleBrightnessChange}
                 currentLocation={currentLocation}
                 onBookmarkClick={() => setShowBookmarkDialog(true)}
+                onLocationChange={handleLocationSelect}
               />
               
               <ProgressTracker 
