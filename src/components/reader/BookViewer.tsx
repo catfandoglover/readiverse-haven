@@ -45,13 +45,17 @@ const BookViewer = ({
         // First, ensure the book is ready
         await book.ready;
         
+        // Wait for the book to be opened
+        await book.opened;
+        
         // Then load all necessary book components sequentially
         await Promise.all([
           book.loaded.metadata,
           book.loaded.spine,
           book.loaded.manifest,
           book.loaded.cover,
-          book.loaded.resources
+          book.loaded.resources,
+          book.loaded.navigation
         ]);
 
         // Generate locations if needed
