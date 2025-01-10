@@ -24,6 +24,7 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isBookReady, setIsBookReady] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const BookViewer = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Initialize book
   useEffect(() => {
     if (!book) return;
 
@@ -44,17 +46,20 @@ const BookViewer = ({
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
+        setIsBookReady(false);
       }
     };
 
+    setIsBookReady(false);
     initializeBook();
   }, [book]);
 
+  // Setup rendition
   useEffect(() => {
-    if (!isBookReady) return;
+    if (!isBookReady || !book) return;
 
     const container = document.querySelector(".epub-view");
-    if (!container || !book) return;
+    if (!container) return;
 
     if (rendition) {
       rendition.destroy();
@@ -68,16 +73,33 @@ const BookViewer = ({
       minSpreadWidth: 800,
     });
 
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
+    // Initialize rendition
+    const initializeRendition = async () => {
+      try {
+        if (currentLocation) {
+          await newRendition.display(currentLocation);
+        } else {
+          await newRendition.display();
+        }
 
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-    });
+        newRendition.on("relocated", (location: any) => {
+          if (!isNavigating) {
+            onLocationChange(location);
+          }
+        });
 
+        setRendition(newRendition);
+        if (onRenditionReady) {
+          onRenditionReady(newRendition);
+        }
+      } catch (error) {
+        console.error('Error initializing rendition:', error);
+      }
+    };
+
+    initializeRendition();
+
+    // Apply theme and styles
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -91,18 +113,14 @@ const BookViewer = ({
       }
     });
 
-    setRendition(newRendition);
-    if (onRenditionReady) {
-      onRenditionReady(newRendition);
-    }
-
     return () => {
       if (newRendition) {
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, currentLocation]);
 
+  // Handle font size changes
   useEffect(() => {
     if (rendition) {
       rendition.themes.fontSize(`${fontSize}%`);
