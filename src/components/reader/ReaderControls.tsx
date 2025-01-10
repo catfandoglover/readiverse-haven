@@ -111,7 +111,28 @@ const ControlPanel = ({
 const ReaderControls = (props: ReaderControlsProps) => {
   const isBookmarked = props.currentLocation ? 
     localStorage.getItem(`book-progress-${props.currentLocation}`) !== null : 
-    true; // Default to true when no location is set yet
+    true;
+
+  const handleBookmarkClick = () => {
+    if (isBookmarked) {
+      props.onBookmarkClick();
+    } else if (props.currentLocation) {
+      localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
+      // Force a re-render by accessing localStorage again
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const BookmarkButton = () => (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleBookmarkClick}
+      className="text-red-500 hover:text-red-600"
+    >
+      <Bookmark className="h-4 w-4" fill={isBookmarked ? "currentColor" : "none"} />
+    </Button>
+  );
 
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
@@ -133,34 +154,12 @@ const ReaderControls = (props: ReaderControlsProps) => {
           </DrawerContent>
         </Drawer>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={isBookmarked ? props.onBookmarkClick : () => {
-            if (props.currentLocation) {
-              localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
-            }
-          }}
-          className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
-        >
-          <Bookmark className="h-4 w-4" />
-        </Button>
+        <BookmarkButton />
       </div>
 
       {/* Desktop Bookmark */}
       <div className="hidden md:block">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={isBookmarked ? props.onBookmarkClick : () => {
-            if (props.currentLocation) {
-              localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
-            }
-          }}
-          className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
-        >
-          <Bookmark className="h-4 w-4" />
-        </Button>
+        <BookmarkButton />
       </div>
     </div>
   );
