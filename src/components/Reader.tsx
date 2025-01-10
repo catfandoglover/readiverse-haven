@@ -90,6 +90,19 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
+  const handleLocationChange = (location: any) => {
+    if (book && currentLocation) {
+      const key = `book-progress-${currentLocation}`;
+      const chapter = location.start.href ? book.spine.get(location.start.href)?.index || 'Unknown Chapter' : 'Unknown Chapter';
+      const page = location.start.displayed?.page || 'Unknown Page';
+      
+      localStorage.setItem(`chapter-${key}`, `Chapter ${chapter + 1}`);
+      localStorage.setItem(`page-${key}`, `${page}`);
+      
+      handleLocationChange(location);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -172,6 +185,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <AlertDialogAction onClick={() => {
                       if (currentLocation) {
                         localStorage.removeItem(`book-progress-${currentLocation}`);
+                        localStorage.removeItem(`chapter-book-progress-${currentLocation}`);
+                        localStorage.removeItem(`page-book-progress-${currentLocation}`);
                         window.dispatchEvent(new Event('storage'));
                       }
                       setShowBookmarkDialog(false);
