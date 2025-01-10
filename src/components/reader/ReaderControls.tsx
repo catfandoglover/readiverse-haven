@@ -131,7 +131,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
     >
       <Bookmark 
         className="h-4 w-4" 
-        fill={isBookmarked ? "currentColor" : "white"} 
+        fill={isBookmarked ? "currentColor" : "none"} 
         stroke={isBookmarked ? "currentColor" : "currentColor"}
       />
     </Button>
