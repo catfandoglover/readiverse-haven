@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -8,13 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark, Maximize2, Minimize2 } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu, Maximize2, Minimize2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import BookmarksMenu from './BookmarksMenu';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -44,90 +45,100 @@ const ControlPanel = ({
   isFullscreen,
   onFullscreenToggle,
 }: ReaderControlsProps) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium whitespace-nowrap">Font Size</span>
-        <Slider
-          value={[fontSize]}
-          onValueChange={onFontSizeChange}
-          min={50}
-          max={200}
-          step={10}
-          className="w-32"
-        />
+    <div className="flex flex-col items-center justify-center gap-6 p-4">
+      <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <span className="text-sm font-medium whitespace-nowrap min-w-20">Font Size</span>
+          <Slider
+            value={[fontSize]}
+            onValueChange={onFontSizeChange}
+            min={50}
+            max={200}
+            step={10}
+            className="w-full md:w-32"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <span className="text-sm font-medium min-w-20">Font</span>
+          <Select
+            value={fontFamily}
+            onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
+          >
+            <SelectTrigger className="w-full md:w-32">
+              <SelectValue placeholder="Select font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="georgia">Georgia</SelectItem>
+              <SelectItem value="helvetica">Helvetica</SelectItem>
+              <SelectItem value="times">Times New Roman</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Font</span>
-        <Select
-          value={fontFamily}
-          onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Select font" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="georgia">Georgia</SelectItem>
-            <SelectItem value="helvetica">Helvetica</SelectItem>
-            <SelectItem value="times">Times New Roman</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+        <div className="flex items-center gap-2 justify-center">
+          <Button
+            variant={textAlign === 'left' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('left')}
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'justify' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('justify')}
+          >
+            <AlignJustify className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'center' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('center')}
+          >
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <span className="text-sm font-medium whitespace-nowrap min-w-20">Brightness</span>
+          <Slider
+            value={[brightness]}
+            onValueChange={onBrightnessChange}
+            min={0.2}
+            max={1}
+            step={0.1}
+            className="w-full md:w-32"
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {(isMobile || !isMobile) && (
         <Button
-          variant={textAlign === 'left' ? 'default' : 'outline'}
+          variant="outline"
           size="icon"
-          onClick={() => onTextAlignChange('left')}
+          onClick={onFullscreenToggle}
+          className="h-8 w-8 rounded-full"
         >
-          <AlignLeft className="h-4 w-4" />
+          {isFullscreen ? (
+            <Minimize2 className="h-4 w-4" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
         </Button>
-        <Button
-          variant={textAlign === 'justify' ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onTextAlignChange('justify')}
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={textAlign === 'center' ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onTextAlignChange('center')}
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
-        <Slider
-          value={[brightness]}
-          onValueChange={onBrightnessChange}
-          min={0.2}
-          max={1}
-          step={0.1}
-          className="w-32"
-        />
-      </div>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onFullscreenToggle}
-        className="h-8 w-8 rounded-full"
-      >
-        {isFullscreen ? (
-          <Minimize2 className="h-4 w-4" />
-        ) : (
-          <Maximize2 className="h-4 w-4" />
-        )}
-      </Button>
+      )}
     </div>
   );
 };
 
 const ReaderControls = (props: ReaderControlsProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
       <div className="hidden md:flex items-center flex-1 justify-center">
@@ -148,18 +159,6 @@ const ReaderControls = (props: ReaderControlsProps) => {
         
         <div className="flex items-center gap-2">
           <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={props.onFullscreenToggle}
-            className="h-8 w-8 rounded-full"
-          >
-            {props.isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       </div>
     </div>
