@@ -30,7 +30,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
-  
+
   const {
     book,
     setBook,
@@ -104,6 +104,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 currentLocation={currentLocation}
                 onBookmarkClick={() => setShowBookmarkDialog(true)}
               />
+              
               <ProgressTracker 
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
@@ -162,7 +163,10 @@ const Reader = ({ metadata }: ReaderProps) => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={() => {
-                      localStorage.removeItem(`book-progress-${book?.key()}`);
+                      if (book && currentLocation) {
+                        localStorage.removeItem(`book-progress-${book.key()}`);
+                        window.dispatchEvent(new Event('storage'));
+                      }
                       setShowBookmarkDialog(false);
                     }}>
                       Continue

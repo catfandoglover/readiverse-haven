@@ -118,7 +118,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
       props.onBookmarkClick();
     } else if (props.currentLocation) {
       localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
-      // Force a re-render by accessing localStorage again
+      // Force a re-render by dispatching storage event
       window.dispatchEvent(new Event('storage'));
     }
   };
