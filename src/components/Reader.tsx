@@ -163,8 +163,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={() => {
-                      if (book && currentLocation) {
-                        localStorage.removeItem(`book-progress-${book.key()}`);
+                      if (currentLocation) {
+                        localStorage.removeItem(`book-progress-${currentLocation}`);
                         window.dispatchEvent(new Event('storage'));
                       }
                       setShowBookmarkDialog(false);

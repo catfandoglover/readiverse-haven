@@ -111,14 +111,13 @@ const ControlPanel = ({
 const ReaderControls = (props: ReaderControlsProps) => {
   const isBookmarked = props.currentLocation ? 
     localStorage.getItem(`book-progress-${props.currentLocation}`) !== null : 
-    true;
+    false;
 
   const handleBookmarkClick = () => {
     if (isBookmarked) {
       props.onBookmarkClick();
     } else if (props.currentLocation) {
       localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
-      // Force a re-render by dispatching storage event
       window.dispatchEvent(new Event('storage'));
     }
   };
@@ -140,12 +139,10 @@ const ReaderControls = (props: ReaderControlsProps) => {
 
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
-      {/* Desktop Controls */}
       <div className="hidden md:flex items-center flex-1 justify-center">
         <ControlPanel {...props} />
       </div>
 
-      {/* Mobile Controls */}
       <div className="md:hidden w-full flex justify-between items-center">
         <Drawer>
           <DrawerTrigger asChild>
@@ -161,7 +158,6 @@ const ReaderControls = (props: ReaderControlsProps) => {
         <BookmarkButton />
       </div>
 
-      {/* Desktop Bookmark */}
       <div className="hidden md:block">
         <BookmarkButton />
       </div>
