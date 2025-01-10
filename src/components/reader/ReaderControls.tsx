@@ -153,30 +153,34 @@ const BookmarkButton = ({ currentLocation, onBookmarkClick }: Pick<ReaderControl
 
 const ReaderControls = (props: ReaderControlsProps) => {
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
-      <div className="hidden md:flex items-center flex-1 justify-center">
-        <ControlPanel {...props} />
-      </div>
-
-      <div className="md:hidden w-full flex justify-between items-center">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Menu className="h-4 w-4" />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <ControlPanel {...props} />
-          </DrawerContent>
-        </Drawer>
-        
+    <>
+      {/* Desktop bookmark button in top right corner */}
+      <div className="hidden md:block fixed top-4 right-16 z-50">
         <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
       </div>
 
-      <div className="hidden md:block">
-        <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+      <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
+        <div className="hidden md:flex items-center flex-1 justify-center">
+          <ControlPanel {...props} />
+        </div>
+
+        <div className="md:hidden w-full flex justify-between items-center">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <ControlPanel {...props} />
+            </DrawerContent>
+          </Drawer>
+          
+          {/* Mobile bookmark button remains in the original position */}
+          <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
