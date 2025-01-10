@@ -127,7 +127,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50" ref={readerContainerRef}>
+      <div className="min-h-screen bg-gray-50 relative" ref={readerContainerRef}>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
@@ -176,12 +176,12 @@ const Reader = ({ metadata }: ReaderProps) => {
                   variant="outline"
                   size="icon"
                   onClick={handleFullscreen}
-                  className="fixed bottom-4 right-4 z-50 h-8 w-8 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  className="fixed bottom-4 right-4 z-[9999] h-8 w-8 md:h-10 md:w-10 rounded-full shadow-lg bg-white/90 backdrop-blur-sm border border-gray-200 hover:bg-white/100"
                 >
                   {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
+                    <Minimize2 className="h-4 w-4 md:h-5 md:w-5" />
                   ) : (
-                    <Maximize2 className="h-4 w-4" />
+                    <Maximize2 className="h-4 w-4 md:h-5 md:w-5" />
                   )}
                 </Button>
                 <BookViewer
