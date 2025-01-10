@@ -37,11 +37,7 @@ const ControlPanel = ({
   onTextAlignChange,
   brightness,
   onBrightnessChange,
-  currentLocation,
-  onBookmarkClick
 }: ReaderControlsProps) => {
-  const isBookmarked = currentLocation && localStorage.getItem(`book-progress-${currentLocation}`);
-
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -108,20 +104,15 @@ const ControlPanel = ({
           className="w-32"
         />
       </div>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onBookmarkClick}
-        className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
-      >
-        <Bookmark className="h-4 w-4" />
-      </Button>
     </div>
   );
 };
 
 const ReaderControls = (props: ReaderControlsProps) => {
+  const isBookmarked = props.currentLocation ? 
+    localStorage.getItem(`book-progress-${props.currentLocation}`) !== null : 
+    true; // Default to true when no location is set yet
+
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
       {/* Desktop Controls */}
@@ -130,7 +121,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
       </div>
 
       {/* Mobile Controls */}
-      <div className="md:hidden w-full">
+      <div className="md:hidden w-full flex justify-between items-center">
         <Drawer>
           <DrawerTrigger asChild>
             <Button variant="outline" size="icon">
@@ -141,6 +132,35 @@ const ReaderControls = (props: ReaderControlsProps) => {
             <ControlPanel {...props} />
           </DrawerContent>
         </Drawer>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={isBookmarked ? props.onBookmarkClick : () => {
+            if (props.currentLocation) {
+              localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
+            }
+          }}
+          className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
+        >
+          <Bookmark className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Desktop Bookmark */}
+      <div className="hidden md:block">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={isBookmarked ? props.onBookmarkClick : () => {
+            if (props.currentLocation) {
+              localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
+            }
+          }}
+          className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
+        >
+          <Bookmark className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
