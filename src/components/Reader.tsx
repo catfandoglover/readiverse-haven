@@ -40,7 +40,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     pageInfo,
     setPageInfo,
     loadProgress,
-    handleLocationChange,
+    handleLocationChange: updateBookProgress,
     saveProgress
   } = useBookProgress();
 
@@ -96,10 +96,10 @@ const Reader = ({ metadata }: ReaderProps) => {
       const chapter = location.start.href ? book.spine.get(location.start.href)?.index || 'Unknown Chapter' : 'Unknown Chapter';
       const page = location.start.displayed?.page || 'Unknown Page';
       
-      localStorage.setItem(`chapter-${key}`, `Chapter ${chapter + 1}`);
+      localStorage.setItem(`chapter-${key}`, `Chapter ${(chapter as number) + 1}`);
       localStorage.setItem(`page-${key}`, `${page}`);
       
-      handleLocationChange(location);
+      updateBookProgress(location);
     }
   };
 
