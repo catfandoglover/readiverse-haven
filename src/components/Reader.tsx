@@ -11,8 +11,17 @@ import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useToast } from "./ui/use-toast";
+import { ChevronLeft, ChevronRight, Bookmark } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -20,7 +29,8 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
-  const { toast } = useToast();
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [hasAutoBookmark, setHasAutoBookmark] = useState(false);
   
   const {
     book,
@@ -48,10 +58,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     const handleBeforeUnload = () => {
       if (book && currentLocation) {
         saveProgress(currentLocation);
-        toast({
-          title: "Progress Saved",
-          description: "Your reading progress has been automatically saved.",
-        });
+        setHasAutoBookmark(true);
       }
     };
 
@@ -61,7 +68,19 @@ const Reader = ({ metadata }: ReaderProps) => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       handleBeforeUnload();
     };
-  }, [book, currentLocation, saveProgress, toast]);
+  }, [book, currentLocation, saveProgress]);
+
+  const handleBookmarkClick = () => {
+    if (hasAutoBookmark) {
+      setShowRemoveDialog(true);
+    }
+  };
+
+  const handleRemoveBookmark = () => {
+    setHasAutoBookmark(false);
+    localStorage.removeItem(`book-progress-${book?.key()}`);
+    setShowRemoveDialog(false);
+  };
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
@@ -97,10 +116,22 @@ const Reader = ({ metadata }: ReaderProps) => {
                 brightness={brightness}
                 onBrightnessChange={handleBrightnessChange}
               />
-              <ProgressTracker 
-                bookProgress={progress.book}
-                pageInfo={pageInfo}
-              />
+              <div className="flex items-center justify-between mb-4">
+                <ProgressTracker 
+                  bookProgress={progress.book}
+                  pageInfo={pageInfo}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBookmarkClick}
+                  className="ml-2"
+                >
+                  <Bookmark 
+                    className={`h-5 w-5 ${hasAutoBookmark ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
+                  />
+                </Button>
+              </div>
               <div className="relative">
                 <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
                   <Button 
@@ -147,6 +178,21 @@ const Reader = ({ metadata }: ReaderProps) => {
           )}
         </div>
       </div>
+
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Bookmark?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the bookmark from this page? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveBookmark}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ThemeProvider>
   );
 };
