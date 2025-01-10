@@ -11,7 +11,7 @@ import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,6 +145,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                 currentLocation={currentLocation}
                 onBookmarkClick={() => setShowBookmarkDialog(true)}
                 onLocationChange={handleLocationSelect}
+                isFullscreen={isFullscreen}
+                onFullscreenToggle={handleFullscreen}
               />
               
               <ProgressTracker 
@@ -172,18 +174,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleFullscreen}
-                  className="fixed bottom-4 right-4 z-[9999] h-8 w-8 md:h-10 md:w-10 rounded-full shadow-lg bg-white/90 backdrop-blur-sm border border-gray-200 hover:bg-white/100"
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4 md:h-5 md:w-5" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4 md:h-5 md:w-5" />
-                  )}
-                </Button>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}

@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark, Maximize2, Minimize2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -28,6 +28,8 @@ interface ReaderControlsProps {
   currentLocation: string | null;
   onBookmarkClick: () => void;
   onLocationChange?: (location: string) => void;
+  isFullscreen: boolean;
+  onFullscreenToggle: () => void;
 }
 
 const ControlPanel = ({
@@ -39,6 +41,8 @@ const ControlPanel = ({
   onTextAlignChange,
   brightness,
   onBrightnessChange,
+  isFullscreen,
+  onFullscreenToggle,
 }: ReaderControlsProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
@@ -106,87 +110,59 @@ const ControlPanel = ({
           className="w-32"
         />
       </div>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onFullscreenToggle}
+        className="h-8 w-8 rounded-full"
+      >
+        {isFullscreen ? (
+          <Minimize2 className="h-4 w-4" />
+        ) : (
+          <Maximize2 className="h-4 w-4" />
+        )}
+      </Button>
     </div>
-  );
-};
-
-const BookmarkButton = ({ currentLocation, onBookmarkClick }: Pick<ReaderControlsProps, 'currentLocation' | 'onBookmarkClick'>) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
-  useEffect(() => {
-    const checkBookmark = () => {
-      if (currentLocation) {
-        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
-        setIsBookmarked(bookmarkExists);
-      }
-    };
-
-    checkBookmark();
-    window.addEventListener('storage', checkBookmark);
-    return () => window.removeEventListener('storage', checkBookmark);
-  }, [currentLocation]);
-
-  const handleBookmarkClick = () => {
-    if (!currentLocation) return;
-
-    if (isBookmarked) {
-      onBookmarkClick(); // Show confirmation dialog for removal
-    } else {
-      localStorage.setItem(`book-progress-${currentLocation}`, currentLocation);
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={handleBookmarkClick}
-      className="text-red-500 hover:text-red-600"
-    >
-      <Bookmark 
-        className="h-4 w-4" 
-        fill={isBookmarked ? "currentColor" : "none"} 
-        stroke={isBookmarked ? "currentColor" : "currentColor"}
-      />
-    </Button>
   );
 };
 
 const ReaderControls = (props: ReaderControlsProps) => {
   return (
-    <>
-      {/* Desktop bookmark controls in top right corner */}
-      <div className="hidden md:flex fixed top-4 right-4 z-50 items-center gap-2">
-        <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
-        <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
+      <div className="hidden md:flex items-center flex-1 justify-center">
+        <ControlPanel {...props} />
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
-        <div className="hidden md:flex items-center flex-1 justify-center">
-          <ControlPanel {...props} />
-        </div>
-
-        <div className="md:hidden w-full flex justify-between items-center">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <ControlPanel {...props} />
-            </DrawerContent>
-          </Drawer>
-          
-          {/* Mobile bookmark controls */}
-          <div className="flex items-center gap-2">
-            <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
-            <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
-          </div>
+      <div className="md:hidden w-full flex justify-between items-center">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Menu className="h-4 w-4" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <ControlPanel {...props} />
+          </DrawerContent>
+        </Drawer>
+        
+        <div className="flex items-center gap-2">
+          <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={props.onFullscreenToggle}
+            className="h-8 w-8 rounded-full"
+          >
+            {props.isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
