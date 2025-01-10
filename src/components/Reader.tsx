@@ -11,7 +11,7 @@ import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const {
     book,
@@ -67,6 +68,39 @@ const Reader = ({ metadata }: ReaderProps) => {
       handleBeforeUnload();
     };
   }, [book, currentLocation, saveProgress]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        handleFullscreen();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
@@ -135,6 +169,20 @@ const Reader = ({ metadata }: ReaderProps) => {
                     className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
                   >
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
+                  </Button>
+                </div>
+                <div className="fixed bottom-4 right-4 z-10">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleFullscreen}
+                    className="h-8 w-8 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <BookViewer
