@@ -115,8 +115,10 @@ const ReaderControls = (props: ReaderControlsProps) => {
       const isCurrentlyBookmarked = localStorage.getItem(bookmarkKey) !== null;
       
       if (isCurrentlyBookmarked) {
-        props.onBookmarkClick(); // This will trigger the confirmation dialog
+        // If bookmark exists, show confirmation dialog
+        props.onBookmarkClick();
       } else {
+        // If no bookmark exists, add it immediately
         localStorage.setItem(bookmarkKey, props.currentLocation);
         window.dispatchEvent(new Event('storage'));
       }
