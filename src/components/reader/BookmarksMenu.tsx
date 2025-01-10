@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 interface BookmarksMenuProps {
   onBookmarkSelect: (cfi: string) => void;
@@ -64,19 +65,28 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 No bookmarks yet
               </p>
             ) : (
-              Object.entries(bookmarks).map(([key, cfi]) => (
-                <Button
-                  key={key}
-                  variant="ghost"
-                  className="w-full justify-start text-left"
-                  onClick={() => onBookmarkSelect(cfi)}
-                >
-                  <BookmarkIcon className="h-4 w-4 mr-2 text-red-500" />
-                  <span className="truncate">
-                    Bookmark {new Date(parseInt(key.split('-')[2])).toLocaleDateString()}
-                  </span>
-                </Button>
-              ))
+              Object.entries(bookmarks).map(([key, cfi]) => {
+                // Extract the timestamp from the key (format: book-progress-{timestamp})
+                const timestamp = key.split('-')[2];
+                const date = new Date(Number(timestamp));
+                const formattedDate = !isNaN(date.getTime()) 
+                  ? format(date, 'MMM d, yyyy h:mm a')
+                  : 'Unknown Date';
+
+                return (
+                  <Button
+                    key={key}
+                    variant="ghost"
+                    className="w-full justify-start text-left"
+                    onClick={() => onBookmarkSelect(cfi)}
+                  >
+                    <BookmarkIcon className="h-4 w-4 mr-2 text-red-500" />
+                    <span className="truncate">
+                      {formattedDate}
+                    </span>
+                  </Button>
+                );
+              })
             )}
           </div>
         </ScrollArea>
