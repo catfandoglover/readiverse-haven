@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { Rendition } from "epubjs";
 import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
@@ -12,6 +12,7 @@ import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useToast } from "./ui/use-toast";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -19,6 +20,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
+  const { toast } = useToast();
   
   const {
     book,
@@ -29,7 +31,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     pageInfo,
     setPageInfo,
     loadProgress,
-    handleLocationChange
+    handleLocationChange,
+    saveProgress
   } = useBookProgress();
 
   const { handleFileUpload } = useFileHandler(
@@ -40,6 +43,25 @@ const Reader = ({ metadata }: ReaderProps) => {
   );
 
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (book && currentLocation) {
+        saveProgress(currentLocation);
+        toast({
+          title: "Progress Saved",
+          description: "Your reading progress has been automatically saved.",
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleBeforeUnload();
+    };
+  }, [book, currentLocation, saveProgress, toast]);
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
