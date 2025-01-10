@@ -8,14 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, Menu, ScrollText, Book } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-
-type ReadingMode = 'scroll' | 'paginated';
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -26,8 +24,6 @@ interface ReaderControlsProps {
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   brightness: number;
   onBrightnessChange: (value: number[]) => void;
-  readingMode: ReadingMode;
-  onReadingModeChange: (value: ReadingMode) => void;
 }
 
 const ControlPanel = ({
@@ -38,9 +34,7 @@ const ControlPanel = ({
   textAlign,
   onTextAlignChange,
   brightness,
-  onBrightnessChange,
-  readingMode,
-  onReadingModeChange
+  onBrightnessChange
 }: ReaderControlsProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center gap-4 p-4">
@@ -95,28 +89,6 @@ const ControlPanel = ({
         >
           <AlignCenter className="h-4 w-4" />
         </Button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium whitespace-nowrap">Reading Mode</span>
-        <div className="flex gap-2">
-          <Button
-            variant={readingMode === 'scroll' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => onReadingModeChange('scroll')}
-            title="Scroll Mode"
-          >
-            <ScrollText className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={readingMode === 'paginated' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => onReadingModeChange('paginated')}
-            title="Page Mode"
-          >
-            <Book className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <div className="flex items-center gap-2">

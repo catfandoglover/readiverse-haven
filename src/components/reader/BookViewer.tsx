@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 
-type ReadingMode = 'scroll' | 'paginated';
-
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -12,7 +10,6 @@ interface BookViewerProps {
   fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
-  readingMode: ReadingMode;
 }
 
 const BookViewer = ({ 
@@ -22,8 +19,7 @@ const BookViewer = ({
   fontSize,
   fontFamily,
   textAlign = 'left',
-  onRenditionReady,
-  readingMode
+  onRenditionReady 
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -49,8 +45,8 @@ const BookViewer = ({
     const newRendition = book.renderTo(container, {
       width: "100%",
       height: "100%",
-      flow: readingMode === 'scroll' ? 'scrolled' : 'paginated',
-      spread: readingMode === 'paginated' && !isMobile ? "auto" : "none",
+      flow: "paginated",
+      spread: isMobile ? "none" : "auto",
       minSpreadWidth: 800,
     });
 
@@ -66,9 +62,9 @@ const BookViewer = ({
 
     newRendition.themes.default({
       body: {
-        "column-count": readingMode === 'paginated' && !isMobile ? "2" : "1",
-        "column-gap": readingMode === 'paginated' ? "2em" : "0",
-        "column-rule": readingMode === 'paginated' && !isMobile ? "1px solid #e5e7eb" : "none",
+        "column-count": isMobile ? "1" : "2",
+        "column-gap": "2em",
+        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
         padding: "1em",
         "text-align": textAlign,
         "font-family": getFontFamily(fontFamily),
@@ -87,7 +83,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, readingMode]);
+  }, [book, isMobile, textAlign, fontFamily, theme]);
 
   useEffect(() => {
     if (rendition) {
@@ -110,9 +106,7 @@ const BookViewer = ({
 
   return (
     <div 
-      className={`epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg ${
-        readingMode === 'scroll' ? 'overflow-y-auto' : 'overflow-hidden'
-      }`}
+      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
       style={{ 
         background: theme.background,
         color: theme.text,

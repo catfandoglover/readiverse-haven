@@ -13,14 +13,11 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type ReadingMode = 'scroll' | 'paginated';
-
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
   const [fontFamily, setFontFamily] = useState<'georgia' | 'helvetica' | 'times'>('georgia');
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
-  const [readingMode, setReadingMode] = useState<ReadingMode>('paginated');
   const [rendition, setRendition] = useState<Rendition | null>(null);
   
   const {
@@ -77,38 +74,32 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onTextAlignChange={setTextAlign}
                 brightness={brightness}
                 onBrightnessChange={handleBrightnessChange}
-                readingMode={readingMode}
-                onReadingModeChange={setReadingMode}
               />
               <ProgressTracker 
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
               />
               <div className="relative">
-                {readingMode === 'paginated' && (
-                  <>
-                    <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={handlePrevPage}
-                        className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                      >
-                        <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
-                      </Button>
-                    </div>
-                    <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={handleNextPage}
-                        className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                      >
-                        <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handlePrevPage}
+                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  >
+                    <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
+                  </Button>
+                </div>
+                <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleNextPage}
+                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  >
+                    <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
+                  </Button>
+                </div>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
@@ -117,7 +108,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                   fontFamily={fontFamily}
                   textAlign={textAlign}
                   onRenditionReady={handleRenditionReady}
-                  readingMode={readingMode}
                 />
               </div>
               <ThemeSwitcher />
