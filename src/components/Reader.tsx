@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Rendition } from "epubjs";
 import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
@@ -31,6 +31,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const readerContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     book,
@@ -126,7 +127,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50" ref={readerContainerRef}>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
@@ -171,20 +172,18 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
-                <div className="fixed bottom-4 right-4 z-10">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleFullscreen}
-                    className="h-8 w-8 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                  >
-                    {isFullscreen ? (
-                      <Minimize2 className="h-4 w-4" />
-                    ) : (
-                      <Maximize2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleFullscreen}
+                  className="fixed bottom-4 right-4 z-50 h-8 w-8 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
