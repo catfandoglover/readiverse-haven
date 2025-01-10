@@ -80,7 +80,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 pageInfo={pageInfo}
               />
               <div className="relative">
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10">
+                <div className="fixed md:absolute left-4 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-12 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
@@ -90,7 +90,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronLeft className="h-6 w-6" />
                   </Button>
                 </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10">
+                <div className="fixed md:absolute right-4 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-12 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
