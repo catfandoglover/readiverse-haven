@@ -90,6 +90,21 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
+  const handleLocationChange = (location: any) => {
+    if (book && currentLocation) {
+      const timestamp = Date.now();
+      const key = `book-progress-${timestamp}`;
+      const chapter = location.start.href ? book.spine.get(location.start.href)?.index || 'Unknown Chapter' : 'Unknown Chapter';
+      const page = location.start.displayed?.page || 'Unknown Page';
+      
+      localStorage.setItem(key, currentLocation);
+      localStorage.setItem(`chapter-${key}`, `Chapter ${chapter + 1}`);
+      localStorage.setItem(`page-${key}`, `${page}`);
+      
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">

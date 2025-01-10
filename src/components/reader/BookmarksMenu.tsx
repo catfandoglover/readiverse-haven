@@ -66,9 +66,8 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
               </p>
             ) : (
               Object.entries(bookmarks).map(([key, cfi]) => {
-                // Extract the timestamp from the key (format: book-progress-{timestamp})
-                const timestamp = key.split('-')[2];
-                const date = new Date(Number(timestamp));
+                const timestamp = parseInt(key.split('-').pop() || '0', 10);
+                const date = new Date(timestamp);
                 const formattedDate = !isNaN(date.getTime()) 
                   ? format(date, 'MMM d, yyyy h:mm a')
                   : 'Unknown Date';
