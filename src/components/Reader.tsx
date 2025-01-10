@@ -40,7 +40,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     pageInfo,
     setPageInfo,
     loadProgress,
-    handleLocationChange,
+    handleLocationChange: handleProgressChange,
     saveProgress
   } = useBookProgress();
 
@@ -94,14 +94,16 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (book && currentLocation) {
       const timestamp = Date.now();
       const key = `book-progress-${timestamp}`;
-      const chapter = location.start.href ? book.spine.get(location.start.href)?.index || 'Unknown Chapter' : 'Unknown Chapter';
+      const chapterIndex = location.start.href ? book.spine.get(location.start.href)?.index : null;
+      const chapter = typeof chapterIndex === 'number' ? chapterIndex + 1 : 'Unknown Chapter';
       const page = location.start.displayed?.page || 'Unknown Page';
       
       localStorage.setItem(key, currentLocation);
-      localStorage.setItem(`chapter-${key}`, `Chapter ${chapter + 1}`);
+      localStorage.setItem(`chapter-${key}`, `Chapter ${chapter}`);
       localStorage.setItem(`page-${key}`, `${page}`);
       
       window.dispatchEvent(new Event('storage'));
+      handleProgressChange(location);
     }
   };
 
