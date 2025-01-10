@@ -44,8 +44,8 @@ const BookViewer = ({
       try {
         // Wait for the book to be fully loaded
         await book.ready;
-        // Wait for the packaging metadata to be loaded
-        await book.loaded.packaging;
+        // Wait for the metadata to be loaded
+        await book.loaded.metadata;
         // Wait for the spine to be loaded
         await book.loaded.spine;
         setIsBookReady(true);
