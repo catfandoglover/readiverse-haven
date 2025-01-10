@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
 
 interface BookmarksMenuProps {
   onBookmarkSelect: (cfi: string) => void;
@@ -38,16 +37,6 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
     return () => window.removeEventListener('storage', loadBookmarks);
   }, []);
 
-  const getBookmarkInfo = (key: string) => {
-    const timestamp = parseInt(key.split('-')[2]);
-    const date = new Date(timestamp);
-    return {
-      date: format(date, 'MMM d, yyyy h:mm a'),
-      chapter: localStorage.getItem(`chapter-${key}`) || 'Unknown Chapter',
-      page: localStorage.getItem(`page-${key}`) || 'Unknown Page'
-    };
-  };
-
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -75,29 +64,19 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 No bookmarks yet
               </p>
             ) : (
-              Object.entries(bookmarks).map(([key, cfi]) => {
-                const info = getBookmarkInfo(key);
-                return (
-                  <Button
-                    key={key}
-                    variant="ghost"
-                    className="w-full justify-start text-left flex-col items-start"
-                    onClick={() => onBookmarkSelect(cfi)}
-                  >
-                    <div className="flex items-center w-full">
-                      <BookmarkIcon className="h-4 w-4 mr-2 text-red-500 flex-shrink-0" />
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="truncate font-medium">
-                          {info.chapter}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Page {info.page} • {info.date}
-                        </span>
-                      </div>
-                    </div>
-                  </Button>
-                );
-              })
+              Object.entries(bookmarks).map(([key, cfi]) => (
+                <Button
+                  key={key}
+                  variant="ghost"
+                  className="w-full justify-start text-left"
+                  onClick={() => onBookmarkSelect(cfi)}
+                >
+                  <BookmarkIcon className="h-4 w-4 mr-2 text-red-500" />
+                  <span className="truncate">
+                    Bookmark {new Date(parseInt(key.split('-')[2])).toLocaleDateString()}
+                  </span>
+                </Button>
+              ))
             )}
           </div>
         </ScrollArea>

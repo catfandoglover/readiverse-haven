@@ -40,7 +40,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     pageInfo,
     setPageInfo,
     loadProgress,
-    handleLocationChange: updateBookProgress,
+    handleLocationChange,
     saveProgress
   } = useBookProgress();
 
@@ -87,19 +87,6 @@ const Reader = ({ metadata }: ReaderProps) => {
   const handleLocationSelect = (location: string) => {
     if (rendition) {
       rendition.display(location);
-    }
-  };
-
-  const handleLocationChange = (location: any) => {
-    if (book && currentLocation) {
-      const key = `book-progress-${currentLocation}`;
-      const chapter = location.start.href ? book.spine.get(location.start.href)?.index || 'Unknown Chapter' : 'Unknown Chapter';
-      const page = location.start.displayed?.page || 'Unknown Page';
-      
-      localStorage.setItem(`chapter-${key}`, `Chapter ${(chapter as number) + 1}`);
-      localStorage.setItem(`page-${key}`, `${page}`);
-      
-      updateBookProgress(location);
     }
   };
 
@@ -185,8 +172,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <AlertDialogAction onClick={() => {
                       if (currentLocation) {
                         localStorage.removeItem(`book-progress-${currentLocation}`);
-                        localStorage.removeItem(`chapter-book-progress-${currentLocation}`);
-                        localStorage.removeItem(`page-book-progress-${currentLocation}`);
                         window.dispatchEvent(new Event('storage'));
                       }
                       setShowBookmarkDialog(false);
