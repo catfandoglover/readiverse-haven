@@ -42,7 +42,12 @@ const BookViewer = ({
 
     const initializeBook = async () => {
       try {
+        // Wait for the book to be fully loaded
         await book.ready;
+        // Wait for the package to be loaded
+        await book.loaded.package;
+        // Wait for the spine to be loaded
+        await book.loaded.spine;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
@@ -52,6 +57,10 @@ const BookViewer = ({
 
     setIsBookReady(false);
     initializeBook();
+
+    return () => {
+      setIsBookReady(false);
+    };
   }, [book]);
 
   // Setup rendition
@@ -76,12 +85,8 @@ const BookViewer = ({
     // Initialize rendition
     const initializeRendition = async () => {
       try {
-        if (currentLocation) {
-          await newRendition.display(currentLocation);
-        } else {
-          await newRendition.display();
-        }
-
+        await newRendition.display(currentLocation || undefined);
+        
         newRendition.on("relocated", (location: any) => {
           if (!isNavigating) {
             onLocationChange(location);
@@ -118,7 +123,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, currentLocation]);
+  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, currentLocation, onRenditionReady]);
 
   // Handle font size changes
   useEffect(() => {
