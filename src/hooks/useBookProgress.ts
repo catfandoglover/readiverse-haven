@@ -13,29 +13,25 @@ export const useBookProgress = () => {
   });
 
   const saveProgress = (cfi: string) => {
-    if (!book || !book.packaging || !book.packaging.metadata) return;
-    const key = `book-progress-${book.packaging.metadata.identifier || 'default'}`;
-    localStorage.setItem(key, cfi);
+    if (!book) return;
+    localStorage.setItem(`book-progress-${book.key()}`, cfi);
   };
 
   const loadProgress = () => {
-    if (!book || !book.packaging || !book.packaging.metadata) return null;
-    const key = `book-progress-${book.packaging.metadata.identifier || 'default'}`;
-    return localStorage.getItem(key);
+    if (!book) return null;
+    return localStorage.getItem(`book-progress-${book.key()}`);
   };
 
   const handleLocationChange = (location: any) => {
-    if (!location?.start?.cfi || !book) return;
-    
     const cfi = location.start.cfi;
     setCurrentLocation(cfi);
     saveProgress(cfi);
 
+    if (!book) return;
+
     // Get current spine item (chapter)
     const currentSpineItem = book.spine.get(location.start.cfi);
     const spineItems = (book.spine as any).spineItems;
-    if (!spineItems) return;
-    
     const spineIndex = spineItems.indexOf(currentSpineItem);
     const totalSpineItems = spineItems.length;
 

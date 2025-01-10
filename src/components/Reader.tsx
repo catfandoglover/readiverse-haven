@@ -53,7 +53,6 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
 
-  // Save progress when leaving the app
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (book && currentLocation) {
@@ -61,33 +60,13 @@ const Reader = ({ metadata }: ReaderProps) => {
       }
     };
 
-    // Also handle when the app loses focus or visibility
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && book && currentLocation) {
-        saveProgress(currentLocation);
-      }
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       handleBeforeUnload();
     };
   }, [book, currentLocation, saveProgress]);
-
-  // Load last position when book is loaded
-  useEffect(() => {
-    if (book && rendition) {
-      const lastPosition = loadProgress();
-      if (lastPosition) {
-        rendition.display(lastPosition);
-        setCurrentLocation(lastPosition);
-      }
-    }
-  }, [book, rendition, loadProgress, setCurrentLocation]);
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);

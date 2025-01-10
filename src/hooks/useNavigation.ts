@@ -1,37 +1,31 @@
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import type { Rendition } from "epubjs";
 
 export const useNavigation = (rendition: Rendition | null) => {
-  const handlePrevPage = useCallback(async () => {
-    if (!rendition) return;
-    try {
-      await rendition.prev();
-    } catch (error) {
-      console.error('Error navigating to previous page:', error);
+  const handlePrevPage = () => {
+    if (rendition) {
+      rendition.prev();
     }
-  }, [rendition]);
+  };
 
-  const handleNextPage = useCallback(async () => {
-    if (!rendition) return;
-    try {
-      await rendition.next();
-    } catch (error) {
-      console.error('Error navigating to next page:', error);
+  const handleNextPage = () => {
+    if (rendition) {
+      rendition.next();
     }
-  }, [rendition]);
+  };
 
   useEffect(() => {
-    const handleKeyPress = async (e: KeyboardEvent) => {
+    const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
-        await handlePrevPage();
+        handlePrevPage();
       } else if (e.key === "ArrowRight") {
-        await handleNextPage();
+        handleNextPage();
       }
     };
 
     window.addEventListener("keyup", handleKeyPress);
     return () => window.removeEventListener("keyup", handleKeyPress);
-  }, [handlePrevPage, handleNextPage]);
+  }, [rendition]);
 
   return {
     handlePrevPage,

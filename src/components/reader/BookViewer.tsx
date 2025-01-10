@@ -23,8 +23,6 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const [isBookReady, setIsBookReady] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -36,54 +34,9 @@ const BookViewer = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Initialize book
   useEffect(() => {
-    if (!book) return;
-
-    const initializeBook = async () => {
-      try {
-        // First, ensure the book is ready
-        await book.ready;
-        
-        // Wait for the book to be opened
-        await book.opened;
-        
-        // Then load all necessary book components sequentially
-        await Promise.all([
-          book.loaded.metadata,
-          book.loaded.spine,
-          book.loaded.manifest,
-          book.loaded.cover,
-          book.loaded.resources,
-          book.loaded.navigation
-        ]);
-
-        // Generate locations if needed
-        if (!book.locations.length()) {
-          await book.locations.generate(1024);
-        }
-
-        setIsBookReady(true);
-      } catch (error) {
-        console.error('Error initializing book:', error);
-        setIsBookReady(false);
-      }
-    };
-
-    setIsBookReady(false);
-    initializeBook();
-
-    return () => {
-      setIsBookReady(false);
-    };
-  }, [book]);
-
-  // Setup rendition
-  useEffect(() => {
-    if (!isBookReady || !book) return;
-
     const container = document.querySelector(".epub-view");
-    if (!container) return;
+    if (!container || !book) return;
 
     if (rendition) {
       rendition.destroy();
@@ -97,29 +50,16 @@ const BookViewer = ({
       minSpreadWidth: 800,
     });
 
-    // Initialize rendition
-    const initializeRendition = async () => {
-      try {
-        await newRendition.display(currentLocation || undefined);
-        
-        newRendition.on("relocated", (location: any) => {
-          if (!isNavigating) {
-            onLocationChange(location);
-          }
-        });
+    if (currentLocation) {
+      newRendition.display(currentLocation);
+    } else {
+      newRendition.display();
+    }
 
-        setRendition(newRendition);
-        if (onRenditionReady) {
-          onRenditionReady(newRendition);
-        }
-      } catch (error) {
-        console.error('Error initializing rendition:', error);
-      }
-    };
+    newRendition.on("relocated", (location: any) => {
+      onLocationChange(location);
+    });
 
-    initializeRendition();
-
-    // Apply theme and styles
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -133,14 +73,18 @@ const BookViewer = ({
       }
     });
 
+    setRendition(newRendition);
+    if (onRenditionReady) {
+      onRenditionReady(newRendition);
+    }
+
     return () => {
       if (newRendition) {
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, currentLocation, onRenditionReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme]);
 
-  // Handle font size changes
   useEffect(() => {
     if (rendition) {
       rendition.themes.fontSize(`${fontSize}%`);
