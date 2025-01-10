@@ -7,6 +7,7 @@ interface BookViewerProps {
   currentLocation: string | null;
   onLocationChange: (location: any) => void;
   fontSize: number;
+  fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
 }
@@ -16,6 +17,7 @@ const BookViewer = ({
   currentLocation, 
   onLocationChange, 
   fontSize,
+  fontFamily,
   textAlign = 'left',
   onRenditionReady 
 }: BookViewerProps) => {
@@ -65,6 +67,7 @@ const BookViewer = ({
         "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
         padding: "1em",
         "text-align": textAlign,
+        "font-family": getFontFamily(fontFamily),
         color: theme.text,
         background: theme.background,
       }
@@ -80,13 +83,26 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, theme]);
+  }, [book, isMobile, textAlign, fontFamily, theme]);
 
   useEffect(() => {
     if (rendition) {
       rendition.themes.fontSize(`${fontSize}%`);
     }
   }, [fontSize, rendition]);
+
+  const getFontFamily = (font: 'georgia' | 'helvetica' | 'times') => {
+    switch (font) {
+      case 'georgia':
+        return 'Georgia, serif';
+      case 'helvetica':
+        return 'Helvetica, Arial, sans-serif';
+      case 'times':
+        return 'Times New Roman, serif';
+      default:
+        return 'Georgia, serif';
+    }
+  };
 
   return (
     <div 

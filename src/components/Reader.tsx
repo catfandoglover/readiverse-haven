@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
+  const [fontFamily, setFontFamily] = useState<'georgia' | 'helvetica' | 'times'>('georgia');
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
@@ -38,6 +39,10 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
 
+  const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
+    setFontFamily(value);
+  };
+
   const handleFontSizeChange = (value: number[]) => {
     setFontSize(value[0]);
   };
@@ -61,6 +66,8 @@ const Reader = ({ metadata }: ReaderProps) => {
               <ReaderControls
                 fontSize={fontSize}
                 onFontSizeChange={handleFontSizeChange}
+                fontFamily={fontFamily}
+                onFontFamilyChange={handleFontFamilyChange}
                 onPrevPage={handlePrevPage}
                 onNextPage={handleNextPage}
                 coverUrl={metadata?.coverUrl}
@@ -78,6 +85,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 currentLocation={currentLocation}
                 onLocationChange={handleLocationChange}
                 fontSize={fontSize}
+                fontFamily={fontFamily}
                 textAlign={textAlign}
                 onRenditionReady={handleRenditionReady}
               />

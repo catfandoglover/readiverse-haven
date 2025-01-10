@@ -1,141 +1,120 @@
-import { ChevronLeft, ChevronRight, BookOpen, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignJustify, Sun } from "lucide-react";
-import { Button } from "../ui/button";
-import { Slider } from "../ui/slider";
-import { useState, useEffect } from "react";
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-} from "../ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ReaderControlsProps {
   fontSize: number;
   onFontSizeChange: (value: number[]) => void;
+  fontFamily: 'georgia' | 'helvetica' | 'times';
+  onFontFamilyChange: (value: 'georgia' | 'helvetica' | 'times') => void;
   onPrevPage: () => void;
   onNextPage: () => void;
   coverUrl?: string;
-  textAlign?: 'left' | 'justify' | 'center';
-  onTextAlignChange?: (align: 'left' | 'justify' | 'center') => void;
-  brightness?: number;
-  onBrightnessChange?: (value: number[]) => void;
+  textAlign: 'left' | 'justify' | 'center';
+  onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
+  brightness: number;
+  onBrightnessChange: (value: number[]) => void;
 }
 
 const ReaderControls = ({
   fontSize,
   onFontSizeChange,
+  fontFamily,
+  onFontFamilyChange,
   onPrevPage,
   onNextPage,
   coverUrl,
-  textAlign = 'left',
+  textAlign,
   onTextAlignChange,
-  brightness = 1,
-  onBrightnessChange,
+  brightness,
+  onBrightnessChange
 }: ReaderControlsProps) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const handleFullscreen = async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    } catch (err) {
-      console.error("Error toggling fullscreen:", err);
-    }
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "F11") {
-        e.preventDefault();
-        handleFullscreen();
-      }
-    };
-
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
-
   return (
-    <div className="mb-4 flex items-center justify-between">
-      <div className="flex gap-2">
-        <Button variant="outline" size="icon" onClick={onPrevPage}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="icon" onClick={onNextPage}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
+      <div className="flex items-center gap-2">
         {coverUrl && (
-          <Button variant="outline" size="icon" asChild>
-            <a href={coverUrl} target="_blank" rel="noopener noreferrer">
-              <BookOpen className="h-4 w-4" />
-            </a>
-          </Button>
+          <img src={coverUrl} alt="Book cover" className="w-12 h-16 object-cover rounded" />
         )}
-        <Button variant="outline" size="icon" onClick={handleFullscreen}>
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              {textAlign === 'left' && <AlignLeft className="h-4 w-4" />}
-              {textAlign === 'center' && <AlignCenter className="h-4 w-4" />}
-              {textAlign === 'justify' && <AlignJustify className="h-4 w-4" />}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => onTextAlignChange?.('left')}>
-              <AlignLeft className="mr-2 h-4 w-4" />
-              Left
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTextAlignChange?.('center')}>
-              <AlignCenter className="mr-2 h-4 w-4" />
-              Center
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTextAlignChange?.('justify')}>
-              <AlignJustify className="mr-2 h-4 w-4" />
-              Justify
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={onPrevPage}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={onNextPage}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+      
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Sun className="h-4 w-4 text-gray-500" />
-          <Slider
-            value={[brightness]}
-            onValueChange={onBrightnessChange}
-            min={0.2}
-            max={1}
-            step={0.1}
-            className="w-24"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Font Size</span>
+          <span className="text-sm font-medium">Font Size</span>
           <Slider
             value={[fontSize]}
             onValueChange={onFontSizeChange}
             min={50}
             max={200}
             step={10}
+            className="w-32"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Font</span>
+          <Select
+            value={fontFamily}
+            onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="georgia">Georgia</SelectItem>
+              <SelectItem value="helvetica">Helvetica</SelectItem>
+              <SelectItem value="times">Times New Roman</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant={textAlign === 'left' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('left')}
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'justify' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('justify')}
+          >
+            <AlignJustify className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'center' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('center')}
+          >
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Brightness</span>
+          <Slider
+            value={[brightness]}
+            onValueChange={onBrightnessChange}
+            min={0.2}
+            max={1}
+            step={0.1}
             className="w-32"
           />
         </div>

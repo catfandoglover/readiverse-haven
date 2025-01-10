@@ -18,6 +18,11 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				georgia: ['Georgia', 'serif'],
+				helvetica: ['Helvetica', 'Arial', 'sans-serif'],
+				times: ['Times New Roman', 'serif']
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
