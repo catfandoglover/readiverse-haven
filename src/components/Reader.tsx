@@ -13,12 +13,25 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface Margins {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
   const [fontFamily, setFontFamily] = useState<'georgia' | 'helvetica' | 'times'>('georgia');
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [lineHeight, setLineHeight] = useState(1.5);
+  const [margins, setMargins] = useState<Margins>({
+    top: 20,
+    right: 40,
+    bottom: 20,
+    left: 40
+  });
   const [rendition, setRendition] = useState<Rendition | null>(null);
   
   const {
@@ -58,6 +71,13 @@ const Reader = ({ metadata }: ReaderProps) => {
     setLineHeight(value[0]);
   };
 
+  const handleMarginsChange = (type: keyof Margins, value: number[]) => {
+    setMargins(prev => ({
+      ...prev,
+      [type]: value[0]
+    }));
+  };
+
   const handleRenditionReady = (newRendition: Rendition) => {
     setRendition(newRendition);
   };
@@ -81,6 +101,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onBrightnessChange={handleBrightnessChange}
                 lineHeight={lineHeight}
                 onLineHeightChange={handleLineHeightChange}
+                margins={margins}
+                onMarginsChange={handleMarginsChange}
               />
               <ProgressTracker 
                 bookProgress={progress.book}
@@ -115,6 +137,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   fontFamily={fontFamily}
                   textAlign={textAlign}
                   lineHeight={lineHeight}
+                  margins={margins}
                   onRenditionReady={handleRenditionReady}
                 />
               </div>

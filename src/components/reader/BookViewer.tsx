@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 
+interface Margins {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -10,6 +17,7 @@ interface BookViewerProps {
   fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   lineHeight: number;
+  margins: Margins;
   onRenditionReady?: (rendition: Rendition) => void;
 }
 
@@ -21,6 +29,7 @@ const BookViewer = ({
   fontFamily,
   textAlign = 'left',
   lineHeight,
+  margins,
   onRenditionReady 
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
@@ -67,7 +76,7 @@ const BookViewer = ({
         "column-count": isMobile ? "1" : "2",
         "column-gap": "2em",
         "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-        padding: "1em",
+        padding: `${margins.top}px ${margins.right}px ${margins.bottom}px ${margins.left}px`,
         "text-align": textAlign,
         "font-family": getFontFamily(fontFamily),
         "line-height": lineHeight,
@@ -86,7 +95,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, lineHeight, theme]);
+  }, [book, isMobile, textAlign, fontFamily, lineHeight, margins, theme]);
 
   useEffect(() => {
     if (rendition) {
