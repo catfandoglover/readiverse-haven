@@ -10,6 +10,8 @@ import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { Button } from "./ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -68,9 +70,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onFontSizeChange={handleFontSizeChange}
                 fontFamily={fontFamily}
                 onFontFamilyChange={handleFontFamilyChange}
-                onPrevPage={handlePrevPage}
-                onNextPage={handleNextPage}
-                coverUrl={metadata?.coverUrl}
                 textAlign={textAlign}
                 onTextAlignChange={setTextAlign}
                 brightness={brightness}
@@ -80,15 +79,37 @@ const Reader = ({ metadata }: ReaderProps) => {
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
               />
-              <BookViewer
-                book={book}
-                currentLocation={currentLocation}
-                onLocationChange={handleLocationChange}
-                fontSize={fontSize}
-                fontFamily={fontFamily}
-                textAlign={textAlign}
-                onRenditionReady={handleRenditionReady}
-              />
+              <div className="relative">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handlePrevPage}
+                    className="h-12 w-12 rounded-full shadow-lg bg-background/80 backdrop-blur-sm"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                </div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleNextPage}
+                    className="h-12 w-12 rounded-full shadow-lg bg-background/80 backdrop-blur-sm"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+                </div>
+                <BookViewer
+                  book={book}
+                  currentLocation={currentLocation}
+                  onLocationChange={handleLocationChange}
+                  fontSize={fontSize}
+                  fontFamily={fontFamily}
+                  textAlign={textAlign}
+                  onRenditionReady={handleRenditionReady}
+                />
+              </div>
               <ThemeSwitcher />
               <div 
                 style={{ 

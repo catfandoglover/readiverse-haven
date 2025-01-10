@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -20,9 +20,6 @@ interface ReaderControlsProps {
   onFontSizeChange: (value: number[]) => void;
   fontFamily: 'georgia' | 'helvetica' | 'times';
   onFontFamilyChange: (value: 'georgia' | 'helvetica' | 'times') => void;
-  onPrevPage: () => void;
-  onNextPage: () => void;
-  coverUrl?: string;
   textAlign: 'left' | 'justify' | 'center';
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   brightness: number;
@@ -38,7 +35,7 @@ const ControlPanel = ({
   onTextAlignChange,
   brightness,
   onBrightnessChange
-}: Omit<ReaderControlsProps, 'onPrevPage' | 'onNextPage' | 'coverUrl'>) => {
+}: ReaderControlsProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -109,48 +106,16 @@ const ControlPanel = ({
   );
 };
 
-const ReaderControls = ({
-  fontSize,
-  onFontSizeChange,
-  fontFamily,
-  onFontFamilyChange,
-  onPrevPage,
-  onNextPage,
-  coverUrl,
-  textAlign,
-  onTextAlignChange,
-  brightness,
-  onBrightnessChange
-}: ReaderControlsProps) => {
+const ReaderControls = (props: ReaderControlsProps) => {
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
-      <div className="flex items-center gap-2">
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={onPrevPage}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={onNextPage}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Desktop Controls */}
-      <div className="hidden md:flex items-center">
-        <ControlPanel
-          fontSize={fontSize}
-          onFontSizeChange={onFontSizeChange}
-          fontFamily={fontFamily}
-          onFontFamilyChange={onFontFamilyChange}
-          textAlign={textAlign}
-          onTextAlignChange={onTextAlignChange}
-          brightness={brightness}
-          onBrightnessChange={onBrightnessChange}
-        />
+      <div className="hidden md:flex items-center flex-1 justify-center">
+        <ControlPanel {...props} />
       </div>
 
       {/* Mobile Controls */}
-      <div className="md:hidden">
+      <div className="md:hidden w-full">
         <Drawer>
           <DrawerTrigger asChild>
             <Button variant="outline" size="icon">
@@ -158,16 +123,7 @@ const ReaderControls = ({
             </Button>
           </DrawerTrigger>
           <DrawerContent>
-            <ControlPanel
-              fontSize={fontSize}
-              onFontSizeChange={onFontSizeChange}
-              fontFamily={fontFamily}
-              onFontFamilyChange={onFontFamilyChange}
-              textAlign={textAlign}
-              onTextAlignChange={onTextAlignChange}
-              brightness={brightness}
-              onBrightnessChange={onBrightnessChange}
-            />
+            <ControlPanel {...props} />
           </DrawerContent>
         </Drawer>
       </div>
