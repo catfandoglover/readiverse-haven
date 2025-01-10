@@ -136,9 +136,12 @@ const ReaderControls = ({
                 target.style.display = 'none';
                 const parent = target.parentElement;
                 if (parent) {
-                  const fallbackIcon = document.createElement('div');
-                  fallbackIcon.innerHTML = '<BookOpen class="h-4 w-4 text-gray-400" />';
-                  parent.appendChild(fallbackIcon);
+                  const BookOpenIcon = document.createElement('div');
+                  parent.appendChild(BookOpenIcon);
+                  const icon = React.createElement(BookOpen, { 
+                    className: "h-4 w-4 text-gray-400" 
+                  });
+                  React.render(icon, BookOpenIcon);
                 }
               }}
             />
