@@ -23,6 +23,7 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [isBookReady, setIsBookReady] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -35,6 +36,23 @@ const BookViewer = ({
   }, []);
 
   useEffect(() => {
+    if (!book) return;
+
+    const initializeBook = async () => {
+      try {
+        await book.ready;
+        setIsBookReady(true);
+      } catch (error) {
+        console.error('Error initializing book:', error);
+      }
+    };
+
+    initializeBook();
+  }, [book]);
+
+  useEffect(() => {
+    if (!isBookReady) return;
+
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
@@ -83,7 +101,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme]);
+  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady]);
 
   useEffect(() => {
     if (rendition) {
