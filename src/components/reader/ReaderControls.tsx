@@ -44,6 +44,7 @@ const ControlPanel = ({
   onBrightnessChange,
   isFullscreen,
   onFullscreenToggle,
+  onLocationChange,
 }: ReaderControlsProps) => {
   const isMobile = useIsMobile();
 
@@ -118,20 +119,23 @@ const ControlPanel = ({
         </div>
       </div>
 
-      {(isMobile || !isMobile) && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onFullscreenToggle}
-          className="h-8 w-8 rounded-full"
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </Button>
-      )}
+      <div className="flex items-center gap-4">
+        {isMobile && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onFullscreenToggle}
+            className="h-8 w-8 rounded-full"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+        {onLocationChange && <BookmarksMenu onBookmarkSelect={onLocationChange} />}
+      </div>
     </div>
   );
 };
