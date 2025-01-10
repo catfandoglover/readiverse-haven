@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -108,28 +108,34 @@ const ControlPanel = ({
   );
 };
 
-const ReaderControls = (props: ReaderControlsProps) => {
-  const handleBookmarkClick = () => {
-    if (props.currentLocation) {
-      const bookmarkKey = `book-progress-${props.currentLocation}`;
-      const isCurrentlyBookmarked = localStorage.getItem(bookmarkKey) !== null;
-      
-      if (isCurrentlyBookmarked) {
-        // If bookmark exists, show confirmation dialog
-        props.onBookmarkClick();
-      } else {
-        // If no bookmark exists, add it immediately
-        localStorage.setItem(bookmarkKey, props.currentLocation);
-        window.dispatchEvent(new Event('storage'));
+const BookmarkButton = ({ currentLocation, onBookmarkClick }: Pick<ReaderControlsProps, 'currentLocation' | 'onBookmarkClick'>) => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    const checkBookmark = () => {
+      if (currentLocation) {
+        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
+        setIsBookmarked(bookmarkExists);
       }
+    };
+
+    checkBookmark();
+    window.addEventListener('storage', checkBookmark);
+    return () => window.removeEventListener('storage', checkBookmark);
+  }, [currentLocation]);
+
+  const handleBookmarkClick = () => {
+    if (!currentLocation) return;
+
+    if (isBookmarked) {
+      onBookmarkClick(); // Show confirmation dialog for removal
+    } else {
+      localStorage.setItem(`book-progress-${currentLocation}`, currentLocation);
+      window.dispatchEvent(new Event('storage'));
     }
   };
 
-  const isBookmarked = props.currentLocation ? 
-    localStorage.getItem(`book-progress-${props.currentLocation}`) !== null : 
-    false;
-
-  const BookmarkButton = () => (
+  return (
     <Button
       variant="ghost"
       size="icon"
@@ -143,7 +149,9 @@ const ReaderControls = (props: ReaderControlsProps) => {
       />
     </Button>
   );
+};
 
+const ReaderControls = (props: ReaderControlsProps) => {
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
       <div className="hidden md:flex items-center flex-1 justify-center">
@@ -162,11 +170,11 @@ const ReaderControls = (props: ReaderControlsProps) => {
           </DrawerContent>
         </Drawer>
         
-        <BookmarkButton />
+        <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
       </div>
 
       <div className="hidden md:block">
-        <BookmarkButton />
+        <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
       </div>
     </div>
   );
