@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -40,9 +40,27 @@ const ReaderControls = ({
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
       <div className="flex items-center gap-2">
-        {coverUrl && (
-          <img src={coverUrl} alt="Book cover" className="w-12 h-16 object-cover rounded" />
-        )}
+        <div className="w-12 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+          {coverUrl ? (
+            <img 
+              src={coverUrl} 
+              alt="Book cover" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  const fallbackIcon = document.createElement('div');
+                  fallbackIcon.innerHTML = '<div class="text-gray-400"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></div>';
+                  parent.appendChild(fallbackIcon);
+                }
+              }}
+            />
+          ) : (
+            <BookOpen className="w-6 h-6 text-gray-400" />
+          )}
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={onPrevPage}>
             <ChevronLeft className="h-4 w-4" />
