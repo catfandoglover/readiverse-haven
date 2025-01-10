@@ -40,9 +40,9 @@ const ControlPanel = ({
   onBrightnessChange
 }: Omit<ReaderControlsProps, 'onPrevPage' | 'onNextPage' | 'coverUrl'>) => {
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col md:flex-row items-center gap-4 p-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Font Size</span>
+        <span className="text-sm font-medium whitespace-nowrap">Font Size</span>
         <Slider
           value={[fontSize]}
           onValueChange={onFontSizeChange}
@@ -95,7 +95,7 @@ const ControlPanel = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Brightness</span>
+        <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
         <Slider
           value={[brightness]}
           onValueChange={onBrightnessChange}
@@ -136,7 +136,7 @@ const ReaderControls = ({
       </div>
 
       {/* Desktop Controls */}
-      <div className="hidden md:flex items-center gap-4">
+      <div className="hidden md:flex items-center">
         <ControlPanel
           fontSize={fontSize}
           onFontSizeChange={onFontSizeChange}
