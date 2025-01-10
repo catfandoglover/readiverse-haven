@@ -155,7 +155,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
   return (
     <>
       {/* Desktop bookmark button in top right corner */}
-      <div className="hidden md:block fixed top-4 right-16 z-50">
+      <div className="hidden md:block fixed top-4 right-4 z-50">
         <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
       </div>
 
