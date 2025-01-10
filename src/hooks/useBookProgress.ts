@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Book } from "epubjs";
-import { useToast } from "@/components/ui/use-toast";
 
 export const useBookProgress = () => {
   const [book, setBook] = useState<Book | null>(null);
@@ -12,7 +11,6 @@ export const useBookProgress = () => {
     chapterCurrent: 1,
     chapterTotal: 0
   });
-  const { toast } = useToast();
 
   const saveProgress = (cfi: string) => {
     if (!book) return;
@@ -48,19 +46,14 @@ export const useBookProgress = () => {
 
     // Calculate chapter pages based on the rendition's layout
     if (currentSpineItem && location.start.displayed) {
-      const rendition = (book as any).rendition;
-      if (rendition && rendition.manager) {
-        // Get the total number of spreads (pages) in the current chapter
-        const totalPages = location.start.displayed.total || 1;
-        // Get the current page number within the chapter
-        const currentPage = location.start.displayed.page || 1;
+      const totalPages = location.start.displayed.total || 1;
+      const currentPage = location.start.displayed.page || 1;
 
-        setPageInfo(prev => ({
-          ...prev,
-          chapterCurrent: currentPage,
-          chapterTotal: totalPages
-        }));
-      }
+      setPageInfo(prev => ({
+        ...prev,
+        chapterCurrent: currentPage,
+        chapterTotal: totalPages
+      }));
     }
   };
 
@@ -73,6 +66,7 @@ export const useBookProgress = () => {
     pageInfo,
     setPageInfo,
     loadProgress,
-    handleLocationChange
+    handleLocationChange,
+    saveProgress
   };
 };
