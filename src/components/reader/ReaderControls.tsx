@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, Menu } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -24,6 +24,8 @@ interface ReaderControlsProps {
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   brightness: number;
   onBrightnessChange: (value: number[]) => void;
+  currentLocation: string | null;
+  onBookmarkClick: () => void;
 }
 
 const ControlPanel = ({
@@ -34,10 +36,14 @@ const ControlPanel = ({
   textAlign,
   onTextAlignChange,
   brightness,
-  onBrightnessChange
+  onBrightnessChange,
+  currentLocation,
+  onBookmarkClick
 }: ReaderControlsProps) => {
+  const isBookmarked = currentLocation && localStorage.getItem(`book-progress-${currentLocation}`);
+
   return (
-    <div className="flex flex-col md:flex-row items-center gap-4 p-4">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium whitespace-nowrap">Font Size</span>
         <Slider
@@ -102,6 +108,15 @@ const ControlPanel = ({
           className="w-32"
         />
       </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onBookmarkClick}
+        className={isBookmarked ? "text-red-500 hover:text-red-600" : "text-gray-500 hover:text-gray-600"}
+      >
+        <Bookmark className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

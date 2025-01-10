@@ -12,7 +12,16 @@ import { useNavigation } from "@/hooks/useNavigation";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useToast } from "./ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -20,7 +29,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
-  const { toast } = useToast();
+  const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
   
   const {
     book,
@@ -48,10 +57,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     const handleBeforeUnload = () => {
       if (book && currentLocation) {
         saveProgress(currentLocation);
-        toast({
-          title: "Progress Saved",
-          description: "Your reading progress has been automatically saved.",
-        });
       }
     };
 
@@ -61,7 +66,7 @@ const Reader = ({ metadata }: ReaderProps) => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       handleBeforeUnload();
     };
-  }, [book, currentLocation, saveProgress, toast]);
+  }, [book, currentLocation, saveProgress]);
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
@@ -96,6 +101,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onTextAlignChange={setTextAlign}
                 brightness={brightness}
                 onBrightnessChange={handleBrightnessChange}
+                currentLocation={currentLocation}
+                onBookmarkClick={() => setShowBookmarkDialog(true)}
               />
               <ProgressTracker 
                 bookProgress={progress.book}
@@ -143,6 +150,26 @@ const Reader = ({ metadata }: ReaderProps) => {
                   zIndex: 50
                 }} 
               />
+
+              <AlertDialog open={showBookmarkDialog} onOpenChange={setShowBookmarkDialog}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove Bookmark</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove the bookmark from this page?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                      localStorage.removeItem(`book-progress-${book?.key()}`);
+                      setShowBookmarkDialog(false);
+                    }}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           )}
         </div>
