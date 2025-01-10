@@ -9,6 +9,7 @@ interface BookViewerProps {
   fontSize: number;
   fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
+  lineHeight: number;
   onRenditionReady?: (rendition: Rendition) => void;
 }
 
@@ -19,6 +20,7 @@ const BookViewer = ({
   fontSize,
   fontFamily,
   textAlign = 'left',
+  lineHeight,
   onRenditionReady 
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
@@ -68,6 +70,7 @@ const BookViewer = ({
         padding: "1em",
         "text-align": textAlign,
         "font-family": getFontFamily(fontFamily),
+        "line-height": lineHeight,
         color: theme.text,
         background: theme.background,
       }
@@ -83,7 +86,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme]);
+  }, [book, isMobile, textAlign, fontFamily, lineHeight, theme]);
 
   useEffect(() => {
     if (rendition) {

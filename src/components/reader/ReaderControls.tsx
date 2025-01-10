@@ -24,6 +24,8 @@ interface ReaderControlsProps {
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   brightness: number;
   onBrightnessChange: (value: number[]) => void;
+  lineHeight: number;
+  onLineHeightChange: (value: number[]) => void;
 }
 
 const ControlPanel = ({
@@ -34,7 +36,9 @@ const ControlPanel = ({
   textAlign,
   onTextAlignChange,
   brightness,
-  onBrightnessChange
+  onBrightnessChange,
+  lineHeight,
+  onLineHeightChange
 }: ReaderControlsProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center gap-4 p-4">
@@ -89,6 +93,18 @@ const ControlPanel = ({
         >
           <AlignCenter className="h-4 w-4" />
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium whitespace-nowrap">Line Height</span>
+        <Slider
+          value={[lineHeight]}
+          onValueChange={onLineHeightChange}
+          min={1}
+          max={2}
+          step={0.1}
+          className="w-32"
+        />
       </div>
 
       <div className="flex items-center gap-2">
