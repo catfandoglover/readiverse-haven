@@ -109,18 +109,23 @@ const ControlPanel = ({
 };
 
 const ReaderControls = (props: ReaderControlsProps) => {
+  const handleBookmarkClick = () => {
+    if (props.currentLocation) {
+      const bookmarkKey = `book-progress-${props.currentLocation}`;
+      const isCurrentlyBookmarked = localStorage.getItem(bookmarkKey) !== null;
+      
+      if (isCurrentlyBookmarked) {
+        props.onBookmarkClick(); // This will trigger the confirmation dialog
+      } else {
+        localStorage.setItem(bookmarkKey, props.currentLocation);
+        window.dispatchEvent(new Event('storage'));
+      }
+    }
+  };
+
   const isBookmarked = props.currentLocation ? 
     localStorage.getItem(`book-progress-${props.currentLocation}`) !== null : 
     false;
-
-  const handleBookmarkClick = () => {
-    if (isBookmarked) {
-      props.onBookmarkClick();
-    } else if (props.currentLocation) {
-      localStorage.setItem(`book-progress-${props.currentLocation}`, props.currentLocation);
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
 
   const BookmarkButton = () => (
     <Button
