@@ -156,7 +156,18 @@ const Reader = ({ metadata }: ReaderProps) => {
             const existingBookmark = localStorage.getItem(bookmarkKey);
             if (existingBookmark) {
               try {
-                const bookmarkData = JSON.parse(existingBookmark);
+                // Handle both string and JSON formats
+                let bookmarkData;
+                try {
+                  bookmarkData = JSON.parse(existingBookmark);
+                } catch {
+                  // If parsing fails, it's the old format (just CFI string)
+                  bookmarkData = {
+                    cfi: existingBookmark,
+                    timestamp: Date.now()
+                  };
+                }
+
                 const spineItem = book?.spine?.get(currentLocation);
                 const updatedBookmarkData = {
                   ...bookmarkData,
@@ -164,7 +175,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                     ? `Chapter ${spineItem.index + 1}: ${newTitle}`
                     : newTitle,
                   metadata: {
-                    ...bookmarkData.metadata,
+                    ...(bookmarkData.metadata || {}),
                     chapterTitle: newTitle,
                     chapterIndex: spineItem?.index,
                     pageNumber: pageInfo.chapterCurrent,
