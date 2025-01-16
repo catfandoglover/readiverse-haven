@@ -3,8 +3,8 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import type Contents from "epubjs/types/contents";
-import type View from "epubjs/types/managers/view";
+import Contents from "epubjs/types/contents";
+import View from "epubjs/types/managers/view";
 
 // Extend the View type to include the document property
 interface ExtendedView extends View {
@@ -139,6 +139,7 @@ const BookViewer = ({
 
     displayLocation();
 
+    // Text selection handler
     newRendition.on("selected", (cfiRange: string, contents: Contents) => {
       const selection = contents.window.getSelection();
       if (!selection) return;
@@ -161,6 +162,7 @@ const BookViewer = ({
       }
     });
 
+    // Apply existing highlights
     highlights.forEach(highlight => {
       try {
         newRendition.annotations.add(
@@ -175,16 +177,15 @@ const BookViewer = ({
       }
     });
 
+    // Location change handler
     newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
       
       const contents = newRendition.getContents();
-      
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const currentView = contents[0].document;
         
         let heading = currentView.querySelector('h2 a[id^="link2H_"]');
-        
         if (heading) {
           heading = heading.parentElement;
         } else {
@@ -192,7 +193,6 @@ const BookViewer = ({
         }
         
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        
         window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
           detail: { title: chapterTitle } 
         }));
