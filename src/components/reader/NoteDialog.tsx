@@ -39,37 +39,19 @@ const NoteDialog = ({
   React.useEffect(() => {
     if (open) {
       setNote(initialNote);
-    } else {
-      setNote("");
     }
   }, [open, initialNote]);
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      // Ensure we clean up properly when closing
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 0);
-    } else {
-      onOpenChange(true);
-    }
-  };
 
   return (
     <Dialog 
       open={open} 
-      onOpenChange={handleOpenChange}
+      onOpenChange={onOpenChange}
+      modal
     >
       <DialogContent 
         className="sm:max-w-[425px]"
-        onEscapeKeyDown={(e) => {
-          e.preventDefault();
-          handleOpenChange(false);
-        }}
-        onPointerDownOutside={(e) => {
-          e.preventDefault();
-          handleOpenChange(false);
-        }}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Add Note</DialogTitle>
@@ -96,7 +78,7 @@ const NoteDialog = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => handleOpenChange(false)}
+            onClick={() => onOpenChange(false)}
           >
             Cancel
           </Button>

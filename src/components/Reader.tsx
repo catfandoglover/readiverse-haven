@@ -94,17 +94,17 @@ const Reader = ({ metadata }: ReaderProps) => {
   } = useHighlights(book?.key() || null);
 
   const handleNoteDialogClose = () => {
-    setTimeout(() => {
+    setNoteDialogOpen(false);
+    requestAnimationFrame(() => {
       setSelectedHighlight(null);
-      setNoteDialogOpen(false);
-    }, 0);
+    });
   };
 
   const handleNoteClick = (highlight: Highlight) => {
-    if (!noteDialogOpen) {
-      setSelectedHighlight(highlight);
+    setSelectedHighlight(highlight);
+    requestAnimationFrame(() => {
       setNoteDialogOpen(true);
-    }
+    });
   };
 
   const handleNoteSave = (note: string) => {
