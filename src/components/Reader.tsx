@@ -7,6 +7,7 @@ import ProgressTracker from "./reader/ProgressTracker";
 import FloatingControls from "./reader/FloatingControls";
 import BookmarkDialog from "./reader/BookmarkDialog";
 import BrightnessOverlay from "./reader/BrightnessOverlay";
+import NavigationButtons from "./reader/NavigationButtons";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -14,12 +15,11 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { useChapterTitle } from "@/hooks/useChapterTitle";
 import { useRenditionSettings } from "@/hooks/useRenditionSettings";
 import { useHighlights } from "@/hooks/useHighlights";
+import { useSessionTimer } from "@/hooks/useSessionTimer";
+import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Reader = ({ metadata }: ReaderProps) => {
-  const [sessionTime, setSessionTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
 
   const {
@@ -55,9 +55,8 @@ const Reader = ({ metadata }: ReaderProps) => {
   } = useRenditionSettings();
 
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
-
   const { currentChapterTitle } = useChapterTitle(book, currentLocation, pageInfo);
-
+  
   const {
     showBookmarkDialog,
     setShowBookmarkDialog,
@@ -73,27 +72,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     removeHighlight,
   } = useHighlights(book?.key() || null);
 
-  // Session timer logic
   useEffect(() => {
-    if (book) {
-      setIsReading(true);
-    } else {
-      setIsReading(false);
-      setSessionTime(0);
-    }
+    setIsReading(!!book);
   }, [book]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isReading) {
-      interval = setInterval(() => {
-        setSessionTime(prev => prev + 1);
-      }, 1000);
-    }
-    
-    return () => clearInterval(interval);
-  }, [isReading]);
+  const sessionTime = useSessionTimer(isReading);
+  useLocationPersistence(book, currentLocation);
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
@@ -112,20 +96,6 @@ const Reader = ({ metadata }: ReaderProps) => {
   const handleTextSelect = (cfiRange: string, text: string) => {
     addHighlight(cfiRange, text);
   };
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (book && currentLocation) {
-        localStorage.setItem(`reading-progress-${book.key()}`, currentLocation);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      handleBeforeUnload();
-    };
-  }, [book, currentLocation]);
 
   return (
     <ThemeProvider>
@@ -161,26 +131,10 @@ const Reader = ({ metadata }: ReaderProps) => {
               />
 
               <div className="relative">
-                <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handlePrevPage}
-                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                  >
-                    <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
-                  </Button>
-                </div>
-                <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handleNextPage}
-                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                  >
-                    <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
-                  </Button>
-                </div>
+                <NavigationButtons
+                  onPrevPage={handlePrevPage}
+                  onNextPage={handleNextPage}
+                />
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
