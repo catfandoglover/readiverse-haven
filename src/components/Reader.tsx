@@ -116,12 +116,24 @@ const Reader = ({ metadata }: ReaderProps) => {
       localStorage.setItem(bookmarkKey, JSON.stringify({
         cfi: currentLocation,
         timestamp: Date.now(),
-        chapterInfo: currentChapterTitle,
+        chapterInfo: currentChapterTitle || "Unknown Chapter",
         pageInfo: pageText
       }));
       window.dispatchEvent(new Event('storage'));
     }
   };
+
+  useEffect(() => {
+    const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
+      console.log("Chapter title change event received:", event.detail.title); // Debug log
+      setCurrentChapterTitle(event.detail.title);
+    };
+
+    window.addEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
+    return () => {
+      window.removeEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
+    };
+  }, []);
 
   return (
     <ThemeProvider>
