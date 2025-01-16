@@ -3,7 +3,6 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import TextSelectionMenu from "./TextSelectionMenu";
 
 interface BookViewerProps {
   book: Book;
@@ -14,7 +13,7 @@ interface BookViewerProps {
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
-  onTextSelect?: (cfiRange: string, text: string, note?: string) => void;
+  onTextSelect?: (cfiRange: string, text: string) => void;
 }
 
 const BookViewer = ({ 
@@ -33,7 +32,6 @@ const BookViewer = ({
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
-  const [selectedText, setSelectedText] = useState<{ text: string, cfiRange: string } | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -136,14 +134,9 @@ const BookViewer = ({
     // Handle text selection
     newRendition.on("selected", (cfiRange: string, contents: any) => {
       const text = contents.window.getSelection()?.toString() || "";
-      if (text) {
-        setSelectedText({ text, cfiRange });
+      if (text && onTextSelect) {
+        onTextSelect(cfiRange, text);
       }
-    });
-
-    // Clear selection when clicking outside
-    newRendition.on("click", () => {
-      setSelectedText(null);
     });
 
     // Apply existing highlights
@@ -230,33 +223,13 @@ const BookViewer = ({
   };
 
   return (
-    <div className="relative">
-      <div 
-        className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
-        style={{ 
-          background: theme.background,
-          color: theme.text,
-        }}
-      />
-      {selectedText && (
-        <TextSelectionMenu
-          selectedText={selectedText.text}
-          selectedCfiRange={selectedText.cfiRange}
-          onHighlight={(cfiRange, text) => {
-            if (onTextSelect) {
-              onTextSelect(cfiRange, text);
-            }
-            setSelectedText(null);
-          }}
-          onCreateNote={(cfiRange, text, note) => {
-            if (onTextSelect) {
-              onTextSelect(cfiRange, text, note);
-            }
-            setSelectedText(null);
-          }}
-        />
-      )}
-    </div>
+    <div 
+      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
+      style={{ 
+        background: theme.background,
+        color: theme.text,
+      }}
+    />
   );
 };
 

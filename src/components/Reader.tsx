@@ -27,12 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import TextSelectionMenu from "./reader/TextSelectionMenu";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
-  const [selectedText, setSelectedText] = useState<{ text: string, cfiRange: string } | null>(null);
 
   const {
     book,
@@ -82,7 +80,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     selectedColor,
     setSelectedColor,
     addHighlight,
-    addHighlightWithNote,
     removeHighlight,
   } = useHighlights(book?.key() || null);
 
@@ -122,12 +119,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleTextSelect = (cfiRange: string, text: string, note?: string) => {
-    if (note) {
-      addHighlightWithNote(cfiRange, text, note);
-    } else {
-      addHighlight(cfiRange, text);
-    }
+  const handleTextSelect = (cfiRange: string, text: string) => {
+    addHighlight(cfiRange, text);
   };
 
   useEffect(() => {
@@ -248,20 +241,6 @@ const Reader = ({ metadata }: ReaderProps) => {
           )}
         </div>
       </div>
-      {selectedText && (
-        <TextSelectionMenu
-          selectedText={selectedText.text}
-          selectedCfiRange={selectedText.cfiRange}
-          onHighlight={(cfiRange, text) => {
-            handleTextSelect(cfiRange, text);
-            setSelectedText(null);
-          }}
-          onCreateNote={(cfiRange, text, note) => {
-            handleTextSelect(cfiRange, text, note);
-            setSelectedText(null);
-          }}
-        />
-      )}
     </ThemeProvider>
   );
 };

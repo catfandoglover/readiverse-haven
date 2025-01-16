@@ -82,12 +82,7 @@ const HighlightsMenu = ({
                   >
                     {highlight.text}
                   </div>
-                  {highlight.note && (
-                    <div className="mt-1 text-xs text-muted-foreground bg-muted p-2 rounded-md">
-                      {highlight.note}
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground">
                     {format(highlight.createdAt, 'PP')}
                   </div>
                 </div>

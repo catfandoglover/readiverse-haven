@@ -48,27 +48,6 @@ export const useHighlights = (bookKey: string | null) => {
     });
   };
 
-  const addHighlightWithNote = (cfiRange: string, text: string, note: string) => {
-    if (!bookKey) return;
-
-    const newHighlight: Highlight = {
-      id: uuidv4(),
-      cfiRange,
-      color: selectedColor,
-      text,
-      note,
-      createdAt: Date.now(),
-      bookKey
-    };
-
-    const newHighlights = [...highlights, newHighlight];
-    saveHighlights(newHighlights);
-    
-    toast({
-      description: "Note added successfully",
-    });
-  };
-
   const removeHighlight = (id: string) => {
     const newHighlights = highlights.filter(h => h.id !== id);
     saveHighlights(newHighlights);
@@ -90,7 +69,6 @@ export const useHighlights = (bookKey: string | null) => {
     selectedColor,
     setSelectedColor,
     addHighlight,
-    addHighlightWithNote,
     removeHighlight,
     updateHighlight
   };
