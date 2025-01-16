@@ -30,7 +30,6 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
-  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -68,115 +67,103 @@ const BookViewer = ({
       const container = document.querySelector(".epub-view");
       if (!container) return;
 
-      try {
-        // Wait for the book to be ready
-        await book.ready;
+      if (rendition) {
+        rendition.destroy();
+      }
 
-        if (rendition) {
-          rendition.destroy();
+      const newRendition = book.renderTo(container, {
+        width: "100%",
+        height: "100%",
+        flow: "paginated",
+        spread: isMobile ? "none" : "always",
+        minSpreadWidth: 0,
+      });
+
+      newRendition.themes.default({
+        body: {
+          "column-count": isMobile ? "1" : "2",
+          "column-gap": "2em",
+          "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+          padding: "1em",
+          "text-align": textAlign,
+          "font-family": getFontFamily(fontFamily),
+          color: theme.text,
+          background: theme.background,
+        },
+        '.highlight-yellow': {
+          'background-color': 'rgba(255, 235, 59, 0.3)',
         }
+      });
 
-        const newRendition = book.renderTo(container, {
-          width: "100%",
-          height: "100%",
-          flow: "paginated",
-          spread: isMobile ? "none" : "always",
-          minSpreadWidth: 0,
-        });
+      // Handle text selection
+      newRendition.on("selected", (cfiRange: string, contents: any) => {
+        const selection = contents.window.getSelection();
+        const text = selection?.toString() || "";
+        if (text && onTextSelect) {
+          onTextSelect(cfiRange, text);
+        }
+      });
 
-        await newRendition.display();
+      // Clear selection when clicking outside
+      newRendition.on("click", (event: MouseEvent) => {
+        const selection = window.getSelection();
+        if (selection && selection.toString() === "" && onTextSelect) {
+          onTextSelect("", "");
+        }
+      });
 
-        newRendition.themes.default({
-          body: {
-            "column-count": isMobile ? "1" : "2",
-            "column-gap": "2em",
-            "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-            padding: "1em",
-            "text-align": textAlign,
-            "font-family": getFontFamily(fontFamily),
-            color: theme.text,
-            background: theme.background,
-          },
-          '.highlight-yellow': {
-            'background-color': 'rgba(255, 235, 59, 0.3)',
+      // Apply existing highlights
+      highlights.forEach(highlight => {
+        try {
+          newRendition.annotations.add(
+            "highlight",
+            highlight.cfiRange,
+            {},
+            undefined,
+            "highlight-yellow"
+          );
+        } catch (error) {
+          console.error('Error applying highlight:', error);
+        }
+      });
+
+      newRendition.on("relocated", (location: any) => {
+        onLocationChange(location);
+        
+        const contents = newRendition.getContents();
+        
+        if (contents && Array.isArray(contents) && contents.length > 0) {
+          const doc = contents[0].document;
+          
+          let heading = doc.querySelector('h2 a[id^="link2H_"]');
+          
+          if (heading) {
+            heading = heading.parentElement;
+          } else {
+            heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
           }
-        });
+          
+          const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+          
+          window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+            detail: { title: chapterTitle } 
+          }));
+        }
+      });
+
+      try {
+        await newRendition.display();
+        
+        if (currentLocation) {
+          await newRendition.display(currentLocation);
+        }
 
         setRendition(newRendition);
         if (onRenditionReady) {
           onRenditionReady(newRendition);
         }
-
-        const displayLocation = async () => {
-          try {
-            if (currentLocation) {
-              await newRendition.display(currentLocation);
-            }
-          } catch (error) {
-            console.error('Error displaying location:', error);
-          }
-        };
-
-        await displayLocation();
-
-        // Handle text selection
-        newRendition.on("selected", (cfiRange: string, contents: any) => {
-          const selection = contents.window.getSelection();
-          const text = selection?.toString() || "";
-          if (text && onTextSelect) {
-            onTextSelect(cfiRange, text);
-          }
-        });
-
-        // Clear selection when clicking outside
-        newRendition.on("click", (event: MouseEvent) => {
-          const selection = window.getSelection();
-          if (selection && selection.toString() === "" && onTextSelect) {
-            onTextSelect("", "");
-          }
-        });
-
-        // Apply existing highlights
-        highlights.forEach(highlight => {
-          try {
-            newRendition.annotations.add(
-              "highlight",
-              highlight.cfiRange,
-              {},
-              undefined,
-              "highlight-yellow"
-            );
-          } catch (error) {
-            console.error('Error applying highlight:', error);
-          }
-        });
-
-        newRendition.on("relocated", (location: any) => {
-          onLocationChange(location);
-          
-          const contents = newRendition.getContents();
-          
-          if (contents && Array.isArray(contents) && contents.length > 0) {
-            const doc = contents[0].document;
-            
-            let heading = doc.querySelector('h2 a[id^="link2H_"]');
-            
-            if (heading) {
-              heading = heading.parentElement;
-            } else {
-              heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-            }
-            
-            const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-            
-            window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-              detail: { title: chapterTitle } 
-            }));
-          }
-        });
-
       } catch (error) {
-        console.error('Error initializing book:', error);
+        console.error('Error displaying book:', error);
       }
     };
 
