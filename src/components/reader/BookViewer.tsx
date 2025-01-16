@@ -61,92 +61,107 @@ const BookViewer = ({
   }, [debouncedResize]);
 
   useEffect(() => {
-    const container = document.querySelector(".epub-view");
-    if (!container || !book) return;
+    const initializeRendition = async () => {
+      const container = document.querySelector(".epub-view");
+      if (!container || !book) return;
 
-    if (rendition) {
-      rendition.destroy();
-    }
-
-    const newRendition = book.renderTo(container, {
-      width: "100%",
-      height: "100%",
-      flow: "paginated",
-      spread: isMobile ? "none" : "always",
-      minSpreadWidth: 0,
-    });
-
-    newRendition.themes.default({
-      body: {
-        "column-count": isMobile ? "1" : "2",
-        "column-gap": "2em",
-        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-        padding: "1em",
-        "text-align": textAlign,
-        "font-family": getFontFamily(fontFamily),
-        color: theme.text,
-        background: theme.background,
-      },
-      '.highlight-yellow': {
-        'background-color': '#FEF7CD',
-        'mix-blend-mode': 'multiply'
-      },
-      '.highlight-green': {
-        'background-color': '#F2FCE2',
-        'mix-blend-mode': 'multiply'
-      },
-      '.highlight-blue': {
-        'background-color': '#D3E4FD',
-        'mix-blend-mode': 'multiply'
-      },
-      '.highlight-pink': {
-        'background-color': '#FFDEE2',
-        'mix-blend-mode': 'multiply'
-      }
-    });
-
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-    });
-
-    if (onRenditionReady) {
-      onRenditionReady(newRendition);
-    }
-
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
-
-    // Handle text selection
-    newRendition.on("selected", (cfiRange: string, contents: any) => {
-      const text = contents.window.getSelection()?.toString() || "";
-      if (text && onTextSelect) {
-        onTextSelect(cfiRange, text);
-      }
-    });
-
-    // Apply existing highlights
-    highlights.forEach(highlight => {
       try {
-        newRendition.annotations.add(
-          "highlight",
-          highlight.cfiRange,
-          {},
-          undefined,
-          `highlight-${highlight.color}`
-        );
-      } catch (error) {
-        console.error('Error applying highlight:', error);
-      }
-    });
+        // Make sure the book is ready before proceeding
+        await book.ready;
+        
+        if (rendition) {
+          rendition.destroy();
+        }
 
-    setRendition(newRendition);
+        const newRendition = book.renderTo(container, {
+          width: "100%",
+          height: "100%",
+          flow: "paginated",
+          spread: isMobile ? "none" : "always",
+          minSpreadWidth: 0,
+        });
+
+        // Wait for rendition to be ready
+        await new Promise<void>((resolve) => {
+          newRendition.on("rendered", () => resolve());
+          newRendition.on("relocated", onLocationChange);
+        });
+
+        newRendition.themes.default({
+          body: {
+            "column-count": isMobile ? "1" : "2",
+            "column-gap": "2em",
+            "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+            padding: "1em",
+            "text-align": textAlign,
+            "font-family": getFontFamily(fontFamily),
+            color: theme.text,
+            background: theme.background,
+          },
+          '.highlight-yellow': {
+            'background-color': '#FEF7CD',
+            'mix-blend-mode': 'multiply'
+          },
+          '.highlight-green': {
+            'background-color': '#F2FCE2',
+            'mix-blend-mode': 'multiply'
+          },
+          '.highlight-blue': {
+            'background-color': '#D3E4FD',
+            'mix-blend-mode': 'multiply'
+          },
+          '.highlight-pink': {
+            'background-color': '#FFDEE2',
+            'mix-blend-mode': 'multiply'
+          }
+        });
+
+        // Handle text selection
+        newRendition.on("selected", (cfiRange: string, contents: any) => {
+          const text = contents.window.getSelection()?.toString() || "";
+          if (text && onTextSelect) {
+            onTextSelect(cfiRange, text);
+          }
+        });
+
+        // Apply existing highlights
+        highlights.forEach(highlight => {
+          try {
+            newRendition.annotations.add(
+              "highlight",
+              highlight.cfiRange,
+              {},
+              undefined,
+              `highlight-${highlight.color}`
+            );
+          } catch (error) {
+            console.error('Error applying highlight:', error);
+          }
+        });
+
+        if (onRenditionReady) {
+          onRenditionReady(newRendition);
+        }
+
+        setRendition(newRendition);
+
+        // Display the content at the correct location
+        if (currentLocation) {
+          await newRendition.display(currentLocation);
+        } else {
+          await newRendition.display();
+        }
+
+      } catch (error) {
+        console.error('Error initializing rendition:', error);
+      }
+    };
+
+    initializeRendition();
 
     return () => {
-      if (newRendition) {
-        newRendition.destroy();
+      if (rendition) {
+        rendition.destroy();
       }
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
