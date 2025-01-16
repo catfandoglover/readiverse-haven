@@ -3,6 +3,7 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
+import TextSelectionMenu from "./TextSelectionMenu";
 
 interface BookViewerProps {
   book: Book;
@@ -13,7 +14,7 @@ interface BookViewerProps {
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
-  onTextSelect?: (cfiRange: string, text: string) => void;
+  onTextSelect?: (cfiRange: string, text: string, note?: string) => void;
 }
 
 const BookViewer = ({ 
