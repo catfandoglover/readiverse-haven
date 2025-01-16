@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
@@ -30,11 +30,11 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
-  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout>();
   const [isBookReady, setIsBookReady] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
 
-  // Debounce window resize with a longer delay
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
@@ -42,35 +42,27 @@ const BookViewer = ({
     []
   );
 
-  // Handle container resize with RAF and debouncing
-  const handleContainerResize = useCallback((container: Element) => {
-    if (isResizing) return;
-    
-    setIsResizing(true);
-    requestAnimationFrame(() => {
+  const handleResize = useCallback((container: Element) => {
+    if (!rendition || !container) return;
+
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+
+    resizeTimeoutRef.current = setTimeout(() => {
       try {
-        if (rendition && typeof rendition.resize === 'function') {
-          rendition.resize(container.clientWidth, container.clientHeight);
-        }
+        rendition.resize(container.clientWidth, container.clientHeight);
       } catch (error) {
         console.error('Error resizing rendition:', error);
-      } finally {
-        setIsResizing(false);
       }
-    });
-  }, [rendition, isResizing]);
-
-  // Debounced version of container resize handler
-  const debouncedContainerResize = useCallback(
-    debounce(handleContainerResize, 1000, { leading: true, trailing: true }),
-    [handleContainerResize]
-  );
+    }, 100);
+  }, [rendition]);
 
   useEffect(() => {
-    const handleResize = () => debouncedResize();
-    window.addEventListener('resize', handleResize);
+    const handleWindowResize = () => debouncedResize();
+    window.addEventListener('resize', handleWindowResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleWindowResize);
       debouncedResize.cancel();
     };
   }, [debouncedResize]);
@@ -91,37 +83,18 @@ const BookViewer = ({
 
     return () => {
       setIsBookReady(false);
-      if (rendition) {
-        try {
-          rendition.destroy();
-        } catch (error) {
-          console.error('Error destroying rendition:', error);
-        }
-      }
     };
   }, [book]);
 
   useEffect(() => {
-    if (!isBookReady) return;
+    if (!isBookReady || !containerRef.current) return;
 
-    const container = document.querySelector(".epub-view");
+    const container = containerRef.current;
     if (!container || !book) return;
 
-    // Create text selection handler
-    const handleTextSelection = (cfiRange: string, contents: any) => {
-      const text = contents.window.getSelection()?.toString() || "";
-      if (text && onTextSelect) {
-        onTextSelect(cfiRange, text);
-        if (contents.window.getSelection()) {
-          contents.window.getSelection()?.removeAllRanges();
-        }
-      }
-    };
-
-    // Clean up existing rendition before creating a new one
+    // Cleanup previous rendition
     if (rendition) {
       try {
-        rendition.off("selected", handleTextSelection);
         rendition.destroy();
       } catch (error) {
         console.error('Error cleaning up rendition:', error);
@@ -137,6 +110,7 @@ const BookViewer = ({
       minSpreadWidth: 0,
     });
 
+    // Apply themes
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -147,8 +121,8 @@ const BookViewer = ({
         "font-family": getFontFamily(fontFamily),
         color: theme.text,
         background: theme.background,
-        "pointer-events": "auto", // Ensure pointer events are enabled
-        "user-select": "text",    // Enable text selection
+        "pointer-events": "auto",
+        "user-select": "text",
       },
       '.highlight-yellow': {
         'background-color': 'rgba(255, 235, 59, 0.3)',
@@ -160,6 +134,7 @@ const BookViewer = ({
       onRenditionReady(newRendition);
     }
 
+    // Display content
     const displayLocation = async () => {
       try {
         if (currentLocation) {
@@ -174,10 +149,20 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Attach text selection handler
+    // Setup text selection handler
+    const handleTextSelection = (cfiRange: string, contents: any) => {
+      const text = contents.window.getSelection()?.toString() || "";
+      if (text && onTextSelect) {
+        onTextSelect(cfiRange, text);
+        if (contents.window.getSelection()) {
+          contents.window.getSelection()?.removeAllRanges();
+        }
+      }
+    };
+
     newRendition.on("selected", handleTextSelection);
 
-    // Apply existing highlights
+    // Apply highlights
     highlights.forEach(highlight => {
       try {
         newRendition.annotations.add(
@@ -192,86 +177,58 @@ const BookViewer = ({
       }
     });
 
+    // Handle location changes
     newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
       
       const contents = newRendition.getContents();
-      
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const doc = contents[0].document;
-        
         let heading = doc.querySelector('h2 a[id^="link2H_"]');
-        
         if (heading) {
           heading = heading.parentElement;
         } else {
           heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
         }
-        
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        
         window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
           detail: { title: chapterTitle } 
         }));
       }
     });
 
-    // Setup ResizeObserver with improved handling
-    if (resizeObserver) {
-      resizeObserver.disconnect();
+    // Setup ResizeObserver
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
     }
 
-    let rafId: number;
     const observer = new ResizeObserver((entries) => {
-      // Cancel any pending RAF
-      if (rafId) {
-        cancelAnimationFrame(rafId);
+      if (entries[0]) {
+        handleResize(entries[0].target);
       }
-
-      // Schedule a new resize operation
-      rafId = requestAnimationFrame(() => {
-        try {
-          if (!isResizing) {
-            for (const entry of entries) {
-              debouncedContainerResize(entry.target);
-            }
-          }
-        } catch (error) {
-          console.error('ResizeObserver error:', error);
-        }
-      });
     });
 
-    try {
-      observer.observe(container);
-      setResizeObserver(observer);
-    } catch (error) {
-      console.error('Error setting up ResizeObserver:', error);
-    }
+    observer.observe(container);
+    resizeObserverRef.current = observer;
 
     // Cleanup function
     return () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
       }
-      if (resizeObserver) {
-        try {
-          resizeObserver.disconnect();
-        } catch (error) {
-          console.error('Error disconnecting ResizeObserver:', error);
-        }
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
       }
-      debouncedContainerResize.cancel();
       if (newRendition) {
+        newRendition.off("selected", handleTextSelection);
         try {
-          newRendition.off("selected", handleTextSelection);
           newRendition.destroy();
         } catch (error) {
           console.error('Error cleaning up rendition:', error);
         }
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, debouncedContainerResize, isResizing]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, handleResize, currentLocation, onLocationChange, onRenditionReady, onTextSelect]);
 
   useEffect(() => {
     if (rendition) {
@@ -294,6 +251,7 @@ const BookViewer = ({
 
   return (
     <div 
+      ref={containerRef}
       className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
       style={{ 
         background: theme.background,
