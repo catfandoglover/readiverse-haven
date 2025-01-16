@@ -16,18 +16,30 @@ interface BookmarksMenuProps {
 }
 
 const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
-  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: string }>({});
+  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number } }>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
     const loadBookmarks = () => {
-      const marks: { [key: string]: string } = {};
+      const marks: { [key: string]: { cfi: string, timestamp: number } } = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('book-progress-')) {
           const value = localStorage.getItem(key);
           if (value) {
-            marks[key] = value;
+            try {
+              const data = JSON.parse(value);
+              marks[key] = {
+                cfi: data.cfi || value, // Fallback for old format
+                timestamp: data.timestamp || Date.now()
+              };
+            } catch {
+              // If parsing fails, use the old format
+              marks[key] = {
+                cfi: value,
+                timestamp: Date.now()
+              };
+            }
           }
         }
       }
@@ -90,7 +102,7 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 No bookmarks yet
               </p>
             ) : (
-              Object.entries(bookmarks).map(([key, cfi]) => (
+              Object.entries(bookmarks).map(([key, { cfi, timestamp }]) => (
                 <Button
                   key={key}
                   variant="ghost"
@@ -99,7 +111,7 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 >
                   <BookmarkIcon className="h-4 w-4 mr-2 text-red-500" />
                   <span className="truncate">
-                    Bookmark {new Date(parseInt(key.split('-')[2])).toLocaleDateString()}
+                    Bookmark {new Date(timestamp).toLocaleDateString()}
                   </span>
                 </Button>
               ))

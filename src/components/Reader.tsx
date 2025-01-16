@@ -90,6 +90,23 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
+  const handleBookmarkClick = () => {
+    if (!currentLocation) return;
+
+    const bookmarkKey = `book-progress-${currentLocation}`;
+    const bookmarkExists = localStorage.getItem(bookmarkKey) !== null;
+
+    if (bookmarkExists) {
+      setShowBookmarkDialog(true);
+    } else {
+      localStorage.setItem(bookmarkKey, JSON.stringify({
+        cfi: currentLocation,
+        timestamp: Date.now()
+      }));
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -108,7 +125,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 brightness={brightness}
                 onBrightnessChange={handleBrightnessChange}
                 currentLocation={currentLocation}
-                onBookmarkClick={() => setShowBookmarkDialog(true)}
+                onBookmarkClick={handleBookmarkClick}
                 onLocationChange={handleLocationSelect}
               />
               
