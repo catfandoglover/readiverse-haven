@@ -57,7 +57,7 @@ const NoteDialog = ({
       document.body.style.overflow = '';
       
       // Force refresh the reader content
-      const readerContent = document.querySelector('.epub-view');
+      const readerContent = document.querySelector('.epub-view') as HTMLElement;
       if (readerContent) {
         const display = readerContent.style.display;
         readerContent.style.display = 'none';
@@ -82,7 +82,7 @@ const NoteDialog = ({
           document.body.style.overflow = '';
           
           // Force refresh the reader content
-          const readerContent = document.querySelector('.epub-view');
+          const readerContent = document.querySelector('.epub-view') as HTMLElement;
           if (readerContent) {
             const display = readerContent.style.display;
             readerContent.style.display = 'none';
