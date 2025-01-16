@@ -82,18 +82,19 @@ const ControlPanel = ({
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium whitespace-nowrap">Font Size</span>
-        <Slider
-          value={[fontSize]}
-          onValueChange={onFontSizeChange}
-          min={50}
-          max={200}
-          step={10}
-          className="w-32"
-        />
-      </div>
+    <>
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium whitespace-nowrap">Font Size</span>
+          <Slider
+            value={[fontSize]}
+            onValueChange={onFontSizeChange}
+            min={50}
+            max={200}
+            step={10}
+            className="w-32"
+          />
+        </div>
 
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Font</span>
@@ -136,27 +137,27 @@ const ControlPanel = ({
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
-        <Slider
-          value={[brightness]}
-          onValueChange={onBrightnessChange}
-          min={0.2}
-          max={1}
-          step={0.1}
-          className="w-32"
-        />
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
+          <Slider
+            value={[brightness]}
+            onValueChange={onBrightnessChange}
+            min={0.2}
+            max={1}
+            step={0.1}
+            className="w-32"
+          />
+        </div>
       </div>
-
       <Button
         variant="outline"
         size="icon"
         onClick={toggleFullscreen}
-        className="ml-2"
+        className="fixed bottom-4 left-4 z-50"
       >
-        {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        {isFullscreen ? <Minimize2 className="h-[1.2rem] w-[1.2rem]" /> : <Maximize2 className="h-[1.2rem] w-[1.2rem]" />}
       </Button>
-    </div>
+    </>
   );
 };
 
