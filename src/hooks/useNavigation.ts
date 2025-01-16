@@ -4,13 +4,17 @@ import type { Rendition } from "epubjs";
 export const useNavigation = (rendition: Rendition | null) => {
   const handlePrevPage = () => {
     if (rendition) {
-      rendition.prev();
+      rendition.prev().catch(error => {
+        console.error('Error navigating to previous page:', error);
+      });
     }
   };
 
   const handleNextPage = () => {
     if (rendition) {
-      rendition.next();
+      rendition.next().catch(error => {
+        console.error('Error navigating to next page:', error);
+      });
     }
   };
 

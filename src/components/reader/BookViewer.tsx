@@ -97,7 +97,6 @@ const BookViewer = ({
         }
       });
 
-      // Enhanced text selection handling
       newRendition.on("selected", (cfiRange: string, contents: any) => {
         if (!contents || !onTextSelect) return;
         
@@ -133,7 +132,6 @@ const BookViewer = ({
         }
       });
 
-      // Apply existing highlights
       highlights.forEach(highlight => {
         try {
           newRendition.annotations.add(
@@ -151,7 +149,6 @@ const BookViewer = ({
       newRendition.on("relocated", (location: any) => {
         onLocationChange(location);
         
-        // Reapply highlights after page change
         highlights.forEach(highlight => {
           try {
             newRendition.annotations.add(
@@ -198,7 +195,6 @@ const BookViewer = ({
 
     initializeBook();
 
-    // Setup ResizeObserver
     if (containerRef.current) {
       resizeObserverRef.current = new ResizeObserver(
         debounce((entries: ResizeObserverEntry[]) => {
