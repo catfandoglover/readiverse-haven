@@ -113,9 +113,23 @@ const Reader = ({ metadata }: ReaderProps) => {
 
         const now = new Date();
         
-        // Get the current page information directly from the rendition
-        const currentPage = pageInfo.chapterCurrent;
-        const totalPages = pageInfo.chapterTotal;
+        // Get the current page information from rendition's displayed content
+        const contents = rendition.getContents();
+        let currentPage = pageInfo.chapterCurrent;
+        let totalPages = pageInfo.chapterTotal;
+        
+        if (contents && contents[0] && contents[0].document) {
+          const displayed = contents[0].document.documentElement.dataset.displayed;
+          if (displayed) {
+            try {
+              const displayedInfo = JSON.parse(displayed);
+              currentPage = displayedInfo.page || currentPage;
+              totalPages = displayedInfo.total || totalPages;
+            } catch (e) {
+              console.error('Error parsing displayed info:', e);
+            }
+          }
+        }
 
         const bookmarkData = {
           cfi: currentLocation,
