@@ -1,10 +1,9 @@
-import { useToast } from "@/components/ui/use-toast";
-import ePub from "epubjs";
 import { Book } from "epubjs";
+import { useToast } from "@/components/ui/use-toast";
 
 export const useFileHandler = (
   setBook: (book: Book) => void,
-  setCurrentLocation: (location: string) => void,
+  setCurrentLocation: (location: string | null) => void,
   loadProgress: () => string | null,
   setPageInfo: (fn: (prev: any) => any) => void
 ) => {
@@ -14,20 +13,18 @@ export const useFileHandler = (
     const reader = new FileReader();
     reader.onload = async (e) => {
       const bookData = e.target?.result;
-      const newBook = ePub(bookData);
+      const newBook = new (window as any).ePub(bookData);
       setBook(newBook);
 
       try {
         // Generate locations for the book
         await newBook.locations.generate(1024);
         
-        // Get the saved reading position
-        const savedLocation = loadProgress();
+        // Get the saved reading position for this book
+        const savedLocation = localStorage.getItem(`reading-progress-${newBook.key()}`);
         
         if (savedLocation) {
-          // Set the current location to the saved position
           setCurrentLocation(savedLocation);
-          
           toast({
             description: "Restored your last reading position",
           });
