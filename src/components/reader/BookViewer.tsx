@@ -135,12 +135,14 @@ const BookViewer = ({
           highlight.cfiRange,
           {},
           undefined,
-          "highlight-" + highlight.color
+          `highlight-${highlight.color}`
         );
       } catch (error) {
         console.error('Error applying highlight:', error);
       }
     });
+
+    setRendition(newRendition);
 
     return () => {
       if (newRendition) {
