@@ -20,6 +20,7 @@ interface HighlightsMenuProps {
   onHighlightSelect: (cfiRange: string) => void;
   onRemoveHighlight: (id: string) => void;
   onUpdateNote: (id: string, note: string) => void;
+  onNoteClick: (highlight: Highlight) => void;
 }
 
 const colorClasses: Record<HighlightColor, string> = {
@@ -32,7 +33,8 @@ const HighlightsMenu = ({
   onColorSelect,
   onHighlightSelect,
   onRemoveHighlight,
-  onUpdateNote
+  onUpdateNote,
+  onNoteClick
 }: HighlightsMenuProps) => {
   const [selectedHighlight, setSelectedHighlight] = React.useState<Highlight | null>(null);
   const [noteDialogOpen, setNoteDialogOpen] = React.useState(false);
