@@ -121,7 +121,7 @@ const BookViewer = ({
       
       // Check if rendition exists and is ready
       if (newRendition) {
-        const resizeCallback = () => {
+        const resizeCallback = (timestamp: number) => {
           newRendition.resize();
         };
         window.requestAnimationFrame(resizeCallback);
