@@ -4,9 +4,9 @@ import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
-import ThemeSwitcher from "./reader/ThemeSwitcher";
-import HighlightsMenu from "./reader/HighlightsMenu";
-import BookmarkControls from "./reader/BookmarkControls";
+import FloatingControls from "./reader/FloatingControls";
+import BookmarkDialog from "./reader/BookmarkDialog";
+import BrightnessOverlay from "./reader/BrightnessOverlay";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -17,16 +17,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [sessionTime, setSessionTime] = useState(0);
@@ -169,6 +159,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
               />
+
               <div className="relative">
                 <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
                   <Button 
@@ -202,57 +193,26 @@ const Reader = ({ metadata }: ReaderProps) => {
                   onTextSelect={handleTextSelect}
                 />
               </div>
-              <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-                <div className="hidden md:block">
-                  <BookmarkControls
-                    currentLocation={currentLocation}
-                    onLocationSelect={handleLocationSelect}
-                    onBookmarkClick={handleBookmarkClick}
-                  />
-                </div>
-                <div className="hidden md:block">
-                  <HighlightsMenu
-                    highlights={highlights}
-                    selectedColor={selectedColor}
-                    onColorSelect={setSelectedColor}
-                    onHighlightSelect={handleLocationSelect}
-                    onRemoveHighlight={removeHighlight}
-                  />
-                </div>
-              </div>
-              <div className="fixed bottom-4 right-4 z-50">
-                <ThemeSwitcher />
-              </div>
-              <div 
-                style={{ 
-                  position: 'fixed',
-                  inset: 0,
-                  pointerEvents: 'none',
-                  backgroundColor: 'black',
-                  opacity: 1 - brightness,
-                  zIndex: 50
-                }} 
+
+              <FloatingControls
+                currentLocation={currentLocation}
+                onLocationSelect={handleLocationSelect}
+                onBookmarkClick={handleBookmarkClick}
+                highlights={highlights}
+                selectedColor={selectedColor}
+                onColorSelect={setSelectedColor}
+                onHighlightSelect={handleLocationSelect}
+                onRemoveHighlight={removeHighlight}
               />
 
-              <AlertDialog open={showBookmarkDialog} onOpenChange={setShowBookmarkDialog}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Remove Bookmark</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to remove the bookmark from {currentChapterTitle || 'this chapter'}?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={handleRemoveBookmark}
-                      aria-label="Remove bookmark"
-                    >
-                      Remove
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <BookmarkDialog
+                open={showBookmarkDialog}
+                onOpenChange={setShowBookmarkDialog}
+                onRemoveBookmark={handleRemoveBookmark}
+                chapterTitle={currentChapterTitle}
+              />
+
+              <BrightnessOverlay brightness={brightness} />
             </>
           )}
         </div>
