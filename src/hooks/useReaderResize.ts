@@ -15,15 +15,27 @@ export const useReaderResize = (rendition: Rendition | null) => {
 
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
-      if (rendition && typeof rendition.resize === 'function') {
-        requestAnimationFrame(() => {
-          try {
+      if (!rendition || !container) return;
+
+      // Use rAF to ensure smooth resize handling
+      let rafId: number;
+      const updateSize = () => {
+        try {
+          if (rendition && typeof rendition.resize === 'function') {
             rendition.resize(container.clientWidth, container.clientHeight);
-          } catch (error) {
-            console.error('Error resizing rendition:', error);
           }
-        });
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        }
+      };
+
+      // Cancel any pending rAF
+      if (rafId) {
+        cancelAnimationFrame(rafId);
       }
+
+      // Schedule new update
+      rafId = requestAnimationFrame(updateSize);
     }, 250),
     [rendition]
   );
@@ -31,6 +43,7 @@ export const useReaderResize = (rendition: Rendition | null) => {
   useEffect(() => {
     const handleResize = () => debouncedResize();
     window.addEventListener('resize', handleResize);
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       debouncedResize.cancel();
