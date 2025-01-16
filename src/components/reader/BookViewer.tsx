@@ -115,13 +115,13 @@ const BookViewer = ({
       }
     });
 
-    // Use ResizeObserver with proper typing and delayed resize
+    // Use ResizeObserver with proper typing
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
       if (!entries.length) return;
       
       // Check if rendition exists and is ready
       if (newRendition) {
-        const resizeCallback = (timestamp: number, frame: number) => {
+        const resizeCallback = (timestamp: DOMHighResTimeStamp) => {
           newRendition.resize();
         };
         window.requestAnimationFrame(resizeCallback);
