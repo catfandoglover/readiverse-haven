@@ -13,16 +13,24 @@ export const useFileHandler = (
   const handleFileUpload = async (file: File) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const bookData = e.target?.result;
-      const newBook = ePub(bookData);
-      setBook(newBook);
-
       try {
+        const bookData = e.target?.result;
+        if (!bookData) {
+          throw new Error("Failed to read book data");
+        }
+
+        const newBook = ePub(bookData);
+        await newBook.ready; // Wait for the book to be ready
+
         // Generate locations for the book
         await newBook.locations.generate(1024);
         
+        // Set the book in state
+        setBook(newBook);
+
         // Get the saved reading position for this book
-        const savedLocation = localStorage.getItem(`reading-progress-${newBook.key()}`);
+        const bookKey = await newBook.key();
+        const savedLocation = localStorage.getItem(`reading-progress-${bookKey}`);
         
         if (savedLocation) {
           setCurrentLocation(savedLocation);
@@ -42,6 +50,7 @@ export const useFileHandler = (
         });
       }
     };
+
     reader.readAsArrayBuffer(file);
   };
 
