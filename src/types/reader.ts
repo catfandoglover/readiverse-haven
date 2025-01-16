@@ -1,3 +1,5 @@
+import type { Highlight, HighlightColor } from './highlight';
+
 export interface BookMetadata {
   coverUrl?: string;
   title?: string;

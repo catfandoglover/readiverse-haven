@@ -185,7 +185,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
-                <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
+                <div className="hidden md:block fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
                   <HighlightsMenu
                     highlights={highlights}
                     selectedColor={selectedColor}
