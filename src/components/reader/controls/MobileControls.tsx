@@ -7,6 +7,7 @@ import AlignmentControls from './AlignmentControls';
 import BrightnessControl from './BrightnessControl';
 import BookmarkControls from './BookmarkControls';
 import SessionTimer from '../SessionTimer';
+import HighlightsMenu from '../HighlightsMenu';
 import type { ReaderControlsProps } from '@/types/reader';
 
 export const MobileControls = (props: ReaderControlsProps) => {
@@ -69,7 +70,14 @@ export const MobileControls = (props: ReaderControlsProps) => {
         </DrawerContent>
       </Drawer>
       
-      <div className="md:hidden flex items-center">
+      <div className="md:hidden flex items-center gap-2">
+        <HighlightsMenu
+          highlights={props.highlights}
+          selectedColor={props.selectedHighlightColor}
+          onColorSelect={props.onHighlightColorSelect}
+          onHighlightSelect={props.onHighlightSelect}
+          onRemoveHighlight={props.onRemoveHighlight}
+        />
         <BookmarkControls
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}
