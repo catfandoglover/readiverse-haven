@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -36,18 +36,45 @@ const NoteDialog = ({
     });
   };
 
-  React.useEffect(() => {
+  // Reset state when dialog opens/closes
+  useEffect(() => {
     if (open) {
       setNote(initialNote);
+      // Prevent background scrolling when drawer is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable scrolling when drawer closes
+      document.body.style.overflow = 'unset';
+      // Clear note state after animation completes
+      const timeout = setTimeout(() => {
+        setNote("");
+      }, 300);
+      return () => clearTimeout(timeout);
     }
   }, [open, initialNote]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   return (
     <Drawer 
       open={open} 
-      onOpenChange={onOpenChange}
+      onOpenChange={(newOpen) => {
+        // Add a small delay before closing to ensure proper cleanup
+        if (!newOpen) {
+          setTimeout(() => {
+            onOpenChange(newOpen);
+          }, 0);
+        } else {
+          onOpenChange(newOpen);
+        }
+      }}
     >
-      <DrawerContent>
+      <DrawerContent className="focus-visible:outline-none">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle>Add Note</DrawerTitle>
