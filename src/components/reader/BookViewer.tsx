@@ -30,7 +30,6 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
-  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -39,7 +38,6 @@ const BookViewer = ({
     []
   );
 
-  // Debounced container resize handler
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
       if (rendition && typeof rendition.resize === 'function') {
@@ -90,20 +88,27 @@ const BookViewer = ({
         background: theme.background,
       },
       '.highlight-yellow': {
-        'background-color': 'rgba(255, 235, 59, 0.3)',
+        'background-color': '#FEF7CD',
+        'mix-blend-mode': 'multiply'
       },
       '.highlight-green': {
-        'background-color': 'rgba(76, 175, 80, 0.3)',
+        'background-color': '#F2FCE2',
+        'mix-blend-mode': 'multiply'
       },
       '.highlight-blue': {
-        'background-color': 'rgba(33, 150, 243, 0.3)',
+        'background-color': '#D3E4FD',
+        'mix-blend-mode': 'multiply'
       },
       '.highlight-pink': {
-        'background-color': 'rgba(233, 30, 99, 0.3)',
+        'background-color': '#FFDEE2',
+        'mix-blend-mode': 'multiply'
       }
     });
 
-    setRendition(newRendition);
+    newRendition.on("relocated", (location: any) => {
+      onLocationChange(location);
+    });
+
     if (onRenditionReady) {
       onRenditionReady(newRendition);
     }
@@ -137,49 +142,7 @@ const BookViewer = ({
       }
     });
 
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-      
-      const contents = newRendition.getContents();
-      
-      if (contents && Array.isArray(contents) && contents.length > 0) {
-        const doc = contents[0].document;
-        
-        let heading = doc.querySelector('h2 a[id^="link2H_"]');
-        
-        if (heading) {
-          heading = heading.parentElement;
-        } else {
-          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-        }
-        
-        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        
-        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-          detail: { title: chapterTitle } 
-        }));
-      }
-    });
-
-    // Create and setup ResizeObserver
-    if (resizeObserver) {
-      resizeObserver.disconnect();
-    }
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        debouncedContainerResize(entry.target);
-      }
-    });
-
-    observer.observe(container);
-    setResizeObserver(observer);
-
     return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      debouncedContainerResize.cancel();
       if (newRendition) {
         newRendition.destroy();
       }

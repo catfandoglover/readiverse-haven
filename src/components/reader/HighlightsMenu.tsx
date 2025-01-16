@@ -20,10 +20,10 @@ interface HighlightsMenuProps {
 }
 
 const colorClasses: Record<HighlightColor, string> = {
-  yellow: 'bg-yellow-200',
-  green: 'bg-green-200',
-  blue: 'bg-blue-200',
-  pink: 'bg-pink-200'
+  yellow: 'bg-[#FEF7CD]',
+  green: 'bg-[#F2FCE2]',
+  blue: 'bg-[#D3E4FD]',
+  pink: 'bg-[#FFDEE2]'
 };
 
 const HighlightsMenu = ({
