@@ -46,7 +46,7 @@ const HighlightsMenu = ({
         align="end" 
         side="left" 
         sideOffset={16}
-        alignOffset={40}
+        alignOffset={-8}
         className="w-64"
       >
         <div className="sticky top-0 bg-background z-10">
