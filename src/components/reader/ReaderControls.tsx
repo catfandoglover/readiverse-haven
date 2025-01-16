@@ -52,7 +52,24 @@ const ControlPanel = (props: ReaderControlsProps) => {
         brightness={props.brightness}
         onBrightnessChange={props.onBrightnessChange}
       />
-      <SessionTimer seconds={props.sessionTime} />
+      <div className="hidden md:block">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+            >
+              <SessionTimer seconds={props.sessionTime} />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <div className="p-4 flex justify-center">
+              <SessionTimer seconds={props.sessionTime} className="text-lg" />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
       <div className="md:hidden">
         <Button
           variant="outline"
