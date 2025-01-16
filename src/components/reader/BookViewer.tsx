@@ -1,15 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
-import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import Contents from "epubjs/types/contents";
-import View from "epubjs/types/managers/view";
-
-// Extend the View type to include the document property
-interface ExtendedView extends View {
-  document: Document;
-}
+import { useRenditionSetup } from "@/hooks/useRenditionSetup";
+import { useReaderResize } from "@/hooks/useReaderResize";
 
 interface BookViewerProps {
   book: Book;
@@ -34,42 +28,31 @@ const BookViewer = ({
   highlights = [],
   onTextSelect
 }: BookViewerProps) => {
-  const [rendition, setRendition] = useState<Rendition | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
-  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
 
-  const debouncedResize = useCallback(
-    debounce(() => {
-      setIsMobile(window.innerWidth < 768);
-    }, 250),
-    []
+  const {
+    rendition,
+    setRendition,
+    setupRendition,
+  } = useRenditionSetup(
+    book,
+    window.innerWidth < 768,
+    textAlign,
+    fontFamily,
+    theme,
+    currentLocation,
+    onLocationChange,
+    onTextSelect,
+    highlights
   );
 
-  const debouncedContainerResize = useCallback(
-    debounce((container: Element) => {
-      if (rendition && typeof rendition.resize === 'function') {
-        requestAnimationFrame(() => {
-          try {
-            rendition.resize(container.clientWidth, container.clientHeight);
-          } catch (error) {
-            console.error('Error resizing rendition:', error);
-          }
-        });
-      }
-    }, 250),
-    [rendition]
-  );
-
-  useEffect(() => {
-    const handleResize = () => debouncedResize();
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      debouncedResize.cancel();
-    };
-  }, [debouncedResize]);
+  const {
+    isMobile,
+    resizeObserver,
+    setResizeObserver,
+    debouncedContainerResize,
+  } = useReaderResize(rendition);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -96,29 +79,8 @@ const BookViewer = ({
       rendition.destroy();
     }
 
-    const newRendition = book.renderTo(container, {
-      width: "100%",
-      height: "100%",
-      flow: "paginated",
-      spread: isMobile ? "none" : "always",
-      minSpreadWidth: 0,
-    });
-
-    newRendition.themes.default({
-      body: {
-        "column-count": isMobile ? "1" : "2",
-        "column-gap": "2em",
-        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-        padding: "1em",
-        "text-align": textAlign,
-        "font-family": getFontFamily(fontFamily),
-        color: theme.text,
-        background: theme.background,
-      },
-      '.highlight-yellow': {
-        'background-color': 'rgba(255, 235, 59, 0.3)',
-      }
-    });
+    const newRendition = setupRendition(container);
+    if (!newRendition) return;
 
     setRendition(newRendition);
     if (onRenditionReady) {
@@ -138,55 +100,6 @@ const BookViewer = ({
     };
 
     displayLocation();
-
-    // Text selection handler
-    newRendition.on("selected", (cfiRange: string, contents: Contents) => {
-      const selection = contents.window.getSelection();
-      if (!selection) return;
-
-      const text = selection.toString().trim();
-      if (!text || !onTextSelect) return;
-
-      onTextSelect(cfiRange, text);
-      selection.removeAllRanges();
-    });
-
-    // Apply existing highlights
-    highlights.forEach(highlight => {
-      try {
-        newRendition.annotations.add(
-          "highlight",
-          highlight.cfiRange,
-          {},
-          undefined,
-          "highlight-yellow"
-        );
-      } catch (error) {
-        console.error('Error applying highlight:', error);
-      }
-    });
-
-    // Location change handler
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-      
-      const contents = newRendition.getContents();
-      if (contents && Array.isArray(contents) && contents.length > 0) {
-        const currentView = contents[0].document;
-        
-        let heading = currentView.querySelector('h2 a[id^="link2H_"]');
-        if (heading) {
-          heading = heading.parentElement;
-        } else {
-          heading = currentView.querySelector('h1, h2, h3, h4, h5, h6');
-        }
-        
-        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-          detail: { title: chapterTitle } 
-        }));
-      }
-    });
 
     if (resizeObserver) {
       resizeObserver.disconnect();
@@ -219,19 +132,6 @@ const BookViewer = ({
       rendition.themes.fontSize(`${fontSize}%`);
     }
   }, [fontSize, rendition]);
-
-  const getFontFamily = (font: 'georgia' | 'helvetica' | 'times') => {
-    switch (font) {
-      case 'georgia':
-        return 'Georgia, serif';
-      case 'helvetica':
-        return 'Helvetica, Arial, sans-serif';
-      case 'times':
-        return 'Times New Roman, serif';
-      default:
-        return 'Georgia, serif';
-    }
-  };
 
   return (
     <div 
