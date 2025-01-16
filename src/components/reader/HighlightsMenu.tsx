@@ -13,11 +13,11 @@ import { Highlight, HighlightColor } from '@/types/highlight';
 import { format } from 'date-fns';
 
 interface HighlightsMenuProps {
-  highlights: Highlight[];
-  selectedColor: HighlightColor;
-  onColorSelect: (color: HighlightColor) => void;
-  onHighlightSelect: (cfiRange: string) => void;
-  onRemoveHighlight: (id: string) => void;
+  highlights?: Highlight[];
+  selectedColor?: HighlightColor;
+  onColorSelect?: (color: HighlightColor) => void;
+  onHighlightSelect?: (cfiRange: string) => void;
+  onRemoveHighlight?: (id: string) => void;
 }
 
 const colorClasses: Record<HighlightColor, string> = {
@@ -25,11 +25,11 @@ const colorClasses: Record<HighlightColor, string> = {
 };
 
 const HighlightsMenu = ({
-  highlights,
-  selectedColor,
-  onColorSelect,
-  onHighlightSelect,
-  onRemoveHighlight
+  highlights = [],
+  selectedColor = 'yellow',
+  onColorSelect = () => {},
+  onHighlightSelect = () => {},
+  onRemoveHighlight = () => {}
 }: HighlightsMenuProps) => {
   return (
     <DropdownMenu>

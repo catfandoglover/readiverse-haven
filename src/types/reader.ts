@@ -21,4 +21,9 @@ export interface ReaderControlsProps {
   onBookmarkClick: () => void;
   onLocationChange?: (location: string) => void;
   sessionTime: number;
+  highlights?: Highlight[];
+  selectedHighlightColor?: HighlightColor;
+  onHighlightColorSelect?: (color: HighlightColor) => void;
+  onHighlightSelect?: (cfiRange: string) => void;
+  onRemoveHighlight?: (id: string) => void;
 }
