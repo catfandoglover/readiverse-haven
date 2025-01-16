@@ -6,6 +6,11 @@ import type { Highlight } from "@/types/highlight";
 import type Contents from "epubjs/types/contents";
 import type View from "epubjs/types/managers/view";
 
+// Extend the View type to include the document property
+interface ExtendedView extends View {
+  document: Document;
+}
+
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -176,14 +181,14 @@ const BookViewer = ({
       const contents = newRendition.getContents();
       
       if (contents && Array.isArray(contents) && contents.length > 0) {
-        const doc = contents[0].document;
+        const currentView = contents[0].document;
         
-        let heading = doc.querySelector('h2 a[id^="link2H_"]');
+        let heading = currentView.querySelector('h2 a[id^="link2H_"]');
         
         if (heading) {
           heading = heading.parentElement;
         } else {
-          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+          heading = currentView.querySelector('h1, h2, h3, h4, h5, h6');
         }
         
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
