@@ -103,10 +103,6 @@ const Reader = ({ metadata }: ReaderProps) => {
       setShowBookmarkDialog(true);
     } else {
       try {
-        // Wait for a small delay to ensure chapter title is updated
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Get current spine item and chapter info
         const spineItem = book?.spine?.get(currentLocation);
         const chapterInfo = spineItem?.index !== undefined 
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
@@ -115,7 +111,6 @@ const Reader = ({ metadata }: ReaderProps) => {
         console.log('Creating bookmark with chapter title:', currentChapterTitle);
         console.log('Current spine item:', spineItem);
 
-        // Create bookmark data with detailed metadata
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: Date.now(),
@@ -154,6 +149,35 @@ const Reader = ({ metadata }: ReaderProps) => {
         if (newTitle && newTitle !== "Unknown Chapter") {
           console.log('Setting chapter title:', newTitle);
           setCurrentChapterTitle(newTitle);
+          
+          // Update existing bookmark if it exists
+          if (currentLocation) {
+            const bookmarkKey = `book-progress-${currentLocation}`;
+            const existingBookmark = localStorage.getItem(bookmarkKey);
+            if (existingBookmark) {
+              try {
+                const bookmarkData = JSON.parse(existingBookmark);
+                const spineItem = book?.spine?.get(currentLocation);
+                const updatedBookmarkData = {
+                  ...bookmarkData,
+                  chapterInfo: spineItem?.index !== undefined 
+                    ? `Chapter ${spineItem.index + 1}: ${newTitle}`
+                    : newTitle,
+                  metadata: {
+                    ...bookmarkData.metadata,
+                    chapterTitle: newTitle,
+                    chapterIndex: spineItem?.index,
+                    pageNumber: pageInfo.chapterCurrent,
+                    totalPages: pageInfo.chapterTotal,
+                  }
+                };
+                localStorage.setItem(bookmarkKey, JSON.stringify(updatedBookmarkData));
+                window.dispatchEvent(new Event('storage'));
+              } catch (error) {
+                console.error('Error updating bookmark metadata:', error);
+              }
+            }
+          }
         }
       }
     };
@@ -162,7 +186,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     return () => {
       window.removeEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
     };
-  }, []);
+  }, [currentLocation, book, pageInfo]);
 
   return (
     <ThemeProvider>
