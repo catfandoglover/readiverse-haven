@@ -16,12 +16,12 @@ interface BookmarksMenuProps {
 }
 
 const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
-  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string } }>({});
+  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string, metadata?: any } }>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
     const loadBookmarks = () => {
-      const marks: { [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string } } = {};
+      const marks: { [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string, metadata?: any } } = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('book-progress-')) {
@@ -32,16 +32,18 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
               marks[key] = {
                 cfi: data.cfi || value,
                 timestamp: data.timestamp || Date.now(),
-                chapterInfo: data.chapterInfo || "Unknown Chapter",
-                pageInfo: data.pageInfo || "Page Unknown"
+                chapterInfo: data.chapterInfo || data.metadata?.chapterTitle || "Loading chapter...",
+                pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber || '?'} of ${data.metadata?.totalPages || '?'}`,
+                metadata: data.metadata || {}
               };
             } catch {
-              // If parsing fails, use the old format
+              // If parsing fails, use the old format but with loading states
               marks[key] = {
                 cfi: value,
                 timestamp: Date.now(),
-                chapterInfo: "Unknown Chapter",
-                pageInfo: "Page Unknown"
+                chapterInfo: "Loading chapter...",
+                pageInfo: "Loading page information...",
+                metadata: {}
               };
             }
           }
