@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 
 interface SessionTimerProps {
   seconds: number;
+  className?: string;
 }
 
-const SessionTimer = ({ seconds }: SessionTimerProps) => {
+const SessionTimer = ({ seconds, className }: SessionTimerProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const formatTime = (totalSeconds: number) => {
@@ -23,20 +24,22 @@ const SessionTimer = ({ seconds }: SessionTimerProps) => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
-      {isVisible && (
-        <div className="bg-background/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium shadow-sm border-0">
-          Reading time: {formatTime(seconds)}
-        </div>
-      )}
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setIsVisible(!isVisible)}
-        className="h-8 w-8 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-      >
-        <Clock className="h-4 w-4" />
-      </Button>
+    <div className={className}>
+      <div className="flex items-center gap-2">
+        {isVisible && (
+          <div className="bg-background/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium shadow-sm border-0">
+            Reading time: {formatTime(seconds)}
+          </div>
+        )}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsVisible(!isVisible)}
+          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+        >
+          <Clock className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };

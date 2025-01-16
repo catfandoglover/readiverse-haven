@@ -10,6 +10,7 @@ import FontControls from './controls/FontControls';
 import AlignmentControls from './controls/AlignmentControls';
 import BrightnessControl from './controls/BrightnessControl';
 import BookmarkControls from './controls/BookmarkControls';
+import SessionTimer from './SessionTimer';
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -23,6 +24,7 @@ interface ReaderControlsProps {
   currentLocation: string | null;
   onBookmarkClick: () => void;
   onLocationChange?: (location: string) => void;
+  sessionTime: number;
 }
 
 const ControlPanel = (props: ReaderControlsProps) => {
@@ -50,6 +52,7 @@ const ControlPanel = (props: ReaderControlsProps) => {
         brightness={props.brightness}
         onBrightnessChange={props.onBrightnessChange}
       />
+      <SessionTimer seconds={props.sessionTime} />
       <div className="md:hidden">
         <Button
           variant="outline"

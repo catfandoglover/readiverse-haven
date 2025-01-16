@@ -5,7 +5,6 @@ import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import ThemeSwitcher from "./reader/ThemeSwitcher";
-import SessionTimer from "./reader/SessionTimer";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -143,6 +142,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 currentLocation={currentLocation}
                 onBookmarkClick={handleBookmarkClick}
                 onLocationChange={handleLocationSelect}
+                sessionTime={sessionTime}
               />
               
               <ProgressTracker 
