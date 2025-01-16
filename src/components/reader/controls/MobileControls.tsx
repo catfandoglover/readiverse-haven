@@ -70,20 +70,13 @@ export const MobileControls = (props: ReaderControlsProps) => {
             </div>
           </DrawerContent>
         </Drawer>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          asChild
-        >
-          <HighlightsMenu
-            highlights={props.highlights}
-            selectedColor={props.selectedHighlightColor}
-            onColorSelect={props.onHighlightColorSelect}
-            onHighlightSelect={props.onLocationChange}
-            onRemoveHighlight={props.onRemoveHighlight}
-          />
-        </Button>
+        <HighlightsMenu
+          highlights={props.highlights}
+          selectedColor={props.selectedHighlightColor}
+          onColorSelect={props.onHighlightColorSelect}
+          onHighlightSelect={props.onLocationChange}
+          onRemoveHighlight={props.onRemoveHighlight}
+        />
       </div>
       
       <div className="md:hidden flex items-center gap-2">
