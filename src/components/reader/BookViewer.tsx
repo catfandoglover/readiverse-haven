@@ -75,6 +75,18 @@ const BookViewer = ({
     if (book) {
       initializeBook();
     }
+
+    // Cleanup function to ensure proper teardown
+    return () => {
+      setIsBookReady(false);
+      if (rendition) {
+        try {
+          rendition.destroy();
+        } catch (error) {
+          console.error('Error destroying rendition:', error);
+        }
+      }
+    };
   }, [book]);
 
   useEffect(() => {
@@ -95,12 +107,17 @@ const BookViewer = ({
       }
     };
 
+    // Clean up existing rendition before creating a new one
     if (rendition) {
-      // Cleanup existing rendition
-      rendition.off("selected", handleTextSelection);
-      rendition.destroy();
+      try {
+        rendition.off("selected", handleTextSelection);
+        rendition.destroy();
+      } catch (error) {
+        console.error('Error cleaning up rendition:', error);
+      }
     }
 
+    // Create new rendition
     const newRendition = book.renderTo(container, {
       width: "100%",
       height: "100%",
@@ -119,6 +136,8 @@ const BookViewer = ({
         "font-family": getFontFamily(fontFamily),
         color: theme.text,
         background: theme.background,
+        "pointer-events": "auto", // Ensure pointer events are enabled
+        "user-select": "text",    // Enable text selection
       },
       '.highlight-yellow': {
         'background-color': 'rgba(255, 235, 59, 0.3)',
@@ -200,14 +219,19 @@ const BookViewer = ({
     observer.observe(container);
     setResizeObserver(observer);
 
+    // Cleanup function
     return () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
       debouncedContainerResize.cancel();
       if (newRendition) {
-        newRendition.off("selected", handleTextSelection);
-        newRendition.destroy();
+        try {
+          newRendition.off("selected", handleTextSelection);
+          newRendition.destroy();
+        } catch (error) {
+          console.error('Error cleaning up rendition:', error);
+        }
       }
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
@@ -237,6 +261,8 @@ const BookViewer = ({
       style={{ 
         background: theme.background,
         color: theme.text,
+        position: 'relative',  // Ensure proper stacking context
+        zIndex: 0,            // Reset stacking context
       }}
     />
   );
