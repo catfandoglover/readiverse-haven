@@ -81,16 +81,32 @@ const BookViewer = ({
   useEffect(() => {
     const initializeBook = async () => {
       try {
-        await book.ready;
+        // Wait for both book and package to be ready
+        await Promise.all([
+          book.ready,
+          new Promise(resolve => {
+            if (book.package && book.package.metadata) {
+              resolve(true);
+            } else {
+              book.on('package-ready', () => resolve(true));
+            }
+          })
+        ]);
+        
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
+        setIsBookReady(false);
       }
     };
 
     if (book) {
       initializeBook();
     }
+
+    return () => {
+      setIsBookReady(false);
+    };
   }, [book]);
 
   useEffect(() => {
