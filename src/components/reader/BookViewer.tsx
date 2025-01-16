@@ -33,23 +33,27 @@ const BookViewer = ({
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
 
+  // More aggressive debounce for window resize
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 250),
+    }, 500),
     []
   );
 
+  // More aggressive debounce for container resize with error handling
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
       if (rendition && typeof rendition.resize === 'function') {
         try {
-          rendition.resize(container.clientWidth, container.clientHeight);
+          requestAnimationFrame(() => {
+            rendition.resize(container.clientWidth, container.clientHeight);
+          });
         } catch (error) {
           console.error('Error resizing rendition:', error);
         }
       }
-    }, 250),
+    }, 500),
     [rendition]
   );
 
@@ -100,7 +104,6 @@ const BookViewer = ({
       const text = contents.window.getSelection()?.toString() || "";
       if (text && onTextSelect) {
         onTextSelect(cfiRange, text);
-        // Clear the selection after processing
         if (contents.window.getSelection()) {
           contents.window.getSelection()?.removeAllRanges();
         }
@@ -205,24 +208,38 @@ const BookViewer = ({
       }
     });
 
-    // Create and setup ResizeObserver
+    // Create and setup ResizeObserver with error handling
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
 
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        debouncedContainerResize(entry.target);
-      }
+      requestAnimationFrame(() => {
+        try {
+          for (const entry of entries) {
+            debouncedContainerResize(entry.target);
+          }
+        } catch (error) {
+          console.error('ResizeObserver error:', error);
+        }
+      });
     });
 
-    observer.observe(container);
-    setResizeObserver(observer);
+    try {
+      observer.observe(container);
+      setResizeObserver(observer);
+    } catch (error) {
+      console.error('Error setting up ResizeObserver:', error);
+    }
 
     // Cleanup function
     return () => {
       if (resizeObserver) {
-        resizeObserver.disconnect();
+        try {
+          resizeObserver.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting ResizeObserver:', error);
+        }
       }
       debouncedContainerResize.cancel();
       if (newRendition) {
@@ -261,8 +278,8 @@ const BookViewer = ({
       style={{ 
         background: theme.background,
         color: theme.text,
-        position: 'relative',  // Ensure proper stacking context
-        zIndex: 0,            // Reset stacking context
+        position: 'relative',
+        zIndex: 0,
       }}
     />
   );
