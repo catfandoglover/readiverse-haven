@@ -50,13 +50,15 @@ export const MobileControls = (props: ReaderControlsProps) => {
       </div>
       
       <div className="md:hidden flex items-center gap-2">
-        <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedHighlightColor}
-          onColorSelect={props.onHighlightColorSelect}
-          onHighlightSelect={props.onHighlightSelect}
-          onRemoveHighlight={props.onRemoveHighlight}
-        />
+        <div className="relative">
+          <HighlightsMenu
+            highlights={props.highlights}
+            selectedColor={props.selectedHighlightColor}
+            onColorSelect={props.onHighlightColorSelect}
+            onHighlightSelect={props.onHighlightSelect}
+            onRemoveHighlight={props.onRemoveHighlight}
+          />
+        </div>
         <BookmarkControls
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}
