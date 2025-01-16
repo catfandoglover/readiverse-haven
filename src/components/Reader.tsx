@@ -158,6 +158,11 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onBookmarkClick={handleBookmarkClick}
                 onLocationChange={handleLocationSelect}
                 sessionTime={sessionTime}
+                highlights={highlights}
+                selectedHighlightColor={selectedColor}
+                onHighlightColorSelect={setSelectedColor}
+                onHighlightSelect={handleLocationSelect}
+                onRemoveHighlight={removeHighlight}
               />
               
               <ProgressTracker 
