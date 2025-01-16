@@ -119,11 +119,12 @@ const BookViewer = ({
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
       if (!entries.length) return;
       
-      // Ensure rendition is ready before resizing
-      if (newRendition && newRendition.manager) {
-        window.requestAnimationFrame((timestamp: number) => {
+      // Check if rendition exists and is ready
+      if (newRendition) {
+        const resizeCallback = () => {
           newRendition.resize();
-        });
+        };
+        window.requestAnimationFrame(resizeCallback);
       }
     });
 
