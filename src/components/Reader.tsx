@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import type { Rendition } from "epubjs";
+import React, { useEffect } from "react";
 import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
@@ -9,6 +8,9 @@ import ThemeSwitcher from "./reader/ThemeSwitcher";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { useChapterTitle } from "@/hooks/useChapterTitle";
+import { useRenditionSettings } from "@/hooks/useRenditionSettings";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -22,19 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
 
 const Reader = ({ metadata }: ReaderProps) => {
-  const [fontSize, setFontSize] = useState(100);
-  const [fontFamily, setFontFamily] = useState<'georgia' | 'helvetica' | 'times'>('georgia');
-  const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
-  const [brightness, setBrightness] = useState(1);
-  const [rendition, setRendition] = useState<Rendition | null>(null);
-  const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
-  const [currentChapterTitle, setCurrentChapterTitle] = useState<string>("Unknown Chapter");
-  const { toast } = useToast();
-
   const {
     book,
     setBook,
@@ -47,6 +38,19 @@ const Reader = ({ metadata }: ReaderProps) => {
     handleLocationChange,
   } = useBookProgress();
 
+  const {
+    fontSize,
+    fontFamily,
+    textAlign,
+    brightness,
+    rendition,
+    handleFontFamilyChange,
+    handleFontSizeChange,
+    handleBrightnessChange,
+    handleRenditionReady,
+    setTextAlign
+  } = useRenditionSettings();
+
   const { handleFileUpload } = useFileHandler(
     setBook,
     setCurrentLocation,
@@ -56,51 +60,22 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
 
-  useEffect(() => {
-    let isSubscribed = true;
+  const currentChapterTitle = useChapterTitle(book, currentLocation, pageInfo);
 
-    const handleBeforeUnload = () => {
-      if (book && currentLocation) {
-        localStorage.setItem(`reading-progress-${book.key()}`, currentLocation);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      isSubscribed = false;
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      handleBeforeUnload();
-    };
-  }, [book, currentLocation]);
-
-  const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
-    setFontFamily(value);
-  };
-
-  const handleFontSizeChange = (value: number[]) => {
-    setFontSize(value[0]);
-  };
-
-  const handleBrightnessChange = (value: number[]) => {
-    setBrightness(value[0]);
-  };
-
-  const handleRenditionReady = (newRendition: Rendition) => {
-    setRendition(newRendition);
-  };
+  const {
+    showBookmarkDialog,
+    setShowBookmarkDialog,
+    handleBookmarkClick,
+    removeBookmark
+  } = useBookmarks(book, currentLocation, currentChapterTitle, pageInfo);
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
       const container = document.querySelector(".epub-view");
       if (container) {
-        // First display the location
         rendition.display(location).then(() => {
-          // Wait a brief moment for the content to be properly laid out
           setTimeout(() => {
-            // Force a re-layout with container dimensions
             rendition.resize(container.clientWidth, container.clientHeight);
-            // Move forward one page to correct the offset
             rendition.next();
           }, 100);
         });
@@ -108,145 +83,19 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleBookmarkClick = async () => {
-    if (!currentLocation || !rendition) return;
-
-    const bookmarkKey = `book-progress-${currentLocation}`;
-    const existingBookmark = localStorage.getItem(bookmarkKey);
-
-    if (existingBookmark) {
-      setShowBookmarkDialog(true);
-    } else {
-      try {
-        const spineItem = book?.spine?.get(currentLocation);
-        const chapterInfo = spineItem?.index !== undefined 
-          ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
-          : currentChapterTitle;
-
-        const now = new Date();
-        
-        // Get the current page information from rendition's displayed content
-        const contents = rendition.getContents();
-        let currentPage = pageInfo.chapterCurrent;
-        let totalPages = pageInfo.chapterTotal;
-        
-        if (contents && contents[0] && contents[0].document) {
-          const displayed = contents[0].document.documentElement.dataset.displayed;
-          if (displayed) {
-            try {
-              const displayedInfo = JSON.parse(displayed);
-              currentPage = displayedInfo.page || currentPage;
-              totalPages = displayedInfo.total || totalPages;
-            } catch (e) {
-              console.error('Error parsing displayed info:', e);
-            }
-          }
-        }
-
-        const bookmarkData = {
-          cfi: currentLocation,
-          timestamp: now.getTime(),
-          chapterInfo,
-          pageInfo: `Page ${currentPage} of ${totalPages}`,
-          metadata: {
-            created: now.toISOString(),
-            formattedDate: format(now, 'PPpp'),
-            chapterIndex: spineItem?.index,
-            chapterTitle: currentChapterTitle,
-            pageNumber: currentPage,
-            totalPages: totalPages,
-          }
-        };
-
-        localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
-        window.dispatchEvent(new Event('storage'));
-        
-        toast({
-          description: `Bookmark added: ${chapterInfo} (${format(now, 'PP')})`,
-        });
-      } catch (error) {
-        console.error('Error saving bookmark:', error);
-        toast({
-          variant: "destructive",
-          description: "Failed to save bookmark. Please try again.",
-        });
-      }
-    }
-  };
-
   useEffect(() => {
-    let isSubscribed = true;
-
-    const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
-      if (!isSubscribed) return;
-      
-      if (event.detail.title) {
-        const newTitle = event.detail.title.trim();
-        if (newTitle && newTitle !== "Unknown Chapter") {
-          setCurrentChapterTitle(newTitle);
-          
-          if (currentLocation) {
-            const bookmarkKey = `book-progress-${currentLocation}`;
-            const existingBookmark = localStorage.getItem(bookmarkKey);
-            if (existingBookmark) {
-              try {
-                let bookmarkData;
-                try {
-                  bookmarkData = JSON.parse(existingBookmark);
-                } catch {
-                  const spineItem = book?.spine?.get(currentLocation);
-                  bookmarkData = {
-                    cfi: existingBookmark,
-                    timestamp: Date.now(),
-                    chapterInfo: spineItem?.index !== undefined 
-                      ? `Chapter ${spineItem.index + 1}: ${newTitle}`
-                      : newTitle,
-                    pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
-                    metadata: {
-                      created: new Date().toISOString(),
-                      chapterIndex: spineItem?.index,
-                      chapterTitle: newTitle,
-                      pageNumber: pageInfo.chapterCurrent,
-                      totalPages: pageInfo.chapterTotal,
-                    }
-                  };
-                }
-
-                const spineItem = book?.spine?.get(currentLocation);
-                const updatedBookmarkData = {
-                  ...bookmarkData,
-                  chapterInfo: spineItem?.index !== undefined 
-                    ? `Chapter ${spineItem.index + 1}: ${newTitle}`
-                    : newTitle,
-                  pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
-                  metadata: {
-                    ...(bookmarkData.metadata || {}),
-                    chapterTitle: newTitle,
-                    chapterIndex: spineItem?.index,
-                    pageNumber: pageInfo.chapterCurrent,
-                    totalPages: pageInfo.chapterTotal,
-                  }
-                };
-
-                if (isSubscribed) {
-                  localStorage.setItem(bookmarkKey, JSON.stringify(updatedBookmarkData));
-                  window.dispatchEvent(new Event('storage'));
-                }
-              } catch (error) {
-                console.error('Error updating bookmark metadata:', error);
-              }
-            }
-          }
-        }
+    const handleBeforeUnload = () => {
+      if (book && currentLocation) {
+        localStorage.setItem(`reading-progress-${book.key()}`, currentLocation);
       }
     };
 
-    window.addEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-      isSubscribed = false;
-      window.removeEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleBeforeUnload();
     };
-  }, [currentLocation, book, pageInfo]);
+  }, [book, currentLocation]);
 
   return (
     <ThemeProvider>
@@ -328,25 +177,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction 
-                      onClick={() => {
-                        if (currentLocation) {
-                          const bookmarkKey = `book-progress-${currentLocation}`;
-                          try {
-                            localStorage.removeItem(bookmarkKey);
-                            window.dispatchEvent(new Event('storage'));
-                            toast({
-                              description: "Bookmark removed successfully",
-                            });
-                          } catch (error) {
-                            console.error('Error removing bookmark:', error);
-                            toast({
-                              variant: "destructive",
-                              description: "Failed to remove bookmark. Please try again.",
-                            });
-                          }
-                        }
-                        setShowBookmarkDialog(false);
-                      }}
+                      onClick={removeBookmark}
                       aria-label="Remove bookmark"
                     >
                       Remove
