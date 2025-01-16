@@ -60,57 +60,7 @@ const BookViewer = ({
       minSpreadWidth: 0,
     });
 
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
-
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-      
-      // Extract chapter title from the current section
-      const contents = newRendition.getContents();
-      console.log("Contents:", contents);
-      
-      if (contents && Array.isArray(contents) && contents.length > 0) {
-        const doc = contents[0].document;
-        console.log("Document:", doc);
-        
-        // First try to find the specific heading format
-        let heading = doc.querySelector('h2 a[id^="link2H_"]');
-        console.log("Initial heading search:", heading);
-        
-        if (heading) {
-          heading = heading.parentElement;
-          console.log("Parent h2:", heading);
-        } else {
-          // Fallback to any heading if specific format not found
-          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-          console.log("Fallback heading:", heading);
-        }
-        
-        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        console.log("Final chapter title:", chapterTitle);
-        
-        // Dispatch a custom event to update the chapter title
-        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-          detail: { title: chapterTitle } 
-        }));
-      }
-    });
-
-    // Use ResizeObserver with debouncing
-    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-      const resizeCallback = () => {
-        if (!entries.length) return;
-        newRendition.resize();
-      };
-      window.requestAnimationFrame(resizeCallback);
-    });
-
-    resizeObserver.observe(container);
-
+    // Set up rendition before displaying content
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -124,10 +74,60 @@ const BookViewer = ({
       }
     });
 
+    // Store rendition reference before displaying content
     setRendition(newRendition);
     if (onRenditionReady) {
       onRenditionReady(newRendition);
     }
+
+    // Display content after rendition is set up
+    if (currentLocation) {
+      newRendition.display(currentLocation);
+    } else {
+      newRendition.display();
+    }
+
+    newRendition.on("relocated", (location: any) => {
+      onLocationChange(location);
+      
+      // Extract chapter title from the current section
+      const contents = newRendition.getContents();
+      
+      if (contents && Array.isArray(contents) && contents.length > 0) {
+        const doc = contents[0].document;
+        
+        // First try to find the specific heading format
+        let heading = doc.querySelector('h2 a[id^="link2H_"]');
+        
+        if (heading) {
+          heading = heading.parentElement;
+        } else {
+          // Fallback to any heading if specific format not found
+          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+        }
+        
+        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+        
+        // Dispatch a custom event to update the chapter title
+        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+          detail: { title: chapterTitle } 
+        }));
+      }
+    });
+
+    // Use ResizeObserver with proper typing and delayed resize
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      if (!entries.length) return;
+      
+      // Ensure rendition is ready before resizing
+      if (newRendition && newRendition.manager) {
+        window.requestAnimationFrame((timestamp: number) => {
+          newRendition.resize();
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
 
     return () => {
       resizeObserver.disconnect();
