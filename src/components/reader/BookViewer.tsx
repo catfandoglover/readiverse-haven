@@ -102,11 +102,11 @@ const BookViewer = ({
 
     // Use ResizeObserver with debouncing
     const resizeObserver = new ResizeObserver((entries) => {
-      const resizeCallback = () => {
+      const resizeCallback = (timestamp: number) => {
         if (!entries.length) return;
         newRendition.resize();
       };
-      requestAnimationFrame(resizeCallback);
+      window.requestAnimationFrame(resizeCallback);
     });
 
     resizeObserver.observe(container);
