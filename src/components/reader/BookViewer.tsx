@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -25,14 +25,24 @@ const BookViewer = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+  // Debounced resize handler
+  const debouncedResize = useCallback(() => {
+    let timeoutId: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768);
+      }, 100);
     };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const handleResize = debouncedResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [debouncedResize]);
 
   useEffect(() => {
     const container = document.querySelector(".epub-view");
@@ -61,27 +71,27 @@ const BookViewer = ({
       
       // Extract chapter title from the current section
       const contents = newRendition.getContents();
-      console.log("Contents:", contents); // Debug log
+      console.log("Contents:", contents);
       
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const doc = contents[0].document;
-        console.log("Document:", doc); // Debug log
+        console.log("Document:", doc);
         
         // First try to find the specific heading format
         let heading = doc.querySelector('h2 a[id^="link2H_"]');
-        console.log("Initial heading search:", heading); // Debug log
+        console.log("Initial heading search:", heading);
         
         if (heading) {
-          heading = heading.parentElement; // Get the h2 element
-          console.log("Parent h2:", heading); // Debug log
+          heading = heading.parentElement;
+          console.log("Parent h2:", heading);
         } else {
           // Fallback to any heading if specific format not found
           heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-          console.log("Fallback heading:", heading); // Debug log
+          console.log("Fallback heading:", heading);
         }
         
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        console.log("Final chapter title:", chapterTitle); // Debug log
+        console.log("Final chapter title:", chapterTitle);
         
         // Dispatch a custom event to update the chapter title
         window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
@@ -89,6 +99,16 @@ const BookViewer = ({
         }));
       }
     });
+
+    // Use ResizeObserver with debouncing
+    const resizeObserver = new ResizeObserver((entries) => {
+      requestAnimationFrame(() => {
+        if (!entries.length) return;
+        newRendition.resize();
+      });
+    });
+
+    resizeObserver.observe(container);
 
     newRendition.themes.default({
       body: {
@@ -109,6 +129,7 @@ const BookViewer = ({
     }
 
     return () => {
+      resizeObserver.disconnect();
       if (newRendition) {
         newRendition.destroy();
       }
