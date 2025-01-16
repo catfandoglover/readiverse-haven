@@ -110,18 +110,20 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 <Button
                   key={key}
                   variant="ghost"
-                  className="w-full justify-start text-left flex-col items-start"
+                  className="w-full justify-start text-left flex-col items-start h-auto min-h-[3rem] py-2 px-4"
                   onClick={() => onBookmarkSelect(cfi)}
                 >
-                  <div className="flex items-center w-full">
-                    <BookmarkIcon className="h-4 w-4 mr-2 text-red-500 shrink-0" />
-                    <span className="truncate">
-                      {chapterInfo}, {pageInfo}
-                    </span>
+                  <div className="flex items-start w-full gap-2">
+                    <BookmarkIcon className="h-4 w-4 text-red-500 shrink-0 mt-1" />
+                    <div className="flex flex-col">
+                      <span className="break-words line-clamp-2">
+                        {chapterInfo}, {pageInfo}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground ml-6">
-                    {new Date(timestamp).toLocaleDateString()}
-                  </span>
                 </Button>
               ))
             )}
