@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
+import type { Highlight } from "@/types/highlight";
 
 interface BookViewerProps {
   book: Book;
@@ -11,6 +12,8 @@ interface BookViewerProps {
   fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
+  highlights?: Highlight[];
+  onTextSelect?: (cfiRange: string, text: string) => void;
 }
 
 const BookViewer = ({ 
@@ -20,14 +23,15 @@ const BookViewer = ({
   fontSize,
   fontFamily,
   textAlign = 'left',
-  onRenditionReady 
+  onRenditionReady,
+  highlights = [],
+  onTextSelect
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
 
-  // Debounced resize handler for window resize
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
@@ -84,6 +88,18 @@ const BookViewer = ({
         "font-family": getFontFamily(fontFamily),
         color: theme.text,
         background: theme.background,
+      },
+      '.highlight-yellow': {
+        'background-color': 'rgba(255, 235, 59, 0.3)',
+      },
+      '.highlight-green': {
+        'background-color': 'rgba(76, 175, 80, 0.3)',
+      },
+      '.highlight-blue': {
+        'background-color': 'rgba(33, 150, 243, 0.3)',
+      },
+      '.highlight-pink': {
+        'background-color': 'rgba(233, 30, 99, 0.3)',
       }
     });
 
@@ -97,6 +113,29 @@ const BookViewer = ({
     } else {
       newRendition.display();
     }
+
+    // Handle text selection
+    newRendition.on("selected", (cfiRange: string, contents: any) => {
+      const text = contents.window.getSelection()?.toString() || "";
+      if (text && onTextSelect) {
+        onTextSelect(cfiRange, text);
+      }
+    });
+
+    // Apply existing highlights
+    highlights.forEach(highlight => {
+      try {
+        newRendition.annotations.add(
+          "highlight",
+          highlight.cfiRange,
+          {},
+          undefined,
+          "highlight-" + highlight.color
+        );
+      } catch (error) {
+        console.error('Error applying highlight:', error);
+      }
+    });
 
     newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
@@ -145,7 +184,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
 
   useEffect(() => {
     if (rendition) {

@@ -5,15 +5,18 @@ import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import ThemeSwitcher from "./reader/ThemeSwitcher";
+import HighlightsMenu from "./reader/HighlightsMenu";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useChapterTitle } from "@/hooks/useChapterTitle";
 import { useRenditionSettings } from "@/hooks/useRenditionSettings";
+import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,6 +75,14 @@ const Reader = ({ metadata }: ReaderProps) => {
     handleRemoveBookmark
   } = useBookmarks(book, currentLocation, currentChapterTitle);
 
+  const {
+    highlights,
+    selectedColor,
+    setSelectedColor,
+    addHighlight,
+    removeHighlight,
+  } = useHighlights(book?.key() || null);
+
   // Session timer logic
   useEffect(() => {
     if (book) {
@@ -106,6 +117,10 @@ const Reader = ({ metadata }: ReaderProps) => {
         });
       }
     }
+  };
+
+  const handleTextSelect = (cfiRange: string, text: string) => {
+    addHighlight(cfiRange, text);
   };
 
   useEffect(() => {
@@ -170,6 +185,15 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
+                <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
+                  <HighlightsMenu
+                    highlights={highlights}
+                    selectedColor={selectedColor}
+                    onColorSelect={setSelectedColor}
+                    onHighlightSelect={handleLocationSelect}
+                    onRemoveHighlight={removeHighlight}
+                  />
+                </div>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
@@ -178,6 +202,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                   fontFamily={fontFamily}
                   textAlign={textAlign}
                   onRenditionReady={handleRenditionReady}
+                  highlights={highlights}
+                  onTextSelect={handleTextSelect}
                 />
               </div>
               <ThemeSwitcher />
