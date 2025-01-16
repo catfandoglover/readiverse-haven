@@ -3,8 +3,8 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import type { Contents } from "epubjs/types/contents";
-import type { View } from "epubjs/types/managers/view";
+import type Contents from "epubjs/types/contents";
+import type View from "epubjs/types/managers/view";
 
 interface BookViewerProps {
   book: Book;
