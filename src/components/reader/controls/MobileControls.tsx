@@ -10,7 +10,24 @@ import SessionTimer from '../SessionTimer';
 import HighlightsMenu from '../HighlightsMenu';
 import type { ReaderControlsProps } from '@/types/reader';
 
-export const MobileControls = (props: ReaderControlsProps) => {
+export const MobileControls = ({
+  fontSize,
+  onFontSizeChange,
+  fontFamily,
+  onFontFamilyChange,
+  textAlign,
+  onTextAlignChange,
+  brightness,
+  onBrightnessChange,
+  currentLocation,
+  onBookmarkClick,
+  onLocationChange,
+  sessionTime,
+  highlights,
+  selectedHighlightColor,
+  onHighlightColorSelect,
+  onRemoveHighlight
+}: ReaderControlsProps) => {
   const [showMobileTimer, setShowMobileTimer] = React.useState(false);
 
   const toggleFullScreen = () => {
@@ -33,18 +50,18 @@ export const MobileControls = (props: ReaderControlsProps) => {
           <DrawerContent>
             <div className="flex flex-col items-center gap-4 p-4">
               <FontControls
-                fontSize={props.fontSize}
-                onFontSizeChange={props.onFontSizeChange}
-                fontFamily={props.fontFamily}
-                onFontFamilyChange={props.onFontFamilyChange}
+                fontSize={fontSize}
+                onFontSizeChange={onFontSizeChange}
+                fontFamily={fontFamily}
+                onFontFamilyChange={onFontFamilyChange}
               />
               <AlignmentControls
-                textAlign={props.textAlign}
-                onTextAlignChange={props.onTextAlignChange}
+                textAlign={textAlign}
+                onTextAlignChange={onTextAlignChange}
               />
               <BrightnessControl
-                brightness={props.brightness}
-                onBrightnessChange={props.onBrightnessChange}
+                brightness={brightness}
+                onBrightnessChange={onBrightnessChange}
               />
               <Button
                 variant="outline"
@@ -52,11 +69,11 @@ export const MobileControls = (props: ReaderControlsProps) => {
                 onClick={() => setShowMobileTimer(!showMobileTimer)}
                 className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
               >
-                <SessionTimer seconds={props.sessionTime} showIcon={true} />
+                <SessionTimer seconds={sessionTime} showIcon={true} />
               </Button>
               {showMobileTimer && (
                 <div className="w-full p-4 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg flex justify-center">
-                  <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
+                  <SessionTimer seconds={sessionTime} className="text-lg" showIcon={false} />
                 </div>
               )}
               <Button
@@ -71,19 +88,19 @@ export const MobileControls = (props: ReaderControlsProps) => {
           </DrawerContent>
         </Drawer>
         <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedHighlightColor}
-          onColorSelect={props.onHighlightColorSelect}
-          onHighlightSelect={props.onLocationChange}
-          onRemoveHighlight={props.onRemoveHighlight}
+          highlights={highlights}
+          selectedColor={selectedHighlightColor}
+          onColorSelect={onHighlightColorSelect}
+          onHighlightSelect={onLocationChange}
+          onRemoveHighlight={onRemoveHighlight}
         />
       </div>
       
       <div className="md:hidden flex items-center gap-2">
         <BookmarkControls
-          currentLocation={props.currentLocation}
-          onBookmarkClick={props.onBookmarkClick}
-          onLocationChange={props.onLocationChange}
+          currentLocation={currentLocation}
+          onBookmarkClick={onBookmarkClick}
+          onLocationChange={onLocationChange}
         />
       </div>
     </div>
