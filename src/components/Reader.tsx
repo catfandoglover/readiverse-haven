@@ -93,7 +93,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleBookmarkClick = () => {
+  const handleBookmarkClick = async () => {
     if (!currentLocation || !rendition) return;
 
     const bookmarkKey = `book-progress-${currentLocation}`;
@@ -103,11 +103,17 @@ const Reader = ({ metadata }: ReaderProps) => {
       setShowBookmarkDialog(true);
     } else {
       try {
+        // Wait for a small delay to ensure chapter title is updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Get current spine item and chapter info
         const spineItem = book?.spine?.get(currentLocation);
         const chapterInfo = spineItem?.index !== undefined 
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
           : currentChapterTitle;
+
+        console.log('Creating bookmark with chapter title:', currentChapterTitle);
+        console.log('Current spine item:', spineItem);
 
         // Create bookmark data with detailed metadata
         const bookmarkData = {
