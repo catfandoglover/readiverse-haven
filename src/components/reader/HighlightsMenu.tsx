@@ -25,7 +25,7 @@ const colorClasses: Record<HighlightColor, string> = {
 };
 
 const HighlightsMenu = ({
-  highlights,
+  highlights = [],
   selectedColor,
   onColorSelect,
   onHighlightSelect,
@@ -64,7 +64,7 @@ const HighlightsMenu = ({
         </div>
         
         <ScrollArea className="h-[300px] overflow-y-auto">
-          {highlights.length === 0 ? (
+          {(!highlights || highlights.length === 0) ? (
             <div className="py-2 px-4 text-sm text-muted-foreground text-center">
               No highlights yet
             </div>
