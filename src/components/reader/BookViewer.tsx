@@ -140,7 +140,8 @@ const BookViewer = ({
       if (!text || !onTextSelect) return;
 
       // Get the current page's content document
-      const currentView = newRendition.manager?.views?.current();
+      const views = newRendition.views();
+      const currentView = views?.length ? views[0] : null;
       if (!currentView) return;
 
       // Get the selection's container node
