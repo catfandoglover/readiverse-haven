@@ -1,5 +1,4 @@
 import React from 'react';
-import BookmarkButton from '../BookmarkButton';
 import BookmarksMenu from '../BookmarksMenu';
 
 interface BookmarkControlsProps {
@@ -15,13 +14,10 @@ const BookmarkControls = ({
 }: BookmarkControlsProps) => {
   return (
     <div className="flex items-center gap-2">
-      <BookmarkButton 
-        currentLocation={currentLocation} 
-        onBookmarkClick={onBookmarkClick} 
-      />
       <BookmarksMenu 
         currentLocation={currentLocation} 
         onLocationSelect={onLocationChange || (() => {})} 
+        onBookmarkClick={onBookmarkClick}
       />
     </div>
   );

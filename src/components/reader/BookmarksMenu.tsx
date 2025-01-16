@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,13 +27,22 @@ interface BookmarkData {
 interface BookmarksMenuProps {
   currentLocation: string | null;
   onLocationSelect: (location: string) => void;
+  onBookmarkClick: () => void;
 }
 
-const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps) => {
+const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    const checkBookmark = () => {
+      if (currentLocation) {
+        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
+        setIsBookmarked(bookmarkExists);
+      }
+    };
+
     const loadBookmarks = () => {
       const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
@@ -65,11 +74,14 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps
     };
 
     loadBookmarks();
+    checkBookmark();
     window.addEventListener('storage', loadBookmarks);
+    window.addEventListener('storage', checkBookmark);
     return () => {
       window.removeEventListener('storage', loadBookmarks);
+      window.removeEventListener('storage', checkBookmark);
     };
-  }, []);
+  }, [currentLocation]);
 
   const handleClearAll = () => {
     const bookmarkKeys = Object.keys(bookmarks);
@@ -84,46 +96,62 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Bookmark className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Toggle bookmarks menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px]">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          Bookmarks
-          {Object.keys(bookmarks).length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClearAll}
-              className="h-6 w-6"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Clear all bookmarks</span>
-            </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onBookmarkClick}
+        className="text-red-500 hover:text-red-600"
+      >
+        <Bookmark 
+          className="h-[1.2rem] w-[1.2rem]" 
+          fill={isBookmarked ? "currentColor" : "none"} 
+          stroke={isBookmarked ? "currentColor" : "currentColor"}
+        />
+        <span className="sr-only">Bookmark this page</span>
+      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Bookmark className="h-[1.2rem] w-[1.2rem]" />
+            <span className="sr-only">Toggle bookmarks menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[200px]">
+          <DropdownMenuLabel className="flex items-center justify-between">
+            Bookmarks
+            {Object.keys(bookmarks).length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearAll}
+                className="h-6 w-6"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Clear all bookmarks</span>
+              </Button>
+            )}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {Object.entries(bookmarks)
+            .sort(([, a], [, b]) => b.timestamp - a.timestamp)
+            .map(([key, bookmark]) => (
+              <DropdownMenuItem
+                key={key}
+                onSelect={() => onLocationSelect(bookmark.cfi)}
+                className="flex flex-col items-start"
+              >
+                <span className="text-sm">{bookmark.chapterInfo}</span>
+                <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
+              </DropdownMenuItem>
+            ))}
+          {Object.keys(bookmarks).length === 0 && (
+            <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
           )}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {Object.entries(bookmarks)
-          .sort(([, a], [, b]) => b.timestamp - a.timestamp)
-          .map(([key, bookmark]) => (
-            <DropdownMenuItem
-              key={key}
-              onSelect={() => onLocationSelect(bookmark.cfi)}
-              className="flex flex-col items-start"
-            >
-              <span className="text-sm">{bookmark.chapterInfo}</span>
-              <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
-            </DropdownMenuItem>
-          ))}
-        {Object.keys(bookmarks).length === 0 && (
-          <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 
