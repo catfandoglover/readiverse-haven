@@ -92,11 +92,14 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
-      // Display the location and ensure proper page alignment
-      rendition.display(location).then(() => {
-        // Force a re-layout to ensure correct page positioning
-        rendition.resize();
-      });
+      const container = document.querySelector(".epub-view");
+      if (container) {
+        // Display the location and ensure proper page alignment
+        rendition.display(location).then(() => {
+          // Force a re-layout to ensure correct page positioning with container dimensions
+          rendition.resize(container.clientWidth, container.clientHeight);
+        });
+      }
     }
   };
 
