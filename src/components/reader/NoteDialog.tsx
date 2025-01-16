@@ -49,10 +49,30 @@ const NoteDialog = ({
     }
   }, [open, initialNote]);
 
+  // Ensure we clean up any lingering overlay effects
+  useEffect(() => {
+    if (!open) {
+      // Force remove any lingering overlay effects
+      document.body.style.pointerEvents = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.pointerEvents = '';
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   return (
     <AlertDialog 
       open={open} 
-      onOpenChange={onOpenChange}
+      onOpenChange={(newOpen) => {
+        // Ensure we clean up before closing
+        if (!newOpen) {
+          document.body.style.pointerEvents = '';
+          document.body.style.overflow = '';
+        }
+        onOpenChange(newOpen);
+      }}
     >
       <AlertDialogContent>
         <AlertDialogHeader>
