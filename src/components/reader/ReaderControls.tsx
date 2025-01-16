@@ -28,6 +28,8 @@ interface ReaderControlsProps {
 }
 
 const ControlPanel = (props: ReaderControlsProps) => {
+  const [showMobileTimer, setShowMobileTimer] = React.useState(false);
+
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -69,6 +71,21 @@ const ControlPanel = (props: ReaderControlsProps) => {
             </div>
           </DrawerContent>
         </Drawer>
+      </div>
+      <div className="md:hidden">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setShowMobileTimer(!showMobileTimer)}
+          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+        >
+          <SessionTimer seconds={props.sessionTime} showIcon={true} />
+        </Button>
+        {showMobileTimer && (
+          <div className="absolute left-0 right-0 mt-2 p-4 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg flex justify-center">
+            <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
+          </div>
+        )}
       </div>
       <div className="md:hidden">
         <Button
