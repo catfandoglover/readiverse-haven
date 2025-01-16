@@ -44,7 +44,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     setPageInfo,
     loadProgress,
     handleLocationChange,
-    saveProgress
   } = useBookProgress();
 
   const { handleFileUpload } = useFileHandler(
@@ -57,9 +56,10 @@ const Reader = ({ metadata }: ReaderProps) => {
   const { handlePrevPage, handleNextPage } = useNavigation(rendition);
 
   useEffect(() => {
+    let isSubscribed = true;
+
     const handleBeforeUnload = () => {
       if (book && currentLocation) {
-        // Save progress without creating a bookmark
         localStorage.setItem(`reading-progress-${book.key()}`, currentLocation);
       }
     };
@@ -67,6 +67,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     
     return () => {
+      isSubscribed = false;
       window.removeEventListener('beforeunload', handleBeforeUnload);
       handleBeforeUnload();
     };
@@ -109,7 +110,6 @@ const Reader = ({ metadata }: ReaderProps) => {
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
           : currentChapterTitle;
 
-        // Create a properly structured bookmark
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: Date.now(),
@@ -141,14 +141,16 @@ const Reader = ({ metadata }: ReaderProps) => {
   };
 
   useEffect(() => {
+    let isSubscribed = true;
+
     const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
+      if (!isSubscribed) return;
+      
       if (event.detail.title) {
         const newTitle = event.detail.title.trim();
         if (newTitle && newTitle !== "Unknown Chapter") {
-          console.log('Setting chapter title:', newTitle);
           setCurrentChapterTitle(newTitle);
           
-          // Update existing bookmark if it exists
           if (currentLocation) {
             const bookmarkKey = `book-progress-${currentLocation}`;
             const existingBookmark = localStorage.getItem(bookmarkKey);
@@ -158,7 +160,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                 try {
                   bookmarkData = JSON.parse(existingBookmark);
                 } catch {
-                  // If parsing fails, create a new properly structured bookmark
                   const spineItem = book?.spine?.get(currentLocation);
                   bookmarkData = {
                     cfi: existingBookmark,
@@ -193,8 +194,10 @@ const Reader = ({ metadata }: ReaderProps) => {
                   }
                 };
 
-                localStorage.setItem(bookmarkKey, JSON.stringify(updatedBookmarkData));
-                window.dispatchEvent(new Event('storage'));
+                if (isSubscribed) {
+                  localStorage.setItem(bookmarkKey, JSON.stringify(updatedBookmarkData));
+                  window.dispatchEvent(new Event('storage'));
+                }
               } catch (error) {
                 console.error('Error updating bookmark metadata:', error);
               }
@@ -206,6 +209,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
     window.addEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
     return () => {
+      isSubscribed = false;
       window.removeEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
     };
   }, [currentLocation, book, pageInfo]);
