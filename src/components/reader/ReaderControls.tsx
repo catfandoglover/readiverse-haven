@@ -60,12 +60,12 @@ const ControlPanel = (props: ReaderControlsProps) => {
               size="icon"
               className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
             >
-              <SessionTimer seconds={props.sessionTime} />
+              <SessionTimer seconds={props.sessionTime} showIcon={true} />
             </Button>
           </DrawerTrigger>
           <DrawerContent>
             <div className="p-4 flex justify-center">
-              <SessionTimer seconds={props.sessionTime} className="text-lg" />
+              <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
             </div>
           </DrawerContent>
         </Drawer>
