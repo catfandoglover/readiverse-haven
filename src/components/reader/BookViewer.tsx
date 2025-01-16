@@ -101,8 +101,8 @@ const BookViewer = ({
     });
 
     // Use ResizeObserver with debouncing
-    const resizeObserver = new ResizeObserver((entries) => {
-      const resizeCallback = (timestamp: number) => {
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      const resizeCallback = () => {
         if (!entries.length) return;
         newRendition.resize();
       };
