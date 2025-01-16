@@ -126,7 +126,7 @@ const BookViewer = ({
       }
       
       // Schedule a new resize with proper type checking
-      const frameCallback: FrameRequestCallback = () => {
+      const frameCallback: FrameRequestCallback = (timestamp: number, frame: number) => {
         if (newRendition && typeof newRendition.resize === 'function') {
           try {
             newRendition.resize();
@@ -136,7 +136,7 @@ const BookViewer = ({
         }
       };
       
-      resizeTimeout = window.requestAnimationFrame(frameCallback);
+      resizeTimeout = requestAnimationFrame(frameCallback);
     });
 
     resizeObserver.observe(container);
