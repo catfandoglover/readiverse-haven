@@ -3,6 +3,7 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookViewerProps {
   book: Book;
@@ -16,8 +17,8 @@ interface BookViewerProps {
   onTextSelect?: (cfiRange: string, text: string) => void;
 }
 
-const MIN_DIMENSION = 100; // Minimum dimension threshold
-const DEBOUNCE_DELAY = 150; // Shorter debounce for better responsiveness
+const MIN_DIMENSION = 100;
+const DEBOUNCE_DELAY = 150;
 
 const BookViewer = ({ 
   book, 
@@ -36,6 +37,7 @@ const BookViewer = ({
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const { toast } = useToast();
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -80,15 +82,21 @@ const BookViewer = ({
 
   useEffect(() => {
     const initializeBook = async () => {
+      if (!book) return;
+
       try {
         // Wait for both book and package to be ready
         await Promise.all([
           book.ready,
-          new Promise(resolve => {
-            if (book.package && book.package.metadata) {
+          new Promise((resolve) => {
+            if (book.package?.metadata) {
               resolve(true);
             } else {
-              book.on('package-ready', () => resolve(true));
+              const handlePackageReady = () => {
+                book.off('package-ready', handlePackageReady);
+                resolve(true);
+              };
+              book.on('package-ready', handlePackageReady);
             }
           })
         ]);
@@ -96,18 +104,21 @@ const BookViewer = ({
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize book. Please try again.",
+        });
         setIsBookReady(false);
       }
     };
 
-    if (book) {
-      initializeBook();
-    }
+    initializeBook();
 
     return () => {
       setIsBookReady(false);
     };
-  }, [book]);
+  }, [book, toast]);
 
   useEffect(() => {
     if (!isBookReady) return;
