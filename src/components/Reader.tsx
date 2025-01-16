@@ -103,38 +103,34 @@ const Reader = ({ metadata }: ReaderProps) => {
       setShowBookmarkDialog(true);
     } else {
       try {
+        // Get current spine item and chapter info
         const spineItem = book?.spine?.get(currentLocation);
         const chapterInfo = spineItem?.index !== undefined 
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
           : currentChapterTitle;
 
-        const currentPage = pageInfo?.chapterCurrent || 1;
-        const totalPages = pageInfo?.chapterTotal || 1;
-        const pageText = `Page ${currentPage} of ${totalPages}`;
-        const timestamp = new Date().toISOString();
-
+        // Create bookmark data with detailed metadata
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: Date.now(),
           chapterInfo,
-          pageInfo: pageText,
+          pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
           metadata: {
-            created: timestamp,
+            created: new Date().toISOString(),
             chapterIndex: spineItem?.index,
             chapterTitle: currentChapterTitle,
-            pageNumber: currentPage,
-            totalPages,
+            pageNumber: pageInfo.chapterCurrent,
+            totalPages: pageInfo.chapterTotal,
           }
         };
 
+        console.log('Saving bookmark with data:', bookmarkData);
         localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
         window.dispatchEvent(new Event('storage'));
         
         toast({
-          description: `Bookmark added: ${chapterInfo}, ${pageText}`,
+          description: `Bookmark added: ${chapterInfo}`,
         });
-
-        console.log('Bookmark saved:', bookmarkData);
       } catch (error) {
         console.error('Error saving bookmark:', error);
         toast({
@@ -236,7 +232,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Remove Bookmark</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to remove the bookmark from {currentChapterTitle}?
+                      Are you sure you want to remove the bookmark from {currentChapterTitle || 'this chapter'}?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
