@@ -30,6 +30,7 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
+  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -38,6 +39,7 @@ const BookViewer = ({
     []
   );
 
+  // Debounced container resize handler
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
       if (rendition && typeof rendition.resize === 'function') {
@@ -61,107 +63,125 @@ const BookViewer = ({
   }, [debouncedResize]);
 
   useEffect(() => {
-    const initializeRendition = async () => {
-      const container = document.querySelector(".epub-view");
-      if (!container || !book) return;
+    const container = document.querySelector(".epub-view");
+    if (!container || !book) return;
 
-      try {
-        // Make sure the book is ready before proceeding
-        await book.ready;
-        
-        if (rendition) {
-          rendition.destroy();
-        }
+    if (rendition) {
+      rendition.destroy();
+    }
 
-        const newRendition = book.renderTo(container, {
-          width: "100%",
-          height: "100%",
-          flow: "paginated",
-          spread: isMobile ? "none" : "always",
-          minSpreadWidth: 0,
-        });
+    const newRendition = book.renderTo(container, {
+      width: "100%",
+      height: "100%",
+      flow: "paginated",
+      spread: isMobile ? "none" : "always",
+      minSpreadWidth: 0,
+    });
 
-        // Wait for rendition to be ready
-        await new Promise<void>((resolve) => {
-          newRendition.on("rendered", () => resolve());
-          newRendition.on("relocated", onLocationChange);
-        });
-
-        newRendition.themes.default({
-          body: {
-            "column-count": isMobile ? "1" : "2",
-            "column-gap": "2em",
-            "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-            padding: "1em",
-            "text-align": textAlign,
-            "font-family": getFontFamily(fontFamily),
-            color: theme.text,
-            background: theme.background,
-          },
-          '.highlight-yellow': {
-            'background-color': '#FEF7CD',
-            'mix-blend-mode': 'multiply'
-          },
-          '.highlight-green': {
-            'background-color': '#F2FCE2',
-            'mix-blend-mode': 'multiply'
-          },
-          '.highlight-blue': {
-            'background-color': '#D3E4FD',
-            'mix-blend-mode': 'multiply'
-          },
-          '.highlight-pink': {
-            'background-color': '#FFDEE2',
-            'mix-blend-mode': 'multiply'
-          }
-        });
-
-        // Handle text selection
-        newRendition.on("selected", (cfiRange: string, contents: any) => {
-          const text = contents.window.getSelection()?.toString() || "";
-          if (text && onTextSelect) {
-            onTextSelect(cfiRange, text);
-          }
-        });
-
-        // Apply existing highlights
-        highlights.forEach(highlight => {
-          try {
-            newRendition.annotations.add(
-              "highlight",
-              highlight.cfiRange,
-              {},
-              undefined,
-              `highlight-${highlight.color}`
-            );
-          } catch (error) {
-            console.error('Error applying highlight:', error);
-          }
-        });
-
-        if (onRenditionReady) {
-          onRenditionReady(newRendition);
-        }
-
-        setRendition(newRendition);
-
-        // Display the content at the correct location
-        if (currentLocation) {
-          await newRendition.display(currentLocation);
-        } else {
-          await newRendition.display();
-        }
-
-      } catch (error) {
-        console.error('Error initializing rendition:', error);
+    newRendition.themes.default({
+      body: {
+        "column-count": isMobile ? "1" : "2",
+        "column-gap": "2em",
+        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+        padding: "1em",
+        "text-align": textAlign,
+        "font-family": getFontFamily(fontFamily),
+        color: theme.text,
+        background: theme.background,
+      },
+      '.highlight-yellow': {
+        'background-color': 'rgba(255, 235, 59, 0.3)',
+      },
+      '.highlight-green': {
+        'background-color': 'rgba(76, 175, 80, 0.3)',
+      },
+      '.highlight-blue': {
+        'background-color': 'rgba(33, 150, 243, 0.3)',
+      },
+      '.highlight-pink': {
+        'background-color': 'rgba(233, 30, 99, 0.3)',
       }
-    };
+    });
 
-    initializeRendition();
+    setRendition(newRendition);
+    if (onRenditionReady) {
+      onRenditionReady(newRendition);
+    }
+
+    if (currentLocation) {
+      newRendition.display(currentLocation);
+    } else {
+      newRendition.display();
+    }
+
+    // Handle text selection
+    newRendition.on("selected", (cfiRange: string, contents: any) => {
+      const text = contents.window.getSelection()?.toString() || "";
+      if (text && onTextSelect) {
+        onTextSelect(cfiRange, text);
+      }
+    });
+
+    // Apply existing highlights
+    highlights.forEach(highlight => {
+      try {
+        newRendition.annotations.add(
+          "highlight",
+          highlight.cfiRange,
+          {},
+          undefined,
+          "highlight-" + highlight.color
+        );
+      } catch (error) {
+        console.error('Error applying highlight:', error);
+      }
+    });
+
+    newRendition.on("relocated", (location: any) => {
+      onLocationChange(location);
+      
+      const contents = newRendition.getContents();
+      
+      if (contents && Array.isArray(contents) && contents.length > 0) {
+        const doc = contents[0].document;
+        
+        let heading = doc.querySelector('h2 a[id^="link2H_"]');
+        
+        if (heading) {
+          heading = heading.parentElement;
+        } else {
+          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+        }
+        
+        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+        
+        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+          detail: { title: chapterTitle } 
+        }));
+      }
+    });
+
+    // Create and setup ResizeObserver
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        debouncedContainerResize(entry.target);
+      }
+    });
+
+    observer.observe(container);
+    setResizeObserver(observer);
 
     return () => {
-      if (rendition) {
-        rendition.destroy();
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      debouncedContainerResize.cancel();
+      if (newRendition) {
+        newRendition.destroy();
       }
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights]);

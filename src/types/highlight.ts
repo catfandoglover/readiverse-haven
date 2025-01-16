@@ -1,7 +1,7 @@
 export interface Highlight {
   id: string;
   cfiRange: string;
-  color: HighlightColor;
+  color: string;
   text: string;
   note?: string;
   createdAt: number;
