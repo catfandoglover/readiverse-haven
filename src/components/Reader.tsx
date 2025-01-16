@@ -121,6 +121,14 @@ const Reader = ({ metadata }: ReaderProps) => {
   };
 
   const handleTextSelect = (cfiRange: string, text: string, note?: string) => {
+    if (!cfiRange || !text) {
+      setSelectedText(null);
+      return;
+    }
+    setSelectedText({ text, cfiRange });
+  };
+
+  const handleHighlight = (cfiRange: string, text: string, note?: string) => {
     if (note) {
       addHighlightWithNote(cfiRange, text, note);
     } else {
@@ -205,7 +213,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   textAlign={textAlign}
                   onRenditionReady={handleRenditionReady}
                   highlights={highlights}
-                  onTextSelect={(cfiRange, text) => setSelectedText({ text, cfiRange })}
+                  onTextSelect={handleTextSelect}
                 />
               </div>
               <ThemeSwitcher />
@@ -247,8 +255,8 @@ const Reader = ({ metadata }: ReaderProps) => {
         <TextSelectionMenu
           selectedText={selectedText.text}
           selectedCfiRange={selectedText.cfiRange}
-          onHighlight={(cfiRange, text) => handleTextSelect(cfiRange, text)}
-          onCreateNote={(cfiRange, text, note) => handleTextSelect(cfiRange, text, note)}
+          onHighlight={handleHighlight}
+          onCreateNote={handleHighlight}
         />
       )}
     </ThemeProvider>

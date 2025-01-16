@@ -3,7 +3,6 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import TextSelectionMenu from "./TextSelectionMenu";
 
 interface BookViewerProps {
   book: Book;
@@ -141,8 +140,9 @@ const BookViewer = ({
     });
 
     // Clear selection when clicking outside
-    newRendition.on("click", () => {
-      if (onTextSelect) {
+    newRendition.on("click", (event: MouseEvent) => {
+      const selection = window.getSelection();
+      if (selection && selection.toString() === "" && onTextSelect) {
         onTextSelect("", "");
       }
     });
