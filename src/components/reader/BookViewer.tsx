@@ -3,7 +3,8 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import type { Contents, View as EpubView } from "epubjs/types/rendition";
+import type Contents from "epubjs/types/rendition/contents";
+import type View from "epubjs/types/rendition/view";
 
 interface BookViewerProps {
   book: Book;
@@ -142,7 +143,7 @@ const BookViewer = ({
 
       // Get the current page's content document
       const views = newRendition.views();
-      const currentView = views?.length ? views[0] as EpubView : null;
+      const currentView = views?.length ? views[0] as View : null;
       if (!currentView) return;
 
       // Get the selection's container node
@@ -150,7 +151,7 @@ const BookViewer = ({
       if (!containerNode) return;
 
       // Check if the selection is within the current view's document
-      if (containerNode.ownerDocument === currentView.contents.document) {
+      if (containerNode.ownerDocument === currentView.document) {
         onTextSelect(cfiRange, text);
       }
     });
