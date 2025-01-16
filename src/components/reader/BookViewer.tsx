@@ -108,9 +108,17 @@ const BookViewer = ({
           console.log("Text selected:", text, "CFI Range:", cfiRange);
           onTextSelect(cfiRange, text);
           
-          // Prevent default selection behavior
-          if (selection) {
-            selection.removeAllRanges();
+          // Apply highlight immediately when text is selected
+          try {
+            newRendition.annotations.add(
+              "highlight",
+              cfiRange,
+              {},
+              undefined,
+              "highlight-yellow"
+            );
+          } catch (error) {
+            console.error('Error applying highlight:', error);
           }
         }
       });
@@ -145,6 +153,21 @@ const BookViewer = ({
 
       newRendition.on("relocated", (location: any) => {
         onLocationChange(location);
+        
+        // Reapply highlights after page change
+        highlights.forEach(highlight => {
+          try {
+            newRendition.annotations.add(
+              "highlight",
+              highlight.cfiRange,
+              {},
+              undefined,
+              "highlight-yellow"
+            );
+          } catch (error) {
+            console.error('Error reapplying highlight:', error);
+          }
+        });
         
         const contents = newRendition.getContents();
         if (contents && Array.isArray(contents) && contents.length > 0) {
