@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Maximize2 } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FontControls from './FontControls';
@@ -65,18 +65,25 @@ export const MobileControls = (props: ReaderControlsProps) => {
                 onClick={toggleFullScreen}
                 className="h-10 w-10"
               >
-                <Maximize2 className="h-4 w-4" />
+                <Menu className="h-4 w-4" />
               </Button>
             </div>
           </DrawerContent>
         </Drawer>
-        <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedHighlightColor}
-          onColorSelect={props.onHighlightColorSelect}
-          onHighlightSelect={props.onLocationChange}
-          onRemoveHighlight={props.onRemoveHighlight}
-        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          asChild
+        >
+          <HighlightsMenu
+            highlights={props.highlights}
+            selectedColor={props.selectedHighlightColor}
+            onColorSelect={props.onHighlightColorSelect}
+            onHighlightSelect={props.onLocationChange}
+            onRemoveHighlight={props.onRemoveHighlight}
+          />
+        </Button>
       </div>
       
       <div className="md:hidden flex items-center gap-2">
