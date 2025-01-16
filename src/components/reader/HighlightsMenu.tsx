@@ -20,10 +20,7 @@ interface HighlightsMenuProps {
 }
 
 const colorClasses: Record<HighlightColor, string> = {
-  yellow: 'bg-yellow-200',
-  green: 'bg-green-200',
-  blue: 'bg-blue-200',
-  pink: 'bg-pink-200'
+  yellow: 'bg-yellow-200'
 };
 
 const HighlightsMenu = ({
@@ -46,17 +43,15 @@ const HighlightsMenu = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="p-2 flex gap-2 justify-center">
-          {(['yellow', 'green', 'blue', 'pink'] as HighlightColor[]).map((color) => (
-            <Button
-              key={color}
-              variant="outline"
-              size="icon"
-              className={`h-6 w-6 rounded-full ${colorClasses[color]} ${
-                selectedColor === color ? 'ring-2 ring-offset-2 ring-primary' : ''
-              }`}
-              onClick={() => onColorSelect(color)}
-            />
-          ))}
+          <Button
+            key="yellow"
+            variant="outline"
+            size="icon"
+            className={`h-6 w-6 rounded-full ${colorClasses.yellow} ${
+              selectedColor === 'yellow' ? 'ring-2 ring-offset-2 ring-primary' : ''
+            }`}
+            onClick={() => onColorSelect('yellow')}
+          />
         </div>
         <DropdownMenuSeparator />
         {highlights.length === 0 ? (
@@ -69,11 +64,7 @@ const HighlightsMenu = ({
               key={highlight.id}
               className="flex items-start gap-2 p-2"
             >
-              <div
-                className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
-                  colorClasses[highlight.color as HighlightColor]
-                }`}
-              />
+              <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${colorClasses.yellow}`} />
               <div className="flex-1 min-w-0">
                 <div 
                   className="text-sm truncate cursor-pointer hover:text-primary"

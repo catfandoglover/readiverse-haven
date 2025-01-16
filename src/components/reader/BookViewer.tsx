@@ -91,15 +91,6 @@ const BookViewer = ({
       },
       '.highlight-yellow': {
         'background-color': 'rgba(255, 235, 59, 0.3)',
-      },
-      '.highlight-green': {
-        'background-color': 'rgba(76, 175, 80, 0.3)',
-      },
-      '.highlight-blue': {
-        'background-color': 'rgba(33, 150, 243, 0.3)',
-      },
-      '.highlight-pink': {
-        'background-color': 'rgba(233, 30, 99, 0.3)',
       }
     });
 
