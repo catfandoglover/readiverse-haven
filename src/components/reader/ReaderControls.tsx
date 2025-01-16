@@ -8,13 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark } from "lucide-react";
+import { AlignLeft, AlignCenter, AlignJustify, Menu, Bookmark, Maximize2, Minimize2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import BookmarksMenu from './BookmarksMenu';
+import { useToast } from "@/components/ui/use-toast";
 
 interface ReaderControlsProps {
   fontSize: number;
@@ -40,6 +41,46 @@ const ControlPanel = ({
   brightness,
   onBrightnessChange,
 }: ReaderControlsProps) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { toast } = useToast();
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+        toast({
+          description: "Entered fullscreen mode",
+        });
+      }).catch(err => {
+        toast({
+          variant: "destructive",
+          description: "Error entering fullscreen mode",
+        });
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+        toast({
+          description: "Exited fullscreen mode",
+        });
+      }).catch(err => {
+        toast({
+          variant: "destructive",
+          description: "Error exiting fullscreen mode",
+        });
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -106,6 +147,15 @@ const ControlPanel = ({
           className="w-32"
         />
       </div>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={toggleFullscreen}
+        className="ml-2"
+      >
+        {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </Button>
     </div>
   );
 };
