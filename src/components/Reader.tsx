@@ -95,7 +95,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleNoteDialogClose = () => {
     setNoteDialogOpen(false);
-    // Clear selected highlight after animation completes
+    // Clear selected highlight after dialog is fully closed
     setTimeout(() => {
       setSelectedHighlight(null);
     }, 300);
@@ -104,10 +104,8 @@ const Reader = ({ metadata }: ReaderProps) => {
   const handleNoteClick = (highlight: Highlight) => {
     // Set highlight first
     setSelectedHighlight(highlight);
-    // Then open dialog in next frame
-    requestAnimationFrame(() => {
-      setNoteDialogOpen(true);
-    });
+    // Then open dialog
+    setNoteDialogOpen(true);
   };
 
   const handleNoteSave = (note: string) => {

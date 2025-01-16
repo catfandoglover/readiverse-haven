@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
@@ -50,17 +50,17 @@ const NoteDialog = ({
   }, [open, initialNote]);
 
   return (
-    <Dialog 
+    <AlertDialog 
       open={open} 
       onOpenChange={onOpenChange}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Note</DialogTitle>
-          <DialogDescription>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add Note</AlertDialogTitle>
+          <AlertDialogDescription>
             Add a note to your highlighted text
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <div className="grid gap-4">
           <div className="grid gap-2">
             <p className="text-sm font-medium text-muted-foreground">
@@ -77,7 +77,7 @@ const NoteDialog = ({
             />
           </div>
         </div>
-        <DialogFooter>
+        <AlertDialogFooter>
           <Button onClick={handleSave}>Save note</Button>
           <Button 
             variant="outline" 
@@ -85,9 +85,9 @@ const NoteDialog = ({
           >
             Cancel
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
