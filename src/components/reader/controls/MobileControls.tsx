@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Maximize2, Highlighter } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FontControls from './FontControls';
@@ -11,16 +11,6 @@ import SessionTimer from '../SessionTimer';
 import type { ReaderControlsProps } from '@/types/reader';
 
 export const MobileControls = (props: ReaderControlsProps) => {
-  const [showMobileTimer, setShowMobileTimer] = React.useState(false);
-
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
   return (
     <div className="md:hidden w-full flex justify-between items-center">
       <div className="flex items-center gap-2">
@@ -49,23 +39,10 @@ export const MobileControls = (props: ReaderControlsProps) => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setShowMobileTimer(!showMobileTimer)}
+                onClick={() => {}}
                 className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
               >
                 <SessionTimer seconds={props.sessionTime} showIcon={true} />
-              </Button>
-              {showMobileTimer && (
-                <div className="w-full p-4 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg flex justify-center">
-                  <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleFullScreen}
-                className="h-10 w-10"
-              >
-                <Maximize2 className="h-4 w-4" />
               </Button>
             </div>
           </DrawerContent>
@@ -74,7 +51,7 @@ export const MobileControls = (props: ReaderControlsProps) => {
       
       <div className="md:hidden flex items-center gap-2">
         <HighlightsMenu
-          highlights={props.highlights || []}
+          highlights={props.highlights}
           selectedColor={props.selectedHighlightColor}
           onColorSelect={props.onHighlightColorSelect}
           onHighlightSelect={props.onHighlightSelect}
