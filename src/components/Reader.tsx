@@ -30,6 +30,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
+  const [currentChapterTitle, setCurrentChapterTitle] = useState<string>("Unknown Chapter");
 
   const {
     book,
@@ -99,10 +100,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (bookmarkExists) {
       setShowBookmarkDialog(true);
     } else {
-      // Get current chapter info from the book
-      const chapter = rendition.location?.start?.href || "Unknown Chapter";
-      const chapterInfo = chapter.split('/').pop()?.replace(/\.xhtml$|\.html$/, '') || "Unknown Chapter";
-      
       // Get current page info
       const currentPage = pageInfo.chapterCurrent;
       const pageText = `Page ${currentPage}`;
@@ -110,7 +107,7 @@ const Reader = ({ metadata }: ReaderProps) => {
       localStorage.setItem(bookmarkKey, JSON.stringify({
         cfi: currentLocation,
         timestamp: Date.now(),
-        chapterInfo,
+        chapterInfo: currentChapterTitle,
         pageInfo: pageText
       }));
       window.dispatchEvent(new Event('storage'));

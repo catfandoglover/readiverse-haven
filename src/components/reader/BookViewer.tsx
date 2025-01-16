@@ -47,7 +47,7 @@ const BookViewer = ({
       height: "100%",
       flow: "paginated",
       spread: isMobile ? "none" : "always",
-      minSpreadWidth: 0, // Remove the minimum width requirement for spread
+      minSpreadWidth: 0,
     });
 
     if (currentLocation) {
@@ -58,6 +58,19 @@ const BookViewer = ({
 
     newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
+      
+      // Extract chapter title from the current section
+      newRendition.getContents().then(contents => {
+        if (contents && contents.length > 0) {
+          const doc = contents[0].document;
+          const heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+          const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+          // Dispatch a custom event to update the chapter title
+          window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+            detail: { title: chapterTitle } 
+          }));
+        }
+      });
     });
 
     newRendition.themes.default({
