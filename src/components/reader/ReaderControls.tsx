@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from "lucide-react";
+import { Menu, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -26,6 +26,14 @@ interface ReaderControlsProps {
 }
 
 const ControlPanel = (props: ReaderControlsProps) => {
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
       <FontControls
@@ -42,11 +50,29 @@ const ControlPanel = (props: ReaderControlsProps) => {
         brightness={props.brightness}
         onBrightnessChange={props.onBrightnessChange}
       />
+      <div className="md:hidden">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleFullScreen}
+          className="h-10 w-10"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };
 
 const ReaderControls = (props: ReaderControlsProps) => {
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   return (
     <>
       {/* Desktop bookmark controls */}
@@ -56,6 +82,18 @@ const ReaderControls = (props: ReaderControlsProps) => {
           onBookmarkClick={props.onBookmarkClick}
           onLocationChange={props.onLocationChange}
         />
+      </div>
+
+      {/* Desktop fullscreen button */}
+      <div className="hidden md:flex fixed bottom-4 right-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleFullScreen}
+          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+        >
+          <Maximize2 className="h-5 w-5" />
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
