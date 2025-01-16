@@ -65,7 +65,6 @@ const BookViewer = ({
   useEffect(() => {
     const initializeBook = async () => {
       try {
-        // Ensure book is loaded
         await book.ready;
         setIsBookReady(true);
       } catch (error) {
@@ -84,9 +83,21 @@ const BookViewer = ({
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
+    // Create text selection handler
+    const handleTextSelection = (cfiRange: string, contents: any) => {
+      const text = contents.window.getSelection()?.toString() || "";
+      if (text && onTextSelect) {
+        onTextSelect(cfiRange, text);
+        // Clear the selection after processing
+        if (contents.window.getSelection()) {
+          contents.window.getSelection()?.removeAllRanges();
+        }
+      }
+    };
+
     if (rendition) {
       // Cleanup existing rendition
-      rendition.off("selected");
+      rendition.off("selected", handleTextSelection);
       rendition.destroy();
     }
 
@@ -133,18 +144,7 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Handle text selection with proper cleanup
-    const handleTextSelection = (cfiRange: string, contents: any) => {
-      const text = contents.window.getSelection()?.toString() || "";
-      if (text && onTextSelect) {
-        onTextSelect(cfiRange, text);
-        // Clear the selection after processing
-        if (contents.window.getSelection()) {
-          contents.window.getSelection()?.removeAllRanges();
-        }
-      }
-    };
-
+    // Attach text selection handler
     newRendition.on("selected", handleTextSelection);
 
     // Apply existing highlights
