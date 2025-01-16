@@ -69,12 +69,12 @@ export const MobileControls = (props: ReaderControlsProps) => {
             </div>
           </DrawerContent>
         </Drawer>
-        <Button variant="outline" size="icon">
-          <Highlighter className="h-4 w-4" />
-        </Button>
       </div>
       
       <div className="md:hidden flex items-center gap-2">
+        <Button variant="outline" size="icon">
+          <Highlighter className="h-4 w-4" />
+        </Button>
         <BookmarkControls
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}
