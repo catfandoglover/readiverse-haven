@@ -241,25 +241,28 @@ const Reader = ({ metadata }: ReaderProps) => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => {
-                      if (currentLocation) {
-                        const bookmarkKey = `book-progress-${currentLocation}`;
-                        try {
-                          localStorage.removeItem(bookmarkKey);
-                          window.dispatchEvent(new Event('storage'));
-                          toast({
-                            description: "Bookmark removed successfully",
-                          });
-                        } catch (error) {
-                          console.error('Error removing bookmark:', error);
-                          toast({
-                            variant: "destructive",
-                            description: "Failed to remove bookmark. Please try again.",
-                          });
+                    <AlertDialogAction 
+                      onClick={() => {
+                        if (currentLocation) {
+                          const bookmarkKey = `book-progress-${currentLocation}`;
+                          try {
+                            localStorage.removeItem(bookmarkKey);
+                            window.dispatchEvent(new Event('storage'));
+                            toast({
+                              description: "Bookmark removed successfully",
+                            });
+                          } catch (error) {
+                            console.error('Error removing bookmark:', error);
+                            toast({
+                              variant: "destructive",
+                              description: "Failed to remove bookmark. Please try again.",
+                            });
+                          }
                         }
-                      }
-                      setShowBookmarkDialog(false);
-                    }}>
+                        setShowBookmarkDialog(false);
+                      }}
+                      aria-label="Remove bookmark"
+                    >
                       Remove
                     </AlertDialogAction>
                   </AlertDialogFooter>
