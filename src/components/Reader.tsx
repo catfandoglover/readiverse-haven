@@ -11,7 +11,6 @@ import { useNavigation } from "@/hooks/useNavigation";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useChapterTitle } from "@/hooks/useChapterTitle";
 import { useRenditionSettings } from "@/hooks/useRenditionSettings";
-import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -73,14 +72,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     handleRemoveBookmark
   } = useBookmarks(book, currentLocation, currentChapterTitle);
 
-  const {
-    highlights,
-    currentColor,
-    setCurrentColor,
-    createHighlight,
-    removeHighlight
-  } = useHighlights(book);
-
+  // Session timer logic
   useEffect(() => {
     if (book) {
       setIsReading(true);
@@ -151,10 +143,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onBookmarkClick={handleBookmarkClick}
                 onLocationChange={handleLocationSelect}
                 sessionTime={sessionTime}
-                highlights={highlights}
-                currentHighlightColor={currentColor}
-                onHighlightColorChange={setCurrentColor}
-                onRemoveHighlight={removeHighlight}
               />
               
               <ProgressTracker 
@@ -190,8 +178,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                   fontFamily={fontFamily}
                   textAlign={textAlign}
                   onRenditionReady={handleRenditionReady}
-                  highlights={highlights}
-                  onCreateHighlight={createHighlight}
                 />
               </div>
               <ThemeSwitcher />
