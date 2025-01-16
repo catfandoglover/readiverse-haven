@@ -136,7 +136,7 @@ const BookViewer = ({
       const selection = contents.window.getSelection();
       if (!selection) return;
 
-      const text = selection.toString();
+      const text = selection.toString().trim();
       if (!text || !onTextSelect) return;
 
       // Get the current page's content document
@@ -148,8 +148,8 @@ const BookViewer = ({
       const containerNode = selection.anchorNode?.parentElement;
       if (!containerNode) return;
 
-      // Check if the selection is within the current view's document
-      if (containerNode.ownerDocument === currentView.document) {
+      // Check if the selection is within the current view's iframe document
+      if (containerNode.ownerDocument === currentView.iframe.contentDocument) {
         onTextSelect(cfiRange, text);
       }
     });
