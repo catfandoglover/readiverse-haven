@@ -31,6 +31,7 @@ const BookViewer = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const [isBookReady, setIsBookReady] = useState(false);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -39,7 +40,6 @@ const BookViewer = ({
     []
   );
 
-  // Debounced container resize handler
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
       if (rendition && typeof rendition.resize === 'function') {
@@ -63,6 +63,24 @@ const BookViewer = ({
   }, [debouncedResize]);
 
   useEffect(() => {
+    const initializeBook = async () => {
+      try {
+        // Ensure book is loaded
+        await book.ready;
+        setIsBookReady(true);
+      } catch (error) {
+        console.error('Error initializing book:', error);
+      }
+    };
+
+    if (book) {
+      initializeBook();
+    }
+  }, [book]);
+
+  useEffect(() => {
+    if (!isBookReady) return;
+
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
@@ -99,11 +117,19 @@ const BookViewer = ({
       onRenditionReady(newRendition);
     }
 
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
+    const displayLocation = async () => {
+      try {
+        if (currentLocation) {
+          await newRendition.display(currentLocation);
+        } else {
+          await newRendition.display();
+        }
+      } catch (error) {
+        console.error('Error displaying location:', error);
+      }
+    };
+
+    displayLocation();
 
     // Handle text selection
     newRendition.on("selected", (cfiRange: string, contents: any) => {
@@ -121,7 +147,7 @@ const BookViewer = ({
           highlight.cfiRange,
           {},
           undefined,
-          "highlight-" + highlight.color
+          "highlight-yellow"
         );
       } catch (error) {
         console.error('Error applying highlight:', error);
@@ -175,7 +201,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
   useEffect(() => {
     if (rendition) {
