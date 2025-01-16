@@ -3,7 +3,6 @@ import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import { useToast } from "@/components/ui/use-toast";
 
 interface BookViewerProps {
   book: Book;
@@ -16,9 +15,6 @@ interface BookViewerProps {
   highlights?: Highlight[];
   onTextSelect?: (cfiRange: string, text: string) => void;
 }
-
-const MIN_DIMENSION = 100;
-const DEBOUNCE_DELAY = 150;
 
 const BookViewer = ({ 
   book, 
@@ -36,89 +32,51 @@ const BookViewer = ({
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const { toast } = useToast();
 
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, DEBOUNCE_DELAY),
+    }, 250),
     []
   );
 
-  const handleResize = useCallback((container: Element) => {
-    if (!rendition || !container || isResizing) return;
-
-    const { clientWidth, clientHeight } = container;
-    if (clientWidth < MIN_DIMENSION || clientHeight < MIN_DIMENSION) return;
-
-    setIsResizing(true);
-    try {
-      rendition.resize(clientWidth, clientHeight);
-    } catch (error) {
-      console.error('Error resizing rendition:', error);
-    } finally {
-      setIsResizing(false);
-    }
-  }, [rendition, isResizing]);
-
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
-      if (container.clientWidth > MIN_DIMENSION && container.clientHeight > MIN_DIMENSION) {
-        requestAnimationFrame(() => handleResize(container));
+      if (rendition && typeof rendition.resize === 'function') {
+        try {
+          rendition.resize(container.clientWidth, container.clientHeight);
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        }
       }
-    }, DEBOUNCE_DELAY),
-    [handleResize]
+    }, 250),
+    [rendition]
   );
 
   useEffect(() => {
-    const handleWindowResize = () => debouncedResize();
-    window.addEventListener('resize', handleWindowResize);
+    const handleResize = () => debouncedResize();
+    window.addEventListener('resize', handleResize);
     return () => {
-      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('resize', handleResize);
       debouncedResize.cancel();
     };
   }, [debouncedResize]);
 
   useEffect(() => {
     const initializeBook = async () => {
-      if (!book) return;
-
       try {
-        // Wait for both book and package to be ready
-        await Promise.all([
-          book.ready,
-          new Promise((resolve) => {
-            if (book.package?.metadata) {
-              resolve(true);
-            } else {
-              const handlePackageReady = () => {
-                book.off('package-ready', handlePackageReady);
-                resolve(true);
-              };
-              book.on('package-ready', handlePackageReady);
-            }
-          })
-        ]);
-        
+        // Ensure book is loaded
+        await book.ready;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to initialize book. Please try again.",
-        });
-        setIsBookReady(false);
       }
     };
 
-    initializeBook();
-
-    return () => {
-      setIsBookReady(false);
-    };
-  }, [book, toast]);
+    if (book) {
+      initializeBook();
+    }
+  }, [book]);
 
   useEffect(() => {
     if (!isBookReady) return;
@@ -173,6 +131,7 @@ const BookViewer = ({
 
     displayLocation();
 
+    // Handle text selection
     newRendition.on("selected", (cfiRange: string, contents: any) => {
       const text = contents.window.getSelection()?.toString() || "";
       if (text && onTextSelect) {
@@ -180,6 +139,7 @@ const BookViewer = ({
       }
     });
 
+    // Apply existing highlights
     highlights.forEach(highlight => {
       try {
         newRendition.annotations.add(
@@ -218,17 +178,15 @@ const BookViewer = ({
       }
     });
 
-    let rafId: number;
+    // Create and setup ResizeObserver
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+
     const observer = new ResizeObserver((entries) => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
+      for (const entry of entries) {
+        debouncedContainerResize(entry.target);
       }
-      
-      rafId = requestAnimationFrame(() => {
-        for (const entry of entries) {
-          debouncedContainerResize(entry.target);
-        }
-      });
     });
 
     observer.observe(container);
@@ -238,15 +196,12 @@ const BookViewer = ({
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
       debouncedContainerResize.cancel();
       if (newRendition) {
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, debouncedContainerResize]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
   useEffect(() => {
     if (rendition) {
