@@ -97,69 +97,71 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
   };
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onBookmarkClick}
-        className="text-red-500 hover:text-red-600"
-      >
-        <Bookmark 
-          className="h-[1.2rem] w-[1.2rem]" 
-          fill={isBookmarked ? "currentColor" : "none"} 
-          stroke={isBookmarked ? "currentColor" : "currentColor"}
-        />
-        <span className="sr-only">Bookmark this page</span>
-      </Button>
+    <div className="flex flex-col md:items-end gap-2">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBookmarkClick}
+          className="text-red-500 hover:text-red-600"
+        >
+          <Bookmark 
+            className="h-[1.2rem] w-[1.2rem]" 
+            fill={isBookmarked ? "currentColor" : "none"} 
+            stroke={isBookmarked ? "currentColor" : "currentColor"}
+          />
+          <span className="sr-only">Bookmark this page</span>
+        </Button>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative">
-            <Bookmark className="h-[1.2rem] w-[1.2rem]" />
-            {Object.keys(bookmarks).length > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full"
-              >
-                {Object.keys(bookmarks).length}
-              </Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bookmark className="h-[1.2rem] w-[1.2rem]" />
+              {Object.keys(bookmarks).length > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full"
+                >
+                  {Object.keys(bookmarks).length}
+                </Badge>
+              )}
+              <span className="sr-only">Toggle bookmarks menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuLabel className="flex items-center justify-between">
+              Bookmarks
+              {Object.keys(bookmarks).length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearAll}
+                  className="h-6 w-6"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Clear all bookmarks</span>
+                </Button>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {Object.entries(bookmarks)
+              .sort(([, a], [, b]) => b.timestamp - a.timestamp)
+              .map(([key, bookmark]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onSelect={() => onLocationSelect(bookmark.cfi)}
+                  className="flex flex-col items-start"
+                >
+                  <span className="text-sm">{bookmark.chapterInfo}</span>
+                  <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
+                </DropdownMenuItem>
+              ))}
+            {Object.keys(bookmarks).length === 0 && (
+              <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
             )}
-            <span className="sr-only">Toggle bookmarks menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px]">
-          <DropdownMenuLabel className="flex items-center justify-between">
-            Bookmarks
-            {Object.keys(bookmarks).length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearAll}
-                className="h-6 w-6"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Clear all bookmarks</span>
-              </Button>
-            )}
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {Object.entries(bookmarks)
-            .sort(([, a], [, b]) => b.timestamp - a.timestamp)
-            .map(([key, bookmark]) => (
-              <DropdownMenuItem
-                key={key}
-                onSelect={() => onLocationSelect(bookmark.cfi)}
-                className="flex flex-col items-start"
-              >
-                <span className="text-sm">{bookmark.chapterInfo}</span>
-                <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
-              </DropdownMenuItem>
-            ))}
-          {Object.keys(bookmarks).length === 0 && (
-            <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
