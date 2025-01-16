@@ -115,22 +115,34 @@ const BookViewer = ({
       }
     });
 
-    // Use ResizeObserver with proper typing
+    // Use ResizeObserver with proper typing and debouncing
+    let resizeTimeout: number;
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
       if (!entries.length) return;
       
-      // Check if rendition exists and is ready
-      if (newRendition) {
-        const resizeCallback = (timestamp: DOMHighResTimeStamp) => {
-          newRendition.resize();
-        };
-        window.requestAnimationFrame(resizeCallback);
+      // Clear any pending resize timeout
+      if (resizeTimeout) {
+        window.cancelAnimationFrame(resizeTimeout);
       }
+      
+      // Schedule a new resize with proper type checking
+      resizeTimeout = window.requestAnimationFrame(() => {
+        if (newRendition && typeof newRendition.resize === 'function') {
+          try {
+            newRendition.resize();
+          } catch (error) {
+            console.error('Error resizing rendition:', error);
+          }
+        }
+      });
     });
 
     resizeObserver.observe(container);
 
     return () => {
+      if (resizeTimeout) {
+        window.cancelAnimationFrame(resizeTimeout);
+      }
       resizeObserver.disconnect();
       if (newRendition) {
         newRendition.destroy();
