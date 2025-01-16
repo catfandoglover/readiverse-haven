@@ -59,7 +59,8 @@ const Reader = ({ metadata }: ReaderProps) => {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (book && currentLocation) {
-        saveProgress(currentLocation);
+        // Save progress without creating a bookmark
+        localStorage.setItem(`reading-progress-${book.key()}`, currentLocation);
       }
     };
 
@@ -69,7 +70,7 @@ const Reader = ({ metadata }: ReaderProps) => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       handleBeforeUnload();
     };
-  }, [book, currentLocation, saveProgress]);
+  }, [book, currentLocation]);
 
   const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
@@ -108,10 +109,7 @@ const Reader = ({ metadata }: ReaderProps) => {
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
           : currentChapterTitle;
 
-        console.log('Creating bookmark with chapter title:', currentChapterTitle);
-        console.log('Current spine item:', spineItem);
-
-        // Create a properly structured bookmark from the start
+        // Create a properly structured bookmark
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: Date.now(),

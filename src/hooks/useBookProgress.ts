@@ -14,12 +14,12 @@ export const useBookProgress = () => {
 
   const saveProgress = (cfi: string) => {
     if (!book) return;
-    localStorage.setItem(`book-progress-${book.key()}`, cfi);
+    localStorage.setItem(`reading-progress-${book.key()}`, cfi);
   };
 
   const loadProgress = () => {
     if (!book) return null;
-    return localStorage.getItem(`book-progress-${book.key()}`);
+    return localStorage.getItem(`reading-progress-${book.key()}`);
   };
 
   const handleLocationChange = (location: any) => {
