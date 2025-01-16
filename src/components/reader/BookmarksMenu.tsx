@@ -8,12 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Bookmark } from "lucide-react";
-
-interface BookmarksMenuProps {
-  currentLocation: string | null;
-  onLocationSelect: (location: string) => void;
-}
+import { Bookmark, Trash2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookmarkData {
   cfi: string;
@@ -28,8 +24,14 @@ interface BookmarkData {
   };
 }
 
+interface BookmarksMenuProps {
+  currentLocation: string | null;
+  onLocationSelect: (location: string) => void;
+}
+
 const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadBookmarks = () => {
@@ -50,7 +52,6 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps
               metadata: data.metadata || {}
             };
           } catch {
-            // If parsing fails, use the raw value as CFI
             marks[key] = {
               cfi: value,
               timestamp: Date.now(),
@@ -70,6 +71,18 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps
     };
   }, []);
 
+  const handleClearAll = () => {
+    const bookmarkKeys = Object.keys(bookmarks);
+    bookmarkKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    setBookmarks({});
+    window.dispatchEvent(new Event('storage'));
+    toast({
+      description: "All bookmarks have been cleared",
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -79,7 +92,20 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
-        <DropdownMenuLabel>Bookmarks</DropdownMenuLabel>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          Bookmarks
+          {Object.keys(bookmarks).length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearAll}
+              className="h-6 w-6"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Clear all bookmarks</span>
+            </Button>
+          )}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {Object.entries(bookmarks)
           .sort(([, a], [, b]) => b.timestamp - a.timestamp)
