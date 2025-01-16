@@ -133,8 +133,22 @@ const BookViewer = ({
     displayLocation();
 
     newRendition.on("selected", (cfiRange: string, contents: any) => {
-      const text = contents.window.getSelection()?.toString() || "";
-      if (text && onTextSelect) {
+      const selection = contents.window.getSelection();
+      if (!selection) return;
+
+      const text = selection.toString();
+      if (!text || !onTextSelect) return;
+
+      // Get the current page's content document
+      const currentView = newRendition.manager?.views?.current();
+      if (!currentView) return;
+
+      // Get the selection's container node
+      const containerNode = selection.anchorNode?.parentElement;
+      if (!containerNode) return;
+
+      // Check if the selection is within the current view's document
+      if (containerNode.ownerDocument === currentView.document) {
         onTextSelect(cfiRange, text);
       }
     });
