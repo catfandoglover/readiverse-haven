@@ -28,7 +28,7 @@ export const useHighlights = (bookKey: string | null) => {
     }
   };
 
-  const addHighlight = (cfiRange: string, text: string) => {
+  const addHighlight = (cfiRange: string, text: string, note?: string) => {
     if (!bookKey) return;
 
     const newHighlight: Highlight = {
@@ -36,6 +36,7 @@ export const useHighlights = (bookKey: string | null) => {
       cfiRange,
       color: selectedColor,
       text,
+      note,
       createdAt: Date.now(),
       bookKey
     };
@@ -44,7 +45,7 @@ export const useHighlights = (bookKey: string | null) => {
     saveHighlights(newHighlights);
     
     toast({
-      description: "Highlight added successfully",
+      description: note ? "Note added successfully" : "Highlight added successfully",
     });
   };
 
@@ -64,12 +65,17 @@ export const useHighlights = (bookKey: string | null) => {
     saveHighlights(newHighlights);
   };
 
+  const updateNote = (id: string, note: string) => {
+    updateHighlight(id, { note });
+  };
+
   return {
     highlights,
     selectedColor,
     setSelectedColor,
     addHighlight,
     removeHighlight,
-    updateHighlight
+    updateHighlight,
+    updateNote
   };
 };

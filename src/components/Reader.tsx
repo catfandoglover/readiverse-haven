@@ -6,6 +6,7 @@ import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import ThemeSwitcher from "./reader/ThemeSwitcher";
 import HighlightsMenu from "./reader/HighlightsMenu";
+import NoteDialog from "./reader/NoteDialog";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -31,6 +32,8 @@ import {
 const Reader = ({ metadata }: ReaderProps) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [selectedHighlight, setSelectedHighlight] = useState<Highlight | null>(null);
 
   const {
     book,
@@ -81,6 +84,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     setSelectedColor,
     addHighlight,
     removeHighlight,
+    updateNote
   } = useHighlights(book?.key() || null);
 
   // Session timer logic
@@ -192,6 +196,14 @@ const Reader = ({ metadata }: ReaderProps) => {
                     onColorSelect={setSelectedColor}
                     onHighlightSelect={handleLocationSelect}
                     onRemoveHighlight={removeHighlight}
+                    onUpdateNote={(id, note) => {
+                      updateNote(id, note);
+                      setSelectedHighlight(null);
+                    }}
+                    onNoteClick={(highlight) => {
+                      setSelectedHighlight(highlight);
+                      setNoteDialogOpen(true);
+                    }}
                   />
                 </div>
                 <BookViewer
@@ -237,6 +249,19 @@ const Reader = ({ metadata }: ReaderProps) => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+
+              <NoteDialog
+                open={noteDialogOpen}
+                onOpenChange={setNoteDialogOpen}
+                onSave={(note) => {
+                  if (selectedHighlight) {
+                    updateNote(selectedHighlight.id, note);
+                  }
+                  setSelectedHighlight(null);
+                }}
+                initialNote={selectedHighlight?.note}
+                highlightedText={selectedHighlight?.text}
+              />
             </>
           )}
         </div>
