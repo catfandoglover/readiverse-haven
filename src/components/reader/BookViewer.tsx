@@ -16,6 +16,9 @@ interface BookViewerProps {
   onTextSelect?: (cfiRange: string, text: string) => void;
 }
 
+const MIN_DIMENSION = 100; // Minimum dimension threshold
+const DEBOUNCE_DELAY = 150; // Shorter debounce for better responsiveness
+
 const BookViewer = ({ 
   book, 
   currentLocation, 
@@ -32,34 +35,45 @@ const BookViewer = ({
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
 
-  // More aggressive debouncing for resize events
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 500),
+    }, DEBOUNCE_DELAY),
     []
   );
 
-  // Debounced container resize with a higher threshold
+  const handleResize = useCallback((container: Element) => {
+    if (!rendition || !container || isResizing) return;
+
+    const { clientWidth, clientHeight } = container;
+    if (clientWidth < MIN_DIMENSION || clientHeight < MIN_DIMENSION) return;
+
+    setIsResizing(true);
+    try {
+      rendition.resize(clientWidth, clientHeight);
+    } catch (error) {
+      console.error('Error resizing rendition:', error);
+    } finally {
+      setIsResizing(false);
+    }
+  }, [rendition, isResizing]);
+
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
-      if (rendition && typeof rendition.resize === 'function' && container.clientWidth > 0 && container.clientHeight > 0) {
-        try {
-          rendition.resize(container.clientWidth, container.clientHeight);
-        } catch (error) {
-          console.error('Error resizing rendition:', error);
-        }
+      if (container.clientWidth > MIN_DIMENSION && container.clientHeight > MIN_DIMENSION) {
+        requestAnimationFrame(() => handleResize(container));
       }
-    }, 500),
-    [rendition]
+    }, DEBOUNCE_DELAY),
+    [handleResize]
   );
 
   useEffect(() => {
-    const handleResize = () => debouncedResize();
-    window.addEventListener('resize', handleResize);
+    const handleWindowResize = () => debouncedResize();
+    window.addEventListener('resize', handleWindowResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleWindowResize);
       debouncedResize.cancel();
     };
   }, [debouncedResize]);
@@ -177,17 +191,15 @@ const BookViewer = ({
       }
     });
 
-    // Create and setup ResizeObserver with error handling
-    if (resizeObserver) {
-      resizeObserver.disconnect();
-    }
-
+    let rafId: number;
     const observer = new ResizeObserver((entries) => {
-      requestAnimationFrame(() => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      
+      rafId = requestAnimationFrame(() => {
         for (const entry of entries) {
-          if (entry.target.clientWidth > 0 && entry.target.clientHeight > 0) {
-            debouncedContainerResize(entry.target);
-          }
+          debouncedContainerResize(entry.target);
         }
       });
     });
@@ -199,12 +211,15 @@ const BookViewer = ({
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
       debouncedContainerResize.cancel();
       if (newRendition) {
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, debouncedContainerResize]);
 
   useEffect(() => {
     if (rendition) {
