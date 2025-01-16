@@ -15,7 +15,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -127,6 +126,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     } else {
       addHighlight(cfiRange, text);
     }
+    setSelectedText(null);
   };
 
   useEffect(() => {
@@ -205,7 +205,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   textAlign={textAlign}
                   onRenditionReady={handleRenditionReady}
                   highlights={highlights}
-                  onTextSelect={handleTextSelect}
+                  onTextSelect={(cfiRange, text) => setSelectedText({ text, cfiRange })}
                 />
               </div>
               <ThemeSwitcher />
@@ -247,14 +247,8 @@ const Reader = ({ metadata }: ReaderProps) => {
         <TextSelectionMenu
           selectedText={selectedText.text}
           selectedCfiRange={selectedText.cfiRange}
-          onHighlight={(cfiRange, text) => {
-            handleTextSelect(cfiRange, text);
-            setSelectedText(null);
-          }}
-          onCreateNote={(cfiRange, text, note) => {
-            handleTextSelect(cfiRange, text, note);
-            setSelectedText(null);
-          }}
+          onHighlight={(cfiRange, text) => handleTextSelect(cfiRange, text)}
+          onCreateNote={(cfiRange, text, note) => handleTextSelect(cfiRange, text, note)}
         />
       )}
     </ThemeProvider>
