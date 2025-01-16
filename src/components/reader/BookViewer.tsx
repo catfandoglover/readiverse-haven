@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
@@ -30,6 +30,8 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -38,11 +40,11 @@ const BookViewer = ({
     []
   );
 
-  const debouncedContainerResize = useCallback(
-    debounce((container: Element) => {
+  const debouncedRenditionResize = useCallback(
+    debounce((width: number, height: number) => {
       if (rendition && typeof rendition.resize === 'function') {
         try {
-          rendition.resize(container.clientWidth, container.clientHeight);
+          rendition.resize(width, height);
         } catch (error) {
           console.error('Error resizing rendition:', error);
         }
@@ -62,16 +64,13 @@ const BookViewer = ({
 
   useEffect(() => {
     const initializeBook = async () => {
-      if (!book) return;
-
-      const container = document.querySelector(".epub-view");
-      if (!container) return;
+      if (!book || !containerRef.current) return;
 
       if (rendition) {
         rendition.destroy();
       }
 
-      const newRendition = book.renderTo(container, {
+      const newRendition = book.renderTo(containerRef.current, {
         width: "100%",
         height: "100%",
         flow: "paginated",
@@ -95,7 +94,6 @@ const BookViewer = ({
         }
       });
 
-      // Handle text selection
       newRendition.on("selected", (cfiRange: string, contents: any) => {
         const selection = contents.window.getSelection();
         const text = selection?.toString() || "";
@@ -104,15 +102,12 @@ const BookViewer = ({
         }
       });
 
-      // Clear selection when clicking outside
-      newRendition.on("click", (event: MouseEvent) => {
-        const selection = window.getSelection();
-        if (selection && selection.toString() === "" && onTextSelect) {
+      newRendition.on("click", () => {
+        if (onTextSelect) {
           onTextSelect("", "");
         }
       });
 
-      // Apply existing highlights
       highlights.forEach(highlight => {
         try {
           newRendition.annotations.add(
@@ -131,20 +126,15 @@ const BookViewer = ({
         onLocationChange(location);
         
         const contents = newRendition.getContents();
-        
         if (contents && Array.isArray(contents) && contents.length > 0) {
           const doc = contents[0].document;
-          
           let heading = doc.querySelector('h2 a[id^="link2H_"]');
-          
           if (heading) {
             heading = heading.parentElement;
           } else {
             heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
           }
-          
           const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-          
           window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
             detail: { title: chapterTitle } 
           }));
@@ -153,11 +143,9 @@ const BookViewer = ({
 
       try {
         await newRendition.display();
-        
         if (currentLocation) {
           await newRendition.display(currentLocation);
         }
-
         setRendition(newRendition);
         if (onRenditionReady) {
           onRenditionReady(newRendition);
@@ -169,10 +157,28 @@ const BookViewer = ({
 
     initializeBook();
 
+    // Setup ResizeObserver
+    if (containerRef.current) {
+      resizeObserverRef.current = new ResizeObserver(
+        debounce((entries: ResizeObserverEntry[]) => {
+          const entry = entries[0];
+          if (entry) {
+            const { width, height } = entry.contentRect;
+            debouncedRenditionResize(width, height);
+          }
+        }, 250)
+      );
+      resizeObserverRef.current.observe(containerRef.current);
+    }
+
     return () => {
       if (rendition) {
         rendition.destroy();
       }
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+      debouncedRenditionResize.cancel();
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
 
@@ -198,6 +204,7 @@ const BookViewer = ({
   return (
     <div className="relative">
       <div 
+        ref={containerRef}
         className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
         style={{ 
           background: theme.background,
