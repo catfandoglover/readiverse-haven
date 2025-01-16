@@ -100,9 +100,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (bookmarkExists) {
       setShowBookmarkDialog(true);
     } else {
-      console.log("Current chapter title:", currentChapterTitle); // Debug log
-      console.log("Current page info:", pageInfo); // Debug log
-      
       // Get current page info
       const currentPage = pageInfo.chapterCurrent;
       const pageText = `Page ${currentPage}`;
@@ -113,20 +110,24 @@ const Reader = ({ metadata }: ReaderProps) => {
         pageText
       });
 
-      localStorage.setItem(bookmarkKey, JSON.stringify({
+      const bookmarkData = {
         cfi: currentLocation,
         timestamp: Date.now(),
-        chapterInfo: currentChapterTitle || "Unknown Chapter",
+        chapterInfo: currentChapterTitle,
         pageInfo: pageText
-      }));
+      };
+
+      localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
       window.dispatchEvent(new Event('storage'));
     }
   };
 
   useEffect(() => {
     const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
-      console.log("Chapter title change event received:", event.detail.title); // Debug log
-      setCurrentChapterTitle(event.detail.title);
+      console.log("Chapter title change event received:", event.detail.title);
+      if (event.detail.title && event.detail.title !== "Unknown Chapter") {
+        setCurrentChapterTitle(event.detail.title);
+      }
     };
 
     window.addEventListener('chapterTitleChange', handleChapterTitleChange as EventListener);
