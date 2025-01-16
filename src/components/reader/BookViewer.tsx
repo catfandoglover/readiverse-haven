@@ -25,13 +25,28 @@ const BookViewer = ({
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
+  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
 
   // Debounced resize handler for window resize
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 100),
+    }, 250),
     []
+  );
+
+  // Debounced container resize handler
+  const debouncedContainerResize = useCallback(
+    debounce((container: Element) => {
+      if (rendition && typeof rendition.resize === 'function') {
+        try {
+          rendition.resize(container.clientWidth, container.clientHeight);
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        }
+      }
+    }, 250),
+    [rendition]
   );
 
   useEffect(() => {
@@ -59,7 +74,6 @@ const BookViewer = ({
       minSpreadWidth: 0,
     });
 
-    // Set up rendition before displaying content
     newRendition.themes.default({
       body: {
         "column-count": isMobile ? "1" : "2",
@@ -73,13 +87,11 @@ const BookViewer = ({
       }
     });
 
-    // Store rendition reference before displaying content
     setRendition(newRendition);
     if (onRenditionReady) {
       onRenditionReady(newRendition);
     }
 
-    // Display content after rendition is set up
     if (currentLocation) {
       newRendition.display(currentLocation);
     } else {
@@ -89,51 +101,45 @@ const BookViewer = ({
     newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
       
-      // Extract chapter title from the current section
       const contents = newRendition.getContents();
       
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const doc = contents[0].document;
         
-        // First try to find the specific heading format
         let heading = doc.querySelector('h2 a[id^="link2H_"]');
         
         if (heading) {
           heading = heading.parentElement;
         } else {
-          // Fallback to any heading if specific format not found
           heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
         }
         
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
         
-        // Dispatch a custom event to update the chapter title
         window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
           detail: { title: chapterTitle } 
         }));
       }
     });
 
-    // Debounced resize handler for the container
-    const debouncedContainerResize = debounce(() => {
-      if (newRendition && typeof newRendition.resize === 'function') {
-        try {
-          newRendition.resize(container.clientWidth, container.clientHeight);
-        } catch (error) {
-          console.error('Error resizing rendition:', error);
-        }
-      }
-    }, 100);
+    // Create and setup ResizeObserver
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
 
-    // Use ResizeObserver for handling container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      debouncedContainerResize();
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        debouncedContainerResize(entry.target);
+      }
     });
 
-    resizeObserver.observe(container);
+    observer.observe(container);
+    setResizeObserver(observer);
 
     return () => {
-      resizeObserver.disconnect();
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       debouncedContainerResize.cancel();
       if (newRendition) {
         newRendition.destroy();
