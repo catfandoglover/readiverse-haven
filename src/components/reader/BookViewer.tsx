@@ -88,26 +88,47 @@ const BookViewer = ({
           "font-family": getFontFamily(fontFamily),
           color: theme.text,
           background: theme.background,
+          "-webkit-user-select": "text",
+          "user-select": "text",
         },
         '.highlight-yellow': {
           'background-color': 'rgba(255, 235, 59, 0.3)',
+          cursor: 'pointer'
         }
       });
 
+      // Enhanced text selection handling
       newRendition.on("selected", (cfiRange: string, contents: any) => {
+        if (!contents || !onTextSelect) return;
+        
         const selection = contents.window.getSelection();
-        const text = selection?.toString() || "";
-        if (text && onTextSelect) {
+        const text = selection?.toString().trim() || "";
+        
+        if (text) {
+          console.log("Text selected:", text, "CFI Range:", cfiRange);
           onTextSelect(cfiRange, text);
+          
+          // Prevent default selection behavior
+          if (selection) {
+            selection.removeAllRanges();
+          }
         }
       });
 
-      newRendition.on("click", () => {
-        if (onTextSelect) {
+      // Clear selection when clicking outside
+      newRendition.on("click", (event: any) => {
+        if (!event.target || !onTextSelect) return;
+        
+        // Only clear if we clicked outside text content
+        const isTextContent = event.target.nodeType === 3 || 
+                            ['P', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(event.target.tagName);
+        
+        if (!isTextContent) {
           onTextSelect("", "");
         }
       });
 
+      // Apply existing highlights
       highlights.forEach(highlight => {
         try {
           newRendition.annotations.add(
