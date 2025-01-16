@@ -152,7 +152,9 @@ const BookViewer = ({
       });
 
       newRendition.on("relocated", (location: any) => {
-        onLocationChange(location);
+        if (onLocationChange) {
+          onLocationChange(location);
+        }
         
         // Reapply highlights after page change
         highlights.forEach(highlight => {
