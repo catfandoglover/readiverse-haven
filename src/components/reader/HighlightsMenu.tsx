@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Highlighter, Trash2 } from "lucide-react";
 import { Highlight, HighlightColor } from '@/types/highlight';
 import { format } from 'date-fns';
+import { Badge } from "@/components/ui/badge";
 
 interface HighlightsMenuProps {
   highlights?: Highlight[];
@@ -31,24 +32,29 @@ const HighlightsMenu = ({
   onHighlightSelect = () => {},
   onRemoveHighlight = () => {}
 }: HighlightsMenuProps) => {
+  const highlightCount = highlights.length;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+          className="relative"
         >
-          <Highlighter className="h-5 w-5" />
+          <Highlighter className="h-[1.2rem] w-[1.2rem]" />
+          {highlightCount > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full"
+            >
+              {highlightCount}
+            </Badge>
+          )}
+          <span className="sr-only">Toggle highlights menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end" 
-        side="left" 
-        sideOffset={8}
-        alignOffset={40}
-        className="w-64"
-      >
+      <DropdownMenuContent align="end" className="w-[280px]">
         <div className="sticky top-0 bg-background z-10">
           <div className="p-2 flex gap-2 justify-center">
             <Button
