@@ -100,8 +100,8 @@ const Reader = ({ metadata }: ReaderProps) => {
           setTimeout(() => {
             // Force a re-layout with container dimensions
             rendition.resize(container.clientWidth, container.clientHeight);
-            // Additional display call to ensure correct page positioning
-            rendition.display(location);
+            // Move forward one page to correct the offset
+            rendition.next();
           }, 100);
         });
       }
