@@ -141,6 +141,23 @@ const Reader = ({ metadata }: ReaderProps) => {
     };
   }, [book, currentLocation]);
 
+  const handleNoteDialogClose = () => {
+    setNoteDialogOpen(false);
+    setSelectedHighlight(null);
+  };
+
+  const handleNoteClick = (highlight: Highlight) => {
+    setSelectedHighlight(highlight);
+    setNoteDialogOpen(true);
+  };
+
+  const handleNoteSave = (note: string) => {
+    if (selectedHighlight) {
+      updateNote(selectedHighlight.id, note);
+    }
+    handleNoteDialogClose();
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -196,14 +213,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                     onColorSelect={setSelectedColor}
                     onHighlightSelect={handleLocationSelect}
                     onRemoveHighlight={removeHighlight}
-                    onUpdateNote={(id, note) => {
-                      updateNote(id, note);
-                      setSelectedHighlight(null);
-                    }}
-                    onNoteClick={(highlight: Highlight) => {
-                      setSelectedHighlight(highlight);
-                      setNoteDialogOpen(true);
-                    }}
+                    onUpdateNote={updateNote}
+                    onNoteClick={handleNoteClick}
                   />
                 </div>
                 <BookViewer
@@ -252,13 +263,8 @@ const Reader = ({ metadata }: ReaderProps) => {
 
               <NoteDialog
                 open={noteDialogOpen}
-                onOpenChange={setNoteDialogOpen}
-                onSave={(note) => {
-                  if (selectedHighlight) {
-                    updateNote(selectedHighlight.id, note);
-                  }
-                  setSelectedHighlight(null);
-                }}
+                onOpenChange={handleNoteDialogClose}
+                onSave={handleNoteSave}
                 initialNote={selectedHighlight?.note}
                 highlightedText={selectedHighlight?.text || ''}
               />
