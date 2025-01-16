@@ -85,7 +85,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
       </div>
 
       {/* Desktop fullscreen button */}
-      <div className="hidden md:flex fixed bottom-4 right-4 z-50">
+      <div className="hidden md:flex fixed bottom-4 left-4 z-50">
         <Button
           variant="outline"
           size="icon"
