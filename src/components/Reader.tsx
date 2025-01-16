@@ -181,7 +181,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                 />
               </div>
               <ThemeSwitcher />
-              <SessionTimer seconds={sessionTime} />
               <div 
                 style={{ 
                   position: 'fixed',
