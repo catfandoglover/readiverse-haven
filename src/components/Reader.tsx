@@ -111,6 +111,7 @@ const Reader = ({ metadata }: ReaderProps) => {
         console.log('Creating bookmark with chapter title:', currentChapterTitle);
         console.log('Current spine item:', spineItem);
 
+        // Create a properly structured bookmark from the start
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: Date.now(),
@@ -125,7 +126,6 @@ const Reader = ({ metadata }: ReaderProps) => {
           }
         };
 
-        console.log('Saving bookmark with data:', bookmarkData);
         localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
         window.dispatchEvent(new Event('storage'));
         
@@ -156,15 +156,26 @@ const Reader = ({ metadata }: ReaderProps) => {
             const existingBookmark = localStorage.getItem(bookmarkKey);
             if (existingBookmark) {
               try {
-                // Handle both string and JSON formats
                 let bookmarkData;
                 try {
                   bookmarkData = JSON.parse(existingBookmark);
                 } catch {
-                  // If parsing fails, it's the old format (just CFI string)
+                  // If parsing fails, create a new properly structured bookmark
+                  const spineItem = book?.spine?.get(currentLocation);
                   bookmarkData = {
                     cfi: existingBookmark,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    chapterInfo: spineItem?.index !== undefined 
+                      ? `Chapter ${spineItem.index + 1}: ${newTitle}`
+                      : newTitle,
+                    pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
+                    metadata: {
+                      created: new Date().toISOString(),
+                      chapterIndex: spineItem?.index,
+                      chapterTitle: newTitle,
+                      pageNumber: pageInfo.chapterCurrent,
+                      totalPages: pageInfo.chapterTotal,
+                    }
                   };
                 }
 
@@ -174,6 +185,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   chapterInfo: spineItem?.index !== undefined 
                     ? `Chapter ${spineItem.index + 1}: ${newTitle}`
                     : newTitle,
+                  pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
                   metadata: {
                     ...(bookmarkData.metadata || {}),
                     chapterTitle: newTitle,
@@ -182,6 +194,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                     totalPages: pageInfo.chapterTotal,
                   }
                 };
+
                 localStorage.setItem(bookmarkKey, JSON.stringify(updatedBookmarkData));
                 window.dispatchEvent(new Event('storage'));
               } catch (error) {
