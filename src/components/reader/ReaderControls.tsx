@@ -64,30 +64,27 @@ const ReaderControls = (props: ReaderControlsProps) => {
         </div>
 
         <div className="md:hidden w-full flex justify-between items-center">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <div className="flex flex-col items-center gap-4 p-4">
-                <ControlPanel {...props} />
-                <BookmarkControls
-                  currentLocation={props.currentLocation}
-                  onBookmarkClick={props.onBookmarkClick}
-                  onLocationChange={props.onLocationChange}
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          {/* Mobile bookmark controls */}
-          <BookmarkControls
-            currentLocation={props.currentLocation}
-            onBookmarkClick={props.onBookmarkClick}
-            onLocationChange={props.onLocationChange}
-          />
+          <div className="flex items-center gap-4">
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="flex flex-col items-center gap-4 p-4">
+                  <ControlPanel {...props} />
+                </div>
+              </DrawerContent>
+            </Drawer>
+            
+            {/* Mobile bookmark controls - now horizontally aligned */}
+            <BookmarkControls
+              currentLocation={props.currentLocation}
+              onBookmarkClick={props.onBookmarkClick}
+              onLocationChange={props.onLocationChange}
+            />
+          </div>
         </div>
       </div>
     </>
