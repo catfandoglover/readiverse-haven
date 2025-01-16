@@ -42,7 +42,12 @@ const HighlightsMenu = ({
           <Highlighter className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent 
+        align="center" 
+        side="left" 
+        sideOffset={16}
+        className="w-64"
+      >
         <div className="sticky top-0 bg-background z-10">
           <div className="p-2 flex gap-2 justify-center">
             <Button
