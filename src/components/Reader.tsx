@@ -193,64 +193,54 @@ const Reader = ({ metadata }: ReaderProps) => {
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
               />
-              <div className="flex gap-4">
-                {showToc && (
-                  <TableOfContents
-                    toc={tableOfContents}
-                    currentLocation={currentLocation}
-                    onNavigate={handleTocNavigate}
-                  />
-                )}
-                <div className="flex-1 relative">
-                  <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={() => setShowToc(!showToc)}
-                      className="mb-2 h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                    >
-                      {showToc ? <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" /> : <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />}
-                    </Button>
+              <div className="relative">
+                <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
+                  <div className="flex flex-col gap-2">
+                    <TableOfContents
+                      toc={tableOfContents}
+                      currentLocation={currentLocation}
+                      onNavigate={handleTocNavigate}
+                    />
                     <Button 
                       variant="outline" 
                       size="icon" 
                       onClick={handlePrevPage}
-                      className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                      className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
                     >
-                      <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
+                      <ChevronLeft className="h-5 w-5" />
                     </Button>
                   </div>
-                  <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handleNextPage}
-                      className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                    >
-                      <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
-                    </Button>
-                  </div>
-                  <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
-                    <HighlightsMenu
-                      highlights={highlights}
-                      selectedColor={selectedColor}
-                      onColorSelect={setSelectedColor}
-                      onHighlightSelect={handleLocationSelect}
-                      onRemoveHighlight={removeHighlight}
-                    />
-                  </div>
-                  <BookViewer
-                    book={book}
-                    currentLocation={currentLocation}
-                    onLocationChange={handleLocationChange}
-                    fontSize={fontSize}
-                    fontFamily={fontFamily}
-                    textAlign={textAlign}
-                    onRenditionReady={handleRenditionReady}
+                </div>
+                <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleNextPage}
+                    className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
+                  <HighlightsMenu
                     highlights={highlights}
-                    onTextSelect={handleTextSelect}
+                    selectedColor={selectedColor}
+                    onColorSelect={setSelectedColor}
+                    onHighlightSelect={handleLocationSelect}
+                    onRemoveHighlight={removeHighlight}
                   />
                 </div>
+                <BookViewer
+                  book={book}
+                  currentLocation={currentLocation}
+                  onLocationChange={handleLocationChange}
+                  fontSize={fontSize}
+                  fontFamily={fontFamily}
+                  textAlign={textAlign}
+                  onRenditionReady={handleRenditionReady}
+                  highlights={highlights}
+                  onTextSelect={handleTextSelect}
+                />
               </div>
               <ThemeSwitcher />
               <div 
