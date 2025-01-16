@@ -116,17 +116,17 @@ const BookViewer = ({
     });
 
     // Use ResizeObserver with proper typing and debouncing
-    let resizeTimeout: number;
+    let resizeTimeout: number | undefined;
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
       if (!entries.length) return;
       
       // Clear any pending resize timeout
-      if (resizeTimeout) {
+      if (resizeTimeout !== undefined) {
         window.cancelAnimationFrame(resizeTimeout);
       }
       
       // Schedule a new resize with proper type checking
-      resizeTimeout = window.requestAnimationFrame(() => {
+      const frameCallback: FrameRequestCallback = () => {
         if (newRendition && typeof newRendition.resize === 'function') {
           try {
             newRendition.resize();
@@ -134,13 +134,15 @@ const BookViewer = ({
             console.error('Error resizing rendition:', error);
           }
         }
-      });
+      };
+      
+      resizeTimeout = window.requestAnimationFrame(frameCallback);
     });
 
     resizeObserver.observe(container);
 
     return () => {
-      if (resizeTimeout) {
+      if (resizeTimeout !== undefined) {
         window.cancelAnimationFrame(resizeTimeout);
       }
       resizeObserver.disconnect();
