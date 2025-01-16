@@ -21,7 +21,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -98,34 +97,62 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!currentLocation || !rendition) return;
 
     const bookmarkKey = `book-progress-${currentLocation}`;
-    const bookmarkExists = localStorage.getItem(bookmarkKey) !== null;
+    const existingBookmark = localStorage.getItem(bookmarkKey);
 
-    if (bookmarkExists) {
+    if (existingBookmark) {
       setShowBookmarkDialog(true);
     } else {
-      const currentPage = pageInfo.chapterCurrent;
-      const pageText = `Page ${currentPage}`;
+      try {
+        const spineItem = book?.spine?.get(currentLocation);
+        const chapterInfo = spineItem?.index !== undefined 
+          ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
+          : currentChapterTitle;
 
-      const bookmarkData = {
-        cfi: currentLocation,
-        timestamp: Date.now(),
-        chapterInfo: currentChapterTitle,
-        pageInfo: pageText
-      };
+        const currentPage = pageInfo?.chapterCurrent || 1;
+        const totalPages = pageInfo?.chapterTotal || 1;
+        const pageText = `Page ${currentPage} of ${totalPages}`;
+        const timestamp = new Date().toISOString();
 
-      localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
-      window.dispatchEvent(new Event('storage'));
-      
-      toast({
-        description: `Bookmark added: ${currentChapterTitle}, ${pageText}`,
-      });
+        const bookmarkData = {
+          cfi: currentLocation,
+          timestamp: Date.now(),
+          chapterInfo,
+          pageInfo: pageText,
+          metadata: {
+            created: timestamp,
+            chapterIndex: spineItem?.index,
+            chapterTitle: currentChapterTitle,
+            pageNumber: currentPage,
+            totalPages,
+          }
+        };
+
+        localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
+        window.dispatchEvent(new Event('storage'));
+        
+        toast({
+          description: `Bookmark added: ${chapterInfo}, ${pageText}`,
+        });
+
+        console.log('Bookmark saved:', bookmarkData);
+      } catch (error) {
+        console.error('Error saving bookmark:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to save bookmark. Please try again.",
+        });
+      }
     }
   };
 
   useEffect(() => {
     const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
       if (event.detail.title) {
-        setCurrentChapterTitle(event.detail.title);
+        const newTitle = event.detail.title.trim();
+        if (newTitle && newTitle !== "Unknown Chapter") {
+          console.log('Setting chapter title:', newTitle);
+          setCurrentChapterTitle(newTitle);
+        }
       }
     };
 
@@ -216,11 +243,20 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={() => {
                       if (currentLocation) {
-                        localStorage.removeItem(`book-progress-${currentLocation}`);
-                        window.dispatchEvent(new Event('storage'));
-                        toast({
-                          description: "Bookmark removed successfully",
-                        });
+                        const bookmarkKey = `book-progress-${currentLocation}`;
+                        try {
+                          localStorage.removeItem(bookmarkKey);
+                          window.dispatchEvent(new Event('storage'));
+                          toast({
+                            description: "Bookmark removed successfully",
+                          });
+                        } catch (error) {
+                          console.error('Error removing bookmark:', error);
+                          toast({
+                            variant: "destructive",
+                            description: "Failed to remove bookmark. Please try again.",
+                          });
+                        }
                       }
                       setShowBookmarkDialog(false);
                     }}>
