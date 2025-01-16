@@ -5,7 +5,6 @@ import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import ThemeSwitcher from "./reader/ThemeSwitcher";
-import HighlightsMenu from "./reader/HighlightsMenu";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
