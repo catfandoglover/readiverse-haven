@@ -95,13 +95,16 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleNoteDialogClose = () => {
     setNoteDialogOpen(false);
-    requestAnimationFrame(() => {
+    // Clear selected highlight after animation completes
+    setTimeout(() => {
       setSelectedHighlight(null);
-    });
+    }, 300);
   };
 
   const handleNoteClick = (highlight: Highlight) => {
+    // Set highlight first
     setSelectedHighlight(highlight);
+    // Then open dialog in next frame
     requestAnimationFrame(() => {
       setNoteDialogOpen(true);
     });
