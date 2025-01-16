@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
 import type { Highlight } from "@/types/highlight";
-import { useToast } from "@/components/ui/use-toast";
+import TextSelectionMenu from "./TextSelectionMenu";
 
 interface BookViewerProps {
   book: Book;
@@ -14,7 +14,7 @@ interface BookViewerProps {
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
-  onTextSelect?: (cfiRange: string, text: string) => void;
+  onTextSelect?: (cfiRange: string, text: string, note?: string) => void;
 }
 
 const BookViewer = ({ 
@@ -30,48 +30,36 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [isBookReady, setIsBookReady] = useState(false);
   const { theme } = useTheme();
-  const { toast } = useToast();
-  
-  const containerRef = useRef<HTMLDivElement>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const resizeTimeoutRef = useRef<NodeJS.Timeout>();
-  const isResizingRef = useRef(false);
+  const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const [isBookReady, setIsBookReady] = useState(false);
+  const [selectedText, setSelectedText] = useState<{ text: string, cfiRange: string } | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 1000),
+    }, 250),
     []
   );
 
-  const handleResize = useCallback((container: Element) => {
-    if (!rendition || !container || isResizingRef.current) return;
-
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-    }
-
-    isResizingRef.current = true;
-    resizeTimeoutRef.current = setTimeout(() => {
-      try {
-        requestAnimationFrame(() => {
+  const debouncedContainerResize = useCallback(
+    debounce((container: Element) => {
+      if (rendition && typeof rendition.resize === 'function') {
+        try {
           rendition.resize(container.clientWidth, container.clientHeight);
-          isResizingRef.current = false;
-        });
-      } catch (error) {
-        console.error('Error resizing rendition:', error);
-        isResizingRef.current = false;
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        }
       }
-    }, 1000);
-  }, [rendition]);
+    }, 250),
+    [rendition]
+  );
 
   useEffect(() => {
-    const handleWindowResize = () => debouncedResize();
-    window.addEventListener('resize', handleWindowResize);
+    const handleResize = () => debouncedResize();
+    window.addEventListener('resize', handleResize);
     return () => {
-      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('resize', handleResize);
       debouncedResize.cancel();
     };
   }, [debouncedResize]);
@@ -79,178 +67,148 @@ const BookViewer = ({
   useEffect(() => {
     const initializeBook = async () => {
       try {
-        if (!book.packaging) {
-          await book.ready;
-        }
+        // Ensure book is loaded
+        await book.ready;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to initialize book. Please try uploading again.",
-        });
       }
     };
 
     if (book) {
       initializeBook();
     }
-
-    return () => {
-      setIsBookReady(false);
-    };
-  }, [book, toast]);
+  }, [book]);
 
   useEffect(() => {
-    if (!isBookReady || !containerRef.current) return;
+    if (!isBookReady) return;
 
-    const container = containerRef.current;
+    const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
-    // Cleanup previous rendition
     if (rendition) {
-      try {
-        rendition.destroy();
-      } catch (error) {
-        console.error('Error cleaning up rendition:', error);
-      }
+      rendition.destroy();
     }
 
-    let newRendition: Rendition | null = null;
-    
-    const setupRendition = async () => {
+    const newRendition = book.renderTo(container, {
+      width: "100%",
+      height: "100%",
+      flow: "paginated",
+      spread: isMobile ? "none" : "always",
+      minSpreadWidth: 0,
+    });
+
+    newRendition.themes.default({
+      body: {
+        "column-count": isMobile ? "1" : "2",
+        "column-gap": "2em",
+        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+        padding: "1em",
+        "text-align": textAlign,
+        "font-family": getFontFamily(fontFamily),
+        color: theme.text,
+        background: theme.background,
+      },
+      '.highlight-yellow': {
+        'background-color': 'rgba(255, 235, 59, 0.3)',
+      }
+    });
+
+    setRendition(newRendition);
+    if (onRenditionReady) {
+      onRenditionReady(newRendition);
+    }
+
+    const displayLocation = async () => {
       try {
-        // Create new rendition
-        newRendition = book.renderTo(container, {
-          width: "100%",
-          height: "100%",
-          flow: "paginated",
-          spread: isMobile ? "none" : "always",
-          minSpreadWidth: 0,
-        });
-
-        // Apply themes
-        newRendition.themes.default({
-          body: {
-            "column-count": isMobile ? "1" : "2",
-            "column-gap": "2em",
-            "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-            padding: "1em",
-            "text-align": textAlign,
-            "font-family": getFontFamily(fontFamily),
-            color: theme.text,
-            background: theme.background,
-            "pointer-events": "auto",
-            "user-select": "text",
-          },
-          '.highlight-yellow': {
-            'background-color': 'rgba(255, 235, 59, 0.3)',
-          }
-        });
-
-        setRendition(newRendition);
-        if (onRenditionReady) {
-          onRenditionReady(newRendition);
-        }
-
-        // Display content
         if (currentLocation) {
           await newRendition.display(currentLocation);
         } else {
           await newRendition.display();
         }
-
-        // Setup text selection handler
-        const handleTextSelection = (cfiRange: string, contents: any) => {
-          const text = contents.window.getSelection()?.toString() || "";
-          if (text && onTextSelect) {
-            onTextSelect(cfiRange, text);
-            if (contents.window.getSelection()) {
-              contents.window.getSelection()?.removeAllRanges();
-            }
-          }
-        };
-
-        newRendition.on("selected", handleTextSelection);
-
-        // Apply highlights
-        highlights.forEach(highlight => {
-          try {
-            newRendition.annotations.add(
-              "highlight",
-              highlight.cfiRange,
-              {},
-              undefined,
-              "highlight-yellow"
-            );
-          } catch (error) {
-            console.error('Error applying highlight:', error);
-          }
-        });
-
-        // Handle location changes
-        newRendition.on("relocated", (location: any) => {
-          onLocationChange(location);
-          
-          const contents = newRendition.getContents();
-          if (contents && Array.isArray(contents) && contents.length > 0) {
-            const doc = contents[0].document;
-            let heading = doc.querySelector('h2 a[id^="link2H_"]');
-            if (heading) {
-              heading = heading.parentElement;
-            } else {
-              heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-            }
-            const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-            window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-              detail: { title: chapterTitle } 
-            }));
-          }
-        });
       } catch (error) {
-        console.error('Error setting up rendition:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to render book. Please try refreshing the page.",
-        });
+        console.error('Error displaying location:', error);
       }
     };
 
-    setupRendition();
+    displayLocation();
 
-    // Setup ResizeObserver
-    if (resizeObserverRef.current) {
-      resizeObserverRef.current.disconnect();
+    // Handle text selection
+    newRendition.on("selected", (cfiRange: string, contents: any) => {
+      const text = contents.window.getSelection()?.toString() || "";
+      if (text) {
+        setSelectedText({ text, cfiRange });
+      }
+    });
+
+    // Clear selection when clicking outside
+    newRendition.on("click", () => {
+      setSelectedText(null);
+    });
+
+    // Apply existing highlights
+    highlights.forEach(highlight => {
+      try {
+        newRendition.annotations.add(
+          "highlight",
+          highlight.cfiRange,
+          {},
+          undefined,
+          "highlight-yellow"
+        );
+      } catch (error) {
+        console.error('Error applying highlight:', error);
+      }
+    });
+
+    newRendition.on("relocated", (location: any) => {
+      onLocationChange(location);
+      
+      const contents = newRendition.getContents();
+      
+      if (contents && Array.isArray(contents) && contents.length > 0) {
+        const doc = contents[0].document;
+        
+        let heading = doc.querySelector('h2 a[id^="link2H_"]');
+        
+        if (heading) {
+          heading = heading.parentElement;
+        } else {
+          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+        }
+        
+        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+        
+        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+          detail: { title: chapterTitle } 
+        }));
+      }
+    });
+
+    // Create and setup ResizeObserver
+    if (resizeObserver) {
+      resizeObserver.disconnect();
     }
 
     const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        handleResize(entries[0].target);
+      for (const entry of entries) {
+        debouncedContainerResize(entry.target);
       }
     });
 
     observer.observe(container);
-    resizeObserverRef.current = observer;
+    setResizeObserver(observer);
 
-    // Cleanup function
     return () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
       }
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      }
+      debouncedContainerResize.cancel();
       if (newRendition) {
-        try {
-          newRendition.destroy();
-        } catch (error) {
-          console.error('Error cleaning up rendition:', error);
-        }
+        newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, handleResize, currentLocation, onLocationChange, onRenditionReady, onTextSelect]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
   useEffect(() => {
     if (rendition) {
@@ -272,16 +230,33 @@ const BookViewer = ({
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
-      style={{ 
-        background: theme.background,
-        color: theme.text,
-        position: 'relative',
-        zIndex: 0,
-      }}
-    />
+    <div className="relative">
+      <div 
+        className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
+        style={{ 
+          background: theme.background,
+          color: theme.text,
+        }}
+      />
+      {selectedText && (
+        <TextSelectionMenu
+          selectedText={selectedText.text}
+          selectedCfiRange={selectedText.cfiRange}
+          onHighlight={(cfiRange, text) => {
+            if (onTextSelect) {
+              onTextSelect(cfiRange, text);
+            }
+            setSelectedText(null);
+          }}
+          onCreateNote={(cfiRange, text, note) => {
+            if (onTextSelect) {
+              onTextSelect(cfiRange, text, note);
+            }
+            setSelectedText(null);
+          }}
+        />
+      )}
+    </div>
   );
 };
 
