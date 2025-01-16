@@ -54,39 +54,45 @@ const BookViewer = ({
     debouncedContainerResize,
   } = useReaderResize(rendition);
 
+  // Initialize book
   useEffect(() => {
     const initializeBook = async () => {
+      if (!book) return;
       try {
         await book.ready;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
+        setIsBookReady(false);
       }
     };
 
-    if (book) {
-      initializeBook();
-    }
+    initializeBook();
   }, [book]);
 
+  // Setup rendition and handle resize
   useEffect(() => {
     if (!isBookReady) return;
 
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
+    // Cleanup previous rendition
     if (rendition) {
       rendition.destroy();
     }
 
+    // Setup new rendition
     const newRendition = setupRendition(container);
     if (!newRendition) return;
 
     setRendition(newRendition);
+    
     if (onRenditionReady) {
       onRenditionReady(newRendition);
     }
 
+    // Display content
     const displayLocation = async () => {
       try {
         if (currentLocation) {
@@ -101,6 +107,7 @@ const BookViewer = ({
 
     displayLocation();
 
+    // Setup resize observer
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
@@ -116,17 +123,21 @@ const BookViewer = ({
     observer.observe(container);
     setResizeObserver(observer);
 
+    // Cleanup
     return () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
-      debouncedContainerResize.cancel();
+      if (debouncedContainerResize && debouncedContainerResize.cancel) {
+        debouncedContainerResize.cancel();
+      }
       if (newRendition) {
         newRendition.destroy();
       }
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
+  // Handle font size changes
   useEffect(() => {
     if (rendition) {
       rendition.themes.fontSize(`${fontSize}%`);
