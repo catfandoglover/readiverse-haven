@@ -33,23 +33,25 @@ const BookViewer = ({
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
 
+  // More aggressive debouncing for resize events
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 250),
+    }, 500),
     []
   );
 
+  // Debounced container resize with a higher threshold
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
-      if (rendition && typeof rendition.resize === 'function') {
+      if (rendition && typeof rendition.resize === 'function' && container.clientWidth > 0 && container.clientHeight > 0) {
         try {
           rendition.resize(container.clientWidth, container.clientHeight);
         } catch (error) {
           console.error('Error resizing rendition:', error);
         }
       }
-    }, 250),
+    }, 500),
     [rendition]
   );
 
@@ -65,7 +67,6 @@ const BookViewer = ({
   useEffect(() => {
     const initializeBook = async () => {
       try {
-        // Ensure book is loaded
         await book.ready;
         setIsBookReady(true);
       } catch (error) {
@@ -131,7 +132,6 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Handle text selection
     newRendition.on("selected", (cfiRange: string, contents: any) => {
       const text = contents.window.getSelection()?.toString() || "";
       if (text && onTextSelect) {
@@ -139,7 +139,6 @@ const BookViewer = ({
       }
     });
 
-    // Apply existing highlights
     highlights.forEach(highlight => {
       try {
         newRendition.annotations.add(
@@ -178,15 +177,19 @@ const BookViewer = ({
       }
     });
 
-    // Create and setup ResizeObserver
+    // Create and setup ResizeObserver with error handling
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
 
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        debouncedContainerResize(entry.target);
-      }
+      requestAnimationFrame(() => {
+        for (const entry of entries) {
+          if (entry.target.clientWidth > 0 && entry.target.clientHeight > 0) {
+            debouncedContainerResize(entry.target);
+          }
+        }
+      });
     });
 
     observer.observe(container);
