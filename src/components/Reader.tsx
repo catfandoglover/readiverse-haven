@@ -112,18 +112,23 @@ const Reader = ({ metadata }: ReaderProps) => {
           : currentChapterTitle;
 
         const now = new Date();
+        
+        // Get the current page information directly from the rendition
+        const currentPage = pageInfo.chapterCurrent;
+        const totalPages = pageInfo.chapterTotal;
+
         const bookmarkData = {
           cfi: currentLocation,
           timestamp: now.getTime(),
           chapterInfo,
-          pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
+          pageInfo: `Page ${currentPage} of ${totalPages}`,
           metadata: {
             created: now.toISOString(),
-            formattedDate: format(now, 'PPpp'), // Adds formatted date like "Apr 13, 2024, 2:30 PM"
+            formattedDate: format(now, 'PPpp'),
             chapterIndex: spineItem?.index,
             chapterTitle: currentChapterTitle,
-            pageNumber: pageInfo.chapterCurrent,
-            totalPages: pageInfo.chapterTotal,
+            pageNumber: currentPage,
+            totalPages: totalPages,
           }
         };
 
