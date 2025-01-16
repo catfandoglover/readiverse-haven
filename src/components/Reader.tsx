@@ -198,22 +198,18 @@ const Reader = ({ metadata }: ReaderProps) => {
                 />
               </div>
               <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-                <div>
-                  <BookmarkControls
-                    currentLocation={currentLocation}
-                    onLocationSelect={handleLocationSelect}
-                    onBookmarkClick={handleBookmarkClick}
-                  />
-                </div>
-                <div>
-                  <HighlightsMenu
-                    highlights={highlights}
-                    selectedColor={selectedColor}
-                    onColorSelect={setSelectedColor}
-                    onHighlightSelect={handleLocationSelect}
-                    onRemoveHighlight={removeHighlight}
-                  />
-                </div>
+                <BookmarkControls
+                  currentLocation={currentLocation}
+                  onLocationSelect={handleLocationSelect}
+                  onBookmarkClick={handleBookmarkClick}
+                />
+                <HighlightsMenu
+                  highlights={highlights}
+                  selectedColor={selectedColor}
+                  onColorSelect={setSelectedColor}
+                  onHighlightSelect={handleLocationSelect}
+                  onRemoveHighlight={removeHighlight}
+                />
               </div>
               <div className="fixed bottom-4 right-4 z-50">
                 <ThemeSwitcher />
