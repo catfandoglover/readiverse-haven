@@ -197,14 +197,23 @@ const Reader = ({ metadata }: ReaderProps) => {
                   onTextSelect={handleTextSelect}
                 />
               </div>
-              <div className="fixed top-4 right-4 z-50">
-                <HighlightsMenu
-                  highlights={highlights}
-                  selectedColor={selectedColor}
-                  onColorSelect={setSelectedColor}
-                  onHighlightSelect={handleLocationSelect}
-                  onRemoveHighlight={removeHighlight}
-                />
+              <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
+                <div>
+                  <BookmarkControls
+                    currentLocation={currentLocation}
+                    onLocationSelect={handleLocationSelect}
+                    onBookmarkClick={handleBookmarkClick}
+                  />
+                </div>
+                <div>
+                  <HighlightsMenu
+                    highlights={highlights}
+                    selectedColor={selectedColor}
+                    onColorSelect={setSelectedColor}
+                    onHighlightSelect={handleLocationSelect}
+                    onRemoveHighlight={removeHighlight}
+                  />
+                </div>
               </div>
               <div className="fixed bottom-4 right-4 z-50">
                 <ThemeSwitcher />
