@@ -90,7 +90,7 @@ const ReaderControls = (props: ReaderControlsProps) => {
           variant="outline"
           size="icon"
           onClick={toggleFullScreen}
-          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+          className="h-10 w-10 shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
         >
           <Maximize2 className="h-5 w-5" />
         </Button>
