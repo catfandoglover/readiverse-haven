@@ -16,7 +16,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,11 +27,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TextSelectionMenu from "./reader/TextSelectionMenu";
+import TableOfContents from "./reader/TableOfContents";
+import type { NavItem } from "@/types/reader";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
   const [selectedText, setSelectedText] = useState<{ text: string, cfiRange: string } | null>(null);
+  const [tableOfContents, setTableOfContents] = useState<NavItem[]>([]);
+  const [showToc, setShowToc] = useState(true);
 
   const {
     book,
@@ -144,10 +147,29 @@ const Reader = ({ metadata }: ReaderProps) => {
     };
   }, [book, currentLocation]);
 
+  useEffect(() => {
+    if (book) {
+      book.loaded.navigation.then(nav => {
+        const toc = nav.toc.map((item: any) => ({
+          label: item.label.trim(),
+          href: item.href,
+          level: item.level || 0,
+        }));
+        setTableOfContents(toc);
+      });
+    }
+  }, [book]);
+
+  const handleTocNavigate = (href: string) => {
+    if (rendition) {
+      rendition.display(href);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
           {!book ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
           ) : (
@@ -171,47 +193,64 @@ const Reader = ({ metadata }: ReaderProps) => {
                 bookProgress={progress.book}
                 pageInfo={pageInfo}
               />
-              <div className="relative">
-                <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handlePrevPage}
-                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                  >
-                    <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
-                  </Button>
-                </div>
-                <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handleNextPage}
-                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                  >
-                    <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
-                  </Button>
-                </div>
-                <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
-                  <HighlightsMenu
+              <div className="flex gap-4">
+                {showToc && (
+                  <TableOfContents
+                    toc={tableOfContents}
+                    currentLocation={currentLocation}
+                    onNavigate={handleTocNavigate}
+                  />
+                )}
+                <div className="flex-1 relative">
+                  <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => setShowToc(!showToc)}
+                      className="mb-2 h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                    >
+                      {showToc ? <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" /> : <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handlePrevPage}
+                      className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                    >
+                      <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
+                    </Button>
+                  </div>
+                  <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handleNextPage}
+                      className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                    >
+                      <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
+                    </Button>
+                  </div>
+                  <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
+                    <HighlightsMenu
+                      highlights={highlights}
+                      selectedColor={selectedColor}
+                      onColorSelect={setSelectedColor}
+                      onHighlightSelect={handleLocationSelect}
+                      onRemoveHighlight={removeHighlight}
+                    />
+                  </div>
+                  <BookViewer
+                    book={book}
+                    currentLocation={currentLocation}
+                    onLocationChange={handleLocationChange}
+                    fontSize={fontSize}
+                    fontFamily={fontFamily}
+                    textAlign={textAlign}
+                    onRenditionReady={handleRenditionReady}
                     highlights={highlights}
-                    selectedColor={selectedColor}
-                    onColorSelect={setSelectedColor}
-                    onHighlightSelect={handleLocationSelect}
-                    onRemoveHighlight={removeHighlight}
+                    onTextSelect={handleTextSelect}
                   />
                 </div>
-                <BookViewer
-                  book={book}
-                  currentLocation={currentLocation}
-                  onLocationChange={handleLocationChange}
-                  fontSize={fontSize}
-                  fontFamily={fontFamily}
-                  textAlign={textAlign}
-                  onRenditionReady={handleRenditionReady}
-                  highlights={highlights}
-                  onTextSelect={handleTextSelect}
-                />
               </div>
               <ThemeSwitcher />
               <div 
