@@ -119,116 +119,120 @@ const BookViewer = ({
 
     let newRendition: Rendition | null = null;
     
-    try {
-      // Create new rendition
-      newRendition = book.renderTo(container, {
-        width: "100%",
-        height: "100%",
-        flow: "paginated",
-        spread: isMobile ? "none" : "always",
-        minSpreadWidth: 0,
-      });
+    const setupRendition = async () => {
+      try {
+        // Create new rendition
+        newRendition = book.renderTo(container, {
+          width: "100%",
+          height: "100%",
+          flow: "paginated",
+          spread: isMobile ? "none" : "always",
+          minSpreadWidth: 0,
+        });
 
-      // Apply themes
-      newRendition.themes.default({
-        body: {
-          "column-count": isMobile ? "1" : "2",
-          "column-gap": "2em",
-          "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-          padding: "1em",
-          "text-align": textAlign,
-          "font-family": getFontFamily(fontFamily),
-          color: theme.text,
-          background: theme.background,
-          "pointer-events": "auto",
-          "user-select": "text",
-        },
-        '.highlight-yellow': {
-          'background-color': 'rgba(255, 235, 59, 0.3)',
-        }
-      });
-
-      setRendition(newRendition);
-      if (onRenditionReady) {
-        onRenditionReady(newRendition);
-      }
-
-      // Display content
-      if (currentLocation) {
-        await newRendition.display(currentLocation);
-      } else {
-        await newRendition.display();
-      }
-
-      // Setup text selection handler
-      const handleTextSelection = (cfiRange: string, contents: any) => {
-        const text = contents.window.getSelection()?.toString() || "";
-        if (text && onTextSelect) {
-          onTextSelect(cfiRange, text);
-          if (contents.window.getSelection()) {
-            contents.window.getSelection()?.removeAllRanges();
+        // Apply themes
+        newRendition.themes.default({
+          body: {
+            "column-count": isMobile ? "1" : "2",
+            "column-gap": "2em",
+            "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
+            padding: "1em",
+            "text-align": textAlign,
+            "font-family": getFontFamily(fontFamily),
+            color: theme.text,
+            background: theme.background,
+            "pointer-events": "auto",
+            "user-select": "text",
+          },
+          '.highlight-yellow': {
+            'background-color': 'rgba(255, 235, 59, 0.3)',
           }
+        });
+
+        setRendition(newRendition);
+        if (onRenditionReady) {
+          onRenditionReady(newRendition);
         }
-      };
 
-      newRendition.on("selected", handleTextSelection);
-
-      // Apply highlights
-      highlights.forEach(highlight => {
-        try {
-          newRendition.annotations.add(
-            "highlight",
-            highlight.cfiRange,
-            {},
-            undefined,
-            "highlight-yellow"
-          );
-        } catch (error) {
-          console.error('Error applying highlight:', error);
+        // Display content
+        if (currentLocation) {
+          await newRendition.display(currentLocation);
+        } else {
+          await newRendition.display();
         }
-      });
 
-      // Handle location changes
-      newRendition.on("relocated", (location: any) => {
-        onLocationChange(location);
-        
-        const contents = newRendition.getContents();
-        if (contents && Array.isArray(contents) && contents.length > 0) {
-          const doc = contents[0].document;
-          let heading = doc.querySelector('h2 a[id^="link2H_"]');
-          if (heading) {
-            heading = heading.parentElement;
-          } else {
-            heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+        // Setup text selection handler
+        const handleTextSelection = (cfiRange: string, contents: any) => {
+          const text = contents.window.getSelection()?.toString() || "";
+          if (text && onTextSelect) {
+            onTextSelect(cfiRange, text);
+            if (contents.window.getSelection()) {
+              contents.window.getSelection()?.removeAllRanges();
+            }
           }
-          const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-          window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-            detail: { title: chapterTitle } 
-          }));
-        }
-      });
+        };
 
-      // Setup ResizeObserver
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
+        newRendition.on("selected", handleTextSelection);
+
+        // Apply highlights
+        highlights.forEach(highlight => {
+          try {
+            newRendition.annotations.add(
+              "highlight",
+              highlight.cfiRange,
+              {},
+              undefined,
+              "highlight-yellow"
+            );
+          } catch (error) {
+            console.error('Error applying highlight:', error);
+          }
+        });
+
+        // Handle location changes
+        newRendition.on("relocated", (location: any) => {
+          onLocationChange(location);
+          
+          const contents = newRendition.getContents();
+          if (contents && Array.isArray(contents) && contents.length > 0) {
+            const doc = contents[0].document;
+            let heading = doc.querySelector('h2 a[id^="link2H_"]');
+            if (heading) {
+              heading = heading.parentElement;
+            } else {
+              heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+            }
+            const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+            window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+              detail: { title: chapterTitle } 
+            }));
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up rendition:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to render book. Please try refreshing the page.",
+        });
       }
+    };
 
-      const observer = new ResizeObserver((entries) => {
-        if (entries[0]) {
-          handleResize(entries[0].target);
-        }
-      });
+    setupRendition();
 
-      observer.observe(container);
-      resizeObserverRef.current = observer;
-    } catch (error) {
-      console.error('Error setting up rendition:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to render book. Please try refreshing the page.",
-      });
+    // Setup ResizeObserver
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
     }
+
+    const observer = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        handleResize(entries[0].target);
+      }
+    });
+
+    observer.observe(container);
+    resizeObserverRef.current = observer;
 
     // Cleanup function
     return () => {
