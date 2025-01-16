@@ -25,7 +25,7 @@ const colorClasses: Record<HighlightColor, string> = {
 };
 
 const HighlightsMenu = ({
-  highlights = [],
+  highlights,
   selectedColor,
   onColorSelect,
   onHighlightSelect,
@@ -43,9 +43,10 @@ const HighlightsMenu = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align="end"
-        alignOffset={-8}
-        className="w-64 md:w-72"
+        align="center" 
+        side="left" 
+        sideOffset={16}
+        className="w-64"
       >
         <div className="sticky top-0 bg-background z-10">
           <div className="p-2 flex gap-2 justify-center">
@@ -63,7 +64,7 @@ const HighlightsMenu = ({
         </div>
         
         <ScrollArea className="h-[300px] overflow-y-auto">
-          {(!highlights || highlights.length === 0) ? (
+          {highlights.length === 0 ? (
             <div className="py-2 px-4 text-sm text-muted-foreground text-center">
               No highlights yet
             </div>
@@ -81,12 +82,7 @@ const HighlightsMenu = ({
                   >
                     {highlight.text}
                   </div>
-                  {highlight.note && (
-                    <div className="mt-1 text-xs text-muted-foreground bg-muted p-2 rounded-md">
-                      {highlight.note}
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground">
                     {format(highlight.createdAt, 'PP')}
                   </div>
                 </div>

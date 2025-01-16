@@ -1,12 +1,11 @@
 import React from 'react';
-import { Menu, Maximize2, BookMarked } from "lucide-react";
+import { Menu, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FontControls from './FontControls';
 import AlignmentControls from './AlignmentControls';
 import BrightnessControl from './BrightnessControl';
 import BookmarkControls from './BookmarkControls';
-import HighlightsMenu from '../HighlightsMenu';
 import SessionTimer from '../SessionTimer';
 import type { ReaderControlsProps } from '@/types/reader';
 
@@ -70,14 +69,7 @@ export const MobileControls = (props: ReaderControlsProps) => {
         </DrawerContent>
       </Drawer>
       
-      <div className="md:hidden flex items-center gap-2">
-        <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedColor}
-          onColorSelect={props.onColorSelect}
-          onHighlightSelect={props.onHighlightSelect}
-          onRemoveHighlight={props.onRemoveHighlight}
-        />
+      <div className="md:hidden flex items-center">
         <BookmarkControls
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Maximize2 } from "lucide-react";
 import FontControls from './FontControls';
@@ -6,7 +7,6 @@ import AlignmentControls from './AlignmentControls';
 import BrightnessControl from './BrightnessControl';
 import SessionTimer from '../SessionTimer';
 import BookmarkControls from './BookmarkControls';
-import HighlightsMenu from '../HighlightsMenu';
 import type { ReaderControlsProps } from '@/types/reader';
 
 export const DesktopControls = (props: ReaderControlsProps) => {
@@ -25,13 +25,6 @@ export const DesktopControls = (props: ReaderControlsProps) => {
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}
           onLocationChange={props.onLocationChange}
-        />
-        <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedColor}
-          onColorSelect={props.onColorSelect}
-          onHighlightSelect={props.onHighlightSelect}
-          onRemoveHighlight={props.onRemoveHighlight}
         />
       </div>
 
@@ -63,7 +56,22 @@ export const DesktopControls = (props: ReaderControlsProps) => {
             onBrightnessChange={props.onBrightnessChange}
           />
           <div className="hidden md:block">
-            <SessionTimer seconds={props.sessionTime} showIcon={true} />
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                >
+                  <SessionTimer seconds={props.sessionTime} showIcon={true} />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="p-4 flex justify-center">
+                  <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
+                </div>
+              </DrawerContent>
+            </Drawer>
           </div>
         </div>
       </div>

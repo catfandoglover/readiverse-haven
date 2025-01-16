@@ -3,7 +3,6 @@ export interface Highlight {
   cfiRange: string;
   color: 'yellow';
   text: string;
-  note?: string;
   createdAt: number;
   bookKey: string;
 }
