@@ -64,25 +64,30 @@ const BookViewer = ({
 
   useEffect(() => {
     const initializeBook = async () => {
+      if (!book) return;
+      
       try {
-        // Ensure book is loaded
+        // Wait for the book to be ready
         await book.ready;
+        // Ensure package is loaded
+        await book.loaded.package;
+        // Ensure spine is loaded
+        await book.loaded.spine;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);
+        setIsBookReady(false);
       }
     };
 
-    if (book) {
-      initializeBook();
-    }
+    initializeBook();
   }, [book]);
 
   useEffect(() => {
-    if (!isBookReady) return;
+    if (!isBookReady || !book) return;
 
     const container = document.querySelector(".epub-view");
-    if (!container || !book) return;
+    if (!container) return;
 
     if (rendition) {
       rendition.destroy();
