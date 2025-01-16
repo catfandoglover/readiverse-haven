@@ -1,4 +1,5 @@
 import { Book } from "epubjs";
+import ePub from "epubjs";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useFileHandler = (
@@ -13,7 +14,7 @@ export const useFileHandler = (
     const reader = new FileReader();
     reader.onload = async (e) => {
       const bookData = e.target?.result;
-      const newBook = new (window as any).ePub(bookData);
+      const newBook = ePub(bookData);
       setBook(newBook);
 
       try {
