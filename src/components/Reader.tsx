@@ -17,7 +17,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -186,20 +185,6 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
-                <div className="hidden md:flex fixed md:absolute right-1 md:-right-16 top-4 z-10 flex-col gap-2">
-                  <BookmarkControls
-                    currentLocation={currentLocation}
-                    onBookmarkClick={handleBookmarkClick}
-                    onLocationChange={handleLocationSelect}
-                  />
-                  <HighlightsMenu
-                    highlights={highlights}
-                    selectedColor={selectedColor}
-                    onColorSelect={setSelectedColor}
-                    onHighlightSelect={handleLocationSelect}
-                    onRemoveHighlight={removeHighlight}
-                  />
-                </div>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
@@ -212,7 +197,16 @@ const Reader = ({ metadata }: ReaderProps) => {
                   onTextSelect={handleTextSelect}
                 />
               </div>
-              <ThemeSwitcher />
+              <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+                <HighlightsMenu
+                  highlights={highlights}
+                  selectedColor={selectedColor}
+                  onColorSelect={setSelectedColor}
+                  onHighlightSelect={handleLocationSelect}
+                  onRemoveHighlight={removeHighlight}
+                />
+                <ThemeSwitcher />
+              </div>
               <div 
                 style={{ 
                   position: 'fixed',
