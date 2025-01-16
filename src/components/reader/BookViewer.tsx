@@ -149,7 +149,7 @@ const BookViewer = ({
       if (!containerNode) return;
 
       // Check if the selection is within the current view's document
-      if (containerNode.ownerDocument === currentView.document) {
+      if (containerNode.ownerDocument === currentView.contents.document) {
         onTextSelect(cfiRange, text);
       }
     });
