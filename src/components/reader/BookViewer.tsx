@@ -31,6 +31,7 @@ const BookViewer = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const [currentChapterTitle, setCurrentChapterTitle] = useState<string>("Unknown Chapter");
 
   // Debounced resize handler for window resize
   const debouncedResize = useCallback(
@@ -128,6 +129,22 @@ const BookViewer = ({
           "fill-opacity": "0.3",
         }
       );
+    });
+
+    // Update chapter title when location changes
+    newRendition.on("locationChanged", (location: any) => {
+      if (location && location.start) {
+        const spineItem = book.spine.get(location.start.cfi);
+        if (spineItem) {
+          spineItem.load(book.load.bind(book)).then((doc: any) => {
+            const title = doc.title || "Unknown Chapter";
+            setCurrentChapterTitle(title);
+            window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+              detail: { title } 
+            }));
+          });
+        }
+      }
     });
 
     setRendition(newRendition);
