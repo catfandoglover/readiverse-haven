@@ -1,3 +1,5 @@
+import { Highlight, HighlightColor } from './highlight';
+
 export interface BookMetadata {
   coverUrl?: string;
   title?: string;
@@ -21,4 +23,8 @@ export interface ReaderControlsProps {
   onBookmarkClick: () => void;
   onLocationChange?: (location: string) => void;
   sessionTime: number;
+  highlights: Highlight[];
+  currentHighlightColor: HighlightColor;
+  onHighlightColorChange: (color: HighlightColor) => void;
+  onRemoveHighlight: (id: string) => void;
 }

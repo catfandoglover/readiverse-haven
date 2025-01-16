@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import { debounce } from "lodash";
+import { Highlight } from "@/types/highlight";
 
 interface BookViewerProps {
   book: Book;
@@ -11,6 +12,8 @@ interface BookViewerProps {
   fontFamily: 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
+  highlights?: Highlight[];
+  onCreateHighlight?: (cfi: string, text: string, chapterInfo?: string) => void;
 }
 
 const BookViewer = ({ 
@@ -20,7 +23,9 @@ const BookViewer = ({
   fontSize,
   fontFamily,
   textAlign = 'left',
-  onRenditionReady 
+  onRenditionReady,
+  highlights = [],
+  onCreateHighlight
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -84,43 +89,51 @@ const BookViewer = ({
         "font-family": getFontFamily(fontFamily),
         color: theme.text,
         background: theme.background,
+      },
+      ".highlight-yellow": {
+        "background-color": "rgba(255, 255, 0, 0.3)",
+      },
+      ".highlight-green": {
+        "background-color": "rgba(0, 255, 0, 0.3)",
+      },
+      ".highlight-blue": {
+        "background-color": "rgba(0, 0, 255, 0.3)",
+      },
+      ".highlight-pink": {
+        "background-color": "rgba(255, 192, 203, 0.3)",
       }
+    });
+
+    // Add highlight handling
+    newRendition.on("selected", (cfiRange: string, contents: any) => {
+      const selection = contents.window.getSelection();
+      const text = selection?.toString().trim();
+      
+      if (text && onCreateHighlight) {
+        contents.window.getSelection()?.removeAllRanges();
+        onCreateHighlight(cfiRange, text, currentChapterTitle);
+      }
+    });
+
+    // Apply existing highlights
+    highlights.forEach(highlight => {
+      newRendition.annotations.add(
+        "highlight",
+        highlight.cfi,
+        {},
+        undefined,
+        `highlight-${highlight.color}`,
+        {
+          fill: highlight.color,
+          "fill-opacity": "0.3",
+        }
+      );
     });
 
     setRendition(newRendition);
     if (onRenditionReady) {
       onRenditionReady(newRendition);
     }
-
-    if (currentLocation) {
-      newRendition.display(currentLocation);
-    } else {
-      newRendition.display();
-    }
-
-    newRendition.on("relocated", (location: any) => {
-      onLocationChange(location);
-      
-      const contents = newRendition.getContents();
-      
-      if (contents && Array.isArray(contents) && contents.length > 0) {
-        const doc = contents[0].document;
-        
-        let heading = doc.querySelector('h2 a[id^="link2H_"]');
-        
-        if (heading) {
-          heading = heading.parentElement;
-        } else {
-          heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-        }
-        
-        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-        
-        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-          detail: { title: chapterTitle } 
-        }));
-      }
-    });
 
     // Create and setup ResizeObserver
     if (resizeObserver) {
@@ -145,7 +158,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
 
   useEffect(() => {
     if (rendition) {
