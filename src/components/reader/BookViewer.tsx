@@ -31,7 +31,6 @@ const BookViewer = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
-  const [isBookReady, setIsBookReady] = useState(false);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -63,28 +62,7 @@ const BookViewer = ({
   }, [debouncedResize]);
 
   useEffect(() => {
-    const initializeBook = async () => {
-      if (!book) return;
-      
-      try {
-        // Wait for the book to be ready
-        await book.ready;
-        // Ensure package is loaded
-        await book.loaded.package;
-        // Ensure spine is loaded
-        await book.loaded.spine;
-        setIsBookReady(true);
-      } catch (error) {
-        console.error('Error initializing book:', error);
-        setIsBookReady(false);
-      }
-    };
-
-    initializeBook();
-  }, [book]);
-
-  useEffect(() => {
-    if (!isBookReady || !book) return;
+    if (!book) return;
 
     const container = document.querySelector(".epub-view");
     if (!container) return;
@@ -138,7 +116,8 @@ const BookViewer = ({
 
     // Handle text selection
     newRendition.on("selected", (cfiRange: string, contents: any) => {
-      const text = contents.window.getSelection()?.toString() || "";
+      const selection = contents.window.getSelection();
+      const text = selection?.toString() || "";
       if (text && onTextSelect) {
         onTextSelect(cfiRange, text);
       }
@@ -214,7 +193,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights]);
 
   useEffect(() => {
     if (rendition) {
