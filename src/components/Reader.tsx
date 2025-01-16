@@ -21,7 +21,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -31,6 +33,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
   const [currentChapterTitle, setCurrentChapterTitle] = useState<string>("Unknown Chapter");
+  const { toast } = useToast();
 
   const {
     book,
@@ -100,15 +103,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (bookmarkExists) {
       setShowBookmarkDialog(true);
     } else {
-      // Get current page info
       const currentPage = pageInfo.chapterCurrent;
       const pageText = `Page ${currentPage}`;
-
-      console.log("Saving bookmark with:", { // Debug log
-        currentLocation,
-        currentChapterTitle,
-        pageText
-      });
 
       const bookmarkData = {
         cfi: currentLocation,
@@ -119,13 +115,16 @@ const Reader = ({ metadata }: ReaderProps) => {
 
       localStorage.setItem(bookmarkKey, JSON.stringify(bookmarkData));
       window.dispatchEvent(new Event('storage'));
+      
+      toast({
+        description: `Bookmark added: ${currentChapterTitle}, ${pageText}`,
+      });
     }
   };
 
   useEffect(() => {
     const handleChapterTitleChange = (event: CustomEvent<{ title: string }>) => {
-      console.log("Chapter title change event received:", event.detail.title);
-      if (event.detail.title && event.detail.title !== "Unknown Chapter") {
+      if (event.detail.title) {
         setCurrentChapterTitle(event.detail.title);
       }
     };
@@ -210,7 +209,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Remove Bookmark</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to remove the bookmark from this page?
+                      Are you sure you want to remove the bookmark from {currentChapterTitle}?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -219,10 +218,13 @@ const Reader = ({ metadata }: ReaderProps) => {
                       if (currentLocation) {
                         localStorage.removeItem(`book-progress-${currentLocation}`);
                         window.dispatchEvent(new Event('storage'));
+                        toast({
+                          description: "Bookmark removed successfully",
+                        });
                       }
                       setShowBookmarkDialog(false);
                     }}>
-                      Continue
+                      Remove
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
