@@ -77,7 +77,7 @@ const HighlightsMenu = ({
                 <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${colorClasses.yellow}`} />
                 <div className="flex-1 min-w-0">
                   <div 
-                    className="text-sm truncate cursor-pointer hover:text-primary"
+                    className="text-sm line-clamp-2 cursor-pointer hover:text-primary"
                     onClick={() => onHighlightSelect(highlight.cfiRange)}
                   >
                     {highlight.text}
