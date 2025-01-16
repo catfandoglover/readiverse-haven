@@ -6,7 +6,6 @@ import FontControls from './FontControls';
 import AlignmentControls from './AlignmentControls';
 import BrightnessControl from './BrightnessControl';
 import BookmarkControls from './BookmarkControls';
-import HighlightsMenu from '../HighlightsMenu';
 import SessionTimer from '../SessionTimer';
 import type { ReaderControlsProps } from '@/types/reader';
 
@@ -49,13 +48,11 @@ export const MobileControls = (props: ReaderControlsProps) => {
         </Sheet>
       </div>
       
-      <div className="flex items-center gap-2">
-        <HighlightsMenu
-          highlights={props.highlights}
-          selectedColor={props.selectedHighlightColor}
-          onColorSelect={props.onHighlightColorSelect}
-          onHighlightSelect={props.onHighlightSelect}
-          onRemoveHighlight={props.onRemoveHighlight}
+      <div className="md:hidden flex items-center gap-2">
+        <BookmarkControls
+          currentLocation={props.currentLocation}
+          onBookmarkClick={props.onBookmarkClick}
+          onLocationChange={props.onLocationChange}
         />
       </div>
     </div>

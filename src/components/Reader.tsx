@@ -198,14 +198,14 @@ const Reader = ({ metadata }: ReaderProps) => {
                 />
               </div>
               <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-                <div className="hidden md:block">
+                <div>
                   <BookmarkControls
                     currentLocation={currentLocation}
                     onLocationSelect={handleLocationSelect}
                     onBookmarkClick={handleBookmarkClick}
                   />
                 </div>
-                <div className="hidden md:block">
+                <div>
                   <HighlightsMenu
                     highlights={highlights}
                     selectedColor={selectedColor}
