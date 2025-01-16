@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
+import { debounce } from "lodash";
 
 interface BookViewerProps {
   book: Book;
@@ -25,22 +26,20 @@ const BookViewer = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
 
-  // Debounced resize handler
-  const debouncedResize = useCallback(() => {
-    let timeoutId: NodeJS.Timeout;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setIsMobile(window.innerWidth < 768);
-      }, 100);
-    };
-  }, []);
+  // Debounced resize handler for window resize
+  const debouncedResize = useCallback(
+    debounce(() => {
+      setIsMobile(window.innerWidth < 768);
+    }, 100),
+    []
+  );
 
   useEffect(() => {
-    const handleResize = debouncedResize();
+    const handleResize = () => debouncedResize();
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
+      debouncedResize.cancel();
     };
   }, [debouncedResize]);
 
@@ -115,24 +114,27 @@ const BookViewer = ({
       }
     });
 
+    // Debounced resize handler for the container
+    const debouncedContainerResize = debounce(() => {
+      if (newRendition && typeof newRendition.resize === 'function') {
+        try {
+          newRendition.resize(container.clientWidth, container.clientHeight);
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        }
+      }
+    }, 100);
+
     // Use ResizeObserver for handling container size changes
     const resizeObserver = new ResizeObserver(() => {
-      if (!newRendition) return;
-      
-      try {
-        if (typeof newRendition.resize === 'function') {
-          // Call resize with default dimensions
-          newRendition.resize(container.clientWidth, container.clientHeight);
-        }
-      } catch (error) {
-        console.error('Error resizing rendition:', error);
-      }
+      debouncedContainerResize();
     });
 
     resizeObserver.observe(container);
 
     return () => {
       resizeObserver.disconnect();
+      debouncedContainerResize.cancel();
       if (newRendition) {
         newRendition.destroy();
       }
