@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
 import ProgressTracker from "./reader/ProgressTracker";
 import ThemeSwitcher from "./reader/ThemeSwitcher";
+import SessionTimer from "./reader/SessionTimer";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -26,6 +27,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Reader = ({ metadata }: ReaderProps) => {
+  const [sessionTime, setSessionTime] = useState(0);
+  const [isReading, setIsReading] = useState(false);
+
   const {
     book,
     setBook,
@@ -68,6 +72,28 @@ const Reader = ({ metadata }: ReaderProps) => {
     handleBookmarkClick,
     handleRemoveBookmark
   } = useBookmarks(book, currentLocation, currentChapterTitle);
+
+  // Session timer logic
+  useEffect(() => {
+    if (book) {
+      setIsReading(true);
+    } else {
+      setIsReading(false);
+      setSessionTime(0);
+    }
+  }, [book]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isReading) {
+      interval = setInterval(() => {
+        setSessionTime(prev => prev + 1);
+      }, 1000);
+    }
+    
+    return () => clearInterval(interval);
+  }, [isReading]);
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
@@ -155,6 +181,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 />
               </div>
               <ThemeSwitcher />
+              <SessionTimer seconds={sessionTime} />
               <div 
                 style={{ 
                   position: 'fixed',
