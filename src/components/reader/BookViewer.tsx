@@ -115,32 +115,22 @@ const BookViewer = ({
       }
     });
 
-    // Use ResizeObserver with proper typing and debouncing
-    let resizeTimeout: number | undefined;
+    // Use ResizeObserver for handling container size changes
     const resizeObserver = new ResizeObserver(() => {
-      if (resizeTimeout !== undefined) {
-        cancelAnimationFrame(resizeTimeout);
-      }
+      if (!newRendition) return;
       
-      const frameCallback = (timestamp: number) => {
-        if (newRendition && typeof newRendition.resize === 'function') {
-          try {
-            newRendition.resize();
-          } catch (error) {
-            console.error('Error resizing rendition:', error);
-          }
+      try {
+        if (newRendition.manager && typeof newRendition.resize === 'function') {
+          newRendition.resize();
         }
-      };
-      
-      resizeTimeout = requestAnimationFrame(frameCallback);
+      } catch (error) {
+        console.error('Error resizing rendition:', error);
+      }
     });
 
     resizeObserver.observe(container);
 
     return () => {
-      if (resizeTimeout !== undefined) {
-        cancelAnimationFrame(resizeTimeout);
-      }
       resizeObserver.disconnect();
       if (newRendition) {
         newRendition.destroy();
