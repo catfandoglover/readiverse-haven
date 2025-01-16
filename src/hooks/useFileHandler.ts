@@ -17,16 +17,30 @@ export const useFileHandler = (
       const newBook = ePub(bookData);
       setBook(newBook);
 
-      await newBook.locations.generate(1024);
-      const totalLocations = newBook.locations.length();
-      setPageInfo(prev => ({ ...prev, total: totalLocations }));
+      try {
+        // Generate locations for the book
+        await newBook.locations.generate(1024);
+        
+        // Get the saved reading position
+        const savedLocation = loadProgress();
+        
+        if (savedLocation) {
+          // Set the current location to the saved position
+          setCurrentLocation(savedLocation);
+          
+          toast({
+            description: "Restored your last reading position",
+          });
+        }
 
-      const savedCfi = await loadProgress();
-      if (savedCfi) {
-        setCurrentLocation(savedCfi);
+        const totalLocations = newBook.locations.length();
+        setPageInfo(prev => ({ ...prev, total: totalLocations }));
+
+      } catch (error) {
+        console.error('Error initializing book:', error);
         toast({
-          title: "Progress Restored",
-          description: "Returning to your last reading position",
+          variant: "destructive",
+          description: "Failed to load book. Please try again.",
         });
       }
     };
