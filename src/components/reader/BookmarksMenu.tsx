@@ -7,8 +7,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon } from "lucide-react";
+import { BookmarkIcon, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookmarksMenuProps {
   onBookmarkSelect: (cfi: string) => void;
@@ -16,6 +17,7 @@ interface BookmarksMenuProps {
 
 const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = React.useState<{ [key: string]: string }>({});
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const loadBookmarks = () => {
@@ -37,6 +39,17 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
     return () => window.removeEventListener('storage', loadBookmarks);
   }, []);
 
+  const clearAllBookmarks = () => {
+    Object.keys(bookmarks).forEach(key => {
+      localStorage.removeItem(key);
+    });
+    setBookmarks({});
+    window.dispatchEvent(new Event('storage'));
+    toast({
+      description: "All bookmarks have been cleared",
+    });
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -55,7 +68,20 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] sm:w-[400px]">
         <SheetHeader>
-          <SheetTitle>Bookmarks</SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle>Bookmarks</SheetTitle>
+            {Object.keys(bookmarks).length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllBookmarks}
+                className="text-red-500 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+            )}
+          </div>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-100px)] mt-4">
           <div className="space-y-4">
