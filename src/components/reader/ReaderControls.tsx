@@ -96,46 +96,46 @@ const ControlPanel = ({
           />
         </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Font</span>
-        <Select
-          value={fontFamily}
-          onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Select font" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="georgia">Georgia</SelectItem>
-            <SelectItem value="helvetica">Helvetica</SelectItem>
-            <SelectItem value="times">Times New Roman</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Font</span>
+          <Select
+            value={fontFamily}
+            onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="georgia">Georgia</SelectItem>
+              <SelectItem value="helvetica">Helvetica</SelectItem>
+              <SelectItem value="times">Times New Roman</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant={textAlign === 'left' ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onTextAlignChange('left')}
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={textAlign === 'justify' ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onTextAlignChange('justify')}
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={textAlign === 'center' ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onTextAlignChange('center')}
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={textAlign === 'left' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('left')}
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'justify' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('justify')}
+          >
+            <AlignJustify className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={textAlign === 'center' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => onTextAlignChange('center')}
+          >
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+        </div>
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
@@ -210,7 +210,10 @@ const ReaderControls = (props: ReaderControlsProps) => {
       {/* Desktop bookmark controls */}
       <div className="hidden md:flex fixed top-4 right-4 z-50 flex-col items-center gap-2">
         <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
-        <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+        <BookmarksMenu 
+          currentLocation={props.currentLocation} 
+          onLocationSelect={props.onLocationChange || (() => {})} 
+        />
       </div>
 
       <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
@@ -230,7 +233,10 @@ const ReaderControls = (props: ReaderControlsProps) => {
                 <ControlPanel {...props} />
                 <div className="flex items-center gap-2">
                   <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
-                  <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+                  <BookmarksMenu 
+                    currentLocation={props.currentLocation} 
+                    onLocationSelect={props.onLocationChange || (() => {})} 
+                  />
                 </div>
               </div>
             </DrawerContent>
