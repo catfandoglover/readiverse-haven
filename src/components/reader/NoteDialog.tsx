@@ -49,12 +49,22 @@ const NoteDialog = ({
     }
   }, [open, initialNote]);
 
-  // Ensure we clean up any lingering overlay effects
+  // Handle cleanup and refresh
   useEffect(() => {
     if (!open) {
       // Force remove any lingering overlay effects
       document.body.style.pointerEvents = '';
       document.body.style.overflow = '';
+      
+      // Force refresh the reader content
+      const readerContent = document.querySelector('.epub-view');
+      if (readerContent) {
+        const display = readerContent.style.display;
+        readerContent.style.display = 'none';
+        setTimeout(() => {
+          readerContent.style.display = display;
+        }, 0);
+      }
     }
     return () => {
       document.body.style.pointerEvents = '';
@@ -70,6 +80,16 @@ const NoteDialog = ({
         if (!newOpen) {
           document.body.style.pointerEvents = '';
           document.body.style.overflow = '';
+          
+          // Force refresh the reader content
+          const readerContent = document.querySelector('.epub-view');
+          if (readerContent) {
+            const display = readerContent.style.display;
+            readerContent.style.display = 'none';
+            setTimeout(() => {
+              readerContent.style.display = display;
+            }, 0);
+          }
         }
         onOpenChange(newOpen);
       }}
