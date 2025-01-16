@@ -92,7 +92,11 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
-      rendition.display(location);
+      // Display the location and ensure proper page alignment
+      rendition.display(location).then(() => {
+        // Force a re-layout to ensure correct page positioning
+        rendition.resize();
+      });
     }
   };
 
