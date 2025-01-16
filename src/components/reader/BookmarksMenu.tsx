@@ -1,50 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, Trash2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
+import { Bookmark } from "lucide-react";
 
 interface BookmarksMenuProps {
-  onBookmarkSelect: (cfi: string) => void;
+  currentLocation: string | null;
+  onLocationSelect: (location: string) => void;
 }
 
-const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
-  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string, metadata?: any } }>({});
-  const { toast } = useToast();
+interface BookmarkData {
+  cfi: string;
+  timestamp: number;
+  chapterInfo: string;
+  pageInfo: string;
+  metadata?: {
+    chapterTitle?: string;
+    chapterIndex?: number;
+    pageNumber?: number;
+    totalPages?: number;
+  };
+}
 
-  React.useEffect(() => {
+const BookmarksMenu = ({ currentLocation, onLocationSelect }: BookmarksMenuProps) => {
+  const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
+
+  useEffect(() => {
     const loadBookmarks = () => {
-      const marks: { [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string, metadata?: any } } = {};
+      const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('book-progress-')) {
           const value = localStorage.getItem(key);
-          if (value) {
-            try {
-              const data = JSON.parse(value);
-              marks[key] = {
-                cfi: data.cfi || value,
-                timestamp: data.timestamp || Date.now(),
-                chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-                pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
-                metadata: data.metadata || {}
-              };
-            } catch {
-              // If parsing fails, use the raw value as CFI
-              marks[key] = {
-                cfi: value,
-                timestamp: Date.now(),
-                chapterInfo: "Unknown Chapter",
-                pageInfo: "Page information unavailable"
-              };
-            }
+          if (!value) continue;
+
+          try {
+            const data = JSON.parse(value);
+            marks[key] = {
+              cfi: data.cfi || value,
+              timestamp: data.timestamp || Date.now(),
+              chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
+              pageInfo: `Page ${data.metadata?.pageNumber}`,
+              metadata: data.metadata || {}
+            };
+          } catch {
+            // If parsing fails, use the raw value as CFI
+            marks[key] = {
+              cfi: value,
+              timestamp: Date.now(),
+              chapterInfo: "Unknown Chapter",
+              pageInfo: "Page information unavailable"
+            };
           }
         }
       }
@@ -53,85 +65,39 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
 
     loadBookmarks();
     window.addEventListener('storage', loadBookmarks);
-    return () => window.removeEventListener('storage', loadBookmarks);
+    return () => {
+      window.removeEventListener('storage', loadBookmarks);
+    };
   }, []);
 
-  const clearAllBookmarks = () => {
-    Object.keys(bookmarks).forEach(key => {
-      localStorage.removeItem(key);
-    });
-    setBookmarks({});
-    window.dispatchEvent(new Event('storage'));
-    toast({
-      description: "All bookmarks have been cleared",
-    });
-  };
-
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="relative"
-        >
-          <BookmarkIcon className="h-5 w-5" />
-          {Object.keys(bookmarks).length > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center">
-              {Object.keys(bookmarks).length}
-            </span>
-          )}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Bookmark className="h-[1.2rem] w-[1.2rem]" />
+          <span className="sr-only">Toggle bookmarks menu</span>
         </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-        <SheetHeader>
-          <div className="flex items-center justify-between">
-            <SheetTitle>Bookmarks</SheetTitle>
-            {Object.keys(bookmarks).length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllBookmarks}
-                className="text-red-500 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
-            )}
-          </div>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-100px)] mt-4">
-          <div className="space-y-4">
-            {Object.entries(bookmarks).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No bookmarks yet
-              </p>
-            ) : (
-              Object.entries(bookmarks).map(([key, { cfi, timestamp, chapterInfo, pageInfo }]) => (
-                <Button
-                  key={key}
-                  variant="ghost"
-                  className="w-full justify-start text-left flex-col items-start h-auto min-h-[3rem] py-2 px-4"
-                  onClick={() => onBookmarkSelect(cfi)}
-                >
-                  <div className="flex items-start w-full gap-2">
-                    <BookmarkIcon className="h-4 w-4 text-red-500 shrink-0 mt-1" />
-                    <div className="flex flex-col">
-                      <span className="break-words line-clamp-2">
-                        {chapterInfo}, {pageInfo}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(timestamp).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </Button>
-              ))
-            )}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[200px]">
+        <DropdownMenuLabel>Bookmarks</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {Object.entries(bookmarks)
+          .sort(([, a], [, b]) => b.timestamp - a.timestamp)
+          .map(([key, bookmark]) => (
+            <DropdownMenuItem
+              key={key}
+              onSelect={() => onLocationSelect(bookmark.cfi)}
+              className="flex flex-col items-start"
+            >
+              <span className="text-sm">{bookmark.chapterInfo}</span>
+              <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
+            </DropdownMenuItem>
+          ))}
+        {Object.keys(bookmarks).length === 0 && (
+          <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
