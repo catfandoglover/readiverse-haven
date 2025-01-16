@@ -108,7 +108,6 @@ const BookViewer = ({
           console.log("Text selected:", text, "CFI Range:", cfiRange);
           onTextSelect(cfiRange, text);
           
-          // Apply highlight immediately when text is selected
           try {
             newRendition.annotations.add(
               "highlight",
@@ -123,11 +122,9 @@ const BookViewer = ({
         }
       });
 
-      // Clear selection when clicking outside
       newRendition.on("click", (event: any) => {
         if (!event.target || !onTextSelect) return;
         
-        // Only clear if we clicked outside text content
         const isTextContent = event.target.nodeType === 3 || 
                             ['P', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(event.target.tagName);
         
@@ -152,9 +149,7 @@ const BookViewer = ({
       });
 
       newRendition.on("relocated", (location: any) => {
-        if (onLocationChange) {
-          onLocationChange(location);
-        }
+        onLocationChange(location);
         
         // Reapply highlights after page change
         highlights.forEach(highlight => {
