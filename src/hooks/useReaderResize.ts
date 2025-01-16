@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from "lodash";
 import type { Rendition } from "epubjs";
 
 export const useReaderResize = (rendition: Rendition | null) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const rafIdRef = useRef<number>();
+  const containerRef = useRef<Element | null>(null);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -17,25 +19,26 @@ export const useReaderResize = (rendition: Rendition | null) => {
     debounce((container: Element) => {
       if (!rendition || !container) return;
 
-      // Use rAF to ensure smooth resize handling
-      let rafId: number;
-      const updateSize = () => {
-        try {
-          if (rendition && typeof rendition.resize === 'function') {
-            rendition.resize(container.clientWidth, container.clientHeight);
-          }
-        } catch (error) {
-          console.error('Error resizing rendition:', error);
-        }
-      };
-
-      // Cancel any pending rAF
-      if (rafId) {
-        cancelAnimationFrame(rafId);
+      // Cancel any existing rAF
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
       }
 
+      // Store container reference
+      containerRef.current = container;
+
       // Schedule new update
-      rafId = requestAnimationFrame(updateSize);
+      rafIdRef.current = requestAnimationFrame(() => {
+        try {
+          if (rendition && containerRef.current && typeof rendition.resize === 'function') {
+            rendition.resize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+          }
+        } catch (error) {
+          console.warn('Non-critical resize error:', error);
+        } finally {
+          rafIdRef.current = undefined;
+        }
+      });
     }, 250),
     [rendition]
   );
@@ -47,8 +50,24 @@ export const useReaderResize = (rendition: Rendition | null) => {
     return () => {
       window.removeEventListener('resize', handleResize);
       debouncedResize.cancel();
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
     };
   }, [debouncedResize]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      debouncedContainerResize.cancel();
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, [resizeObserver, debouncedContainerResize]);
 
   return {
     isMobile,
