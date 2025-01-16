@@ -94,10 +94,15 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (rendition) {
       const container = document.querySelector(".epub-view");
       if (container) {
-        // Display the location and ensure proper page alignment
+        // First display the location
         rendition.display(location).then(() => {
-          // Force a re-layout to ensure correct page positioning with container dimensions
-          rendition.resize(container.clientWidth, container.clientHeight);
+          // Wait a brief moment for the content to be properly laid out
+          setTimeout(() => {
+            // Force a re-layout with container dimensions
+            rendition.resize(container.clientWidth, container.clientHeight);
+            // Additional display call to ensure correct page positioning
+            rendition.display(location);
+          }, 100);
         });
       }
     }
