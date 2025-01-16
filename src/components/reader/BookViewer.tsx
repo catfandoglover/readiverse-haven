@@ -85,6 +85,8 @@ const BookViewer = ({
     if (!container || !book) return;
 
     if (rendition) {
+      // Cleanup existing rendition
+      rendition.off("selected");
       rendition.destroy();
     }
 
@@ -131,13 +133,19 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Handle text selection
-    newRendition.on("selected", (cfiRange: string, contents: any) => {
+    // Handle text selection with proper cleanup
+    const handleTextSelection = (cfiRange: string, contents: any) => {
       const text = contents.window.getSelection()?.toString() || "";
       if (text && onTextSelect) {
         onTextSelect(cfiRange, text);
+        // Clear the selection after processing
+        if (contents.window.getSelection()) {
+          contents.window.getSelection()?.removeAllRanges();
+        }
       }
-    });
+    };
+
+    newRendition.on("selected", handleTextSelection);
 
     // Apply existing highlights
     highlights.forEach(highlight => {
@@ -198,6 +206,7 @@ const BookViewer = ({
       }
       debouncedContainerResize.cancel();
       if (newRendition) {
+        newRendition.off("selected", handleTextSelection);
         newRendition.destroy();
       }
     };
