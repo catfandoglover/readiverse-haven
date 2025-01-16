@@ -143,16 +143,14 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleNoteDialogClose = () => {
     setNoteDialogOpen(false);
-    setTimeout(() => {
-      setSelectedHighlight(null);
-    }, 100);
+    setSelectedHighlight(null);
   };
 
   const handleNoteClick = (highlight: Highlight) => {
-    setSelectedHighlight(highlight);
-    setTimeout(() => {
+    if (!noteDialogOpen) {
+      setSelectedHighlight(highlight);
       setNoteDialogOpen(true);
-    }, 0);
+    }
   };
 
   const handleNoteSave = (note: string) => {
@@ -267,7 +265,11 @@ const Reader = ({ metadata }: ReaderProps) => {
 
               <NoteDialog
                 open={noteDialogOpen}
-                onOpenChange={handleNoteDialogClose}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    handleNoteDialogClose();
+                  }
+                }}
                 onSave={handleNoteSave}
                 initialNote={selectedHighlight?.note}
                 highlightedText={selectedHighlight?.text || ''}
