@@ -148,7 +148,7 @@ const BookViewer = ({
 
       // Get the current page's content document
       const views = newRendition.views();
-      const currentView = views?.length ? views[0] as View : null;
+      const currentView = views?.length ? views[0] as ExtendedView : null;
       if (!currentView) return;
 
       // Get the selection's container node
