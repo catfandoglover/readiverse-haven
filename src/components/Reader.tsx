@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [fontSize, setFontSize] = useState(100);
@@ -110,13 +111,15 @@ const Reader = ({ metadata }: ReaderProps) => {
           ? `Chapter ${spineItem.index + 1}: ${currentChapterTitle}`
           : currentChapterTitle;
 
+        const now = new Date();
         const bookmarkData = {
           cfi: currentLocation,
-          timestamp: Date.now(),
+          timestamp: now.getTime(),
           chapterInfo,
           pageInfo: `Page ${pageInfo.chapterCurrent} of ${pageInfo.chapterTotal}`,
           metadata: {
-            created: new Date().toISOString(),
+            created: now.toISOString(),
+            formattedDate: format(now, 'PPpp'), // Adds formatted date like "Apr 13, 2024, 2:30 PM"
             chapterIndex: spineItem?.index,
             chapterTitle: currentChapterTitle,
             pageNumber: pageInfo.chapterCurrent,
@@ -128,7 +131,7 @@ const Reader = ({ metadata }: ReaderProps) => {
         window.dispatchEvent(new Event('storage'));
         
         toast({
-          description: `Bookmark added: ${chapterInfo}`,
+          description: `Bookmark added: ${chapterInfo} (${format(now, 'PP')})`,
         });
       } catch (error) {
         console.error('Error saving bookmark:', error);

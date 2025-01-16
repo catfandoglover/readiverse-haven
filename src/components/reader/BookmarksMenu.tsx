@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Bookmark, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from "date-fns";
 
 interface BookmarkData {
   cfi: string;
@@ -18,6 +19,8 @@ interface BookmarkData {
   chapterInfo: string;
   pageInfo: string;
   metadata?: {
+    created?: string;
+    formattedDate?: string;
     chapterTitle?: string;
     chapterIndex?: number;
     pageNumber?: number;
@@ -129,7 +132,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
             <span className="sr-only">Toggle bookmarks menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px]">
+        <DropdownMenuContent align="end" className="w-[280px]">
           <DropdownMenuLabel className="flex items-center justify-between">
             Bookmarks
             {Object.keys(bookmarks).length > 0 && (
@@ -151,10 +154,15 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
               <DropdownMenuItem
                 key={key}
                 onSelect={() => onLocationSelect(bookmark.cfi)}
-                className="flex flex-col items-start"
+                className="flex flex-col items-start gap-1"
               >
-                <span className="text-sm">{bookmark.chapterInfo}</span>
+                <span className="text-sm font-medium">{bookmark.chapterInfo}</span>
                 <span className="text-xs text-muted-foreground">{bookmark.pageInfo}</span>
+                {bookmark.metadata?.created && (
+                  <span className="text-xs text-muted-foreground">
+                    {bookmark.metadata.formattedDate || format(parseISO(bookmark.metadata.created), 'PPpp')}
+                  </span>
+                )}
               </DropdownMenuItem>
             ))}
           {Object.keys(bookmarks).length === 0 && (
