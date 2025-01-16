@@ -22,11 +22,3 @@ export interface ReaderControlsProps {
   onLocationChange?: (location: string) => void;
   sessionTime: number;
 }
-
-export interface NavItem {
-  label: string;
-  href: string;
-  level?: number;
-  page?: number;
-  subitems?: NavItem[];
-}

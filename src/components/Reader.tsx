@@ -16,6 +16,7 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,15 +28,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TextSelectionMenu from "./reader/TextSelectionMenu";
-import TableOfContents from "./reader/TableOfContents";
-import type { NavItem } from "@/types/reader";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isReading, setIsReading] = useState(false);
   const [selectedText, setSelectedText] = useState<{ text: string, cfiRange: string } | null>(null);
-  const [tableOfContents, setTableOfContents] = useState<NavItem[]>([]);
-  const [showToc, setShowToc] = useState(true);
 
   const {
     book,
@@ -147,29 +144,10 @@ const Reader = ({ metadata }: ReaderProps) => {
     };
   }, [book, currentLocation]);
 
-  useEffect(() => {
-    if (book) {
-      book.loaded.navigation.then(nav => {
-        const toc = nav.toc.map((item: any) => ({
-          label: item.label.trim(),
-          href: item.href,
-          level: item.level || 0,
-        }));
-        setTableOfContents(toc);
-      });
-    }
-  }, [book]);
-
-  const handleTocNavigate = (href: string) => {
-    if (rendition) {
-      rendition.display(href);
-    }
-  };
-
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
           ) : (
@@ -195,30 +173,23 @@ const Reader = ({ metadata }: ReaderProps) => {
               />
               <div className="relative">
                 <div className="fixed md:absolute left-1 md:-left-16 top-1/2 -translate-y-1/2 z-10">
-                  <div className="flex flex-col gap-2">
-                    <TableOfContents
-                      toc={tableOfContents}
-                      currentLocation={currentLocation}
-                      onNavigate={handleTocNavigate}
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handlePrevPage}
-                      className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handlePrevPage}
+                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                  >
+                    <ChevronLeft className="h-3 w-3 md:h-5 md:w-5" />
+                  </Button>
                 </div>
                 <div className="fixed md:absolute right-1 md:-right-16 top-1/2 -translate-y-1/2 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={handleNextPage}
-                    className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+                    className="h-6 w-6 md:h-10 md:w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-3 w-3 md:h-5 md:w-5" />
                   </Button>
                 </div>
                 <div className="fixed md:absolute right-1 md:-right-16 top-1/4 -translate-y-1/2 z-10">
