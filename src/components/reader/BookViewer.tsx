@@ -32,29 +32,38 @@ const BookViewer = ({
   const { theme } = useTheme();
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
   const [isBookReady, setIsBookReady] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
 
-  // More aggressive debounce for window resize
+  // Debounce window resize with a longer delay
   const debouncedResize = useCallback(
     debounce(() => {
       setIsMobile(window.innerWidth < 768);
-    }, 500),
+    }, 1000),
     []
   );
 
-  // More aggressive debounce for container resize with error handling
-  const debouncedContainerResize = useCallback(
-    debounce((container: Element) => {
-      if (rendition && typeof rendition.resize === 'function') {
-        try {
-          requestAnimationFrame(() => {
-            rendition.resize(container.clientWidth, container.clientHeight);
-          });
-        } catch (error) {
-          console.error('Error resizing rendition:', error);
+  // Handle container resize with RAF and debouncing
+  const handleContainerResize = useCallback((container: Element) => {
+    if (isResizing) return;
+    
+    setIsResizing(true);
+    requestAnimationFrame(() => {
+      try {
+        if (rendition && typeof rendition.resize === 'function') {
+          rendition.resize(container.clientWidth, container.clientHeight);
         }
+      } catch (error) {
+        console.error('Error resizing rendition:', error);
+      } finally {
+        setIsResizing(false);
       }
-    }, 500),
-    [rendition]
+    });
+  }, [rendition, isResizing]);
+
+  // Debounced version of container resize handler
+  const debouncedContainerResize = useCallback(
+    debounce(handleContainerResize, 1000, { leading: true, trailing: true }),
+    [handleContainerResize]
   );
 
   useEffect(() => {
@@ -80,7 +89,6 @@ const BookViewer = ({
       initializeBook();
     }
 
-    // Cleanup function to ensure proper teardown
     return () => {
       setIsBookReady(false);
       if (rendition) {
@@ -208,16 +216,25 @@ const BookViewer = ({
       }
     });
 
-    // Create and setup ResizeObserver with error handling
+    // Setup ResizeObserver with improved handling
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
 
+    let rafId: number;
     const observer = new ResizeObserver((entries) => {
-      requestAnimationFrame(() => {
+      // Cancel any pending RAF
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+
+      // Schedule a new resize operation
+      rafId = requestAnimationFrame(() => {
         try {
-          for (const entry of entries) {
-            debouncedContainerResize(entry.target);
+          if (!isResizing) {
+            for (const entry of entries) {
+              debouncedContainerResize(entry.target);
+            }
           }
         } catch (error) {
           console.error('ResizeObserver error:', error);
@@ -234,6 +251,9 @@ const BookViewer = ({
 
     // Cleanup function
     return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
       if (resizeObserver) {
         try {
           resizeObserver.disconnect();
@@ -251,7 +271,7 @@ const BookViewer = ({
         }
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady, debouncedContainerResize, isResizing]);
 
   useEffect(() => {
     if (rendition) {
