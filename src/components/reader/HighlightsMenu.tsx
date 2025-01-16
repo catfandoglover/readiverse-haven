@@ -45,8 +45,8 @@ const HighlightsMenu = ({
       <DropdownMenuContent 
         align="end" 
         side="left" 
-        sideOffset={16}
-        alignOffset={-8}
+        sideOffset={8}
+        alignOffset={40}
         className="w-64"
       >
         <div className="sticky top-0 bg-background z-10">
