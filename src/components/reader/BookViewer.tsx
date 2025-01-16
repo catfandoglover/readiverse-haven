@@ -120,8 +120,9 @@ const BookViewer = ({
       if (!newRendition) return;
       
       try {
-        if (newRendition.manager && typeof newRendition.resize === 'function') {
-          newRendition.resize();
+        if (typeof newRendition.resize === 'function') {
+          // Call resize with default dimensions
+          newRendition.resize(container.clientWidth, container.clientHeight);
         }
       } catch (error) {
         console.error('Error resizing rendition:', error);
