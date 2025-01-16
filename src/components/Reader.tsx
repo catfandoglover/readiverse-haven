@@ -143,12 +143,16 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const handleNoteDialogClose = () => {
     setNoteDialogOpen(false);
-    setSelectedHighlight(null);
+    setTimeout(() => {
+      setSelectedHighlight(null);
+    }, 100);
   };
 
   const handleNoteClick = (highlight: Highlight) => {
     setSelectedHighlight(highlight);
-    setNoteDialogOpen(true);
+    setTimeout(() => {
+      setNoteDialogOpen(true);
+    }, 0);
   };
 
   const handleNoteSave = (note: string) => {
