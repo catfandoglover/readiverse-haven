@@ -31,7 +31,11 @@ interface BookmarksMenuProps {
   onBookmarkClick: () => void;
 }
 
-const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: BookmarksMenuProps) => {
+const BookmarksMenu = ({
+  currentLocation,
+  onLocationSelect,
+  onBookmarkClick,
+}: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
@@ -57,8 +61,8 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
             marks[key] = {
               cfi: data.cfi || value,
               timestamp: data.timestamp || Date.now(),
-              chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-              pageInfo: `Page ${data.metadata?.pageNumber}`,
+              chapterInfo: data.chapterInfo || "Unknown Chapter",
+              pageInfo: data.pageInfo || "Page information unavailable",
               metadata: data.metadata || {}
             };
           } catch {
@@ -97,7 +101,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
   };
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex md:flex-col items-end gap-2">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
