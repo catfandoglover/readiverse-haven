@@ -156,10 +156,10 @@ const BookmarkButton = ({ currentLocation, onBookmarkClick }: Pick<ReaderControl
 const ReaderControls = (props: ReaderControlsProps) => {
   return (
     <>
-      {/* Desktop bookmark controls in top right corner */}
-      <div className="hidden md:flex fixed top-4 right-4 z-50 items-center gap-2">
-        <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+      {/* Desktop bookmark controls */}
+      <div className="hidden md:flex fixed top-4 right-4 z-50 flex-col items-center gap-2">
         <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+        <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
       </div>
 
       <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
@@ -175,13 +175,18 @@ const ReaderControls = (props: ReaderControlsProps) => {
               </Button>
             </DrawerTrigger>
             <DrawerContent>
-              <ControlPanel {...props} />
+              <div className="flex flex-col items-center gap-4 p-4">
+                <ControlPanel {...props} />
+                <div className="flex items-center gap-2">
+                  <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
+                  <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
+                </div>
+              </div>
             </DrawerContent>
           </Drawer>
           
           {/* Mobile bookmark controls */}
           <div className="flex items-center gap-2">
-            <BookmarksMenu onBookmarkSelect={props.onLocationChange || (() => {})} />
             <BookmarkButton currentLocation={props.currentLocation} onBookmarkClick={props.onBookmarkClick} />
           </div>
         </div>
