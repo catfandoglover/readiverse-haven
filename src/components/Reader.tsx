@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { ReaderProps } from "@/types/reader";
+import type { Highlight, HighlightColor } from "@/types/highlight";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -17,7 +18,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { HighlightColor } from "@/types/highlight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,7 +200,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                       updateNote(id, note);
                       setSelectedHighlight(null);
                     }}
-                    onNoteClick={(highlight) => {
+                    onNoteClick={(highlight: Highlight) => {
                       setSelectedHighlight(highlight);
                       setNoteDialogOpen(true);
                     }}
@@ -260,7 +260,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                   setSelectedHighlight(null);
                 }}
                 initialNote={selectedHighlight?.note}
-                highlightedText={selectedHighlight?.text}
+                highlightedText={selectedHighlight?.text || ''}
               />
             </>
           )}
