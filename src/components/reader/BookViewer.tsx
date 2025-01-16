@@ -122,7 +122,7 @@ const BookViewer = ({
         cancelAnimationFrame(resizeTimeout);
       }
       
-      resizeTimeout = requestAnimationFrame((...args) => {
+      const frameCallback = (timestamp: number) => {
         if (newRendition && typeof newRendition.resize === 'function') {
           try {
             newRendition.resize();
@@ -130,7 +130,9 @@ const BookViewer = ({
             console.error('Error resizing rendition:', error);
           }
         }
-      });
+      };
+      
+      resizeTimeout = requestAnimationFrame(frameCallback);
     });
 
     resizeObserver.observe(container);
