@@ -73,21 +73,9 @@ const ReaderControls = (props: ReaderControlsProps) => {
             <DrawerContent>
               <div className="flex flex-col items-center gap-4 p-4">
                 <ControlPanel {...props} />
-                <BookmarkControls
-                  currentLocation={props.currentLocation}
-                  onBookmarkClick={props.onBookmarkClick}
-                  onLocationChange={props.onLocationChange}
-                />
               </div>
             </DrawerContent>
           </Drawer>
-          
-          {/* Mobile bookmark controls */}
-          <BookmarkControls
-            currentLocation={props.currentLocation}
-            onBookmarkClick={props.onBookmarkClick}
-            onLocationChange={props.onLocationChange}
-          />
         </div>
       </div>
     </>
