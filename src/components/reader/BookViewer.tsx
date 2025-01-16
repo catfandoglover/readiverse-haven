@@ -22,12 +22,12 @@ const BookViewer = ({
   onRenditionReady 
 }: BookViewerProps) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme } = useTheme();
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+      setIsMobile(window.innerWidth < 768);
     };
 
     window.addEventListener('resize', handleResize);
@@ -46,8 +46,8 @@ const BookViewer = ({
       width: "100%",
       height: "100%",
       flow: "paginated",
-      spread: isMobile ? "none" : "auto",
-      minSpreadWidth: 800,
+      spread: isMobile ? "none" : "always",
+      minSpreadWidth: 0, // Remove the minimum width requirement for spread
     });
 
     if (currentLocation) {
