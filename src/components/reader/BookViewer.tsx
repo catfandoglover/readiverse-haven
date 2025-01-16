@@ -136,13 +136,22 @@ const BookViewer = ({
       if (location && location.start) {
         const spineItem = book.spine.get(location.start.cfi);
         if (spineItem) {
-          spineItem.load(book.load.bind(book)).then((doc: any) => {
-            const title = doc.title || "Unknown Chapter";
+          const loadPromise = spineItem.load(book.load.bind(book));
+          if (loadPromise instanceof Promise) {
+            loadPromise.then((doc: any) => {
+              const title = doc.title || "Unknown Chapter";
+              setCurrentChapterTitle(title);
+              window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+                detail: { title } 
+              }));
+            });
+          } else {
+            const title = loadPromise.title || "Unknown Chapter";
             setCurrentChapterTitle(title);
             window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
               detail: { title } 
             }));
-          });
+          }
         }
       }
     });
