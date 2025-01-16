@@ -36,11 +36,32 @@ const NoteDialog = ({
     });
   };
 
+  const forceReaderRefresh = () => {
+    const readerContent = document.querySelector('.epub-view') as HTMLElement;
+    if (readerContent) {
+      // Remove the element
+      const parent = readerContent.parentNode;
+      if (parent) {
+        const clone = readerContent.cloneNode(true);
+        parent.removeChild(readerContent);
+        // Force a reflow
+        void readerContent.offsetHeight;
+        // Add the element back
+        parent.appendChild(clone);
+      }
+    }
+  };
+
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (open) {
       setNote(initialNote);
     } else {
+      // Clean up and force refresh when dialog closes
+      document.body.style.pointerEvents = '';
+      document.body.style.overflow = '';
+      forceReaderRefresh();
+      
       // Clear note state after animation completes
       const timeout = setTimeout(() => {
         setNote("");
@@ -49,47 +70,15 @@ const NoteDialog = ({
     }
   }, [open, initialNote]);
 
-  // Handle cleanup and refresh
-  useEffect(() => {
-    if (!open) {
-      // Force remove any lingering overlay effects
-      document.body.style.pointerEvents = '';
-      document.body.style.overflow = '';
-      
-      // Force refresh the reader content
-      const readerContent = document.querySelector('.epub-view') as HTMLElement;
-      if (readerContent) {
-        const display = readerContent.style.display;
-        readerContent.style.display = 'none';
-        setTimeout(() => {
-          readerContent.style.display = display;
-        }, 0);
-      }
-    }
-    return () => {
-      document.body.style.pointerEvents = '';
-      document.body.style.overflow = '';
-    };
-  }, [open]);
-
   return (
     <AlertDialog 
       open={open} 
       onOpenChange={(newOpen) => {
-        // Ensure we clean up before closing
         if (!newOpen) {
+          // Clean up and force refresh before closing
           document.body.style.pointerEvents = '';
           document.body.style.overflow = '';
-          
-          // Force refresh the reader content
-          const readerContent = document.querySelector('.epub-view') as HTMLElement;
-          if (readerContent) {
-            const display = readerContent.style.display;
-            readerContent.style.display = 'none';
-            setTimeout(() => {
-              readerContent.style.display = display;
-            }, 0);
-          }
+          forceReaderRefresh();
         }
         onOpenChange(newOpen);
       }}
