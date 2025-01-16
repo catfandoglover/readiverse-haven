@@ -91,7 +91,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   };
 
   const handleBookmarkClick = () => {
-    if (!currentLocation) return;
+    if (!currentLocation || !rendition) return;
 
     const bookmarkKey = `book-progress-${currentLocation}`;
     const bookmarkExists = localStorage.getItem(bookmarkKey) !== null;
@@ -99,9 +99,19 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (bookmarkExists) {
       setShowBookmarkDialog(true);
     } else {
+      // Get current chapter info from the book
+      const chapter = rendition.location?.start?.href || "Unknown Chapter";
+      const chapterInfo = chapter.split('/').pop()?.replace(/\.xhtml$|\.html$/, '') || "Unknown Chapter";
+      
+      // Get current page info
+      const currentPage = pageInfo.chapterCurrent;
+      const pageText = `Page ${currentPage}`;
+
       localStorage.setItem(bookmarkKey, JSON.stringify({
         cfi: currentLocation,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        chapterInfo,
+        pageInfo: pageText
       }));
       window.dispatchEvent(new Event('storage'));
     }

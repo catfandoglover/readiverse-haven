@@ -16,12 +16,12 @@ interface BookmarksMenuProps {
 }
 
 const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
-  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number } }>({});
+  const [bookmarks, setBookmarks] = React.useState<{ [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string } }>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
     const loadBookmarks = () => {
-      const marks: { [key: string]: { cfi: string, timestamp: number } } = {};
+      const marks: { [key: string]: { cfi: string, timestamp: number, chapterInfo?: string, pageInfo?: string } } = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('book-progress-')) {
@@ -30,14 +30,18 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
             try {
               const data = JSON.parse(value);
               marks[key] = {
-                cfi: data.cfi || value, // Fallback for old format
-                timestamp: data.timestamp || Date.now()
+                cfi: data.cfi || value,
+                timestamp: data.timestamp || Date.now(),
+                chapterInfo: data.chapterInfo || "Unknown Chapter",
+                pageInfo: data.pageInfo || "Page Unknown"
               };
             } catch {
               // If parsing fails, use the old format
               marks[key] = {
                 cfi: value,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                chapterInfo: "Unknown Chapter",
+                pageInfo: "Page Unknown"
               };
             }
           }
@@ -102,16 +106,21 @@ const BookmarksMenu = ({ onBookmarkSelect }: BookmarksMenuProps) => {
                 No bookmarks yet
               </p>
             ) : (
-              Object.entries(bookmarks).map(([key, { cfi, timestamp }]) => (
+              Object.entries(bookmarks).map(([key, { cfi, timestamp, chapterInfo, pageInfo }]) => (
                 <Button
                   key={key}
                   variant="ghost"
-                  className="w-full justify-start text-left"
+                  className="w-full justify-start text-left flex-col items-start"
                   onClick={() => onBookmarkSelect(cfi)}
                 >
-                  <BookmarkIcon className="h-4 w-4 mr-2 text-red-500" />
-                  <span className="truncate">
-                    Bookmark {new Date(timestamp).toLocaleDateString()}
+                  <div className="flex items-center w-full">
+                    <BookmarkIcon className="h-4 w-4 mr-2 text-red-500 shrink-0" />
+                    <span className="truncate">
+                      {chapterInfo}, {pageInfo}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground ml-6">
+                    {new Date(timestamp).toLocaleDateString()}
                   </span>
                 </Button>
               ))
