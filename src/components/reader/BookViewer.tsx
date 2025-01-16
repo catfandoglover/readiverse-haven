@@ -60,17 +60,16 @@ const BookViewer = ({
       onLocationChange(location);
       
       // Extract chapter title from the current section
-      newRendition.getContents().then(contents => {
-        if (contents && contents.length > 0) {
-          const doc = contents[0].document;
-          const heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
-          const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
-          // Dispatch a custom event to update the chapter title
-          window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
-            detail: { title: chapterTitle } 
-          }));
-        }
-      });
+      const contents = newRendition.getContents();
+      if (contents && contents.length > 0) {
+        const doc = contents[0].document;
+        const heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+        const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+        // Dispatch a custom event to update the chapter title
+        window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
+          detail: { title: chapterTitle } 
+        }));
+      }
     });
 
     newRendition.themes.default({
