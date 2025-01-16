@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bookmark, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface BookmarkData {
   cfi: string;
@@ -113,8 +114,16 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="relative">
             <Bookmark className="h-[1.2rem] w-[1.2rem]" />
+            {Object.keys(bookmarks).length > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full"
+              >
+                {Object.keys(bookmarks).length}
+              </Badge>
+            )}
             <span className="sr-only">Toggle bookmarks menu</span>
           </Button>
         </DropdownMenuTrigger>
