@@ -100,9 +100,18 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (bookmarkExists) {
       setShowBookmarkDialog(true);
     } else {
+      console.log("Current chapter title:", currentChapterTitle); // Debug log
+      console.log("Current page info:", pageInfo); // Debug log
+      
       // Get current page info
       const currentPage = pageInfo.chapterCurrent;
       const pageText = `Page ${currentPage}`;
+
+      console.log("Saving bookmark with:", { // Debug log
+        currentLocation,
+        currentChapterTitle,
+        pageText
+      });
 
       localStorage.setItem(bookmarkKey, JSON.stringify({
         cfi: currentLocation,

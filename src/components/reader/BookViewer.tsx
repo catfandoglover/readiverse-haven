@@ -61,17 +61,28 @@ const BookViewer = ({
       
       // Extract chapter title from the current section
       const contents = newRendition.getContents();
+      console.log("Contents:", contents); // Debug log
+      
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const doc = contents[0].document;
+        console.log("Document:", doc); // Debug log
+        
         // First try to find the specific heading format
         let heading = doc.querySelector('h2 a[id^="link2H_"]');
+        console.log("Initial heading search:", heading); // Debug log
+        
         if (heading) {
           heading = heading.parentElement; // Get the h2 element
+          console.log("Parent h2:", heading); // Debug log
         } else {
           // Fallback to any heading if specific format not found
           heading = doc.querySelector('h1, h2, h3, h4, h5, h6');
+          console.log("Fallback heading:", heading); // Debug log
         }
+        
         const chapterTitle = heading ? heading.textContent?.trim() : "Unknown Chapter";
+        console.log("Final chapter title:", chapterTitle); // Debug log
+        
         // Dispatch a custom event to update the chapter title
         window.dispatchEvent(new CustomEvent('chapterTitleChange', { 
           detail: { title: chapterTitle } 
