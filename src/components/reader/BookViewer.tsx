@@ -147,19 +147,8 @@ const BookViewer = ({
       const text = selection.toString().trim();
       if (!text || !onTextSelect) return;
 
-      // Get the current page's content document
-      const views = newRendition.views();
-      const currentView = views?.length ? views[0] as ExtendedView : null;
-      if (!currentView) return;
-
-      // Get the selection's container node
-      const containerNode = selection.anchorNode?.parentElement;
-      if (!containerNode) return;
-
-      // Check if the selection is within the current view's document
-      if (containerNode.ownerDocument === currentView.document) {
-        onTextSelect(cfiRange, text);
-      }
+      onTextSelect(cfiRange, text);
+      selection.removeAllRanges();
     });
 
     // Apply existing highlights
