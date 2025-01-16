@@ -20,10 +20,6 @@ interface HighlightsMenuProps {
   onRemoveHighlight?: (id: string) => void;
 }
 
-const colorClasses: Record<HighlightColor, string> = {
-  yellow: 'bg-yellow-200'
-};
-
 const HighlightsMenu = ({
   highlights = [],
   selectedColor = 'yellow',
@@ -43,9 +39,10 @@ const HighlightsMenu = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align="center" 
+        align="end" 
         side="left" 
         sideOffset={16}
+        alignOffset={-40} // This aligns the drawer with the highlighter icon
         className="w-64"
       >
         <div className="sticky top-0 bg-background z-10">
