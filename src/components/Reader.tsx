@@ -94,8 +94,10 @@ const Reader = ({ metadata }: ReaderProps) => {
   } = useHighlights(book?.key() || null);
 
   const handleNoteDialogClose = () => {
-    setSelectedHighlight(null);
-    setNoteDialogOpen(false);
+    setTimeout(() => {
+      setSelectedHighlight(null);
+      setNoteDialogOpen(false);
+    }, 0);
   };
 
   const handleNoteClick = (highlight: Highlight) => {
