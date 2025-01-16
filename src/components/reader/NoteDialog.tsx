@@ -34,7 +34,6 @@ const NoteDialog = ({
     toast({
       description: "Note saved successfully",
     });
-    onOpenChange(false);
   };
 
   React.useEffect(() => {
@@ -44,8 +43,21 @@ const NoteDialog = ({
   }, [open, initialNote]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+      modal={true}
+    >
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          onOpenChange(false);
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Add Note</DialogTitle>
           <DialogDescription>
@@ -69,7 +81,10 @@ const NoteDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button onClick={handleSave}>Save note</Button>

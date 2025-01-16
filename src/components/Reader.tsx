@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import type { ReaderProps } from "@/types/reader";
-import type { Highlight, HighlightColor } from "@/types/highlight";
-import UploadPrompt from "./reader/UploadPrompt";
-import ReaderControls from "./reader/ReaderControls";
-import BookViewer from "./reader/BookViewer";
-import ProgressTracker from "./reader/ProgressTracker";
-import ThemeSwitcher from "./reader/ThemeSwitcher";
-import HighlightsMenu from "./reader/HighlightsMenu";
-import NoteDialog from "./reader/NoteDialog";
+import type { Highlight } from "@/types/highlight";
+import UploadPrompt from "./components/reader/UploadPrompt";
+import ReaderControls from "./components/reader/ReaderControls";
+import BookViewer from "./components/reader/BookViewer";
+import ProgressTracker from "./components/reader/ProgressTracker";
+import ThemeSwitcher from "./components/reader/ThemeSwitcher";
+import HighlightsMenu from "./components/reader/HighlightsMenu";
+import NoteDialog from "./components/reader/NoteDialog";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -16,7 +21,7 @@ import { useChapterTitle } from "@/hooks/useChapterTitle";
 import { useRenditionSettings } from "@/hooks/useRenditionSettings";
 import { useHighlights } from "@/hooks/useHighlights";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Button } from "./ui/button";
+import { Button } from "./components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AlertDialog,
@@ -87,6 +92,25 @@ const Reader = ({ metadata }: ReaderProps) => {
     updateNote
   } = useHighlights(book?.key() || null);
 
+  const handleNoteDialogClose = () => {
+    setSelectedHighlight(null);
+    setNoteDialogOpen(false);
+  };
+
+  const handleNoteClick = (highlight: Highlight) => {
+    if (!noteDialogOpen) {
+      setSelectedHighlight(highlight);
+      setNoteDialogOpen(true);
+    }
+  };
+
+  const handleNoteSave = (note: string) => {
+    if (selectedHighlight) {
+      updateNote(selectedHighlight.id, note);
+    }
+    handleNoteDialogClose();
+  };
+
   // Session timer logic
   useEffect(() => {
     if (book) {
@@ -140,25 +164,6 @@ const Reader = ({ metadata }: ReaderProps) => {
       handleBeforeUnload();
     };
   }, [book, currentLocation]);
-
-  const handleNoteDialogClose = () => {
-    setNoteDialogOpen(false);
-    setSelectedHighlight(null);
-  };
-
-  const handleNoteClick = (highlight: Highlight) => {
-    if (!noteDialogOpen) {
-      setSelectedHighlight(highlight);
-      setNoteDialogOpen(true);
-    }
-  };
-
-  const handleNoteSave = (note: string) => {
-    if (selectedHighlight) {
-      updateNote(selectedHighlight.id, note);
-    }
-    handleNoteDialogClose();
-  };
 
   return (
     <ThemeProvider>
@@ -263,17 +268,19 @@ const Reader = ({ metadata }: ReaderProps) => {
                 </AlertDialogContent>
               </AlertDialog>
 
-              <NoteDialog
-                open={noteDialogOpen}
-                onOpenChange={(open) => {
-                  if (!open) {
-                    handleNoteDialogClose();
-                  }
-                }}
-                onSave={handleNoteSave}
-                initialNote={selectedHighlight?.note}
-                highlightedText={selectedHighlight?.text || ''}
-              />
+              {selectedHighlight && (
+                <NoteDialog
+                  open={noteDialogOpen}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      handleNoteDialogClose();
+                    }
+                  }}
+                  onSave={handleNoteSave}
+                  initialNote={selectedHighlight.note}
+                  highlightedText={selectedHighlight.text}
+                />
+              )}
             </>
           )}
         </div>
