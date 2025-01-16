@@ -1,12 +1,11 @@
 import React from 'react';
-import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import FontControls from './FontControls';
 import AlignmentControls from './AlignmentControls';
 import BrightnessControl from './BrightnessControl';
 import BookmarkControls from './BookmarkControls';
-import HighlightsMenu from '../HighlightsMenu';
 import SessionTimer from '../SessionTimer';
 import type { ReaderControlsProps } from '@/types/reader';
 
@@ -14,13 +13,13 @@ export const MobileControls = (props: ReaderControlsProps) => {
   return (
     <div className="md:hidden w-full flex justify-between items-center">
       <div className="flex items-center gap-2">
-        <Drawer>
-          <DrawerTrigger asChild>
+        <Sheet>
+          <SheetTrigger asChild>
             <Button variant="outline" size="icon">
               <Menu className="h-4 w-4" />
             </Button>
-          </DrawerTrigger>
-          <DrawerContent>
+          </SheetTrigger>
+          <SheetContent side="left">
             <div className="flex flex-col items-center gap-4 p-4">
               <FontControls
                 fontSize={props.fontSize}
@@ -45,20 +44,11 @@ export const MobileControls = (props: ReaderControlsProps) => {
                 <SessionTimer seconds={props.sessionTime} showIcon={true} />
               </Button>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </SheetContent>
+        </Sheet>
       </div>
       
       <div className="md:hidden flex items-center gap-2">
-        <div className="relative">
-          <HighlightsMenu
-            highlights={props.highlights}
-            selectedColor={props.selectedHighlightColor}
-            onColorSelect={props.onHighlightColorSelect}
-            onHighlightSelect={props.onHighlightSelect}
-            onRemoveHighlight={props.onRemoveHighlight}
-          />
-        </div>
         <BookmarkControls
           currentLocation={props.currentLocation}
           onBookmarkClick={props.onBookmarkClick}
