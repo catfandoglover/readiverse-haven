@@ -142,7 +142,7 @@ const BookViewer = ({
     };
   }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
-  // Handle font size changes
+  // Handle font size changes and reapply highlights
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
 
@@ -155,20 +155,30 @@ const BookViewer = ({
     const currentLoc = rendition.location?.start?.cfi;
     if (currentLoc) {
       rendition.display(currentLoc).then(() => {
-        // Reapply highlights after the content has been re-rendered
-        highlights.forEach(highlight => {
-          try {
-            rendition.annotations.add(
-              "highlight",
-              highlight.cfiRange,
-              {},
-              undefined,
-              "highlight-yellow"
-            );
-          } catch (error) {
-            console.error('Error reapplying highlight:', error);
-          }
-        });
+        // Clear existing highlights before reapplying
+        rendition.annotations.clear();
+        
+        // Reapply highlights after a short delay to ensure content is fully rendered
+        setTimeout(() => {
+          highlights.forEach(highlight => {
+            try {
+              rendition.annotations.add(
+                "highlight",
+                highlight.cfiRange,
+                {},
+                undefined,
+                "highlight-yellow",
+                {
+                  "fill": "yellow",
+                  "fill-opacity": "0.3",
+                  "mix-blend-mode": "multiply"
+                }
+              );
+            } catch (error) {
+              console.error('Error reapplying highlight:', error);
+            }
+          });
+        }, 100);
       });
     }
   }, [fontSize, rendition, highlights, isRenditionReady]);
