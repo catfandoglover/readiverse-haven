@@ -44,14 +44,15 @@ const TableOfContents = ({ toc, onNavigate }: TableOfContentsProps) => {
           <ScrollArea className="h-[50vh] px-4">
             <div className="space-y-2">
               {toc.map((item, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  className="w-full justify-start text-left whitespace-normal h-auto"
-                  onClick={() => handleNavigation(item.href)}
-                >
-                  <span className="line-clamp-2">{item.label}</span>
-                </Button>
+                <DrawerClose key={index} asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left whitespace-normal h-auto"
+                    onClick={() => handleNavigation(item.href)}
+                  >
+                    <span className="line-clamp-2">{item.label}</span>
+                  </Button>
+                </DrawerClose>
               ))}
             </div>
           </ScrollArea>
