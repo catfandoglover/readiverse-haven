@@ -32,21 +32,22 @@ export const useReaderResize = (rendition: Rendition | null) => {
         cancelAnimationFrame(rafId.current);
       }
 
-      // Schedule new resize operation with a delay
-      resizeTimeout.current = setTimeout(() => {
-        rafId.current = requestAnimationFrame(() => {
-          try {
-            if (rendition && typeof rendition.resize === 'function') {
-              rendition.resize(container.clientWidth, container.clientHeight);
-            }
-          } catch (error) {
-            console.error('Error resizing rendition:', error);
-          } finally {
-            isResizing.current = false;
+      // Use RAF to ensure smooth resize handling
+      rafId.current = requestAnimationFrame(() => {
+        try {
+          if (rendition && typeof rendition.resize === 'function') {
+            rendition.resize(container.clientWidth, container.clientHeight);
           }
-        });
-      }, 100);
-    }, 250),
+        } catch (error) {
+          console.error('Error resizing rendition:', error);
+        } finally {
+          // Add a small delay before allowing next resize
+          setTimeout(() => {
+            isResizing.current = false;
+          }, 100);
+        }
+      });
+    }, 100), // Reduced debounce time for smoother resizing
     [rendition]
   );
 

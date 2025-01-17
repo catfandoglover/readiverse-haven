@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Book } from "epubjs";
+import { Book, Contents } from "epubjs";
+
+interface SpineItem {
+  index: number;
+  href: string;
+  linear: boolean;
+  properties: any;
+  url: string;
+}
 
 export const useBookProgress = () => {
   const [book, setBook] = useState<Book | null>(null);
@@ -31,10 +39,12 @@ export const useBookProgress = () => {
 
     // Get current spine item (chapter)
     const currentSpineItem = book.spine.get(location.start.cfi);
-    // Access spine items safely with type assertion
-    const spineItems = (book.spine as any).items;
-    const spineIndex = spineItems ? spineItems.indexOf(currentSpineItem) : 0;
-    const totalSpineItems = spineItems ? spineItems.length : 1;
+    
+    // Safely access spine items with proper type checking
+    const spine = book.spine as unknown as { items: SpineItem[] };
+    const spineItems = spine.items || [];
+    const spineIndex = currentSpineItem ? spineItems.findIndex(item => item.href === currentSpineItem.href) : 0;
+    const totalSpineItems = spineItems.length || 1;
 
     // Calculate overall book progress
     const spineProgress = spineIndex / totalSpineItems;
