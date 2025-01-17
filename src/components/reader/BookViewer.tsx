@@ -30,6 +30,7 @@ const BookViewer = ({
 }: BookViewerProps) => {
   const { theme } = useTheme();
   const [isBookReady, setIsBookReady] = useState(false);
+  const [isRenditionReady, setIsRenditionReady] = useState(false);
 
   const {
     rendition,
@@ -88,9 +89,13 @@ const BookViewer = ({
 
     setRendition(newRendition);
     
-    if (onRenditionReady) {
-      onRenditionReady(newRendition);
-    }
+    // Wait for rendition to be ready
+    newRendition.on("rendered", () => {
+      setIsRenditionReady(true);
+      if (onRenditionReady) {
+        onRenditionReady(newRendition);
+      }
+    });
 
     // Display content
     const displayLocation = async () => {
@@ -139,7 +144,7 @@ const BookViewer = ({
 
   // Handle font size changes
   useEffect(() => {
-    if (!rendition) return;
+    if (!rendition || !isRenditionReady) return;
 
     const container = document.querySelector(".epub-view");
     if (!container) return;
@@ -147,7 +152,7 @@ const BookViewer = ({
     rendition.themes.fontSize(`${fontSize}%`);
     
     // Force a re-render of the current location to ensure highlights are properly positioned
-    const currentLoc = rendition.location.start?.cfi;
+    const currentLoc = rendition.location?.start?.cfi;
     if (currentLoc) {
       rendition.display(currentLoc).then(() => {
         // Reapply highlights after the content has been re-rendered
@@ -166,7 +171,7 @@ const BookViewer = ({
         });
       });
     }
-  }, [fontSize, rendition, highlights]);
+  }, [fontSize, rendition, highlights, isRenditionReady]);
 
   return (
     <div 
