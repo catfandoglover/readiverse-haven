@@ -1,4 +1,5 @@
 import type { Highlight, HighlightColor } from './highlight';
+import type { NavItem } from 'epubjs';
 
 export interface BookMetadata {
   coverUrl?: string;
@@ -28,4 +29,6 @@ export interface ReaderControlsProps {
   onHighlightColorSelect?: (color: HighlightColor) => void;
   onHighlightSelect?: (cfiRange: string) => void;
   onRemoveHighlight?: (id: string) => void;
+  toc?: NavItem[];
+  onNavigate?: (href: string) => void;
 }

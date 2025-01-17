@@ -20,7 +20,9 @@ const ReaderControls = ({
   selectedHighlightColor,
   onHighlightColorSelect,
   onHighlightSelect,
-  onRemoveHighlight
+  onRemoveHighlight,
+  toc,
+  onNavigate
 }: ReaderControlsProps) => {
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
@@ -61,6 +63,8 @@ const ReaderControls = ({
         onHighlightColorSelect={onHighlightColorSelect}
         onHighlightSelect={onHighlightSelect}
         onRemoveHighlight={onRemoveHighlight}
+        toc={toc}
+        onNavigate={onNavigate}
       />
     </div>
   );

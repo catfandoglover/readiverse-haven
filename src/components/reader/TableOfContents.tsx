@@ -14,11 +14,11 @@ import {
 import type { NavItem } from "epubjs";
 
 interface TableOfContentsProps {
-  toc: NavItem[];
+  toc?: NavItem[];
   onNavigate: (href: string) => void;
 }
 
-const TableOfContents = ({ toc, onNavigate }: TableOfContentsProps) => {
+const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
   const handleNavigation = (href: string) => {
     onNavigate(href);
   };
