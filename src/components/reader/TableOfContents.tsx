@@ -12,7 +12,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import type { NavItem } from "epubjs";
-import { toast } from "sonner";
 
 interface TableOfContentsProps {
   toc: NavItem[];
@@ -22,7 +21,6 @@ interface TableOfContentsProps {
 const TableOfContents = ({ toc, onNavigate }: TableOfContentsProps) => {
   const handleNavigation = (href: string) => {
     onNavigate(href);
-    toast("Navigating to chapter...");
   };
 
   return (
