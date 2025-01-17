@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { Book, Rendition } from "epubjs";
+import type { Book, Rendition, Contents } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -151,15 +151,16 @@ const BookViewer = ({
 
     rendition.themes.fontSize(`${fontSize}%`);
     
-    // Force a re-render of the current location to ensure highlights are properly positioned
     const currentLoc = rendition.location?.start?.cfi;
     if (currentLoc) {
       rendition.display(currentLoc).then(() => {
         try {
           // Remove existing highlights
           const contents = rendition.getContents();
-          if (contents && contents.length > 0) {
-            contents.forEach((content: any) => {
+          if (contents) {
+            // Convert Contents to array and ensure proper typing
+            const contentsArray = Array.isArray(contents) ? contents : [contents];
+            contentsArray.forEach((content) => {
               if (content && content.document) {
                 const highlights = content.document.querySelectorAll('.epub-highlight');
                 highlights.forEach((highlight: Element) => highlight.remove());
