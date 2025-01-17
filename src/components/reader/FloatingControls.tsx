@@ -9,13 +9,13 @@ interface FloatingControlsProps {
   onLocationSelect: (location: string) => void;
   onBookmarkClick: () => void;
   highlights: Highlight[];
-  selectedColor: string;
-  onColorSelect: (color: string) => void;
-  onHighlightSelect: (highlight: Highlight) => void;
+  selectedColor: 'yellow';
+  onColorSelect: (color: 'yellow') => void;
+  onHighlightSelect: (cfiRange: string) => void;
   onRemoveHighlight: (id: string) => void;
 }
 
-export const FloatingControls = ({
+const FloatingControls = ({
   currentLocation,
   onLocationSelect,
   onBookmarkClick,
