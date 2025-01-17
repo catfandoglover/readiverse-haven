@@ -7,7 +7,6 @@ import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
-import SearchDialog from "./SearchDialog";
 
 interface BookViewerProps {
   book: Book;
@@ -158,74 +157,8 @@ const BookViewer = ({
     }
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
-  const handleSearch = async (query: string) => {
-    if (!book || !rendition) return [];
-
-    const results = [];
-    const spine = book.spine.spineItems;
-
-    for (const item of spine) {
-      try {
-        const chapter = await item.load(book.load.bind(book));
-        const text = chapter.textContent || '';
-        const matches = text.match(new RegExp(query, 'gi'));
-
-        if (matches) {
-          const doc = chapter.document;
-          const walker = document.createTreeWalker(
-            doc,
-            NodeFilter.SHOW_TEXT,
-            {
-              acceptNode: function(node) {
-                return node.textContent?.toLowerCase().includes(query.toLowerCase())
-                  ? NodeFilter.FILTER_ACCEPT
-                  : NodeFilter.FILTER_REJECT;
-              }
-            }
-          );
-
-          let node;
-          while ((node = walker.nextNode())) {
-            const range = doc.createRange();
-            range.selectNodeContents(node);
-            
-            const cfi = item.cfiFromRange(range);
-            
-            // Get surrounding context
-            const nodeText = node.textContent || '';
-            const matchIndex = nodeText.toLowerCase().indexOf(query.toLowerCase());
-            const start = Math.max(0, matchIndex - 40);
-            const end = Math.min(nodeText.length, matchIndex + query.length + 40);
-            const excerpt = '...' + nodeText.slice(start, end) + '...';
-
-            results.push({
-              cfi: cfi,
-              excerpt: excerpt,
-              percentage: item.index / spine.length
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error searching chapter:', error);
-      }
-    }
-
-    return results;
-  };
-
-  const handleSearchResultClick = (cfi: string) => {
-    if (rendition) {
-      rendition.display(cfi);
-    }
-  };
-
   return (
-    <div className="relative">
-      <div className="absolute right-4 top-4 z-50">
-        <SearchDialog onSearch={handleSearch} onResultClick={handleSearchResultClick} />
-      </div>
-      <ViewerContainer theme={theme} />
-    </div>
+    <ViewerContainer theme={theme} />
   );
 };
 
