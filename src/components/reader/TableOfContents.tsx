@@ -47,10 +47,10 @@ const TableOfContents = ({ toc, onNavigate }: TableOfContentsProps) => {
                 <Button
                   key={index}
                   variant="ghost"
-                  className="w-full justify-start text-left"
+                  className="w-full justify-start text-left whitespace-normal h-auto"
                   onClick={() => handleNavigation(item.href)}
                 >
-                  {item.label}
+                  <span className="line-clamp-2">{item.label}</span>
                 </Button>
               ))}
             </div>
