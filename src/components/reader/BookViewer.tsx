@@ -155,35 +155,42 @@ const BookViewer = ({
     const currentLoc = rendition.location?.start?.cfi;
     if (currentLoc) {
       rendition.display(currentLoc).then(() => {
-        // Remove existing highlights by removing elements with highlight class
-        const contents = rendition.getContents();
-        contents.forEach(content => {
-          const doc = content.document;
-          const highlights = doc.querySelectorAll('.epub-highlight');
-          highlights.forEach(highlight => highlight.remove());
-        });
-        
-        // Reapply highlights after a short delay to ensure content is fully rendered
-        setTimeout(() => {
-          highlights.forEach(highlight => {
-            try {
-              rendition.annotations.add(
-                "highlight",
-                highlight.cfiRange,
-                {},
-                undefined,
-                "highlight-yellow",
-                {
-                  "fill": "yellow",
-                  "fill-opacity": "0.3",
-                  "mix-blend-mode": "multiply"
-                }
-              );
-            } catch (error) {
-              console.error('Error reapplying highlight:', error);
-            }
-          });
-        }, 100);
+        try {
+          // Remove existing highlights
+          const contents = rendition.getContents();
+          if (contents && contents.length > 0) {
+            contents.forEach((content: any) => {
+              if (content && content.document) {
+                const highlights = content.document.querySelectorAll('.epub-highlight');
+                highlights.forEach((highlight: Element) => highlight.remove());
+              }
+            });
+          }
+          
+          // Reapply highlights after a short delay
+          setTimeout(() => {
+            highlights.forEach(highlight => {
+              try {
+                rendition.annotations.add(
+                  "highlight",
+                  highlight.cfiRange,
+                  {},
+                  undefined,
+                  "highlight-yellow",
+                  {
+                    "fill": "yellow",
+                    "fill-opacity": "0.3",
+                    "mix-blend-mode": "multiply"
+                  }
+                );
+              } catch (error) {
+                console.error('Error reapplying highlight:', error);
+              }
+            });
+          }, 100);
+        } catch (error) {
+          console.error('Error handling highlights:', error);
+        }
       });
     }
   }, [fontSize, rendition, highlights, isRenditionReady]);
