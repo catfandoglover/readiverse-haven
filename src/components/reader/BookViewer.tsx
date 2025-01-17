@@ -139,10 +139,34 @@ const BookViewer = ({
 
   // Handle font size changes
   useEffect(() => {
-    if (rendition) {
-      rendition.themes.fontSize(`${fontSize}%`);
+    if (!rendition) return;
+
+    const container = document.querySelector(".epub-view");
+    if (!container) return;
+
+    rendition.themes.fontSize(`${fontSize}%`);
+    
+    // Force a re-render of the current location to ensure highlights are properly positioned
+    const currentLoc = rendition.location.start?.cfi;
+    if (currentLoc) {
+      rendition.display(currentLoc).then(() => {
+        // Reapply highlights after the content has been re-rendered
+        highlights.forEach(highlight => {
+          try {
+            rendition.annotations.add(
+              "highlight",
+              highlight.cfiRange,
+              {},
+              undefined,
+              "highlight-yellow"
+            );
+          } catch (error) {
+            console.error('Error reapplying highlight:', error);
+          }
+        });
+      });
     }
-  }, [fontSize, rendition]);
+  }, [fontSize, rendition, highlights]);
 
   return (
     <div 
