@@ -34,6 +34,7 @@ const BookViewer = ({
   const { theme } = useTheme();
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
+  const [container, setContainer] = useState<Element | null>(null);
 
   const {
     rendition,
@@ -76,12 +77,17 @@ const BookViewer = ({
     initializeBook();
   }, [book]);
 
+  // Get container reference
+  useEffect(() => {
+    const epubContainer = document.querySelector(".epub-view");
+    if (epubContainer) {
+      setContainer(epubContainer);
+    }
+  }, []);
+
   // Setup rendition and handle resize
   useEffect(() => {
-    if (!isBookReady) return;
-
-    const container = document.querySelector(".epub-view");
-    if (!container || !book) return;
+    if (!isBookReady || !container || !book) return;
 
     if (rendition) {
       rendition.destroy();
@@ -97,7 +103,6 @@ const BookViewer = ({
       if (onRenditionReady) {
         onRenditionReady(newRendition);
       }
-      // Reapply highlights after rendering
       reapplyHighlights();
     });
 
@@ -115,16 +120,15 @@ const BookViewer = ({
 
     displayLocation();
 
+    // Setup resize observer
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
 
     const observer = new ResizeObserver((entries) => {
-      requestAnimationFrame(() => {
-        for (const entry of entries) {
-          debouncedContainerResize(entry.target);
-        }
-      });
+      for (const entry of entries) {
+        debouncedContainerResize(entry.target);
+      }
     });
 
     observer.observe(container);
@@ -141,7 +145,7 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, container]);
 
   // Handle font size changes and reapply highlights
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
