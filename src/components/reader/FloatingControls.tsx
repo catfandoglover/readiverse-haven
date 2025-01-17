@@ -1,6 +1,7 @@
 import ThemeSwitcher from './ThemeSwitcher';
 import BookmarkControls from './BookmarkControls';
 import HighlightsMenu from './HighlightsMenu';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Highlight } from '@/types/highlight';
 
 interface FloatingControlsProps {
@@ -24,17 +25,19 @@ const FloatingControls = ({
   onHighlightSelect,
   onRemoveHighlight
 }: FloatingControlsProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <>
       <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-        <div className="hidden md:block">
+        <div className={isMobile ? "hidden" : "block"}>
           <BookmarkControls
             currentLocation={currentLocation}
             onLocationSelect={onLocationSelect}
             onBookmarkClick={onBookmarkClick}
           />
         </div>
-        <div className="hidden md:block">
+        <div className={isMobile ? "hidden" : "block"}>
           <HighlightsMenu
             highlights={highlights}
             selectedColor={selectedColor}
