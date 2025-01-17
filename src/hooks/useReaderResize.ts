@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from "lodash";
 import type { Rendition } from "epubjs";
 
 export const useReaderResize = (rendition: Rendition | null) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [resizeObserver, setResizeObserver] = useState<ResizeObserver | null>(null);
+  const rafId = useRef<number>();
+  const isResizing = useRef(false);
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -15,30 +17,46 @@ export const useReaderResize = (rendition: Rendition | null) => {
 
   const debouncedContainerResize = useCallback(
     debounce((container: Element) => {
-      if (!rendition || !container) return;
+      if (!rendition || !container || isResizing.current) return;
 
-      // Use rAF to ensure smooth resize handling
-      let rafId: number;
-      const updateSize = () => {
+      isResizing.current = true;
+
+      // Cancel any existing RAF
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+
+      // Schedule new resize operation
+      rafId.current = requestAnimationFrame(() => {
         try {
           if (rendition && typeof rendition.resize === 'function') {
             rendition.resize(container.clientWidth, container.clientHeight);
           }
         } catch (error) {
           console.error('Error resizing rendition:', error);
+        } finally {
+          isResizing.current = false;
         }
-      };
-
-      // Cancel any pending rAF
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-
-      // Schedule new update
-      rafId = requestAnimationFrame(updateSize);
+      });
     }, 250),
     [rendition]
   );
+
+  // Cleanup function to handle observer and RAF
+  const cleanup = useCallback(() => {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+    }
+    if (debouncedContainerResize?.cancel) {
+      debouncedContainerResize.cancel();
+    }
+    if (debouncedResize?.cancel) {
+      debouncedResize.cancel();
+    }
+  }, [resizeObserver, debouncedContainerResize, debouncedResize]);
 
   useEffect(() => {
     const handleResize = () => debouncedResize();
@@ -46,9 +64,9 @@ export const useReaderResize = (rendition: Rendition | null) => {
     
     return () => {
       window.removeEventListener('resize', handleResize);
-      debouncedResize.cancel();
+      cleanup();
     };
-  }, [debouncedResize]);
+  }, [debouncedResize, cleanup]);
 
   return {
     isMobile,
