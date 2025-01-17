@@ -67,6 +67,10 @@ const BookViewer = ({
       if (!book) return;
       try {
         await book.ready;
+        // Ensure spine is loaded
+        await book.loaded.spine;
+        // Ensure navigation is loaded
+        await book.loaded.navigation;
         setIsBookReady(true);
       } catch (error) {
         console.error('Error initializing book:', error);

@@ -31,7 +31,7 @@ export const useBookProgress = () => {
 
     // Get current spine item (chapter)
     const currentSpineItem = book.spine.get(location.start.cfi);
-    const spineItems = (book.spine as any).spineItems;
+    const spineItems = book.spine.items;
     const spineIndex = spineItems.indexOf(currentSpineItem);
     const totalSpineItems = spineItems.length;
 
