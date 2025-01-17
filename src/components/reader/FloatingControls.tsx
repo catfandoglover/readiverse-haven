@@ -9,13 +9,13 @@ interface FloatingControlsProps {
   onLocationSelect: (location: string) => void;
   onBookmarkClick: () => void;
   highlights: Highlight[];
-  selectedColor: 'yellow';
-  onColorSelect: (color: 'yellow') => void;
-  onHighlightSelect: (location: string) => void;
+  selectedColor: string;
+  onColorSelect: (color: string) => void;
+  onHighlightSelect: (highlight: Highlight) => void;
   onRemoveHighlight: (id: string) => void;
 }
 
-const FloatingControls = ({
+export const FloatingControls = ({
   currentLocation,
   onLocationSelect,
   onBookmarkClick,
@@ -46,8 +46,6 @@ const FloatingControls = ({
             onRemoveHighlight={onRemoveHighlight}
           />
         </div>
-      </div>
-      <div className="fixed bottom-4 right-4 z-50">
         <ThemeSwitcher />
       </div>
     </>
