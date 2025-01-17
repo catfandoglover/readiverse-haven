@@ -8,6 +8,7 @@ import FloatingControls from "./reader/FloatingControls";
 import BookmarkDialog from "./reader/BookmarkDialog";
 import BrightnessOverlay from "./reader/BrightnessOverlay";
 import NavigationButtons from "./reader/NavigationButtons";
+import TableOfContents from "./reader/TableOfContents";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -18,9 +19,11 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import type { NavItem } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
+  const [toc, setToc] = useState<NavItem[]>([]);
 
   const {
     book,
@@ -97,6 +100,20 @@ const Reader = ({ metadata }: ReaderProps) => {
     addHighlight(cfiRange, text);
   };
 
+  useEffect(() => {
+    if (book) {
+      book.loaded.navigation.then(nav => {
+        setToc(nav.toc);
+      });
+    }
+  }, [book]);
+
+  const handleTocNavigation = (href: string) => {
+    if (rendition) {
+      rendition.display(href);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -135,6 +152,9 @@ const Reader = ({ metadata }: ReaderProps) => {
                   onPrevPage={handlePrevPage}
                   onNextPage={handleNextPage}
                 />
+                <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50">
+                  <TableOfContents toc={toc} onNavigate={handleTocNavigation} />
+                </div>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
