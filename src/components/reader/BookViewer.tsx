@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import type { Book, Rendition, Contents } from "epubjs";
+import type { Book, Rendition } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
+import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
+import ViewerContainer from "./ViewerContainer";
 
 interface BookViewerProps {
   book: Book;
@@ -78,18 +80,15 @@ const BookViewer = ({
     const container = document.querySelector(".epub-view");
     if (!container || !book) return;
 
-    // Cleanup previous rendition
     if (rendition) {
       rendition.destroy();
     }
 
-    // Setup new rendition
     const newRendition = setupRendition(container);
     if (!newRendition) return;
 
     setRendition(newRendition);
     
-    // Wait for rendition to be ready
     newRendition.on("rendered", () => {
       setIsRenditionReady(true);
       if (onRenditionReady) {
@@ -97,7 +96,6 @@ const BookViewer = ({
       }
     });
 
-    // Display content
     const displayLocation = async () => {
       try {
         if (currentLocation) {
@@ -112,7 +110,6 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Setup resize observer
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
@@ -128,12 +125,11 @@ const BookViewer = ({
     observer.observe(container);
     setResizeObserver(observer);
 
-    // Cleanup
     return () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
-      if (debouncedContainerResize && debouncedContainerResize.cancel) {
+      if (debouncedContainerResize?.cancel) {
         debouncedContainerResize.cancel();
       }
       if (newRendition) {
@@ -143,67 +139,10 @@ const BookViewer = ({
   }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
 
   // Handle font size changes and reapply highlights
-  useEffect(() => {
-    if (!rendition || !isRenditionReady) return;
-
-    const container = document.querySelector(".epub-view");
-    if (!container) return;
-
-    rendition.themes.fontSize(`${fontSize}%`);
-    
-    const currentLoc = rendition.location?.start?.cfi;
-    if (currentLoc) {
-      rendition.display(currentLoc).then(() => {
-        try {
-          // Remove existing highlights
-          const contents = rendition.getContents();
-          if (contents) {
-            // Convert Contents to array and ensure proper typing
-            const contentsArray = Array.isArray(contents) ? contents : [contents];
-            contentsArray.forEach((content) => {
-              if (content && content.document) {
-                const highlights = content.document.querySelectorAll('.epub-highlight');
-                highlights.forEach((highlight: Element) => highlight.remove());
-              }
-            });
-          }
-          
-          // Reapply highlights after a short delay
-          setTimeout(() => {
-            highlights.forEach(highlight => {
-              try {
-                rendition.annotations.add(
-                  "highlight",
-                  highlight.cfiRange,
-                  {},
-                  undefined,
-                  "highlight-yellow",
-                  {
-                    "fill": "yellow",
-                    "fill-opacity": "0.3",
-                    "mix-blend-mode": "multiply"
-                  }
-                );
-              } catch (error) {
-                console.error('Error reapplying highlight:', error);
-              }
-            });
-          }, 100);
-        } catch (error) {
-          console.error('Error handling highlights:', error);
-        }
-      });
-    }
-  }, [fontSize, rendition, highlights, isRenditionReady]);
+  useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
 
   return (
-    <div 
-      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
-      style={{ 
-        background: theme.background,
-        color: theme.text,
-      }}
-    />
+    <ViewerContainer theme={theme} />
   );
 };
 
