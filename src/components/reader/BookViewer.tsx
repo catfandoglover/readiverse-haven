@@ -155,8 +155,13 @@ const BookViewer = ({
     const currentLoc = rendition.location?.start?.cfi;
     if (currentLoc) {
       rendition.display(currentLoc).then(() => {
-        // Clear existing highlights before reapplying
-        rendition.annotations.clear();
+        // Remove existing highlights by removing elements with highlight class
+        const contents = rendition.getContents();
+        contents.forEach(content => {
+          const doc = content.document;
+          const highlights = doc.querySelectorAll('.epub-highlight');
+          highlights.forEach(highlight => highlight.remove());
+        });
         
         // Reapply highlights after a short delay to ensure content is fully rendered
         setTimeout(() => {
