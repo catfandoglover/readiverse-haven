@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Fullscreen, FullscreenExit } from "lucide-react";
+import { Menu, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FontControls from './FontControls';
@@ -97,9 +97,9 @@ export const MobileControls = ({
                 className="h-10 w-10"
               >
                 {isFullscreen ? (
-                  <FullscreenExit className="h-4 w-4" />
+                  <Minimize className="h-4 w-4" />
                 ) : (
-                  <Fullscreen className="h-4 w-4" />
+                  <Maximize className="h-4 w-4" />
                 )}
               </Button>
             </div>
