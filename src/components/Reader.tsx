@@ -154,6 +154,9 @@ const Reader = ({ metadata }: ReaderProps) => {
                   onPrevPage={handlePrevPage}
                   onNextPage={handleNextPage}
                 />
+                <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
+                  <TableOfContents toc={toc} onNavigate={handleTocNavigation} />
+                </div>
                 <BookViewer
                   book={book}
                   currentLocation={currentLocation}
