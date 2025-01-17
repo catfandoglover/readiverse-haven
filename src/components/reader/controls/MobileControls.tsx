@@ -8,6 +8,7 @@ import BrightnessControl from './BrightnessControl';
 import BookmarkControls from './BookmarkControls';
 import SessionTimer from '../SessionTimer';
 import HighlightsMenu from '../HighlightsMenu';
+import TableOfContents from '../TableOfContents';
 import type { ReaderControlsProps } from '@/types/reader';
 
 export const MobileControls = ({
@@ -26,7 +27,9 @@ export const MobileControls = ({
   highlights,
   selectedHighlightColor,
   onHighlightColorSelect,
-  onRemoveHighlight
+  onRemoveHighlight,
+  toc,
+  onNavigate
 }: ReaderControlsProps) => {
   const [showMobileTimer, setShowMobileTimer] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
@@ -105,6 +108,7 @@ export const MobileControls = ({
             </div>
           </DrawerContent>
         </Drawer>
+        <TableOfContents toc={toc} onNavigate={onNavigate} />
         <HighlightsMenu
           highlights={highlights}
           selectedColor={selectedHighlightColor}

@@ -29,7 +29,7 @@ const TableOfContents = ({ toc, onNavigate }: TableOfContentsProps) => {
         <Button
           variant="outline"
           size="icon"
-          className="h-10 w-10"
+          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
         >
           <BookOpen className="h-4 w-4" />
         </Button>
