@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from "lucide-react";
+import { Menu, Fullscreen, FullscreenExit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FontControls from './FontControls';
@@ -29,14 +29,28 @@ export const MobileControls = ({
   onRemoveHighlight
 }: ReaderControlsProps) => {
   const [showMobileTimer, setShowMobileTimer] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
     } else {
       document.exitFullscreen();
+      setIsFullscreen(false);
     }
   };
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className="md:hidden w-full flex justify-between items-center">
@@ -82,7 +96,11 @@ export const MobileControls = ({
                 onClick={toggleFullScreen}
                 className="h-10 w-10"
               >
-                <Menu className="h-4 w-4" />
+                {isFullscreen ? (
+                  <FullscreenExit className="h-4 w-4" />
+                ) : (
+                  <Fullscreen className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </DrawerContent>
