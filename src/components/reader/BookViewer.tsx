@@ -5,6 +5,7 @@ import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
+import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 
 interface BookViewerProps {
@@ -57,6 +58,8 @@ const BookViewer = ({
     debouncedContainerResize,
   } = useReaderResize(rendition);
 
+  const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
+
   // Initialize book
   useEffect(() => {
     const initializeBook = async () => {
@@ -94,6 +97,8 @@ const BookViewer = ({
       if (onRenditionReady) {
         onRenditionReady(newRendition);
       }
+      // Reapply highlights after rendering
+      reapplyHighlights();
     });
 
     const displayLocation = async () => {
@@ -136,10 +141,17 @@ const BookViewer = ({
         newRendition.destroy();
       }
     };
-  }, [book, isMobile, textAlign, fontFamily, theme, highlights, isBookReady]);
+  }, [book, isMobile, textAlign, fontFamily, theme, isBookReady]);
 
   // Handle font size changes and reapply highlights
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
+
+  // Reapply highlights when they change
+  useEffect(() => {
+    if (rendition && isRenditionReady) {
+      reapplyHighlights();
+    }
+  }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
   return (
     <ViewerContainer theme={theme} />

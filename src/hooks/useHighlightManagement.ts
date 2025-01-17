@@ -23,26 +23,25 @@ export const useHighlightManagement = (
   const reapplyHighlights = useCallback(() => {
     if (!rendition) return;
     
-    setTimeout(() => {
+    try {
       highlights.forEach(highlight => {
-        try {
-          rendition.annotations.add(
-            "highlight",
-            highlight.cfiRange,
-            {},
-            undefined,
-            "highlight-yellow",
-            {
-              "fill": "yellow",
-              "fill-opacity": "0.3",
-              "mix-blend-mode": "multiply"
-            }
-          );
-        } catch (error) {
-          console.error('Error reapplying highlight:', error);
-        }
+        rendition.annotations.remove(highlight.cfiRange, "highlight");
+        rendition.annotations.add(
+          "highlight",
+          highlight.cfiRange,
+          {},
+          undefined,
+          "highlight-yellow",
+          {
+            "fill": "yellow",
+            "fill-opacity": "0.3",
+            "mix-blend-mode": "multiply"
+          }
+        );
       });
-    }, 100);
+    } catch (error) {
+      console.error('Error reapplying highlights:', error);
+    }
   }, [rendition, highlights]);
 
   return {
