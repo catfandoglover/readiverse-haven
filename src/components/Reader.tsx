@@ -140,6 +140,8 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onHighlightColorSelect={setSelectedColor}
                 onHighlightSelect={handleLocationSelect}
                 onRemoveHighlight={removeHighlight}
+                toc={toc}
+                onNavigate={handleTocNavigation}
               />
               
               <ProgressTracker 
