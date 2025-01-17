@@ -2,12 +2,16 @@ import Reader from "@/components/Reader";
 
 const Index = () => {
   const bookMetadata = {
-    coverUrl: "/placeholder.svg", // Using the placeholder image from public folder
+    coverUrl: "/placeholder.svg",
     title: "Sample Book",
     author: "Sample Author"
   };
 
-  return <Reader metadata={bookMetadata} />;
+  return (
+    <div className="min-h-screen">
+      <Reader metadata={bookMetadata} />
+    </div>
+  );
 };
 
 export default Index;
