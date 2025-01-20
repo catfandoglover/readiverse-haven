@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { ReaderProps } from "@/types/reader";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -24,6 +27,7 @@ import type { NavItem } from "epubjs";
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
+  const [externalLink, setExternalLink] = useState<string | null>(null);
 
   const {
     book,
@@ -114,12 +118,41 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
+  useEffect(() => {
+    const fetchExternalLink = async () => {
+      const { data, error } = await supabase
+        .from('external_links')
+        .select('url')
+        .single();
+      
+      if (data && !error) {
+        setExternalLink(data.url);
+      }
+    };
+
+    fetchExternalLink();
+  }, []);
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
-            <UploadPrompt onFileUpload={handleFileUpload} />
+            <div className="space-y-4">
+              <UploadPrompt onFileUpload={handleFileUpload} />
+              {externalLink && (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => window.open(externalLink, '_blank')}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Read Online Version
+                  </Button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <ReaderControls
