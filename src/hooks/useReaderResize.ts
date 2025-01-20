@@ -20,23 +20,19 @@ export const useReaderResize = (rendition: Rendition | null) => {
     debounce((container: Element) => {
       if (!rendition || !container || isResizing.current) return;
 
-      // Clear any existing timeout
-      if (resizeTimeout.current) {
-        clearTimeout(resizeTimeout.current);
-      }
-
       isResizing.current = true;
 
-      // Cancel any existing RAF
+      // Cancel any existing RAF to prevent stacking
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
       }
 
-      // Use RAF to ensure smooth resize handling
+      // Use RAF to batch resize operations
       rafId.current = requestAnimationFrame(() => {
         try {
+          const { width, height } = container.getBoundingClientRect();
           if (rendition && typeof rendition.resize === 'function') {
-            rendition.resize(container.clientWidth, container.clientHeight);
+            rendition.resize(width, height);
           }
         } catch (error) {
           console.error('Error resizing rendition:', error);
@@ -47,11 +43,11 @@ export const useReaderResize = (rendition: Rendition | null) => {
           }, 100);
         }
       });
-    }, 100), // Reduced debounce time for smoother resizing
+    }, 100),
     [rendition]
   );
 
-  // Cleanup function to handle observer, RAF, and timeouts
+  // Cleanup function
   const cleanup = useCallback(() => {
     if (resizeObserver) {
       resizeObserver.disconnect();
@@ -81,7 +77,8 @@ export const useReaderResize = (rendition: Rendition | null) => {
       }, 100);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       cleanup();
