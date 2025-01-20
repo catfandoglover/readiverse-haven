@@ -7,7 +7,6 @@ import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
-import SearchDialog from "./SearchDialog";
 
 interface BookViewerProps {
   book: Book;
@@ -62,58 +61,15 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  const handleSearch = async (query: string) => {
-    if (!book || !rendition) return [];
-    
-    const results = [];
-    const spine = book.spine;
-    
-    for (const item of spine.items) {
-      try {
-        const contents = await item.load(book.load.bind(book));
-        const doc = contents.document;
-        const text = doc.body.textContent || '';
-        
-        // Simple text search (can be enhanced with more sophisticated search)
-        const searchText = text.toLowerCase();
-        const queryText = query.toLowerCase();
-        let index = searchText.indexOf(queryText);
-        
-        while (index !== -1) {
-          // Get surrounding context
-          const start = Math.max(0, index - 40);
-          const end = Math.min(searchText.length, index + queryText.length + 40);
-          const excerpt = text.slice(start, end).trim();
-          
-          // Get CFI for this location
-          const range = doc.createRange();
-          range.setStart(doc.body, 0);
-          range.setEnd(doc.body, 0);
-          const cfi = item.cfiFromRange(range);
-          
-          results.push({
-            cfi,
-            excerpt,
-            percentage: item.index / spine.items.length
-          });
-          
-          index = searchText.indexOf(queryText, index + 1);
-        }
-      } catch (error) {
-        console.error('Error searching in item:', error);
-      }
-    }
-    
-    return results;
-  };
-
   // Initialize book
   useEffect(() => {
     const initializeBook = async () => {
       if (!book) return;
       try {
         await book.ready;
+        // Ensure spine is loaded
         await book.loaded.spine;
+        // Ensure navigation is loaded
         await book.loaded.navigation;
         setIsBookReady(true);
       } catch (error) {
@@ -206,19 +162,7 @@ const BookViewer = ({
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
   return (
-    <div className="relative">
-      <div className="absolute top-4 right-4 z-50">
-        <SearchDialog
-          onSearch={handleSearch}
-          onResultClick={(cfi) => {
-            if (rendition) {
-              rendition.display(cfi);
-            }
-          }}
-        />
-      </div>
-      <ViewerContainer theme={theme} />
-    </div>
+    <ViewerContainer theme={theme} />
   );
 };
 
