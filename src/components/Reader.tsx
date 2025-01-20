@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowLeft } from "lucide-react";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -138,23 +138,23 @@ const Reader = ({ metadata }: ReaderProps) => {
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {!book ? (
-            <div className="space-y-4">
-              <UploadPrompt onFileUpload={handleFileUpload} />
-              {externalLink && (
-                <div className="flex justify-center">
+            <UploadPrompt onFileUpload={handleFileUpload} />
+          ) : (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                {externalLink && (
                   <Button
                     onClick={() => window.open(externalLink, '_blank')}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    Read Online Version
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Return to Book Cover</span>
+                    <ExternalLink className="h-4 w-4 ml-1" />
                   </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
+                )}
+              </div>
+
               <ReaderControls
                 fontSize={fontSize}
                 onFontSizeChange={handleFontSizeChange}
