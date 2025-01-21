@@ -138,11 +138,11 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const sections = await book.spine.items;
+    const sections = book.spine.spineItems;
 
     for (const section of sections) {
       try {
-        const content = await section.load(book.load.bind(book));
+        const content = await section.load();
         const text = content.textContent || '';
         
         let startIndex = 0;
