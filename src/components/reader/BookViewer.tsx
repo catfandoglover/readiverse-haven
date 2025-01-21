@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { Book, Rendition } from "epubjs";
+import type { Book, Rendition, Spine } from "epubjs";
 import type Section from "epubjs/types/section";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
@@ -176,15 +176,14 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine;
+    const spine = book.spine as Spine & { items: Section[] };
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
       return [];
     }
 
-    // Access spine items through the spine object directly
-    for (const section of spine) {
+    for (const section of spine.items) {
       try {
         // Load section content
         const content = await section.load();

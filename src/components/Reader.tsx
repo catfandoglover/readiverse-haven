@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import type { NavItem } from 'epubjs';
+import type { NavItem, Spine } from 'epubjs';
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -139,15 +139,14 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine;
+    const spine = book.spine as Spine & { items: Section[] };
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
       return [];
     }
 
-    // Access spine items through the spine object directly
-    for (const section of spine) {
+    for (const section of spine.items) {
       try {
         // Load section content
         const content = await section.load();
