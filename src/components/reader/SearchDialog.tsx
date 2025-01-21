@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface SearchResult {
   cfi: string;
   excerpt: string;
+  chapterTitle?: string;
 }
 
 interface SearchDialogProps {
@@ -120,13 +121,17 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                     onClick={() => handleResultClick(result.cfi)}
                     className="w-full text-left px-4 py-3 hover:bg-accent rounded-md transition-colors flex flex-col gap-1"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Match {index + 1}</span>
-                      <span className="text-xs text-muted-foreground">Page {index + 1}</span>
+                    <span className="text-sm font-bold">
+                      {result.chapterTitle || `Chapter ${Math.floor(index / 5) + 1}`}
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">
+                        Page {index + 1}
+                      </span>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {result.excerpt}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {result.excerpt}
-                    </p>
                   </button>
                 ))}
               </div>
