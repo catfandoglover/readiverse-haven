@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Book } from "epubjs";
 import type { NavItem } from 'epubjs';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useReaderState = () => {
   const [isReading, setIsReading] = useState(false);
