@@ -1,22 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import type { NavItem } from 'epubjs';
 import type { Book } from "epubjs";
 import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
-import ReaderControls from "./reader/ReaderControls";
-import BookViewer from "./reader/BookViewer";
-import ProgressTracker from "./reader/ProgressTracker";
-import FloatingControls from "./reader/FloatingControls";
-import BookmarkDialog from "./reader/BookmarkDialog";
-import BrightnessOverlay from "./reader/BrightnessOverlay";
-import NavigationButtons from "./reader/NavigationButtons";
-import TableOfContents from "./reader/TableOfContents";
-import SearchDialog from "./reader/SearchDialog";
+import ReaderHeader from "./reader/ReaderHeader";
+import ReaderContent from "./reader/ReaderContent";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -26,6 +16,7 @@ import { useRenditionSettings } from "@/hooks/useRenditionSettings";
 import { useHighlights } from "@/hooks/useHighlights";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
+import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 interface SpineItem {
@@ -34,10 +25,6 @@ interface SpineItem {
 }
 
 const Reader = ({ metadata }: ReaderProps) => {
-  const [isReading, setIsReading] = useState(false);
-  const [toc, setToc] = useState<NavItem[]>([]);
-  const [externalLink, setExternalLink] = useState<string | null>(null);
-
   const {
     book,
     setBook,
@@ -88,6 +75,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     removeHighlight,
   } = useHighlights(book?.key() || null);
 
+  const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
+
   const handleSearchResultClick = (cfi: string) => {
     if (rendition) {
       rendition.display(cfi);
@@ -104,14 +93,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     const results: { cfi: string; excerpt: string; }[] = [];
     
     try {
-      // Get spine items
       const spine = book.spine as Spine;
       if (!spine) {
         console.error('No spine found');
         return [];
       }
 
-      // Safely access spine items with type assertion
       const spineItems = (spine as unknown as { items: SpineItem[] }).items;
       if (!spineItems || !spineItems.length) {
         console.error('No spine items found');
@@ -120,11 +107,9 @@ const Reader = ({ metadata }: ReaderProps) => {
 
       console.log('Found spine items:', spineItems.length);
       
-      // Search through each spine item
       for (const item of spineItems) {
         try {
           console.log('Processing spine item:', item.href);
-          // Get the document content
           const content = await book.load(item.href);
           console.log('Loaded content:', {
             type: typeof content,
@@ -143,7 +128,6 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          // Convert content to text and search
           const textContent = doc.documentElement.textContent || '';
           console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
@@ -159,13 +143,11 @@ const Reader = ({ metadata }: ReaderProps) => {
               excerpt: text.slice(Math.max(0, index - 20), Math.min(text.length, index + query.length + 20))
             });
 
-            // Get surrounding context
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
             try {
-              // Generate CFI for this location
               const cfi = item.cfiBase + "!" + index;
               console.log('Generated CFI:', cfi);
               
@@ -197,8 +179,8 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  useEffect(() => {
-    setIsReading(!!book);
+  React.useEffect(() => {
+    handleBookLoad(book);
   }, [book]);
 
   const sessionTime = useSessionTimer(isReading);
@@ -222,34 +204,11 @@ const Reader = ({ metadata }: ReaderProps) => {
     addHighlight(cfiRange, text);
   };
 
-  useEffect(() => {
-    if (book) {
-      book.loaded.navigation.then(nav => {
-        setToc(nav.toc);
-      });
-    }
-  }, [book]);
-
   const handleTocNavigation = (href: string) => {
     if (rendition) {
       rendition.display(href);
     }
   };
-
-  useEffect(() => {
-    const fetchExternalLink = async () => {
-      const { data, error } = await supabase
-        .from('external_links')
-        .select('url')
-        .single();
-      
-      if (data && !error) {
-        setExternalLink(data.url);
-      }
-    };
-
-    fetchExternalLink();
-  }, []);
 
   return (
     <ThemeProvider>
@@ -259,91 +218,42 @@ const Reader = ({ metadata }: ReaderProps) => {
             <UploadPrompt onFileUpload={handleFileUpload} />
           ) : (
             <>
-              <div className="mb-4 flex items-center justify-between">
-                {externalLink && (
-                  <Button
-                    onClick={() => window.open(externalLink, '_blank')}
-                    variant="outline"
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Return to Book Cover</span>
-                    <ExternalLink className="h-4 w-4 ml-1" />
-                  </Button>
-                )}
-                <SearchDialog 
-                  onSearch={handleSearch}
-                  onResultClick={handleSearchResultClick}
-                />
-              </div>
-
-              <ReaderControls
+              <ReaderHeader
+                externalLink={externalLink}
+                onSearch={handleSearch}
+                onSearchResultClick={handleSearchResultClick}
+              />
+              <ReaderContent
+                book={book}
                 fontSize={fontSize}
-                onFontSizeChange={handleFontSizeChange}
                 fontFamily={fontFamily}
-                onFontFamilyChange={handleFontFamilyChange}
                 textAlign={textAlign}
-                onTextAlignChange={setTextAlign}
                 brightness={brightness}
-                onBrightnessChange={handleBrightnessChange}
                 currentLocation={currentLocation}
-                onBookmarkClick={handleBookmarkClick}
-                onLocationChange={handleLocationSelect}
+                progress={progress}
+                pageInfo={pageInfo}
                 sessionTime={sessionTime}
                 highlights={highlights}
-                selectedHighlightColor={selectedColor}
-                onHighlightColorSelect={setSelectedColor}
-                onHighlightSelect={handleLocationSelect}
-                onRemoveHighlight={removeHighlight}
-                toc={toc}
-                onNavigate={handleTocNavigation}
-              />
-              
-              <ProgressTracker 
-                bookProgress={progress.book}
-                pageInfo={pageInfo}
-              />
-
-              <div className="relative">
-                <NavigationButtons
-                  onPrevPage={handlePrevPage}
-                  onNextPage={handleNextPage}
-                />
-                <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
-                  <TableOfContents toc={toc} onNavigate={handleTocNavigation} />
-                </div>
-                <BookViewer
-                  book={book}
-                  currentLocation={currentLocation}
-                  onLocationChange={handleLocationChange}
-                  fontSize={fontSize}
-                  fontFamily={fontFamily}
-                  textAlign={textAlign}
-                  onRenditionReady={handleRenditionReady}
-                  highlights={highlights}
-                  onTextSelect={handleTextSelect}
-                />
-              </div>
-
-              <FloatingControls
-                currentLocation={currentLocation}
-                onLocationSelect={handleLocationSelect}
-                onBookmarkClick={handleBookmarkClick}
-                highlights={highlights}
                 selectedColor={selectedColor}
-                onColorSelect={setSelectedColor}
-                onHighlightSelect={handleLocationSelect}
-                onRemoveHighlight={removeHighlight}
+                toc={toc}
+                currentChapterTitle={currentChapterTitle}
+                showBookmarkDialog={showBookmarkDialog}
+                onFontSizeChange={handleFontSizeChange}
+                onFontFamilyChange={handleFontFamilyChange}
+                onTextAlignChange={setTextAlign}
+                onBrightnessChange={handleBrightnessChange}
+                onBookmarkClick={handleBookmarkClick}
+                onLocationChange={handleLocationSelect}
+                onPrevPage={handlePrevPage}
+                onNextPage={handleNextPage}
+                onTocNavigate={handleTocNavigation}
+                onRenditionReady={handleRenditionReady}
+                onTextSelect={handleTextSelect}
+                setShowBookmarkDialog={setShowBookmarkDialog}
+                handleRemoveBookmark={handleRemoveBookmark}
+                setSelectedColor={setSelectedColor}
+                removeHighlight={removeHighlight}
               />
-
-              <BookmarkDialog
-                open={showBookmarkDialog}
-                onOpenChange={setShowBookmarkDialog}
-                onRemoveBookmark={handleRemoveBookmark}
-                chapterTitle={currentChapterTitle}
-              />
-
-              <BrightnessOverlay brightness={brightness} />
             </>
           )}
         </div>
