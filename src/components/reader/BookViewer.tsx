@@ -172,7 +172,7 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine;
+    const spine = book.spine as unknown as { spineItems: Section[] };
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
@@ -180,7 +180,7 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = spine.items() || [];
+      const spineItems = spine.spineItems || [];
       
       if (spineItems.length === 0) {
         console.error('No spine items found');

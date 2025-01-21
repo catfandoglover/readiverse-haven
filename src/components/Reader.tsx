@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import type { NavItem } from 'epubjs';
+import type { NavItem, Spine } from 'epubjs';
 import type { Book } from "epubjs";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
@@ -140,7 +140,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine;
+    const spine = book.spine as unknown as { spineItems: Section[] };
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
@@ -148,7 +148,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const spineItems = spine.items() || [];
+      const spineItems = spine.spineItems || [];
       
       if (spineItems.length === 0) {
         console.error('No spine items found');
