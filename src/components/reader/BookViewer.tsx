@@ -8,7 +8,6 @@ import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
-import SearchDialog from "./SearchDialog";
 
 interface BookViewerProps {
   book: Book;
@@ -168,77 +167,8 @@ const BookViewer = ({
     }
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
-  const handleSearchResultClick = (cfi: string) => {
-    if (rendition) {
-      rendition.display(cfi);
-    }
-  };
-
-  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
-    if (!book || !rendition) return [];
-
-    const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as unknown as { spineItems: Section[] };
-    
-    if (!spine || !spine.spineItems) {
-      console.error('Invalid spine structure:', spine);
-      return [];
-    }
-
-    try {
-      const spineItems = spine.spineItems;
-      
-      if (spineItems.length === 0) {
-        console.error('No spine items found');
-        return [];
-      }
-
-      for (const section of spineItems) {
-        try {
-          if (!section.href) continue;
-          
-          const content = await book.load(section.href);
-          if (!content) continue;
-
-          const text = content.toString().toLowerCase();
-          const searchQuery = query.toLowerCase();
-          
-          let startIndex = 0;
-          while (true) {
-            const index = text.indexOf(searchQuery, startIndex);
-            if (index === -1) break;
-
-            const start = Math.max(0, index - 40);
-            const end = Math.min(text.length, index + query.length + 40);
-            const excerpt = text.slice(start, end);
-
-            if (section.cfiBase) {
-              const cfi = section.cfiBase + "!" + index;
-              results.push({ cfi, excerpt });
-            }
-            
-            startIndex = index + 1;
-          }
-        } catch (error) {
-          console.error('Error searching section:', error);
-        }
-      }
-
-      return results;
-    } catch (error) {
-      console.error('Error accessing spine items:', error);
-      return [];
-    }
-  };
-
   return (
     <div className="relative">
-      <div className="absolute top-4 right-4 z-50">
-        <SearchDialog 
-          onSearch={handleSearch}
-          onResultClick={handleSearchResultClick}
-        />
-      </div>
       <ViewerContainer theme={theme} />
     </div>
   );

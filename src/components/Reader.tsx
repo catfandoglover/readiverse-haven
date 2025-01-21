@@ -6,7 +6,6 @@ import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
 import type { NavItem } from 'epubjs';
 import type { Book } from "epubjs";
-import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -16,6 +15,7 @@ import BookmarkDialog from "./reader/BookmarkDialog";
 import BrightnessOverlay from "./reader/BrightnessOverlay";
 import NavigationButtons from "./reader/NavigationButtons";
 import TableOfContents from "./reader/TableOfContents";
+import SearchDialog from "./reader/SearchDialog";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -26,7 +26,6 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import SearchDialog from "./reader/SearchDialog";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
@@ -220,12 +219,11 @@ const Reader = ({ metadata }: ReaderProps) => {
                     <ExternalLink className="h-4 w-4 ml-1" />
                   </Button>
                 )}
+                <SearchDialog 
+                  onSearch={handleSearch}
+                  onResultClick={handleSearchResultClick}
+                />
               </div>
-
-              <SearchDialog 
-                onSearch={handleSearch}
-                onResultClick={handleSearchResultClick}
-              />
 
               <ReaderControls
                 fontSize={fontSize}
