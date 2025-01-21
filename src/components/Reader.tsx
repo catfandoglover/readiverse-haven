@@ -82,60 +82,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     removeHighlight,
   } = useHighlights(book?.key() || null);
 
-  useEffect(() => {
-    setIsReading(!!book);
-  }, [book]);
-
-  const sessionTime = useSessionTimer(isReading);
-  useLocationPersistence(book, currentLocation);
-
-  const handleLocationSelect = (location: string) => {
-    if (rendition) {
-      const container = document.querySelector(".epub-view");
-      if (container) {
-        rendition.display(location).then(() => {
-          setTimeout(() => {
-            rendition.resize(container.clientWidth, container.clientHeight);
-            rendition.display(location);
-          }, 100);
-        });
-      }
-    }
-  };
-
-  const handleTextSelect = (cfiRange: string, text: string) => {
-    addHighlight(cfiRange, text);
-  };
-
-  useEffect(() => {
-    if (book) {
-      book.loaded.navigation.then(nav => {
-        setToc(nav.toc);
-      });
-    }
-  }, [book]);
-
-  const handleTocNavigation = (href: string) => {
-    if (rendition) {
-      rendition.display(href);
-    }
-  };
-
-  useEffect(() => {
-    const fetchExternalLink = async () => {
-      const { data, error } = await supabase
-        .from('external_links')
-        .select('url')
-        .single();
-      
-      if (data && !error) {
-        setExternalLink(data.url);
-      }
-    };
-
-    fetchExternalLink();
-  }, []);
-
   const handleSearchResultClick = (cfi: string) => {
     if (rendition) {
       rendition.display(cfi);
@@ -198,6 +144,60 @@ const Reader = ({ metadata }: ReaderProps) => {
       return [];
     }
   };
+
+  useEffect(() => {
+    setIsReading(!!book);
+  }, [book]);
+
+  const sessionTime = useSessionTimer(isReading);
+  useLocationPersistence(book, currentLocation);
+
+  const handleLocationSelect = (location: string) => {
+    if (rendition) {
+      const container = document.querySelector(".epub-view");
+      if (container) {
+        rendition.display(location).then(() => {
+          setTimeout(() => {
+            rendition.resize(container.clientWidth, container.clientHeight);
+            rendition.display(location);
+          }, 100);
+        });
+      }
+    }
+  };
+
+  const handleTextSelect = (cfiRange: string, text: string) => {
+    addHighlight(cfiRange, text);
+  };
+
+  useEffect(() => {
+    if (book) {
+      book.loaded.navigation.then(nav => {
+        setToc(nav.toc);
+      });
+    }
+  }, [book]);
+
+  const handleTocNavigation = (href: string) => {
+    if (rendition) {
+      rendition.display(href);
+    }
+  };
+
+  useEffect(() => {
+    const fetchExternalLink = async () => {
+      const { data, error } = await supabase
+        .from('external_links')
+        .select('url')
+        .single();
+      
+      if (data && !error) {
+        setExternalLink(data.url);
+      }
+    };
+
+    fetchExternalLink();
+  }, []);
 
   return (
     <ThemeProvider>
