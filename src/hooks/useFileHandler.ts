@@ -1,5 +1,7 @@
 // src/hooks/useFileHandler.ts
 import { useToast } from "@/hooks/use-toast";
+import ePub from "epubjs";
+import type { Book } from "epubjs";
 export const useFileHandler = (
   setBook: (book: Book) => void,
   setCurrentLocation: (location: string | null) => void,
