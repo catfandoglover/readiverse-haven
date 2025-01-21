@@ -10,13 +10,19 @@ export const useReaderState = () => {
 
   useEffect(() => {
     const fetchExternalLink = async () => {
-      const { data, error } = await supabase
-        .from('external_links')
-        .select('url')
-        .single();
-      
-      if (data && !error) {
-        setExternalLink(data.url);
+      try {
+        const { data, error } = await supabase
+          .from('external_links')
+          .select('url')
+          .maybeSingle();
+        
+        if (data && !error) {
+          setExternalLink(data.url);
+        } else if (error) {
+          console.error('Error fetching external link:', error);
+        }
+      } catch (error) {
+        console.error('Error in fetchExternalLink:', error);
       }
     };
 
