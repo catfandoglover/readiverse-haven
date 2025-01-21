@@ -22,6 +22,14 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 interface SpineItem {
   href: string;
   cfiBase: string;
+  index?: number;
+}
+
+interface DocumentContent {
+  documentElement: {
+    textContent: string;
+    querySelector: (selector: string) => Element | null;
+  };
 }
 
 const Reader = ({ metadata }: ReaderProps) => {
@@ -83,31 +91,25 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
+  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
       console.log('Book or rendition not available');
       return [];
     }
 
-    const results: { cfi: string; excerpt: string; }[] = [];
+    const results: { cfi: string; excerpt: string; chapterTitle?: string }[] = [];
     
     try {
-      const spine = book.spine as Spine;
-      if (!spine) {
-        console.error('No spine found');
-        return [];
-      }
-
-      const spineItems = (spine as unknown as { items: SpineItem[] }).items;
-      if (!spineItems || !spineItems.length) {
+      const spine = book.spine as unknown as { items: SpineItem[] };
+      if (!spine || !spine.items || !spine.items.length) {
         console.error('No spine items found');
         return [];
       }
 
-      console.log('Found spine items:', spineItems.length);
+      console.log('Found spine items:', spine.items.length);
       
-      for (const item of spineItems) {
+      for (const item of spine.items) {
         try {
           console.log('Processing spine item:', item.href);
           const content = await book.load(item.href);
@@ -122,10 +124,17 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const doc = content as any;
+          const doc = content as DocumentContent;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
+          }
+
+          // Extract chapter title from the document
+          let chapterTitle = "Unknown Chapter";
+          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          if (headingElement) {
+            chapterTitle = headingElement.textContent.trim();
           }
 
           const textContent = doc.documentElement.textContent || '';
@@ -153,12 +162,14 @@ const Reader = ({ metadata }: ReaderProps) => {
               
               results.push({ 
                 cfi, 
-                excerpt: `...${excerpt}...` 
+                excerpt: `...${excerpt}...`,
+                chapterTitle
               });
               
               console.log('Added result:', {
                 cfi,
-                excerptLength: excerpt.length
+                excerptLength: excerpt.length,
+                chapterTitle
               });
             } catch (error) {
               console.error('Error generating CFI:', error);
