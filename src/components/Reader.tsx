@@ -22,6 +22,7 @@ import { useHighlights } from "@/hooks/useHighlights";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import SearchDialog from "./reader/SearchDialog";
 import type { NavItem } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
@@ -133,6 +134,45 @@ const Reader = ({ metadata }: ReaderProps) => {
     fetchExternalLink();
   }, []);
 
+  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
+    if (!book || !rendition) return [];
+
+    const results: { cfi: string; excerpt: string; }[] = [];
+    const sections = await book.spine.items;
+
+    for (const section of sections) {
+      try {
+        const content = await section.load(book.load.bind(book));
+        const text = content.textContent || '';
+        
+        let startIndex = 0;
+        while (true) {
+          const index = text.toLowerCase().indexOf(query.toLowerCase(), startIndex);
+          if (index === -1) break;
+
+          const start = Math.max(0, index - 40);
+          const end = Math.min(text.length, index + query.length + 40);
+          const excerpt = text.slice(start, end);
+
+          const cfi = section.cfiFromRange(index, index + query.length);
+          results.push({ cfi, excerpt });
+
+          startIndex = index + 1;
+        }
+      } catch (error) {
+        console.error('Error searching section:', error);
+      }
+    }
+
+    return results;
+  };
+
+  const handleSearchResultClick = (cfi: string) => {
+    if (rendition) {
+      rendition.display(cfi);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
@@ -154,6 +194,11 @@ const Reader = ({ metadata }: ReaderProps) => {
                   </Button>
                 )}
               </div>
+
+              <SearchDialog 
+                onSearch={handleSearch}
+                onResultClick={handleSearchResultClick}
+              />
 
               <ReaderControls
                 fontSize={fontSize}
