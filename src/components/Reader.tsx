@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
 import type { NavItem } from 'epubjs';
-import Spine from "epubjs/types/spine";
 import type { Book } from "epubjs";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
@@ -149,8 +148,9 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const spineItems = (spine as unknown as { items: Section[] }).items || [];
-      if (!spineItems.length) {
+      const spineItems = spine.items || [];
+      
+      if (!Array.isArray(spineItems) || spineItems.length === 0) {
         console.error('No spine items found');
         return [];
       }
@@ -160,19 +160,22 @@ const Reader = ({ metadata }: ReaderProps) => {
           if (!section.href) continue;
           
           const content = await book.load(section.href);
-          const text = content.toString();
+          if (!content) continue;
+
+          const text = content.toString().toLowerCase();
+          const searchQuery = query.toLowerCase();
           
           let startIndex = 0;
           while (true) {
-            const index = text.toLowerCase().indexOf(query.toLowerCase(), startIndex);
+            const index = text.indexOf(searchQuery, startIndex);
             if (index === -1) break;
 
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            const cfi = section.cfiBase || '';
-            if (cfi) {
+            if (section.cfiBase) {
+              const cfi = section.cfiBase + "!" + index;
               results.push({ cfi, excerpt });
             }
             
