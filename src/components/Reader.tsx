@@ -161,7 +161,7 @@ const Reader = ({ metadata }: ReaderProps) => {
               results.push({ 
                 cfi, 
                 excerpt: `...${excerpt}...`,
-                chapterTitle: chapterTitle || `Chapter ${spine.items.indexOf(item) + 1}`
+                chapterTitle: chapterTitle || `Chapter ${spineItems.indexOf(item) + 1}`
               });
               
               console.log('Added result:', {
