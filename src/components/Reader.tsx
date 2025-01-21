@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import type { Spine } from "epubjs/types/spine";
+import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -26,7 +26,6 @@ import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import SearchDialog from "./reader/SearchDialog";
 import type { NavItem } from "epubjs";
-import type Section from "epubjs/types/section";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
@@ -158,16 +157,13 @@ const Reader = ({ metadata }: ReaderProps) => {
           const end = Math.min(text.length, index + query.length + 40);
           const excerpt = text.slice(start, end);
 
-          // Generate CFI range for the found text
-          const range = {
-            startContainer: content,
-            endContainer: content,
-            startOffset: index,
-            endOffset: index + query.length
-          };
+          // Create a proper DOM Range object
+          const range = document.createRange();
+          range.setStart(content.body, index);
+          range.setEnd(content.body, index + query.length);
           const cfi = section.cfiFromRange(range);
+          
           results.push({ cfi, excerpt });
-
           startIndex = index + 1;
         }
       } catch (error) {
