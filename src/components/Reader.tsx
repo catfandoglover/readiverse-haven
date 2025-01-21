@@ -93,9 +93,16 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
 
   useEffect(() => {
     if (preloadedBookUrl) {
+      console.log('Loading book from URL:', preloadedBookUrl);
       loadBookFromUrl(preloadedBookUrl);
     }
   }, [preloadedBookUrl, loadBookFromUrl]);
+
+  useEffect(() => {
+    console.log('Current book state:', book);
+    console.log('Current preloadedBookUrl:', preloadedBookUrl);
+    console.log('Current isLoading state:', isLoading);
+  }, [book, preloadedBookUrl, isLoading]);
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
@@ -133,8 +140,11 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {!book && !preloadedBookUrl && !isLoading ? (
-            <UploadPrompt onFileUpload={handleFileUpload} />
+          {(!book && !preloadedBookUrl && !isLoading) ? (
+            <div>
+              {/* Only show upload prompt if we truly have no book */}
+              <UploadPrompt onFileUpload={handleFileUpload} />
+            </div>
           ) : (
             <>
               <ReaderControls

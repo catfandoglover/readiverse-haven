@@ -52,15 +52,31 @@ export const useFileHandler = (
   };
 
   const loadBookFromUrl = async (url: string) => {
+    if (!url) {
+      console.error('No URL provided to loadBookFromUrl');
+      return;
+    }
+
     try {
+      console.log('Fetching book from URL:', url);
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const bookData = await response.arrayBuffer();
+      if (!bookData || bookData.byteLength === 0) {
+        throw new Error('Received empty book data');
+      }
+      
+      console.log('Book data fetched, size:', bookData.byteLength);
       await initializeBook(bookData);
     } catch (error) {
       console.error('Error loading book from URL:', error);
       toast({
         variant: "destructive",
-        description: "Failed to load book. Please try again.",
+        description: `Failed to load book: ${error.message}`,
       });
     }
   };

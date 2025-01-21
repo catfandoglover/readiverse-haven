@@ -16,7 +16,11 @@ export const useBook = (slug: string | undefined) => {
         .eq('slug', slug)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      console.log('Fetched book data:', data);
       return data;
     },
     enabled: !!slug
