@@ -17,13 +17,15 @@ const Index = () => {
     author: ""
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="min-h-screen">
-      <Reader metadata={bookMetadata} preloadedBookUrl={book?.epub_file_url} />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-lg">Loading...</div>
+        </div>
+      ) : (
+        <Reader metadata={bookMetadata} preloadedBookUrl={book?.epub_file_url} isLoading={isLoading} />
+      )}
     </div>
   );
 };

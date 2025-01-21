@@ -30,9 +30,10 @@ interface ReaderProps {
     author: string;
   };
   preloadedBookUrl?: string;
+  isLoading?: boolean;
 }
 
-const Reader = ({ metadata, preloadedBookUrl }: ReaderProps) => {
+const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
   const [externalLink, setExternalLink] = useState<string | null>(null);
@@ -151,7 +152,7 @@ const Reader = ({ metadata, preloadedBookUrl }: ReaderProps) => {
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {!book && !preloadedBookUrl ? (
+          {!book && !preloadedBookUrl && !isLoading ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
           ) : (
             <>
