@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
 import type Section from "epubjs/types/section";
-import Spine from "epubjs/types/spine";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -177,12 +176,12 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as unknown as { items: any[] };
+    const spine = book.spine as any;
     
     for (const section of spine.items) {
       try {
-        const content = await section.load();
-        const doc = content.ownerDocument || content;
+        const contents = await section.load();
+        const doc = new DOMParser().parseFromString(contents, 'text/html');
         const text = doc.body.textContent || '';
         
         let startIndex = 0;
@@ -197,6 +196,7 @@ const BookViewer = ({
           const range = doc.createRange();
           range.setStart(doc.body, 0);
           range.setEnd(doc.body, doc.body.childNodes.length);
+
           const cfi = section.cfiFromRange(range);
           
           results.push({ cfi, excerpt });

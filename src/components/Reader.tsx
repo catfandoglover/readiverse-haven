@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import Spine from "epubjs/types/spine";
+import type { NavItem } from 'epubjs';
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -25,7 +25,6 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import SearchDialog from "./reader/SearchDialog";
-import type { NavItem } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
@@ -140,12 +139,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as unknown as { items: any[] };
+    const spine = book.spine as any;
     
     for (const section of spine.items) {
       try {
-        const content = await section.load();
-        const doc = content.ownerDocument || content;
+        const contents = await section.load();
+        const doc = new DOMParser().parseFromString(contents, 'text/html');
         const text = doc.body.textContent || '';
         
         let startIndex = 0;
@@ -160,6 +159,7 @@ const Reader = ({ metadata }: ReaderProps) => {
           const range = doc.createRange();
           range.setStart(doc.body, 0);
           range.setEnd(doc.body, doc.body.childNodes.length);
+
           const cfi = section.cfiFromRange(range);
           
           results.push({ cfi, excerpt });
