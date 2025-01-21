@@ -22,6 +22,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 interface SpineItem {
   href: string;
   cfiBase: string;
+  index?: number;
 }
 
 const Reader = ({ metadata }: ReaderProps) => {
@@ -93,28 +94,31 @@ const Reader = ({ metadata }: ReaderProps) => {
     const results: { cfi: string; excerpt: string; chapterTitle?: string }[] = [];
     
     try {
-      const spine = book.spine as Spine;
+      const spine = book.spine;
       if (!spine) {
         console.error('No spine found');
         return [];
       }
 
-      const spineItems = (spine as unknown as { items: SpineItem[] }).items;
-      if (!spineItems || !spineItems.length) {
-        console.error('No spine items found');
-        return [];
-      }
-
+      // Get spine items using the proper EPUB.js API
+      const spineItems = spine.spineItems || [];
       console.log('Found spine items:', spineItems.length);
       
-      for (const item of spineItems) {
+      for (let i = 0; i < spineItems.length; i++) {
+        const item = spineItems[i];
         try {
           console.log('Processing spine item:', item.href);
-          const content = await book.load(item.href);
+          const section = await book.section(item.href);
+          if (!section) {
+            console.log('No section found for:', item.href);
+            continue;
+          }
+
+          const content = await section.render();
           console.log('Loaded content:', {
             type: typeof content,
             isNull: content === null,
-            hasDocument: content && (content as any).documentElement !== undefined
+            hasDocument: content && content.documentElement !== undefined
           });
           
           if (!content || typeof content !== 'object') {
@@ -122,7 +126,7 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const doc = content as any;
+          const doc = content;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -155,20 +159,45 @@ const Reader = ({ metadata }: ReaderProps) => {
             const excerpt = text.slice(start, end);
 
             try {
-              const cfi = item.cfiBase + "!" + index;
-              console.log('Generated CFI:', cfi);
-              
-              results.push({ 
-                cfi, 
-                excerpt: `...${excerpt}...`,
-                chapterTitle: chapterTitle || `Chapter ${spineItems.indexOf(item) + 1}`
-              });
-              
-              console.log('Added result:', {
-                cfi,
-                excerptLength: excerpt.length,
-                chapterTitle
-              });
+              // Generate a proper CFI using EPUB.js
+              const range = doc.createRange();
+              const textNodes = doc.documentElement.querySelectorAll('*');
+              let currentLength = 0;
+              let targetNode = null;
+              let offset = 0;
+
+              // Find the text node containing our match
+              for (const node of textNodes) {
+                if (node.textContent) {
+                  const nodeLength = node.textContent.length;
+                  if (currentLength + nodeLength > index) {
+                    targetNode = node;
+                    offset = index - currentLength;
+                    break;
+                  }
+                  currentLength += nodeLength;
+                }
+              }
+
+              if (targetNode) {
+                range.setStart(targetNode, offset);
+                range.setEnd(targetNode, offset + query.length);
+                const cfi = section.cfiFromRange(range);
+                
+                console.log('Generated CFI:', cfi);
+                
+                results.push({ 
+                  cfi, 
+                  excerpt: `...${excerpt}...`,
+                  chapterTitle: chapterTitle || `Chapter ${i + 1}`
+                });
+                
+                console.log('Added result:', {
+                  cfi,
+                  excerptLength: excerpt.length,
+                  chapterTitle
+                });
+              }
             } catch (error) {
               console.error('Error generating CFI:', error);
             }
