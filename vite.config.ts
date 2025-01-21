@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 export default defineConfig(({ mode }) => ({
   server: {
     port: 8080,
-    host: true, // This will listen on all available network interfaces
+    host: true,
   },
   plugins: [
     react(),
@@ -25,21 +25,47 @@ export default defineConfig(({ mode }) => ({
           const nodeModulesPath = path.resolve(__dirname, 'node_modules');
           const pdfWorkerPath = path.join(nodeModulesPath, 'pdfjs-dist', 'build', 'pdf.worker.min.js');
           const publicDir = path.resolve(__dirname, 'public');
+          const targetPath = path.join(publicDir, 'pdf.worker.min.js');
           
           // Create public directory if it doesn't exist
           if (!fs.existsSync(publicDir)) {
             fs.mkdirSync(publicDir, { recursive: true });
           }
           
-          // Copy the worker file
+          // Copy the worker file if it exists and has changed
           if (fs.existsSync(pdfWorkerPath)) {
-            fs.copyFileSync(pdfWorkerPath, path.join(publicDir, 'pdf.worker.min.js'));
-            console.log('PDF worker file copied successfully');
+            // Only copy if target doesn't exist or source is newer
+            if (!fs.existsSync(targetPath) || 
+                fs.statSync(pdfWorkerPath).mtime > fs.statSync(targetPath).mtime) {
+              fs.copyFileSync(pdfWorkerPath, targetPath);
+              console.log('PDF worker file copied successfully');
+            } else {
+              console.log('PDF worker file is up to date');
+            }
           } else {
             console.warn('PDF worker file not found at:', pdfWorkerPath);
           }
+
+          // Copy cMaps if needed
+          const cMapsDir = path.join(nodeModulesPath, 'pdfjs-dist', 'cmaps');
+          const publicCMapsDir = path.join(publicDir, 'cmaps');
+          
+          if (fs.existsSync(cMapsDir)) {
+            if (!fs.existsSync(publicCMapsDir)) {
+              fs.mkdirSync(publicCMapsDir, { recursive: true });
+            }
+            fs.readdirSync(cMapsDir).forEach(file => {
+              const srcPath = path.join(cMapsDir, file);
+              const destPath = path.join(publicCMapsDir, file);
+              if (!fs.existsSync(destPath) || 
+                  fs.statSync(srcPath).mtime > fs.statSync(destPath).mtime) {
+                fs.copyFileSync(srcPath, destPath);
+              }
+            });
+            console.log('cMaps files copied successfully');
+          }
         } catch (error) {
-          console.error('Error copying PDF worker file:', error);
+          console.error('Error copying PDF files:', error);
         }
       }
     }

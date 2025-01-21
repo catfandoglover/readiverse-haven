@@ -1,7 +1,13 @@
 import { getDocument, GlobalWorkerOptions, PDFDocumentProxy } from 'pdfjs-dist';
 
-// Configure the worker to use a local worker file
-GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// Configure the worker
+if (typeof window !== 'undefined') {
+  // In browser environment
+  GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
+} else {
+  // In Node.js environment (SSR)
+  GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+}
 
 export interface ProcessedPage {
   content: string;
@@ -14,14 +20,23 @@ export class PDFProcessor {
   async loadDocument(file: ArrayBuffer): Promise<void> {
     try {
       console.log('Starting PDF document load...');
+      console.log('Worker source:', GlobalWorkerOptions.workerSrc);
       
       // Load the document with additional configuration
       const loadingTask = getDocument({
         data: file,
         useWorkerFetch: true,
         isEvalSupported: true,
-        useSystemFonts: true
+        useSystemFonts: true,
+        cMapUrl: `${window.location.origin}/cmaps/`,
+        cMapPacked: true,
       });
+
+      // Add error handler to the loading task
+      loadingTask.onPassword = (callback) => {
+        console.log('Password required for PDF');
+        callback('');  // Cancel password prompt
+      };
 
       this.document = await loadingTask.promise;
       console.log('PDF document loaded successfully');
