@@ -141,7 +141,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as Spine & { items: Section[] };
+    const spine = book.spine;
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
@@ -149,15 +149,18 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      if (!spine.items || !Array.isArray(spine.items)) {
-        console.error('No valid spine items found');
+      const spineItems = spine.items || [];
+      if (!spineItems.length) {
+        console.error('No spine items found');
         return [];
       }
 
-      for (const section of spine.items) {
+      for (const section of spineItems) {
         try {
-          const content = await section.load();
-          const text = content.textContent || '';
+          if (!section.href) continue;
+          
+          const content = await book.load(section.href);
+          const text = content.toString();
           
           let startIndex = 0;
           while (true) {
