@@ -12,14 +12,25 @@ export const useFileHandler = (
 
   const initializeBook = async (bookData: ArrayBuffer) => {
     try {
+      console.log('Initializing book with data size:', bookData.byteLength);
+      
       const newBook = ePub(bookData);
+      console.log('Created ePub instance');
+      
       await newBook.ready;
+      console.log('Book ready');
+      
       await newBook.locations.generate(1024);
+      console.log('Locations generated');
       
       setBook(newBook);
+      console.log('Book set in state');
 
       const bookKey = await newBook.key();
+      console.log('Book key generated:', bookKey);
+      
       const savedLocation = localStorage.getItem(`reading-progress-${bookKey}`);
+      console.log('Saved location:', savedLocation);
       
       if (savedLocation) {
         setCurrentLocation(savedLocation);
@@ -30,12 +41,16 @@ export const useFileHandler = (
 
       const totalLocations = newBook.locations.length();
       setPageInfo(prev => ({ ...prev, total: totalLocations }));
+      console.log('Page info updated, total locations:', totalLocations);
+
+      return newBook;
     } catch (error) {
       console.error('Error initializing book:', error);
       toast({
         variant: "destructive",
         description: "Failed to load book. Please try again.",
       });
+      throw error;
     }
   };
 
