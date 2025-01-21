@@ -173,6 +173,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     return results;
   };
 
+  const handleSearchResultClick = (cfi: string) => {
+    if (rendition) {
+      rendition.display(cfi);
+    }
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
