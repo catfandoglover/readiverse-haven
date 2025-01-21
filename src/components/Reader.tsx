@@ -143,13 +143,13 @@ const Reader = ({ metadata }: ReaderProps) => {
     const results: { cfi: string; excerpt: string; }[] = [];
     const spine = book.spine as unknown as { spineItems: Section[] };
     
-    if (!spine) {
+    if (!spine || !spine.spineItems) {
       console.error('Invalid spine structure:', spine);
       return [];
     }
 
     try {
-      const spineItems = spine.spineItems || [];
+      const spineItems = spine.spineItems;
       
       if (spineItems.length === 0) {
         console.error('No spine items found');
@@ -191,12 +191,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     } catch (error) {
       console.error('Error accessing spine items:', error);
       return [];
-    }
-  };
-
-  const handleSearchResultClick = (cfi: string) => {
-    if (rendition) {
-      rendition.display(cfi);
     }
   };
 
