@@ -25,8 +25,11 @@ interface SpineItem {
   index?: number;
 }
 
-interface DocumentContent extends Document {
+interface DocumentContent {
   documentElement: HTMLElement;
+  createRange: () => Range;
+  querySelector: (selectors: string) => Element | null;
+  querySelectorAll: (selectors: string) => NodeListOf<Element>;
 }
 
 const Reader = ({ metadata }: ReaderProps) => {
@@ -82,12 +85,6 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
-  const handleSearchResultClick = (cfi: string) => {
-    if (rendition) {
-      rendition.display(cfi);
-    }
-  };
-
   const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
@@ -104,12 +101,11 @@ const Reader = ({ metadata }: ReaderProps) => {
         return [];
       }
 
-      // Get spine items using the proper EPUB.js API
-      const items = spine.items || [];
-      console.log('Found spine items:', items.length);
+      // Get spine items using type assertion
+      const spineItems = (spine as any).items || [];
+      console.log('Found spine items:', spineItems.length);
       
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
+      for (const item of spineItems) {
         try {
           console.log('Processing spine item:', item.href);
           const section = await book.section(item.href);
@@ -118,18 +114,14 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const content = await section.render() as DocumentContent;
-          console.log('Loaded content:', {
-            type: typeof content,
-            isNull: content === null,
-            hasDocument: content?.documentElement !== undefined
-          });
-          
-          if (!content || typeof content !== 'object') {
+          const doc = await section.render();
+          if (!doc || typeof doc !== 'object') {
             console.log('Invalid content for:', item.href);
             continue;
           }
 
+          // Cast the document to our interface
+          const content = doc as unknown as DocumentContent;
           if (!content.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -152,19 +144,13 @@ const Reader = ({ metadata }: ReaderProps) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
-            console.log('Found match:', {
-              index,
-              excerpt: text.slice(Math.max(0, index - 20), Math.min(text.length, index + query.length + 20))
-            });
-
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
             try {
-              // Generate a proper CFI using EPUB.js
               const range = content.createRange();
-              const textNodes = content.documentElement.querySelectorAll('*');
+              const textNodes = Array.from(content.documentElement.querySelectorAll('*'));
               let currentLength = 0;
               let targetNode: Node | null = null;
               let offset = 0;
@@ -192,13 +178,7 @@ const Reader = ({ metadata }: ReaderProps) => {
                 results.push({ 
                   cfi, 
                   excerpt: `...${excerpt}...`,
-                  chapterTitle: chapterTitle || `Chapter ${i + 1}`
-                });
-                
-                console.log('Added result:', {
-                  cfi,
-                  excerptLength: excerpt.length,
-                  chapterTitle
+                  chapterTitle: chapterTitle || `Chapter ${spineItems.indexOf(item) + 1}`
                 });
               }
             } catch (error) {
