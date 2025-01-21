@@ -178,12 +178,15 @@ const BookViewer = ({
     const results: { cfi: string; excerpt: string; }[] = [];
     const spine = book.spine;
     
-    if (!spine || !spine.spineItems) {
+    if (!spine) {
       console.error('Invalid spine structure:', spine);
       return [];
     }
 
-    for (const section of spine.spineItems) {
+    // Cast spine to access items property
+    const spineItems = (spine as any).items || [];
+
+    for (const section of spineItems) {
       try {
         const contents = await section.load();
         const text = contents.textContent || '';
