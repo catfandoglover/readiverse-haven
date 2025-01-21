@@ -12,26 +12,16 @@ const UploadPrompt = ({ onFileUpload }: UploadPromptProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileType = file.type;
-    if (fileType !== 'application/epub+zip' && fileType !== 'application/pdf') {
-      toast({
-        title: "Error",
-        description: "Please upload an EPUB or PDF file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       onFileUpload(file);
       toast({
         title: "Success",
-        description: "Document loaded successfully!",
+        description: "Book loaded successfully!",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load document. Please try again.",
+        description: "Failed to load book. Please try again.",
         variant: "destructive",
       });
     }
@@ -42,11 +32,11 @@ const UploadPrompt = ({ onFileUpload }: UploadPromptProps) => {
       <label className="cursor-pointer">
         <div className="flex flex-col items-center">
           <Upload className="w-12 h-12 text-gray-400" />
-          <span className="mt-2 text-sm text-gray-500">Upload EPUB or PDF file</span>
+          <span className="mt-2 text-sm text-gray-500">Upload EPUB file</span>
         </div>
         <input
           type="file"
-          accept=".epub,.pdf"
+          accept=".epub"
           onChange={handleFileChange}
           className="hidden"
         />
