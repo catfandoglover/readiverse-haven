@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import type { Book, Rendition, Spine } from "epubjs";
+import type { Book, Rendition } from "epubjs";
+import Spine from "epubjs/types/spine";
 import type Section from "epubjs/types/section";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
@@ -63,7 +64,6 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  // Listen for highlight removal events
   useEffect(() => {
     const handleRemoveHighlight = (event: CustomEvent) => {
       if (rendition && event.detail?.cfiRange) {
@@ -82,9 +82,7 @@ const BookViewer = ({
       if (!book) return;
       try {
         await book.ready;
-        // Ensure spine is loaded
         await book.loaded.spine;
-        // Ensure navigation is loaded
         await book.loaded.navigation;
         setIsBookReady(true);
       } catch (error) {
@@ -137,7 +135,6 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Setup resize observer
     if (resizeObserver) {
       resizeObserver.disconnect();
     }
@@ -184,15 +181,14 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = (spine as unknown as { items: Section[] }).items;
-      if (!spineItems) {
+      const spineItems = spine.items || [];
+      if (!spineItems.length) {
         console.error('No spine items found');
         return [];
       }
 
       for (const section of spineItems) {
         try {
-          // Load section content
           const content = await section.load();
           const text = content.textContent || '';
           
@@ -205,7 +201,6 @@ const BookViewer = ({
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Get the CFI for this section
             const cfi = section.cfiBase || '';
             if (cfi) {
               results.push({ cfi, excerpt });

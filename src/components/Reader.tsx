@@ -148,15 +148,14 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const spineItems = (spine as unknown as { items: Section[] }).items;
-      if (!spineItems) {
+      const spineItems = spine.items || [];
+      if (!spineItems.length) {
         console.error('No spine items found');
         return [];
       }
 
       for (const section of spineItems) {
         try {
-          // Load section content
           const content = await section.load();
           const text = content.textContent || '';
           
@@ -169,7 +168,6 @@ const Reader = ({ metadata }: ReaderProps) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Get the CFI for this section
             const cfi = section.cfiBase || '';
             if (cfi) {
               results.push({ cfi, excerpt });
