@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { Book, Rendition } from "epubjs";
 import type Section from "epubjs/types/section";
+import type { SpineItem } from "epubjs/types/spine";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -180,9 +181,9 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = spine.items || [];
+      const spineItems = Array.isArray(spine.spineItems) ? spine.spineItems : [];
       
-      if (!Array.isArray(spineItems) || spineItems.length === 0) {
+      if (spineItems.length === 0) {
         console.error('No spine items found');
         return [];
       }

@@ -1,3 +1,32 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import Index from "./pages/Index";
+import type { SpineItem } from "epubjs/types/spine";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <ErrorBoundary>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
+
 import React, { useEffect, useState } from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -139,7 +168,7 @@ const Reader = ({ metadata }: ReaderProps) => {
   const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
     if (!book || !rendition) return [];
 
-    const results: { cfi: string; excerpt: string; }[] = [];
+    const results: { cfi: string; excerpt: string; } = [];
     const spine = book.spine;
     
     if (!spine) {
@@ -148,9 +177,9 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const spineItems = spine.items || [];
+      const spineItems = Array.isArray(spine.spineItems) ? spine.spineItems : [];
       
-      if (!Array.isArray(spineItems) || spineItems.length === 0) {
+      if (spineItems.length === 0) {
         console.error('No spine items found');
         return [];
       }
