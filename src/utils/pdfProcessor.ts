@@ -1,8 +1,9 @@
-import { getDocument, GlobalWorkerOptions, version } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
+import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry';
 
-// Configure the worker with the correct version
-GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+// Configure the worker to use the bundled worker file
+GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export interface ProcessedPage {
   content: string;
