@@ -148,14 +148,14 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const items = spine.items || [];
+      const spineItems = spine.spineItems || [];
       
-      if (items.length === 0) {
+      if (spineItems.length === 0) {
         console.error('No spine items found');
         return [];
       }
 
-      for (const section of items) {
+      for (const section of spineItems) {
         try {
           if (!section.href) continue;
           
