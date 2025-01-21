@@ -1,5 +1,4 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions, PDFDocumentProxy } from 'pdfjs-dist';
 
 // Configure the worker to use a local worker file
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -15,7 +14,16 @@ export class PDFProcessor {
   async loadDocument(file: ArrayBuffer): Promise<void> {
     try {
       console.log('Starting PDF document load...');
-      this.document = await getDocument({ data: file }).promise;
+      
+      // Load the document with additional configuration
+      const loadingTask = getDocument({
+        data: file,
+        useWorkerFetch: true,
+        isEvalSupported: true,
+        useSystemFonts: true
+      });
+
+      this.document = await loadingTask.promise;
       console.log('PDF document loaded successfully');
     } catch (error) {
       console.error('Error loading PDF:', error);
@@ -31,30 +39,40 @@ export class PDFProcessor {
   async getPage(pageNum: number): Promise<ProcessedPage> {
     if (!this.document) throw new Error('No PDF document loaded');
     
-    const page = await this.document.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const content = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
+    try {
+      const page = await this.document.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const content = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
 
-    return {
-      content,
-      pageNum
-    };
+      return {
+        content,
+        pageNum
+      };
+    } catch (error) {
+      console.error(`Error getting page ${pageNum}:`, error);
+      throw new Error(`Failed to process page ${pageNum}`);
+    }
   }
 
   async getAllPages(): Promise<ProcessedPage[]> {
     if (!this.document) throw new Error('No PDF document loaded');
     
-    const pageCount = await this.getPageCount();
-    const pages: ProcessedPage[] = [];
+    try {
+      const pageCount = await this.getPageCount();
+      const pages: ProcessedPage[] = [];
 
-    for (let i = 1; i <= pageCount; i++) {
-      const page = await this.getPage(i);
-      pages.push(page);
+      for (let i = 1; i <= pageCount; i++) {
+        const page = await this.getPage(i);
+        pages.push(page);
+      }
+
+      return pages;
+    } catch (error) {
+      console.error('Error processing pages:', error);
+      throw new Error('Failed to process PDF pages');
     }
-
-    return pages;
   }
 
   destroy(): void {
