@@ -6,6 +6,7 @@ import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
 import type { NavItem } from 'epubjs';
 import Spine from "epubjs/types/spine";
+import type { Book } from "epubjs";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -140,7 +141,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine;
+    const spine = book.spine as Spine & { items: Section[] };
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
@@ -148,13 +149,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     try {
-      const spineItems = spine.items || [];
-      if (!spineItems.length) {
-        console.error('No spine items found');
+      if (!spine.items || !Array.isArray(spine.items)) {
+        console.error('No valid spine items found');
         return [];
       }
 
-      for (const section of spineItems) {
+      for (const section of spine.items) {
         try {
           const content = await section.load();
           const text = content.textContent || '';
