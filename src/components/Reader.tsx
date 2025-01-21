@@ -139,7 +139,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const sections = Array.from(book.spine.spineItems) as Section[];
+    const sections = Array.from(book.spine.items) as Section[];
 
     for (const section of sections) {
       try {
@@ -155,7 +155,8 @@ const Reader = ({ metadata }: ReaderProps) => {
           const end = Math.min(text.length, index + query.length + 40);
           const excerpt = text.slice(start, end);
 
-          const cfi = section.cfiFromRange(index, index + query.length);
+          // Generate CFI range for the found text
+          const cfi = section.cfiFromRange(index);
           results.push({ cfi, excerpt });
 
           startIndex = index + 1;
