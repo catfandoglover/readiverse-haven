@@ -175,7 +175,7 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const sections = book.spine.spineItems;
+    const sections = book.spine.items;
 
     for (const section of sections) {
       try {
