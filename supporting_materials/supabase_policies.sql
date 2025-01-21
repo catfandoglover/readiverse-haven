@@ -5,3 +5,8 @@ TO public
 USING (
   bucket_id = (SELECT id FROM storage.buckets WHERE name = 'epub_files')
 );
+
+
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public;
+REVOKE USAGE ON SCHEMA public FROM anon;
