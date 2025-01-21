@@ -25,6 +25,10 @@ interface SpineItem {
   index?: number;
 }
 
+interface DocumentContent extends Document {
+  documentElement: HTMLElement;
+}
+
 const Reader = ({ metadata }: ReaderProps) => {
   const {
     book,
@@ -101,11 +105,11 @@ const Reader = ({ metadata }: ReaderProps) => {
       }
 
       // Get spine items using the proper EPUB.js API
-      const spineItems = spine.spineItems || [];
-      console.log('Found spine items:', spineItems.length);
+      const items = spine.items || [];
+      console.log('Found spine items:', items.length);
       
-      for (let i = 0; i < spineItems.length; i++) {
-        const item = spineItems[i];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
         try {
           console.log('Processing spine item:', item.href);
           const section = await book.section(item.href);
@@ -114,11 +118,11 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const content = await section.render();
+          const content = await section.render() as DocumentContent;
           console.log('Loaded content:', {
             type: typeof content,
             isNull: content === null,
-            hasDocument: content && content.documentElement !== undefined
+            hasDocument: content?.documentElement !== undefined
           });
           
           if (!content || typeof content !== 'object') {
@@ -126,20 +130,19 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const doc = content;
-          if (!doc.documentElement) {
+          if (!content.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
           }
 
           // Extract chapter title from the content
           let chapterTitle = '';
-          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          const headingElement = content.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
           if (headingElement) {
-            chapterTitle = headingElement.textContent.trim();
+            chapterTitle = headingElement.textContent?.trim() || '';
           }
 
-          const textContent = doc.documentElement.textContent || '';
+          const textContent = content.documentElement.textContent || '';
           console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
           const searchQuery = query.toLowerCase();
@@ -160,10 +163,10 @@ const Reader = ({ metadata }: ReaderProps) => {
 
             try {
               // Generate a proper CFI using EPUB.js
-              const range = doc.createRange();
-              const textNodes = doc.documentElement.querySelectorAll('*');
+              const range = content.createRange();
+              const textNodes = content.documentElement.querySelectorAll('*');
               let currentLength = 0;
-              let targetNode = null;
+              let targetNode: Node | null = null;
               let offset = 0;
 
               // Find the text node containing our match
