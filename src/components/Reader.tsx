@@ -85,6 +85,12 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
+  const handleSearchResultClick = (cfi: string) => {
+    if (rendition) {
+      rendition.display(cfi);
+    }
+  };
+
   const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
