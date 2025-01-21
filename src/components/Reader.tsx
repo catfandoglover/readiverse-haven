@@ -140,13 +140,13 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as unknown as { items: Section[] };
-    const sections = Array.from(spine.items);
-
-    for (const section of sections) {
+    const spine = book.spine as unknown as { items: any[] };
+    
+    for (const section of spine.items) {
       try {
         const content = await section.load();
-        const text = content.textContent || '';
+        const doc = content.ownerDocument || content;
+        const text = doc.body.textContent || '';
         
         let startIndex = 0;
         while (true) {
@@ -157,10 +157,9 @@ const Reader = ({ metadata }: ReaderProps) => {
           const end = Math.min(text.length, index + query.length + 40);
           const excerpt = text.slice(start, end);
 
-          // Create a proper DOM Range object
-          const range = document.createRange();
-          range.setStart(content.body, index);
-          range.setEnd(content.body, index + query.length);
+          const range = doc.createRange();
+          range.setStart(doc.body, 0);
+          range.setEnd(doc.body, doc.body.childNodes.length);
           const cfi = section.cfiFromRange(range);
           
           results.push({ cfi, excerpt });
@@ -172,12 +171,6 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
 
     return results;
-  };
-
-  const handleSearchResultClick = (cfi: string) => {
-    if (rendition) {
-      rendition.display(cfi);
-    }
   };
 
   return (
