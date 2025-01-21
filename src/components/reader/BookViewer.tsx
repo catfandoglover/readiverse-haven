@@ -176,42 +176,53 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as Spine & { items: Section[] };
+    const spine = book.spine;
     
     if (!spine) {
       console.error('Invalid spine structure:', spine);
       return [];
     }
 
-    for (const section of spine.items) {
-      try {
-        // Load section content
-        const content = await section.load();
-        const text = content.textContent || '';
-        
-        let startIndex = 0;
-        while (true) {
-          const index = text.toLowerCase().indexOf(query.toLowerCase(), startIndex);
-          if (index === -1) break;
-
-          const start = Math.max(0, index - 40);
-          const end = Math.min(text.length, index + query.length + 40);
-          const excerpt = text.slice(start, end);
-
-          // Get the CFI for this section
-          const cfi = section.cfiBase || '';
-          if (cfi) {
-            results.push({ cfi, excerpt });
-          }
-          
-          startIndex = index + 1;
-        }
-      } catch (error) {
-        console.error('Error searching section:', error);
+    try {
+      const spineItems = (spine as unknown as { items: Section[] }).items;
+      if (!spineItems) {
+        console.error('No spine items found');
+        return [];
       }
-    }
 
-    return results;
+      for (const section of spineItems) {
+        try {
+          // Load section content
+          const content = await section.load();
+          const text = content.textContent || '';
+          
+          let startIndex = 0;
+          while (true) {
+            const index = text.toLowerCase().indexOf(query.toLowerCase(), startIndex);
+            if (index === -1) break;
+
+            const start = Math.max(0, index - 40);
+            const end = Math.min(text.length, index + query.length + 40);
+            const excerpt = text.slice(start, end);
+
+            // Get the CFI for this section
+            const cfi = section.cfiBase || '';
+            if (cfi) {
+              results.push({ cfi, excerpt });
+            }
+            
+            startIndex = index + 1;
+          }
+        } catch (error) {
+          console.error('Error searching section:', error);
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error accessing spine items:', error);
+      return [];
+    }
   };
 
   const handleSearchResultClick = (cfi: string) => {
