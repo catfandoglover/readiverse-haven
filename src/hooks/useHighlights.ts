@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Highlight, HighlightColor } from '@/types/highlight';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const useHighlights = (bookKey: string | null) => {
   const [highlights, setHighlights] = useState<Highlight[]>([]);

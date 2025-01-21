@@ -1,5 +1,5 @@
 import { Upload } from "lucide-react";
-import { useToast } from "../ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface UploadPromptProps {
   onFileUpload: (file: File) => void;
