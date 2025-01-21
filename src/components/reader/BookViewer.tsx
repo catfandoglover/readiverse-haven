@@ -180,7 +180,7 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = spine.spineItems || [];
+      const spineItems = spine.items() || [];
       
       if (spineItems.length === 0) {
         console.error('No spine items found');
