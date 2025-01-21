@@ -49,8 +49,18 @@ export const useHighlights = (bookKey: string | null) => {
   };
 
   const removeHighlight = (id: string) => {
+    // Find the highlight to be removed
+    const highlightToRemove = highlights.find(h => h.id === id);
+    if (!highlightToRemove) return;
+
+    // Remove from state and localStorage
     const newHighlights = highlights.filter(h => h.id !== id);
     saveHighlights(newHighlights);
+
+    // Dispatch a custom event to notify the BookViewer component
+    window.dispatchEvent(new CustomEvent('removeHighlight', {
+      detail: { cfiRange: highlightToRemove.cfiRange }
+    }));
     
     toast({
       description: "Highlight removed successfully",

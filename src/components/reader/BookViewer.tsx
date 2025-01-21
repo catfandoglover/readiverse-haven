@@ -61,7 +61,20 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  // Initialize book
+  // Listen for highlight removal events
+  useEffect(() => {
+    const handleRemoveHighlight = (event: CustomEvent) => {
+      if (rendition && event.detail?.cfiRange) {
+        rendition.annotations.remove(event.detail.cfiRange, "highlight");
+      }
+    };
+
+    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    return () => {
+      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    };
+  }, [rendition]);
+
   useEffect(() => {
     const initializeBook = async () => {
       if (!book) return;
@@ -81,7 +94,6 @@ const BookViewer = ({
     initializeBook();
   }, [book]);
 
-  // Get container reference
   useEffect(() => {
     const epubContainer = document.querySelector(".epub-view");
     if (epubContainer) {
@@ -89,7 +101,6 @@ const BookViewer = ({
     }
   }, []);
 
-  // Setup rendition and handle resize
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
 
@@ -151,10 +162,8 @@ const BookViewer = ({
     };
   }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, container]);
 
-  // Handle font size changes and reapply highlights
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
 
-  // Reapply highlights when they change
   useEffect(() => {
     if (rendition && isRenditionReady) {
       reapplyHighlights();
