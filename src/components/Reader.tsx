@@ -92,11 +92,17 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
   useLocationPersistence(book, currentLocation);
 
   useEffect(() => {
-    if (preloadedBookUrl) {
+    console.log('UseEffect triggered with:', {
+      preloadedBookUrl,
+      currentBook: book,
+      isReading
+    });
+    
+    if (preloadedBookUrl && !book) {
       console.log('Loading book from URL:', preloadedBookUrl);
       loadBookFromUrl(preloadedBookUrl);
     }
-  }, [preloadedBookUrl, loadBookFromUrl]);
+  }, [preloadedBookUrl, loadBookFromUrl, book, isReading]);
 
   useEffect(() => {
     console.log('Current book state:', book);
@@ -140,9 +146,12 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {(!book && !preloadedBookUrl && !isLoading) ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-lg">Loading book...</div>
+            </div>
+          ) : !book && !preloadedBookUrl ? (
             <div>
-              {/* Only show upload prompt if we truly have no book */}
               <UploadPrompt onFileUpload={handleFileUpload} />
             </div>
           ) : (
