@@ -168,6 +168,12 @@ const BookViewer = ({
     }
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
+  const handleSearchResultClick = (cfi: string) => {
+    if (rendition) {
+      rendition.display(cfi);
+    }
+  };
+
   const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
     if (!book || !rendition) return [];
 

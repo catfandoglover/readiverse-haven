@@ -137,6 +137,12 @@ const Reader = ({ metadata }: ReaderProps) => {
     fetchExternalLink();
   }, []);
 
+  const handleSearchResultClick = (cfi: string) => {
+    if (rendition) {
+      rendition.display(cfi);
+    }
+  };
+
   const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
     if (!book || !rendition) return [];
 
