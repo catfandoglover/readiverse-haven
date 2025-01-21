@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import type Section from "epubjs/types/section";
-import type { NavItem } from 'epubjs';
+import type { NavItem, Spine } from 'epubjs';
 import type { Book } from "epubjs";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
@@ -98,29 +98,32 @@ const Reader = ({ metadata }: ReaderProps) => {
     const results: { cfi: string; excerpt: string; }[] = [];
     
     try {
-      // Get all spine items (chapters)
-      const spineItems = book.spine?.spineItems;
-      console.log('Found spine items:', spineItems?.length);
-      
-      if (!spineItems || spineItems.length === 0) {
-        console.error('No spine items found');
+      // Get spine items
+      const spine = book.spine as Spine;
+      if (!spine || !spine.items) {
+        console.error('No spine or items found');
         return [];
       }
 
+      console.log('Found spine items:', spine.items.length);
+      
       // Search through each spine item
-      for (const item of spineItems) {
+      for (const item of spine.items) {
         try {
           console.log('Processing spine item:', item.href);
           // Get the document content
           const content = await book.load(item.href);
-          console.log('Loaded content type:', typeof content);
+          console.log('Loaded content:', {
+            type: typeof content,
+            isNull: content === null,
+            hasDocument: content && (content as any).documentElement !== undefined
+          });
           
           if (!content || typeof content !== 'object') {
             console.log('Invalid content for:', item.href);
             continue;
           }
 
-          // Safely access document content
           const doc = content as any;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
@@ -129,7 +132,7 @@ const Reader = ({ metadata }: ReaderProps) => {
 
           // Convert content to text and search
           const textContent = doc.documentElement.textContent || '';
-          console.log('Extracted text length:', textContent.length);
+          console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
           const searchQuery = query.toLowerCase();
           
@@ -138,7 +141,10 @@ const Reader = ({ metadata }: ReaderProps) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
-            console.log('Found match at index:', index);
+            console.log('Found match:', {
+              index,
+              excerpt: text.slice(Math.max(0, index - 20), Math.min(text.length, index + query.length + 20))
+            });
 
             // Get surrounding context
             const start = Math.max(0, index - 40);
@@ -147,34 +153,18 @@ const Reader = ({ metadata }: ReaderProps) => {
 
             try {
               // Generate CFI for this location
-              const range = doc.createRange();
-              let currentIndex = 0;
-              let currentNode = doc.documentElement.firstChild;
+              const cfi = item.cfiBase + "!" + index;
+              console.log('Generated CFI:', cfi);
               
-              // Find the text node containing our match
-              while (currentNode) {
-                if (currentNode.nodeType === Node.TEXT_NODE) {
-                  const nodeText = currentNode.textContent || '';
-                  if (currentIndex + nodeText.length > index) {
-                    const offset = index - currentIndex;
-                    console.log('Found matching node:', {
-                      nodeText: nodeText.substring(0, 20) + '...',
-                      offset,
-                      currentIndex
-                    });
-                    
-                    range.setStart(currentNode, offset);
-                    range.setEnd(currentNode, offset + query.length);
-                    
-                    // Use the spine item's cfiBase directly
-                    const cfi = item.cfiBase + "!" + offset;
-                    results.push({ cfi, excerpt: `...${excerpt}...` });
-                    break;
-                  }
-                  currentIndex += nodeText.length;
-                }
-                currentNode = currentNode.nextSibling;
-              }
+              results.push({ 
+                cfi, 
+                excerpt: `...${excerpt}...` 
+              });
+              
+              console.log('Added result:', {
+                cfi,
+                excerptLength: excerpt.length
+              });
             } catch (error) {
               console.error('Error generating CFI:', error);
             }
@@ -182,11 +172,11 @@ const Reader = ({ metadata }: ReaderProps) => {
             lastIndex = index + 1;
           }
         } catch (error) {
-          console.error('Error searching section:', error);
+          console.error('Error processing section:', error);
         }
       }
 
-      console.log('Search completed. Results:', results.length);
+      console.log('Search completed. Total results:', results.length);
       return results;
     } catch (error) {
       console.error('Error accessing spine items:', error);
