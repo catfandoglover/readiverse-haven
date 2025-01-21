@@ -181,7 +181,7 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = spine.items || [];
+      const spineItems = (spine as unknown as { items: Section[] }).items || [];
       if (!spineItems.length) {
         console.error('No spine items found');
         return [];
