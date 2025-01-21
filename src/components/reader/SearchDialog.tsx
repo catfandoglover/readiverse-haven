@@ -72,7 +72,17 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Search</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Search
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-full"
+              onClick={() => setQuery("")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogTitle>
         </DialogHeader>
         <div className="flex gap-2 mt-2">
           <Input
@@ -84,10 +94,13 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                 handleSearch();
               }
             }}
+            className="flex-1"
           />
           <Button 
             onClick={handleSearch}
             disabled={isSearching}
+            size="icon"
+            className="shrink-0"
           >
             {isSearching ? (
               <div className="animate-spin">⌛</div>
@@ -96,22 +109,32 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
             )}
           </Button>
         </div>
+        
         {results.length > 0 && (
-          <ScrollArea className="h-[300px] mt-4 rounded-md border p-4">
-            <div className="space-y-4">
-              {results.map((result, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleResultClick(result.cfi)}
-                  className="w-full text-left p-2 hover:bg-accent rounded-md transition-colors"
-                >
-                  <p className="text-sm">
-                    ...{result.excerpt}...
-                  </p>
-                </button>
-              ))}
+          <>
+            <ScrollArea className="h-[300px] mt-4">
+              <div className="space-y-1">
+                {results.map((result, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleResultClick(result.cfi)}
+                    className="w-full text-left px-4 py-3 hover:bg-accent rounded-md transition-colors flex flex-col gap-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Match {index + 1}</span>
+                      <span className="text-xs text-muted-foreground">Page {index + 1}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {result.excerpt}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {results.length} matches found
             </div>
-          </ScrollArea>
+          </>
         )}
       </DialogContent>
     </Dialog>
