@@ -180,14 +180,14 @@ const BookViewer = ({
     }
 
     try {
-      const spineItems = spine.spineItems || [];
+      const items = spine.items || [];
       
-      if (spineItems.length === 0) {
+      if (items.length === 0) {
         console.error('No spine items found');
         return [];
       }
 
-      for (const section of spineItems) {
+      for (const section of items) {
         try {
           if (!section.href) continue;
           
