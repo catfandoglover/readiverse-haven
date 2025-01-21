@@ -176,13 +176,17 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as any;
+    const spine = book.spine;
     
-    for (const section of spine.items) {
+    if (!spine || !spine.spineItems) {
+      console.error('Invalid spine structure:', spine);
+      return [];
+    }
+
+    for (const section of spine.spineItems) {
       try {
         const contents = await section.load();
-        const doc = new DOMParser().parseFromString(contents, 'text/html');
-        const text = doc.body.textContent || '';
+        const text = contents.textContent || '';
         
         let startIndex = 0;
         while (true) {
@@ -193,13 +197,11 @@ const BookViewer = ({
           const end = Math.min(text.length, index + query.length + 40);
           const excerpt = text.slice(start, end);
 
-          const range = doc.createRange();
-          range.setStart(doc.body, 0);
-          range.setEnd(doc.body, doc.body.childNodes.length);
-
-          const cfi = section.cfiFromRange(range);
+          const cfi = section.cfiBase;
+          if (cfi) {
+            results.push({ cfi, excerpt });
+          }
           
-          results.push({ cfi, excerpt });
           startIndex = index + 1;
         }
       } catch (error) {
