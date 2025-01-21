@@ -2,10 +2,7 @@ import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 // Configure the worker
-GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.js`;
 
 export interface ProcessedPage {
   content: string;
@@ -17,7 +14,9 @@ export class PDFProcessor {
 
   async loadDocument(file: ArrayBuffer): Promise<void> {
     try {
-      this.document = await getDocument(file).promise;
+      console.log('Starting PDF document load...');
+      this.document = await getDocument({ data: file }).promise;
+      console.log('PDF document loaded successfully');
     } catch (error) {
       console.error('Error loading PDF:', error);
       throw new Error('Failed to load PDF document');
