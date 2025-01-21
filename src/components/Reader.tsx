@@ -146,13 +146,14 @@ const Reader = ({ metadata }: ReaderProps) => {
       return [];
     }
 
-    // Cast spine to access items property
-    const spineItems = (spine as any).items || [];
+    // Properly access spine items
+    const spineItems = spine.items;
 
     for (const section of spineItems) {
       try {
-        const contents = await section.load();
-        const text = contents.textContent || '';
+        // Load section content
+        const content = await section.load();
+        const text = content.textContent || '';
         
         let startIndex = 0;
         while (true) {
@@ -163,7 +164,8 @@ const Reader = ({ metadata }: ReaderProps) => {
           const end = Math.min(text.length, index + query.length + 40);
           const excerpt = text.slice(start, end);
 
-          const cfi = section.cfiBase;
+          // Get the CFI for this section
+          const cfi = section.cfiBase || '';
           if (cfi) {
             results.push({ cfi, excerpt });
           }
