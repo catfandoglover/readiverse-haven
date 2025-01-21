@@ -23,7 +23,7 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import SearchDialog from "./reader/SearchDialog";
-import type { NavItem } from "epubjs";
+import type { NavItem, Section } from "epubjs";
 
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
@@ -138,7 +138,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const sections = Object.values(book.spine.spineByHref);
+    const sections = book.spine.items as Section[];
 
     for (const section of sections) {
       try {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { Book, Rendition } from "epubjs";
+import type { Book, Rendition, Section } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -175,7 +175,7 @@ const BookViewer = ({
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const sections = Object.values(book.spine.spineByHref);
+    const sections = book.spine.items as Section[];
 
     for (const section of sections) {
       try {
