@@ -22,14 +22,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 interface SpineItem {
   href: string;
   cfiBase: string;
-  index?: number;
-}
-
-interface DocumentContent {
-  documentElement: HTMLElement;
-  createRange: () => Range;
-  querySelector: (selectors: string) => Element | null;
-  querySelectorAll: (selectors: string) => NodeListOf<Element>;
 }
 
 const Reader = ({ metadata }: ReaderProps) => {
@@ -91,56 +83,52 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
+  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
       console.log('Book or rendition not available');
       return [];
     }
 
-    const results: { cfi: string; excerpt: string; chapterTitle?: string }[] = [];
+    const results: { cfi: string; excerpt: string; }[] = [];
     
     try {
-      const spine = book.spine;
+      const spine = book.spine as Spine;
       if (!spine) {
         console.error('No spine found');
         return [];
       }
 
-      // Get spine items using type assertion
-      const spineItems = (spine as any).items || [];
+      const spineItems = (spine as unknown as { items: SpineItem[] }).items;
+      if (!spineItems || !spineItems.length) {
+        console.error('No spine items found');
+        return [];
+      }
+
       console.log('Found spine items:', spineItems.length);
       
       for (const item of spineItems) {
         try {
           console.log('Processing spine item:', item.href);
-          const section = await book.section(item.href);
-          if (!section) {
-            console.log('No section found for:', item.href);
-            continue;
-          }
-
-          const doc = await section.render();
-          if (!doc || typeof doc !== 'object') {
+          const content = await book.load(item.href);
+          console.log('Loaded content:', {
+            type: typeof content,
+            isNull: content === null,
+            hasDocument: content && (content as any).documentElement !== undefined
+          });
+          
+          if (!content || typeof content !== 'object') {
             console.log('Invalid content for:', item.href);
             continue;
           }
 
-          // Cast the document to our interface
-          const content = doc as unknown as DocumentContent;
-          if (!content.documentElement) {
+          const doc = content as any;
+          if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
           }
 
-          // Extract chapter title from the content
-          let chapterTitle = '';
-          const headingElement = content.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
-          if (headingElement) {
-            chapterTitle = headingElement.textContent?.trim() || '';
-          }
-
-          const textContent = content.documentElement.textContent || '';
+          const textContent = doc.documentElement.textContent || '';
           console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
           const searchQuery = query.toLowerCase();
@@ -150,43 +138,28 @@ const Reader = ({ metadata }: ReaderProps) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
+            console.log('Found match:', {
+              index,
+              excerpt: text.slice(Math.max(0, index - 20), Math.min(text.length, index + query.length + 20))
+            });
+
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
             try {
-              const range = content.createRange();
-              const textNodes = Array.from(content.documentElement.querySelectorAll('*'));
-              let currentLength = 0;
-              let targetNode: Node | null = null;
-              let offset = 0;
-
-              // Find the text node containing our match
-              for (const node of textNodes) {
-                if (node.textContent) {
-                  const nodeLength = node.textContent.length;
-                  if (currentLength + nodeLength > index) {
-                    targetNode = node;
-                    offset = index - currentLength;
-                    break;
-                  }
-                  currentLength += nodeLength;
-                }
-              }
-
-              if (targetNode) {
-                range.setStart(targetNode, offset);
-                range.setEnd(targetNode, offset + query.length);
-                const cfi = section.cfiFromRange(range);
-                
-                console.log('Generated CFI:', cfi);
-                
-                results.push({ 
-                  cfi, 
-                  excerpt: `...${excerpt}...`,
-                  chapterTitle: chapterTitle || `Chapter ${spineItems.indexOf(item) + 1}`
-                });
-              }
+              const cfi = item.cfiBase + "!" + index;
+              console.log('Generated CFI:', cfi);
+              
+              results.push({ 
+                cfi, 
+                excerpt: `...${excerpt}...` 
+              });
+              
+              console.log('Added result:', {
+                cfi,
+                excerptLength: excerpt.length
+              });
             } catch (error) {
               console.error('Error generating CFI:', error);
             }
