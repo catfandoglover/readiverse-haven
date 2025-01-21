@@ -1,8 +1,8 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
-// Configure the worker
-GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.js`;
+// Configure the worker to use a local worker file
+GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 export interface ProcessedPage {
   content: string;
