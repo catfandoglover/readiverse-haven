@@ -1,7 +1,4 @@
-import { Book } from "epubjs";
-import ePub from "epubjs";
-import { useToast } from "@/components/ui/use-toast";
-
+// src/hooks/useFileHandler.ts
 export const useFileHandler = (
   setBook: (book: Book) => void,
   setCurrentLocation: (location: string | null) => void,
@@ -10,49 +7,60 @@ export const useFileHandler = (
 ) => {
   const { toast } = useToast();
 
+  const initializeBook = async (bookData: ArrayBuffer) => {
+    try {
+      const newBook = ePub(bookData);
+      await newBook.ready;
+      await newBook.locations.generate(1024);
+      
+      setBook(newBook);
+
+      const bookKey = await newBook.key();
+      const savedLocation = localStorage.getItem(`reading-progress-${bookKey}`);
+      
+      if (savedLocation) {
+        setCurrentLocation(savedLocation);
+        toast({
+          description: "Restored your last reading position",
+        });
+      }
+
+      const totalLocations = newBook.locations.length();
+      setPageInfo(prev => ({ ...prev, total: totalLocations }));
+    } catch (error) {
+      console.error('Error initializing book:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to load book. Please try again.",
+      });
+    }
+  };
+
   const handleFileUpload = async (file: File) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      try {
-        const bookData = e.target?.result;
-        if (!bookData) {
-          throw new Error("Failed to read book data");
-        }
-
-        const newBook = ePub(bookData);
-        await newBook.ready; // Wait for the book to be ready
-
-        // Generate locations for the book
-        await newBook.locations.generate(1024);
-        
-        // Set the book in state
-        setBook(newBook);
-
-        // Get the saved reading position for this book
-        const bookKey = await newBook.key();
-        const savedLocation = localStorage.getItem(`reading-progress-${bookKey}`);
-        
-        if (savedLocation) {
-          setCurrentLocation(savedLocation);
-          toast({
-            description: "Restored your last reading position",
-          });
-        }
-
-        const totalLocations = newBook.locations.length();
-        setPageInfo(prev => ({ ...prev, total: totalLocations }));
-
-      } catch (error) {
-        console.error('Error initializing book:', error);
-        toast({
-          variant: "destructive",
-          description: "Failed to load book. Please try again.",
-        });
+      const bookData = e.target?.result as ArrayBuffer;
+      if (!bookData) {
+        throw new Error("Failed to read book data");
       }
+      await initializeBook(bookData);
     };
-
     reader.readAsArrayBuffer(file);
   };
 
-  return { handleFileUpload };
+  const loadBookFromUrl = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const bookData = await response.arrayBuffer();
+      await initializeBook(bookData);
+    } catch (error) {
+      console.error('Error loading book from URL:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to load book. Please try again.",
+      });
+    }
+  };
+
+  return { handleFileUpload, loadBookFromUrl };
 };
