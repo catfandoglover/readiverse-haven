@@ -112,8 +112,8 @@ const createVirtualEpubFromPDF = async (pages: { content: string; pageNum: numbe
     </html>
   `], { type: 'application/xhtml+xml' });
 
-  // Create a virtual EPUB book
-  const book = ePub(blob);
+  // Create a virtual EPUB book from the Blob URL
+  const book = ePub(URL.createObjectURL(blob));
   await book.ready;
   return book;
 };
