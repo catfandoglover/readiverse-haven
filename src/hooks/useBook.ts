@@ -10,19 +10,39 @@ export const useBook = (slug: string | undefined) => {
     queryFn: async () => {
       if (!slug) return null;
       
-      const { data, error } = await supabase
-        .from('books')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-        
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      try {
+        // Try direct query with proper headers
+        const { data, error } = await supabase
+          .from('books')
+          .select('*')
+          .eq('slug', slug.toLowerCase()) // Ensure lowercase comparison
+          .single();
+
+        if (error) {
+          console.error('Initial query error:', error);
+          // If first query fails, try alternative approach
+          const { data: retryData, error: retryError } = await supabase
+            .from('books')
+            .select()
+            .filter('slug', 'eq', slug)
+            .limit(1);
+
+          if (retryError) {
+            console.error('Retry query error:', retryError);
+            return null;
+          }
+
+          return retryData?.[0] || null;
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Unexpected error in useBook:', error);
+        return null;
       }
-      console.log('Fetched book data:', data);
-      return data;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    retry: false,
+    retryOnMount: false
   });
 };
