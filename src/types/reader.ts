@@ -8,7 +8,7 @@ export interface BookMetadata {
 }
 
 export interface ReaderProps {
-  metadata?: BookMetadata;
+  metadata: BookMetadata;
 }
 
 export interface ReaderControlsProps {
