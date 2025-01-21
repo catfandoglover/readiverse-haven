@@ -146,10 +146,8 @@ const Reader = ({ metadata }: ReaderProps) => {
       return [];
     }
 
-    // Properly access spine items
-    const spineItems = spine.items;
-
-    for (const section of spineItems) {
+    // Access spine items through the spine object directly
+    for (const section of spine) {
       try {
         // Load section content
         const content = await section.load();
