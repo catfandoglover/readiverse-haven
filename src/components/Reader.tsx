@@ -83,14 +83,14 @@ const Reader = ({ metadata }: ReaderProps) => {
     }
   };
 
-  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; }[]> => {
+  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
       console.log('Book or rendition not available');
       return [];
     }
 
-    const results: { cfi: string; excerpt: string; }[] = [];
+    const results: { cfi: string; excerpt: string; chapterTitle?: string }[] = [];
     
     try {
       const spine = book.spine as Spine;
@@ -128,6 +128,13 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
+          // Extract chapter title from the content
+          let chapterTitle = '';
+          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          if (headingElement) {
+            chapterTitle = headingElement.textContent.trim();
+          }
+
           const textContent = doc.documentElement.textContent || '';
           console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
@@ -153,12 +160,14 @@ const Reader = ({ metadata }: ReaderProps) => {
               
               results.push({ 
                 cfi, 
-                excerpt: `...${excerpt}...` 
+                excerpt: `...${excerpt}...`,
+                chapterTitle: chapterTitle || `Chapter ${spine.items.indexOf(item) + 1}`
               });
               
               console.log('Added result:', {
                 cfi,
-                excerptLength: excerpt.length
+                excerptLength: excerpt.length,
+                chapterTitle
               });
             } catch (error) {
               console.error('Error generating CFI:', error);
