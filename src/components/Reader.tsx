@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import type { ReaderProps } from "@/types/reader";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderControls from "./reader/ReaderControls";
 import BookViewer from "./reader/BookViewer";
@@ -21,7 +20,16 @@ import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import type { NavItem } from "epubjs";
 
-const Reader = ({ metadata }: ReaderProps) => {
+interface ReaderProps {
+  metadata: {
+    coverUrl: string;
+    title: string;
+    author: string;
+  };
+  preloadedBookUrl?: string;
+}
+
+const Reader = ({ metadata, preloadedBookUrl }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
 
@@ -37,7 +45,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     handleLocationChange,
   } = useBookProgress();
 
-  const { handleFileUpload } = useFileHandler(
+  const { handleFileUpload, loadBookFromUrl } = useFileHandler(
     setBook,
     setCurrentLocation,
     loadProgress,
@@ -82,6 +90,12 @@ const Reader = ({ metadata }: ReaderProps) => {
   const sessionTime = useSessionTimer(isReading);
   useLocationPersistence(book, currentLocation);
 
+  useEffect(() => {
+    if (preloadedBookUrl) {
+      loadBookFromUrl(preloadedBookUrl);
+    }
+  }, [preloadedBookUrl, loadBookFromUrl]);
+
   const handleLocationSelect = (location: string) => {
     if (rendition) {
       const container = document.querySelector(".epub-view");
@@ -118,7 +132,7 @@ const Reader = ({ metadata }: ReaderProps) => {
     <ThemeProvider>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {!book ? (
+          {!book && !preloadedBookUrl ? (
             <UploadPrompt onFileUpload={handleFileUpload} />
           ) : (
             <>

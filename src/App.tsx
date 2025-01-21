@@ -17,6 +17,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/:bookSlug" element={<Index />} />
           </Routes>
         </BrowserRouter>
       </ErrorBoundary>
