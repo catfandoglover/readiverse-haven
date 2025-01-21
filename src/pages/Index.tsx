@@ -5,7 +5,11 @@ import Reader from "@/components/Reader";
 
 const Index = () => {
   const { bookSlug } = useParams();
-  const { data: book, isLoading } = useBook(bookSlug);
+  const { data: book, isLoading, error } = useBook(bookSlug);
+  
+  console.log('Book data in Index:', book);
+  console.log('Loading state:', isLoading);
+  console.log('Error state:', error);
 
   const bookMetadata = book ? {
     coverUrl: book.cover_url || "/placeholder.svg",
