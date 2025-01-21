@@ -92,46 +92,60 @@ const Reader = ({ metadata }: ReaderProps) => {
     if (!book || !rendition) return [];
 
     const results: { cfi: string; excerpt: string; }[] = [];
-    const spine = book.spine as unknown as { spineItems: Section[] };
     
-    if (!spine || !spine.spineItems) {
-      console.error('Invalid spine structure:', spine);
-      return [];
-    }
-
     try {
-      const spineItems = spine.spineItems;
+      // Get all spine items (chapters)
+      const spineItems = book.spine.items;
       
-      if (spineItems.length === 0) {
+      if (!spineItems || spineItems.length === 0) {
         console.error('No spine items found');
         return [];
       }
 
-      for (const section of spineItems) {
+      // Search through each spine item
+      for (const item of spineItems) {
         try {
-          if (!section.href) continue;
-          
-          const content = await book.load(section.href);
-          if (!content) continue;
+          // Get the document content
+          const doc = await book.load(item.href);
+          if (!doc) continue;
 
-          const text = content.toString().toLowerCase();
+          // Convert content to text and search
+          const content = doc.documentElement.textContent || '';
+          const text = content.toLowerCase();
           const searchQuery = query.toLowerCase();
           
-          let startIndex = 0;
+          let lastIndex = 0;
           while (true) {
-            const index = text.indexOf(searchQuery, startIndex);
+            const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
+            // Get surrounding context
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            if (section.cfiBase) {
-              const cfi = section.cfiBase + "!" + index;
-              results.push({ cfi, excerpt });
+            // Generate CFI for this location
+            const range = doc.createRange();
+            let currentIndex = 0;
+            let currentNode: Node | null = doc.documentElement;
+            
+            // Find the text node containing our match
+            while (currentNode) {
+              if (currentNode.nodeType === Node.TEXT_NODE) {
+                const nodeText = currentNode.textContent || '';
+                if (currentIndex + nodeText.length > index) {
+                  range.setStart(currentNode, index - currentIndex);
+                  range.setEnd(currentNode, index - currentIndex + query.length);
+                  const cfi = item.cfiBase + book.locations.generateCfiFromRange(range);
+                  results.push({ cfi, excerpt: `...${excerpt}...` });
+                  break;
+                }
+                currentIndex += nodeText.length;
+              }
+              currentNode = document.createNodeIterator(doc.documentElement, NodeFilter.SHOW_TEXT).nextNode();
             }
             
-            startIndex = index + 1;
+            lastIndex = index + 1;
           }
         } catch (error) {
           console.error('Error searching section:', error);
