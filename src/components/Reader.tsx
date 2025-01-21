@@ -28,6 +28,11 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
+interface SpineItem {
+  href: string;
+  cfiBase: string;
+}
+
 const Reader = ({ metadata }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
@@ -101,15 +106,22 @@ const Reader = ({ metadata }: ReaderProps) => {
     try {
       // Get spine items
       const spine = book.spine as Spine;
-      if (!spine || !spine.items) {
-        console.error('No spine or items found');
+      if (!spine) {
+        console.error('No spine found');
         return [];
       }
 
-      console.log('Found spine items:', spine.items.length);
+      // Safely access spine items with type assertion
+      const spineItems = (spine as unknown as { items: SpineItem[] }).items;
+      if (!spineItems || !spineItems.length) {
+        console.error('No spine items found');
+        return [];
+      }
+
+      console.log('Found spine items:', spineItems.length);
       
       // Search through each spine item
-      for (const item of spine.items) {
+      for (const item of spineItems) {
         try {
           console.log('Processing spine item:', item.href);
           // Get the document content
