@@ -36,6 +36,7 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const {
     rendition,
@@ -61,6 +62,30 @@ const BookViewer = ({
   } = useReaderResize(rendition);
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
+
+  const handleTouchStart = (e: TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!touchStartX || !rendition) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX;
+    const minSwipeDistance = 50; // Minimum distance for a swipe
+
+    if (Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe right -> go to previous page
+        rendition.prev();
+      } else {
+        // Swipe left -> go to next page
+        rendition.next();
+      }
+    }
+
+    setTouchStartX(null);
+  };
 
   useEffect(() => {
     const handleRemoveHighlight = (event: CustomEvent) => {
@@ -96,8 +121,21 @@ const BookViewer = ({
     const epubContainer = document.querySelector(".epub-view");
     if (epubContainer) {
       setContainer(epubContainer);
+
+      // Add touch event listeners only on mobile
+      if (isMobile) {
+        epubContainer.addEventListener('touchstart', handleTouchStart);
+        epubContainer.addEventListener('touchend', handleTouchEnd);
+      }
+
+      return () => {
+        if (isMobile) {
+          epubContainer.removeEventListener('touchstart', handleTouchStart);
+          epubContainer.removeEventListener('touchend', handleTouchEnd);
+        }
+      };
     }
-  }, []);
+  }, [container, isMobile]);
 
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
