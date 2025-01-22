@@ -85,29 +85,25 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
-  const handleSearchResultClick = (cfi: string) => {
-    console.log('Navigating to CFI:', cfi);
-    if (rendition) {
+  const handleSearchResultClick = (href: string) => {
+    console.log('Navigating to href:', href);
+    if (rendition && book) {
       try {
-        // Extract the spine item href from the CFI
-        const hrefMatch = cfi.match(/\[(.*?)\]/);
-        if (hrefMatch && hrefMatch[1]) {
-          const href = hrefMatch[1];
-          // Find the spine item with this href
-          const spine = book?.spine as unknown as { items: SpineItem[] };
+        // Navigate directly to the href
+        rendition.display(href).catch(error => {
+          console.error('Failed to navigate directly:', error);
+          
+          // Fallback: try to find the spine item and use its index
+          const spine = book.spine as unknown as { items: SpineItem[] };
           const spineItem = spine?.items?.find(item => item.href === href);
           
-          if (spineItem) {
-            // Use the spine item's base CFI for navigation
-            const baseCfi = spineItem.cfiBase + "!/4/2";
-            console.log('Using base CFI for navigation:', baseCfi);
-            rendition.display(baseCfi);
+          if (spineItem && typeof spineItem.index === 'number') {
+            console.log('Falling back to spine index:', spineItem.index);
+            rendition.display(spineItem.index);
           } else {
-            console.error('Spine item not found for href:', href);
+            console.error('Could not find spine item for href:', href);
           }
-        } else {
-          console.error('Could not extract href from CFI:', cfi);
-        }
+        });
       } catch (error) {
         console.error('Navigation error:', error);
       }
@@ -168,7 +164,7 @@ const Reader = ({ metadata }: ReaderProps) => {
             const excerpt = text.slice(start, end);
 
             results.push({
-              cfi: item.href,  // Just store the href, we'll construct the full CFI when navigating
+              cfi: item.href,  // Store the href for navigation
               excerpt: `...${excerpt}...`,
               chapterTitle
             });
@@ -270,3 +266,5 @@ const Reader = ({ metadata }: ReaderProps) => {
     </ThemeProvider>
   );
 };
+
+export default Reader;
