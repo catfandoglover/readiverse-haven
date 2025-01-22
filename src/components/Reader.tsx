@@ -89,15 +89,25 @@ const Reader = ({ metadata }: ReaderProps) => {
     console.log('Navigating to CFI:', cfi);
     if (rendition) {
       try {
-        // First try to display the CFI directly
-        rendition.display(cfi).catch(() => {
-          // If that fails, try to extract and navigate to just the section part
-          const sectionMatch = cfi.match(/^(.*?)\[.*?\]/);
-          if (sectionMatch && sectionMatch[1]) {
-            console.log('Falling back to section navigation:', sectionMatch[1]);
-            rendition.display(sectionMatch[1]);
+        // Extract the spine item href from the CFI
+        const hrefMatch = cfi.match(/\[(.*?)\]/);
+        if (hrefMatch && hrefMatch[1]) {
+          const href = hrefMatch[1];
+          // Find the spine item with this href
+          const spine = book?.spine as unknown as { items: SpineItem[] };
+          const spineItem = spine?.items?.find(item => item.href === href);
+          
+          if (spineItem) {
+            // Use the spine item's base CFI for navigation
+            const baseCfi = spineItem.cfiBase + "!/4/2";
+            console.log('Using base CFI for navigation:', baseCfi);
+            rendition.display(baseCfi);
+          } else {
+            console.error('Spine item not found for href:', href);
           }
-        });
+        } else {
+          console.error('Could not extract href from CFI:', cfi);
+        }
       } catch (error) {
         console.error('Navigation error:', error);
       }
@@ -126,11 +136,6 @@ const Reader = ({ metadata }: ReaderProps) => {
         try {
           console.log('Processing spine item:', item.href);
           const content = await book.load(item.href);
-          console.log('Loaded content:', {
-            type: typeof content,
-            isNull: content === null,
-            hasDocument: content && (content as any).documentElement !== undefined
-          });
           
           if (!content || typeof content !== 'object') {
             console.log('Invalid content for:', item.href);
@@ -150,7 +155,6 @@ const Reader = ({ metadata }: ReaderProps) => {
           }
 
           const textContent = doc.documentElement.textContent || '';
-          console.log('Text content sample:', textContent.substring(0, 100));
           const text = textContent.toLowerCase();
           const searchQuery = query.toLowerCase();
           
@@ -163,25 +167,11 @@ const Reader = ({ metadata }: ReaderProps) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            try {
-              // Generate a simpler CFI that just points to the section
-              const cfi = `${item.cfiBase}!/4/2[${item.href}]`;
-              console.log('Generated CFI:', cfi);
-              
-              results.push({ 
-                cfi, 
-                excerpt: `...${excerpt}...`,
-                chapterTitle
-              });
-              
-              console.log('Added result:', {
-                cfi,
-                excerptLength: excerpt.length,
-                chapterTitle
-              });
-            } catch (error) {
-              console.error('Error generating CFI:', error);
-            }
+            results.push({
+              cfi: item.href,  // Just store the href, we'll construct the full CFI when navigating
+              excerpt: `...${excerpt}...`,
+              chapterTitle
+            });
             
             lastIndex = index + 1;
           }
@@ -280,5 +270,3 @@ const Reader = ({ metadata }: ReaderProps) => {
     </ThemeProvider>
   );
 };
-
-export default Reader;
