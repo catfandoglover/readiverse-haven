@@ -25,6 +25,7 @@ interface BookmarkData {
     chapterIndex?: number;
     pageNumber?: number;
     totalPages?: number;
+    exactLocation?: string;
   };
 }
 
@@ -58,10 +59,10 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
           try {
             const data = JSON.parse(value);
             marks[key] = {
-              cfi: data.cfi || value,
+              cfi: data.metadata?.exactLocation || data.cfi,
               timestamp: data.timestamp || Date.now(),
               chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-              pageInfo: `Page ${data.metadata?.pageNumber}`,
+              pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber}`,
               metadata: data.metadata || {}
             };
           } catch {
