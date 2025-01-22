@@ -30,7 +30,6 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
-  cfi?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -95,24 +94,11 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      // If we have a CFI, use it directly
-      if (result.cfi) {
-        handleLocationChange(result.cfi);
-        return;
-      }
-
-      // Try to navigate using spine index
+      // Try to navigate using spine index first if available
       if (typeof result.spineIndex === 'number') {
-        const spine = book.spine as unknown as { items: SpineItem[] };
-        const item = spine.items[result.spineIndex];
-        if (item) {
-          // Get the CFI for this spine item
-          const cfi = book.spine.get(result.spineIndex)?.cfiBase;
-          if (cfi) {
-            handleLocationChange(cfi);
-            return;
-          }
-        }
+        console.log('Navigating using spine index:', result.spineIndex);
+        await rendition.display(result.spineIndex);
+        return;
       }
 
       // Fallback to href navigation
@@ -120,8 +106,9 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
 
-      if (spineItem?.cfiBase) {
-        handleLocationChange(spineItem.cfiBase);
+      if (spineItem?.index !== undefined) {
+        console.log('Found spine item, navigating to index:', spineItem.index);
+        await rendition.display(spineItem.index);
       } else {
         console.error('Could not find spine item for href:', result.href);
       }
