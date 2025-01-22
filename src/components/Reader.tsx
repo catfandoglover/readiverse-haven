@@ -95,21 +95,36 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      // If we have a direct CFI, use it first
       if (result.cfi) {
         console.log('Navigating using CFI:', result.cfi);
         await rendition.display(result.cfi);
+        
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        const currentView = rendition.manager?.views?.current();
+        if (currentView) {
+          const textNodes = currentView.document.evaluate(
+            `//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${result.excerpt.toLowerCase()}')]`,
+            currentView.document,
+            null,
+            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+            null
+          );
+          
+          if (textNodes.snapshotLength > 0) {
+            const node = textNodes.snapshotItem(0);
+            node?.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
         return;
       }
 
-      // Try spine index navigation next
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
         return;
       }
 
-      // Fallback to href navigation
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
@@ -118,8 +133,6 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
         console.log('Found spine item, navigating to index:', spineItem.index);
         await rendition.display(spineItem.index);
       } else {
-        // Last resort: try direct href navigation
-        console.log('Attempting direct href navigation');
         await rendition.display(result.href);
       }
     } catch (error) {
