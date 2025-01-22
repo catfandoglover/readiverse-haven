@@ -17,10 +17,12 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       style={{ 
         background: theme.background,
         color: theme.text,
-        WebkitUserSelect: 'text', // Enable text selection on iOS
-        userSelect: 'text',       // Enable text selection on other browsers
-        WebkitTouchCallout: 'default', // Enable the iOS text selection menu
-        touchAction: 'pan-y',     // Allow vertical scrolling while maintaining text selection
+        WebkitUserSelect: 'text',
+        WebkitTouchCallout: 'default',
+        touchAction: 'pan-y',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        WebkitTapHighlightColor: 'rgba(0,0,0,0)',
       }}
     />
   );

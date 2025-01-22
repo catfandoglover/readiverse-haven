@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import type { Book, Rendition } from "epubjs";
 import type Section from "epubjs/types/section";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -9,6 +9,7 @@ import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/components/ui/use-toast";
+import { debounce } from "lodash";
 
 interface BookViewerProps {
   book: Book;
@@ -38,6 +39,8 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
+  const [touchStartPosition, setTouchStartPosition] = useState({ x: 0, y: 0 });
+  const moveThreshold = 10;
 
   const {
     rendition,
@@ -64,6 +67,28 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    setTouchStartPosition({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  }, []);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    const touchEndPosition = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+
+    const deltaX = Math.abs(touchEndPosition.x - touchStartPosition.x);
+    const deltaY = Math.abs(touchEndPosition.y - touchStartPosition.y);
+
+    if (deltaX < moveThreshold && deltaY < moveThreshold) {
+      // Small movement - likely a tap for selection
+      return;
+    }
+  }, [touchStartPosition, moveThreshold]);
+
   useEffect(() => {
     if (!rendition) return;
 
@@ -75,16 +100,12 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text || !onTextSelect) return;
 
-        // Create a range to get the selected text
-        const range = selection.getRangeAt(0);
-        if (!range) return;
-
         onTextSelect(cfiRange, text);
         toast({
           description: "Text highlighted successfully",
         });
 
-        // Clear the selection after a short delay to allow the iOS menu to close
+        // Delay selection clearing to allow iOS menu to close
         setTimeout(() => {
           selection.removeAllRanges();
         }, 100);
@@ -97,13 +118,21 @@ const BookViewer = ({
       }
     };
 
-    // Use the epub.js "selected" event which works better with iOS
     rendition.on("selected", handleTextSelection);
+
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart);
+      container.addEventListener('touchend', handleTouchEnd);
+    }
 
     return () => {
       rendition.off("selected", handleTextSelection);
+      if (container) {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchend', handleTouchEnd);
+      }
     };
-  }, [rendition, onTextSelect]);
+  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd]);
 
   useEffect(() => {
     const initializeBook = async () => {
