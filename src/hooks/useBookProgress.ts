@@ -31,14 +31,32 @@ export const useBookProgress = () => {
   };
 
   const handleLocationChange = (location: any) => {
+    // Early return if location or its required properties are undefined
+    if (!location || !location.start) {
+      console.warn('Invalid location object received:', location);
+      return;
+    }
+
+    // If location is a string (like from bookmarks), use it directly
+    if (typeof location === 'string') {
+      setCurrentLocation(location);
+      saveProgress(location);
+      return;
+    }
+
     const cfi = location.start.cfi;
+    if (!cfi) {
+      console.warn('No CFI found in location:', location);
+      return;
+    }
+
     setCurrentLocation(cfi);
     saveProgress(cfi);
 
     if (!book) return;
 
     // Get current spine item (chapter)
-    const currentSpineItem = book.spine.get(location.start.cfi);
+    const currentSpineItem = book.spine.get(cfi);
     
     // Safely access spine items with proper type checking
     const spine = book.spine as unknown as { items: SpineItem[] };
