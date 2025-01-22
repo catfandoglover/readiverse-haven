@@ -9,9 +9,6 @@ import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Highlighter } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BookViewerProps {
   book: Book;
@@ -41,9 +38,9 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const [isHighlightMode, setIsHighlightMode] = useState(false);
   const selectionTimeoutRef = useRef<NodeJS.Timeout>();
-  const isMobile = useIsMobile();
+  const lastTapRef = useRef(0);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const {
     rendition,
@@ -51,7 +48,7 @@ const BookViewer = ({
     setupRendition,
   } = useRenditionSetup(
     book,
-    isMobile,
+    window.innerWidth < 768,
     textAlign,
     fontFamily,
     theme,
@@ -62,6 +59,7 @@ const BookViewer = ({
   );
 
   const {
+    isMobile,
     resizeObserver,
     setResizeObserver,
     debouncedContainerResize,
@@ -69,20 +67,52 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    const MOVE_THRESHOLD = 10;
+
+    const touchEnd = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+
+    const deltaX = Math.abs(touchEnd.x - touchStartRef.current.x);
+    const deltaY = Math.abs(touchEnd.y - touchStartRef.current.y);
+
+    // If significant movement, don't process as selection
+    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
+      return;
+    }
+
+    // Handle double tap
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      e.preventDefault();
+      return;
+    }
+
+    lastTapRef.current = now;
+  }, []);
+
   useEffect(() => {
     if (!rendition) return;
 
     const handleTextSelection = (cfiRange: string, contents: any) => {
       try {
-        // Only process selection in highlight mode on mobile
-        if (isMobile && !isHighlightMode) return;
-
         const selection = contents.window.getSelection();
         if (!selection) return;
 
         const text = selection.toString().trim();
         if (!text || !onTextSelect) return;
 
+        // Clear any existing timeout
         if (selectionTimeoutRef.current) {
           clearTimeout(selectionTimeoutRef.current);
         }
@@ -92,12 +122,9 @@ const BookViewer = ({
           description: "Text highlighted successfully",
         });
 
-        // Clear selection after highlighting
+        // Set new timeout for clearing selection
         selectionTimeoutRef.current = setTimeout(() => {
           selection.removeAllRanges();
-          if (isMobile) {
-            setIsHighlightMode(false);
-          }
         }, 250);
       } catch (error) {
         console.error('Error creating highlight:', error);
@@ -110,13 +137,22 @@ const BookViewer = ({
 
     rendition.on("selected", handleTextSelection);
 
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart, { passive: true });
+      container.addEventListener('touchend', handleTouchEnd);
+    }
+
     return () => {
       if (selectionTimeoutRef.current) {
         clearTimeout(selectionTimeoutRef.current);
       }
       rendition.off("selected", handleTextSelection);
+      if (container) {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchend', handleTouchEnd);
+      }
     };
-  }, [rendition, onTextSelect, isHighlightMode, isMobile, toast]);
+  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -205,24 +241,7 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      {isMobile && (
-        <Button
-          variant={isHighlightMode ? "default" : "outline"}
-          size="icon"
-          onClick={() => setIsHighlightMode(!isHighlightMode)}
-          className="absolute top-2 right-2 z-50 h-8 w-8 rounded-full"
-        >
-          <Highlighter className="h-4 w-4" />
-          <span className="sr-only">
-            {isHighlightMode ? "Disable highlight mode" : "Enable highlight mode"}
-          </span>
-        </Button>
-      )}
-      <ViewerContainer 
-        theme={theme} 
-        setContainer={setContainer}
-        isHighlightMode={isHighlightMode} 
-      />
+      <ViewerContainer theme={theme} setContainer={setContainer} />
     </div>
   );
 };
