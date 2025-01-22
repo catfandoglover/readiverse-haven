@@ -73,30 +73,32 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Search
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 rounded-full"
-              onClick={() => setQuery("")}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Search</DialogTitle>
         </DialogHeader>
         <div className="flex gap-2 mt-2">
-          <Input
-            placeholder="Enter search term..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSearch();
-              }
-            }}
-            className="flex-1"
-          />
+          <div className="relative flex-1">
+            <Input
+              placeholder="Enter search term..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
+              className="pr-8"
+            />
+            {query && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full"
+                onClick={() => setQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <Button 
             onClick={handleSearch}
             disabled={isSearching}
