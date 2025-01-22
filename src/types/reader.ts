@@ -16,8 +16,10 @@ export interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
+  cfi?: string;
 }
 
+// ... keep existing code (ReaderControlsProps interface)
 export interface ReaderControlsProps {
   fontSize: number;
   onFontSizeChange: (value: number[]) => void;
