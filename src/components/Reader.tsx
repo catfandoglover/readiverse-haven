@@ -30,6 +30,7 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
+  cfi?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -94,7 +95,14 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      // Try to navigate using spine index first if available
+      // If we have a direct CFI, use it first
+      if (result.cfi) {
+        console.log('Navigating using CFI:', result.cfi);
+        await rendition.display(result.cfi);
+        return;
+      }
+
+      // Try spine index navigation next
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
@@ -110,7 +118,9 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
         console.log('Found spine item, navigating to index:', spineItem.index);
         await rendition.display(spineItem.index);
       } else {
-        console.error('Could not find spine item for href:', result.href);
+        // Last resort: try direct href navigation
+        console.log('Attempting direct href navigation');
+        await rendition.display(result.href);
       }
     } catch (error) {
       console.error('Navigation error:', error);
@@ -170,13 +180,32 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Store both href and spine index for more reliable navigation
-            results.push({
-              href: item.href,
-              excerpt: `...${excerpt}...`,
-              chapterTitle,
-              spineIndex: item.index
-            });
+            // Generate CFI for this specific match
+            try {
+              const range = document.createRange();
+              const textNode = doc.documentElement.firstChild;
+              if (textNode) {
+                range.setStart(textNode, start);
+                range.setEnd(textNode, end);
+                const cfi = book.package.cfiFromRange(range);
+
+                results.push({
+                  href: item.href,
+                  excerpt: `...${excerpt}...`,
+                  chapterTitle,
+                  spineIndex: item.index,
+                  cfi: cfi
+                });
+              }
+            } catch (cfiError) {
+              // Fallback without CFI if generation fails
+              results.push({
+                href: item.href,
+                excerpt: `...${excerpt}...`,
+                chapterTitle,
+                spineIndex: item.index
+              });
+            }
             
             lastIndex = index + 1;
           }
