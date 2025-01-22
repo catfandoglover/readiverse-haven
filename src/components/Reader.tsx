@@ -101,8 +101,11 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
         
         await new Promise(resolve => setTimeout(resolve, 150));
         
-        const currentView = rendition.manager?.views?.current();
-        if (currentView) {
+        // Use type assertion to access the current view
+        const views = (rendition as any).views?.();
+        const currentView = views?.[0];
+        
+        if (currentView?.document) {
           const textNodes = currentView.document.evaluate(
             `//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${result.excerpt.toLowerCase()}')]`,
             currentView.document,
