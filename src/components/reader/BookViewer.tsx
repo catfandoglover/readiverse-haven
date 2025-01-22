@@ -7,7 +7,6 @@ import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
-import { useToast } from "@/components/ui/use-toast";
 import ViewerContainer from "./ViewerContainer";
 
 interface BookViewerProps {
@@ -34,13 +33,9 @@ const BookViewer = ({
   onTextSelect
 }: BookViewerProps) => {
   const { theme } = useTheme();
-  const { toast } = useToast();
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [swipeOverlay, setSwipeOverlay] = useState<'left' | 'right' | null>(null);
 
   const {
     rendition,
@@ -66,64 +61,6 @@ const BookViewer = ({
   } = useReaderResize(rendition);
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
-
-  const handleTouchStart = (e: TouchEvent) => {
-    if (e.touches && e.touches[0]) {
-      setTouchStartX(e.touches[0].clientX);
-      setTouchStartY(e.touches[0].clientY);
-    }
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!touchStartX || !touchStartY) return;
-
-    const touchX = e.touches[0].clientX;
-    const touchY = e.touches[0].clientY;
-    const deltaX = touchX - touchStartX;
-    const deltaY = Math.abs(touchY - touchStartY);
-
-    // Only prevent default if horizontal swipe is detected
-    if (Math.abs(deltaX) > 20 && deltaY < 50) {
-      e.preventDefault();
-      setSwipeOverlay(deltaX > 0 ? 'right' : 'left');
-    }
-  };
-
-  const handleTouchEnd = (e: TouchEvent) => {
-    if (!touchStartX || !touchStartY || !rendition) {
-      setTouchStartX(null);
-      setTouchStartY(null);
-      setSwipeOverlay(null);
-      return;
-    }
-
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = Math.abs(touchEndY - touchStartY);
-    const minSwipeDistance = 50;
-    const maxVerticalOffset = 50;
-
-    if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalOffset) {
-      if (deltaX > 0) {
-        rendition.prev();
-        toast({
-          title: "Previous Page",
-          duration: 1000,
-        });
-      } else {
-        rendition.next();
-        toast({
-          title: "Next Page",
-          duration: 1000,
-        });
-      }
-    }
-
-    setTouchStartX(null);
-    setTouchStartY(null);
-    setSwipeOverlay(null);
-  };
 
   useEffect(() => {
     const handleRemoveHighlight = (event: CustomEvent) => {
@@ -159,22 +96,8 @@ const BookViewer = ({
     const epubContainer = document.querySelector(".epub-view");
     if (epubContainer) {
       setContainer(epubContainer);
-
-      if (isMobile) {
-        epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-        epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-        epubContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
-      }
-
-      return () => {
-        if (isMobile) {
-          epubContainer.removeEventListener('touchstart', handleTouchStart);
-          epubContainer.removeEventListener('touchmove', handleTouchMove);
-          epubContainer.removeEventListener('touchend', handleTouchEnd);
-        }
-      };
     }
-  }, [container, isMobile]);
+  }, []);
 
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
@@ -246,13 +169,7 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      <ViewerContainer theme={theme}>
-        {swipeOverlay && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white text-2xl font-bold">
-            {swipeOverlay === 'left' ? 'Next Page' : 'Previous Page'}
-          </div>
-        )}
-      </ViewerContainer>
+      <ViewerContainer theme={theme} />
     </div>
   );
 };
