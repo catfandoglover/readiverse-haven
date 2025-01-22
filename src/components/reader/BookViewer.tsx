@@ -37,6 +37,7 @@ const BookViewer = ({
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   const {
     rendition,
@@ -64,27 +65,42 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   const handleTouchStart = (e: TouchEvent) => {
+    e.preventDefault();
     setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    if (!touchStartX || !rendition) return;
+    e.preventDefault();
+    if (!touchStartX || !touchStartY || !rendition) return;
 
     const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
     const deltaX = touchEndX - touchStartX;
-    const minSwipeDistance = 50; // Minimum distance for a swipe
+    const deltaY = Math.abs(touchEndY - touchStartY);
+    const minSwipeDistance = 50;
+    const maxVerticalOffset = 50;
 
-    if (Math.abs(deltaX) > minSwipeDistance) {
+    // Only trigger swipe if horizontal movement is greater than vertical
+    // and vertical movement is less than maxVerticalOffset to prevent
+    // accidental swipes while scrolling
+    if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalOffset) {
       if (deltaX > 0) {
-        // Swipe right -> go to previous page
         rendition.prev();
       } else {
-        // Swipe left -> go to next page
         rendition.next();
       }
     }
 
     setTouchStartX(null);
+    setTouchStartY(null);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    // Prevent default to avoid page scrolling while swiping
+    if (touchStartX !== null) {
+      e.preventDefault();
+    }
   };
 
   useEffect(() => {
@@ -124,14 +140,16 @@ const BookViewer = ({
 
       // Add touch event listeners only on mobile
       if (isMobile) {
-        epubContainer.addEventListener('touchstart', handleTouchStart);
-        epubContainer.addEventListener('touchend', handleTouchEnd);
+        epubContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+        epubContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+        epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
       }
 
       return () => {
         if (isMobile) {
           epubContainer.removeEventListener('touchstart', handleTouchStart);
           epubContainer.removeEventListener('touchend', handleTouchEnd);
+          epubContainer.removeEventListener('touchmove', handleTouchMove);
         }
       };
     }
