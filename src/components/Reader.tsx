@@ -31,7 +31,7 @@ interface SearchResult {
   chapterTitle?: string;
   spineIndex?: number;
   location?: string;
-  searchText: string;  // Added to store the actual matched text
+  searchText: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -160,9 +160,9 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       }
 
       // After navigation completes, find and highlight the text
-      rendition.on('rendered', () => {
+      rendition.once('rendered', () => {
         findTextInPage(result.searchText);
-      }, { once: true }); // Use once: true to ensure the event listener is removed after first use
+      });
 
     } catch (error) {
       console.error('Navigation error:', error);
@@ -230,7 +230,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
               excerpt: `...${excerpt}...`,
               chapterTitle,
               spineIndex: item.index,
-              searchText: query  // Store the actual search text
+              searchText: query
             });
             
             lastIndex = index + 1;
