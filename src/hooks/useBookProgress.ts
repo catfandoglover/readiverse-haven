@@ -36,36 +36,29 @@ export const useBookProgress = () => {
       return;
     }
 
-    // Handle string locations (like from bookmarks)
-    if (typeof location === 'string') {
-      setCurrentLocation(location);
-      saveProgress(location);
-      return;
-    }
+    if (!book) return;
 
-    // Handle location objects (from highlights or normal navigation)
+    // Extract the CFI based on the location type
     let cfi: string;
-    
-    if (location.start) {
-      // Normal navigation location object
+    let percentage = 0;
+
+    if (typeof location === 'string') {
+      // Handle string locations (from bookmarks)
+      cfi = location;
+    } else if (location.start?.cfi) {
+      // Handle normal navigation location objects
       cfi = location.start.cfi;
+      percentage = location.start.percentage || 0;
     } else if (location.cfiRange) {
-      // Highlight location object
+      // Handle highlight location objects
       cfi = location.cfiRange;
     } else {
       console.warn('Unrecognized location format:', location);
       return;
     }
 
-    if (!cfi) {
-      console.warn('No CFI found in location:', location);
-      return;
-    }
-
     setCurrentLocation(cfi);
     saveProgress(cfi);
-
-    if (!book) return;
 
     // Get current spine item (chapter)
     const currentSpineItem = book.spine.get(cfi);
@@ -78,22 +71,18 @@ export const useBookProgress = () => {
 
     // Calculate overall book progress
     const spineProgress = spineIndex / totalSpineItems;
-    const locationProgress = location.start?.percentage || 0;
-    const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
+    const overallProgress = (spineProgress + (percentage / totalSpineItems)) * 100;
 
     setProgress({
       book: Math.min(100, Math.max(0, Math.round(overallProgress)))
     });
 
-    // Calculate chapter pages based on the rendition's layout
-    if (currentSpineItem && location.start?.displayed) {
-      const totalPages = location.start.displayed.total || 1;
-      const currentPage = location.start.displayed.page || 1;
-
+    // Update page info if available
+    if (location.start?.displayed) {
       setPageInfo(prev => ({
         ...prev,
-        chapterCurrent: currentPage,
-        chapterTotal: totalPages
+        chapterCurrent: location.start.displayed.page || 1,
+        chapterTotal: location.start.displayed.total || 1
       }));
     }
   };
