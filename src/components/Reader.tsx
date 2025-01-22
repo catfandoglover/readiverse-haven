@@ -157,7 +157,8 @@ const Reader = ({ metadata }: ReaderProps) => {
             const excerpt = text.slice(start, end);
 
             try {
-              const cfi = item.cfiBase + "!" + index;
+              // Construct a proper CFI using the spine item's cfiBase
+              const cfi = `${item.cfiBase}!/4/2[${item.href}],/1:${index},/1:${index + query.length}`;
               console.log('Generated CFI:', cfi);
               
               results.push({ 
