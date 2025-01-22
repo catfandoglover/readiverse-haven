@@ -16,6 +16,21 @@ const Index = () => {
     hasEpubUrl: book?.epub_file_url ? 'yes' : 'no'
   });
 
+  // If no slug is provided, show the upload screen directly
+  if (!bookSlug) {
+    return (
+      <div className="min-h-screen">
+        <Reader 
+          metadata={{
+            coverUrl: "/placeholder.svg",
+            title: "Upload a Book",
+            author: ""
+          }}
+        />
+      </div>
+    );
+  }
+
   // Early return for loading state
   if (isLoading) {
     return (
@@ -54,24 +69,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {isLoading ? (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-lg">Loading...</div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Book Not Found</h2>
-            <p className="text-gray-600">Sorry, we couldn't find the book you're looking for.</p>
-            {/* Add a return to home link */}
-            <a href="/" className="mt-4 inline-block text-blue-500 hover:underline">
-              Return to Home
-            </a>
-          </div>
-        </div>
-      ) : (
-        <Reader metadata={bookMetadata} preloadedBookUrl={book?.epub_file_url} isLoading={isLoading} />
-      )}
+      <Reader metadata={bookMetadata} preloadedBookUrl={book?.epub_file_url} isLoading={isLoading} />
     </div>
   );
 };
