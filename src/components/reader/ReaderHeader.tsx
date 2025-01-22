@@ -2,11 +2,12 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import SearchDialog from "./SearchDialog";
+import type { SearchResult } from '@/types/reader';
 
 interface ReaderHeaderProps {
   externalLink: string | null;
-  onSearch: (query: string) => Promise<{ cfi: string; excerpt: string; }[]>;
-  onSearchResultClick: (cfi: string) => void;
+  onSearch: (query: string) => Promise<SearchResult[]>;
+  onSearchResultClick: (result: SearchResult) => void;
 }
 
 const ReaderHeader = ({

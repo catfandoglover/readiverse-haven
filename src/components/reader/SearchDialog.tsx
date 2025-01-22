@@ -11,13 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-
-interface SearchResult {
-  href: string;
-  excerpt: string;
-  chapterTitle?: string;
-  spineIndex?: number;
-}
+import type { SearchResult } from "@/types/reader";
 
 interface SearchDialogProps {
   onSearch: (query: string) => Promise<SearchResult[]>;

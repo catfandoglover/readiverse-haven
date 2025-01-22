@@ -11,6 +11,13 @@ export interface ReaderProps {
   metadata: BookMetadata;
 }
 
+export interface SearchResult {
+  href: string;
+  excerpt: string;
+  chapterTitle?: string;
+  spineIndex?: number;
+}
+
 export interface ReaderControlsProps {
   fontSize: number;
   onFontSizeChange: (value: number[]) => void;
