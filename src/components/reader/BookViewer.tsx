@@ -38,8 +38,6 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const [touchStartTime, setTouchStartTime] = useState(0);
-  const [lastProcessedSelection, setLastProcessedSelection] = useState('');
 
   const {
     rendition,
@@ -83,27 +81,22 @@ const BookViewer = ({
     const epubContainer = document.querySelector(".epub-view");
     if (!epubContainer || !rendition) return;
 
-    const processSelection = (content: any) => {
-      if (!content?.window?.getSelection) return null;
+    const handleTextSelection = (content: any) => {
+      if (!content?.window?.getSelection) return;
       
       const selection = content.window.getSelection();
-      if (!selection || !selection.toString().trim()) return null;
-
-      const selectionText = selection.toString().trim();
-      // Prevent processing the same selection multiple times
-      if (selectionText === lastProcessedSelection) return null;
+      if (!selection || !selection.toString().trim()) return;
 
       try {
         const range = selection.getRangeAt(0);
         const cfi = content.cfiFromRange(range);
+        const text = selection.toString().trim();
         
-        if (onTextSelect && cfi) {
-          setLastProcessedSelection(selectionText);
-          onTextSelect(cfi, selectionText);
+        if (onTextSelect && cfi && text) {
+          onTextSelect(cfi, text);
           toast({
             description: "Text highlighted successfully",
           });
-          // Clear the selection after highlighting
           selection.removeAllRanges();
         }
       } catch (error) {
@@ -115,45 +108,20 @@ const BookViewer = ({
       }
     };
 
-    const handleTouchStart = () => {
-      setTouchStartTime(Date.now());
-    };
-
-    const handleTouchEnd = () => {
-      const touchDuration = Date.now() - touchStartTime;
-      // Only process short touches to avoid conflicting with scrolling
-      if (touchDuration < 500) return;
-
-      const contents = rendition.getContents();
-      if (!contents) return;
-
-      const contentsArray = Array.isArray(contents) ? contents : [contents];
-      contentsArray.forEach(processSelection);
-    };
-
     const handleSelectionChange = () => {
       const contents = rendition.getContents();
       if (!contents) return;
 
       const contentsArray = Array.isArray(contents) ? contents : [contents];
-      contentsArray.forEach(processSelection);
+      contentsArray.forEach(handleTextSelection);
     };
 
-    epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-    epubContainer.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('selectionchange', handleSelectionChange);
-
-    // Prevent default context menu to avoid interference with highlighting
-    epubContainer.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
+    rendition.on("selected", handleSelectionChange);
 
     return () => {
-      epubContainer.removeEventListener('touchstart', handleTouchStart);
-      epubContainer.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('selectionchange', handleSelectionChange);
+      rendition.off("selected", handleSelectionChange);
     };
-  }, [container, rendition, onTextSelect, touchStartTime, lastProcessedSelection]);
+  }, [rendition, onTextSelect]);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -242,7 +210,7 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      <ViewerContainer theme={theme} />
+      <ViewerContainer theme={theme} setContainer={setContainer} />
     </div>
   );
 };
