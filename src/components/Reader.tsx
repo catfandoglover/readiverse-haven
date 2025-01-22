@@ -30,13 +30,6 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
-  cfi?: string;
-  textNode?: Text;
-  textOffset?: number;
-}
-
-interface ExtendedBook extends Book {
-  epubcfi: (range: Range, base?: string) => { toString: () => string };
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -101,20 +94,14 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      if (result.cfi) {
-        // If we have a precise CFI location, use it
-        await rendition.display(result.cfi);
-        return;
-      }
-
-      // Fallback to spine index navigation if available
+      // Try to navigate using spine index first if available
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
         return;
       }
 
-      // Last resort: href navigation
+      // Fallback to href navigation
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
@@ -158,7 +145,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             continue;
           }
 
-          const doc = content as unknown as Document;
+          const doc = content as { documentElement: { textContent: string; querySelector: (selector: string) => Element | null } };
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -179,56 +166,17 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
-            // Find the text node and offset for precise navigation
-            let currentNode = doc.documentElement.firstChild as Node;
-            let currentOffset = 0;
-            let targetNode: Text | null = null;
-            let targetOffset = 0;
+            const start = Math.max(0, index - 40);
+            const end = Math.min(text.length, index + query.length + 40);
+            const excerpt = text.slice(start, end);
 
-            // Walk through text nodes to find the one containing our search result
-            const walkNodes = (node: Node) => {
-              if (node.nodeType === Node.TEXT_NODE) {
-                const nodeText = node.textContent?.toLowerCase() || '';
-                if (currentOffset <= index && currentOffset + nodeText.length > index) {
-                  targetNode = node as Text;
-                  targetOffset = index - currentOffset;
-                  return true;
-                }
-                currentOffset += nodeText.length;
-              }
-              
-              let child = node.firstChild;
-              while (child) {
-                if (walkNodes(child)) return true;
-                child = child.nextSibling;
-              }
-              return false;
-            };
-
-            walkNodes(doc.documentElement);
-
-            if (targetNode) {
-              const range = document.createRange();
-              range.setStart(targetNode, targetOffset);
-              range.setEnd(targetNode, targetOffset + query.length);
-              
-              const extendedBook = book as ExtendedBook;
-              const cfi = extendedBook.epubcfi(range, item.cfiBase).toString();
-
-              const start = Math.max(0, index - 40);
-              const end = Math.min(text.length, index + query.length + 40);
-              const excerpt = text.slice(start, end);
-
-              results.push({
-                href: item.href,
-                excerpt: `...${excerpt}...`,
-                chapterTitle,
-                spineIndex: item.index,
-                cfi,
-                textNode: targetNode,
-                textOffset: targetOffset
-              });
-            }
+            // Store both href and spine index for more reliable navigation
+            results.push({
+              href: item.href,
+              excerpt: `...${excerpt}...`,
+              chapterTitle,
+              spineIndex: item.index
+            });
             
             lastIndex = index + 1;
           }
