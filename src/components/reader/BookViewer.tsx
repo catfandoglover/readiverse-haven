@@ -40,6 +40,8 @@ const BookViewer = ({
   const [container, setContainer] = useState<Element | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [touchStartTime, setTouchStartTime] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchStartY, setTouchStartY] = useState(0);
 
   const {
     rendition,
@@ -101,14 +103,26 @@ const BookViewer = ({
     if (epubContainer) {
       setContainer(epubContainer);
 
-      // Add touch event handlers for mobile highlighting
       const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        
+        const touch = e.touches[0];
         setTouchStartTime(Date.now());
+        setTouchStartX(touch.clientX);
+        setTouchStartY(touch.clientY);
         setIsSelecting(false);
       };
 
       const handleTouchMove = (e: TouchEvent) => {
-        if (Date.now() - touchStartTime > 500) {
+        if (e.touches.length !== 1) return;
+        
+        const touch = e.touches[0];
+        const deltaX = Math.abs(touch.clientX - touchStartX);
+        const deltaY = Math.abs(touch.clientY - touchStartY);
+        const timeDiff = Date.now() - touchStartTime;
+
+        // If the user has been touching for more than 500ms and hasn't moved much horizontally
+        if (timeDiff > 500 && deltaX < 20) {
           setIsSelecting(true);
           // Prevent scrolling while selecting text
           if (isSelecting) {
@@ -130,15 +144,25 @@ const BookViewer = ({
             
             const selection = content.window.getSelection();
             if (selection && selection.toString().trim()) {
-              const range = selection.getRangeAt(0);
-              const cfiRange = rendition.location.start.cfi;
-              if (onTextSelect && cfiRange) {
-                onTextSelect(cfiRange, selection.toString().trim());
+              try {
+                const range = selection.getRangeAt(0);
+                const cfi = content.cfiFromRange(range);
+                
+                if (onTextSelect && cfi) {
+                  onTextSelect(cfi, selection.toString().trim());
+                  toast({
+                    description: "Text highlighted successfully",
+                  });
+                }
+              } catch (error) {
+                console.error('Error creating highlight:', error);
                 toast({
-                  description: "Text highlighted successfully",
+                  variant: "destructive",
+                  description: "Failed to create highlight",
                 });
+              } finally {
+                selection.removeAllRanges();
               }
-              selection.removeAllRanges();
             }
           });
         }
@@ -155,7 +179,7 @@ const BookViewer = ({
         epubContainer.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [container, rendition, onTextSelect, touchStartTime, isSelecting]);
+  }, [container, rendition, onTextSelect, touchStartTime, isSelecting, touchStartX, touchStartY]);
 
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
