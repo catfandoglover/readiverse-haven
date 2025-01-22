@@ -38,6 +38,7 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
+  const [lastSelectionTime, setLastSelectionTime] = useState(0);
 
   const {
     rendition,
@@ -88,7 +89,10 @@ const BookViewer = ({
         const contents = rendition.getContents();
         if (!contents) return;
 
-        // Handle contents as an array or single item
+        const now = Date.now();
+        if (now - lastSelectionTime < 500) return; // Debounce selections
+        setLastSelectionTime(now);
+        
         const contentsArray = Array.isArray(contents) ? contents : [contents];
         
         contentsArray.forEach(content => {
@@ -117,18 +121,24 @@ const BookViewer = ({
         });
       };
 
-      // Add both selectionchange and mouseup events to catch all selection scenarios
+      // Add multiple event listeners to ensure we catch the selection
       document.addEventListener('selectionchange', handleSelection);
       epubContainer.addEventListener('mouseup', handleSelection);
       epubContainer.addEventListener('touchend', handleSelection);
+      epubContainer.addEventListener('contextmenu', (e) => {
+        // Prevent the default context menu on iOS
+        e.preventDefault();
+        handleSelection();
+      });
 
       return () => {
         document.removeEventListener('selectionchange', handleSelection);
         epubContainer.removeEventListener('mouseup', handleSelection);
         epubContainer.removeEventListener('touchend', handleSelection);
+        epubContainer.removeEventListener('contextmenu', handleSelection);
       };
     }
-  }, [container, rendition, onTextSelect]);
+  }, [container, rendition, onTextSelect, lastSelectionTime]);
 
   useEffect(() => {
     const initializeBook = async () => {
