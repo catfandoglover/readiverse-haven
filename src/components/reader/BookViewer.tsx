@@ -38,6 +38,7 @@ const BookViewer = ({
   const [container, setContainer] = useState<Element | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const {
     rendition,
@@ -65,14 +66,36 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   const handleTouchStart = (e: TouchEvent) => {
-    e.preventDefault();
-    setTouchStartX(e.touches[0].clientX);
-    setTouchStartY(e.touches[0].clientY);
+    console.log('Touch start event fired');
+    if (e.touches && e.touches[0]) {
+      setTouchStartX(e.touches[0].clientX);
+      setTouchStartY(e.touches[0].clientY);
+      setIsSwiping(true);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isSwiping && touchStartX !== null && touchStartY !== null) {
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      const deltaX = touchX - touchStartX;
+      const deltaY = Math.abs(touchY - touchStartY);
+      
+      // If horizontal movement is greater than vertical and exceeds threshold
+      if (Math.abs(deltaX) > 20 && deltaY < 50) {
+        e.preventDefault();
+      }
+    }
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    e.preventDefault();
-    if (!touchStartX || !touchStartY || !rendition) return;
+    console.log('Touch end event fired');
+    if (!touchStartX || !touchStartY || !rendition || !isSwiping) {
+      setIsSwiping(false);
+      setTouchStartX(null);
+      setTouchStartY(null);
+      return;
+    }
 
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
@@ -81,26 +104,26 @@ const BookViewer = ({
     const minSwipeDistance = 50;
     const maxVerticalOffset = 50;
 
-    // Only trigger swipe if horizontal movement is greater than vertical
-    // and vertical movement is less than maxVerticalOffset to prevent
-    // accidental swipes while scrolling
+    console.log('Swipe detected:', {
+      deltaX,
+      deltaY,
+      minSwipeDistance,
+      maxVerticalOffset
+    });
+
     if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalOffset) {
       if (deltaX > 0) {
+        console.log('Navigating to previous page');
         rendition.prev();
       } else {
+        console.log('Navigating to next page');
         rendition.next();
       }
     }
 
+    setIsSwiping(false);
     setTouchStartX(null);
     setTouchStartY(null);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    // Prevent default to avoid page scrolling while swiping
-    if (touchStartX !== null) {
-      e.preventDefault();
-    }
   };
 
   useEffect(() => {
@@ -138,18 +161,18 @@ const BookViewer = ({
     if (epubContainer) {
       setContainer(epubContainer);
 
-      // Add touch event listeners only on mobile
       if (isMobile) {
-        epubContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-        epubContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+        console.log('Setting up mobile touch handlers');
+        epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
         epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+        epubContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
       }
 
       return () => {
         if (isMobile) {
           epubContainer.removeEventListener('touchstart', handleTouchStart);
-          epubContainer.removeEventListener('touchend', handleTouchEnd);
           epubContainer.removeEventListener('touchmove', handleTouchMove);
+          epubContainer.removeEventListener('touchend', handleTouchEnd);
         }
       };
     }
