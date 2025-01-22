@@ -95,10 +95,28 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      // If we have a direct CFI, use it first
+      // If we have a direct CFI, use it first with specific display options
       if (result.cfi) {
         console.log('Navigating using CFI:', result.cfi);
-        await rendition.display(result.cfi);
+        await rendition.display(result.cfi, {
+          spreads: false, // Disable spreads to ensure proper centering
+          highlight: true // Enable highlighting of the target
+        });
+        
+        // After navigation, ensure the text is visible and centered
+        rendition.views().forEach(view => {
+          if (view) {
+            const element = view.element as HTMLElement;
+            const target = element.querySelector(`[data-epubcfi="${result.cfi}"]`);
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'center'
+              });
+            }
+          }
+        });
         return;
       }
 
