@@ -31,20 +31,32 @@ export const useBookProgress = () => {
   };
 
   const handleLocationChange = (location: any) => {
-    // Early return if location or its required properties are undefined
-    if (!location || !location.start) {
+    if (!location) {
       console.warn('Invalid location object received:', location);
       return;
     }
 
-    // If location is a string (like from bookmarks), use it directly
+    // Handle string locations (like from bookmarks)
     if (typeof location === 'string') {
       setCurrentLocation(location);
       saveProgress(location);
       return;
     }
 
-    const cfi = location.start.cfi;
+    // Handle location objects (from highlights or normal navigation)
+    let cfi: string;
+    
+    if (location.start) {
+      // Normal navigation location object
+      cfi = location.start.cfi;
+    } else if (location.cfiRange) {
+      // Highlight location object
+      cfi = location.cfiRange;
+    } else {
+      console.warn('Unrecognized location format:', location);
+      return;
+    }
+
     if (!cfi) {
       console.warn('No CFI found in location:', location);
       return;
@@ -66,7 +78,7 @@ export const useBookProgress = () => {
 
     // Calculate overall book progress
     const spineProgress = spineIndex / totalSpineItems;
-    const locationProgress = location.start.percentage || 0;
+    const locationProgress = location.start?.percentage || 0;
     const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
 
     setProgress({
@@ -74,7 +86,7 @@ export const useBookProgress = () => {
     });
 
     // Calculate chapter pages based on the rendition's layout
-    if (currentSpineItem && location.start.displayed) {
+    if (currentSpineItem && location.start?.displayed) {
       const totalPages = location.start.displayed.total || 1;
       const currentPage = location.start.displayed.page || 1;
 
