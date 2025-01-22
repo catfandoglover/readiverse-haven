@@ -120,7 +120,14 @@ const BookViewer = ({
       const handleTouchEnd = () => {
         if (isSelecting && rendition) {
           const contents = rendition.getContents();
-          contents.forEach(content => {
+          if (!contents) return;
+
+          // Handle contents as an array or single item
+          const contentsArray = Array.isArray(contents) ? contents : [contents];
+          
+          contentsArray.forEach(content => {
+            if (!content?.window?.getSelection) return;
+            
             const selection = content.window.getSelection();
             if (selection && selection.toString().trim()) {
               const range = selection.getRangeAt(0);
