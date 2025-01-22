@@ -33,18 +33,6 @@ interface SearchResult {
   cfi?: string;
 }
 
-// Extended type for EPUB.js Book to include package property
-interface ExtendedBook extends Book {
-  package: {
-    cfiFromHref: (href: string) => string;
-  };
-}
-
-// Extended type for EPUB.js Section to include cfiFromStart method
-interface ExtendedSection extends Section {
-  cfiFromStart: () => string;
-}
-
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
   const {
     book,
@@ -118,8 +106,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       
       if (spineItem) {
         // Generate a CFI for the start of the section
-        const extendedBook = book as unknown as ExtendedBook;
-        const cfi = extendedBook.package.cfiFromHref(result.href);
+        const cfi = book.package.cfiFromHref(result.href);
         if (cfi) {
           handleLocationChange(cfi);
           return;
@@ -128,7 +115,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
 
       // Fallback to spine index if everything else fails
       if (typeof result.spineIndex === 'number') {
-        const section = book.spine.get(result.spineIndex) as unknown as ExtendedSection;
+        const section = book.spine.get(result.spineIndex);
         if (section) {
           const cfi = section.cfiFromStart();
           handleLocationChange(cfi);
@@ -193,8 +180,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const excerpt = text.slice(start, end);
 
             // Generate a CFI for this specific location
-            const extendedBook = book as unknown as ExtendedBook;
-            const cfi = extendedBook.package.cfiFromHref(item.href);
+            const cfi = book.package.cfiFromHref(item.href);
 
             results.push({
               href: item.href,
