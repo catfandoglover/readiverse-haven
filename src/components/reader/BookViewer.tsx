@@ -8,7 +8,6 @@ import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
-import { useToast } from "@/components/ui/use-toast";
 
 interface BookViewerProps {
   book: Book;
@@ -33,7 +32,6 @@ const BookViewer = ({
   highlights = [],
   onTextSelect
 }: BookViewerProps) => {
-  const { toast } = useToast();
   const { theme } = useTheme();
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
@@ -41,7 +39,6 @@ const BookViewer = ({
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [isSwiping, setIsSwiping] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
 
   const {
     rendition,
@@ -69,11 +66,11 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   const handleTouchStart = (e: TouchEvent) => {
+    console.log('Touch start event fired');
     if (e.touches && e.touches[0]) {
       setTouchStartX(e.touches[0].clientX);
       setTouchStartY(e.touches[0].clientY);
       setIsSwiping(true);
-      setSwipeDirection(null);
     }
   };
 
@@ -84,19 +81,19 @@ const BookViewer = ({
       const deltaX = touchX - touchStartX;
       const deltaY = Math.abs(touchY - touchStartY);
       
+      // If horizontal movement is greater than vertical and exceeds threshold
       if (Math.abs(deltaX) > 20 && deltaY < 50) {
         e.preventDefault();
-        setSwipeDirection(deltaX > 0 ? 'right' : 'left');
       }
     }
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
+    console.log('Touch end event fired');
     if (!touchStartX || !touchStartY || !rendition || !isSwiping) {
       setIsSwiping(false);
       setTouchStartX(null);
       setTouchStartY(null);
-      setSwipeDirection(null);
       return;
     }
 
@@ -107,26 +104,26 @@ const BookViewer = ({
     const minSwipeDistance = 50;
     const maxVerticalOffset = 50;
 
+    console.log('Swipe detected:', {
+      deltaX,
+      deltaY,
+      minSwipeDistance,
+      maxVerticalOffset
+    });
+
     if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalOffset) {
       if (deltaX > 0) {
+        console.log('Navigating to previous page');
         rendition.prev();
-        toast({
-          description: "Previous page",
-          duration: 1000,
-        });
       } else {
+        console.log('Navigating to next page');
         rendition.next();
-        toast({
-          description: "Next page",
-          duration: 1000,
-        });
       }
     }
 
     setIsSwiping(false);
     setTouchStartX(null);
     setTouchStartY(null);
-    setSwipeDirection(null);
   };
 
   useEffect(() => {
@@ -165,6 +162,7 @@ const BookViewer = ({
       setContainer(epubContainer);
 
       if (isMobile) {
+        console.log('Setting up mobile touch handlers');
         epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
         epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
         epubContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -251,23 +249,6 @@ const BookViewer = ({
   return (
     <div className="relative">
       <ViewerContainer theme={theme} />
-      {isSwiping && swipeDirection && (
-        <div 
-          className={`fixed inset-0 bg-black/10 flex items-center ${
-            swipeDirection === 'right' ? 'justify-start' : 'justify-end'
-          } pointer-events-none z-50`}
-        >
-          <div className={`
-            ${swipeDirection === 'right' ? 'ml-4' : 'mr-4'}
-            bg-white/80 dark:bg-gray-800/80 
-            text-black dark:text-white 
-            px-3 py-2 rounded-lg
-            text-sm font-medium
-          `}>
-            {swipeDirection === 'right' ? '← Previous' : 'Next →'}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
