@@ -21,7 +21,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 
 interface SpineItem {
   href: string;
-  cfiBase: string;
   index?: number;
 }
 
@@ -30,7 +29,6 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
-  cfi?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -95,39 +93,13 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      if (result.cfi) {
-        console.log('Navigating using CFI:', result.cfi);
-        await rendition.display(result.cfi);
-        
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Use type assertion to access the current view
-        const views = (rendition as any).views?.();
-        const currentView = views?.[0];
-        
-        if (currentView?.document) {
-          const textNodes = currentView.document.evaluate(
-            `//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${result.excerpt.toLowerCase()}')]`,
-            currentView.document,
-            null,
-            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-            null
-          );
-          
-          if (textNodes.snapshotLength > 0) {
-            const node = textNodes.snapshotItem(0);
-            node?.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }
-        return;
-      }
-
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
         return;
       }
 
+      // Fallback to href navigation if no spine index
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
@@ -171,7 +143,6 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             continue;
           }
 
-          // Cast content to Document type to access DOM methods
           const doc = content as Document;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
@@ -197,62 +168,12 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Generate CFI for this specific match
-            try {
-              // Access the underlying book object which has the package property
-              const bookWithPackage = book as unknown as { package: { cfiFromRange: (range: Range) => string } };
-              const range = document.createRange();
-              
-              // Find the text node containing our match
-              const walker = document.createTreeWalker(
-                doc.documentElement,
-                NodeFilter.SHOW_TEXT,
-                null
-              );
-
-              let node: Node | null = walker.nextNode();
-              let currentPos = 0;
-
-              // Find the text node containing our match
-              while (node) {
-                const nodeLength = node.textContent?.length || 0;
-                if (currentPos + nodeLength > start) {
-                  range.setStart(node, start - currentPos);
-                  range.setEnd(node, Math.min(end - currentPos, nodeLength));
-                  break;
-                }
-                currentPos += nodeLength;
-                node = walker.nextNode();
-              }
-
-              if (node && bookWithPackage.package) {
-                const cfi = bookWithPackage.package.cfiFromRange(range);
-                results.push({
-                  href: item.href,
-                  excerpt: `...${excerpt}...`,
-                  chapterTitle,
-                  spineIndex: item.index,
-                  cfi
-                });
-              } else {
-                // Fallback without CFI
-                results.push({
-                  href: item.href,
-                  excerpt: `...${excerpt}...`,
-                  chapterTitle,
-                  spineIndex: item.index
-                });
-              }
-            } catch (cfiError) {
-              console.error('Error generating CFI:', cfiError);
-              // Fallback without CFI if generation fails
-              results.push({
-                href: item.href,
-                excerpt: `...${excerpt}...`,
-                chapterTitle,
-                spineIndex: item.index
-              });
-            }
+            results.push({
+              href: item.href,
+              excerpt: `...${excerpt}...`,
+              chapterTitle,
+              spineIndex: item.index
+            });
             
             lastIndex = index + 1;
           }
