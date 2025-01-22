@@ -29,6 +29,7 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
+  location?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -93,13 +94,18 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
+      if (result.location) {
+        console.log('Navigating using location:', result.location);
+        await rendition.display(result.location);
+        return;
+      }
+
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
         return;
       }
 
-      // Fallback to href navigation if no spine index
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
@@ -136,8 +142,13 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       for (const item of spine.items) {
         try {
           console.log('Processing spine item:', item.href);
-          const content = await book.load(item.href);
-          
+          const section = await book.spine.get(item.href);
+          if (!section) {
+            console.log('No section found for:', item.href);
+            continue;
+          }
+
+          const content = await section.load();
           if (!content || typeof content !== 'object') {
             console.log('Invalid content for:', item.href);
             continue;
@@ -168,12 +179,51 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            results.push({
-              href: item.href,
-              excerpt: `...${excerpt}...`,
-              chapterTitle,
-              spineIndex: item.index
-            });
+            // Get the location using section.cfiFromRange
+            const range = document.createRange();
+            const textNodes = doc.evaluate(
+              '//text()',
+              doc,
+              null,
+              XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+              null
+            );
+
+            let currentPos = 0;
+            let targetNode = null;
+            let targetOffset = 0;
+
+            for (let i = 0; i < textNodes.snapshotLength; i++) {
+              const node = textNodes.snapshotItem(i);
+              const nodeText = node?.textContent || '';
+              if (currentPos + nodeText.length > index) {
+                targetNode = node;
+                targetOffset = index - currentPos;
+                break;
+              }
+              currentPos += nodeText.length;
+            }
+
+            if (targetNode) {
+              range.setStart(targetNode, targetOffset);
+              range.setEnd(targetNode, targetOffset + query.length);
+              const location = section.cfiFromRange(range);
+
+              results.push({
+                href: item.href,
+                excerpt: `...${excerpt}...`,
+                chapterTitle,
+                spineIndex: item.index,
+                location
+              });
+            } else {
+              results.push({
+                href: item.href,
+                excerpt: `...${excerpt}...`,
+                chapterTitle,
+                spineIndex: item.index
+              });
+            }
             
             lastIndex = index + 1;
           }
