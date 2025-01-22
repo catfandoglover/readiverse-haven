@@ -25,14 +25,14 @@ interface SpineItem {
   index?: number;
 }
 
-interface DocumentContent {
-  documentElement: {
-    textContent: string;
-    querySelector: (selector: string) => Element | null;
-  };
+interface SearchResult {
+  href: string;
+  excerpt: string;
+  chapterTitle?: string;
+  spineIndex?: number;
 }
 
-const Reader = ({ metadata }: ReaderProps) => {
+const Reader: React.FC<ReaderProps> = ({ metadata }) => {
   const {
     book,
     setBook,
@@ -85,39 +85,46 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
-  const handleSearchResultClick = (href: string) => {
-    console.log('Navigating to href:', href);
-    if (rendition && book) {
-      try {
-        // Navigate directly to the href
-        rendition.display(href).catch(error => {
-          console.error('Failed to navigate directly:', error);
-          
-          // Fallback: try to find the spine item and use its index
-          const spine = book.spine as unknown as { items: SpineItem[] };
-          const spineItem = spine?.items?.find(item => item.href === href);
-          
-          if (spineItem && typeof spineItem.index === 'number') {
-            console.log('Falling back to spine index:', spineItem.index);
-            rendition.display(spineItem.index);
-          } else {
-            console.error('Could not find spine item for href:', href);
-          }
-        });
-      } catch (error) {
-        console.error('Navigation error:', error);
+  const handleSearchResultClick = async (result: SearchResult) => {
+    if (!rendition || !book) {
+      console.error('Rendition or book not available');
+      return;
+    }
+
+    console.log('Navigating with result:', result);
+
+    try {
+      // Try to navigate using spine index first if available
+      if (typeof result.spineIndex === 'number') {
+        console.log('Navigating using spine index:', result.spineIndex);
+        await rendition.display(result.spineIndex);
+        return;
       }
+
+      // Fallback to href navigation
+      console.log('Attempting href navigation:', result.href);
+      const spine = book.spine as unknown as { items: SpineItem[] };
+      const spineItem = spine?.items?.find(item => item.href === result.href);
+
+      if (spineItem?.index !== undefined) {
+        console.log('Found spine item, navigating to index:', spineItem.index);
+        await rendition.display(spineItem.index);
+      } else {
+        console.error('Could not find spine item for href:', result.href);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
     }
   };
 
-  const handleSearch = async (query: string): Promise<{ cfi: string; excerpt: string; chapterTitle?: string }[]> => {
+  const handleSearch = async (query: string): Promise<SearchResult[]> => {
     console.log('Starting search for query:', query);
     if (!book || !rendition) {
       console.log('Book or rendition not available');
       return [];
     }
 
-    const results: { cfi: string; excerpt: string; chapterTitle?: string }[] = [];
+    const results: SearchResult[] = [];
     
     try {
       const spine = book.spine as unknown as { items: SpineItem[] };
@@ -138,7 +145,7 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          const doc = content as DocumentContent;
+          const doc = content as { documentElement: { textContent: string; querySelector: (selector: string) => Element | null } };
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -163,10 +170,12 @@ const Reader = ({ metadata }: ReaderProps) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
+            // Store both href and spine index for more reliable navigation
             results.push({
-              cfi: item.href,  // Store the href for navigation
+              href: item.href,
               excerpt: `...${excerpt}...`,
-              chapterTitle
+              chapterTitle,
+              spineIndex: item.index
             });
             
             lastIndex = index + 1;
@@ -190,30 +199,6 @@ const Reader = ({ metadata }: ReaderProps) => {
 
   const sessionTime = useSessionTimer(isReading);
   useLocationPersistence(book, currentLocation);
-
-  const handleLocationSelect = (location: string) => {
-    if (rendition) {
-      const container = document.querySelector(".epub-view");
-      if (container) {
-        rendition.display(location).then(() => {
-          setTimeout(() => {
-            rendition.resize(container.clientWidth, container.clientHeight);
-            rendition.display(location);
-          }, 100);
-        });
-      }
-    }
-  };
-
-  const handleTextSelect = (cfiRange: string, text: string) => {
-    addHighlight(cfiRange, text);
-  };
-
-  const handleTocNavigation = (href: string) => {
-    if (rendition) {
-      rendition.display(href);
-    }
-  };
 
   return (
     <ThemeProvider>
@@ -248,12 +233,12 @@ const Reader = ({ metadata }: ReaderProps) => {
                 onTextAlignChange={setTextAlign}
                 onBrightnessChange={handleBrightnessChange}
                 onBookmarkClick={handleBookmarkClick}
-                onLocationChange={handleLocationSelect}
+                onLocationChange={handleLocationChange}
                 onPrevPage={handlePrevPage}
                 onNextPage={handleNextPage}
-                onTocNavigate={handleTocNavigation}
+                onTocNavigate={href => rendition?.display(href)}
                 onRenditionReady={handleRenditionReady}
-                onTextSelect={handleTextSelect}
+                onTextSelect={(cfiRange, text) => addHighlight(cfiRange, text)}
                 setShowBookmarkDialog={setShowBookmarkDialog}
                 handleRemoveBookmark={handleRemoveBookmark}
                 setSelectedColor={setSelectedColor}

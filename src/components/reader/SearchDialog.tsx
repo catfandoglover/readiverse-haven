@@ -13,14 +13,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
 interface SearchResult {
-  cfi: string;
+  href: string;
   excerpt: string;
   chapterTitle?: string;
+  spineIndex?: number;
 }
 
 interface SearchDialogProps {
   onSearch: (query: string) => Promise<SearchResult[]>;
-  onResultClick: (cfi: string) => void;
+  onResultClick: (result: SearchResult) => void;
 }
 
 const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
@@ -54,8 +55,8 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
     }
   };
 
-  const handleResultClick = (cfi: string) => {
-    onResultClick(cfi);
+  const handleResultClick = (result: SearchResult) => {
+    onResultClick(result);
     setIsOpen(false);
   };
 
@@ -120,7 +121,7 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                 {results.map((result, index) => (
                   <button
                     key={index}
-                    onClick={() => handleResultClick(result.cfi)}
+                    onClick={() => handleResultClick(result)}
                     className="w-full text-left px-4 py-3 hover:bg-accent rounded-md transition-colors flex flex-col gap-1"
                   >
                     <span className="text-sm font-bold">
