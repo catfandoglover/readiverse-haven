@@ -155,7 +155,8 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             continue;
           }
 
-          const doc = content as { documentElement: { textContent: string; querySelector: (selector: string) => Element | null } };
+          // Cast content to Document type to access DOM methods
+          const doc = content as Document;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -164,7 +165,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
           let chapterTitle = "Unknown Chapter";
           const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
           if (headingElement) {
-            chapterTitle = headingElement.textContent.trim();
+            chapterTitle = headingElement.textContent?.trim() || "Unknown Chapter";
           }
 
           const textContent = doc.documentElement.textContent || '';
@@ -182,22 +183,52 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
 
             // Generate CFI for this specific match
             try {
+              // Access the underlying book object which has the package property
+              const bookWithPackage = book as unknown as { package: { cfiFromRange: (range: Range) => string } };
               const range = document.createRange();
-              const textNode = doc.documentElement.firstChild;
-              if (textNode) {
-                range.setStart(textNode, start);
-                range.setEnd(textNode, end);
-                const cfi = book.package.cfiFromRange(range);
+              
+              // Find the text node containing our match
+              const walker = document.createTreeWalker(
+                doc.documentElement,
+                NodeFilter.SHOW_TEXT,
+                null
+              );
 
+              let node: Node | null = walker.nextNode();
+              let currentPos = 0;
+
+              // Find the text node containing our match
+              while (node) {
+                const nodeLength = node.textContent?.length || 0;
+                if (currentPos + nodeLength > start) {
+                  range.setStart(node, start - currentPos);
+                  range.setEnd(node, Math.min(end - currentPos, nodeLength));
+                  break;
+                }
+                currentPos += nodeLength;
+                node = walker.nextNode();
+              }
+
+              if (node && bookWithPackage.package) {
+                const cfi = bookWithPackage.package.cfiFromRange(range);
                 results.push({
                   href: item.href,
                   excerpt: `...${excerpt}...`,
                   chapterTitle,
                   spineIndex: item.index,
-                  cfi: cfi
+                  cfi
+                });
+              } else {
+                // Fallback without CFI
+                results.push({
+                  href: item.href,
+                  excerpt: `...${excerpt}...`,
+                  chapterTitle,
+                  spineIndex: item.index
                 });
               }
             } catch (cfiError) {
+              console.error('Error generating CFI:', cfiError);
               // Fallback without CFI if generation fails
               results.push({
                 href: item.href,
