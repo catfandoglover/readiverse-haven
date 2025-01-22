@@ -65,40 +65,29 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   useEffect(() => {
-    const handleRemoveHighlight = (event: CustomEvent) => {
-      if (rendition && event.detail?.cfiRange) {
-        rendition.annotations.remove(event.detail.cfiRange, "highlight");
-      }
-    };
+    if (!rendition) return;
 
-    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
-    return () => {
-      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
-    };
-  }, [rendition]);
-
-  useEffect(() => {
-    const epubContainer = document.querySelector(".epub-view");
-    if (!epubContainer || !rendition) return;
-
-    const handleTextSelection = (content: any) => {
-      if (!content?.window?.getSelection) return;
-      
-      const selection = content.window.getSelection();
-      if (!selection || !selection.toString().trim()) return;
-
+    const handleTextSelection = (cfiRange: string, contents: any) => {
       try {
-        const range = selection.getRangeAt(0);
-        const cfi = content.cfiFromRange(range);
+        const selection = contents.window.getSelection();
+        if (!selection) return;
+
         const text = selection.toString().trim();
-        
-        if (onTextSelect && cfi && text) {
-          onTextSelect(cfi, text);
-          toast({
-            description: "Text highlighted successfully",
-          });
+        if (!text || !onTextSelect) return;
+
+        // Create a range to get the selected text
+        const range = selection.getRangeAt(0);
+        if (!range) return;
+
+        onTextSelect(cfiRange, text);
+        toast({
+          description: "Text highlighted successfully",
+        });
+
+        // Clear the selection after a short delay to allow the iOS menu to close
+        setTimeout(() => {
           selection.removeAllRanges();
-        }
+        }, 100);
       } catch (error) {
         console.error('Error creating highlight:', error);
         toast({
@@ -108,18 +97,11 @@ const BookViewer = ({
       }
     };
 
-    const handleSelectionChange = () => {
-      const contents = rendition.getContents();
-      if (!contents) return;
-
-      const contentsArray = Array.isArray(contents) ? contents : [contents];
-      contentsArray.forEach(handleTextSelection);
-    };
-
-    rendition.on("selected", handleSelectionChange);
+    // Use the epub.js "selected" event which works better with iOS
+    rendition.on("selected", handleTextSelection);
 
     return () => {
-      rendition.off("selected", handleSelectionChange);
+      rendition.off("selected", handleTextSelection);
     };
   }, [rendition, onTextSelect]);
 
