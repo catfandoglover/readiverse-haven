@@ -45,6 +45,10 @@ export const useBookProgress = () => {
     if (typeof location === 'string') {
       // Handle string locations (from bookmarks)
       cfi = location;
+      // When it's a string location (bookmark/highlight), we need to navigate to it
+      if (book.rendition) {
+        book.rendition.display(cfi);
+      }
     } else if (location.start?.cfi) {
       // Handle normal navigation location objects
       cfi = location.start.cfi;
@@ -52,6 +56,10 @@ export const useBookProgress = () => {
     } else if (location.cfiRange) {
       // Handle highlight location objects
       cfi = location.cfiRange;
+      // For highlights, we need to navigate to the location
+      if (book.rendition) {
+        book.rendition.display(cfi);
+      }
     } else {
       console.warn('Unrecognized location format:', location);
       return;
