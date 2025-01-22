@@ -3,6 +3,7 @@ import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
 import type Section from "epubjs/types/section";
 import type { Book } from "epubjs";
+import type { ExtendedBook } from "@/types/epub";
 import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderHeader from "./reader/ReaderHeader";
@@ -30,6 +31,7 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
+  cfi?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -94,14 +96,21 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
-      // Try to navigate using spine index first if available
+      // If we have a CFI, use it for precise navigation
+      if (result.cfi) {
+        console.log('Navigating using CFI:', result.cfi);
+        await rendition.display(result.cfi);
+        return;
+      }
+
+      // Fallback to spine index navigation
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
         return;
       }
 
-      // Fallback to href navigation
+      // Last resort: href navigation
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
@@ -125,6 +134,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     }
 
     const results: SearchResult[] = [];
+    const extendedBook = book as ExtendedBook;
     
     try {
       const spine = book.spine as unknown as { items: SpineItem[] };
@@ -145,19 +155,16 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             continue;
           }
 
-          const doc = content as { documentElement: { textContent: string; querySelector: (selector: string) => Element | null } };
-          if (!doc.documentElement) {
-            console.log('No document element found for:', item.href);
-            continue;
-          }
-
+          // Cast content to Document type for proper DOM access
+          const doc = content as unknown as Document;
+          
           let chapterTitle = "Unknown Chapter";
-          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          const headingElement = doc.querySelector('h1, h2, h3, h4, h5, h6');
           if (headingElement) {
-            chapterTitle = headingElement.textContent.trim();
+            chapterTitle = headingElement.textContent?.trim() || "Unknown Chapter";
           }
 
-          const textContent = doc.documentElement.textContent || '';
+          const textContent = doc.textContent || '';
           const text = textContent.toLowerCase();
           const searchQuery = query.toLowerCase();
           
@@ -166,17 +173,42 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
-            const start = Math.max(0, index - 40);
-            const end = Math.min(text.length, index + query.length + 40);
-            const excerpt = text.slice(start, end);
+            // Find the text node containing our search result
+            const treeWalker = document.createTreeWalker(
+              doc.body,
+              NodeFilter.SHOW_TEXT,
+              {
+                acceptNode: (node) => {
+                  return node.textContent?.toLowerCase().includes(searchQuery)
+                    ? NodeFilter.FILTER_ACCEPT
+                    : NodeFilter.FILTER_REJECT;
+                }
+              }
+            );
 
-            // Store both href and spine index for more reliable navigation
-            results.push({
-              href: item.href,
-              excerpt: `...${excerpt}...`,
-              chapterTitle,
-              spineIndex: item.index
-            });
+            let node: Node | null = null;
+            while (treeWalker.nextNode()) {
+              const currentNode = treeWalker.currentNode;
+              if (currentNode.textContent?.toLowerCase().indexOf(searchQuery) !== -1) {
+                node = currentNode;
+                break;
+              }
+            }
+
+            if (node) {
+              const cfi = extendedBook.epubcfi(node, 0, "");
+              const start = Math.max(0, index - 40);
+              const end = Math.min(text.length, index + query.length + 40);
+              const excerpt = text.slice(start, end);
+
+              results.push({
+                href: item.href,
+                excerpt: `...${excerpt}...`,
+                chapterTitle,
+                spineIndex: item.index,
+                cfi
+              });
+            }
             
             lastIndex = index + 1;
           }
