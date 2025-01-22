@@ -86,8 +86,21 @@ const Reader = ({ metadata }: ReaderProps) => {
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
   const handleSearchResultClick = (cfi: string) => {
+    console.log('Navigating to CFI:', cfi);
     if (rendition) {
-      rendition.display(cfi);
+      try {
+        // First try to display the CFI directly
+        rendition.display(cfi).catch(() => {
+          // If that fails, try to extract and navigate to just the section part
+          const sectionMatch = cfi.match(/^(.*?)\[.*?\]/);
+          if (sectionMatch && sectionMatch[1]) {
+            console.log('Falling back to section navigation:', sectionMatch[1]);
+            rendition.display(sectionMatch[1]);
+          }
+        });
+      } catch (error) {
+        console.error('Navigation error:', error);
+      }
     }
   };
 
@@ -130,7 +143,6 @@ const Reader = ({ metadata }: ReaderProps) => {
             continue;
           }
 
-          // Extract chapter title from the document
           let chapterTitle = "Unknown Chapter";
           const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
           if (headingElement) {
@@ -147,18 +159,13 @@ const Reader = ({ metadata }: ReaderProps) => {
             const index = text.indexOf(searchQuery, lastIndex);
             if (index === -1) break;
 
-            console.log('Found match:', {
-              index,
-              excerpt: text.slice(Math.max(0, index - 20), Math.min(text.length, index + query.length + 20))
-            });
-
             const start = Math.max(0, index - 40);
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
             try {
-              // Construct a proper CFI using the spine item's cfiBase
-              const cfi = `${item.cfiBase}!/4/2[${item.href}],/1:${index},/1:${index + query.length}`;
+              // Generate a simpler CFI that just points to the section
+              const cfi = `${item.cfiBase}!/4/2[${item.href}]`;
               console.log('Generated CFI:', cfi);
               
               results.push({ 
