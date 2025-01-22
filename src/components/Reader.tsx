@@ -142,13 +142,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       for (const item of spine.items) {
         try {
           console.log('Processing spine item:', item.href);
-          const section = await book.spine.get(item.href);
-          if (!section) {
-            console.log('No section found for:', item.href);
-            continue;
-          }
-
-          const content = await section.load();
+          const content = await book.load(item.href);
           if (!content || typeof content !== 'object') {
             console.log('Invalid content for:', item.href);
             continue;
@@ -179,51 +173,12 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Get the location using section.cfiFromRange
-            const range = document.createRange();
-            const textNodes = doc.evaluate(
-              '//text()',
-              doc,
-              null,
-              XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-              null
-            );
-
-            let currentPos = 0;
-            let targetNode = null;
-            let targetOffset = 0;
-
-            for (let i = 0; i < textNodes.snapshotLength; i++) {
-              const node = textNodes.snapshotItem(i);
-              const nodeText = node?.textContent || '';
-              if (currentPos + nodeText.length > index) {
-                targetNode = node;
-                targetOffset = index - currentPos;
-                break;
-              }
-              currentPos += nodeText.length;
-            }
-
-            if (targetNode) {
-              range.setStart(targetNode, targetOffset);
-              range.setEnd(targetNode, targetOffset + query.length);
-              const location = section.cfiFromRange(range);
-
-              results.push({
-                href: item.href,
-                excerpt: `...${excerpt}...`,
-                chapterTitle,
-                spineIndex: item.index,
-                location
-              });
-            } else {
-              results.push({
-                href: item.href,
-                excerpt: `...${excerpt}...`,
-                chapterTitle,
-                spineIndex: item.index
-              });
-            }
+            results.push({
+              href: item.href,
+              excerpt: `...${excerpt}...`,
+              chapterTitle,
+              spineIndex: item.index
+            });
             
             lastIndex = index + 1;
           }
