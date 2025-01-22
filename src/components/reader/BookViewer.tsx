@@ -8,6 +8,7 @@ import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookViewerProps {
   book: Book;
@@ -33,9 +34,12 @@ const BookViewer = ({
   onTextSelect
 }: BookViewerProps) => {
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [touchStartTime, setTouchStartTime] = useState(0);
 
   const {
     rendition,
@@ -96,8 +100,55 @@ const BookViewer = ({
     const epubContainer = document.querySelector(".epub-view");
     if (epubContainer) {
       setContainer(epubContainer);
+
+      // Add touch event handlers for mobile highlighting
+      const handleTouchStart = (e: TouchEvent) => {
+        setTouchStartTime(Date.now());
+        setIsSelecting(false);
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        if (Date.now() - touchStartTime > 500) {
+          setIsSelecting(true);
+          // Prevent scrolling while selecting text
+          if (isSelecting) {
+            e.preventDefault();
+          }
+        }
+      };
+
+      const handleTouchEnd = () => {
+        if (isSelecting && rendition) {
+          const contents = rendition.getContents();
+          contents.forEach(content => {
+            const selection = content.window.getSelection();
+            if (selection && selection.toString().trim()) {
+              const range = selection.getRangeAt(0);
+              const cfiRange = rendition.location.start.cfi;
+              if (onTextSelect && cfiRange) {
+                onTextSelect(cfiRange, selection.toString().trim());
+                toast({
+                  description: "Text highlighted successfully",
+                });
+              }
+              selection.removeAllRanges();
+            }
+          });
+        }
+        setIsSelecting(false);
+      };
+
+      epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+      epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      epubContainer.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        epubContainer.removeEventListener('touchstart', handleTouchStart);
+        epubContainer.removeEventListener('touchmove', handleTouchMove);
+        epubContainer.removeEventListener('touchend', handleTouchEnd);
+      };
     }
-  }, []);
+  }, [container, rendition, onTextSelect, touchStartTime, isSelecting]);
 
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
