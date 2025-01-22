@@ -94,32 +94,26 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     console.log('Navigating with result:', result);
 
     try {
+      if (result.location) {
+        console.log('Navigating using location:', result.location);
+        await rendition.display(result.location);
+        return;
+      }
+
       if (typeof result.spineIndex === 'number') {
         console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
-        
-        // After navigation, find and highlight the search text
-        const contents = rendition.getContents();
-        if (contents && contents[0]) {
-          const doc = contents[0].document;
-          const searchText = result.excerpt.replace(/\.{3}/g, '').trim();
-          
-          // Create a text finder
-          const finder = new window.FindInPage(doc);
-          finder.find(searchText);
+        return;
+      }
 
-          // Scroll the found text into view
-          const selection = doc.getSelection();
-          if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.startContainer.parentElement?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
-          }
-        }
+      console.log('Attempting href navigation:', result.href);
+      const spine = book.spine as unknown as { items: SpineItem[] };
+      const spineItem = spine?.items?.find(item => item.href === result.href);
+
+      if (spineItem?.index !== undefined) {
+        console.log('Found spine item, navigating to index:', spineItem.index);
+        await rendition.display(spineItem.index);
       } else {
-        console.log('Attempting href navigation:', result.href);
         await rendition.display(result.href);
       }
     } catch (error) {
@@ -259,48 +253,5 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
     </ThemeProvider>
   );
 };
-
-// Helper class for text finding
-class FindInPage {
-  private document: Document;
-
-  constructor(doc: Document) {
-    this.document = doc;
-  }
-
-  find(searchText: string): boolean {
-    const selection = this.document.getSelection();
-    if (!selection) return false;
-
-    // Clear any existing selection
-    selection.removeAllRanges();
-
-    // Create a TreeWalker to iterate through text nodes
-    const walker = this.document.createTreeWalker(
-      this.document.body,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
-
-    let node: Node | null = walker.nextNode();
-    while (node) {
-      const nodeText = node.textContent || '';
-      const index = nodeText.indexOf(searchText);
-      
-      if (index > -1) {
-        const range = this.document.createRange();
-        range.setStart(node, index);
-        range.setEnd(node, index + searchText.length);
-        
-        selection.addRange(range);
-        return true;
-      }
-      
-      node = walker.nextNode();
-    }
-
-    return false;
-  }
-}
 
 export default Reader;
