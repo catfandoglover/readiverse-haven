@@ -98,27 +98,6 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       if (result.cfi) {
         console.log('Navigating using CFI:', result.cfi);
         await rendition.display(result.cfi);
-        
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Use type assertion to access the current view
-        const views = (rendition as any).views?.();
-        const currentView = views?.[0];
-        
-        if (currentView?.document) {
-          const textNodes = currentView.document.evaluate(
-            `//text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '${result.excerpt.toLowerCase()}')]`,
-            currentView.document,
-            null,
-            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-            null
-          );
-          
-          if (textNodes.snapshotLength > 0) {
-            const node = textNodes.snapshotItem(0);
-            node?.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }
         return;
       }
 
@@ -164,28 +143,22 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       for (const item of spine.items) {
         try {
           console.log('Processing spine item:', item.href);
-          const content = await book.load(item.href);
+          const section = await book.spine.get(item.href);
+          const content = await section.load();
           
-          if (!content || typeof content !== 'object') {
+          if (!content || typeof content !== 'string') {
             console.log('Invalid content for:', item.href);
             continue;
           }
 
-          // Cast content to Document type to access DOM methods
-          const doc = content as Document;
-          if (!doc.documentElement) {
-            console.log('No document element found for:', item.href);
-            continue;
-          }
-
           let chapterTitle = "Unknown Chapter";
-          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          const doc = new DOMParser().parseFromString(content, 'text/html');
+          const headingElement = doc.querySelector('h1, h2, h3, h4, h5, h6');
           if (headingElement) {
             chapterTitle = headingElement.textContent?.trim() || "Unknown Chapter";
           }
 
-          const textContent = doc.documentElement.textContent || '';
-          const text = textContent.toLowerCase();
+          const text = content.toLowerCase();
           const searchQuery = query.toLowerCase();
           
           let lastIndex = 0;
@@ -198,54 +171,46 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const excerpt = text.slice(start, end);
 
             // Generate CFI for this specific match
-            try {
-              // Access the underlying book object which has the package property
-              const bookWithPackage = book as unknown as { package: { cfiFromRange: (range: Range) => string } };
-              const range = document.createRange();
+            const range = doc.createRange();
+            const textNodes = doc.evaluate(
+              '//text()',
+              doc.body,
+              null,
+              XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+              null
+            );
+
+            let currentPos = 0;
+            let targetNode = null;
+            let targetOffset = 0;
+
+            // Find the text node containing our match
+            for (let i = 0; i < textNodes.snapshotLength; i++) {
+              const node = textNodes.snapshotItem(i);
+              const nodeText = node?.textContent || '';
+              if (currentPos + nodeText.length > index) {
+                targetNode = node;
+                targetOffset = index - currentPos;
+                break;
+              }
+              currentPos += nodeText.length;
+            }
+
+            if (targetNode) {
+              range.setStart(targetNode, targetOffset);
+              range.setEnd(targetNode, targetOffset + query.length);
               
-              // Find the text node containing our match
-              const walker = document.createTreeWalker(
-                doc.documentElement,
-                NodeFilter.SHOW_TEXT,
-                null
-              );
+              const cfi = section.cfiFromRange(range);
 
-              let node: Node | null = walker.nextNode();
-              let currentPos = 0;
-
-              // Find the text node containing our match
-              while (node) {
-                const nodeLength = node.textContent?.length || 0;
-                if (currentPos + nodeLength > start) {
-                  range.setStart(node, start - currentPos);
-                  range.setEnd(node, Math.min(end - currentPos, nodeLength));
-                  break;
-                }
-                currentPos += nodeLength;
-                node = walker.nextNode();
-              }
-
-              if (node && bookWithPackage.package) {
-                const cfi = bookWithPackage.package.cfiFromRange(range);
-                results.push({
-                  href: item.href,
-                  excerpt: `...${excerpt}...`,
-                  chapterTitle,
-                  spineIndex: item.index,
-                  cfi
-                });
-              } else {
-                // Fallback without CFI
-                results.push({
-                  href: item.href,
-                  excerpt: `...${excerpt}...`,
-                  chapterTitle,
-                  spineIndex: item.index
-                });
-              }
-            } catch (cfiError) {
-              console.error('Error generating CFI:', cfiError);
-              // Fallback without CFI if generation fails
+              results.push({
+                href: item.href,
+                excerpt: `...${excerpt}...`,
+                chapterTitle,
+                spineIndex: item.index,
+                cfi
+              });
+            } else {
+              // Fallback without CFI
               results.push({
                 href: item.href,
                 excerpt: `...${excerpt}...`,
