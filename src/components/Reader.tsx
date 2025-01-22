@@ -34,6 +34,17 @@ interface ReaderProps {
 }
 
 const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
+interface ReaderProps {
+  metadata: {
+    coverUrl: string;
+    title: string;
+    author: string;
+  };
+  preloadedBookUrl?: string;
+  isLoading?: boolean;
+}
+
+const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
   const [isReading, setIsReading] = useState(false);
   const [toc, setToc] = useState<NavItem[]>([]);
   const [externalLink, setExternalLink] = useState<string | null>(null);
@@ -50,6 +61,7 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     handleLocationChange,
   } = useBookProgress();
 
+  const { handleFileUpload, loadBookFromUrl } = useFileHandler(
   const { handleFileUpload, loadBookFromUrl } = useFileHandler(
     setBook,
     setCurrentLocation,
@@ -113,6 +125,7 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     console.log('Current preloadedBookUrl:', preloadedBookUrl);
     console.log('Current isLoading state:', isLoading);
   }, [book, preloadedBookUrl, isLoading]);
+
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {

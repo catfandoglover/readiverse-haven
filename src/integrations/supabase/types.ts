@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       books: {
         Row: {
+<<<<<<< HEAD
           author: string | null
           cover_url: string | null
           created_at: string
@@ -60,6 +61,33 @@ export type Database = {
           id?: string
           title?: string
           url?: string
+=======
+          id: string
+          title: string
+          slug: string
+          author: string | null
+          cover_url: string | null
+          epub_file_url: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          author?: string | null
+          cover_url?: string | null
+          epub_file_url: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          author?: string | null
+          cover_url?: string | null
+          epub_file_url?: string
+          created_at?: string
+>>>>>>> 9ca1a8d1ef9d69d8e108ab95cc108112c9907887
         }
         Relationships: []
       }
