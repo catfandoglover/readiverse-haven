@@ -18,6 +18,7 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SpineItem {
   href: string;
@@ -30,9 +31,11 @@ interface SearchResult {
   chapterTitle?: string;
   spineIndex?: number;
   location?: string;
+  searchText: string;  // Added to store the actual matched text
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
+  const { toast } = useToast();
   const {
     book,
     setBook,
@@ -85,39 +88,88 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
 
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
+  const findTextInPage = (searchText: string): void => {
+    if (!rendition) return;
+
+    const contents = rendition.getContents();
+    if (!contents || !contents[0]) return;
+
+    const doc = contents[0].document;
+    if (!doc || !doc.body) return;
+
+    // Create a text node with the search text to normalize it the same way as the document
+    const searchTextNode = document.createTextNode(searchText);
+    const normalizedSearchText = searchTextNode.textContent?.toLowerCase() || '';
+
+    const walker = document.createTreeWalker(
+      doc.body,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node: Node | null = walker.nextNode();
+    while (node) {
+      const text = node.textContent?.toLowerCase() || '';
+      const index = text.indexOf(normalizedSearchText);
+      
+      if (index !== -1) {
+        // Found the text, now scroll it into view
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + normalizedSearchText.length);
+
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        // Get the parent element to scroll into view
+        const element = node.parentElement;
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Temporarily highlight the found text
+          const originalColor = element.style.backgroundColor;
+          element.style.backgroundColor = 'yellow';
+          setTimeout(() => {
+            element.style.backgroundColor = originalColor;
+          }, 2000);
+
+          break;
+        }
+      }
+      node = walker.nextNode();
+    }
+  };
+
   const handleSearchResultClick = async (result: SearchResult) => {
     if (!rendition || !book) {
       console.error('Rendition or book not available');
       return;
     }
 
-    console.log('Navigating with result:', result);
-
     try {
-      if (result.location) {
-        console.log('Navigating using location:', result.location);
-        await rendition.display(result.location);
-        return;
-      }
-
+      // First navigate to the correct chapter
       if (typeof result.spineIndex === 'number') {
-        console.log('Navigating using spine index:', result.spineIndex);
         await rendition.display(result.spineIndex);
-        return;
-      }
-
-      console.log('Attempting href navigation:', result.href);
-      const spine = book.spine as unknown as { items: SpineItem[] };
-      const spineItem = spine?.items?.find(item => item.href === result.href);
-
-      if (spineItem?.index !== undefined) {
-        console.log('Found spine item, navigating to index:', spineItem.index);
-        await rendition.display(spineItem.index);
-      } else {
+      } else if (result.href) {
         await rendition.display(result.href);
+      } else {
+        throw new Error('No valid navigation target');
       }
+
+      // After navigation completes, find and highlight the text
+      rendition.on('rendered', () => {
+        findTextInPage(result.searchText);
+      }, { once: true }); // Use once: true to ensure the event listener is removed after first use
+
     } catch (error) {
       console.error('Navigation error:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to navigate to the search result",
+      });
     }
   };
 
@@ -177,7 +229,8 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
               href: item.href,
               excerpt: `...${excerpt}...`,
               chapterTitle,
-              spineIndex: item.index
+              spineIndex: item.index,
+              searchText: query  // Store the actual search text
             });
             
             lastIndex = index + 1;
