@@ -4,11 +4,13 @@ import type { Theme } from '@/contexts/ThemeContext';
 interface ViewerContainerProps {
   theme: Theme;
   setContainer: (element: Element | null) => void;
+  isHighlightMode?: boolean;
 }
 
 const ViewerContainer: React.FC<ViewerContainerProps> = ({ 
   theme,
-  setContainer 
+  setContainer,
+  isHighlightMode = false
 }) => {
   return (
     <div 
@@ -17,9 +19,9 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       style={{ 
         background: theme.background,
         color: theme.text,
-        WebkitUserSelect: 'text',
-        userSelect: 'text',
-        WebkitTouchCallout: 'default',
+        WebkitUserSelect: isHighlightMode ? 'text' : 'none',
+        userSelect: isHighlightMode ? 'text' : 'none',
+        WebkitTouchCallout: isHighlightMode ? 'default' : 'none',
         touchAction: 'manipulation',
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
