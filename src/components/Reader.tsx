@@ -22,6 +22,9 @@ import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import type { NavItem } from "epubjs";
+import { useToast } from "@/hooks/use-toast";
+import { Toast } from "@/components/ui/toast.tsx";
+
 
 interface ReaderProps {
   metadata: {
@@ -50,12 +53,30 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     handleLocationChange,
   } = useBookProgress();
 
-  const { handleFileUpload, loadBookFromUrl } = useFileHandler(
+  const { toast } = useToast();
+
+  const { handleFileUpload: originalHandleFileUpload, loadBookFromUrl } = useFileHandler(
     setBook,
     setCurrentLocation,
     loadProgress,
     setPageInfo
   );
+
+  const handleFileUpload = async (file: File) => {
+    try {
+      await originalHandleFileUpload(file);
+      toast({
+        title: "Book loaded successfully",
+        description: `Now reading: ${file.name}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error loading book",
+        description: "Please try again with a valid EPUB file",
+        variant: "destructive",
+      });
+    }
+  };
 
   const {
     fontSize,
@@ -104,9 +125,15 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     
     if (preloadedBookUrl && !book) {
       console.log('Loading book from URL:', preloadedBookUrl);
-      loadBookFromUrl(preloadedBookUrl);
+      loadBookFromUrl(preloadedBookUrl).catch(() => {
+        toast({
+          title: "Error loading book",
+          description: "Unable to load the book from URL",
+          variant: "destructive",
+        });
+      });
     }
-  }, [preloadedBookUrl, loadBookFromUrl, book, isReading]);
+  }, [preloadedBookUrl, loadBookFromUrl, book, isReading, toast]);
 
   useEffect(() => {
     console.log('Current book state:', book);
