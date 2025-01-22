@@ -35,6 +35,10 @@ interface SearchResult {
   textOffset?: number;
 }
 
+interface ExtendedBook extends Book {
+  epubcfi: (range: Range, base?: string) => { toString: () => string };
+}
+
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
   const {
     book,
@@ -154,7 +158,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             continue;
           }
 
-          const doc = content as { documentElement: { textContent: string; querySelector: (selector: string) => Element | null } };
+          const doc = content as unknown as Document;
           if (!doc.documentElement) {
             console.log('No document element found for:', item.href);
             continue;
@@ -208,7 +212,8 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
               range.setStart(targetNode, targetOffset);
               range.setEnd(targetNode, targetOffset + query.length);
               
-              const cfi = new book.epubcfi(range, item.cfiBase).toString();
+              const extendedBook = book as ExtendedBook;
+              const cfi = extendedBook.epubcfi(range, item.cfiBase).toString();
 
               const start = Math.max(0, index - 40);
               const end = Math.min(text.length, index + query.length + 40);
