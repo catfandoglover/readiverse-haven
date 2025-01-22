@@ -30,6 +30,7 @@ interface SearchResult {
   excerpt: string;
   chapterTitle?: string;
   spineIndex?: number;
+  cfi?: string;
 }
 
 const Reader: React.FC<ReaderProps> = ({ metadata }) => {
@@ -86,18 +87,15 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
   const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
   const handleSearchResultClick = async (result: SearchResult) => {
-    if (!rendition || !book) {
-      console.error('Rendition or book not available');
+    if (!book || !rendition) {
+      console.error('Book or rendition not available');
       return;
     }
 
-    console.log('Navigating with result:', result);
-
     try {
-      // Try to navigate using spine index first if available
-      if (typeof result.spineIndex === 'number') {
-        console.log('Navigating using spine index:', result.spineIndex);
-        await rendition.display(result.spineIndex);
+      // If we have a CFI from the search result, use it directly
+      if (result.cfi) {
+        handleLocationChange(result.cfi);
         return;
       }
 
@@ -105,12 +103,23 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       console.log('Attempting href navigation:', result.href);
       const spine = book.spine as unknown as { items: SpineItem[] };
       const spineItem = spine?.items?.find(item => item.href === result.href);
+      
+      if (spineItem) {
+        // Generate a CFI for the start of the section
+        const cfi = book.package.cfiFromHref(result.href);
+        if (cfi) {
+          handleLocationChange(cfi);
+          return;
+        }
+      }
 
-      if (spineItem?.index !== undefined) {
-        console.log('Found spine item, navigating to index:', spineItem.index);
-        await rendition.display(spineItem.index);
-      } else {
-        console.error('Could not find spine item for href:', result.href);
+      // Fallback to spine index if everything else fails
+      if (typeof result.spineIndex === 'number') {
+        const section = book.spine.get(result.spineIndex);
+        if (section) {
+          const cfi = section.cfiFromStart();
+          handleLocationChange(cfi);
+        }
       }
     } catch (error) {
       console.error('Navigation error:', error);
@@ -170,12 +179,15 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
             const end = Math.min(text.length, index + query.length + 40);
             const excerpt = text.slice(start, end);
 
-            // Store both href and spine index for more reliable navigation
+            // Generate a CFI for this specific location
+            const cfi = book.package.cfiFromHref(item.href);
+
             results.push({
               href: item.href,
               excerpt: `...${excerpt}...`,
               chapterTitle,
-              spineIndex: item.index
+              spineIndex: item.index,
+              cfi
             });
             
             lastIndex = index + 1;
