@@ -7,6 +7,7 @@ import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
+import { useToast } from "@/components/ui/use-toast";
 import ViewerContainer from "./ViewerContainer";
 
 interface BookViewerProps {
@@ -33,12 +34,13 @@ const BookViewer = ({
   onTextSelect
 }: BookViewerProps) => {
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [isSwiping, setIsSwiping] = useState(false);
+  const [swipeOverlay, setSwipeOverlay] = useState<'left' | 'right' | null>(null);
 
   const {
     rendition,
@@ -66,34 +68,32 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   const handleTouchStart = (e: TouchEvent) => {
-    console.log('Touch start event fired');
     if (e.touches && e.touches[0]) {
       setTouchStartX(e.touches[0].clientX);
       setTouchStartY(e.touches[0].clientY);
-      setIsSwiping(true);
     }
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (isSwiping && touchStartX !== null && touchStartY !== null) {
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      const deltaX = touchX - touchStartX;
-      const deltaY = Math.abs(touchY - touchStartY);
-      
-      // If horizontal movement is greater than vertical and exceeds threshold
-      if (Math.abs(deltaX) > 20 && deltaY < 50) {
-        e.preventDefault();
-      }
+    if (!touchStartX || !touchStartY) return;
+
+    const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
+    const deltaX = touchX - touchStartX;
+    const deltaY = Math.abs(touchY - touchStartY);
+
+    // Only prevent default if horizontal swipe is detected
+    if (Math.abs(deltaX) > 20 && deltaY < 50) {
+      e.preventDefault();
+      setSwipeOverlay(deltaX > 0 ? 'right' : 'left');
     }
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    console.log('Touch end event fired');
-    if (!touchStartX || !touchStartY || !rendition || !isSwiping) {
-      setIsSwiping(false);
+    if (!touchStartX || !touchStartY || !rendition) {
       setTouchStartX(null);
       setTouchStartY(null);
+      setSwipeOverlay(null);
       return;
     }
 
@@ -104,26 +104,25 @@ const BookViewer = ({
     const minSwipeDistance = 50;
     const maxVerticalOffset = 50;
 
-    console.log('Swipe detected:', {
-      deltaX,
-      deltaY,
-      minSwipeDistance,
-      maxVerticalOffset
-    });
-
     if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalOffset) {
       if (deltaX > 0) {
-        console.log('Navigating to previous page');
         rendition.prev();
+        toast({
+          title: "Previous Page",
+          duration: 1000,
+        });
       } else {
-        console.log('Navigating to next page');
         rendition.next();
+        toast({
+          title: "Next Page",
+          duration: 1000,
+        });
       }
     }
 
-    setIsSwiping(false);
     setTouchStartX(null);
     setTouchStartY(null);
+    setSwipeOverlay(null);
   };
 
   useEffect(() => {
@@ -162,7 +161,6 @@ const BookViewer = ({
       setContainer(epubContainer);
 
       if (isMobile) {
-        console.log('Setting up mobile touch handlers');
         epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
         epubContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
         epubContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -248,7 +246,13 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      <ViewerContainer theme={theme} />
+      <ViewerContainer theme={theme}>
+        {swipeOverlay && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white text-2xl font-bold">
+            {swipeOverlay === 'left' ? 'Next Page' : 'Previous Page'}
+          </div>
+        )}
+      </ViewerContainer>
     </div>
   );
 };
