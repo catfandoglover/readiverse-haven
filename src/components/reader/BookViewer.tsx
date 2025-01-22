@@ -38,7 +38,8 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const [lastSelectionTime, setLastSelectionTime] = useState(0);
+  const [touchStartTime, setTouchStartTime] = useState(0);
+  const [lastProcessedSelection, setLastProcessedSelection] = useState('');
 
   const {
     rendition,
@@ -80,65 +81,79 @@ const BookViewer = ({
 
   useEffect(() => {
     const epubContainer = document.querySelector(".epub-view");
-    if (epubContainer) {
-      setContainer(epubContainer);
+    if (!epubContainer || !rendition) return;
 
-      const handleSelection = () => {
-        if (!rendition) return;
-        
-        const contents = rendition.getContents();
-        if (!contents) return;
+    const processSelection = (content: any) => {
+      if (!content?.window?.getSelection) return null;
+      
+      const selection = content.window.getSelection();
+      if (!selection || !selection.toString().trim()) return null;
 
-        const now = Date.now();
-        if (now - lastSelectionTime < 500) return; // Debounce selections
-        setLastSelectionTime(now);
-        
-        const contentsArray = Array.isArray(contents) ? contents : [contents];
-        
-        contentsArray.forEach(content => {
-          if (!content?.window?.getSelection) return;
-          
-          const selection = content.window.getSelection();
-          if (!selection || !selection.toString().trim()) return;
+      const selectionText = selection.toString().trim();
+      // Prevent processing the same selection multiple times
+      if (selectionText === lastProcessedSelection) return null;
 
-          try {
-            const range = selection.getRangeAt(0);
-            const cfi = content.cfiFromRange(range);
-            
-            if (onTextSelect && cfi) {
-              onTextSelect(cfi, selection.toString().trim());
-              toast({
-                description: "Text highlighted successfully",
-              });
-            }
-          } catch (error) {
-            console.error('Error creating highlight:', error);
-            toast({
-              variant: "destructive",
-              description: "Failed to create highlight",
-            });
-          }
+      try {
+        const range = selection.getRangeAt(0);
+        const cfi = content.cfiFromRange(range);
+        
+        if (onTextSelect && cfi) {
+          setLastProcessedSelection(selectionText);
+          onTextSelect(cfi, selectionText);
+          toast({
+            description: "Text highlighted successfully",
+          });
+          // Clear the selection after highlighting
+          selection.removeAllRanges();
+        }
+      } catch (error) {
+        console.error('Error creating highlight:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to create highlight",
         });
-      };
+      }
+    };
 
-      // Add multiple event listeners to ensure we catch the selection
-      document.addEventListener('selectionchange', handleSelection);
-      epubContainer.addEventListener('mouseup', handleSelection);
-      epubContainer.addEventListener('touchend', handleSelection);
-      epubContainer.addEventListener('contextmenu', (e) => {
-        // Prevent the default context menu on iOS
-        e.preventDefault();
-        handleSelection();
-      });
+    const handleTouchStart = () => {
+      setTouchStartTime(Date.now());
+    };
 
-      return () => {
-        document.removeEventListener('selectionchange', handleSelection);
-        epubContainer.removeEventListener('mouseup', handleSelection);
-        epubContainer.removeEventListener('touchend', handleSelection);
-        epubContainer.removeEventListener('contextmenu', handleSelection);
-      };
-    }
-  }, [container, rendition, onTextSelect, lastSelectionTime]);
+    const handleTouchEnd = () => {
+      const touchDuration = Date.now() - touchStartTime;
+      // Only process short touches to avoid conflicting with scrolling
+      if (touchDuration < 500) return;
+
+      const contents = rendition.getContents();
+      if (!contents) return;
+
+      const contentsArray = Array.isArray(contents) ? contents : [contents];
+      contentsArray.forEach(processSelection);
+    };
+
+    const handleSelectionChange = () => {
+      const contents = rendition.getContents();
+      if (!contents) return;
+
+      const contentsArray = Array.isArray(contents) ? contents : [contents];
+      contentsArray.forEach(processSelection);
+    };
+
+    epubContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+    epubContainer.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('selectionchange', handleSelectionChange);
+
+    // Prevent default context menu to avoid interference with highlighting
+    epubContainer.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    return () => {
+      epubContainer.removeEventListener('touchstart', handleTouchStart);
+      epubContainer.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [container, rendition, onTextSelect, touchStartTime, lastProcessedSelection]);
 
   useEffect(() => {
     const initializeBook = async () => {
