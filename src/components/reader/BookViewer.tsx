@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition } from "epubjs";
 import type Section from "epubjs/types/section";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -9,7 +9,6 @@ import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/components/ui/use-toast";
-import { debounce } from "lodash";
 
 interface BookViewerProps {
   book: Book;
@@ -39,8 +38,9 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const [touchStartPosition, setTouchStartPosition] = useState({ x: 0, y: 0 });
-  const moveThreshold = 10;
+  const selectionTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastTapRef = useRef(0);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const {
     rendition,
@@ -68,26 +68,38 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    setTouchStartPosition({
+    touchStartRef.current = {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY
-    });
+    };
   }, []);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
-    const touchEndPosition = {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    const MOVE_THRESHOLD = 10;
+
+    const touchEnd = {
       x: e.changedTouches[0].clientX,
       y: e.changedTouches[0].clientY
     };
 
-    const deltaX = Math.abs(touchEndPosition.x - touchStartPosition.x);
-    const deltaY = Math.abs(touchEndPosition.y - touchStartPosition.y);
+    const deltaX = Math.abs(touchEnd.x - touchStartRef.current.x);
+    const deltaY = Math.abs(touchEnd.y - touchStartRef.current.y);
 
-    if (deltaX < moveThreshold && deltaY < moveThreshold) {
-      // Small movement - likely a tap for selection
+    // If significant movement, don't process as selection
+    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
       return;
     }
-  }, [touchStartPosition, moveThreshold]);
+
+    // Handle double tap
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      e.preventDefault();
+      return;
+    }
+
+    lastTapRef.current = now;
+  }, []);
 
   useEffect(() => {
     if (!rendition) return;
@@ -100,15 +112,20 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text || !onTextSelect) return;
 
+        // Clear any existing timeout
+        if (selectionTimeoutRef.current) {
+          clearTimeout(selectionTimeoutRef.current);
+        }
+
         onTextSelect(cfiRange, text);
         toast({
           description: "Text highlighted successfully",
         });
 
-        // Delay selection clearing to allow iOS menu to close
-        setTimeout(() => {
+        // Set new timeout for clearing selection
+        selectionTimeoutRef.current = setTimeout(() => {
           selection.removeAllRanges();
-        }, 100);
+        }, 250);
       } catch (error) {
         console.error('Error creating highlight:', error);
         toast({
@@ -121,18 +138,21 @@ const BookViewer = ({
     rendition.on("selected", handleTextSelection);
 
     if (container) {
-      container.addEventListener('touchstart', handleTouchStart);
+      container.addEventListener('touchstart', handleTouchStart, { passive: true });
       container.addEventListener('touchend', handleTouchEnd);
     }
 
     return () => {
+      if (selectionTimeoutRef.current) {
+        clearTimeout(selectionTimeoutRef.current);
+      }
       rendition.off("selected", handleTextSelection);
       if (container) {
         container.removeEventListener('touchstart', handleTouchStart);
         container.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd]);
+  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
 
   useEffect(() => {
     const initializeBook = async () => {

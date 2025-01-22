@@ -18,11 +18,12 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         background: theme.background,
         color: theme.text,
         WebkitUserSelect: 'text',
+        userSelect: 'text',
         WebkitTouchCallout: 'default',
-        touchAction: 'pan-y',
-        overscrollBehavior: 'contain',
+        touchAction: 'manipulation',
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+        overscrollBehavior: 'contain',
       }}
     />
   );
