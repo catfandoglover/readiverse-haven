@@ -2,7 +2,7 @@ import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
 import type Section from "epubjs/types/section";
-import type { Book, Rendition } from "epubjs";
+import type { Book } from "epubjs";
 import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderHeader from "./reader/ReaderHeader";
@@ -98,29 +98,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata }) => {
       // If we have a direct CFI, use it first
       if (result.cfi) {
         console.log('Navigating using CFI:', result.cfi);
-        // Create display options object
-        const displayOptions = {
-          spreads: false,
-          highlight: true
-        };
-        
         await rendition.display(result.cfi);
-        
-        // After navigation, ensure the text is visible and centered
-        const views = rendition.views();
-        views.forEach(view => {
-          if (view && view.section && view.section.document) {
-            const doc = view.section.document;
-            const target = doc.querySelector(`[data-epubcfi="${result.cfi}"]`);
-            if (target) {
-              target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'center'
-              });
-            }
-          }
-        });
         return;
       }
 
