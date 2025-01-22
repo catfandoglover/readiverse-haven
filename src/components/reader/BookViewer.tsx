@@ -82,7 +82,7 @@ const BookViewer = ({
     if (epubContainer) {
       setContainer(epubContainer);
 
-      const handleSelectionChange = () => {
+      const handleSelection = () => {
         if (!rendition) return;
         
         const contents = rendition.getContents();
@@ -97,34 +97,35 @@ const BookViewer = ({
           const selection = content.window.getSelection();
           if (!selection || !selection.toString().trim()) return;
 
-          // Small delay to ensure the selection is complete
-          setTimeout(() => {
-            try {
-              const range = selection.getRangeAt(0);
-              const cfi = content.cfiFromRange(range);
-              
-              if (onTextSelect && cfi) {
-                onTextSelect(cfi, selection.toString().trim());
-                toast({
-                  description: "Text highlighted successfully",
-                });
-              }
-            } catch (error) {
-              console.error('Error creating highlight:', error);
+          try {
+            const range = selection.getRangeAt(0);
+            const cfi = content.cfiFromRange(range);
+            
+            if (onTextSelect && cfi) {
+              onTextSelect(cfi, selection.toString().trim());
               toast({
-                variant: "destructive",
-                description: "Failed to create highlight",
+                description: "Text highlighted successfully",
               });
             }
-          }, 100);
+          } catch (error) {
+            console.error('Error creating highlight:', error);
+            toast({
+              variant: "destructive",
+              description: "Failed to create highlight",
+            });
+          }
         });
       };
 
-      // Add selectionchange event listener to detect Safari's text selection
-      document.addEventListener('selectionchange', handleSelectionChange);
+      // Add both selectionchange and mouseup events to catch all selection scenarios
+      document.addEventListener('selectionchange', handleSelection);
+      epubContainer.addEventListener('mouseup', handleSelection);
+      epubContainer.addEventListener('touchend', handleSelection);
 
       return () => {
-        document.removeEventListener('selectionchange', handleSelectionChange);
+        document.removeEventListener('selectionchange', handleSelection);
+        epubContainer.removeEventListener('mouseup', handleSelection);
+        epubContainer.removeEventListener('touchend', handleSelection);
       };
     }
   }, [container, rendition, onTextSelect]);
