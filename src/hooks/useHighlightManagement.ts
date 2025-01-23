@@ -24,25 +24,36 @@ export const useHighlightManagement = (
     if (!rendition) return;
     
     try {
+      // Clear existing highlights first
+      rendition.views().forEach(view => {
+        if (view?.contents) {
+          clearHighlights(view.contents);
+        }
+      });
+
+      // Add all highlights
       highlights.forEach(highlight => {
-        rendition.annotations.remove(highlight.cfiRange, "highlight");
-        rendition.annotations.add(
-          "highlight",
-          highlight.cfiRange,
-          {},
-          undefined,
-          `highlight-${highlight.color}`,
-          {
-            "fill": highlight.color,
-            "fill-opacity": "0.3",
-            "mix-blend-mode": "multiply"
-          }
-        );
+        try {
+          rendition.annotations.add(
+            "highlight",
+            highlight.cfiRange,
+            {},
+            undefined,
+            `highlight-${highlight.color}`,
+            {
+              "fill": highlight.color,
+              "fill-opacity": "0.3",
+              "mix-blend-mode": "multiply"
+            }
+          );
+        } catch (error) {
+          console.error('Error applying highlight:', error);
+        }
       });
     } catch (error) {
       console.error('Error reapplying highlights:', error);
     }
-  }, [rendition, highlights]);
+  }, [rendition, highlights, clearHighlights]);
 
   return {
     clearHighlights,

@@ -234,9 +234,14 @@ const BookViewer = ({
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
 
   useEffect(() => {
-    if (rendition && isRenditionReady) {
+    if (!rendition || !isRenditionReady) return;
+    
+    // Ensure rendition is fully ready before reapplying highlights
+    const timeoutId = setTimeout(() => {
       reapplyHighlights();
-    }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
   return (
