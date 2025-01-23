@@ -55,7 +55,7 @@ const Library = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background library-page">
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-georgia text-foreground">Library</h1>
@@ -132,7 +132,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
             onClick={() => handleNavigation('/')}
           >
             <Compass className="h-6 w-6" />
@@ -141,7 +141,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
             onClick={() => handleNavigation('/library')}
           >
             <BookOpen className="h-6 w-6" />
@@ -150,7 +150,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
           >
             <Search className="h-6 w-6" />
             <span className="text-xs">Search</span>

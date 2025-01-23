@@ -116,7 +116,7 @@ const Home = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
             onClick={() => handleNavigation('/')}
           >
             <Compass className="h-6 w-6" />
@@ -125,7 +125,7 @@ const Home = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
             onClick={() => handleNavigation('/library')}
           >
             <BookOpen className="h-6 w-6" />
@@ -134,7 +134,7 @@ const Home = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1 w-16 text-foreground"
           >
             <Search className="h-6 w-6" />
             <span className="text-xs">Search</span>
