@@ -2,7 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Home, BookOpen, ShoppingBag, Headphones, Search, MoreHorizontal } from "lucide-react";
+import { Home, BookOpen, ShoppingBag, Headphones, Search } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
@@ -37,10 +37,10 @@ const Library = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="px-4 pb-4 border-b">
-        <h1 className="text-4xl font-georgia">Library</h1>
+      <header className="px-6 py-8 border-b border-border">
+        <h1 className="text-4xl font-georgia text-foreground">Library</h1>
       </header>
 
       {/* Book List */}
@@ -49,7 +49,7 @@ const Library = () => {
           {books?.map((book) => (
             <Card 
               key={book.id} 
-              className="flex gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+              className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
               onClick={() => handleBookClick(book.slug)}
             >
               <div className="w-16 h-24 flex-shrink-0">
@@ -62,7 +62,7 @@ const Library = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
                 {book.author && (
-                  <p className="text-gray-500 text-sm">{book.author}</p>
+                  <p className="text-muted-foreground text-sm">{book.author}</p>
                 )}
               </div>
             </Card>
@@ -71,7 +71,7 @@ const Library = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="border-t bg-white py-2 px-4">
+      <nav className="border-t border-border bg-background py-2 px-4">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <Button variant="ghost" size="icon" className="flex flex-col items-center gap-1">
             <Home className="h-6 w-6" />
