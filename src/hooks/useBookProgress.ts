@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Book, Contents } from "epubjs";
+import { useLibraryStorage } from "./useLibraryStorage";
 
 interface SpineItem {
   index: number;
@@ -20,14 +21,19 @@ export const useBookProgress = () => {
     chapterTotal: 0
   });
 
+  const { saveReadingProgress, getReadingProgress } = useLibraryStorage();
+
   const saveProgress = (cfi: string) => {
     if (!book) return;
-    localStorage.setItem(`reading-progress-${book.key()}`, cfi);
+    const bookKey = book.key();
+    saveReadingProgress(bookKey, progress.book);
   };
 
   const loadProgress = () => {
     if (!book) return null;
-    return localStorage.getItem(`reading-progress-${book.key()}`);
+    const bookKey = book.key();
+    const savedProgress = getReadingProgress(bookKey);
+    return savedProgress?.position ? savedProgress.position.toString() : null;
   };
 
   const handleLocationChange = (location: any) => {
@@ -51,9 +57,11 @@ export const useBookProgress = () => {
     const locationProgress = location.start.percentage || 0;
     const overallProgress = (spineProgress + (locationProgress / totalSpineItems)) * 100;
 
-    setProgress({
+    const newProgress = {
       book: Math.min(100, Math.max(0, Math.round(overallProgress)))
-    });
+    };
+    
+    setProgress(newProgress);
 
     // Calculate chapter pages based on the rendition's layout
     if (currentSpineItem && location.start.displayed) {
