@@ -85,7 +85,7 @@ const Library = () => {
             <p>Start reading books to add them to your library!</p>
           </div>
         ) : isGridView ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
             {books?.map((book) => (
               <div
                 key={book.id}
