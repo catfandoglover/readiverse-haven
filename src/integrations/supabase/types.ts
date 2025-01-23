@@ -87,6 +87,95 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_list_books: {
+        Row: {
+          added_at: string
+          book_id: string
+          reading_list_id: string
+        }
+        Insert: {
+          added_at?: string
+          book_id: string
+          reading_list_id: string
+        }
+        Update: {
+          added_at?: string
+          book_id?: string
+          reading_list_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_list_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reading_list_books_reading_list_id_fkey"
+            columns: ["reading_list_id"]
+            isOneToOne: false
+            referencedRelation: "reading_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reading_progress: {
+        Row: {
+          book_id: string
+          created_at: string
+          device_id: string
+          id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          device_id: string
+          id?: string
+          position: number
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
