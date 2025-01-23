@@ -11,17 +11,19 @@ export const useBook = (slug: string | undefined) => {
       if (!slug) return null;
       
       try {
+        console.log('Fetching book with slug:', slug);
         const { data, error } = await supabase
           .from('books')
           .select('*')
-          .eq('slug', slug.toLowerCase())
+          .eq('slug', slug)
           .maybeSingle();
 
         if (error) {
           console.error('Error fetching book:', error);
-          return null;
+          throw error;
         }
 
+        console.log('Book data received:', data);
         return data;
       } catch (error) {
         console.error('Unexpected error in useBook:', error);
