@@ -110,9 +110,12 @@ const BookViewer = ({
       if (debouncedContainerResize?.cancel) {
         debouncedContainerResize.cancel();
       }
-      if (currentRendition?.manager?.destroy) {
+      if (currentRendition) {
         try {
-          currentRendition.destroy();
+          // Safely destroy the rendition
+          if (typeof currentRendition.destroy === 'function') {
+            currentRendition.destroy();
+          }
         } catch (error) {
           console.error('Error destroying rendition:', error);
         }
