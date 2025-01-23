@@ -3,13 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Home, BookOpen, ShoppingBag, Headphones, Search, MoreHorizontal } from "lucide-react";
-import BookLinkButton from "./BookLinkButton";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Library = () => {
+  const navigate = useNavigate();
   const { data: books, isLoading } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
@@ -22,6 +23,10 @@ const Library = () => {
       return data as Book[];
     }
   });
+
+  const handleBookClick = (slug: string) => {
+    navigate(`/${slug}`);
+  };
 
   if (isLoading) {
     return (
@@ -50,7 +55,11 @@ const Library = () => {
       <div className="flex-1 overflow-auto px-4">
         <div className="space-y-6 py-4">
           {books?.map((book) => (
-            <Card key={book.id} className="flex gap-4 p-4 hover:bg-gray-50 transition-colors">
+            <Card 
+              key={book.id} 
+              className="flex gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => handleBookClick(book.slug)}
+            >
               <div className="w-16 h-24 flex-shrink-0">
                 <img
                   src={book.cover_url || '/placeholder.svg'}
@@ -61,9 +70,8 @@ const Library = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
                 {book.author && (
-                  <p className="text-gray-500 text-sm mb-2">{book.author}</p>
+                  <p className="text-gray-500 text-sm">{book.author}</p>
                 )}
-                <BookLinkButton book={book} />
               </div>
             </Card>
           ))}
