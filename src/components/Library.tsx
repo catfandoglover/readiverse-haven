@@ -2,7 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Home, BookOpen, ShoppingBag, Headphones, Search } from "lucide-react";
+import { Compass, BookOpen, Search } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +57,7 @@ const Library = () => {
         <h1 className="text-4xl font-georgia text-foreground">Library</h1>
       </header>
 
-      <div className="flex-1 overflow-auto px-4">
+      <div className="flex-1 overflow-auto px-4 pb-16">
         <div className="space-y-6 py-4">
           {books?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -90,7 +90,7 @@ const Library = () => {
         </div>
       </div>
 
-      <nav className="border-t border-border bg-background py-2 px-4">
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 px-4">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <Button 
             variant="ghost" 
@@ -98,8 +98,8 @@ const Library = () => {
             className="flex flex-col items-center gap-1"
             onClick={() => handleNavigation('/')}
           >
-            <Home className="h-6 w-6" />
-            <span className="text-xs">Home</span>
+            <Compass className="h-6 w-6" />
+            <span className="text-xs">Discover</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -110,15 +110,11 @@ const Library = () => {
             <BookOpen className="h-6 w-6" />
             <span className="text-xs">Library</span>
           </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col items-center gap-1">
-            <ShoppingBag className="h-6 w-6" />
-            <span className="text-xs">Store</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col items-center gap-1">
-            <Headphones className="h-6 w-6" />
-            <span className="text-xs">Audio</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="flex flex-col items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex flex-col items-center gap-1"
+          >
             <Search className="h-6 w-6" />
             <span className="text-xs">Search</span>
           </Button>

@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Compass, BookOpen, Search } from "lucide-react";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -26,6 +28,10 @@ const Home = () => {
     navigate(`/${slug}`);
   };
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -37,10 +43,10 @@ const Home = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       <header className="px-6 py-8 border-b border-border">
-        <h1 className="text-4xl font-georgia text-foreground">Home</h1>
+        <h1 className="text-4xl font-georgia text-foreground">Discover</h1>
       </header>
 
-      <div className="flex-1 overflow-auto px-4">
+      <div className="flex-1 overflow-auto px-4 pb-16">
         <div className="space-y-6 py-4">
           {books?.map((book) => (
             <Card 
@@ -65,6 +71,37 @@ const Home = () => {
           ))}
         </div>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 px-4">
+        <div className="flex justify-between items-center max-w-md mx-auto">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex flex-col items-center gap-1"
+            onClick={() => handleNavigation('/')}
+          >
+            <Compass className="h-6 w-6" />
+            <span className="text-xs">Discover</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex flex-col items-center gap-1"
+            onClick={() => handleNavigation('/library')}
+          >
+            <BookOpen className="h-6 w-6" />
+            <span className="text-xs">Library</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex flex-col items-center gap-1"
+          >
+            <Search className="h-6 w-6" />
+            <span className="text-xs">Search</span>
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 };
