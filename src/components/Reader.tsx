@@ -23,8 +23,6 @@ import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import type { NavItem } from "epubjs";
 import { useToast } from "@/hooks/use-toast";
-import { Toast } from "@/components/ui/toast.tsx";
-
 
 interface ReaderProps {
   metadata: {
@@ -71,9 +69,8 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
       });
     } catch (error) {
       toast({
-        title: "Error loading book",
-        description: "Please try again with a valid EPUB file",
         variant: "destructive",
+        description: "Please try again with a valid EPUB file",
       });
     }
   };
@@ -127,20 +124,26 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
       console.log('Loading book from URL:', preloadedBookUrl);
       loadBookFromUrl(preloadedBookUrl).catch(() => {
         toast({
-          title: "Error loading book",
-          description: "Unable to load the book from URL",
           variant: "destructive",
+          description: "Unable to load the book from URL",
         });
       });
     }
   }, [preloadedBookUrl, loadBookFromUrl, book, isReading, toast]);
 
   useEffect(() => {
-    console.log('Current book state:', book);
-    console.log('Current preloadedBookUrl:', preloadedBookUrl);
-    console.log('Current isLoading state:', isLoading);
-  }, [book, preloadedBookUrl, isLoading]);
-
+    if (book && currentLocation) {
+      const bookKey = book.key();
+      const progressKey = `book-progress-${currentLocation}`;
+      const progressData = {
+        bookId: bookKey,
+        position: progress.book,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem(progressKey, JSON.stringify(progressData));
+      console.log('Stored book progress:', progressData);
+    }
+  }, [book, currentLocation, progress.book]);
 
   const handleLocationSelect = (location: string) => {
     if (rendition) {
