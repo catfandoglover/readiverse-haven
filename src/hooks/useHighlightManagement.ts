@@ -31,9 +31,9 @@ export const useHighlightManagement = (
           highlight.cfiRange,
           {},
           undefined,
-          "highlight-yellow",
+          `highlight-${highlight.color}`,
           {
-            "fill": "yellow",
+            "fill": highlight.color,
             "fill-opacity": "0.3",
             "mix-blend-mode": "multiply"
           }
