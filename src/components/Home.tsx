@@ -53,6 +53,7 @@ const Home = () => {
               pressed={!isGridView}
               onPressedChange={() => setIsGridView(false)}
               aria-label="List view"
+              className="text-foreground"
             >
               <List className="h-4 w-4" />
             </Toggle>
@@ -60,6 +61,7 @@ const Home = () => {
               pressed={isGridView}
               onPressedChange={() => setIsGridView(true)}
               aria-label="Grid view"
+              className="text-foreground"
             >
               <Grid className="h-4 w-4" />
             </Toggle>
