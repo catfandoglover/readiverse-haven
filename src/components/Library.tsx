@@ -39,16 +39,8 @@ const Library = () => {
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <header className="px-4 py-6 border-b">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-georgia">Library</h1>
-          <Button variant="ghost" size="icon">
-            <MoreHorizontal className="h-6 w-6" />
-          </Button>
-        </div>
-        <button className="flex items-center gap-2 mt-4 text-lg text-gray-600">
-          Collections
-        </button>
+      <header className="px-4 pb-4 border-b">
+        <h1 className="text-4xl font-georgia">Library</h1>
       </header>
 
       {/* Book List */}
