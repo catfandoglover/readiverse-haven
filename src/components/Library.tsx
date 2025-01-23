@@ -90,8 +90,8 @@ const Library = () => {
         </div>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 px-4">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
+        <div className="flex justify-between items-center max-w-md mx-auto px-8">
           <Button 
             variant="ghost" 
             size="icon" 
