@@ -11,28 +11,15 @@ export const useBook = (slug: string | undefined) => {
       if (!slug) return null;
       
       try {
-        // Try direct query with proper headers
         const { data, error } = await supabase
           .from('books')
           .select('*')
-          .eq('slug', slug.toLowerCase()) // Ensure lowercase comparison
-          .single();
+          .eq('slug', slug.toLowerCase())
+          .maybeSingle();
 
         if (error) {
-          console.error('Initial query error:', error);
-          // If first query fails, try alternative approach
-          const { data: retryData, error: retryError } = await supabase
-            .from('books')
-            .select()
-            .filter('slug', 'eq', slug)
-            .limit(1);
-
-          if (retryError) {
-            console.error('Retry query error:', retryError);
-            return null;
-          }
-
-          return retryData?.[0] || null;
+          console.error('Error fetching book:', error);
+          return null;
         }
 
         return data;

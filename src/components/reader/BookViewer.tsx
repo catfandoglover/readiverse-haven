@@ -61,7 +61,6 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  // Listen for highlight removal events
   useEffect(() => {
     const handleRemoveHighlight = (event: CustomEvent) => {
       if (rendition && event.detail?.cfiRange) {
@@ -80,9 +79,7 @@ const BookViewer = ({
       if (!book) return;
       try {
         await book.ready;
-        // Ensure spine is loaded
         await book.loaded.spine;
-        // Ensure navigation is loaded
         await book.loaded.navigation;
         setIsBookReady(true);
       } catch (error) {
@@ -104,14 +101,31 @@ const BookViewer = ({
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
 
-    if (rendition) {
-      rendition.destroy();
-    }
+    let currentRendition = rendition;
+    
+    const cleanup = () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      if (debouncedContainerResize?.cancel) {
+        debouncedContainerResize.cancel();
+      }
+      if (currentRendition?.manager?.destroy) {
+        try {
+          currentRendition.destroy();
+        } catch (error) {
+          console.error('Error destroying rendition:', error);
+        }
+      }
+    };
+
+    cleanup();
 
     const newRendition = setupRendition(container);
     if (!newRendition) return;
 
     setRendition(newRendition);
+    currentRendition = newRendition;
     
     newRendition.on("rendered", () => {
       setIsRenditionReady(true);
@@ -135,11 +149,6 @@ const BookViewer = ({
 
     displayLocation();
 
-    // Setup resize observer
-    if (resizeObserver) {
-      resizeObserver.disconnect();
-    }
-
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         debouncedContainerResize(entry.target);
@@ -149,17 +158,7 @@ const BookViewer = ({
     observer.observe(container);
     setResizeObserver(observer);
 
-    return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (debouncedContainerResize?.cancel) {
-        debouncedContainerResize.cancel();
-      }
-      if (newRendition) {
-        newRendition.destroy();
-      }
-    };
+    return cleanup;
   }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, container]);
 
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
