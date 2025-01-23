@@ -95,7 +95,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 w-16"
             onClick={() => handleNavigation('/')}
           >
             <Compass className="h-6 w-6" />
@@ -104,7 +104,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 w-16"
             onClick={() => handleNavigation('/library')}
           >
             <BookOpen className="h-6 w-6" />
@@ -113,7 +113,7 @@ const Library = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 w-16"
           >
             <Search className="h-6 w-6" />
             <span className="text-xs">Search</span>
