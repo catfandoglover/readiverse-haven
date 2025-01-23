@@ -9,18 +9,19 @@ export const useBook = (slug: string | undefined) => {
     queryKey: ['book', slug],
     queryFn: async () => {
       if (!slug) return null;
+
+      console.log('Fetching book with slug:', slug);
       
       try {
-        // Try direct query with proper headers
         const { data, error } = await supabase
           .from('books')
           .select('*')
-          .eq('slug', slug.toLowerCase()) // Ensure lowercase comparison
+          .eq('slug', slug.toLowerCase())
           .single();
 
         if (error) {
-          console.error('Initial query error:', error);
-          // If first query fails, try alternative approach
+          console.log('Initial query error:', error);
+          
           const { data: retryData, error: retryError } = await supabase
             .from('books')
             .select()
@@ -28,16 +29,25 @@ export const useBook = (slug: string | undefined) => {
             .limit(1);
 
           if (retryError) {
-            console.error('Retry query error:', retryError);
+            console.log('Retry query error:', retryError);
             return null;
           }
 
-          return retryData?.[0] || null;
+          const result = retryData?.[0] || null;
+          console.log('Retry query result:', {
+            found: !!result,
+            hasEpubUrl: result?.epub_file_url ? 'yes' : 'no'
+          });
+          return result;
         }
 
+        console.log('Query result:', {
+          found: !!data,
+          hasEpubUrl: data?.epub_file_url ? 'yes' : 'no'
+        });
         return data;
       } catch (error) {
-        console.error('Unexpected error in useBook:', error);
+        console.log('Unexpected error in useBook:', error);
         return null;
       }
     },

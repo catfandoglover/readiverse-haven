@@ -1,16 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { ExternalLink, ArrowLeft } from "lucide-react";
+import type Section from "epubjs/types/section";
+import type { Book } from "epubjs";
+import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
-import ReaderControls from "./reader/ReaderControls";
-import BookViewer from "./reader/BookViewer";
-import ProgressTracker from "./reader/ProgressTracker";
-import FloatingControls from "./reader/FloatingControls";
-import BookmarkDialog from "./reader/BookmarkDialog";
-import BrightnessOverlay from "./reader/BrightnessOverlay";
-import NavigationButtons from "./reader/NavigationButtons";
-import TableOfContents from "./reader/TableOfContents";
+import ReaderHeader from "./reader/ReaderHeader";
+import ReaderContent from "./reader/ReaderContent";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -20,27 +16,26 @@ import { useRenditionSettings } from "@/hooks/useRenditionSettings";
 import { useHighlights } from "@/hooks/useHighlights";
 import { useSessionTimer } from "@/hooks/useSessionTimer";
 import { useLocationPersistence } from "@/hooks/useLocationPersistence";
+import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import type { NavItem } from "epubjs";
 import { useToast } from "@/hooks/use-toast";
-import { Toast } from "@/components/ui/toast.tsx";
 
-
-interface ReaderProps {
-  metadata: {
-    coverUrl: string;
-    title: string;
-    author: string;
-  };
-  preloadedBookUrl?: string;
-  isLoading?: boolean;
+interface SpineItem {
+  href: string;
+  index?: number;
 }
 
-const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
-  const [isReading, setIsReading] = useState(false);
-  const [toc, setToc] = useState<NavItem[]>([]);
-  const [externalLink, setExternalLink] = useState<string | null>(null);
+interface SearchResult {
+  href: string;
+  excerpt: string;
+  chapterTitle?: string;
+  spineIndex?: number;
+  location?: string;
+  searchText: string;
+}
 
+const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }) => {
+  const { toast } = useToast();
   const {
     book,
     setBook,
@@ -52,8 +47,6 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     loadProgress,
     handleLocationChange,
   } = useBookProgress();
-
-  const { toast } = useToast();
 
   const { handleFileUpload: originalHandleFileUpload, loadBookFromUrl } = useFileHandler(
     setBook,
@@ -109,22 +102,147 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     removeHighlight,
   } = useHighlights(book?.key() || null);
 
-  useEffect(() => {
-    setIsReading(!!book);
-  }, [book]);
+  const { isReading, toc, externalLink, handleBookLoad } = useReaderState();
 
-  const sessionTime = useSessionTimer(isReading);
-  useLocationPersistence(book, currentLocation);
+  const findTextInPage = (searchText: string): void => {
+    if (!rendition) return;
 
-  useEffect(() => {
-    console.log('UseEffect triggered with:', {
-      preloadedBookUrl,
-      currentBook: book,
-      isReading
-    });
+    const contents = rendition.getContents();
+    if (!contents || !contents[0]) return;
+
+    const doc = contents[0].document;
+    if (!doc || !doc.body) return;
+
+    const searchTextNode = document.createTextNode(searchText);
+    const normalizedSearchText = searchTextNode.textContent?.toLowerCase() || '';
+
+    const walker = document.createTreeWalker(
+      doc.body,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node: Node | null = walker.nextNode();
+    while (node) {
+      const text = node.textContent?.toLowerCase() || '';
+      const index = text.indexOf(normalizedSearchText);
+      
+      if (index !== -1) {
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + normalizedSearchText.length);
+
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        const element = node.parentElement;
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          const originalColor = element.style.backgroundColor;
+          element.style.backgroundColor = 'yellow';
+          setTimeout(() => {
+            element.style.backgroundColor = originalColor;
+          }, 2000);
+
+          break;
+        }
+      }
+      node = walker.nextNode();
+    }
+  };
+
+  const handleSearchResultClick = async (result: SearchResult) => {
+    if (!rendition || !book) {
+      console.error('Rendition or book not available');
+      return;
+    }
+
+    try {
+      if (typeof result.spineIndex === 'number') {
+        await rendition.display(result.spineIndex);
+      } else if (result.href) {
+        await rendition.display(result.href);
+      } else {
+        throw new Error('No valid navigation target');
+      }
+
+      rendition.once('rendered', () => {
+        findTextInPage(result.searchText);
+      });
+
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to navigate to the search result",
+      });
+    }
+  };
+
+  const handleSearch = async (query: string): Promise<SearchResult[]> => {
+    if (!book || !rendition) return [];
+
+    const results: SearchResult[] = [];
     
+    try {
+      const spine = book.spine as unknown as { items: SpineItem[] };
+      if (!spine?.items?.length) return [];
+
+      for (const item of spine.items) {
+        try {
+          const content = await book.load(item.href);
+          if (!content || typeof content !== 'object') continue;
+
+          const doc = content as Document;
+          if (!doc.documentElement) continue;
+
+          let chapterTitle = "Unknown Chapter";
+          const headingElement = doc.documentElement.querySelector('h1, h2, h3, h4, h5, h6');
+          if (headingElement) {
+            chapterTitle = headingElement.textContent?.trim() || "Unknown Chapter";
+          }
+
+          const textContent = doc.documentElement.textContent || '';
+          const text = textContent.toLowerCase();
+          const searchQuery = query.toLowerCase();
+          
+          let lastIndex = 0;
+          while (true) {
+            const index = text.indexOf(searchQuery, lastIndex);
+            if (index === -1) break;
+
+            const start = Math.max(0, index - 40);
+            const end = Math.min(text.length, index + query.length + 40);
+            const excerpt = text.slice(start, end);
+
+            results.push({
+              href: item.href,
+              excerpt: `...${excerpt}...`,
+              chapterTitle,
+              spineIndex: item.index,
+              searchText: query
+            });
+            
+            lastIndex = index + 1;
+          }
+        } catch (error) {
+          console.error('Error processing section:', error);
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error accessing spine items:', error);
+      return [];
+    }
+  };
+
+  React.useEffect(() => {
     if (preloadedBookUrl && !book) {
-      console.log('Loading book from URL:', preloadedBookUrl);
       loadBookFromUrl(preloadedBookUrl).catch(() => {
         toast({
           title: "Error loading book",
@@ -133,61 +251,14 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
         });
       });
     }
-  }, [preloadedBookUrl, loadBookFromUrl, book, isReading, toast]);
+  }, [preloadedBookUrl, loadBookFromUrl, book, toast]);
 
-  useEffect(() => {
-    console.log('Current book state:', book);
-    console.log('Current preloadedBookUrl:', preloadedBookUrl);
-    console.log('Current isLoading state:', isLoading);
-  }, [book, preloadedBookUrl, isLoading]);
-
-
-  const handleLocationSelect = (location: string) => {
-    if (rendition) {
-      const container = document.querySelector(".epub-view");
-      if (container) {
-        rendition.display(location).then(() => {
-          setTimeout(() => {
-            rendition.resize(container.clientWidth, container.clientHeight);
-            rendition.display(location);
-          }, 100);
-        });
-      }
-    }
-  };
-
-  const handleTextSelect = (cfiRange: string, text: string) => {
-    addHighlight(cfiRange, text);
-  };
-
-  useEffect(() => {
-    if (book) {
-      book.loaded.navigation.then(nav => {
-        setToc(nav.toc);
-      });
-    }
+  React.useEffect(() => {
+    handleBookLoad(book);
   }, [book]);
 
-  const handleTocNavigation = (href: string) => {
-    if (rendition) {
-      rendition.display(href);
-    }
-  };
-
-  useEffect(() => {
-    const fetchExternalLink = async () => {
-      const { data, error } = await supabase
-        .from('external_links')
-        .select('url')
-        .single();
-      
-      if (data && !error) {
-        setExternalLink(data.url);
-      }
-    };
-
-    fetchExternalLink();
-  }, []);
+  const sessionTime = useSessionTimer(isReading);
+  useLocationPersistence(book, currentLocation);
 
   return (
     <ThemeProvider>
@@ -203,87 +274,42 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
             </div>
           ) : (
             <>
-              <div className="mb-4 flex items-center justify-between">
-                {externalLink && (
-                  <Button
-                    onClick={() => window.open(externalLink, '_blank')}
-                    variant="outline"
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Return to Book Cover</span>
-                    <ExternalLink className="h-4 w-4 ml-1" />
-                  </Button>
-                )}
-              </div>
-
-              <ReaderControls
+              <ReaderHeader
+                externalLink={externalLink}
+                onSearch={handleSearch}
+                onSearchResultClick={handleSearchResultClick}
+              />
+              <ReaderContent
+                book={book}
                 fontSize={fontSize}
-                onFontSizeChange={handleFontSizeChange}
                 fontFamily={fontFamily}
-                onFontFamilyChange={handleFontFamilyChange}
                 textAlign={textAlign}
-                onTextAlignChange={setTextAlign}
                 brightness={brightness}
-                onBrightnessChange={handleBrightnessChange}
                 currentLocation={currentLocation}
-                onBookmarkClick={handleBookmarkClick}
-                onLocationChange={handleLocationSelect}
+                progress={progress}
+                pageInfo={pageInfo}
                 sessionTime={sessionTime}
                 highlights={highlights}
-                selectedHighlightColor={selectedColor}
-                onHighlightColorSelect={setSelectedColor}
-                onHighlightSelect={handleLocationSelect}
-                onRemoveHighlight={removeHighlight}
-                toc={toc}
-                onNavigate={handleTocNavigation}
-              />
-              
-              <ProgressTracker 
-                bookProgress={progress.book}
-                pageInfo={pageInfo}
-              />
-
-              <div className="relative">
-                <NavigationButtons
-                  onPrevPage={handlePrevPage}
-                  onNextPage={handleNextPage}
-                />
-                <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
-                  <TableOfContents toc={toc} onNavigate={handleTocNavigation} />
-                </div>
-                <BookViewer
-                  book={book}
-                  currentLocation={currentLocation}
-                  onLocationChange={handleLocationChange}
-                  fontSize={fontSize}
-                  fontFamily={fontFamily}
-                  textAlign={textAlign}
-                  onRenditionReady={handleRenditionReady}
-                  highlights={highlights}
-                  onTextSelect={handleTextSelect}
-                />
-              </div>
-
-              <FloatingControls
-                currentLocation={currentLocation}
-                onLocationSelect={handleLocationSelect}
-                onBookmarkClick={handleBookmarkClick}
-                highlights={highlights}
                 selectedColor={selectedColor}
-                onColorSelect={setSelectedColor}
-                onHighlightSelect={handleLocationSelect}
-                onRemoveHighlight={removeHighlight}
+                toc={toc}
+                currentChapterTitle={currentChapterTitle}
+                showBookmarkDialog={showBookmarkDialog}
+                onFontSizeChange={handleFontSizeChange}
+                onFontFamilyChange={handleFontFamilyChange}
+                onTextAlignChange={setTextAlign}
+                onBrightnessChange={handleBrightnessChange}
+                onBookmarkClick={handleBookmarkClick}
+                onLocationChange={handleLocationChange}
+                onPrevPage={handlePrevPage}
+                onNextPage={handleNextPage}
+                onTocNavigate={href => rendition?.display(href)}
+                onRenditionReady={handleRenditionReady}
+                onTextSelect={(cfiRange, text) => addHighlight(cfiRange, text)}
+                setShowBookmarkDialog={setShowBookmarkDialog}
+                handleRemoveBookmark={handleRemoveBookmark}
+                setSelectedColor={setSelectedColor}
+                removeHighlight={removeHighlight}
               />
-
-              <BookmarkDialog
-                open={showBookmarkDialog}
-                onOpenChange={setShowBookmarkDialog}
-                onRemoveBookmark={handleRemoveBookmark}
-                chapterTitle={currentChapterTitle}
-              />
-
-              <BrightnessOverlay brightness={brightness} />
             </>
           )}
         </div>
