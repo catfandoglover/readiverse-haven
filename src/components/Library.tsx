@@ -71,7 +71,7 @@ const Library = () => {
                 className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
                 onClick={() => handleBookClick(book.slug)}
               >
-                <div className="w-16 h-24 flex-shrink-0">
+                <div className="w-24 h-24 flex-shrink-0">
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
