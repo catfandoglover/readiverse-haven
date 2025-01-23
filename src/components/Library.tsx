@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Compass, BookOpen, Search } from "lucide-react";
+import { Compass, BookOpen, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { Toggle } from "./ui/toggle";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Library = () => {
   const navigate = useNavigate();
+  const [isGridView, setIsGridView] = useState(false);
+  
   const { data: books, isLoading } = useQuery({
     queryKey: ['user-library'],
     queryFn: async () => {
@@ -54,18 +57,52 @@ const Library = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       <header className="px-6 py-8 border-b border-border">
-        <h1 className="text-4xl font-georgia text-foreground">Library</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-4xl font-georgia text-foreground">Library</h1>
+          <div className="flex gap-2">
+            <Toggle
+              pressed={!isGridView}
+              onPressedChange={() => setIsGridView(false)}
+              aria-label="List view"
+            >
+              <List className="h-4 w-4" />
+            </Toggle>
+            <Toggle
+              pressed={isGridView}
+              onPressedChange={() => setIsGridView(true)}
+              aria-label="Grid view"
+            >
+              <Grid className="h-4 w-4" />
+            </Toggle>
+          </div>
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto px-4 pb-16">
-        <div className="space-y-6 py-4">
-          {books?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Your library is empty.</p>
-              <p>Start reading books to add them to your library!</p>
-            </div>
-          ) : (
-            books?.map((book) => (
+        {books?.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Your library is empty.</p>
+            <p>Start reading books to add them to your library!</p>
+          </div>
+        ) : isGridView ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
+            {books?.map((book) => (
+              <div
+                key={book.id}
+                className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleBookClick(book.slug)}
+              >
+                <img
+                  src={book.cover_url || '/placeholder.svg'}
+                  alt={book.title}
+                  className="w-full h-full object-cover rounded-md shadow-sm"
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6 py-4">
+            {books?.map((book) => (
               <Card 
                 key={book.id} 
                 className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
@@ -85,9 +122,9 @@ const Library = () => {
                   )}
                 </div>
               </Card>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
