@@ -2,7 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Menu, Home, BookOpen, ShoppingBag, Headphones, Search, MoreHorizontal } from "lucide-react";
+import { Home, BookOpen, ShoppingBag, Headphones, Search, MoreHorizontal } from "lucide-react";
 import BookLinkButton from "./BookLinkButton";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
@@ -36,18 +36,12 @@ const Library = () => {
       {/* Header */}
       <header className="px-4 py-6 border-b">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-            <h1 className="text-4xl font-georgia">Library</h1>
-          </div>
+          <h1 className="text-4xl font-georgia">Library</h1>
           <Button variant="ghost" size="icon">
             <MoreHorizontal className="h-6 w-6" />
           </Button>
         </div>
         <button className="flex items-center gap-2 mt-4 text-lg text-gray-600">
-          <Menu className="h-5 w-5" />
           Collections
         </button>
       </header>
