@@ -18,11 +18,25 @@ const Library = () => {
     queryKey: ['user-library'],
     queryFn: async () => {
       // Get book IDs from localStorage
+      console.log('All localStorage keys:', Object.keys(localStorage));
+      
       const libraryItems = Object.keys(localStorage)
         .filter(key => key.startsWith('book-progress-'))
         .map(key => {
           try {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            console.log('Processing localStorage key:', key);
+            const rawData = localStorage.getItem(key);
+            console.log('Raw localStorage data:', rawData);
+            
+            const data = JSON.parse(rawData || '{}');
+            console.log('Parsed data:', data);
+            
+            // Check if we have a valid bookId
+            if (!data.bookId) {
+              console.warn('No bookId found in data for key:', key);
+              return null;
+            }
+            
             return data.bookId;
           } catch (error) {
             console.error('Error parsing localStorage item:', error);
@@ -30,17 +44,28 @@ const Library = () => {
           }
         })
         .filter(Boolean); // Remove null values
+      
+      console.log('Found book IDs:', libraryItems);
 
-      if (!libraryItems.length) return [];
+      if (!libraryItems.length) {
+        console.log('No books found in library');
+        return [];
+      }
 
       // Fetch book details from Supabase
+      console.log('Fetching books with IDs:', libraryItems);
       const { data: booksData, error: booksError } = await supabase
         .from('books')
         .select('*')
         .in('id', libraryItems)
         .order('title');
       
-      if (booksError) throw booksError;
+      if (booksError) {
+        console.error('Error fetching books:', booksError);
+        throw booksError;
+      }
+      
+      console.log('Retrieved books:', booksData);
       return booksData as Book[];
     }
   });
