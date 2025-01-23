@@ -17,7 +17,7 @@ const Library = () => {
   const { data: books, isLoading } = useQuery({
     queryKey: ['user-library'],
     queryFn: async () => {
-      // Get book IDs from localStorage
+      // Get book slugs from localStorage
       console.log('All localStorage keys:', Object.keys(localStorage));
       
       const libraryItems = Object.keys(localStorage)
@@ -31,13 +31,21 @@ const Library = () => {
             const data = JSON.parse(rawData || '{}');
             console.log('Parsed data:', data);
             
-            // Check if we have a valid bookId
+            // Get the slug from the URL in the bookId
             if (!data.bookId) {
               console.warn('No bookId found in data for key:', key);
               return null;
             }
+
+            // Extract the book number from the Gutenberg URL
+            const urlMatch = data.bookId.match(/gutenberg\.org\/(\d+)$/);
+            if (!urlMatch) {
+              console.warn('Could not extract book number from:', data.bookId);
+              return null;
+            }
+
+            return `gutenberg-${urlMatch[1]}`;
             
-            return data.bookId;
           } catch (error) {
             console.error('Error parsing localStorage item:', error);
             return null;
@@ -45,7 +53,7 @@ const Library = () => {
         })
         .filter(Boolean); // Remove null values
       
-      console.log('Found book IDs:', libraryItems);
+      console.log('Found book slugs:', libraryItems);
 
       if (!libraryItems.length) {
         console.log('No books found in library');
@@ -53,11 +61,11 @@ const Library = () => {
       }
 
       // Fetch book details from Supabase
-      console.log('Fetching books with IDs:', libraryItems);
+      console.log('Fetching books with slugs:', libraryItems);
       const { data: booksData, error: booksError } = await supabase
         .from('books')
         .select('*')
-        .in('id', libraryItems)
+        .in('slug', libraryItems)
         .order('title');
       
       if (booksError) {
