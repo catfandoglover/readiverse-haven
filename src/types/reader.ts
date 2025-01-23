@@ -8,7 +8,14 @@ export interface BookMetadata {
 }
 
 export interface ReaderProps {
-  metadata?: BookMetadata;
+  metadata: BookMetadata;
+}
+
+export interface SearchResult {
+  href: string;
+  excerpt: string;
+  chapterTitle?: string;
+  spineIndex?: number;
 }
 
 export interface ReaderControlsProps {

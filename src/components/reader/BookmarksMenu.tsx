@@ -25,6 +25,7 @@ interface BookmarkData {
     chapterIndex?: number;
     pageNumber?: number;
     totalPages?: number;
+    exactLocation?: string;
   };
 }
 
@@ -47,7 +48,12 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
       }
     };
 
-    const loadBookmarks = () => {
+    const loadBookmarks = (event?: StorageEvent) => {
+      // Only reload if the change is bookmark-related
+      if (event && !event.key?.startsWith('book-progress-')) {
+        return;
+      }
+
       const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -58,10 +64,10 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
           try {
             const data = JSON.parse(value);
             marks[key] = {
-              cfi: data.cfi || value,
+              cfi: data.metadata?.exactLocation || data.cfi,
               timestamp: data.timestamp || Date.now(),
               chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-              pageInfo: `Page ${data.metadata?.pageNumber}`,
+              pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
               metadata: data.metadata || {}
             };
           } catch {
@@ -79,11 +85,16 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
 
     loadBookmarks();
     checkBookmark();
-    window.addEventListener('storage', loadBookmarks);
-    window.addEventListener('storage', checkBookmark);
+
+    // Add event listeners
+    const handleStorage = (event: StorageEvent) => {
+      loadBookmarks(event);
+      checkBookmark();
+    };
+
+    window.addEventListener('storage', handleStorage);
     return () => {
-      window.removeEventListener('storage', loadBookmarks);
-      window.removeEventListener('storage', checkBookmark);
+      window.removeEventListener('storage', handleStorage);
     };
   }, [currentLocation]);
 
