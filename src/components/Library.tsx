@@ -17,20 +17,27 @@ const Library = () => {
   const { data: books, isLoading } = useQuery({
     queryKey: ['user-library'],
     queryFn: async () => {
-      const { data: libraryData, error: libraryError } = await supabase
-        .from('user_library')
-        .select('book_id');
-      
-      if (libraryError) throw libraryError;
-      
-      if (!libraryData?.length) return [];
+      // Get book IDs from localStorage
+      const libraryItems = Object.keys(localStorage)
+        .filter(key => key.startsWith('book-progress-'))
+        .map(key => {
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            return data.bookId;
+          } catch (error) {
+            console.error('Error parsing localStorage item:', error);
+            return null;
+          }
+        })
+        .filter(Boolean); // Remove null values
 
-      const bookIds = libraryData.map(item => item.book_id);
-      
+      if (!libraryItems.length) return [];
+
+      // Fetch book details from Supabase
       const { data: booksData, error: booksError } = await supabase
         .from('books')
         .select('*')
-        .in('id', bookIds)
+        .in('id', libraryItems)
         .order('title');
       
       if (booksError) throw booksError;
@@ -81,7 +88,7 @@ const Library = () => {
       </header>
 
       <div className="flex-1 overflow-auto px-4 pb-16">
-        {books?.length === 0 ? (
+        {!books?.length ? (
           <div className="text-center py-8 text-muted-foreground">
             <p>Your library is empty.</p>
             <p>Start reading books to add them to your library!</p>
