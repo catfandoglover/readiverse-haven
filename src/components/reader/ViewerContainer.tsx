@@ -11,7 +11,7 @@ const ViewerContainer: React.FC<ViewerContainerProps & { children?: React.ReactN
 }) => {
   return (
     <div 
-      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg" 
+      className="epub-view h-[80vh] border border-gray-200 rounded-lg overflow-hidden shadow-lg reader-container" 
       style={{ 
         background: theme.background,
         color: theme.text,
