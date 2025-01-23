@@ -44,7 +44,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background home-page">
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-georgia text-foreground">Discover</h1>
