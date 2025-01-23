@@ -1,19 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Database } from '@/integrations/supabase/types';
+
+type Book = Database['public']['Tables']['books']['Row'];
 
 interface BookLinkButtonProps {
-  bookSlug: string;
-  children: React.ReactNode;
+  book: Book;
   className?: string;
 }
 
-const BookLinkButton = ({ bookSlug, children, className }: BookLinkButtonProps) => {
+const BookLinkButton = ({ book, className }: BookLinkButtonProps) => {
   const navigate = useNavigate();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate(`/${bookSlug}`);
+    navigate(`/${book.slug}`);
   };
 
   return (
@@ -21,7 +23,7 @@ const BookLinkButton = ({ bookSlug, children, className }: BookLinkButtonProps) 
       onClick={handleClick}
       className={className}
     >
-      {children}
+      Read Now
     </Button>
   );
 };
