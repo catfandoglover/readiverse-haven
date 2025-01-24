@@ -63,11 +63,12 @@ export const useHighlights = (bookKey: string | null) => {
     }
 
     try {
-      // Remove from state and localStorage
+      // Remove from state and localStorage first
       const newHighlights = highlights.filter(h => h.id !== id);
-      saveHighlights(newHighlights);
+      setHighlights(newHighlights); // Update state immediately
+      localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
 
-      // Dispatch custom event to remove highlight from the book content
+      // Then dispatch event to remove from view
       window.dispatchEvent(new CustomEvent('removeHighlight', {
         detail: { cfiRange: highlightToRemove.cfiRange }
       }));

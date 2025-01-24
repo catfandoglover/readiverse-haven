@@ -10,7 +10,6 @@ import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
 
-// Add type definitions for EPUBJS View and Contents
 interface EpubContent {
   document: Document;
 }
@@ -77,7 +76,7 @@ const BookViewer = ({
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
   useEffect(() => {
-    const handleRemoveHighlight = (event: CustomEvent) => {
+    const handleRemoveHighlight = async (event: CustomEvent) => {
       if (!rendition) return;
       
       try {
@@ -94,14 +93,14 @@ const BookViewer = ({
         }
 
         // Iterate through each view to remove highlight elements
-        views.forEach((view: any) => {
-          if (!view || !view.contents) return;
+        for (const view of views) {
+          if (!view || !view.contents) continue;
           
           // Handle both single content and array of contents
           const contents = Array.isArray(view.contents) ? view.contents : [view.contents];
           
-          contents.forEach(content => {
-            if (!content || !content.document) return;
+          for (const content of contents) {
+            if (!content || !content.document) continue;
             
             try {
               // Find and remove highlight elements
@@ -111,11 +110,16 @@ const BookViewer = ({
                   highlight.parentNode.removeChild(highlight);
                 }
               });
+
+              // Force a re-render of the current view
+              if (view.section) {
+                await rendition.display(view.section.href);
+              }
             } catch (error) {
               console.error('Error removing highlight elements:', error);
             }
-          });
-        });
+          }
+        }
 
         toast({
           description: "Highlight removed successfully",
