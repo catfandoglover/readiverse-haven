@@ -23,8 +23,16 @@ export const useHighlights = (bookKey: string | null) => {
 
   const saveHighlights = (newHighlights: Highlight[]) => {
     if (!bookKey) return;
-    localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
-    setHighlights(prev => [...prev, ...newHighlights.filter(nh => !prev.some(ph => ph.id === nh.id))]);
+    try {
+      localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
+      setHighlights(newHighlights);
+    } catch (error) {
+      console.error('Error saving highlights:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to save highlights",
+      });
+    }
   };
 
   const addHighlight = (cfiRange: string, text: string) => {
@@ -39,7 +47,7 @@ export const useHighlights = (bookKey: string | null) => {
       bookKey
     };
 
-    const newHighlights = [newHighlight];
+    const newHighlights = [...highlights, newHighlight];
     saveHighlights(newHighlights);
     
     toast({
@@ -48,29 +56,28 @@ export const useHighlights = (bookKey: string | null) => {
   };
 
   const removeHighlight = (id: string) => {
-    // Find the highlight to be removed
     const highlightToRemove = highlights.find(h => h.id === id);
-    if (!highlightToRemove) return;
+    if (!highlightToRemove) {
+      console.error('Highlight not found:', id);
+      return;
+    }
 
-    // Remove from state and localStorage
-    const newHighlights = highlights.filter(h => h.id !== id);
-    saveHighlights(newHighlights);
+    try {
+      // Remove from state and localStorage
+      const newHighlights = highlights.filter(h => h.id !== id);
+      saveHighlights(newHighlights);
 
-    // Dispatch a custom event to notify the BookViewer component
-    window.dispatchEvent(new CustomEvent('removeHighlight', {
-      detail: { cfiRange: highlightToRemove.cfiRange }
-    }));
-    
-    toast({
-      description: "Highlight removed successfully",
-    });
-  };
-
-  const updateHighlight = (id: string, updates: Partial<Highlight>) => {
-    const newHighlights = highlights.map(h => 
-      h.id === id ? { ...h, ...updates } : h
-    );
-    saveHighlights(newHighlights);
+      // Dispatch custom event to remove highlight from the book content
+      window.dispatchEvent(new CustomEvent('removeHighlight', {
+        detail: { cfiRange: highlightToRemove.cfiRange }
+      }));
+    } catch (error) {
+      console.error('Error removing highlight:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to remove highlight",
+      });
+    }
   };
 
   return {
@@ -78,7 +85,6 @@ export const useHighlights = (bookKey: string | null) => {
     selectedColor,
     setSelectedColor,
     addHighlight,
-    removeHighlight,
-    updateHighlight
+    removeHighlight
   };
 };

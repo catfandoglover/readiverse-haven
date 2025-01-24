@@ -82,19 +82,43 @@ const BookViewer = ({
       
       try {
         const { cfiRange } = event.detail;
+        
+        // Remove the highlight annotation
         rendition.annotations.remove(cfiRange, "highlight");
         
-        // Force rendition to update
-        rendition.views().forEach((view: unknown) => {
-          const epubView = view as EpubView;
-          if (epubView && epubView.contents) {
-            epubView.contents.forEach(content => {
-              if (content?.document) {
-                const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
-                highlights.forEach(highlight => highlight.remove());
-              }
-            });
-          }
+        // Get all current views
+        const views = rendition.views();
+        if (!views || !Array.isArray(views)) {
+          console.error('No views available');
+          return;
+        }
+
+        // Iterate through each view to remove highlight elements
+        views.forEach((view: any) => {
+          if (!view || !view.contents) return;
+          
+          // Handle both single content and array of contents
+          const contents = Array.isArray(view.contents) ? view.contents : [view.contents];
+          
+          contents.forEach(content => {
+            if (!content || !content.document) return;
+            
+            try {
+              // Find and remove highlight elements
+              const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
+              highlights.forEach(highlight => {
+                if (highlight && highlight.parentNode) {
+                  highlight.parentNode.removeChild(highlight);
+                }
+              });
+            } catch (error) {
+              console.error('Error removing highlight elements:', error);
+            }
+          });
+        });
+
+        toast({
+          description: "Highlight removed successfully",
         });
       } catch (error) {
         console.error('Error removing highlight:', error);
