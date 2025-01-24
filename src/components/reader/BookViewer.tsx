@@ -10,6 +10,24 @@ import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
 
+interface EpubContent {
+  document: Document;
+}
+
+interface EpubView {
+  contents: EpubContent[];
+  section?: {
+    href: string;
+  };
+}
+
+interface View {
+  contents?: EpubContent | EpubContent[];
+  section?: {
+    href: string;
+  };
+}
+
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -67,6 +85,79 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
+  useEffect(() => {
+    const handleRemoveHighlight = async (event: CustomEvent) => {
+      if (!rendition) return;
+      
+      try {
+        const { cfiRange } = event.detail;
+        
+        // Remove the highlight annotation
+        rendition.annotations.remove(cfiRange, "highlight");
+        
+        // Get all current views and ensure proper typing
+        const rawViews = rendition.views();
+        if (!rawViews || !Array.isArray(rawViews)) {
+          console.error('No views available');
+          return;
+        }
+
+        // Type guard function to check if a view matches View interface
+        const isValidView = (view: any): view is View => {
+          return view && 
+                 (Array.isArray(view.contents) || 
+                  (view.contents && 'document' in view.contents));
+        };
+
+        // Filter and convert views to View type
+        const views = rawViews.filter(isValidView);
+        
+        // Iterate through each view to remove highlight elements
+        for (const view of views) {
+          if (!view.contents) continue;
+          
+          const contents = Array.isArray(view.contents) ? view.contents : [view.contents];
+          
+          for (const content of contents) {
+            if (!content || !content.document) continue;
+            
+            try {
+              // Find and remove highlight elements
+              const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
+              highlights.forEach(highlight => {
+                if (highlight && highlight.parentNode) {
+                  highlight.parentNode.removeChild(highlight);
+                }
+              });
+
+              // Force a re-render of the current view
+              if (view.section) {
+                await rendition.display(view.section.href);
+              }
+            } catch (error) {
+              console.error('Error removing highlight elements:', error);
+            }
+          }
+        }
+
+        toast({
+          description: "Highlight removed successfully",
+        });
+      } catch (error) {
+        console.error('Error removing highlight:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to remove highlight",
+        });
+      }
+    };
+
+    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    return () => {
+      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    };
+  }, [rendition, toast]);
+
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchStartRef.current = {
       x: e.touches[0].clientX,
@@ -112,7 +203,6 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text || !onTextSelect) return;
 
-        // Clear any existing timeout
         if (selectionTimeoutRef.current) {
           clearTimeout(selectionTimeoutRef.current);
         }
@@ -122,7 +212,6 @@ const BookViewer = ({
           description: "Text highlighted successfully",
         });
 
-        // Set new timeout for clearing selection
         selectionTimeoutRef.current = setTimeout(() => {
           selection.removeAllRanges();
         }, 250);
@@ -155,8 +244,8 @@ const BookViewer = ({
   }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
 
   useEffect(() => {
+    if (!book) return;
     const initializeBook = async () => {
-      if (!book) return;
       try {
         await book.ready;
         await book.loaded.spine;
@@ -236,7 +325,6 @@ const BookViewer = ({
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
     
-    // Ensure rendition is fully ready before reapplying highlights
     const timeoutId = setTimeout(() => {
       reapplyHighlights();
     }, 100);
