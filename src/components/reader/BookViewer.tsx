@@ -16,6 +16,9 @@ interface EpubContent {
 
 interface EpubView {
   contents: EpubContent[];
+  section?: {
+    href: string;
+  };
 }
 
 interface BookViewerProps {
@@ -86,7 +89,7 @@ const BookViewer = ({
         rendition.annotations.remove(cfiRange, "highlight");
         
         // Get all current views
-        const views = rendition.views();
+        const views = rendition.views() as EpubView[];
         if (!views || !Array.isArray(views)) {
           console.error('No views available');
           return;
