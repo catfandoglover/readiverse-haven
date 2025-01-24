@@ -88,21 +88,28 @@ const BookViewer = ({
         // Remove the highlight annotation
         rendition.annotations.remove(cfiRange, "highlight");
         
-        // Get all current views
-        const views = rendition.views() as EpubView[];
-        if (!views || !Array.isArray(views)) {
+        // Get all current views and ensure proper typing
+        const rawViews = rendition.views();
+        if (!rawViews || !Array.isArray(rawViews)) {
           console.error('No views available');
           return;
         }
 
+        // Type guard function to check if a view matches EpubView interface
+        const isEpubView = (view: any): view is EpubView => {
+          return view && 
+                 Array.isArray(view.contents) && 
+                 view.contents.every(content => content && content.document);
+        };
+
+        // Filter and convert views to EpubView type
+        const views = rawViews.filter(isEpubView);
+        
         // Iterate through each view to remove highlight elements
         for (const view of views) {
-          if (!view || !view.contents) continue;
+          if (!view.contents) continue;
           
-          // Handle both single content and array of contents
-          const contents = Array.isArray(view.contents) ? view.contents : [view.contents];
-          
-          for (const content of contents) {
+          for (const content of view.contents) {
             if (!content || !content.document) continue;
             
             try {
