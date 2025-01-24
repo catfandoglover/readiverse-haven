@@ -11,7 +11,6 @@ export type Database = {
     Tables: {
       books: {
         Row: {
-<<<<<<< HEAD
           author: string | null
           cover_url: string | null
           created_at: string
@@ -61,33 +60,6 @@ export type Database = {
           id?: string
           title?: string
           url?: string
-=======
-          id: string
-          title: string
-          slug: string
-          author: string | null
-          cover_url: string | null
-          epub_file_url: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          slug: string
-          author?: string | null
-          cover_url?: string | null
-          epub_file_url: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          slug?: string
-          author?: string | null
-          cover_url?: string | null
-          epub_file_url?: string
-          created_at?: string
->>>>>>> 9ca1a8d1ef9d69d8e108ab95cc108112c9907887
         }
         Relationships: []
       }
@@ -114,6 +86,124 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reading_list_books: {
+        Row: {
+          added_at: string
+          book_id: string
+          reading_list_id: string
+        }
+        Insert: {
+          added_at?: string
+          book_id: string
+          reading_list_id: string
+        }
+        Update: {
+          added_at?: string
+          book_id?: string
+          reading_list_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_list_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reading_list_books_reading_list_id_fkey"
+            columns: ["reading_list_id"]
+            isOneToOne: false
+            referencedRelation: "reading_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reading_progress: {
+        Row: {
+          book_id: string
+          created_at: string
+          device_id: string
+          id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          device_id: string
+          id?: string
+          position: number
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_library: {
+        Row: {
+          added_at: string
+          book_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          book_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          book_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_library_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
