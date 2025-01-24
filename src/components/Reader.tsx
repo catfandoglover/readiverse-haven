@@ -275,7 +275,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
           ) : (
             <>
               <ReaderHeader
-                externalLink={externalLink}
+                externalLink={metadata.coverUrl || null}
                 onSearch={handleSearch}
                 onSearchResultClick={handleSearchResultClick}
               />
