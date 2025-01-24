@@ -67,6 +67,41 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
+  // Handle highlight removal event
+  useEffect(() => {
+    const handleRemoveHighlight = (event: CustomEvent) => {
+      if (!rendition) return;
+      
+      try {
+        const { cfiRange } = event.detail;
+        rendition.annotations.remove(cfiRange, "highlight");
+        
+        // Force rendition to update
+        rendition.views().forEach(view => {
+          if (view && view.contents) {
+            view.contents.forEach(content => {
+              if (content?.document) {
+                const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
+                highlights.forEach(highlight => highlight.remove());
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error removing highlight:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to remove highlight",
+        });
+      }
+    };
+
+    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    return () => {
+      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    };
+  }, [rendition, toast]);
+
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchStartRef.current = {
       x: e.touches[0].clientX,
@@ -112,7 +147,6 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text || !onTextSelect) return;
 
-        // Clear any existing timeout
         if (selectionTimeoutRef.current) {
           clearTimeout(selectionTimeoutRef.current);
         }
@@ -122,7 +156,6 @@ const BookViewer = ({
           description: "Text highlighted successfully",
         });
 
-        // Set new timeout for clearing selection
         selectionTimeoutRef.current = setTimeout(() => {
           selection.removeAllRanges();
         }, 250);
@@ -236,7 +269,6 @@ const BookViewer = ({
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
     
-    // Ensure rendition is fully ready before reapplying highlights
     const timeoutId = setTimeout(() => {
       reapplyHighlights();
     }, 100);
