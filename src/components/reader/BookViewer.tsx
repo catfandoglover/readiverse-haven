@@ -21,6 +21,13 @@ interface EpubView {
   };
 }
 
+interface View {
+  contents?: EpubContent | EpubContent[];
+  section?: {
+    href: string;
+  };
+}
+
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -95,21 +102,23 @@ const BookViewer = ({
           return;
         }
 
-        // Type guard function to check if a view matches EpubView interface
-        const isEpubView = (view: any): view is EpubView => {
+        // Type guard function to check if a view matches View interface
+        const isValidView = (view: any): view is View => {
           return view && 
-                 Array.isArray(view.contents) && 
-                 view.contents.every(content => content && content.document);
+                 (Array.isArray(view.contents) || 
+                  (view.contents && 'document' in view.contents));
         };
 
-        // Filter and convert views to EpubView type
-        const views = rawViews.filter(isEpubView);
+        // Filter and convert views to View type
+        const views = rawViews.filter(isValidView);
         
         // Iterate through each view to remove highlight elements
         for (const view of views) {
           if (!view.contents) continue;
           
-          for (const content of view.contents) {
+          const contents = Array.isArray(view.contents) ? view.contents : [view.contents];
+          
+          for (const content of contents) {
             if (!content || !content.document) continue;
             
             try {
