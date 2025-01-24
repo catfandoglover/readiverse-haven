@@ -145,17 +145,43 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
     }
   }, [book, currentLocation, progress.book]);
 
-  const handleLocationSelect = (location: string) => {
-    if (rendition) {
+  const handleLocationSelect = async (location: string) => {
+    if (!rendition) {
+      console.error('Rendition not ready');
+      toast({
+        variant: "destructive",
+        description: "Reader not ready. Please try again.",
+      });
+      return;
+    }
+
+    try {
+      console.log('Attempting to display location:', location);
       const container = document.querySelector(".epub-view");
-      if (container) {
-        rendition.display(location).then(() => {
-          setTimeout(() => {
-            rendition.resize(container.clientWidth, container.clientHeight);
-            rendition.display(location);
-          }, 100);
-        });
+      if (!container) {
+        console.error('Container not found');
+        return;
       }
+
+      await book?.ready;
+      console.log('Book ready, displaying location');
+      
+      await rendition.display(location);
+      console.log('Location displayed successfully');
+      
+      // Resize after a short delay to ensure content is properly laid out
+      setTimeout(() => {
+        if (rendition && container) {
+          rendition.resize(container.clientWidth, container.clientHeight);
+          rendition.display(location);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error displaying location:', error);
+      toast({
+        variant: "destructive",
+        description: "Unable to navigate to the selected location. Please try again.",
+      });
     }
   };
 
