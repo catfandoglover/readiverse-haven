@@ -14,7 +14,7 @@ const Index = () => {
   const { data: book, isLoading, error } = useBook(bookSlug);
 
   const metadata = book ? {
-    coverUrl: book.cover_url || "/placeholder.svg",
+    coverUrl: book.Cover_super || "/placeholder.svg",
     title: book.title,
     author: book.author
   } : defaultMetadata;
