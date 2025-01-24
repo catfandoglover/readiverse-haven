@@ -10,6 +10,15 @@ import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
 
+// Add type definitions for EPUBJS View and Contents
+interface EpubContent {
+  document: Document;
+}
+
+interface EpubView {
+  contents: EpubContent[];
+}
+
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
@@ -67,7 +76,6 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  // Handle highlight removal event
   useEffect(() => {
     const handleRemoveHighlight = (event: CustomEvent) => {
       if (!rendition) return;
@@ -77,9 +85,10 @@ const BookViewer = ({
         rendition.annotations.remove(cfiRange, "highlight");
         
         // Force rendition to update
-        rendition.views().forEach(view => {
-          if (view && view.contents) {
-            view.contents.forEach(content => {
+        rendition.views().forEach((view: unknown) => {
+          const epubView = view as EpubView;
+          if (epubView && epubView.contents) {
+            epubView.contents.forEach(content => {
               if (content?.document) {
                 const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
                 highlights.forEach(highlight => highlight.remove());
@@ -188,8 +197,8 @@ const BookViewer = ({
   }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
 
   useEffect(() => {
+    if (!book) return;
     const initializeBook = async () => {
-      if (!book) return;
       try {
         await book.ready;
         await book.loaded.spine;
