@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import type { Rendition, Contents } from "epubjs";
+import type { Rendition } from "epubjs";
 import type { Highlight } from "@/types/highlight";
 
 export const useHighlightManagement = (
   rendition: Rendition | null,
   highlights: Highlight[] = []
 ) => {
-  const clearHighlights = useCallback((contents: Contents) => {
+  const clearHighlights = useCallback((contents: any) => {
     try {
       const contentsArray = Array.isArray(contents) ? contents : [contents];
       contentsArray.forEach((content) => {
@@ -26,8 +26,8 @@ export const useHighlightManagement = (
     try {
       // Clear existing highlights first
       rendition.views().forEach(view => {
-        if (view?.contents) {
-          clearHighlights(view.contents);
+        if (view) {
+          clearHighlights(view);
         }
       });
 

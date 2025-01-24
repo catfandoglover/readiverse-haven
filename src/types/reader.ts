@@ -9,6 +9,9 @@ export interface BookMetadata {
 
 export interface ReaderProps {
   metadata: BookMetadata;
+  preloadedBookUrl?: string | null;
+  isLoading?: boolean;
+  error?: Error;
 }
 
 export interface SearchResult {
