@@ -282,7 +282,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
               <ReaderContent
                 book={book}
                 fontSize={fontSize}
-                fontFamily={fontFamily}
+                fontFamily={fontFamily as 'lexend' | 'georgia' | 'helvetica' | 'times'}
                 textAlign={textAlign}
                 brightness={brightness}
                 currentLocation={currentLocation}
