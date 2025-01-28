@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition } from "epubjs";
-import type Section from "epubjs/types/section";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -18,17 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-interface EpubContent {
-  document: Document;
-}
-
-interface View {
-  contents?: EpubContent | EpubContent[];
-  section?: {
-    href: string;
-  };
-}
 
 interface BookViewerProps {
   book: Book;
