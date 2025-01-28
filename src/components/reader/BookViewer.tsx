@@ -300,7 +300,7 @@ const BookViewer = ({
       if (!cfiRange || !rendition) return;
 
       try {
-        // Remove the highlight annotation from rendition
+        // First remove the annotation
         rendition.annotations.remove(cfiRange, 'highlight');
 
         // Get all contents and remove highlight elements
@@ -308,21 +308,44 @@ const BookViewer = ({
         if (Array.isArray(contents)) {
           contents.forEach(content => {
             if (content?.document) {
-              const highlights = content.document.querySelectorAll('.epub-highlight');
+              // Find and remove the specific highlight element
+              const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
               highlights.forEach(highlight => {
-                if (highlight.dataset.epubcfi === cfiRange) {
-                  highlight.remove();
+                const parent = highlight.parentNode;
+                if (parent) {
+                  // Instead of removing the element, unwrap it to preserve text
+                  while (highlight.firstChild) {
+                    parent.insertBefore(highlight.firstChild, highlight);
+                  }
+                  parent.removeChild(highlight);
                 }
               });
             }
           });
         }
 
-        // Force a re-render of the current page
-        const currentLocation = rendition.location.start.cfi;
-        rendition.display(currentLocation).then(() => {
-          reapplyHighlights();
+        // Force a redraw of the current section
+        const currentSection = rendition.currentLocation().start.cfi;
+        rendition.display(currentSection).then(() => {
+          // After redraw, reapply remaining highlights
+          highlights.forEach(h => {
+            if (h.cfiRange !== cfiRange) {
+              rendition.annotations.add(
+                "highlight",
+                h.cfiRange,
+                {},
+                undefined,
+                `highlight-${h.color}`,
+                {
+                  "fill": h.color,
+                  "fill-opacity": "0.3",
+                  "mix-blend-mode": "multiply"
+                }
+              );
+            }
+          });
         });
+
       } catch (error) {
         console.error('Error removing highlight:', error);
         toast({
@@ -337,7 +360,7 @@ const BookViewer = ({
     return () => {
       window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
     };
-  }, [rendition, isRenditionReady, toast, reapplyHighlights]);
+  }, [rendition, isRenditionReady, toast, highlights]);
 
   return (
     <div className="relative">
