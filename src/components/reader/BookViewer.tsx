@@ -330,9 +330,9 @@ const BookViewer = ({
 
         // Handle different location types
         if (location && typeof location === 'object') {
-          if ('start' in location && location.start?.cfi) {
+          if ('start' in location && location.start && typeof location.start === 'object' && 'cfi' in location.start) {
             currentSection = location.start.cfi;
-          } else if ('cfi' in location) {
+          } else if ('cfi' in location && typeof location.cfi === 'string') {
             currentSection = location.cfi;
           }
         }
