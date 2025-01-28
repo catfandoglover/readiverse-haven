@@ -144,6 +144,9 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text) return;
 
+        // Prevent immediate highlight application
+        contents.window.getSelection()?.removeAllRanges();
+        
         setSelectedText({ cfiRange, text });
         setShowHighlightDialog(true);
 
