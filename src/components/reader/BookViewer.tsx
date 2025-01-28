@@ -10,21 +10,17 @@ import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface EpubContent {
   document: Document;
-}
-
-interface EpubView {
-  contents: EpubContent[];
-  section?: {
-    href: string;
-  };
 }
 
 interface View {
@@ -65,10 +61,8 @@ const BookViewer = ({
   const [selectedText, setSelectedText] = useState<{
     cfiRange: string;
     text: string;
-    x: number;
-    y: number;
   } | null>(null);
-  const selectionTimeoutRef = useRef<NodeJS.Timeout>();
+  const [showHighlightDialog, setShowHighlightDialog] = useState(false);
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
 
@@ -129,13 +123,25 @@ const BookViewer = ({
     lastTapRef.current = now;
   }, []);
 
-  const handleHighlight = () => {
+  const handleHighlightConfirm = () => {
     if (selectedText && onTextSelect) {
       onTextSelect(selectedText.cfiRange, selectedText.text);
       setSelectedText(null);
+      setShowHighlightDialog(false);
       toast({
         description: "Text highlighted successfully",
       });
+    }
+  };
+
+  const handleHighlightCancel = () => {
+    setSelectedText(null);
+    setShowHighlightDialog(false);
+    if (rendition) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+      }
     }
   };
 
@@ -150,15 +156,8 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text) return;
 
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-
-        setSelectedText({ 
-          cfiRange, 
-          text,
-          x: rect.left + (rect.width / 2),
-          y: rect.top
-        });
+        setSelectedText({ cfiRange, text });
+        setShowHighlightDialog(true);
 
       } catch (error) {
         console.error('Error handling text selection:', error);
@@ -177,9 +176,6 @@ const BookViewer = ({
     }
 
     return () => {
-      if (selectionTimeoutRef.current) {
-        clearTimeout(selectionTimeoutRef.current);
-      }
       rendition.off("selected", handleTextSelection);
       if (container) {
         container.removeEventListener('touchstart', handleTouchStart);
@@ -277,30 +273,30 @@ const BookViewer = ({
     return () => clearTimeout(timeoutId);
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
-  const handleContextMenuClose = () => {
-    if (selectedText) {
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-      }
-      setSelectedText(null);
-    }
-  };
-
   return (
     <div className="relative">
-      <ContextMenu onOpenChange={handleContextMenuClose}>
-        <ContextMenuTrigger>
-          <ViewerContainer theme={theme} setContainer={setContainer} />
-        </ContextMenuTrigger>
-        {selectedText && (
-          <ContextMenuContent>
-            <ContextMenuItem onClick={handleHighlight}>
+      <ViewerContainer theme={theme} setContainer={setContainer} />
+      <Dialog open={showHighlightDialog} onOpenChange={setShowHighlightDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Highlight</DialogTitle>
+            <DialogDescription>
+              Do you want to highlight this text?
+              <div className="mt-2 p-4 bg-muted rounded-md">
+                {selectedText?.text}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleHighlightCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleHighlightConfirm}>
               Highlight
-            </ContextMenuItem>
-          </ContextMenuContent>
-        )}
-      </ContextMenu>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
