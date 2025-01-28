@@ -53,6 +53,7 @@ const BookViewer = ({
   const [showHighlightDialog, setShowHighlightDialog] = useState(false);
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
+  const pendingHighlightRef = useRef<{ cfiRange: string; text: string } | null>(null);
 
   const {
     rendition,
@@ -66,7 +67,7 @@ const BookViewer = ({
     theme,
     currentLocation,
     onLocationChange,
-    onTextSelect,
+    undefined, // We'll handle text selection separately
     highlights
   );
 
@@ -116,6 +117,15 @@ const BookViewer = ({
       onTextSelect(selectedText.cfiRange, selectedText.text);
       setSelectedText(null);
       setShowHighlightDialog(false);
+      
+      // Clear the selection after confirming
+      if (rendition) {
+        const contents = rendition.getContents();
+        contents.forEach(content => {
+          content.window.getSelection()?.removeAllRanges();
+        });
+      }
+      
       toast({
         description: "Text highlighted successfully",
       });
@@ -126,10 +136,10 @@ const BookViewer = ({
     setSelectedText(null);
     setShowHighlightDialog(false);
     if (rendition) {
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-      }
+      const contents = rendition.getContents();
+      contents.forEach(content => {
+        content.window.getSelection()?.removeAllRanges();
+      });
     }
   };
 
@@ -144,9 +154,7 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text) return;
 
-        // Prevent immediate highlight application
-        contents.window.getSelection()?.removeAllRanges();
-        
+        // Store the selection details
         setSelectedText({ cfiRange, text });
         setShowHighlightDialog(true);
 
