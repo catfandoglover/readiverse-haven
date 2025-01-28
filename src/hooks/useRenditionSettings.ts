@@ -3,12 +3,12 @@ import type { Rendition } from "epubjs";
 
 export const useRenditionSettings = () => {
   const [fontSize, setFontSize] = useState(100);
-  const [fontFamily, setFontFamily] = useState<'georgia' | 'helvetica' | 'times'>('georgia');
+  const [fontFamily, setFontFamily] = useState<'lexend' | 'georgia' | 'helvetica' | 'times'>('lexend');
   const [textAlign, setTextAlign] = useState<'left' | 'justify' | 'center'>('left');
   const [brightness, setBrightness] = useState(1);
   const [rendition, setRendition] = useState<Rendition | null>(null);
 
-  const handleFontFamilyChange = (value: 'georgia' | 'helvetica' | 'times') => {
+  const handleFontFamilyChange = (value: 'lexend' | 'georgia' | 'helvetica' | 'times') => {
     setFontFamily(value);
   };
 

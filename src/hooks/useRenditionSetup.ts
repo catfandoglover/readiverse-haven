@@ -8,7 +8,7 @@ export const useRenditionSetup = (
   book: Book,
   isMobile: boolean,
   textAlign: 'left' | 'justify' | 'center',
-  fontFamily: 'georgia' | 'helvetica' | 'times',
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times',
   theme: { text: string; background: string },
   currentLocation: string | null,
   onLocationChange: (location: any) => void,
@@ -17,8 +17,10 @@ export const useRenditionSetup = (
 ) => {
   const [rendition, setRendition] = useState<Rendition | null>(null);
 
-  const getFontFamily = (font: 'georgia' | 'helvetica' | 'times') => {
+  const getFontFamily = (font: 'lexend' | 'georgia' | 'helvetica' | 'times') => {
     switch (font) {
+      case 'lexend':
+        return 'Lexend, sans-serif';
       case 'georgia':
         return 'Georgia, serif';
       case 'helvetica':
@@ -26,7 +28,7 @@ export const useRenditionSetup = (
       case 'times':
         return 'Times New Roman, serif';
       default:
-        return 'Georgia, serif';
+        return 'Lexend, sans-serif';
     }
   };
 
