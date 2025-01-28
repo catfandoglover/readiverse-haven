@@ -53,7 +53,7 @@ export const useRenditionSetup = (
         background: theme.background,
       },
       '.highlight-yellow': {
-        'background-color': 'rgba(255, 235, 59, 0.3)',
+        'background-color': '#CCFF33',
       }
     });
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition, Location } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
-import type { Highlight } from "@/types/highlight";
+import type { Highlight } from '@/types/highlight';
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
@@ -286,11 +286,29 @@ const BookViewer = ({
     if (!rendition || !isRenditionReady) return;
     
     const timeoutId = setTimeout(() => {
-      reapplyHighlights();
+      highlights.forEach(highlight => {
+        try {
+          rendition.annotations.remove(highlight.cfiRange, 'highlight');
+          rendition.annotations.add(
+            "highlight",
+            highlight.cfiRange,
+            {},
+            undefined,
+            `highlight-${highlight.color}`,
+            {
+              "fill": "#CCFF33",
+              "fill-opacity": "0.3",
+              "mix-blend-mode": "multiply"
+            }
+          );
+        } catch (error) {
+          console.error('Error applying highlight:', error);
+        }
+      });
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
+  }, [highlights, rendition, isRenditionReady]);
 
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
