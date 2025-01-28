@@ -292,6 +292,49 @@ const BookViewer = ({
     return () => clearTimeout(timeoutId);
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
+  useEffect(() => {
+    if (!rendition || !isRenditionReady) return;
+    
+    // Listen for the custom removeHighlight event
+    const handleRemoveHighlight = (event: CustomEvent) => {
+      const { cfiRange } = event.detail;
+      if (!cfiRange || !rendition) return;
+
+      try {
+        // Remove the highlight annotation from rendition
+        rendition.annotations.remove(cfiRange, 'highlight');
+
+        // Get all contents
+        const contents = rendition.getContents();
+        if (Array.isArray(contents)) {
+          contents.forEach(content => {
+            if (content?.document) {
+              // Remove highlight elements from DOM
+              const highlights = content.document.querySelectorAll('.epub-highlight');
+              highlights.forEach(highlight => {
+                if (highlight.dataset.epubcfi === cfiRange) {
+                  highlight.remove();
+                }
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error removing highlight:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to remove highlight",
+        });
+      }
+    };
+
+    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    
+    return () => {
+      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    };
+  }, [rendition, isRenditionReady, toast]);
+
   return (
     <div className="relative">
       <ViewerContainer theme={theme} setContainer={setContainer} />
