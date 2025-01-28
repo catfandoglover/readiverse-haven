@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Copy, Share2, Highlighter } from "lucide-react";
 
 interface BookViewerProps {
   book: Book;
@@ -50,7 +51,7 @@ const BookViewer = ({
     cfiRange: string;
     text: string;
   } | null>(null);
-  const [showHighlightDialog, setShowHighlightDialog] = useState(false);
+  const [showTextDialog, setShowTextDialog] = useState(false);
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
   const pendingHighlightRef = useRef<{ cfiRange: string; text: string } | null>(null);
@@ -112,38 +113,60 @@ const BookViewer = ({
     lastTapRef.current = now;
   }, []);
 
-  const handleHighlightConfirm = () => {
+  const handleHighlightText = () => {
     if (selectedText && onTextSelect) {
       onTextSelect(selectedText.cfiRange, selectedText.text);
-      setSelectedText(null);
-      setShowHighlightDialog(false);
-      
-      // Clear the selection after confirming
-      if (rendition) {
-        const contents = rendition.getContents();
-        if (Array.isArray(contents)) {
-          contents.forEach(content => {
-            if (content.window.getSelection) {
-              content.window.getSelection()?.removeAllRanges();
-            }
-          });
-        }
-      }
-      
+      clearSelection();
+      setShowTextDialog(false);
       toast({
         description: "Text highlighted successfully",
       });
     }
   };
 
-  const handleHighlightCancel = () => {
+  const handleCopyText = async () => {
+    if (selectedText) {
+      try {
+        await navigator.clipboard.writeText(selectedText.text);
+        clearSelection();
+        setShowTextDialog(false);
+        toast({
+          description: "Text copied to clipboard",
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          description: "Failed to copy text",
+        });
+      }
+    }
+  };
+
+  const handleShareText = async () => {
+    if (selectedText) {
+      try {
+        await navigator.share({
+          text: selectedText.text,
+        });
+        clearSelection();
+        setShowTextDialog(false);
+        toast({
+          description: "Text shared successfully",
+        });
+      } catch (error) {
+        // If share is not supported or user cancels, try copy instead
+        handleCopyText();
+      }
+    }
+  };
+
+  const clearSelection = () => {
     setSelectedText(null);
-    setShowHighlightDialog(false);
     if (rendition) {
       const contents = rendition.getContents();
       if (Array.isArray(contents)) {
         contents.forEach(content => {
-          if (content.window.getSelection) {
+          if (content.window?.getSelection) {
             content.window.getSelection()?.removeAllRanges();
           }
         });
@@ -162,10 +185,8 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text) return;
 
-        // Store the selection details
         setSelectedText({ cfiRange, text });
-        setShowHighlightDialog(true);
-
+        setShowTextDialog(true);
       } catch (error) {
         console.error('Error handling text selection:', error);
         toast({
@@ -177,19 +198,10 @@ const BookViewer = ({
 
     rendition.on("selected", handleTextSelection);
 
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart, { passive: true });
-      container.addEventListener('touchend', handleTouchEnd);
-    }
-
     return () => {
       rendition.off("selected", handleTextSelection);
-      if (container) {
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchend', handleTouchEnd);
-      }
     };
-  }, [rendition, container, handleTouchStart, handleTouchEnd, toast]);
+  }, [rendition, toast]);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -283,23 +295,40 @@ const BookViewer = ({
   return (
     <div className="relative">
       <ViewerContainer theme={theme} setContainer={setContainer} />
-      <Dialog open={showHighlightDialog} onOpenChange={setShowHighlightDialog}>
+      <Dialog open={showTextDialog} onOpenChange={setShowTextDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Highlight</DialogTitle>
+            <DialogTitle>Text Options</DialogTitle>
             <DialogDescription>
-              Do you want to highlight this text?
+              Choose what you'd like to do with the selected text:
               <div className="mt-2 p-4 bg-muted rounded-md">
                 {selectedText?.text}
               </div>
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleHighlightCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleHighlightConfirm}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleHighlightText}
+            >
+              <Highlighter className="h-4 w-4" />
               Highlight
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleCopyText}
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
+            <Button
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleShareText}
+            >
+              <Share2 className="h-4 w-4" />
+              Share
             </Button>
           </DialogFooter>
         </DialogContent>
