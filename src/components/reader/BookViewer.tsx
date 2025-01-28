@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import type { Book, Rendition } from "epubjs";
+import type { Book, Rendition, Location } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Highlight } from "@/types/highlight";
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
@@ -326,7 +326,16 @@ const BookViewer = ({
 
         // Force a redraw of the current section
         const location = rendition.currentLocation();
-        const currentSection = location?.start?.cfi || location?.cfi;
+        let currentSection: string | undefined;
+
+        // Handle different location types
+        if (location && typeof location === 'object') {
+          if ('start' in location && location.start?.cfi) {
+            currentSection = location.start.cfi;
+          } else if ('cfi' in location) {
+            currentSection = location.cfi;
+          }
+        }
         
         if (currentSection) {
           rendition.display(currentSection).then(() => {
