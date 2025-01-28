@@ -295,7 +295,6 @@ const BookViewer = ({
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
     
-    // Listen for the custom removeHighlight event
     const handleRemoveHighlight = (event: CustomEvent) => {
       const { cfiRange } = event.detail;
       if (!cfiRange || !rendition) return;
@@ -304,12 +303,11 @@ const BookViewer = ({
         // Remove the highlight annotation from rendition
         rendition.annotations.remove(cfiRange, 'highlight');
 
-        // Get all contents
+        // Get all contents and remove highlight elements
         const contents = rendition.getContents();
         if (Array.isArray(contents)) {
           contents.forEach(content => {
             if (content?.document) {
-              // Remove highlight elements from DOM
               const highlights = content.document.querySelectorAll('.epub-highlight');
               highlights.forEach(highlight => {
                 if (highlight.dataset.epubcfi === cfiRange) {
@@ -319,6 +317,12 @@ const BookViewer = ({
             }
           });
         }
+
+        // Force a re-render of the current page
+        const currentLocation = rendition.location.start.cfi;
+        rendition.display(currentLocation).then(() => {
+          reapplyHighlights();
+        });
       } catch (error) {
         console.error('Error removing highlight:', error);
         toast({
@@ -333,7 +337,7 @@ const BookViewer = ({
     return () => {
       window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
     };
-  }, [rendition, isRenditionReady, toast]);
+  }, [rendition, isRenditionReady, toast, reapplyHighlights]);
 
   return (
     <div className="relative">
