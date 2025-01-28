@@ -9,6 +9,30 @@ import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+
+interface EpubContent {
+  document: Document;
+}
+
+interface EpubView {
+  contents: EpubContent[];
+  section?: {
+    href: string;
+  };
+}
+
+interface View {
+  contents?: EpubContent | EpubContent[];
+  section?: {
+    href: string;
+  };
+}
 
 interface BookViewerProps {
   book: Book;
@@ -38,6 +62,10 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
+  const [selectedText, setSelectedText] = useState<{
+    cfiRange: string;
+    text: string;
+  } | null>(null);
   const selectionTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
@@ -87,12 +115,10 @@ const BookViewer = ({
     const deltaX = Math.abs(touchEnd.x - touchStartRef.current.x);
     const deltaY = Math.abs(touchEnd.y - touchStartRef.current.y);
 
-    // If significant movement, don't process as selection
     if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
       return;
     }
 
-    // Handle double tap
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       e.preventDefault();
       return;
@@ -100,6 +126,16 @@ const BookViewer = ({
 
     lastTapRef.current = now;
   }, []);
+
+  const handleHighlight = () => {
+    if (selectedText && onTextSelect) {
+      onTextSelect(selectedText.cfiRange, selectedText.text);
+      setSelectedText(null);
+      toast({
+        description: "Text highlighted successfully",
+      });
+    }
+  };
 
   useEffect(() => {
     if (!rendition) return;
@@ -110,27 +146,15 @@ const BookViewer = ({
         if (!selection) return;
 
         const text = selection.toString().trim();
-        if (!text || !onTextSelect) return;
+        if (!text) return;
 
-        // Clear any existing timeout
-        if (selectionTimeoutRef.current) {
-          clearTimeout(selectionTimeoutRef.current);
-        }
+        setSelectedText({ cfiRange, text });
 
-        onTextSelect(cfiRange, text);
-        toast({
-          description: "Text highlighted successfully",
-        });
-
-        // Set new timeout for clearing selection
-        selectionTimeoutRef.current = setTimeout(() => {
-          selection.removeAllRanges();
-        }, 250);
       } catch (error) {
-        console.error('Error creating highlight:', error);
+        console.error('Error handling text selection:', error);
         toast({
           variant: "destructive",
-          description: "Failed to create highlight",
+          description: "Failed to process text selection",
         });
       }
     };
@@ -152,7 +176,7 @@ const BookViewer = ({
         container.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
+  }, [rendition, container, handleTouchStart, handleTouchEnd, toast]);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -246,7 +270,18 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      <ViewerContainer theme={theme} setContainer={setContainer} />
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <ViewerContainer theme={theme} setContainer={setContainer} />
+        </ContextMenuTrigger>
+        {selectedText && (
+          <ContextMenuContent>
+            <ContextMenuItem onClick={handleHighlight}>
+              Highlight
+            </ContextMenuItem>
+          </ContextMenuContent>
+        )}
+      </ContextMenu>
     </div>
   );
 };
