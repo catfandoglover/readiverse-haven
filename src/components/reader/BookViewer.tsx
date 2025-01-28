@@ -121,9 +121,13 @@ const BookViewer = ({
       // Clear the selection after confirming
       if (rendition) {
         const contents = rendition.getContents();
-        contents.forEach(content => {
-          content.window.getSelection()?.removeAllRanges();
-        });
+        if (Array.isArray(contents)) {
+          contents.forEach(content => {
+            if (content.window.getSelection) {
+              content.window.getSelection()?.removeAllRanges();
+            }
+          });
+        }
       }
       
       toast({
@@ -137,9 +141,13 @@ const BookViewer = ({
     setShowHighlightDialog(false);
     if (rendition) {
       const contents = rendition.getContents();
-      contents.forEach(content => {
-        content.window.getSelection()?.removeAllRanges();
-      });
+      if (Array.isArray(contents)) {
+        contents.forEach(content => {
+          if (content.window.getSelection) {
+            content.window.getSelection()?.removeAllRanges();
+          }
+        });
+      }
     }
   };
 
