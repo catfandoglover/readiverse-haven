@@ -24,7 +24,7 @@ interface BookViewerProps {
   currentLocation: string | null;
   onLocationChange: (location: any) => void;
   fontSize: number;
-  fontFamily: 'georgia' | 'helvetica' | 'times';
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
