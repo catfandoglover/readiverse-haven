@@ -325,26 +325,30 @@ const BookViewer = ({
         }
 
         // Force a redraw of the current section
-        const currentSection = rendition.currentLocation().start.cfi;
-        rendition.display(currentSection).then(() => {
-          // After redraw, reapply remaining highlights
-          highlights.forEach(h => {
-            if (h.cfiRange !== cfiRange) {
-              rendition.annotations.add(
-                "highlight",
-                h.cfiRange,
-                {},
-                undefined,
-                `highlight-${h.color}`,
-                {
-                  "fill": h.color,
-                  "fill-opacity": "0.3",
-                  "mix-blend-mode": "multiply"
-                }
-              );
-            }
+        const location = rendition.currentLocation();
+        const currentSection = location?.start?.cfi || location?.cfi;
+        
+        if (currentSection) {
+          rendition.display(currentSection).then(() => {
+            // After redraw, reapply remaining highlights
+            highlights.forEach(h => {
+              if (h.cfiRange !== cfiRange) {
+                rendition.annotations.add(
+                  "highlight",
+                  h.cfiRange,
+                  {},
+                  undefined,
+                  `highlight-${h.color}`,
+                  {
+                    "fill": h.color,
+                    "fill-opacity": "0.3",
+                    "mix-blend-mode": "multiply"
+                  }
+                );
+              }
+            });
           });
-        });
+        }
 
       } catch (error) {
         console.error('Error removing highlight:', error);
