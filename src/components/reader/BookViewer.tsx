@@ -65,6 +65,8 @@ const BookViewer = ({
   const [selectedText, setSelectedText] = useState<{
     cfiRange: string;
     text: string;
+    x: number;
+    y: number;
   } | null>(null);
   const selectionTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef(0);
@@ -148,7 +150,15 @@ const BookViewer = ({
         const text = selection.toString().trim();
         if (!text) return;
 
-        setSelectedText({ cfiRange, text });
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        setSelectedText({ 
+          cfiRange, 
+          text,
+          x: rect.left + (rect.width / 2),
+          y: rect.top
+        });
 
       } catch (error) {
         console.error('Error handling text selection:', error);
@@ -260,7 +270,6 @@ const BookViewer = ({
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
     
-    // Ensure rendition is fully ready before reapplying highlights
     const timeoutId = setTimeout(() => {
       reapplyHighlights();
     }, 100);
@@ -268,9 +277,19 @@ const BookViewer = ({
     return () => clearTimeout(timeoutId);
   }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
 
+  const handleContextMenuClose = () => {
+    if (selectedText) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+      }
+      setSelectedText(null);
+    }
+  };
+
   return (
     <div className="relative">
-      <ContextMenu>
+      <ContextMenu onOpenChange={handleContextMenuClose}>
         <ContextMenuTrigger>
           <ViewerContainer theme={theme} setContainer={setContainer} />
         </ContextMenuTrigger>
