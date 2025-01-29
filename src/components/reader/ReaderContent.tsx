@@ -118,7 +118,7 @@ const ReaderContent = ({
 
     const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const width = window.innerWidth;
-    const threshold = width * 0.3; // 30% of screen width for tap areas
+    const threshold = width * 0.2; // 20% of screen width for tap areas
 
     if (x < threshold) {
       e.preventDefault();
@@ -132,7 +132,7 @@ const ReaderContent = ({
   React.useEffect(() => {
     if (!isMobile) return;
 
-    // Add event listeners to the document instead of container
+    // Add event listeners to the document for better touch area coverage
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
     document.addEventListener('click', handleTouchStart);
 
@@ -179,17 +179,31 @@ const ReaderContent = ({
         <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
           <TableOfContents toc={toc} onNavigate={onTocNavigate} />
         </div>
-        <BookViewer
-          book={book}
-          currentLocation={currentLocation}
-          onLocationChange={onLocationChange}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-          textAlign={textAlign}
-          onRenditionReady={onRenditionReady}
-          highlights={highlights}
-          onTextSelect={onTextSelect}
-        />
+        <div className="relative">
+          {isMobile && (
+            <>
+              <div 
+                className="absolute left-0 top-0 w-1/5 h-full z-10"
+                onClick={onPrevPage}
+              />
+              <div 
+                className="absolute right-0 top-0 w-1/5 h-full z-10"
+                onClick={onNextPage}
+              />
+            </>
+          )}
+          <BookViewer
+            book={book}
+            currentLocation={currentLocation}
+            onLocationChange={onLocationChange}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            textAlign={textAlign}
+            onRenditionReady={onRenditionReady}
+            highlights={highlights}
+            onTextSelect={onTextSelect}
+          />
+        </div>
       </div>
 
       <FloatingControls
