@@ -118,7 +118,7 @@ const ReaderContent = ({
 
     const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const width = window.innerWidth;
-    const threshold = width * 0.2; // 20% of screen width for tap areas
+    const threshold = width * 0.05; // 5% of screen width for tap areas
 
     if (x < threshold) {
       e.preventDefault();
@@ -183,11 +183,11 @@ const ReaderContent = ({
           {isMobile && (
             <>
               <div 
-                className="absolute left-0 top-0 w-1/5 h-full z-10"
+                className="absolute left-0 top-0 w-[5%] h-full z-10"
                 onClick={onPrevPage}
               />
               <div 
-                className="absolute right-0 top-0 w-1/5 h-full z-10"
+                className="absolute right-0 top-0 w-[5%] h-full z-10"
                 onClick={onNextPage}
               />
             </>
