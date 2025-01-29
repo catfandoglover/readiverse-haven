@@ -1,15 +1,19 @@
-import React from 'react';
-import ReaderControls from "./ReaderControls";
-import ProgressTracker from "./ProgressTracker";
-import NavigationButtons from "./NavigationButtons";
-import TableOfContents from "./TableOfContents";
-import BookViewer from "./BookViewer";
-import FloatingControls from "./FloatingControls";
-import BookmarkDialog from "./BookmarkDialog";
-import BrightnessOverlay from "./BrightnessOverlay";
-import type { Book } from "epubjs";
+import React, { useState, useCallback } from 'react';
+import type { Book, Rendition } from 'epubjs';
 import type { NavItem } from 'epubjs';
-import type { Highlight } from '@/types/highlight';
+import type { Highlight, HighlightColor } from '@/types/highlight';
+import { useTheme } from '@/contexts/ThemeContext';
+import TableOfContents from './TableOfContents';
+import NavigationButtons from './NavigationButtons';
+import BookViewer from './BookViewer';
+import ViewerContainer from './ViewerContainer';
+import BrightnessOverlay from './BrightnessOverlay';
+import { DesktopControls } from './controls/DesktopControls';
+import { MobileControls } from './controls/MobileControls';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useRenditionSetup } from '@/hooks/useRenditionSetup';
+import { useReaderResize } from '@/hooks/useReaderResize';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReaderContentProps {
   book: Book;
@@ -79,6 +83,62 @@ const ReaderContent = ({
   setSelectedColor,
   removeHighlight,
 }: ReaderContentProps) => {
+  const [container, setContainer] = useState<Element | null>(null);
+  const [isRenditionReady, setIsRenditionReady] = useState(false);
+  const { theme } = useTheme();
+  const isMobile = useIsMobile();
+
+  const {
+    rendition,
+    setRendition,
+    setupRendition,
+  } = useRenditionSetup(
+    book!,
+    isMobile,
+    textAlign,
+    fontFamily,
+    theme,
+    currentLocation,
+    onLocationChange,
+    onTextSelect,
+    highlights
+  );
+
+  const {
+    resizeObserver,
+    setResizeObserver,
+    debouncedContainerResize
+  } = useReaderResize(rendition);
+
+  const handleTouchStart = useCallback((e: TouchEvent | MouseEvent) => {
+    if (!isMobile || !rendition) return;
+
+    const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const width = window.innerWidth;
+    const threshold = width * 0.3; // 30% of screen width for tap areas
+
+    if (x < threshold) {
+      e.preventDefault();
+      onPrevPage();
+    } else if (x > width - threshold) {
+      e.preventDefault();
+      onNextPage();
+    }
+  }, [isMobile, rendition, onPrevPage, onNextPage]);
+
+  React.useEffect(() => {
+    if (!container || !isMobile) return;
+
+    const containerElement = container as HTMLElement;
+    containerElement.addEventListener('touchstart', handleTouchStart);
+    containerElement.addEventListener('click', handleTouchStart);
+
+    return () => {
+      containerElement.removeEventListener('touchstart', handleTouchStart);
+      containerElement.removeEventListener('click', handleTouchStart);
+    };
+  }, [container, isMobile, handleTouchStart]);
+
   return (
     <>
       <ReaderControls
