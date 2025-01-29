@@ -1,33 +1,40 @@
-import React from "react";
-import type { Book } from "epubjs";
-import type { Highlight } from "@/types/highlight";
-import BookViewer from "./BookViewer";
+import React from 'react';
 import ReaderControls from "./ReaderControls";
 import ProgressTracker from "./ProgressTracker";
-import SessionTimer from "./SessionTimer";
+import NavigationButtons from "./NavigationButtons";
 import TableOfContents from "./TableOfContents";
+import BookViewer from "./BookViewer";
+import FloatingControls from "./FloatingControls";
 import BookmarkDialog from "./BookmarkDialog";
-import { cn } from "@/lib/utils";
+import BrightnessOverlay from "./BrightnessOverlay";
+import type { Book } from "epubjs";
+import type { NavItem } from 'epubjs';
+import type { Highlight } from '@/types/highlight';
 
 interface ReaderContentProps {
-  book: Book | null;
+  book: Book;
   fontSize: number;
   fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
-  textAlign?: 'left' | 'justify' | 'center';
+  textAlign: 'left' | 'justify' | 'center';
   brightness: number;
   currentLocation: string | null;
-  progress: number;
-  pageInfo: { currentPage: number; totalPages: number };
+  progress: { book: number };
+  pageInfo: {
+    current: number;
+    total: number;
+    chapterCurrent: number;
+    chapterTotal: number;
+  };
   sessionTime: number;
   highlights: Highlight[];
-  selectedColor: string;
-  toc: any[];
-  currentChapterTitle: string | null;
+  selectedColor: 'yellow';
+  toc: NavItem[];
+  currentChapterTitle: string;
   showBookmarkDialog: boolean;
-  onFontSizeChange: (size: number) => void;
-  onFontFamilyChange: (font: 'lexend' | 'georgia' | 'helvetica' | 'times') => void;
-  onTextAlignChange: (align: 'left' | 'justify' | 'center') => void;
-  onBrightnessChange: (brightness: number) => void;
+  onFontSizeChange: (value: number[]) => void;
+  onFontFamilyChange: (value: 'lexend' | 'georgia' | 'helvetica' | 'times') => void;
+  onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
+  onBrightnessChange: (value: number[]) => void;
   onBookmarkClick: () => void;
   onLocationChange: (location: any) => void;
   onPrevPage: () => void;
@@ -36,12 +43,12 @@ interface ReaderContentProps {
   onRenditionReady: (rendition: any) => void;
   onTextSelect: (cfiRange: string, text: string) => void;
   setShowBookmarkDialog: (show: boolean) => void;
-  handleRemoveBookmark: (cfiRange: string) => void;
-  setSelectedColor: (color: string) => void;
-  removeHighlight: (cfiRange: string) => void;
+  handleRemoveBookmark: () => void;
+  setSelectedColor: (color: 'yellow') => void;
+  removeHighlight: (id: string) => void;
 }
 
-const ReaderContent: React.FC<ReaderContentProps> = ({
+const ReaderContent = ({
   book,
   fontSize,
   fontFamily,
@@ -71,62 +78,77 @@ const ReaderContent: React.FC<ReaderContentProps> = ({
   handleRemoveBookmark,
   setSelectedColor,
   removeHighlight,
-}) => {
+}: ReaderContentProps) => {
   return (
-    <div className="relative">
-      <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4">
-        <div className="hidden md:block">
-          <TableOfContents
-            toc={toc}
-            currentChapterTitle={currentChapterTitle}
-            onTocNavigate={onTocNavigate}
-          />
-        </div>
-        <div>
-          <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
-            <ReaderControls
-              fontSize={fontSize}
-              fontFamily={fontFamily}
-              textAlign={textAlign}
-              brightness={brightness}
-              onFontSizeChange={onFontSizeChange}
-              onFontFamilyChange={onFontFamilyChange}
-              onTextAlignChange={onTextAlignChange}
-              onBrightnessChange={onBrightnessChange}
-              onBookmarkClick={onBookmarkClick}
-              onPrevPage={onPrevPage}
-              onNextPage={onNextPage}
-              highlights={highlights}
-              selectedColor={selectedColor}
-              setSelectedColor={setSelectedColor}
-              removeHighlight={removeHighlight}
-            />
-          </div>
-          <div className={cn("bg-white rounded-lg shadow-lg p-4 relative", textAlign)}>
-            <BookViewer
-              book={book}
-              fontSize={fontSize}
-              fontFamily={fontFamily}
-              textAlign={textAlign}
-              currentLocation={currentLocation}
-              onLocationChange={onLocationChange}
-              onRenditionReady={onRenditionReady}
-              highlights={highlights}
-              onTextSelect={onTextSelect}
-            />
-          </div>
-          <div className="mt-4 bg-white rounded-lg shadow-lg p-4">
-            <ProgressTracker progress={progress} pageInfo={pageInfo} />
-            <SessionTimer sessionTime={sessionTime} />
-          </div>
-        </div>
-      </div>
-      <BookmarkDialog
-        show={showBookmarkDialog}
-        onClose={() => setShowBookmarkDialog(false)}
-        onRemove={handleRemoveBookmark}
+    <>
+      <ReaderControls
+        fontSize={fontSize}
+        onFontSizeChange={onFontSizeChange}
+        fontFamily={fontFamily}
+        onFontFamilyChange={onFontFamilyChange}
+        textAlign={textAlign}
+        onTextAlignChange={onTextAlignChange}
+        brightness={brightness}
+        onBrightnessChange={onBrightnessChange}
+        currentLocation={currentLocation}
+        onBookmarkClick={onBookmarkClick}
+        onLocationChange={onLocationChange}
+        sessionTime={sessionTime}
+        highlights={highlights}
+        selectedHighlightColor={selectedColor}
+        onHighlightColorSelect={setSelectedColor}
+        onHighlightSelect={onLocationChange}
+        onRemoveHighlight={removeHighlight}
+        toc={toc}
+        onNavigate={onTocNavigate}
       />
-    </div>
+      
+      <ProgressTracker 
+        bookProgress={progress.book}
+        pageInfo={pageInfo}
+      />
+
+      <div className="relative">
+        <NavigationButtons
+          onPrevPage={onPrevPage}
+          onNextPage={onNextPage}
+        />
+        <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
+          <TableOfContents toc={toc} onNavigate={onTocNavigate} />
+        </div>
+        <BookViewer
+          book={book}
+          currentLocation={currentLocation}
+          onLocationChange={onLocationChange}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          textAlign={textAlign}
+          onRenditionReady={onRenditionReady}
+          highlights={highlights}
+          onTextSelect={onTextSelect}
+        />
+      </div>
+
+      <FloatingControls
+        currentLocation={currentLocation}
+        onLocationSelect={onLocationChange}
+        onBookmarkClick={onBookmarkClick}
+        highlights={highlights}
+        selectedColor={selectedColor}
+        onColorSelect={setSelectedColor}
+        onHighlightSelect={onLocationChange}
+        onRemoveHighlight={removeHighlight}
+      />
+
+      <BookmarkDialog
+        open={showBookmarkDialog}
+        onOpenChange={setShowBookmarkDialog}
+        onRemoveBookmark={handleRemoveBookmark}
+        chapterTitle={currentChapterTitle}
+      />
+
+      <BrightnessOverlay brightness={brightness} />
+    </>
   );
 };
 
