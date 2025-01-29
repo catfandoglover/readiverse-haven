@@ -48,12 +48,34 @@
     --ring: 212.7 26.8% 83.9%;
   }
 
+  .sepia {
+    --background: 45 37% 94%;
+    --foreground: 32 24% 28%;
+    --card: 45 37% 94%;
+    --card-foreground: 32 24% 28%;
+    --popover: 45 37% 94%;
+    --popover-foreground: 32 24% 28%;
+    --primary: 32 24% 28%;
+    --primary-foreground: 45 37% 94%;
+    --secondary: 32 24% 28%;
+    --secondary-foreground: 45 37% 94%;
+    --muted: 32 24% 28%;
+    --muted-foreground: 32 24% 28%;
+    --accent: 32 24% 28%;
+    --accent-foreground: 45 37% 94%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 45 37% 94%;
+    --border: 32 24% 28%;
+    --input: 32 24% 28%;
+    --ring: 32 24% 28%;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 
   .reader-container {
@@ -61,6 +83,41 @@
   }
 
   .epub-view {
-    @apply bg-white shadow-lg rounded-lg;
+    @apply bg-background text-foreground shadow-lg rounded-lg transition-colors duration-300;
+  }
+
+  /* Dark mode specific overrides */
+  .dark {
+    .shadow-lg {
+      @apply shadow-[0_10px_15px_-3px_rgba(0,0,0,0.4),0_4px_6px_-4px_rgba(0,0,0,0.4)];
+    }
+
+    .border {
+      @apply border-gray-800;
+    }
+
+    input, select, button {
+      @apply bg-gray-800 border-gray-700;
+    }
+
+    .bg-white {
+      @apply bg-gray-900;
+    }
+
+    .bg-gray-50 {
+      @apply bg-gray-900;
+    }
+
+    .bg-gray-100 {
+      @apply bg-gray-800;
+    }
+
+    .text-gray-700 {
+      @apply text-gray-300;
+    }
+
+    .hover\:bg-gray-100:hover {
+      @apply hover:bg-gray-800;
+    }
   }
 }
