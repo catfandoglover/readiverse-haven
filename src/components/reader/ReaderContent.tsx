@@ -14,6 +14,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useRenditionSetup } from '@/hooks/useRenditionSetup';
 import { useReaderResize } from '@/hooks/useReaderResize';
 import { useToast } from '@/hooks/use-toast';
+import ReaderControls from './ReaderControls';
+import ProgressTracker from './ProgressTracker';
+import FloatingControls from './FloatingControls';
+import BookmarkDialog from './BookmarkDialog';
 
 interface ReaderContentProps {
   book: Book;
