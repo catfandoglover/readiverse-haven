@@ -85,4 +85,39 @@
   .epub-view {
     @apply bg-background text-foreground shadow-lg rounded-lg transition-colors duration-300;
   }
+
+  /* Dark mode specific overrides */
+  .dark {
+    .shadow-lg {
+      @apply shadow-[0_10px_15px_-3px_rgba(0,0,0,0.4),0_4px_6px_-4px_rgba(0,0,0,0.4)];
+    }
+
+    .border {
+      @apply border-gray-800;
+    }
+
+    input, select, button {
+      @apply bg-gray-800 border-gray-700;
+    }
+
+    .bg-white {
+      @apply bg-gray-900;
+    }
+
+    .bg-gray-50 {
+      @apply bg-gray-900;
+    }
+
+    .bg-gray-100 {
+      @apply bg-gray-800;
+    }
+
+    .text-gray-700 {
+      @apply text-gray-300;
+    }
+
+    .hover\:bg-gray-100:hover {
+      @apply hover:bg-gray-800;
+    }
+  }
 }
