@@ -215,6 +215,7 @@ const ReaderContent = ({
         onColorSelect={setSelectedColor}
         onHighlightSelect={onLocationChange}
         onRemoveHighlight={removeHighlight}
+        bookKey={book?.key()}
       />
 
       <BookmarkDialog

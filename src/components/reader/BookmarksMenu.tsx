@@ -18,6 +18,7 @@ interface BookmarkData {
   timestamp: number;
   chapterInfo: string;
   pageInfo: string;
+  bookKey: string;
   metadata?: {
     created?: string;
     formattedDate?: string;
@@ -33,9 +34,15 @@ interface BookmarksMenuProps {
   currentLocation: string | null;
   onLocationSelect: (location: string) => void;
   onBookmarkClick: () => void;
+  bookKey?: string | null;
 }
 
-const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: BookmarksMenuProps) => {
+const BookmarksMenu = ({ 
+  currentLocation, 
+  onLocationSelect, 
+  onBookmarkClick,
+  bookKey 
+}: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
@@ -63,20 +70,20 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
 
           try {
             const data = JSON.parse(value);
-            marks[key] = {
-              cfi: data.metadata?.exactLocation || data.cfi,
-              timestamp: data.timestamp || Date.now(),
-              chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-              pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
-              metadata: data.metadata || {}
-            };
+            // Only include bookmarks for the current book
+            if (data.bookKey === bookKey) {
+              marks[key] = {
+                cfi: data.metadata?.exactLocation || data.cfi,
+                timestamp: data.timestamp || Date.now(),
+                chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
+                pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
+                bookKey: data.bookKey,
+                metadata: data.metadata || {}
+              };
+            }
           } catch {
-            marks[key] = {
-              cfi: value,
-              timestamp: Date.now(),
-              chapterInfo: "Unknown Chapter",
-              pageInfo: "Page information unavailable"
-            };
+            // Skip invalid bookmarks
+            console.warn('Invalid bookmark data:', key);
           }
         }
       }
@@ -96,7 +103,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
     return () => {
       window.removeEventListener('storage', handleStorage);
     };
-  }, [currentLocation]);
+  }, [currentLocation, bookKey]);
 
   const handleClearAll = () => {
     const bookmarkKeys = Object.keys(bookmarks);
