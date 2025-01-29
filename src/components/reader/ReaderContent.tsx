@@ -88,7 +88,6 @@ const ReaderContent = ({
   removeHighlight,
 }: ReaderContentProps) => {
   const [container, setContainer] = useState<Element | null>(null);
-  const [isRenditionReady, setIsRenditionReady] = useState(false);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
 
@@ -131,17 +130,17 @@ const ReaderContent = ({
   }, [isMobile, rendition, onPrevPage, onNextPage]);
 
   React.useEffect(() => {
-    if (!container || !isMobile) return;
+    if (!isMobile) return;
 
-    const containerElement = container as HTMLElement;
-    containerElement.addEventListener('touchstart', handleTouchStart);
-    containerElement.addEventListener('click', handleTouchStart);
+    // Add event listeners to the document instead of container
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('click', handleTouchStart);
 
     return () => {
-      containerElement.removeEventListener('touchstart', handleTouchStart);
-      containerElement.removeEventListener('click', handleTouchStart);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('click', handleTouchStart);
     };
-  }, [container, isMobile, handleTouchStart]);
+  }, [isMobile, handleTouchStart]);
 
   return (
     <>
