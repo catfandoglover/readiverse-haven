@@ -20,8 +20,8 @@ export const useBookmarks = (
       setShowBookmarkDialog(true);
     } else {
       try {
-        // Wait for the current location to be fully rendered
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Wait for the current location to be fully rendered and page info to be calculated
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         const spineItem = book?.spine?.get(currentLocation);
         const chapterInfo = spineItem?.index !== undefined 
@@ -30,7 +30,25 @@ export const useBookmarks = (
 
         // Get the current page information from rendition
         const currentPage = book.rendition.currentLocation();
-        const pageInfo = currentPage?.start?.displayed || { page: 1, total: 1 };
+        
+        // Ensure we have valid page information
+        let pageInfo = { page: 1, total: 1 };
+        if (currentPage?.start?.displayed) {
+          pageInfo = {
+            page: currentPage.start.displayed.page,
+            total: currentPage.start.displayed.total
+          };
+        } else {
+          // If displayed info isn't available, try to get it from the current section
+          const section = book.rendition.currentSection();
+          if (section) {
+            const pages = await section.pages();
+            pageInfo = {
+              page: currentPage?.start?.location || 1,
+              total: pages?.length || 1
+            };
+          }
+        }
 
         const now = new Date();
         
