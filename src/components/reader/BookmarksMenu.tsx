@@ -47,23 +47,27 @@ const BookmarksMenu = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
-  // Load bookmarks for current book
+  // Single effect to handle both bookmark loading and status
   useEffect(() => {
     if (!bookKey) {
       setBookmarks({});
+      setIsBookmarked(false);
       return;
     }
 
-    const loadBookmarks = () => {
+    const loadBookmarksAndStatus = () => {
+      console.log('Loading bookmarks for book:', bookKey);
       const marks: Record<string, BookmarkData> = {};
+      
+      // Load all bookmarks for current book
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key?.startsWith('book-progress-')) continue;
 
-        const value = localStorage.getItem(key);
-        if (!value) continue;
-
         try {
+          const value = localStorage.getItem(key);
+          if (!value) continue;
+
           const data = JSON.parse(value);
           if (data.bookKey === bookKey) {
             marks[key] = {
@@ -76,47 +80,43 @@ const BookmarksMenu = ({
             };
           }
         } catch (error) {
-          console.warn('Invalid bookmark data:', key);
+          console.warn('Invalid bookmark data:', key, error);
         }
       }
+
+      // Update bookmarks state
       setBookmarks(marks);
-    };
 
-    loadBookmarks();
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key?.startsWith('book-progress-')) {
-        loadBookmarks();
+      // Check if current location is bookmarked
+      if (currentLocation) {
+        const bookmarkKey = `book-progress-${currentLocation}`;
+        const isCurrentLocationBookmarked = localStorage.getItem(bookmarkKey) !== null;
+        console.log('Current location bookmarked:', isCurrentLocationBookmarked);
+        setIsBookmarked(isCurrentLocationBookmarked);
+      } else {
+        setIsBookmarked(false);
       }
     };
 
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [bookKey]);
+    // Initial load
+    loadBookmarksAndStatus();
 
-  // Check if current location is bookmarked
-  useEffect(() => {
-    if (!currentLocation) {
-      setIsBookmarked(false);
-      return;
-    }
+    // Poll for changes every second (for mobile compatibility)
+    const pollInterval = setInterval(loadBookmarksAndStatus, 1000);
 
-    const checkBookmarkStatus = () => {
-      const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
-      setIsBookmarked(bookmarkExists);
-    };
-
-    checkBookmarkStatus();
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === `book-progress-${currentLocation}`) {
-        checkBookmarkStatus();
-      }
+    // Also listen for storage events (works better on desktop)
+    const handleStorage = () => {
+      loadBookmarksAndStatus();
     };
 
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [currentLocation]);
+
+    // Cleanup
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [bookKey, currentLocation]);
 
   const handleClearAll = () => {
     if (!bookKey) return;
@@ -126,7 +126,11 @@ const BookmarksMenu = ({
       localStorage.removeItem(key);
     });
     setBookmarks({});
+    setIsBookmarked(false);
+    
+    // Manually trigger a storage event for mobile
     window.dispatchEvent(new Event('storage'));
+    
     toast({
       description: "All bookmarks have been cleared",
     });
