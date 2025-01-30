@@ -39,6 +39,7 @@ export const useBookmarks = (
           timestamp: now.getTime(),
           chapterInfo,
           pageInfo: `Page ${pageInfo.page} of ${pageInfo.total}`,
+          bookKey: book.key(),
           metadata: {
             created: now.toISOString(),
             formattedDate: format(now, 'PPpp'),

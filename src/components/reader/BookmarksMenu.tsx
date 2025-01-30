@@ -18,6 +18,7 @@ interface BookmarkData {
   timestamp: number;
   chapterInfo: string;
   pageInfo: string;
+  bookKey: string;
   metadata?: {
     created?: string;
     formattedDate?: string;
@@ -33,84 +34,122 @@ interface BookmarksMenuProps {
   currentLocation: string | null;
   onLocationSelect: (location: string) => void;
   onBookmarkClick: () => void;
+  bookKey: string | null;
 }
 
-const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: BookmarksMenuProps) => {
+const BookmarksMenu = ({ 
+  currentLocation, 
+  onLocationSelect, 
+  onBookmarkClick,
+  bookKey 
+}: BookmarksMenuProps) => {
   const [bookmarks, setBookmarks] = useState<Record<string, BookmarkData>>({});
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
+  // Single effect to handle both bookmark loading and status
   useEffect(() => {
-    const checkBookmark = () => {
-      if (currentLocation) {
-        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
-        setIsBookmarked(bookmarkExists);
-      }
-    };
+    if (!bookKey) {
+      setBookmarks({});
+      setIsBookmarked(false);
+      return;
+    }
 
-    const loadBookmarks = (event?: StorageEvent) => {
-      // Only reload if the change is bookmark-related
-      if (event && !event.key?.startsWith('book-progress-')) {
-        return;
-      }
-
+    const loadBookmarksAndStatus = () => {
+      console.log('Loading bookmarks for book:', bookKey);
       const marks: Record<string, BookmarkData> = {};
+      
+      // Load all bookmarks for current book
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith('book-progress-')) {
+        if (!key?.startsWith('book-progress-')) continue;
+
+        try {
           const value = localStorage.getItem(key);
           if (!value) continue;
 
-          try {
-            const data = JSON.parse(value);
+          const data = JSON.parse(value);
+          // Only include bookmarks for the current book
+          if (data.bookKey === bookKey) {
             marks[key] = {
               cfi: data.metadata?.exactLocation || data.cfi,
               timestamp: data.timestamp || Date.now(),
               chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
               pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
+              bookKey: data.bookKey,
               metadata: data.metadata || {}
             };
-          } catch {
-            marks[key] = {
-              cfi: value,
-              timestamp: Date.now(),
-              chapterInfo: "Unknown Chapter",
-              pageInfo: "Page information unavailable"
-            };
           }
+        } catch (error) {
+          console.warn('Invalid bookmark data:', key, error);
         }
       }
+
+      // Update bookmarks state
       setBookmarks(marks);
+
+      // Check if current location is bookmarked
+      if (currentLocation) {
+        const bookmarkKey = `book-progress-${currentLocation}`;
+        const bookmarkData = localStorage.getItem(bookmarkKey);
+        if (bookmarkData) {
+          try {
+            const data = JSON.parse(bookmarkData);
+            // Only consider it bookmarked if it belongs to the current book
+            setIsBookmarked(data.bookKey === bookKey);
+          } catch {
+            setIsBookmarked(false);
+          }
+        } else {
+          setIsBookmarked(false);
+        }
+      } else {
+        setIsBookmarked(false);
+      }
     };
 
-    loadBookmarks();
-    checkBookmark();
+    // Initial load
+    loadBookmarksAndStatus();
 
-    // Add event listeners
-    const handleStorage = (event: StorageEvent) => {
-      loadBookmarks(event);
-      checkBookmark();
+    // Poll for changes every second (for mobile compatibility)
+    const pollInterval = setInterval(loadBookmarksAndStatus, 1000);
+
+    // Also listen for storage events (works better on desktop)
+    const handleStorage = () => {
+      loadBookmarksAndStatus();
     };
 
     window.addEventListener('storage', handleStorage);
+
+    // Cleanup
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener('storage', handleStorage);
     };
-  }, [currentLocation]);
+  }, [bookKey, currentLocation]);
 
   const handleClearAll = () => {
-    const bookmarkKeys = Object.keys(bookmarks);
-    bookmarkKeys.forEach(key => {
-      localStorage.removeItem(key);
+    if (!bookKey) return;
+    
+    // Only clear bookmarks for the current book
+    Object.entries(bookmarks).forEach(([key, bookmark]) => {
+      if (bookmark.bookKey === bookKey) {
+        localStorage.removeItem(key);
+      }
     });
+    
     setBookmarks({});
+    setIsBookmarked(false);
+    
+    // Manually trigger a storage event for mobile
     window.dispatchEvent(new Event('storage'));
+    
     toast({
       description: "All bookmarks have been cleared",
     });
   };
 
-  const bookmarkCount = Object.keys(bookmarks).length;
+  const bookmarkCount = Object.values(bookmarks).filter(b => b.bookKey === bookKey).length;
 
   return (
     <div className="flex flex-col items-end gap-2">
@@ -146,7 +185,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
         <DropdownMenuContent align="end" className="w-[280px]">
           <DropdownMenuLabel className="flex items-center justify-between">
             Bookmarks
-            {Object.keys(bookmarks).length > 0 && (
+            {bookmarkCount > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -160,6 +199,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {Object.entries(bookmarks)
+            .filter(([, bookmark]) => bookmark.bookKey === bookKey)
             .sort(([, a], [, b]) => b.timestamp - a.timestamp)
             .map(([key, bookmark]) => (
               <DropdownMenuItem
@@ -176,7 +216,7 @@ const BookmarksMenu = ({ currentLocation, onLocationSelect, onBookmarkClick }: B
                 )}
               </DropdownMenuItem>
             ))}
-          {Object.keys(bookmarks).length === 0 && (
+          {bookmarkCount === 0 && (
             <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
           )}
         </DropdownMenuContent>
