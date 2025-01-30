@@ -41,4 +41,5 @@ export interface ReaderControlsProps {
   onRemoveHighlight?: (id: string) => void;
   toc?: NavItem[];
   onNavigate?: (href: string) => void;
+  bookKey: string | null;
 }

@@ -29,8 +29,9 @@ export const MobileControls = ({
   onHighlightColorSelect,
   onRemoveHighlight,
   toc,
-  onNavigate
-}: ReaderControlsProps) => {
+  onNavigate,
+  bookKey
+}: ReaderControlsProps & { bookKey: string | null }) => {
   const [showMobileTimer, setShowMobileTimer] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -123,6 +124,7 @@ export const MobileControls = ({
           currentLocation={currentLocation}
           onBookmarkClick={onBookmarkClick}
           onLocationChange={onLocationChange}
+          bookKey={bookKey}
         />
       </div>
     </div>
