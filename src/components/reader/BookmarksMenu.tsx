@@ -47,20 +47,9 @@ const BookmarksMenu = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
+  // Clear bookmarks when book changes
   useEffect(() => {
-    const checkBookmark = () => {
-      if (currentLocation) {
-        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
-        setIsBookmarked(bookmarkExists);
-      }
-    };
-
-    const loadBookmarks = (event?: StorageEvent) => {
-      // Only reload if the change is bookmark-related
-      if (event && !event.key?.startsWith('book-progress-')) {
-        return;
-      }
-
+    if (bookKey) {
       const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -82,28 +71,39 @@ const BookmarksMenu = ({
               };
             }
           } catch {
-            // Skip invalid bookmarks
             console.warn('Invalid bookmark data:', key);
           }
         }
       }
       setBookmarks(marks);
+    } else {
+      // Clear bookmarks if no book is loaded
+      setBookmarks({});
+    }
+  }, [bookKey]);
+
+  useEffect(() => {
+    const checkBookmark = () => {
+      if (currentLocation) {
+        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
+        setIsBookmarked(bookmarkExists);
+      }
     };
 
-    loadBookmarks();
-    checkBookmark();
-
-    // Add event listeners
-    const handleStorage = (event: StorageEvent) => {
-      loadBookmarks(event);
+    const handleStorage = (event?: StorageEvent) => {
+      // Only reload if the change is bookmark-related
+      if (event && !event.key?.startsWith('book-progress-')) {
+        return;
+      }
       checkBookmark();
     };
 
+    checkBookmark();
     window.addEventListener('storage', handleStorage);
     return () => {
       window.removeEventListener('storage', handleStorage);
     };
-  }, [currentLocation, bookKey]);
+  }, [currentLocation]);
 
   const handleClearAll = () => {
     const bookmarkKeys = Object.keys(bookmarks);
