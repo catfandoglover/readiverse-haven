@@ -47,9 +47,14 @@ const BookmarksMenu = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
-  // Clear bookmarks when book changes
+  // Combined effect to handle both bookmark loading and status checking
   useEffect(() => {
-    if (bookKey) {
+    const loadBookmarksAndCheckStatus = () => {
+      if (!bookKey) {
+        setBookmarks({});
+        return;
+      }
+
       const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -59,7 +64,6 @@ const BookmarksMenu = ({
 
           try {
             const data = JSON.parse(value);
-            // Only include bookmarks for the current book
             if (data.bookKey === bookKey) {
               marks[key] = {
                 cfi: data.metadata?.exactLocation || data.cfi,
@@ -76,36 +80,31 @@ const BookmarksMenu = ({
         }
       }
       setBookmarks(marks);
-    } else {
-      // Clear bookmarks if no book is loaded
-      setBookmarks({});
-    }
-  }, [bookKey]);
 
-  useEffect(() => {
-    const checkBookmark = () => {
+      // Check if current location is bookmarked
       if (currentLocation) {
         const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
         setIsBookmarked(bookmarkExists);
       }
     };
 
+    // Initial load
+    loadBookmarksAndCheckStatus();
+
+    // Setup storage event listener
     const handleStorage = (event?: StorageEvent) => {
-      // Only reload if the change is bookmark-related
-      if (event && !event.key?.startsWith('book-progress-')) {
-        return;
+      if (!event || event.key?.startsWith('book-progress-')) {
+        loadBookmarksAndCheckStatus();
       }
-      checkBookmark();
     };
 
-    checkBookmark();
     window.addEventListener('storage', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [currentLocation]);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [bookKey, currentLocation]);
 
   const handleClearAll = () => {
+    if (!bookKey) return;
+
     const bookmarkKeys = Object.keys(bookmarks);
     bookmarkKeys.forEach(key => {
       localStorage.removeItem(key);
@@ -153,7 +152,7 @@ const BookmarksMenu = ({
         <DropdownMenuContent align="end" className="w-[280px]">
           <DropdownMenuLabel className="flex items-center justify-between">
             Bookmarks
-            {Object.keys(bookmarks).length > 0 && (
+            {bookmarkCount > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -183,7 +182,7 @@ const BookmarksMenu = ({
                 )}
               </DropdownMenuItem>
             ))}
-          {Object.keys(bookmarks).length === 0 && (
+          {bookmarkCount === 0 && (
             <DropdownMenuItem disabled>No bookmarks yet</DropdownMenuItem>
           )}
         </DropdownMenuContent>
