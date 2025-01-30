@@ -22,7 +22,8 @@ const ReaderControls = ({
   onHighlightSelect,
   onRemoveHighlight,
   toc,
-  onNavigate
+  onNavigate,
+  bookKey
 }: ReaderControlsProps) => {
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
@@ -44,6 +45,7 @@ const ReaderControls = ({
         onHighlightColorSelect={onHighlightColorSelect}
         onHighlightSelect={onHighlightSelect}
         onRemoveHighlight={onRemoveHighlight}
+        bookKey={bookKey}
       />
       <MobileControls 
         fontSize={fontSize}
@@ -65,6 +67,7 @@ const ReaderControls = ({
         onRemoveHighlight={onRemoveHighlight}
         toc={toc}
         onNavigate={onNavigate}
+        bookKey={bookKey}
       />
     </div>
   );

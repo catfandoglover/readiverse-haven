@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import type { Book, Rendition } from 'epubjs';
+import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -13,7 +13,6 @@ import { MobileControls } from './controls/MobileControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRenditionSetup } from '@/hooks/useRenditionSetup';
 import { useReaderResize } from '@/hooks/useReaderResize';
-import { useToast } from '@/hooks/use-toast';
 import ReaderControls from './ReaderControls';
 import ProgressTracker from './ProgressTracker';
 import FloatingControls from './FloatingControls';
@@ -90,6 +89,7 @@ const ReaderContent = ({
   const [container, setContainer] = useState<Element | null>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const bookKey = book?.key() || null;
 
   const {
     rendition,
@@ -132,7 +132,6 @@ const ReaderContent = ({
   React.useEffect(() => {
     if (!isMobile) return;
 
-    // Add event listeners to the document for better touch area coverage
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
     document.addEventListener('click', handleTouchStart);
 
@@ -164,6 +163,7 @@ const ReaderContent = ({
         onRemoveHighlight={removeHighlight}
         toc={toc}
         onNavigate={onTocNavigate}
+        bookKey={bookKey}
       />
       
       <ProgressTracker 
@@ -215,6 +215,7 @@ const ReaderContent = ({
         onColorSelect={setSelectedColor}
         onHighlightSelect={onLocationChange}
         onRemoveHighlight={removeHighlight}
+        bookKey={bookKey}
       />
 
       <BookmarkDialog
