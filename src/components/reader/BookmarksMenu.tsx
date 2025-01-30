@@ -47,60 +47,76 @@ const BookmarksMenu = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
-  // Combined effect to handle both bookmark loading and status checking
+  // Load bookmarks for current book
   useEffect(() => {
-    const loadBookmarksAndCheckStatus = () => {
-      if (!bookKey) {
-        setBookmarks({});
-        return;
-      }
+    if (!bookKey) {
+      setBookmarks({});
+      return;
+    }
 
+    const loadBookmarks = () => {
       const marks: Record<string, BookmarkData> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith('book-progress-')) {
-          const value = localStorage.getItem(key);
-          if (!value) continue;
+        if (!key?.startsWith('book-progress-')) continue;
 
-          try {
-            const data = JSON.parse(value);
-            if (data.bookKey === bookKey) {
-              marks[key] = {
-                cfi: data.metadata?.exactLocation || data.cfi,
-                timestamp: data.timestamp || Date.now(),
-                chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
-                pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
-                bookKey: data.bookKey,
-                metadata: data.metadata || {}
-              };
-            }
-          } catch {
-            console.warn('Invalid bookmark data:', key);
+        const value = localStorage.getItem(key);
+        if (!value) continue;
+
+        try {
+          const data = JSON.parse(value);
+          if (data.bookKey === bookKey) {
+            marks[key] = {
+              cfi: data.metadata?.exactLocation || data.cfi,
+              timestamp: data.timestamp || Date.now(),
+              chapterInfo: data.chapterInfo || `Chapter ${data.metadata?.chapterIndex + 1}: ${data.metadata?.chapterTitle}`,
+              pageInfo: data.pageInfo || `Page ${data.metadata?.pageNumber} of ${data.metadata?.totalPages}`,
+              bookKey: data.bookKey,
+              metadata: data.metadata || {}
+            };
           }
+        } catch (error) {
+          console.warn('Invalid bookmark data:', key);
         }
       }
       setBookmarks(marks);
-
-      // Check if current location is bookmarked
-      if (currentLocation) {
-        const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
-        setIsBookmarked(bookmarkExists);
-      }
     };
 
-    // Initial load
-    loadBookmarksAndCheckStatus();
+    loadBookmarks();
 
-    // Setup storage event listener
-    const handleStorage = (event?: StorageEvent) => {
-      if (!event || event.key?.startsWith('book-progress-')) {
-        loadBookmarksAndCheckStatus();
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key?.startsWith('book-progress-')) {
+        loadBookmarks();
       }
     };
 
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
-  }, [bookKey, currentLocation]);
+  }, [bookKey]);
+
+  // Check if current location is bookmarked
+  useEffect(() => {
+    if (!currentLocation) {
+      setIsBookmarked(false);
+      return;
+    }
+
+    const checkBookmarkStatus = () => {
+      const bookmarkExists = localStorage.getItem(`book-progress-${currentLocation}`) !== null;
+      setIsBookmarked(bookmarkExists);
+    };
+
+    checkBookmarkStatus();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === `book-progress-${currentLocation}`) {
+        checkBookmarkStatus();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [currentLocation]);
 
   const handleClearAll = () => {
     if (!bookKey) return;
