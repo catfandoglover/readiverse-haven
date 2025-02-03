@@ -34,10 +34,8 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Notion client
+    // Initialize clients
     const notion = new Client({ auth: notionApiKey })
-    
-    // Initialize Supabase client with service role key for admin access
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     console.log('Fetching questions from Notion database...')
@@ -46,65 +44,98 @@ serve(async (req) => {
     let hasMore = true;
     let startCursor = undefined;
 
-    // Fetch all pages from the Notion database using pagination
     while (hasMore) {
       const response = await notion.databases.query({
         database_id: notionDatabaseId,
         start_cursor: startCursor,
-        page_size: 100, // Maximum allowed by Notion API
+        page_size: 100,
       });
 
       console.log(`Fetched ${response.results.length} questions from current page`);
 
-      // Process each page and extract question data
-      const questions = response.results.map(page => {
-        const properties = page.properties
+      for (const page of response.results) {
+        console.log('Processing Notion page:', page.id);
         
-        // Debug logging to see the structure of the properties
-        console.log('Page properties:', JSON.stringify(properties, null, 2))
-        
-        // Extract category number (title of the question)
-        const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null
-        
-        // Extract the question text
-        const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text'
-        
-        return {
-          notion_id: page.id,
-          category: properties.Category?.select?.name || 'Uncategorized',
-          category_number: categoryNumber,
-          question: questionText,
-        }
-      });
+        const properties = page.properties;
+        const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
+        const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
+        const relatedBooks = properties['Books']?.relation || [];
 
-      allQuestions = [...allQuestions, ...questions];
-      
-      // Update pagination info
+        console.log('Found related books:', relatedBooks);
+
+        // Insert/update the question in great_questions table
+        const { data: insertedQuestion, error: questionError } = await supabase
+          .from('great_questions')
+          .upsert({
+            notion_id: page.id,
+            category: properties.Category?.select?.name || 'Uncategorized',
+            category_number: categoryNumber,
+            question: questionText
+          })
+          .select()
+          .single();
+
+        if (questionError) {
+          console.error('Error upserting question:', questionError);
+          continue;
+        }
+
+        console.log('Inserted/updated question:', insertedQuestion);
+
+        // Get all books that have Notion URLs
+        const { data: books, error: booksError } = await supabase
+          .from('books')
+          .select('id, Notion_URL');
+
+        if (booksError) {
+          console.error('Error fetching books:', booksError);
+          continue;
+        }
+
+        // Create a mapping of Notion page IDs to Supabase book IDs
+        const bookMap = new Map(
+          books
+            .filter(book => book.Notion_URL)
+            .map(book => [
+              book.Notion_URL.split('/').pop()?.replace(/-/g, ''),
+              book.id
+            ])
+        );
+
+        // Process each related book
+        for (const relation of relatedBooks) {
+          const notionBookId = relation.id.replace(/-/g, '');
+          const supabaseBookId = bookMap.get(notionBookId);
+
+          if (supabaseBookId) {
+            console.log(`Creating relationship between question ${insertedQuestion.id} and book ${supabaseBookId}`);
+            
+            const { error: relationError } = await supabase
+              .from('book_questions')
+              .upsert({
+                question_id: insertedQuestion.id,
+                book_id: supabaseBookId,
+                randomizer: Math.random()
+              }, {
+                onConflict: 'question_id,book_id'
+              });
+
+            if (relationError) {
+              console.error('Error creating book-question relationship:', relationError);
+            } else {
+              console.log('Successfully created book-question relationship');
+            }
+          } else {
+            console.warn(`No matching Supabase book found for Notion book ID: ${notionBookId}`);
+          }
+        }
+      }
+
       hasMore = response.has_more;
       startCursor = response.next_cursor || undefined;
     }
 
-    console.log(`Total questions fetched: ${allQuestions.length}`);
-    console.log('Questions to be inserted:', JSON.stringify(allQuestions, null, 2));
-    console.log('Inserting questions into Supabase...');
-
-    // Insert questions into Supabase, using upsert to avoid duplicates
-    const { data, error } = await supabase
-      .from('great_questions')
-      .upsert(
-        allQuestions,
-        { 
-          onConflict: 'notion_id',
-          ignoreDuplicates: false 
-        }
-      );
-
-    if (error) {
-      console.error('Error inserting questions:', error);
-      throw error;
-    }
-
-    console.log('Successfully synced questions with Supabase');
+    console.log('Sync completed successfully');
 
     return new Response(
       JSON.stringify({
