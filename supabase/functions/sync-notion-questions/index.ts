@@ -8,8 +8,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Received request:', req.method)
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -190,7 +193,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Fatal error during sync:', { error: error.message })
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
