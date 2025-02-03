@@ -6,7 +6,6 @@ import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { Compass, BookOpen, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
-import { NotionSync } from "./NotionSync";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -49,26 +48,23 @@ const Home = () => {
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-georgia text-foreground">Discover</h1>
-          <div className="flex gap-4 items-center">
-            <NotionSync />
-            <div className="flex gap-2">
-              <Toggle
-                pressed={!isGridView}
-                onPressedChange={() => setIsGridView(false)}
-                aria-label="List view"
-                className="text-foreground"
-              >
-                <List className="h-4 w-4" />
-              </Toggle>
-              <Toggle
-                pressed={isGridView}
-                onPressedChange={() => setIsGridView(true)}
-                aria-label="Grid view"
-                className="text-foreground"
-              >
-                <Grid className="h-4 w-4" />
-              </Toggle>
-            </div>
+          <div className="flex gap-2">
+            <Toggle
+              pressed={!isGridView}
+              onPressedChange={() => setIsGridView(false)}
+              aria-label="List view"
+              className="text-foreground"
+            >
+              <List className="h-4 w-4" />
+            </Toggle>
+            <Toggle
+              pressed={isGridView}
+              onPressedChange={() => setIsGridView(true)}
+              aria-label="Grid view"
+              className="text-foreground"
+            >
+              <Grid className="h-4 w-4" />
+            </Toggle>
           </div>
         </div>
       </header>
