@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Database } from "@/integrations/supabase/types";
-import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Compass, BookOpen, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
@@ -11,7 +10,6 @@ import { Toggle } from "./ui/toggle";
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Home = () => {
-  const navigate = useNavigate();
   const [isGridView, setIsGridView] = useState(false);
   
   const { data: books, isLoading } = useQuery({
@@ -27,19 +25,14 @@ const Home = () => {
     }
   });
 
-  const handleBookClick = (slug: string) => {
-    navigate(`/${slug}`);
-  };
-
-  const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent triggering the parent onClick
+  const handleBookClick = (coverUrl: string | null) => {
     if (coverUrl) {
       window.open(coverUrl, '_blank');
     }
   };
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    window.location.href = path;
   };
 
   if (isLoading) {
@@ -83,7 +76,7 @@ const Home = () => {
               <div
                 key={book.id}
                 className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                onClick={() => handleBookClick(book.Cover_super)}
               >
                 <img
                   src={book.cover_url || '/placeholder.svg'}
@@ -99,12 +92,9 @@ const Home = () => {
               <Card 
                 key={book.id} 
                 className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                onClick={() => handleBookClick(book.slug)}
+                onClick={() => handleBookClick(book.Cover_super)}
               >
-                <div 
-                  className="w-24 h-24 flex-shrink-0 cursor-pointer"
-                  onClick={(e) => handleCoverClick(book.Cover_super, e)}
-                >
+                <div className="w-24 h-24 flex-shrink-0">
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
