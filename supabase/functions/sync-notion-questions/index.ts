@@ -15,33 +15,33 @@ serve(async (req) => {
   try {
     console.log('Starting Notion sync process...')
     
-    const notion = new createClient({
-      auth: Deno.env.get('NOTION_API_KEY'),
-    })
+    // Check environment variables first
+    const notionKey = Deno.env.get('NOTION_API_KEY')
+    const notionDbId = Deno.env.get('NOTION_DATABASE_ID')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    const supabase = createSupabaseClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Log environment variables (without exposing sensitive data)
     console.log('Environment check:', {
-      hasNotionKey: !!Deno.env.get('NOTION_API_KEY'),
-      hasNotionDbId: !!Deno.env.get('NOTION_DATABASE_ID'),
-      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      hasNotionKey: !!notionKey,
+      hasNotionDbId: !!notionDbId,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
     })
 
-    // Fetch all entries from the Notion database
-    const databaseId = Deno.env.get('NOTION_DATABASE_ID')
-    if (!databaseId) {
-      console.error('NOTION_DATABASE_ID is not set')
-      throw new Error('NOTION_DATABASE_ID is not set')
+    if (!notionKey || !notionDbId) {
+      throw new Error('Missing required environment variables: NOTION_API_KEY or NOTION_DATABASE_ID')
     }
 
-    console.log('Querying Notion database:', databaseId)
+    const notion = new createClient({ auth: notionKey })
+    
+    const supabase = createSupabaseClient(
+      supabaseUrl ?? '',
+      supabaseServiceKey ?? ''
+    )
+
+    console.log('Querying Notion database:', notionDbId)
     const response = await notion.databases.query({
-      database_id: databaseId,
+      database_id: notionDbId,
     })
     console.log('Retrieved', response.results.length, 'entries from Notion')
 
@@ -54,7 +54,7 @@ serve(async (req) => {
       }
 
       const properties = page.properties as any
-      console.log('Processing page with properties:', JSON.stringify(properties, null, 2))
+      console.log('Processing page properties:', JSON.stringify(properties, null, 2))
       
       // Get the book relations
       const bookRelations = properties.Books?.relation || []
