@@ -7,8 +7,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function extractNotionId(url: string): string | null {
+  try {
+    // Handle both URL formats
+    const matches = url.match(/(?:[a-f0-9]{32})|(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+    if (matches && matches[0]) {
+      // Convert to standard format without dashes
+      return matches[0].replace(/-/g, '');
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting Notion ID:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -21,7 +35,6 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    // Log environment variable status (without revealing values)
     console.log('Environment variables check:', {
       hasNotionApiKey: !!notionApiKey,
       hasNotionDatabaseId: !!notionDatabaseId,
@@ -42,7 +55,6 @@ serve(async (req) => {
       throw new Error(errorMsg)
     }
 
-    // Initialize clients
     const notion = new Client({ auth: notionApiKey })
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -117,16 +129,28 @@ serve(async (req) => {
             const bookMap = new Map(
               books
                 .filter(book => book.Notion_URL)
-                .map(book => [
-                  book.Notion_URL.split('/').pop()?.replace(/-/g, ''),
-                  book.id
-                ])
+                .map(book => {
+                  const notionId = extractNotionId(book.Notion_URL);
+                  console.log('Extracted Notion ID for book:', {
+                    url: book.Notion_URL,
+                    extractedId: notionId,
+                    bookId: book.id
+                  });
+                  return [notionId, book.id];
+                })
+                .filter(([notionId]) => notionId !== null)
             );
 
             // Process each related book
             for (const relation of relatedBooks) {
               const notionBookId = relation.id.replace(/-/g, '');
               const supabaseBookId = bookMap.get(notionBookId);
+
+              console.log('Processing book relation:', {
+                notionBookId,
+                supabaseBookId,
+                availableBooks: Array.from(bookMap.entries())
+              });
 
               if (supabaseBookId) {
                 console.log(`Creating relationship between question ${insertedQuestion.id} and book ${supabaseBookId}`);
@@ -186,7 +210,6 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    // Enhanced error logging
     const errorDetails = {
       message: error.message,
       stack: error.stack,
