@@ -16,17 +16,17 @@ export async function triggerNotionSync() {
     console.log('Sync response:', data);
     
     toast({
-      title: "Sync Completed",
-      description: data?.message || "The Notion sync process has completed successfully.",
+      title: "Test Successful",
+      description: "Edge Function connection test completed.",
     });
 
     return data;
   } catch (error) {
-    console.error('Error triggering Notion sync:', error);
+    console.error('Error triggering Edge Function:', error);
     toast({
       variant: "destructive",
-      title: "Sync Failed",
-      description: error instanceof Error ? error.message : "Failed to trigger the Notion sync. Please try again later.",
+      title: "Connection Test Failed",
+      description: "Failed to connect to Edge Function. Check console for details.",
     });
     throw error;
   }
@@ -34,10 +34,3 @@ export async function triggerNotionSync() {
 
 // Make the function available globally for console access
 (window as any).triggerNotionSync = triggerNotionSync;
-
-// Also expose it as a named global for TypeScript support
-declare global {
-  interface Window {
-    triggerNotionSync: typeof triggerNotionSync;
-  }
-}
