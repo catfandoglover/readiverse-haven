@@ -34,3 +34,10 @@ export async function triggerNotionSync() {
 
 // Make the function available globally for console access
 (window as any).triggerNotionSync = triggerNotionSync;
+
+// Also expose it as a named global for TypeScript support
+declare global {
+  interface Window {
+    triggerNotionSync: typeof triggerNotionSync;
+  }
+}
