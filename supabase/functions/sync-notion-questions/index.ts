@@ -22,11 +22,23 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
+    console.log('Checking environment variables...')
     if (!notionKey || !notionDbId || !supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing required environment variables')
+      const missingVars = [
+        !notionKey && 'NOTION_API_KEY',
+        !notionDbId && 'NOTION_DATABASE_ID',
+        !supabaseUrl && 'SUPABASE_URL',
+        !supabaseServiceKey && 'SUPABASE_SERVICE_ROLE_KEY'
+      ].filter(Boolean)
+      
+      console.error('Missing required environment variables:', missingVars)
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
     }
 
+    console.log('Initializing Notion client...')
     const notion = new createClient({ auth: notionKey })
+    
+    console.log('Initializing Supabase client...')
     const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
     
     console.log('Querying Notion database:', { databaseId: notionDbId })
@@ -34,6 +46,8 @@ serve(async (req) => {
       database_id: notionDbId,
       page_size: 100,
     })
+
+    console.log('Retrieved pages from Notion:', { pageCount: response.results.length })
 
     let processedCount = 0
     let errorCount = 0
@@ -47,11 +61,21 @@ serve(async (req) => {
         }
 
         const properties = page.properties as any
+        console.log('Processing page:', { 
+          pageId: page.id, 
+          properties: Object.keys(properties)
+        })
         
         // Extract question data
         const categoryNumber = properties.CategoryNumber?.number || null
         const category = properties.Category?.select?.name || 'Uncategorized'
         const questionText = properties.Question?.title?.[0]?.plain_text || ''
+
+        console.log('Extracted question data:', {
+          categoryNumber,
+          category,
+          questionText: questionText.substring(0, 50) + '...' // Log first 50 chars
+        })
 
         if (!questionText) {
           console.log('Warning: Skipping page with no question text:', { pageId: page.id })
@@ -59,6 +83,7 @@ serve(async (req) => {
         }
 
         // Upsert question to Supabase
+        console.log('Upserting question to Supabase...')
         const { data: questionData, error: questionError } = await supabase
           .from('great_questions')
           .upsert({
@@ -73,7 +98,7 @@ serve(async (req) => {
           .single()
 
         if (questionError) {
-          console.log('Error upserting question:', { error: questionError, pageId: page.id })
+          console.error('Error upserting question:', { error: questionError, pageId: page.id })
           errors.push({ type: 'question_upsert', pageId: page.id, error: questionError.message })
           errorCount++
           continue
@@ -81,21 +106,31 @@ serve(async (req) => {
 
         // Get book relations and create book-question associations
         const bookRelations = properties['The Classics']?.relation || []
+        console.log('Found book relations:', { 
+          questionId: questionData.id,
+          relationCount: bookRelations.length 
+        })
         
         // Delete existing relationships for this question to avoid duplicates
+        console.log('Deleting existing relationships...')
         const { error: deleteError } = await supabase
           .from('book_questions')
           .delete()
           .eq('question_id', questionData.id)
 
         if (deleteError) {
-          console.log('Error deleting existing relationships:', { error: deleteError })
+          console.error('Error deleting existing relationships:', { error: deleteError })
           errors.push({ type: 'relationship_delete', error: deleteError.message })
           errorCount++
         }
 
         // Create new relationships with randomizer values
         for (const bookRef of bookRelations) {
+          console.log('Creating book-question relation:', {
+            questionId: questionData.id,
+            bookId: bookRef.id
+          })
+          
           const { error: relationError } = await supabase
             .from('book_questions')
             .insert({
@@ -105,7 +140,7 @@ serve(async (req) => {
             })
 
           if (relationError) {
-            console.log('Error creating book-question relation:', {
+            console.error('Error creating book-question relation:', {
               error: relationError,
               questionId: questionData.id,
               bookId: bookRef.id
@@ -126,7 +161,7 @@ serve(async (req) => {
           bookRelationsCount: bookRelations.length
         })
       } catch (error) {
-        console.log('Error processing page:', { error: error.message })
+        console.error('Error processing page:', { error: error.message })
         errors.push({ type: 'page_processing', error: error.message })
         errorCount++
       }
@@ -153,7 +188,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.log('Fatal error during sync:', { error: error.message })
+    console.error('Fatal error during sync:', { error: error.message })
     return new Response(
       JSON.stringify({ error: error.message }),
       {
