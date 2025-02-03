@@ -73,7 +73,7 @@ serve(async (req) => {
 
             console.log('Found related books:', relatedBooks);
 
-            // Insert/update the question in great_questions table
+            // Insert/update the question in great_questions table with conflict handling
             const { data: insertedQuestion, error: questionError } = await supabase
               .from('great_questions')
               .upsert({
@@ -81,12 +81,23 @@ serve(async (req) => {
                 category: properties.Category?.select?.name || 'Uncategorized',
                 category_number: categoryNumber,
                 question: questionText
+              }, {
+                onConflict: 'notion_id',
+                ignoreDuplicates: false
               })
               .select()
               .single();
 
             if (questionError) {
-              console.error('Error upserting question:', questionError);
+              console.error('Error upserting question:', {
+                error: questionError,
+                questionData: {
+                  notion_id: page.id,
+                  category: properties.Category?.select?.name,
+                  category_number: categoryNumber,
+                  question: questionText
+                }
+              });
               continue;
             }
 
@@ -181,7 +192,6 @@ serve(async (req) => {
       stack: error.stack,
       cause: error.cause,
       name: error.name,
-      // Additional error properties that might be helpful
       code: error.code,
       statusCode: error.status,
       details: error.details,
