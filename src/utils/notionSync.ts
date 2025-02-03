@@ -31,3 +31,6 @@ export async function triggerNotionSync() {
     throw error;
   }
 }
+
+// Make the function available globally for console access
+(window as any).triggerNotionSync = triggerNotionSync;
