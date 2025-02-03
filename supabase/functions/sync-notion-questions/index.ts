@@ -8,12 +8,19 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Add timestamp to all logs for better tracking
+  const logWithTimestamp = (message: string, data?: any) => {
+    const timestamp = new Date().toISOString()
+    console.log(`[${timestamp}] ${message}`, data ? JSON.stringify(data) : '')
+  }
+
   if (req.method === 'OPTIONS') {
+    logWithTimestamp('Handling CORS preflight request')
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting Notion sync process...')
+    logWithTimestamp('Starting Notion sync process...')
     
     // Check environment variables first
     const notionKey = Deno.env.get('NOTION_API_KEY')
@@ -21,7 +28,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    console.log('Environment check:', {
+    logWithTimestamp('Environment variables check:', {
       hasNotionKey: !!notionKey,
       hasNotionDbId: !!notionDbId,
       hasSupabaseUrl: !!supabaseUrl,
@@ -29,28 +36,33 @@ serve(async (req) => {
     })
 
     if (!notionKey || !notionDbId) {
-      throw new Error('Missing required environment variables: NOTION_API_KEY or NOTION_DATABASE_ID')
+      const error = 'Missing required environment variables: NOTION_API_KEY or NOTION_DATABASE_ID'
+      logWithTimestamp('Error:', { error })
+      throw new Error(error)
     }
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+      const error = 'Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY'
+      logWithTimestamp('Error:', { error })
+      throw new Error(error)
     }
 
     const notion = new createClient({ auth: notionKey })
+    logWithTimestamp('Notion client created successfully')
     
     const supabase = createSupabaseClient(
       supabaseUrl,
       supabaseServiceKey
     )
+    logWithTimestamp('Supabase client created successfully')
 
-    console.log('Querying Notion database:', notionDbId)
+    logWithTimestamp('Querying Notion database:', { databaseId: notionDbId })
     const response = await notion.databases.query({
       database_id: notionDbId,
-      page_size: 100, // Adjust based on your needs
+      page_size: 100,
     })
-    console.log('Retrieved', response.results.length, 'entries from Notion')
+    logWithTimestamp('Retrieved entries from Notion:', { count: response.results.length })
 
-    // Process each entry and update Supabase
     let processedCount = 0
     let errorCount = 0
     const errors = []
@@ -58,12 +70,12 @@ serve(async (req) => {
     for (const page of response.results) {
       try {
         if (!('properties' in page)) {
-          console.warn('Skipping page without properties')
+          logWithTimestamp('Warning: Skipping page without properties', { pageId: page.id })
           continue
         }
 
         const properties = page.properties as any
-        console.log('Processing page:', {
+        logWithTimestamp('Processing page:', {
           id: page.id,
           propertyKeys: Object.keys(properties),
         })
@@ -73,8 +85,14 @@ serve(async (req) => {
         const category = properties.Category?.select?.name || 'Uncategorized'
         const questionText = properties.Question?.title?.[0]?.plain_text || ''
 
+        logWithTimestamp('Extracted question data:', {
+          categoryNumber,
+          category,
+          questionText: questionText.substring(0, 50) + '...' // Log first 50 chars for privacy
+        })
+
         if (!questionText) {
-          console.warn('Skipping page with no question text:', page.id)
+          logWithTimestamp('Warning: Skipping page with no question text:', { pageId: page.id })
           continue
         }
 
@@ -92,7 +110,10 @@ serve(async (req) => {
           .single()
 
         if (questionError) {
-          console.error('Error upserting question:', questionError)
+          logWithTimestamp('Error upserting question:', {
+            error: questionError,
+            pageId: page.id
+          })
           errors.push({
             type: 'question_upsert',
             pageId: page.id,
@@ -102,9 +123,16 @@ serve(async (req) => {
           continue
         }
 
+        logWithTimestamp('Question upserted successfully:', {
+          questionId: questionData.id
+        })
+
         // Get book relations
         const bookRelations = properties.Books?.relation || []
-        console.log('Processing book relations:', bookRelations.length)
+        logWithTimestamp('Processing book relations:', {
+          count: bookRelations.length,
+          pageId: page.id
+        })
 
         // Create book-question associations
         for (const bookRef of bookRelations) {
@@ -118,7 +146,11 @@ serve(async (req) => {
             })
 
           if (relationError) {
-            console.error('Error creating book-question relation:', relationError)
+            logWithTimestamp('Error creating book-question relation:', {
+              error: relationError,
+              pageId: page.id,
+              bookId: bookRef.id
+            })
             errors.push({
               type: 'relation_upsert',
               pageId: page.id,
@@ -126,12 +158,24 @@ serve(async (req) => {
               error: relationError.message
             })
             errorCount++
+          } else {
+            logWithTimestamp('Book-question relation created successfully:', {
+              bookId: bookRef.id,
+              questionId: questionData.id
+            })
           }
         }
 
         processedCount++
+        logWithTimestamp('Successfully processed page:', {
+          pageId: page.id,
+          processedCount
+        })
       } catch (error) {
-        console.error('Error processing page:', page.id, error)
+        logWithTimestamp('Error processing page:', {
+          pageId: page.id,
+          error: error.message
+        })
         errors.push({
           type: 'page_processing',
           pageId: page.id,
@@ -141,11 +185,12 @@ serve(async (req) => {
       }
     }
 
-    console.log('Sync completed:', {
+    const summary = {
       totalProcessed: processedCount,
       errorCount,
       errors
-    })
+    }
+    logWithTimestamp('Sync completed:', summary)
 
     return new Response(
       JSON.stringify({
@@ -161,7 +206,10 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Fatal error during sync:', error)
+    logWithTimestamp('Fatal error during sync:', {
+      error: error.message,
+      stack: error.stack
+    })
     return new Response(
       JSON.stringify({
         error: error.message,
