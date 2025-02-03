@@ -4,11 +4,24 @@ import Reader from "@/components/Reader";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { triggerNotionSync } from "@/utils/notionSync";
 
 const Index = () => {
   const { bookSlug } = useParams();
   const { data: book, isLoading } = useBook(bookSlug);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Test the Notion sync when the component mounts
+    const testNotionSync = async () => {
+      try {
+        await triggerNotionSync();
+      } catch (error) {
+        console.error('Error testing Notion sync:', error);
+      }
+    };
+    testNotionSync();
+  }, []); // Run once when component mounts
 
   useEffect(() => {
     const addToLibrary = async () => {

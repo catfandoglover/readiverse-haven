@@ -3,11 +3,17 @@ import { toast } from "@/hooks/use-toast";
 
 export async function triggerNotionSync() {
   try {
+    console.log('Starting Notion sync...');
     const { data, error } = await supabase.functions.invoke('sync-notion-questions', {
       method: 'POST',
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error from Edge Function:', error);
+      throw error;
+    }
+    
+    console.log('Sync response:', data);
     
     toast({
       title: "Sync Completed",
