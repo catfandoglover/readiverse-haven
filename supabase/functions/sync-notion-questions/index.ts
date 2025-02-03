@@ -12,7 +12,23 @@ serve(async (req) => {
   }
 
   try {
-    // Simple response to test if the function works
+    const notionApiKey = Deno.env.get('NOTION_API_KEY')
+    const notionDatabaseId = Deno.env.get('NOTION_DATABASE_ID')
+
+    if (!notionApiKey || !notionDatabaseId) {
+      console.error('Missing required environment variables')
+      return new Response(
+        JSON.stringify({
+          error: 'Server configuration error - missing required environment variables'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
+    }
+
+    // For now, return a success response to verify the function is working
     return new Response(
       JSON.stringify({
         message: "Edge function is working",

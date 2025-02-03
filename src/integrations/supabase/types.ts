@@ -102,7 +102,7 @@ export type Database = {
       great_questions: {
         Row: {
           category: string
-          category_number: number | null
+          category_number: string | null
           created_at: string
           id: string
           notion_id: string
@@ -110,7 +110,7 @@ export type Database = {
         }
         Insert: {
           category: string
-          category_number?: number | null
+          category_number?: string | null
           created_at?: string
           id?: string
           notion_id: string
@@ -118,7 +118,7 @@ export type Database = {
         }
         Update: {
           category?: string
-          category_number?: number | null
+          category_number?: string | null
           created_at?: string
           id?: string
           notion_id?: string
