@@ -1,3 +1,4 @@
+// @ts-ignore: Deno deployment
 import { createClient } from 'https://esm.sh/@notionhq/client'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient as createSupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
