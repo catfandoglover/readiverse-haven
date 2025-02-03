@@ -138,7 +138,7 @@ const Library = () => {
                 onClick={(e) => handleCoverClick(book.Cover_super, e)}
               >
                 <img
-                  src={book.Cover_super || '/placeholder.svg'}
+                  src={book.cover_url || '/placeholder.svg'}
                   alt={book.title}
                   className="w-full h-full object-cover rounded-md shadow-sm"
                 />
@@ -158,7 +158,7 @@ const Library = () => {
                   onClick={(e) => handleCoverClick(book.Cover_super, e)}
                 >
                   <img
-                    src={book.Cover_super || '/placeholder.svg'}
+                    src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
                     className="w-full h-full object-cover rounded-md shadow-sm"
                   />
