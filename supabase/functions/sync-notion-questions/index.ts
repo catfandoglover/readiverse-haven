@@ -22,46 +22,24 @@ serve(async (req) => {
   try {
     logWithTimestamp('Starting Notion sync process...')
     
-    // Check environment variables first
+    // Check environment variables
     const notionKey = Deno.env.get('NOTION_API_KEY')
     const notionDbId = Deno.env.get('NOTION_DATABASE_ID')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    logWithTimestamp('Environment variables check:', {
-      hasNotionKey: !!notionKey,
-      hasNotionDbId: !!notionDbId,
-      hasSupabaseUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey,
-    })
-
-    if (!notionKey || !notionDbId) {
-      const error = 'Missing required environment variables: NOTION_API_KEY or NOTION_DATABASE_ID'
-      logWithTimestamp('Error:', { error })
-      throw new Error(error)
-    }
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      const error = 'Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY'
-      logWithTimestamp('Error:', { error })
-      throw new Error(error)
+    if (!notionKey || !notionDbId || !supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables')
     }
 
     const notion = new createClient({ auth: notionKey })
-    logWithTimestamp('Notion client created successfully')
+    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
     
-    const supabase = createSupabaseClient(
-      supabaseUrl,
-      supabaseServiceKey
-    )
-    logWithTimestamp('Supabase client created successfully')
-
     logWithTimestamp('Querying Notion database:', { databaseId: notionDbId })
     const response = await notion.databases.query({
       database_id: notionDbId,
       page_size: 100,
     })
-    logWithTimestamp('Retrieved entries from Notion:', { count: response.results.length })
 
     let processedCount = 0
     let errorCount = 0
@@ -75,21 +53,11 @@ serve(async (req) => {
         }
 
         const properties = page.properties as any
-        logWithTimestamp('Processing page:', {
-          id: page.id,
-          propertyKeys: Object.keys(properties),
-        })
-
+        
         // Extract question data
-        const categoryNumber = properties.CategoryNumber?.number || 0
+        const categoryNumber = properties.CategoryNumber?.number || null
         const category = properties.Category?.select?.name || 'Uncategorized'
         const questionText = properties.Question?.title?.[0]?.plain_text || ''
-
-        logWithTimestamp('Extracted question data:', {
-          categoryNumber,
-          category,
-          questionText: questionText.substring(0, 50) + '...' // Log first 50 chars for privacy
-        })
 
         if (!questionText) {
           logWithTimestamp('Warning: Skipping page with no question text:', { pageId: page.id })
@@ -98,89 +66,74 @@ serve(async (req) => {
 
         // Upsert question to Supabase
         const { data: questionData, error: questionError } = await supabase
-          .from('questions')
+          .from('great_questions')
           .upsert({
+            notion_id: page.id,
             category_number: categoryNumber,
             category: category,
             question: questionText,
           }, {
-            onConflict: 'question'
+            onConflict: 'notion_id'
           })
           .select()
           .single()
 
         if (questionError) {
-          logWithTimestamp('Error upserting question:', {
-            error: questionError,
-            pageId: page.id
-          })
-          errors.push({
-            type: 'question_upsert',
-            pageId: page.id,
-            error: questionError.message
-          })
+          logWithTimestamp('Error upserting question:', { error: questionError, pageId: page.id })
+          errors.push({ type: 'question_upsert', pageId: page.id, error: questionError.message })
           errorCount++
           continue
         }
 
-        logWithTimestamp('Question upserted successfully:', {
-          questionId: questionData.id
-        })
+        // Get book relations and create book-question associations
+        const bookRelations = properties['The Classics']?.relation || []
+        
+        // Delete existing relationships for this question to avoid duplicates
+        const { error: deleteError } = await supabase
+          .from('book_questions')
+          .delete()
+          .eq('question_id', questionData.id)
 
-        // Get book relations
-        const bookRelations = properties.Books?.relation || []
-        logWithTimestamp('Processing book relations:', {
-          count: bookRelations.length,
-          pageId: page.id
-        })
+        if (deleteError) {
+          logWithTimestamp('Error deleting existing relationships:', { error: deleteError })
+          errors.push({ type: 'relationship_delete', error: deleteError.message })
+          errorCount++
+        }
 
-        // Create book-question associations
+        // Create new relationships with randomizer values
         for (const bookRef of bookRelations) {
           const { error: relationError } = await supabase
             .from('book_questions')
-            .upsert({
-              book_id: bookRef.id,
+            .insert({
               question_id: questionData.id,
-            }, {
-              onConflict: 'book_id,question_id'
+              book_id: bookRef.id,
+              randomizer: Math.random(), // Generate random value for ordering
             })
 
           if (relationError) {
             logWithTimestamp('Error creating book-question relation:', {
               error: relationError,
-              pageId: page.id,
+              questionId: questionData.id,
               bookId: bookRef.id
             })
             errors.push({
-              type: 'relation_upsert',
-              pageId: page.id,
+              type: 'relation_insert',
+              questionId: questionData.id,
               bookId: bookRef.id,
               error: relationError.message
             })
             errorCount++
-          } else {
-            logWithTimestamp('Book-question relation created successfully:', {
-              bookId: bookRef.id,
-              questionId: questionData.id
-            })
           }
         }
 
         processedCount++
-        logWithTimestamp('Successfully processed page:', {
-          pageId: page.id,
-          processedCount
+        logWithTimestamp('Successfully processed question:', {
+          questionId: questionData.id,
+          bookRelationsCount: bookRelations.length
         })
       } catch (error) {
-        logWithTimestamp('Error processing page:', {
-          pageId: page.id,
-          error: error.message
-        })
-        errors.push({
-          type: 'page_processing',
-          pageId: page.id,
-          error: error.message
-        })
+        logWithTimestamp('Error processing page:', { error: error.message })
+        errors.push({ type: 'page_processing', error: error.message })
         errorCount++
       }
     }
@@ -198,7 +151,7 @@ serve(async (req) => {
         processed: processedCount,
         errors: errorCount,
         errorDetails: errors,
-        message: `Sync completed. Processed ${processedCount} entries with ${errorCount} errors.`
+        message: `Sync completed. Processed ${processedCount} questions with ${errorCount} errors.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -206,15 +159,9 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    logWithTimestamp('Fatal error during sync:', {
-      error: error.message,
-      stack: error.stack
-    })
+    logWithTimestamp('Fatal error during sync:', { error: error.message })
     return new Response(
-      JSON.stringify({
-        error: error.message,
-        details: error.stack
-      }),
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
