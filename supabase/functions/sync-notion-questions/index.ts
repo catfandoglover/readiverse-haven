@@ -32,11 +32,15 @@ serve(async (req) => {
       throw new Error('Missing required environment variables: NOTION_API_KEY or NOTION_DATABASE_ID')
     }
 
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+    }
+
     const notion = new createClient({ auth: notionKey })
     
     const supabase = createSupabaseClient(
-      supabaseUrl ?? '',
-      supabaseServiceKey ?? ''
+      supabaseUrl,
+      supabaseServiceKey
     )
 
     console.log('Querying Notion database:', notionDbId)

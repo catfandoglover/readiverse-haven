@@ -208,10 +208,13 @@ const Reader = ({ metadata, preloadedBookUrl, isLoading }: ReaderProps) => {
       const { data, error } = await supabase
         .from('external_links')
         .select('url')
-        .single();
+        .limit(1)
+        .maybeSingle();
       
       if (data && !error) {
         setExternalLink(data.url);
+      } else {
+        console.error('Error fetching external link:', error);
       }
     };
 
