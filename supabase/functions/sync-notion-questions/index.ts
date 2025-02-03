@@ -8,19 +8,13 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Add timestamp to all logs for better tracking
-  const logWithTimestamp = (message: string, data?: any) => {
-    const timestamp = new Date().toISOString()
-    console.log(`[${timestamp}] ${message}`, data ? JSON.stringify(data) : '')
-  }
-
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    logWithTimestamp('Handling CORS preflight request')
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    logWithTimestamp('Starting Notion sync process...')
+    console.log('Starting Notion sync process...')
     
     // Check environment variables
     const notionKey = Deno.env.get('NOTION_API_KEY')
@@ -35,7 +29,7 @@ serve(async (req) => {
     const notion = new createClient({ auth: notionKey })
     const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
     
-    logWithTimestamp('Querying Notion database:', { databaseId: notionDbId })
+    console.log('Querying Notion database:', { databaseId: notionDbId })
     const response = await notion.databases.query({
       database_id: notionDbId,
       page_size: 100,
@@ -48,7 +42,7 @@ serve(async (req) => {
     for (const page of response.results) {
       try {
         if (!('properties' in page)) {
-          logWithTimestamp('Warning: Skipping page without properties', { pageId: page.id })
+          console.log('Warning: Skipping page without properties', { pageId: page.id })
           continue
         }
 
@@ -60,7 +54,7 @@ serve(async (req) => {
         const questionText = properties.Question?.title?.[0]?.plain_text || ''
 
         if (!questionText) {
-          logWithTimestamp('Warning: Skipping page with no question text:', { pageId: page.id })
+          console.log('Warning: Skipping page with no question text:', { pageId: page.id })
           continue
         }
 
@@ -79,7 +73,7 @@ serve(async (req) => {
           .single()
 
         if (questionError) {
-          logWithTimestamp('Error upserting question:', { error: questionError, pageId: page.id })
+          console.log('Error upserting question:', { error: questionError, pageId: page.id })
           errors.push({ type: 'question_upsert', pageId: page.id, error: questionError.message })
           errorCount++
           continue
@@ -95,7 +89,7 @@ serve(async (req) => {
           .eq('question_id', questionData.id)
 
         if (deleteError) {
-          logWithTimestamp('Error deleting existing relationships:', { error: deleteError })
+          console.log('Error deleting existing relationships:', { error: deleteError })
           errors.push({ type: 'relationship_delete', error: deleteError.message })
           errorCount++
         }
@@ -111,7 +105,7 @@ serve(async (req) => {
             })
 
           if (relationError) {
-            logWithTimestamp('Error creating book-question relation:', {
+            console.log('Error creating book-question relation:', {
               error: relationError,
               questionId: questionData.id,
               bookId: bookRef.id
@@ -127,12 +121,12 @@ serve(async (req) => {
         }
 
         processedCount++
-        logWithTimestamp('Successfully processed question:', {
+        console.log('Successfully processed question:', {
           questionId: questionData.id,
           bookRelationsCount: bookRelations.length
         })
       } catch (error) {
-        logWithTimestamp('Error processing page:', { error: error.message })
+        console.log('Error processing page:', { error: error.message })
         errors.push({ type: 'page_processing', error: error.message })
         errorCount++
       }
@@ -143,7 +137,7 @@ serve(async (req) => {
       errorCount,
       errors
     }
-    logWithTimestamp('Sync completed:', summary)
+    console.log('Sync completed:', summary)
 
     return new Response(
       JSON.stringify({
@@ -159,7 +153,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    logWithTimestamp('Fatal error during sync:', { error: error.message })
+    console.log('Fatal error during sync:', { error: error.message })
     return new Response(
       JSON.stringify({ error: error.message }),
       {
