@@ -9,10 +9,8 @@ const corsHeaders = {
 
 function extractNotionId(url: string): string | null {
   try {
-    // Handle both URL formats
     const matches = url.match(/(?:[a-f0-9]{32})|(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
     if (matches && matches[0]) {
-      // Convert to standard format without dashes
       return matches[0].replace(/-/g, '');
     }
     return null;
@@ -81,9 +79,30 @@ serve(async (req) => {
             const properties = page.properties;
             const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
             const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
-            const relatedBooks = properties['Books']?.relation || [];
+            
+            // Get "The Classics" relation property
+            const classicsRelation = properties['The Classics']?.relation || [];
+            console.log('The Classics relation:', classicsRelation);
 
-            console.log('Found related books:', relatedBooks);
+            // Fetch related pages from "The Classics" database
+            const relatedPages = await Promise.all(
+              classicsRelation.map(async (relation) => {
+                try {
+                  const page = await notion.pages.retrieve({ page_id: relation.id });
+                  console.log('Retrieved related classic:', {
+                    pageId: relation.id,
+                    url: page.url
+                  });
+                  return page.url;
+                } catch (error) {
+                  console.error('Error fetching related classic:', error);
+                  return null;
+                }
+              })
+            );
+
+            const validUrls = relatedPages.filter(url => url !== null);
+            console.log('Related classics URLs:', validUrls);
 
             // Insert/update the question in great_questions table with conflict handling
             const { data: insertedQuestion, error: questionError } = await supabase
@@ -92,7 +111,8 @@ serve(async (req) => {
                 notion_id: page.id,
                 category: properties.Category?.select?.name || 'Uncategorized',
                 category_number: categoryNumber,
-                question: questionText
+                question: questionText,
+                related_classics: validUrls // This would require adding a new column to the great_questions table
               }, {
                 onConflict: 'notion_id',
                 ignoreDuplicates: false
@@ -107,7 +127,8 @@ serve(async (req) => {
                   notion_id: page.id,
                   category: properties.Category?.select?.name,
                   category_number: categoryNumber,
-                  question: questionText
+                  question: questionText,
+                  related_classics: validUrls
                 }
               });
               continue;
@@ -115,65 +136,6 @@ serve(async (req) => {
 
             console.log('Inserted/updated question:', insertedQuestion);
 
-            // Get all books that have Notion URLs
-            const { data: books, error: booksError } = await supabase
-              .from('books')
-              .select('id, Notion_URL');
-
-            if (booksError) {
-              console.error('Error fetching books:', booksError);
-              continue;
-            }
-
-            // Create a mapping of Notion page IDs to Supabase book IDs
-            const bookMap = new Map(
-              books
-                .filter(book => book.Notion_URL)
-                .map(book => {
-                  const notionId = extractNotionId(book.Notion_URL);
-                  console.log('Extracted Notion ID for book:', {
-                    url: book.Notion_URL,
-                    extractedId: notionId,
-                    bookId: book.id
-                  });
-                  return [notionId, book.id];
-                })
-                .filter(([notionId]) => notionId !== null)
-            );
-
-            // Process each related book
-            for (const relation of relatedBooks) {
-              const notionBookId = relation.id.replace(/-/g, '');
-              const supabaseBookId = bookMap.get(notionBookId);
-
-              console.log('Processing book relation:', {
-                notionBookId,
-                supabaseBookId,
-                availableBooks: Array.from(bookMap.entries())
-              });
-
-              if (supabaseBookId) {
-                console.log(`Creating relationship between question ${insertedQuestion.id} and book ${supabaseBookId}`);
-                
-                const { error: relationError } = await supabase
-                  .from('book_questions')
-                  .upsert({
-                    question_id: insertedQuestion.id,
-                    book_id: supabaseBookId,
-                    randomizer: Math.random()
-                  }, {
-                    onConflict: 'question_id,book_id'
-                  });
-
-                if (relationError) {
-                  console.error('Error creating book-question relationship:', relationError);
-                } else {
-                  console.log('Successfully created book-question relationship');
-                }
-              } else {
-                console.warn(`No matching Supabase book found for Notion book ID: ${notionBookId}`);
-              }
-            }
           } catch (pageError) {
             console.error('Error processing page:', {
               pageId: page.id,
