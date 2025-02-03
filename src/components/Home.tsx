@@ -7,13 +7,11 @@ import { Button } from "./ui/button";
 import { Compass, BookOpen, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
 import { triggerNotionSync } from "@/utils/notionSync";
-import { useToast } from "@/hooks/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Home = () => {
   const [isGridView, setIsGridView] = useState(false);
-  const { toast } = useToast();
   
   useEffect(() => {
     const syncNotionData = async () => {
@@ -23,11 +21,6 @@ const Home = () => {
         console.log('Notion sync completed');
       } catch (error) {
         console.error('Error syncing with Notion:', error);
-        toast({
-          variant: "destructive",
-          title: "Sync Error",
-          description: "Failed to sync with Notion. Check console for details.",
-        });
       }
     };
 
