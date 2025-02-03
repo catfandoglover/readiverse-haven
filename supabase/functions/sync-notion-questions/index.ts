@@ -5,6 +5,8 @@ import { createClient as createSupabaseClient } from 'https://esm.sh/@supabase/s
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
@@ -13,7 +15,10 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request')
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200
+    })
   }
 
   try {
@@ -180,9 +185,6 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        processed: processedCount,
-        errors: errorCount,
-        errorDetails: errors,
         message: `Sync completed. Processed ${processedCount} questions with ${errorCount} errors.`
       }),
       {
@@ -191,7 +193,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Fatal error during sync:', { error: error.message })
+    console.error('Fatal error during sync:', error)
     return new Response(
       JSON.stringify({ 
         success: false,
