@@ -46,63 +46,114 @@ serve(async (req) => {
     console.log('Querying Notion database:', notionDbId)
     const response = await notion.databases.query({
       database_id: notionDbId,
+      page_size: 100, // Adjust based on your needs
     })
     console.log('Retrieved', response.results.length, 'entries from Notion')
 
     // Process each entry and update Supabase
     let processedCount = 0
+    let errorCount = 0
+    const errors = []
+
     for (const page of response.results) {
-      if (!('properties' in page)) {
-        console.warn('Skipping page without properties')
-        continue
-      }
+      try {
+        if (!('properties' in page)) {
+          console.warn('Skipping page without properties')
+          continue
+        }
 
-      const properties = page.properties as any
-      console.log('Processing page properties:', JSON.stringify(properties, null, 2))
-      
-      // Get the book relations
-      const bookRelations = properties.Books?.relation || []
-      // Get the question relations
-      const questionRelations = properties.Questions?.relation || []
+        const properties = page.properties as any
+        console.log('Processing page:', {
+          id: page.id,
+          propertyKeys: Object.keys(properties),
+        })
 
-      console.log('Found relations:', {
-        books: bookRelations.length,
-        questions: questionRelations.length
-      })
+        // Extract question data
+        const categoryNumber = properties.CategoryNumber?.number || 0
+        const category = properties.Category?.select?.name || 'Uncategorized'
+        const questionText = properties.Question?.title?.[0]?.plain_text || ''
 
-      // Create associations in Supabase
-      for (const book of bookRelations) {
-        for (const question of questionRelations) {
-          console.log('Creating association:', {
-            book_id: book.id,
-            question_id: question.id
+        if (!questionText) {
+          console.warn('Skipping page with no question text:', page.id)
+          continue
+        }
+
+        // Upsert question to Supabase
+        const { data: questionData, error: questionError } = await supabase
+          .from('questions')
+          .upsert({
+            category_number: categoryNumber,
+            category: category,
+            question: questionText,
+          }, {
+            onConflict: 'question'
           })
+          .select()
+          .single()
 
-          const { error } = await supabase
+        if (questionError) {
+          console.error('Error upserting question:', questionError)
+          errors.push({
+            type: 'question_upsert',
+            pageId: page.id,
+            error: questionError.message
+          })
+          errorCount++
+          continue
+        }
+
+        // Get book relations
+        const bookRelations = properties.Books?.relation || []
+        console.log('Processing book relations:', bookRelations.length)
+
+        // Create book-question associations
+        for (const bookRef of bookRelations) {
+          const { error: relationError } = await supabase
             .from('book_questions')
             .upsert({
-              book_id: book.id,
-              question_id: question.id,
+              book_id: bookRef.id,
+              question_id: questionData.id,
             }, {
               onConflict: 'book_id,question_id'
             })
 
-          if (error) {
-            console.error('Error upserting book-question relation:', error)
-          } else {
-            processedCount++
+          if (relationError) {
+            console.error('Error creating book-question relation:', relationError)
+            errors.push({
+              type: 'relation_upsert',
+              pageId: page.id,
+              bookId: bookRef.id,
+              error: relationError.message
+            })
+            errorCount++
           }
         }
+
+        processedCount++
+      } catch (error) {
+        console.error('Error processing page:', page.id, error)
+        errors.push({
+          type: 'page_processing',
+          pageId: page.id,
+          error: error.message
+        })
+        errorCount++
       }
     }
 
-    console.log('Sync completed. Processed', processedCount, 'associations')
+    console.log('Sync completed:', {
+      totalProcessed: processedCount,
+      errorCount,
+      errors
+    })
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         processed: processedCount,
-        message: `Sync completed. Processed ${processedCount} associations.`
+        errors: errorCount,
+        errorDetails: errors,
+        message: `Sync completed. Processed ${processedCount} entries with ${errorCount} errors.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -110,9 +161,9 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error during sync:', error)
+    console.error('Fatal error during sync:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
         details: error.stack
       }),

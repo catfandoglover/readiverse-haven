@@ -42,7 +42,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "questions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       books: {
@@ -174,7 +174,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "reading_lists"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       reading_lists: {
@@ -230,7 +230,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "books"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       user_library: {
@@ -259,7 +259,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "books"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
