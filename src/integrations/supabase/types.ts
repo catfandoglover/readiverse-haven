@@ -107,6 +107,7 @@ export type Database = {
           id: string
           notion_id: string
           question: string
+          related_classics: string[] | null
         }
         Insert: {
           category: string
@@ -115,6 +116,7 @@ export type Database = {
           id?: string
           notion_id: string
           question: string
+          related_classics?: string[] | null
         }
         Update: {
           category?: string
@@ -123,6 +125,7 @@ export type Database = {
           id?: string
           notion_id?: string
           question?: string
+          related_classics?: string[] | null
         }
         Relationships: []
       }

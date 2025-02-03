@@ -85,15 +85,15 @@ serve(async (req) => {
             console.log('The Classics relation:', classicsRelation);
 
             // Fetch related pages from "The Classics" database
-            const relatedPages = await Promise.all(
+            const relatedUrls = await Promise.all(
               classicsRelation.map(async (relation) => {
                 try {
-                  const page = await notion.pages.retrieve({ page_id: relation.id });
+                  const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
                   console.log('Retrieved related classic:', {
                     pageId: relation.id,
-                    url: page.url
+                    url: relatedPage.url
                   });
-                  return page.url;
+                  return relatedPage.url;
                 } catch (error) {
                   console.error('Error fetching related classic:', error);
                   return null;
@@ -101,10 +101,11 @@ serve(async (req) => {
               })
             );
 
-            const validUrls = relatedPages.filter(url => url !== null);
+            // Filter out any null values from failed retrievals
+            const validUrls = relatedUrls.filter((url): url is string => url !== null);
             console.log('Related classics URLs:', validUrls);
 
-            // Insert/update the question in great_questions table with conflict handling
+            // Insert/update the question in great_questions table
             const { data: insertedQuestion, error: questionError } = await supabase
               .from('great_questions')
               .upsert({
@@ -112,7 +113,7 @@ serve(async (req) => {
                 category: properties.Category?.select?.name || 'Uncategorized',
                 category_number: categoryNumber,
                 question: questionText,
-                related_classics: validUrls // This would require adding a new column to the great_questions table
+                related_classics: validUrls // Store the array of related URLs
               }, {
                 onConflict: 'notion_id',
                 ignoreDuplicates: false
@@ -135,6 +136,7 @@ serve(async (req) => {
             }
 
             console.log('Inserted/updated question:', insertedQuestion);
+            allQuestions.push(insertedQuestion);
 
           } catch (pageError) {
             console.error('Error processing page:', {
