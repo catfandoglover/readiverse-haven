@@ -52,14 +52,25 @@ serve(async (req) => {
     // Process each page and extract question data
     const questions = response.results.map(page => {
       const properties = page.properties
+      
+      // Debug logging to see the structure of the properties
+      console.log('Page properties:', JSON.stringify(properties, null, 2))
+      
+      // Extract category number (title of the question)
+      const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null
+      
+      // Extract the question text
+      const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text'
+      
       return {
         notion_id: page.id,
         category: properties.Category?.select?.name || 'Uncategorized',
-        category_number: properties['Category Number']?.rich_text?.[0]?.plain_text || null,
-        question: properties.Question?.title?.[0]?.plain_text || 'No question text',
+        category_number: categoryNumber,
+        question: questionText,
       }
     })
 
+    console.log('Questions to be inserted:', JSON.stringify(questions, null, 2))
     console.log('Inserting questions into Supabase...')
 
     // Insert questions into Supabase, using upsert to avoid duplicates
