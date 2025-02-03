@@ -7,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
 }
 
 function checkRequiredEnvVars() {
@@ -26,19 +25,28 @@ function checkRequiredEnvVars() {
 }
 
 serve(async (req) => {
-  console.log('Received request:', req.method)
-  
+  console.log('Received request:', req.method);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request')
+    console.log('Handling CORS preflight request');
     return new Response('ok', { 
       headers: corsHeaders,
       status: 200
-    })
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({
+      error: `Method ${req.method} not allowed`
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 405
+    });
   }
 
   try {
-    console.log('Starting Notion sync process...')
+    console.log('Starting Notion sync process...');
     
     // Check environment variables first
     try {
@@ -63,55 +71,55 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    console.log('Initializing Notion client...')
-    const notion = new createClient({ auth: notionKey })
+    console.log('Initializing Notion client...');
+    const notion = new createClient({ auth: notionKey });
     
-    console.log('Initializing Supabase client...')
-    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+    console.log('Initializing Supabase client...');
+    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
     
-    console.log('Querying Notion database:', { databaseId: notionDbId })
+    console.log('Querying Notion database:', { databaseId: notionDbId });
     const response = await notion.databases.query({
       database_id: notionDbId,
       page_size: 100,
-    })
+    });
 
-    console.log('Retrieved pages from Notion:', { pageCount: response.results.length })
+    console.log('Retrieved pages from Notion:', { pageCount: response.results.length });
 
-    let processedCount = 0
-    let errorCount = 0
-    const errors = []
+    let processedCount = 0;
+    let errorCount = 0;
+    const errors = [];
 
     for (const page of response.results) {
       try {
         if (!('properties' in page)) {
-          console.log('Warning: Skipping page without properties', { pageId: page.id })
-          continue
+          console.log('Warning: Skipping page without properties', { pageId: page.id });
+          continue;
         }
 
-        const properties = page.properties as any
+        const properties = page.properties as any;
         console.log('Processing page:', { 
           pageId: page.id, 
           properties: Object.keys(properties)
-        })
+        });
         
         // Extract question data
-        const categoryNumber = properties.CategoryNumber?.number || null
-        const category = properties.Category?.select?.name || 'Uncategorized'
-        const questionText = properties.Question?.title?.[0]?.plain_text || ''
+        const categoryNumber = properties.CategoryNumber?.number || null;
+        const category = properties.Category?.select?.name || 'Uncategorized';
+        const questionText = properties.Question?.title?.[0]?.plain_text || '';
 
         console.log('Extracted question data:', {
           categoryNumber,
           category,
           questionText: questionText.substring(0, 50) + '...'
-        })
+        });
 
         if (!questionText) {
-          console.log('Warning: Skipping page with no question text:', { pageId: page.id })
-          continue
+          console.log('Warning: Skipping page with no question text:', { pageId: page.id });
+          continue;
         }
 
         // Upsert question to Supabase
-        console.log('Upserting question to Supabase...')
+        console.log('Upserting question to Supabase...');
         const { data: questionData, error: questionError } = await supabase
           .from('great_questions')
           .upsert({
@@ -123,33 +131,33 @@ serve(async (req) => {
             onConflict: 'notion_id'
           })
           .select()
-          .single()
+          .single();
 
         if (questionError) {
-          console.error('Error upserting question:', { error: questionError, pageId: page.id })
-          errors.push({ type: 'question_upsert', pageId: page.id, error: questionError.message })
-          errorCount++
-          continue
+          console.error('Error upserting question:', { error: questionError, pageId: page.id });
+          errors.push({ type: 'question_upsert', pageId: page.id, error: questionError.message });
+          errorCount++;
+          continue;
         }
 
         // Get book relations and create book-question associations
-        const bookRelations = properties['The Classics']?.relation || []
+        const bookRelations = properties['The Classics']?.relation || [];
         console.log('Found book relations:', { 
           questionId: questionData.id,
           relationCount: bookRelations.length 
-        })
+        });
         
         // Delete existing relationships for this question to avoid duplicates
-        console.log('Deleting existing relationships...')
+        console.log('Deleting existing relationships...');
         const { error: deleteError } = await supabase
           .from('book_questions')
           .delete()
-          .eq('question_id', questionData.id)
+          .eq('question_id', questionData.id);
 
         if (deleteError) {
-          console.error('Error deleting existing relationships:', { error: deleteError })
-          errors.push({ type: 'relationship_delete', error: deleteError.message })
-          errorCount++
+          console.error('Error deleting existing relationships:', { error: deleteError });
+          errors.push({ type: 'relationship_delete', error: deleteError.message });
+          errorCount++;
         }
 
         // Create new relationships with randomizer values
@@ -157,7 +165,7 @@ serve(async (req) => {
           console.log('Creating book-question relation:', {
             questionId: questionData.id,
             bookId: bookRef.id
-          })
+          });
           
           const { error: relationError } = await supabase
             .from('book_questions')
@@ -165,33 +173,33 @@ serve(async (req) => {
               question_id: questionData.id,
               book_id: bookRef.id,
               randomizer: Math.random(),
-            })
+            });
 
           if (relationError) {
             console.error('Error creating book-question relation:', {
               error: relationError,
               questionId: questionData.id,
               bookId: bookRef.id
-            })
+            });
             errors.push({
               type: 'relation_insert',
               questionId: questionData.id,
               bookId: bookRef.id,
               error: relationError.message
-            })
-            errorCount++
+            });
+            errorCount++;
           }
         }
 
-        processedCount++
+        processedCount++;
         console.log('Successfully processed question:', {
           questionId: questionData.id,
           bookRelationsCount: bookRelations.length
-        })
+        });
       } catch (error) {
-        console.error('Error processing page:', error)
-        errors.push({ type: 'page_processing', error: error.message })
-        errorCount++
+        console.error('Error processing page:', error);
+        errors.push({ type: 'page_processing', error: error.message });
+        errorCount++;
       }
     }
 
@@ -199,7 +207,7 @@ serve(async (req) => {
       totalProcessed: processedCount,
       errorCount,
       errors
-    })
+    });
 
     return new Response(
       JSON.stringify({
@@ -210,9 +218,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
-    )
+    );
   } catch (error) {
-    console.error('Fatal error during sync:', error)
+    console.error('Fatal error during sync:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
@@ -222,6 +230,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       }
-    )
+    );
   }
-})
+});
