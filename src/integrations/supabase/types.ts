@@ -90,6 +90,30 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          category: string
+          category_number: number
+          created_at: string
+          id: string
+          question: string
+        }
+        Insert: {
+          category: string
+          category_number: number
+          created_at?: string
+          id?: string
+          question: string
+        }
+        Update: {
+          category?: string
+          category_number?: number
+          created_at?: string
+          id?: string
+          question?: string
+        }
+        Relationships: []
+      }
       reading_list_books: {
         Row: {
           added_at: string
