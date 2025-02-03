@@ -5,23 +5,30 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { triggerNotionSync } from "@/utils/notionSync";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { bookSlug } = useParams();
   const { data: book, isLoading } = useBook(bookSlug);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Test the Notion sync when the component mounts
-    const testNotionSync = async () => {
-      try {
-        await triggerNotionSync();
-      } catch (error) {
-        console.error('Error testing Notion sync:', error);
-      }
-    };
-    testNotionSync();
-  }, []); // Run once when component mounts
+  const handleSync = async () => {
+    try {
+      toast({
+        description: "Starting Notion sync...",
+      });
+      await triggerNotionSync();
+      toast({
+        description: "Notion sync completed successfully",
+      });
+    } catch (error) {
+      console.error('Error triggering Notion sync:', error);
+      toast({
+        description: "Failed to sync with Notion",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const addToLibrary = async () => {
@@ -76,14 +83,21 @@ const Index = () => {
   }
 
   return (
-    <Reader
-      metadata={{
-        coverUrl: book.cover_url || '',
-        title: book.title,
-        author: book.author || '',
-      }}
-      preloadedBookUrl={book.epub_file_url}
-    />
+    <div>
+      <div className="fixed top-4 right-4 z-50">
+        <Button onClick={handleSync}>
+          Sync Notion Questions
+        </Button>
+      </div>
+      <Reader
+        metadata={{
+          coverUrl: book.cover_url || '',
+          title: book.title,
+          author: book.author || '',
+        }}
+        preloadedBookUrl={book.epub_file_url}
+      />
+    </div>
   );
 };
 
