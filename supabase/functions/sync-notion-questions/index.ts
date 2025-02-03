@@ -42,60 +42,75 @@ serve(async (req) => {
 
     console.log('Fetching questions from Notion database...')
     
-    // Fetch all pages from the Notion database
-    const response = await notion.databases.query({
-      database_id: notionDatabaseId,
-    })
+    let allQuestions = [];
+    let hasMore = true;
+    let startCursor = undefined;
 
-    console.log(`Found ${response.results.length} questions in Notion`)
+    // Fetch all pages from the Notion database using pagination
+    while (hasMore) {
+      const response = await notion.databases.query({
+        database_id: notionDatabaseId,
+        start_cursor: startCursor,
+        page_size: 100, // Maximum allowed by Notion API
+      });
 
-    // Process each page and extract question data
-    const questions = response.results.map(page => {
-      const properties = page.properties
-      
-      // Debug logging to see the structure of the properties
-      console.log('Page properties:', JSON.stringify(properties, null, 2))
-      
-      // Extract category number (title of the question)
-      const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null
-      
-      // Extract the question text
-      const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text'
-      
-      return {
-        notion_id: page.id,
-        category: properties.Category?.select?.name || 'Uncategorized',
-        category_number: categoryNumber,
-        question: questionText,
-      }
-    })
+      console.log(`Fetched ${response.results.length} questions from current page`);
 
-    console.log('Questions to be inserted:', JSON.stringify(questions, null, 2))
-    console.log('Inserting questions into Supabase...')
+      // Process each page and extract question data
+      const questions = response.results.map(page => {
+        const properties = page.properties
+        
+        // Debug logging to see the structure of the properties
+        console.log('Page properties:', JSON.stringify(properties, null, 2))
+        
+        // Extract category number (title of the question)
+        const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null
+        
+        // Extract the question text
+        const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text'
+        
+        return {
+          notion_id: page.id,
+          category: properties.Category?.select?.name || 'Uncategorized',
+          category_number: categoryNumber,
+          question: questionText,
+        }
+      });
+
+      allQuestions = [...allQuestions, ...questions];
+      
+      // Update pagination info
+      hasMore = response.has_more;
+      startCursor = response.next_cursor || undefined;
+    }
+
+    console.log(`Total questions fetched: ${allQuestions.length}`);
+    console.log('Questions to be inserted:', JSON.stringify(allQuestions, null, 2));
+    console.log('Inserting questions into Supabase...');
 
     // Insert questions into Supabase, using upsert to avoid duplicates
     const { data, error } = await supabase
       .from('great_questions')
       .upsert(
-        questions,
+        allQuestions,
         { 
           onConflict: 'notion_id',
           ignoreDuplicates: false 
         }
-      )
+      );
 
     if (error) {
-      console.error('Error inserting questions:', error)
-      throw error
+      console.error('Error inserting questions:', error);
+      throw error;
     }
 
-    console.log('Successfully synced questions with Supabase')
+    console.log('Successfully synced questions with Supabase');
 
     return new Response(
       JSON.stringify({
         message: "Successfully synced questions from Notion",
         timestamp: new Date().toISOString(),
-        questionsProcessed: questions.length
+        questionsProcessed: allQuestions.length
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -103,7 +118,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
