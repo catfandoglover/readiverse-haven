@@ -53,6 +53,7 @@ export type Database = {
           created_at: string
           epub_file_url: string
           id: string
+          Notion_URL: string | null
           slug: string
           title: string
         }
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string
           epub_file_url: string
           id?: string
+          Notion_URL?: string | null
           slug: string
           title: string
         }
@@ -73,6 +75,7 @@ export type Database = {
           created_at?: string
           epub_file_url?: string
           id?: string
+          Notion_URL?: string | null
           slug?: string
           title?: string
         }
