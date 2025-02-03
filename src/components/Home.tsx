@@ -31,6 +31,13 @@ const Home = () => {
     navigate(`/${slug}`);
   };
 
+  const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent triggering the parent onClick
+    if (coverUrl) {
+      window.open(coverUrl, '_blank');
+    }
+  };
+
   const handleNavigation = (path: string) => {
     navigate(path);
   };
@@ -76,7 +83,7 @@ const Home = () => {
               <div
                 key={book.id}
                 className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleBookClick(book.slug)}
+                onClick={(e) => handleCoverClick(book.Cover_super, e)}
               >
                 <img
                   src={book.cover_url || '/placeholder.svg'}
@@ -94,7 +101,10 @@ const Home = () => {
                 className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
                 onClick={() => handleBookClick(book.slug)}
               >
-                <div className="w-24 h-24 flex-shrink-0">
+                <div 
+                  className="w-24 h-24 flex-shrink-0 cursor-pointer"
+                  onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                >
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}

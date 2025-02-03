@@ -17,7 +17,6 @@ const Library = () => {
   const { data: books, isLoading } = useQuery({
     queryKey: ['user-library'],
     queryFn: async () => {
-      // Get book slugs from localStorage
       console.log('All localStorage keys:', Object.keys(localStorage));
       
       const libraryItems = Object.keys(localStorage)
@@ -31,13 +30,11 @@ const Library = () => {
             const data = JSON.parse(rawData || '{}');
             console.log('Parsed data:', data);
             
-            // Get the slug from the URL in the bookId
             if (!data.bookId) {
               console.warn('No bookId found in data for key:', key);
               return null;
             }
 
-            // Extract the book number from the Gutenberg URL
             const urlMatch = data.bookId.match(/gutenberg\.org\/(\d+)$/);
             if (!urlMatch) {
               console.warn('Could not extract book number from:', data.bookId);
@@ -51,7 +48,7 @@ const Library = () => {
             return null;
           }
         })
-        .filter(Boolean); // Remove null values
+        .filter(Boolean);
       
       console.log('Found book slugs:', libraryItems);
 
@@ -60,7 +57,6 @@ const Library = () => {
         return [];
       }
 
-      // Fetch book details from Supabase
       console.log('Fetching books with slugs:', libraryItems);
       const { data: booksData, error: booksError } = await supabase
         .from('books')
@@ -80,6 +76,13 @@ const Library = () => {
 
   const handleBookClick = (slug: string) => {
     navigate(`/${slug}`);
+  };
+
+  const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent triggering the parent onClick
+    if (coverUrl) {
+      window.open(coverUrl, '_blank');
+    }
   };
 
   const handleNavigation = (path: string) => {
@@ -132,7 +135,7 @@ const Library = () => {
               <div
                 key={book.id}
                 className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleBookClick(book.slug)}
+                onClick={(e) => handleCoverClick(book.Cover_super, e)}
               >
                 <img
                   src={book.cover_url || '/placeholder.svg'}
@@ -150,7 +153,10 @@ const Library = () => {
                 className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
                 onClick={() => handleBookClick(book.slug)}
               >
-                <div className="w-24 h-24 flex-shrink-0">
+                <div 
+                  className="w-24 h-24 flex-shrink-0 cursor-pointer"
+                  onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                >
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
