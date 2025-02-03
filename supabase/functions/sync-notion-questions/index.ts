@@ -9,6 +9,21 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 }
 
+function checkRequiredEnvVars() {
+  const required = [
+    'NOTION_API_KEY',
+    'NOTION_DATABASE_ID',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
+  ];
+  
+  const missing = required.filter(key => !Deno.env.get(key));
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+}
+
 serve(async (req) => {
   console.log('Received request:', req.method)
   
@@ -24,24 +39,28 @@ serve(async (req) => {
   try {
     console.log('Starting Notion sync process...')
     
-    // Check environment variables
-    const notionKey = Deno.env.get('NOTION_API_KEY')
-    const notionDbId = Deno.env.get('NOTION_DATABASE_ID')
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-    console.log('Checking environment variables...')
-    if (!notionKey || !notionDbId || !supabaseUrl || !supabaseServiceKey) {
-      const missingVars = [
-        !notionKey && 'NOTION_API_KEY',
-        !notionDbId && 'NOTION_DATABASE_ID',
-        !supabaseUrl && 'SUPABASE_URL',
-        !supabaseServiceKey && 'SUPABASE_SERVICE_ROLE_KEY'
-      ].filter(Boolean)
-      
-      console.error('Missing required environment variables:', missingVars)
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
+    // Check environment variables first
+    try {
+      checkRequiredEnvVars();
+    } catch (error) {
+      console.error('Environment variables check failed:', error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: error.message 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
+    
+    // Initialize clients
+    const notionKey = Deno.env.get('NOTION_API_KEY')!;
+    const notionDbId = Deno.env.get('NOTION_DATABASE_ID')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     console.log('Initializing Notion client...')
     const notion = new createClient({ auth: notionKey })
