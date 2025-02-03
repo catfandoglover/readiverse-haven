@@ -9,42 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      book_questions: {
-        Row: {
-          book_id: string | null
-          created_at: string
-          id: string
-          question_id: string | null
-        }
-        Insert: {
-          book_id?: string | null
-          created_at?: string
-          id?: string
-          question_id?: string | null
-        }
-        Update: {
-          book_id?: string | null
-          created_at?: string
-          id?: string
-          question_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "book_questions_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "book_questions_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       books: {
         Row: {
           author: string | null
@@ -120,30 +84,6 @@ export type Database = {
           id?: string
           outseta_user_id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      questions: {
-        Row: {
-          category: string
-          category_number: number
-          created_at: string
-          id: string
-          question: string
-        }
-        Insert: {
-          category: string
-          category_number: number
-          created_at?: string
-          id?: string
-          question: string
-        }
-        Update: {
-          category?: string
-          category_number?: number
-          created_at?: string
-          id?: string
-          question?: string
         }
         Relationships: []
       }
