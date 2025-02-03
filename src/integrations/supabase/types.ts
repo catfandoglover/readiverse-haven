@@ -42,7 +42,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "questions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       books: {
@@ -75,6 +75,24 @@ export type Database = {
           id?: string
           slug?: string
           title?: string
+        }
+        Relationships: []
+      }
+      external_links: {
+        Row: {
+          created_at: string
+          id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          url?: string
         }
         Relationships: []
       }
@@ -156,7 +174,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "reading_lists"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       reading_lists: {
@@ -212,7 +230,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "books"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_library: {
@@ -241,7 +259,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "books"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
