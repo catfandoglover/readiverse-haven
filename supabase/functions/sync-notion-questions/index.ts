@@ -39,15 +39,7 @@ serve(async (req) => {
 
       const errorMsg = `Missing required environment variables: ${missingVars.join(', ')}`
       console.error(errorMsg)
-      return new Response(
-        JSON.stringify({
-          error: errorMsg
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500 
-        }
-      )
+      throw new Error(errorMsg)
     }
 
     // Initialize clients
@@ -148,14 +140,23 @@ serve(async (req) => {
               }
             }
           } catch (pageError) {
-            console.error('Error processing page:', page.id, pageError);
+            console.error('Error processing page:', {
+              pageId: page.id,
+              error: pageError.message,
+              stack: pageError.stack,
+              cause: pageError.cause
+            });
           }
         }
 
         hasMore = response.has_more;
         startCursor = response.next_cursor || undefined;
       } catch (queryError) {
-        console.error('Error querying Notion database:', queryError);
+        console.error('Error querying Notion database:', {
+          error: queryError.message,
+          stack: queryError.stack,
+          cause: queryError.cause
+        });
         throw queryError;
       }
     }
@@ -174,17 +175,24 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    // Log the full error details
-    console.error('Error details:', {
+    // Enhanced error logging
+    const errorDetails = {
       message: error.message,
       stack: error.stack,
-      cause: error.cause
-    });
+      cause: error.cause,
+      name: error.name,
+      // Additional error properties that might be helpful
+      code: error.code,
+      statusCode: error.status,
+      details: error.details,
+    };
+    
+    console.error('Detailed error information:', errorDetails);
 
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.stack,
+        details: errorDetails,
         timestamp: new Date().toISOString()
       }),
       { 
