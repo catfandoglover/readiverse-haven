@@ -82,7 +82,7 @@ serve(async (req) => {
         console.log('Extracted question data:', {
           categoryNumber,
           category,
-          questionText: questionText.substring(0, 50) + '...' // Log first 50 chars
+          questionText: questionText.substring(0, 50) + '...'
         })
 
         if (!questionText) {
@@ -144,7 +144,7 @@ serve(async (req) => {
             .insert({
               question_id: questionData.id,
               book_id: bookRef.id,
-              randomizer: Math.random(), // Generate random value for ordering
+              randomizer: Math.random(),
             })
 
           if (relationError) {
@@ -169,18 +169,17 @@ serve(async (req) => {
           bookRelationsCount: bookRelations.length
         })
       } catch (error) {
-        console.error('Error processing page:', { error: error.message })
+        console.error('Error processing page:', error)
         errors.push({ type: 'page_processing', error: error.message })
         errorCount++
       }
     }
 
-    const summary = {
+    console.log('Sync completed:', {
       totalProcessed: processedCount,
       errorCount,
       errors
-    }
-    console.log('Sync completed:', summary)
+    })
 
     return new Response(
       JSON.stringify({
