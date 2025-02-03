@@ -3,7 +3,7 @@ import { toast } from "@/hooks/use-toast";
 
 export async function triggerNotionSync() {
   try {
-    console.log('Starting Notion sync...');
+    console.log('Starting Notion sync process...');
     const { data, error } = await supabase.functions.invoke('sync-notion-questions', {
       method: 'POST',
     });

@@ -24,6 +24,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Log environment variables (without exposing sensitive data)
+    console.log('Environment check:', {
+      hasNotionKey: !!Deno.env.get('NOTION_API_KEY'),
+      hasNotionDbId: !!Deno.env.get('NOTION_DATABASE_ID'),
+      hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
+      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    })
+
     // Fetch all entries from the Notion database
     const databaseId = Deno.env.get('NOTION_DATABASE_ID')
     if (!databaseId) {
