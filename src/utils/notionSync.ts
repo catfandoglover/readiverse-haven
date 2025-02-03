@@ -3,22 +3,25 @@ import { toast } from "@/hooks/use-toast";
 
 export async function triggerNotionSync() {
   try {
-    const { error } = await supabase.functions.invoke('sync-notion-questions', {
+    const { data, error } = await supabase.functions.invoke('sync-notion-questions', {
       method: 'POST',
     });
 
     if (error) throw error;
     
     toast({
-      title: "Sync Started",
-      description: "The Notion sync process has been triggered successfully.",
+      title: "Sync Completed",
+      description: data?.message || "The Notion sync process has completed successfully.",
     });
+
+    return data;
   } catch (error) {
     console.error('Error triggering Notion sync:', error);
     toast({
-      title: "Sync Failed",
-      description: "Failed to trigger the Notion sync. Please try again later.",
       variant: "destructive",
+      title: "Sync Failed",
+      description: error instanceof Error ? error.message : "Failed to trigger the Notion sync. Please try again later.",
     });
+    throw error;
   }
 }
