@@ -10,24 +10,27 @@ const corsHeaders = {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRIES = 5;
+const INITIAL_RETRY_DELAY = 2000; // 2 seconds
+const MAX_RETRY_DELAY = 30000; // 30 seconds
 
 async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
   try {
     return await fn();
   } catch (error) {
+    console.error('Error in fetchWithRetry:', error);
+    
     if (retries > 0 && (error.message?.includes('rate limit') || error.status === 429)) {
+      const nextDelay = Math.min(delayMs * 2, MAX_RETRY_DELAY);
       console.log(`Rate limited, retrying in ${delayMs}ms... (${retries} retries left)`);
       await delay(delayMs);
-      return fetchWithRetry(fn, retries - 1, delayMs * 2);
+      return fetchWithRetry(fn, retries - 1, nextDelay);
     }
     throw error;
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -40,22 +43,8 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    console.log('Environment variables check:', {
-      hasNotionApiKey: !!notionApiKey,
-      hasNotionDatabaseId: !!notionDatabaseId,
-      hasSupabaseUrl: !!supabaseUrl,
-      hasSupabaseServiceKey: !!supabaseServiceKey
-    })
-
     if (!notionApiKey || !notionDatabaseId || !supabaseUrl || !supabaseServiceKey) {
-      const missingVars = [
-        !notionApiKey && 'NOTION_API_KEY',
-        !notionDatabaseId && 'NOTION_DATABASE_ID',
-        !supabaseUrl && 'SUPABASE_URL',
-        !supabaseServiceKey && 'SUPABASE_SERVICE_ROLE_KEY'
-      ].filter(Boolean)
-
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
+      throw new Error('Missing required environment variables')
     }
 
     const notion = new Client({ auth: notionApiKey })
@@ -72,7 +61,7 @@ serve(async (req) => {
         return await notion.databases.query({
           database_id: notionDatabaseId,
           start_cursor: startCursor,
-          page_size: 100,
+          page_size: 50, // Reduced from 100 to help with rate limits
         });
       });
 
@@ -80,24 +69,17 @@ serve(async (req) => {
 
       for (const page of response.results) {
         try {
-          console.log('Processing Notion page:', page.id);
-          
           const properties = page.properties;
           const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
           const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
           
           const classicsRelation = properties['The Classics']?.relation || [];
-          console.log('The Classics relation:', classicsRelation);
 
           const relatedUrls = await Promise.all(
             classicsRelation.map(async (relation) => {
               try {
                 const relatedPage = await fetchWithRetry(async () => {
                   return await notion.pages.retrieve({ page_id: relation.id });
-                });
-                console.log('Retrieved related classic:', {
-                  pageId: relation.id,
-                  url: relatedPage.url
                 });
                 return relatedPage.url;
               } catch (error) {
@@ -108,7 +90,6 @@ serve(async (req) => {
           );
 
           const validUrls = relatedUrls.filter((url): url is string => url !== null);
-          console.log('Related classics URLs:', validUrls);
 
           const { data: insertedQuestion, error: questionError } = await supabase
             .from('great_questions')
@@ -125,26 +106,14 @@ serve(async (req) => {
             .select()
             .single();
 
-          if (questionError) {
-            console.error('Error upserting question:', {
-              error: questionError,
-              questionData: {
-                notion_id: page.id,
-                category: properties.Category?.select?.name,
-                category_number: categoryNumber,
-                question: questionText,
-                related_classics: validUrls
-              }
-            });
-            continue;
-          }
+          if (questionError) throw questionError;
 
           // For each valid URL, create or update the book_questions relationship
           for (const url of validUrls) {
             const { data: book } = await supabase
               .from('books')
               .select('id')
-              .eq('Notion_URL', url)
+              .eq('Notion_URL', url) // Fixed: Using correct column name
               .single();
 
             if (book) {
@@ -153,7 +122,7 @@ serve(async (req) => {
                 .upsert({
                   question_id: insertedQuestion.id,
                   book_id: book.id,
-                  notion_url: url,
+                  notion_url: url, // Using the new column we added
                   randomizer: Math.random()
                 }, {
                   onConflict: 'question_id,notion_url'
@@ -161,21 +130,20 @@ serve(async (req) => {
             }
           }
 
-          console.log('Inserted/updated question:', insertedQuestion);
           allQuestions.push(insertedQuestion);
 
         } catch (pageError) {
-          console.error('Error processing page:', {
-            pageId: page.id,
-            error: pageError.message,
-            stack: pageError.stack,
-            cause: pageError.cause
-          });
+          console.error('Error processing page:', pageError);
         }
       }
 
       hasMore = response.has_more;
       startCursor = response.next_cursor || undefined;
+      
+      // Add a small delay between pages to help with rate limiting
+      if (hasMore) {
+        await delay(1000);
+      }
     }
 
     console.log('Sync completed successfully');
