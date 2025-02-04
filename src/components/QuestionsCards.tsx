@@ -16,7 +16,6 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      // First, get questions
       const { data: questions, error: questionsError } = await supabase
         .from('great_questions')
         .select('*')
@@ -24,7 +23,6 @@ const QuestionsCards = () => {
 
       if (questionsError) throw questionsError;
 
-      // For each question, get related books
       const questionsWithBooks = await Promise.all(
         questions.map(async (question) => {
           const { data: bookQuestions, error: bookQuestionsError } = await supabase
@@ -54,6 +52,12 @@ const QuestionsCards = () => {
     }
   });
 
+  const handleBookClick = (coverUrl: string | null) => {
+    if (coverUrl) {
+      window.open(coverUrl, '_blank');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -79,22 +83,21 @@ const QuestionsCards = () => {
             
             <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4">
               <Carousel>
-                <CarouselContent>
+                <CarouselContent className="-ml-1">
                   {question.books.map((book) => (
-                    <CarouselItem key={book.id} className="basis-1/3 md:basis-1/4 lg:basis-1/5">
-                      <div className="space-y-2">
-                        <div className="aspect-[2/3] relative overflow-hidden rounded-md">
+                    <CarouselItem 
+                      key={book.id} 
+                      // One book on mobile, three on tablet/desktop
+                      className="pl-1 basis-full sm:basis-1/3"
+                      onClick={() => handleBookClick(book.Cover_super)}
+                    >
+                      <div className="cursor-pointer transition-transform hover:scale-105">
+                        <div className="aspect-square relative overflow-hidden rounded-md">
                           <img
                             src={book.cover_url || '/placeholder.svg'}
                             alt={book.title}
-                            className="object-cover w-full h-full"
+                            className="object-contain w-full h-full"
                           />
-                        </div>
-                        <div className="text-sm">
-                          <p className="font-semibold truncate">{book.title}</p>
-                          {book.author && (
-                            <p className="text-gray-600 text-xs truncate">{book.author}</p>
-                          )}
                         </div>
                       </div>
                     </CarouselItem>
