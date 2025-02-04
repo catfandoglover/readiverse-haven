@@ -9,32 +9,7 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000;
-const MAX_RETRY_DELAY = 5000;
-const BATCH_SIZE = 5;
-
-async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
-  try {
-    return await fn();
-  } catch (error) {
-    console.error('Error in fetchWithRetry:', error);
-    
-    if (retries > 0 && (error.message?.includes('rate limit') || error.status === 429)) {
-      const nextDelay = Math.min(delayMs * 2, MAX_RETRY_DELAY);
-      console.log(`Rate limited, retrying in ${delayMs}ms... (${retries} retries left)`);
-      await delay(delayMs);
-      return fetchWithRetry(fn, retries - 1, nextDelay);
-    }
-    throw error;
-  }
-}
-
 serve(async (req) => {
-  console.log('Received request:', req.method);
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
@@ -60,94 +35,50 @@ serve(async (req) => {
 
     console.log('Fetching questions from Notion database...');
     
-    let hasMore = true;
-    let startCursor = undefined;
-    let totalProcessed = 0;
+    const response = await notion.databases.query({
+      database_id: notionDatabaseId,
+      page_size: 5, // Reduced batch size to prevent timeouts
+    });
+
+    console.log(`Processing ${response.results.length} questions`);
     let successCount = 0;
 
-    while (hasMore) {
-      const response = await fetchWithRetry(async () => {
-        return await notion.databases.query({
-          database_id: notionDatabaseId,
-          start_cursor: startCursor,
-          page_size: BATCH_SIZE,
-        });
-      });
-
-      console.log(`Processing batch of ${response.results.length} questions`);
-
-      for (const page of response.results) {
-        try {
-          const properties = page.properties;
-          const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
-          const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
-          
-          const classicsRelation = properties['The Classics']?.relation || [];
-          
-          const relatedUrls = [];
-          for (const relation of classicsRelation) {
-            try {
-              const relatedPage = await fetchWithRetry(async () => {
-                return await notion.pages.retrieve({ page_id: relation.id });
-              });
-              if (relatedPage.url) {
-                relatedUrls.push(relatedPage.url);
-              }
-              await delay(100);
-            } catch (error) {
-              console.error('Error fetching related classic:', error);
-            }
-          }
-
-          const { data: insertedQuestion, error: questionError } = await supabase
-            .from('great_questions')
-            .upsert({
-              notion_id: page.id,
-              category: properties.Category?.select?.name || 'Uncategorized',
-              category_number: categoryNumber,
-              question: questionText,
-              related_classics: relatedUrls
-            }, {
-              onConflict: 'notion_id'
-            })
-            .select()
-            .single();
-
-          if (questionError) throw questionError;
-
-          for (const url of relatedUrls) {
-            const { data: book } = await supabase
-              .from('books')
-              .select('id')
-              .eq('Notion_URL', url)
-              .single();
-
-            if (book) {
-              await supabase
-                .from('book_questions')
-                .upsert({
-                  question_id: insertedQuestion.id,
-                  book_id: book.id,
-                  randomizer: Math.random()
-                }, {
-                  onConflict: 'question_id,book_id'
-                });
-            }
-          }
-
-          successCount++;
-        } catch (pageError) {
-          console.error('Error processing page:', pageError);
-        }
+    for (const page of response.results) {
+      try {
+        const properties = page.properties;
+        const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
+        const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
         
-        totalProcessed++;
-      }
+        const classicsRelation = properties['The Classics']?.relation || [];
+        
+        const relatedUrls = [];
+        for (const relation of classicsRelation) {
+          try {
+            const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
+            if (relatedPage.url) {
+              relatedUrls.push(relatedPage.url);
+            }
+          } catch (error) {
+            console.error('Error fetching related classic:', error);
+          }
+        }
 
-      hasMore = response.has_more;
-      startCursor = response.next_cursor || undefined;
-      
-      if (hasMore) {
-        await delay(500);
+        const { error: questionError } = await supabase
+          .from('great_questions')
+          .upsert({
+            notion_id: page.id,
+            category: properties.Category?.select?.name || 'Uncategorized',
+            category_number: categoryNumber,
+            question: questionText,
+            related_classics: relatedUrls
+          }, {
+            onConflict: 'notion_id'
+          });
+
+        if (questionError) throw questionError;
+        successCount++;
+      } catch (pageError) {
+        console.error('Error processing page:', pageError);
       }
     }
 
@@ -156,8 +87,8 @@ serve(async (req) => {
       JSON.stringify({
         message: "Successfully synced questions from Notion",
         timestamp: new Date().toISOString(),
-        totalProcessed,
-        successCount
+        processed: response.results.length,
+        success: successCount
       }),
       { 
         headers: corsHeaders,
