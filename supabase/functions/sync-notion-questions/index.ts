@@ -11,9 +11,9 @@ const corsHeaders = {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // 1 second
-const MAX_RETRY_DELAY = 5000; // 5 seconds
-const BATCH_SIZE = 10; // Process 10 questions at a time
+const INITIAL_RETRY_DELAY = 1000;
+const MAX_RETRY_DELAY = 5000;
+const BATCH_SIZE = 10;
 
 async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
   try {
@@ -32,11 +32,13 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, del
 }
 
 serve(async (req) => {
+  console.log('Received request:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
+    return new Response(null, { 
       headers: corsHeaders,
-      status: 200
+      status: 204
     });
   }
 
@@ -81,7 +83,6 @@ serve(async (req) => {
           
           const classicsRelation = properties['The Classics']?.relation || [];
           
-          // Process related URLs in smaller batches
           const relatedUrls = [];
           for (const relation of classicsRelation) {
             try {
@@ -91,7 +92,6 @@ serve(async (req) => {
               if (relatedPage.url) {
                 relatedUrls.push(relatedPage.url);
               }
-              // Small delay between relation fetches
               await delay(100);
             } catch (error) {
               console.error('Error fetching related classic:', error);
@@ -114,7 +114,6 @@ serve(async (req) => {
 
           if (questionError) throw questionError;
 
-          // Process book relations one at a time
           for (const url of relatedUrls) {
             const { data: book } = await supabase
               .from('books')
@@ -146,7 +145,6 @@ serve(async (req) => {
       hasMore = response.has_more;
       startCursor = response.next_cursor || undefined;
       
-      // Add delay between batches
       if (hasMore) {
         await delay(500);
       }

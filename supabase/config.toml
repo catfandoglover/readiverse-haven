@@ -12,5 +12,12 @@ port = 54322
 enabled = true
 port = 54323
 
-[functions.sync-notion-questions]
-verify_jwt = false
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
