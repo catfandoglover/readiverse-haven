@@ -6,6 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json',
 }
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -13,7 +14,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000;
 const MAX_RETRY_DELAY = 5000;
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 5;
 
 async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
   try {
@@ -159,7 +160,7 @@ serve(async (req) => {
         successCount
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         status: 200,
       },
     );
@@ -172,7 +173,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         status: 500,
       },
     );
