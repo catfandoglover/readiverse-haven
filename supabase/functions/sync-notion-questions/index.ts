@@ -8,19 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-function extractNotionId(url: string): string | null {
-  try {
-    const matches = url.match(/(?:[a-f0-9]{32})|(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
-    if (matches && matches[0]) {
-      return matches[0].replace(/-/g, '');
-    }
-    return null;
-  } catch (error) {
-    console.error('Error extracting Notion ID:', error);
-    return null;
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

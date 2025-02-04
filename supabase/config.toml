@@ -1,4 +1,17 @@
 project_id = "myeyoafugkrkwcnfedlu"
 
-[functions.sync-notion-questions]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[[fetch.services]]
+name = "notion"
+url = "https://api.notion.com"
