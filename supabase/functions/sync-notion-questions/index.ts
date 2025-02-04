@@ -34,25 +34,28 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, del
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
-    console.log('Starting Notion sync process...')
+    console.log('Starting Notion sync process...');
     
-    const notionApiKey = Deno.env.get('NOTION_API_KEY')
-    const notionDatabaseId = Deno.env.get('NOTION_DATABASE_ID')
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const notionApiKey = Deno.env.get('NOTION_API_KEY');
+    const notionDatabaseId = Deno.env.get('NOTION_DATABASE_ID');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!notionApiKey || !notionDatabaseId || !supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing required environment variables')
+      throw new Error('Missing required environment variables');
     }
 
-    const notion = new Client({ auth: notionApiKey })
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const notion = new Client({ auth: notionApiKey });
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Fetching questions from Notion database...')
+    console.log('Fetching questions from Notion database...');
     
     let hasMore = true;
     let startCursor = undefined;
@@ -161,7 +164,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
-    )
+    );
   } catch (error) {
     console.error('Error in sync process:', error);
     
@@ -174,6 +177,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       },
-    )
+    );
   }
-})
+});
