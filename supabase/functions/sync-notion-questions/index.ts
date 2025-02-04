@@ -32,6 +32,7 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, del
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
