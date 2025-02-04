@@ -31,6 +31,7 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, del
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -113,7 +114,7 @@ serve(async (req) => {
             const { data: book } = await supabase
               .from('books')
               .select('id')
-              .eq('Notion_URL', url) // Fixed: Using correct column name
+              .eq('Notion_URL', url)
               .single();
 
             if (book) {
@@ -122,7 +123,7 @@ serve(async (req) => {
                 .upsert({
                   question_id: insertedQuestion.id,
                   book_id: book.id,
-                  notion_url: url, // Using the new column we added
+                  notion_url: url,
                   randomizer: Math.random()
                 }, {
                   onConflict: 'question_id,notion_url'

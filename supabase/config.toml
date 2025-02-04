@@ -14,7 +14,3 @@ port = 54323
 
 [functions.sync-notion-questions]
 verify_jwt = false
-
-[[services.fetch]]
-name = "notion"
-url = "https://api.notion.com"
