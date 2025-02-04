@@ -8,6 +8,24 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
+async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0 && (error.message?.includes('rate limit') || error.status === 429)) {
+      console.log(`Rate limited, retrying in ${delayMs}ms... (${retries} retries left)`);
+      await delay(delayMs);
+      return fetchWithRetry(fn, retries - 1, delayMs * 2);
+    }
+    throw error;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -50,10 +68,12 @@ serve(async (req) => {
     let startCursor = undefined;
 
     while (hasMore) {
-      const response = await notion.databases.query({
-        database_id: notionDatabaseId,
-        start_cursor: startCursor,
-        page_size: 100,
+      const response = await fetchWithRetry(async () => {
+        return await notion.databases.query({
+          database_id: notionDatabaseId,
+          start_cursor: startCursor,
+          page_size: 100,
+        });
       });
 
       console.log(`Fetched ${response.results.length} questions from current page`);
@@ -72,7 +92,9 @@ serve(async (req) => {
           const relatedUrls = await Promise.all(
             classicsRelation.map(async (relation) => {
               try {
-                const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
+                const relatedPage = await fetchWithRetry(async () => {
+                  return await notion.pages.retrieve({ page_id: relation.id });
+                });
                 console.log('Retrieved related classic:', {
                   pageId: relation.id,
                   url: relatedPage.url
@@ -115,6 +137,28 @@ serve(async (req) => {
               }
             });
             continue;
+          }
+
+          // For each valid URL, create or update the book_questions relationship
+          for (const url of validUrls) {
+            const { data: book } = await supabase
+              .from('books')
+              .select('id')
+              .eq('Notion_URL', url)
+              .single();
+
+            if (book) {
+              await supabase
+                .from('book_questions')
+                .upsert({
+                  question_id: insertedQuestion.id,
+                  book_id: book.id,
+                  notion_url: url,
+                  randomizer: Math.random()
+                }, {
+                  onConflict: 'question_id,notion_url'
+                });
+            }
           }
 
           console.log('Inserted/updated question:', insertedQuestion);
