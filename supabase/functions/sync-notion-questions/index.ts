@@ -10,9 +10,10 @@ const corsHeaders = {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const MAX_RETRIES = 5;
-const INITIAL_RETRY_DELAY = 2000; // 2 seconds
-const MAX_RETRY_DELAY = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 5000; // 5 seconds
+const BATCH_SIZE = 10; // Process 10 questions at a time
 
 async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, delayMs = INITIAL_RETRY_DELAY): Promise<any> {
   try {
@@ -31,7 +32,6 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = MAX_RETRIES, del
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -53,20 +53,21 @@ serve(async (req) => {
 
     console.log('Fetching questions from Notion database...')
     
-    let allQuestions = [];
     let hasMore = true;
     let startCursor = undefined;
+    let totalProcessed = 0;
+    let successCount = 0;
 
     while (hasMore) {
       const response = await fetchWithRetry(async () => {
         return await notion.databases.query({
           database_id: notionDatabaseId,
           start_cursor: startCursor,
-          page_size: 50, // Reduced from 100 to help with rate limits
+          page_size: BATCH_SIZE,
         });
       });
 
-      console.log(`Fetched ${response.results.length} questions from current page`);
+      console.log(`Processing batch of ${response.results.length} questions`);
 
       for (const page of response.results) {
         try {
@@ -75,22 +76,23 @@ serve(async (req) => {
           const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
           
           const classicsRelation = properties['The Classics']?.relation || [];
-
-          const relatedUrls = await Promise.all(
-            classicsRelation.map(async (relation) => {
-              try {
-                const relatedPage = await fetchWithRetry(async () => {
-                  return await notion.pages.retrieve({ page_id: relation.id });
-                });
-                return relatedPage.url;
-              } catch (error) {
-                console.error('Error fetching related classic:', error);
-                return null;
+          
+          // Process related URLs in smaller batches
+          const relatedUrls = [];
+          for (const relation of classicsRelation) {
+            try {
+              const relatedPage = await fetchWithRetry(async () => {
+                return await notion.pages.retrieve({ page_id: relation.id });
+              });
+              if (relatedPage.url) {
+                relatedUrls.push(relatedPage.url);
               }
-            })
-          );
-
-          const validUrls = relatedUrls.filter((url): url is string => url !== null);
+              // Small delay between relation fetches
+              await delay(100);
+            } catch (error) {
+              console.error('Error fetching related classic:', error);
+            }
+          }
 
           const { data: insertedQuestion, error: questionError } = await supabase
             .from('great_questions')
@@ -99,18 +101,17 @@ serve(async (req) => {
               category: properties.Category?.select?.name || 'Uncategorized',
               category_number: categoryNumber,
               question: questionText,
-              related_classics: validUrls
+              related_classics: relatedUrls
             }, {
-              onConflict: 'notion_id',
-              ignoreDuplicates: false
+              onConflict: 'notion_id'
             })
             .select()
             .single();
 
           if (questionError) throw questionError;
 
-          // For each valid URL, create or update the book_questions relationship
-          for (const url of validUrls) {
+          // Process book relations one at a time
+          for (const url of relatedUrls) {
             const { data: book } = await supabase
               .from('books')
               .select('id')
@@ -123,37 +124,37 @@ serve(async (req) => {
                 .upsert({
                   question_id: insertedQuestion.id,
                   book_id: book.id,
-                  notion_url: url,
                   randomizer: Math.random()
                 }, {
-                  onConflict: 'question_id,notion_url'
+                  onConflict: 'question_id,book_id'
                 });
             }
           }
 
-          allQuestions.push(insertedQuestion);
-
+          successCount++;
         } catch (pageError) {
           console.error('Error processing page:', pageError);
         }
+        
+        totalProcessed++;
       }
 
       hasMore = response.has_more;
       startCursor = response.next_cursor || undefined;
       
-      // Add a small delay between pages to help with rate limiting
+      // Add delay between batches
       if (hasMore) {
-        await delay(1000);
+        await delay(500);
       }
     }
 
     console.log('Sync completed successfully');
-
     return new Response(
       JSON.stringify({
         message: "Successfully synced questions from Notion",
         timestamp: new Date().toISOString(),
-        questionsProcessed: allQuestions.length
+        totalProcessed,
+        successCount
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
