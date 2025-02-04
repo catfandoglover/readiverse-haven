@@ -10,8 +10,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Received request:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response(null, { 
       headers: corsHeaders,
       status: 204
@@ -27,6 +30,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!notionApiKey || !notionDatabaseId || !supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables');
       throw new Error('Missing required environment variables');
     }
 
@@ -75,8 +79,12 @@ serve(async (req) => {
             onConflict: 'notion_id'
           });
 
-        if (questionError) throw questionError;
+        if (questionError) {
+          console.error('Error upserting question:', questionError);
+          throw questionError;
+        }
         successCount++;
+        console.log(`Successfully processed question ${successCount}`);
       } catch (pageError) {
         console.error('Error processing page:', pageError);
       }
