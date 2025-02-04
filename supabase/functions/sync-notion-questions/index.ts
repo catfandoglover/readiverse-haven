@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 function extractNotionId(url: string): string | null {
@@ -21,6 +22,7 @@ function extractNotionId(url: string): string | null {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -48,9 +50,7 @@ serve(async (req) => {
         !supabaseServiceKey && 'SUPABASE_SERVICE_ROLE_KEY'
       ].filter(Boolean)
 
-      const errorMsg = `Missing required environment variables: ${missingVars.join(', ')}`
-      console.error(errorMsg)
-      throw new Error(errorMsg)
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
     }
 
     const notion = new Client({ auth: notionApiKey })
@@ -63,101 +63,88 @@ serve(async (req) => {
     let startCursor = undefined;
 
     while (hasMore) {
-      try {
-        const response = await notion.databases.query({
-          database_id: notionDatabaseId,
-          start_cursor: startCursor,
-          page_size: 100,
-        });
+      const response = await notion.databases.query({
+        database_id: notionDatabaseId,
+        start_cursor: startCursor,
+        page_size: 100,
+      });
 
-        console.log(`Fetched ${response.results.length} questions from current page`);
+      console.log(`Fetched ${response.results.length} questions from current page`);
 
-        for (const page of response.results) {
-          try {
-            console.log('Processing Notion page:', page.id);
-            
-            const properties = page.properties;
-            const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
-            const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
-            
-            // Get "The Classics" relation property
-            const classicsRelation = properties['The Classics']?.relation || [];
-            console.log('The Classics relation:', classicsRelation);
+      for (const page of response.results) {
+        try {
+          console.log('Processing Notion page:', page.id);
+          
+          const properties = page.properties;
+          const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
+          const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
+          
+          const classicsRelation = properties['The Classics']?.relation || [];
+          console.log('The Classics relation:', classicsRelation);
 
-            // Fetch related pages from "The Classics" database
-            const relatedUrls = await Promise.all(
-              classicsRelation.map(async (relation) => {
-                try {
-                  const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
-                  console.log('Retrieved related classic:', {
-                    pageId: relation.id,
-                    url: relatedPage.url
-                  });
-                  return relatedPage.url;
-                } catch (error) {
-                  console.error('Error fetching related classic:', error);
-                  return null;
-                }
-              })
-            );
+          const relatedUrls = await Promise.all(
+            classicsRelation.map(async (relation) => {
+              try {
+                const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
+                console.log('Retrieved related classic:', {
+                  pageId: relation.id,
+                  url: relatedPage.url
+                });
+                return relatedPage.url;
+              } catch (error) {
+                console.error('Error fetching related classic:', error);
+                return null;
+              }
+            })
+          );
 
-            // Filter out any null values from failed retrievals
-            const validUrls = relatedUrls.filter((url): url is string => url !== null);
-            console.log('Related classics URLs:', validUrls);
+          const validUrls = relatedUrls.filter((url): url is string => url !== null);
+          console.log('Related classics URLs:', validUrls);
 
-            // Insert/update the question in great_questions table
-            const { data: insertedQuestion, error: questionError } = await supabase
-              .from('great_questions')
-              .upsert({
+          const { data: insertedQuestion, error: questionError } = await supabase
+            .from('great_questions')
+            .upsert({
+              notion_id: page.id,
+              category: properties.Category?.select?.name || 'Uncategorized',
+              category_number: categoryNumber,
+              question: questionText,
+              related_classics: validUrls
+            }, {
+              onConflict: 'notion_id',
+              ignoreDuplicates: false
+            })
+            .select()
+            .single();
+
+          if (questionError) {
+            console.error('Error upserting question:', {
+              error: questionError,
+              questionData: {
                 notion_id: page.id,
-                category: properties.Category?.select?.name || 'Uncategorized',
+                category: properties.Category?.select?.name,
                 category_number: categoryNumber,
                 question: questionText,
-                related_classics: validUrls // Store the array of related URLs
-              }, {
-                onConflict: 'notion_id',
-                ignoreDuplicates: false
-              })
-              .select()
-              .single();
-
-            if (questionError) {
-              console.error('Error upserting question:', {
-                error: questionError,
-                questionData: {
-                  notion_id: page.id,
-                  category: properties.Category?.select?.name,
-                  category_number: categoryNumber,
-                  question: questionText,
-                  related_classics: validUrls
-                }
-              });
-              continue;
-            }
-
-            console.log('Inserted/updated question:', insertedQuestion);
-            allQuestions.push(insertedQuestion);
-
-          } catch (pageError) {
-            console.error('Error processing page:', {
-              pageId: page.id,
-              error: pageError.message,
-              stack: pageError.stack,
-              cause: pageError.cause
+                related_classics: validUrls
+              }
             });
+            continue;
           }
-        }
 
-        hasMore = response.has_more;
-        startCursor = response.next_cursor || undefined;
-      } catch (queryError) {
-        console.error('Error querying Notion database:', {
-          error: queryError.message,
-          stack: queryError.stack,
-          cause: queryError.cause
-        });
-        throw queryError;
+          console.log('Inserted/updated question:', insertedQuestion);
+          allQuestions.push(insertedQuestion);
+
+        } catch (pageError) {
+          console.error('Error processing page:', {
+            pageId: page.id,
+            error: pageError.message,
+            stack: pageError.stack,
+            cause: pageError.cause
+          });
+        }
       }
+
+      hasMore = response.has_more;
+      startCursor = response.next_cursor || undefined;
     }
 
     console.log('Sync completed successfully');
@@ -174,22 +161,11 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    const errorDetails = {
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause,
-      name: error.name,
-      code: error.code,
-      statusCode: error.status,
-      details: error.details,
-    };
+    console.error('Error in sync process:', error);
     
-    console.error('Detailed error information:', errorDetails);
-
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: errorDetails,
         timestamp: new Date().toISOString()
       }),
       { 
