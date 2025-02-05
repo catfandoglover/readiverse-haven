@@ -10,6 +10,12 @@ type Book = Database['public']['Tables']['books']['Row'];
 
 interface QuestionWithBooks extends Question {
   books: Book[];
+  book_questions: {
+    book_id: string;
+    created_at: string;
+    question_id: string;
+    randomizer: number;
+  }[];
 }
 
 const QuestionsCards = () => {
@@ -24,13 +30,13 @@ const QuestionsCards = () => {
       if (questionsError) throw questionsError;
 
       // Transform the data to match our expected format
-      const transformedQuestions = questions.map(question => {
+      const transformedQuestions = (questions as QuestionWithBooks[]).map(question => {
         const uniqueBooks = Array.from(
           new Set(
-            question.books.map(book => book.id)
+            question.books.map((book: Book) => book.id)
           )
         ).map(bookId => 
-          question.books.find(book => book.id === bookId)
+          question.books.find((book: Book) => book.id === bookId)
         ).filter((book): book is Book => book !== undefined);
 
         return {
