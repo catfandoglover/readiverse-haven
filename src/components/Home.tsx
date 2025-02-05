@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +39,9 @@ const Home = () => {
       
       if (error) throw error;
       return data as Book[];
-    }
+    },
+    staleTime: 30000, // Cache data for 30 seconds
+    refetchOnMount: false
   });
 
   const handleBookClick = (coverUrl: string | null) => {
@@ -50,14 +53,6 @@ const Home = () => {
   const handleNavigation = (path: string) => {
     window.location.href = path;
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading books...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-screen bg-background home-page">
@@ -98,7 +93,7 @@ const Home = () => {
       <div className="flex-1 overflow-auto">
         <QuestionsCards />
         
-        <div className="px-4 pb-16">
+        <div className={`px-4 pb-16 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
           {isGridView ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
               {books?.map((book) => (
@@ -111,6 +106,7 @@ const Home = () => {
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
                     className="w-full h-full object-cover rounded-md shadow-sm"
+                    loading="lazy"
                   />
                 </div>
               ))}
@@ -128,6 +124,7 @@ const Home = () => {
                       src={book.cover_url || '/placeholder.svg'}
                       alt={book.title}
                       className="w-full h-full object-cover rounded-md shadow-sm"
+                      loading="lazy"
                     />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -72,7 +72,9 @@ const Library = () => {
       
       console.log('Retrieved books:', booksData);
       return booksData as Book[];
-    }
+    },
+    staleTime: 30000, // Cache data for 30 seconds
+    refetchOnMount: false
   });
 
   const handleBookClick = (slug: string) => {
@@ -80,7 +82,7 @@ const Library = () => {
   };
 
   const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent triggering the parent onClick
+    event.stopPropagation();
     if (coverUrl) {
       window.open(coverUrl, '_blank');
     }
@@ -89,14 +91,6 @@ const Library = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading library...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-screen bg-background library-page">
@@ -141,7 +135,7 @@ const Library = () => {
             <p>Start reading books to add them to your library!</p>
           </div>
         ) : isGridView ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
+          <div className={`grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
             {books?.map((book) => (
               <div
                 key={book.id}
@@ -152,12 +146,13 @@ const Library = () => {
                   src={book.cover_url || '/placeholder.svg'}
                   alt={book.title}
                   className="w-full h-full object-cover rounded-md shadow-sm"
+                  loading="lazy"
                 />
               </div>
             ))}
           </div>
         ) : (
-          <div className="space-y-6 py-4">
+          <div className={`space-y-6 py-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
             {books?.map((book) => (
               <Card 
                 key={book.id} 
@@ -172,6 +167,7 @@ const Library = () => {
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
                     className="w-full h-full object-cover rounded-md shadow-sm"
+                    loading="lazy"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
