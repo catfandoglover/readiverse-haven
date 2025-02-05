@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
@@ -10,6 +10,7 @@ import {
   useCarousel 
 } from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
+import DepartmentFilter from "./DepartmentFilter";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 type Book = Database['public']['Tables']['books']['Row'];
@@ -53,6 +54,9 @@ const CarouselProgress = ({ books }: { books: Book[] }) => {
 };
 
 const QuestionsCards = () => {
+  const [visibleQuestions, setVisibleQuestions] = useState(6);
+  const [isDepartmentFilterOpen, setIsDepartmentFilterOpen] = useState(false);
+
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
@@ -65,7 +69,7 @@ const QuestionsCards = () => {
             books(*)
           )
         `)
-        .limit(6);
+        .limit(18); // Increased limit to support "Load More"
 
       if (questionsError) throw questionsError;
 
@@ -94,6 +98,10 @@ const QuestionsCards = () => {
     }
   };
 
+  const handleLoadMore = () => {
+    setVisibleQuestions(prev => Math.min((prev + 6), questions?.length || 0));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -102,9 +110,11 @@ const QuestionsCards = () => {
     );
   }
 
+  const displayedQuestions = questions?.slice(0, visibleQuestions) || [];
+
   return (
     <div className="space-y-6 p-4">
-      {questions?.map((question) => (
+      {displayedQuestions.map((question) => (
         <Card 
           key={question.id}
           className="overflow-hidden"
@@ -152,23 +162,31 @@ const QuestionsCards = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4 py-6">
         <Button 
           variant="outline" 
-          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
+          onClick={handleLoadMore}
+          disabled={visibleQuestions >= (questions?.length || 0)}
         >
           More Questions
         </Button>
         <Button 
           variant="outline"
-          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
         >
           What do you want to ask
         </Button>
         <Button 
           variant="outline"
-          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
+          onClick={() => setIsDepartmentFilterOpen(true)}
         >
           Sort by Department
         </Button>
       </div>
+
+      <DepartmentFilter 
+        isOpen={isDepartmentFilterOpen}
+        onClose={() => setIsDepartmentFilterOpen(false)}
+      />
     </div>
   );
 };
