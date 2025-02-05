@@ -55,57 +55,37 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      console.log('Fetching questions and books...');
-      
-      // First, get all questions
+      // First, get questions with their book relationships
       const { data: questionsData, error: questionsError } = await supabase
-        .from('book_questions')
+        .from('great_questions')
         .select(`
-          question_id,
-          book_id,
-          great_questions!inner(*),
-          books(*)
+          *,
+          book_questions!inner(
+            book_id,
+            books(*)
+          )
         `)
-        .order('randomizer');
+        .limit(6);
 
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        throw questionsError;
-      }
+      if (questionsError) throw questionsError;
 
-      console.log('Raw questions data:', questionsData);
-
-      // Group by question
-      const questionMap = new Map<string, QuestionWithBooks>();
-
-      questionsData?.forEach((relation: any) => {
-        const questionId = relation.question_id;
-        const book = relation.books;
-        const question = relation.great_questions;
-
-        if (!questionMap.has(questionId)) {
-          questionMap.set(questionId, {
-            ...question,
-            books: [],
-            book_questions: []
-          });
-        }
-
-        const existingQuestion = questionMap.get(questionId)!;
+      // Transform the data to remove duplicates and properly structure the books
+      const transformedQuestions = (questionsData || []).map((question: any) => {
+        // Get unique books by creating a Map with book.id as key
+        const uniqueBooks = new Map();
+        question.book_questions.forEach((bq: any) => {
+          if (bq.books) {
+            uniqueBooks.set(bq.books.id, bq.books);
+          }
+        });
         
-        // Only add the book if it's not already in the array
-        if (book && !existingQuestion.books.some(b => b.id === book.id)) {
-          existingQuestion.books.push(book);
-        }
+        return {
+          ...question,
+          books: Array.from(uniqueBooks.values())
+        };
       });
 
-      const transformedQuestions = Array.from(questionMap.values());
-      
-      // Log each question and its books for debugging
-      transformedQuestions.forEach(question => {
-        console.log(`Question "${question.question}" has ${question.books.length} books:`, question.books);
-      });
-
+      console.log('Transformed questions:', transformedQuestions);
       return transformedQuestions as QuestionWithBooks[];
     }
   });
