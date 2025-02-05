@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,23 +103,33 @@ const Library = () => {
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-georgia text-foreground">Library</h1>
-          <div className="flex gap-2">
-            <Toggle
-              pressed={!isGridView}
-              onPressedChange={() => setIsGridView(false)}
-              aria-label="List view"
+          <div className="flex gap-4 items-center">
+            <Button
+              variant="ghost"
+              size="icon"
               className="text-foreground"
+              onClick={() => handleNavigation('/search')}
             >
-              <List className="h-4 w-4" />
-            </Toggle>
-            <Toggle
-              pressed={isGridView}
-              onPressedChange={() => setIsGridView(true)}
-              aria-label="Grid view"
-              className="text-foreground"
-            >
-              <Grid className="h-4 w-4" />
-            </Toggle>
+              <Search className="h-5 w-5" />
+            </Button>
+            <div className="flex gap-2">
+              <Toggle
+                pressed={!isGridView}
+                onPressedChange={() => setIsGridView(false)}
+                aria-label="List view"
+                className="text-foreground"
+              >
+                <List className="h-4 w-4" />
+              </Toggle>
+              <Toggle
+                pressed={isGridView}
+                onPressedChange={() => setIsGridView(true)}
+                aria-label="Grid view"
+                className="text-foreground"
+              >
+                <Grid className="h-4 w-4" />
+              </Toggle>
+            </div>
           </div>
         </div>
       </header>
@@ -194,14 +205,6 @@ const Library = () => {
           >
             <LibraryBig className="h-6 w-6" />
             <span className="text-xs">Library</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="flex flex-col items-center gap-1 w-14 text-foreground"
-          >
-            <Search className="h-6 w-6" />
-            <span className="text-xs">Search</span>
           </Button>
         </div>
       </nav>
