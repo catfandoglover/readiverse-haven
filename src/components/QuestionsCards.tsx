@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 import { 
   Carousel, 
   CarouselContent, 
@@ -55,7 +56,6 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      // First, get questions with their book relationships
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
@@ -69,9 +69,7 @@ const QuestionsCards = () => {
 
       if (questionsError) throw questionsError;
 
-      // Transform the data to remove duplicates and properly structure the books
       const transformedQuestions = (questionsData || []).map((question: any) => {
-        // Get unique books by creating a Map with book.id as key
         const uniqueBooks = new Map();
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
@@ -150,6 +148,27 @@ const QuestionsCards = () => {
           </div>
         </Card>
       ))}
+      
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4 py-6">
+        <Button 
+          variant="outline" 
+          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+        >
+          More Questions
+        </Button>
+        <Button 
+          variant="outline"
+          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+        >
+          What do you want to ask
+        </Button>
+        <Button 
+          variant="outline"
+          className="text-foreground border-foreground hover:bg-foreground hover:text-background"
+        >
+          Sort by Department
+        </Button>
+      </div>
     </div>
   );
 };
