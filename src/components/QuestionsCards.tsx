@@ -55,8 +55,8 @@ const QuestionsCards = () => {
   };
 
   const getBookCoverUrl = (book: Book) => {
-    // Try Cover_super first, then fall back to cover_url
-    return book.Cover_super || book.cover_url || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+    // Use cover_url first, then fall back to the Lightning Inspiration logo
+    return book.cover_url || '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
   };
 
   if (isLoading) {
@@ -99,7 +99,7 @@ const QuestionsCards = () => {
                             className="object-contain w-full h-full"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+                              target.src = '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
                             }}
                           />
                         </div>
