@@ -22,30 +22,29 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      const { data: questions, error: questionsError } = await supabase
+      const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
-        .select('*, book_questions!inner(book_id), books!inner(book_questions(*))')
+        .select(`
+          *,
+          book_questions(book_id, created_at, question_id, randomizer),
+          books:book_questions(books(*))
+        `)
         .limit(6);
 
       if (questionsError) throw questionsError;
 
       // Transform the data to match our expected format
-      const transformedQuestions = (questions as QuestionWithBooks[]).map(question => {
-        const uniqueBooks = Array.from(
-          new Set(
-            question.books.map((book: Book) => book.id)
-          )
-        ).map(bookId => 
-          question.books.find((book: Book) => book.id === bookId)
-        ).filter((book): book is Book => book !== undefined);
-
+      const transformedQuestions = (questionsData || []).map((question: any) => {
+        // Extract books from the nested structure
+        const books = question.books?.map((bookRelation: any) => bookRelation.books) || [];
+        
         return {
           ...question,
-          books: uniqueBooks
+          books: books.filter((book: Book | null): book is Book => book !== null)
         };
       });
 
-      return transformedQuestions;
+      return transformedQuestions as QuestionWithBooks[];
     }
   });
 
