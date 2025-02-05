@@ -79,14 +79,10 @@ const QuestionsCards = () => {
     }
   });
 
-  const handleBookClick = (coverUrl: string | null) => {
-    if (coverUrl) {
-      window.open(coverUrl, '_blank');
+  const handleBookClick = (book: Book) => {
+    if (book.Cover_super) {
+      window.open(book.Cover_super, '_blank');
     }
-  };
-
-  const getBookCoverUrl = (book: Book) => {
-    return book.cover_url || '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
   };
 
   if (isLoading) {
@@ -119,12 +115,12 @@ const QuestionsCards = () => {
                     <CarouselItem 
                       key={book.id} 
                       className="pl-1 basis-full sm:basis-1/3"
-                      onClick={() => handleBookClick(getBookCoverUrl(book))}
+                      onClick={() => handleBookClick(book)}
                     >
                       <div className="cursor-pointer transition-transform hover:scale-105">
                         <div className="aspect-square relative overflow-hidden rounded-md">
                           <img
-                            src={getBookCoverUrl(book)}
+                            src={book.cover_url || '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png'}
                             alt={book.title || 'Book cover'}
                             className="object-contain w-full h-full"
                             onError={(e) => {
