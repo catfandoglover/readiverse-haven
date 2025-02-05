@@ -54,6 +54,11 @@ const QuestionsCards = () => {
     }
   };
 
+  const getBookCoverUrl = (book: Book) => {
+    // Try Cover_super first, then fall back to cover_url
+    return book.Cover_super || book.cover_url || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -84,14 +89,18 @@ const QuestionsCards = () => {
                     <CarouselItem 
                       key={book.id} 
                       className="pl-1 basis-full sm:basis-1/3"
-                      onClick={() => handleBookClick(book.Cover_super)}
+                      onClick={() => handleBookClick(getBookCoverUrl(book))}
                     >
                       <div className="cursor-pointer transition-transform hover:scale-105">
                         <div className="aspect-square relative overflow-hidden rounded-md">
                           <img
-                            src={book.cover_url || '/placeholder.svg'}
-                            alt={book.title}
+                            src={getBookCoverUrl(book)}
+                            alt={book.title || 'Book cover'}
                             className="object-contain w-full h-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
+                            }}
                           />
                         </div>
                       </div>
