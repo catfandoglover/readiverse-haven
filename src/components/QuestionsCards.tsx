@@ -18,37 +18,28 @@ const QuestionsCards = () => {
     queryFn: async () => {
       const { data: questions, error: questionsError } = await supabase
         .from('great_questions')
-        .select('*')
+        .select('*, book_questions!inner(book_id), books!inner(book_questions(*))')
         .limit(6);
 
       if (questionsError) throw questionsError;
 
-      const questionsWithBooks = await Promise.all(
-        questions.map(async (question) => {
-          const { data: bookQuestions, error: bookQuestionsError } = await supabase
-            .from('book_questions')
-            .select('book_id')
-            .eq('question_id', question.id);
+      // Transform the data to match our expected format
+      const transformedQuestions = questions.map(question => {
+        const uniqueBooks = Array.from(
+          new Set(
+            question.books.map(book => book.id)
+          )
+        ).map(bookId => 
+          question.books.find(book => book.id === bookId)
+        ).filter((book): book is Book => book !== undefined);
 
-          if (bookQuestionsError) throw bookQuestionsError;
+        return {
+          ...question,
+          books: uniqueBooks
+        };
+      });
 
-          const bookIds = bookQuestions.map(bq => bq.book_id);
-          
-          const { data: books, error: booksError } = await supabase
-            .from('books')
-            .select('*')
-            .in('id', bookIds);
-
-          if (booksError) throw booksError;
-
-          return {
-            ...question,
-            books: books || []
-          };
-        })
-      );
-
-      return questionsWithBooks;
+      return transformedQuestions;
     }
   });
 

@@ -20,7 +20,7 @@ export type Database = {
           book_id: string
           created_at?: string
           question_id: string
-          randomizer: number
+          randomizer?: number
         }
         Update: {
           book_id?: string
