@@ -15,66 +15,40 @@ const Library = () => {
   const navigate = useNavigate();
   const [isGridView, setIsGridView] = useState(false);
   
-  const { data: books, isLoading } = useQuery({
+  const { data: books = [], isLoading } = useQuery({
     queryKey: ['user-library'],
     queryFn: async () => {
-      console.log('All localStorage keys:', Object.keys(localStorage));
-      
+      // Get all library items from localStorage
       const libraryItems = Object.keys(localStorage)
         .filter(key => key.startsWith('book-progress-'))
         .map(key => {
           try {
-            console.log('Processing localStorage key:', key);
-            const rawData = localStorage.getItem(key);
-            console.log('Raw localStorage data:', rawData);
-            
-            const data = JSON.parse(rawData || '{}');
-            console.log('Parsed data:', data);
-            
-            if (!data.bookId) {
-              console.warn('No bookId found in data for key:', key);
-              return null;
-            }
-
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            if (!data.bookId) return null;
             const urlMatch = data.bookId.match(/gutenberg\.org\/(\d+)$/);
-            if (!urlMatch) {
-              console.warn('Could not extract book number from:', data.bookId);
-              return null;
-            }
-
-            return `gutenberg-${urlMatch[1]}`;
-            
+            return urlMatch ? `gutenberg-${urlMatch[1]}` : null;
           } catch (error) {
             console.error('Error parsing localStorage item:', error);
             return null;
           }
         })
         .filter(Boolean);
-      
-      console.log('Found book slugs:', libraryItems);
 
-      if (!libraryItems.length) {
-        console.log('No books found in library');
-        return [];
-      }
+      if (!libraryItems.length) return [];
 
-      console.log('Fetching books with slugs:', libraryItems);
       const { data: booksData, error: booksError } = await supabase
         .from('books')
         .select('*')
         .in('slug', libraryItems)
         .order('title');
       
-      if (booksError) {
-        console.error('Error fetching books:', booksError);
-        throw booksError;
-      }
-      
-      console.log('Retrieved books:', booksData);
+      if (booksError) throw booksError;
       return booksData as Book[];
     },
-    staleTime: 30000, // Cache data for 30 seconds
-    refetchOnMount: false
+    staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    initialData: [], // Provide empty array as initial data
   });
 
   const handleBookClick = (slug: string) => {
