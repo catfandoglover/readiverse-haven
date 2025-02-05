@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,12 +18,6 @@ type Book = Database['public']['Tables']['books']['Row'];
 
 interface QuestionWithBooks extends Question {
   books: Book[];
-  book_questions: {
-    book_id: string;
-    created_at: string;
-    question_id: string;
-    randomizer: number;
-  }[];
 }
 
 const CarouselProgress = ({ books }: { books: Book[] }) => {
@@ -60,30 +55,46 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
+      console.log('Fetching questions and books...');
+      
+      // First, fetch all questions with their book relationships
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
           *,
-          book_questions!inner(
+          book_questions (
             book_id,
-            books(*)
+            books (*)
           )
         `)
-        .limit(18); // Increased limit to support "Load More"
+        .limit(18);
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
 
-      const transformedQuestions = (questionsData || []).map((question: any) => {
+      // Transform the data to get unique books per question
+      const transformedQuestions = questionsData.map((question: any) => {
+        // Create a Map to store unique books by their ID
         const uniqueBooks = new Map();
+        
+        // Add each book to the Map (this automatically handles duplicates)
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
             uniqueBooks.set(bq.books.id, bq.books);
           }
         });
         
+        // Convert the Map values back to an array
+        const uniqueBooksArray = Array.from(uniqueBooks.values());
+        
+        console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
+          uniqueBooksArray.map((book: Book) => book.id));
+        
         return {
           ...question,
-          books: Array.from(uniqueBooks.values())
+          books: uniqueBooksArray
         };
       });
 
