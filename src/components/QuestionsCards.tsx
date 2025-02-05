@@ -55,37 +55,44 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      // First, get questions with their book relationships
+      console.log('Fetching questions and books...');
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
           *,
-          book_questions!inner(
+          book_questions(
             book_id,
             books(*)
           )
         `)
         .limit(6);
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
 
-      // Transform the data to remove duplicates and properly structure the books
+      console.log('Raw questions data:', questionsData);
+
       const transformedQuestions = (questionsData || []).map((question: any) => {
-        // Get unique books by creating a Map with book.id as key
-        const uniqueBooks = new Map();
-        question.book_questions.forEach((bq: any) => {
-          if (bq.books) {
-            uniqueBooks.set(bq.books.id, bq.books);
-          }
-        });
+        // Get all books from book_questions relationships
+        const books = question.book_questions
+          .map((bq: any) => bq.books)
+          .filter((book: Book | null): book is Book => book !== null);
+
+        // Remove duplicates based on book ID
+        const uniqueBooks = Array.from(
+          new Map(books.map(book => [book.id, book])).values()
+        );
+
+        console.log(`Question "${question.question}" has ${uniqueBooks.length} unique books:`, uniqueBooks);
         
         return {
           ...question,
-          books: Array.from(uniqueBooks.values())
+          books: uniqueBooks
         };
       });
 
-      console.log('Transformed questions:', transformedQuestions);
       return transformedQuestions as QuestionWithBooks[];
     }
   });
