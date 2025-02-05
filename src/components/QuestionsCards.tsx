@@ -73,7 +73,7 @@ const QuestionsCards = () => {
           key={question.id}
           className="overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #244228 0%, #000000 100%)'
+            background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
           }}
         >
           <div className="p-6">
