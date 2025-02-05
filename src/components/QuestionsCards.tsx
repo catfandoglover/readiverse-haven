@@ -73,21 +73,20 @@ const QuestionsCards = () => {
           key={question.id}
           className="overflow-hidden"
           style={{
-            background: 'linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)'
+            background: 'linear-gradient(135deg, #244228 0%, #000000 100%)'
           }}
         >
           <div className="p-6">
-            <h3 className="text-xl font-georgia mb-4 text-gray-800">
+            <h3 className="text-xl font-georgia mb-4 text-white">
               {question.question}
             </h3>
             
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4">
+            <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4">
               <Carousel>
                 <CarouselContent className="-ml-1">
                   {question.books.map((book) => (
                     <CarouselItem 
                       key={book.id} 
-                      // One book on mobile, three on tablet/desktop
                       className="pl-1 basis-full sm:basis-1/3"
                       onClick={() => handleBookClick(book.Cover_super)}
                     >
