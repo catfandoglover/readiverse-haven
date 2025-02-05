@@ -2,7 +2,12 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Carousel, CarouselContent, CarouselItem } from "./ui/carousel";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem,
+  useCarousel 
+} from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
@@ -17,6 +22,34 @@ interface QuestionWithBooks extends Question {
     randomizer: number;
   }[];
 }
+
+const CarouselProgress = ({ books }: { books: Book[] }) => {
+  const { api } = useCarousel();
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!api) return;
+
+    api.on('select', () => {
+      setActiveIndex(api.selectedScrollSnap());
+    });
+  }, [api]);
+
+  return (
+    <div className="flex justify-center gap-2 mt-2">
+      {books.map((_, idx) => (
+        <img
+          key={idx}
+          src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png"
+          alt={`Slide ${idx + 1}`}
+          className={`w-4 h-4 transition-opacity duration-300 ${
+            idx === activeIndex ? 'opacity-100' : 'opacity-30'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
@@ -33,9 +66,7 @@ const QuestionsCards = () => {
 
       if (questionsError) throw questionsError;
 
-      // Transform the data to match our expected format
       const transformedQuestions = (questionsData || []).map((question: any) => {
-        // Extract books from the nested structure
         const books = question.books?.map((bookRelation: any) => bookRelation.books) || [];
         
         return {
@@ -55,7 +86,6 @@ const QuestionsCards = () => {
   };
 
   const getBookCoverUrl = (book: Book) => {
-    // Use cover_url first, then fall back to the Lightning Inspiration logo
     return book.cover_url || '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
   };
 
@@ -107,6 +137,7 @@ const QuestionsCards = () => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
+                <CarouselProgress books={question.books} />
               </Carousel>
             </div>
           </div>
