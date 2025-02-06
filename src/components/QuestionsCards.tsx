@@ -56,7 +56,7 @@ const BookCover = ({ book }: { book: Book }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [primaryImageFailed, setPrimaryImageFailed] = useState(false);
   const isMobile = useIsMobile();
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
 
   useEffect(() => {
     if (!book.cover_url) {
@@ -65,62 +65,46 @@ const BookCover = ({ book }: { book: Book }) => {
       return;
     }
 
-    let isActive = true;
+    let isMounted = true;
     const img = new Image();
     
-    // Add timestamp to URL to prevent caching issues in Safari
-    const timestamp = new Date().getTime();
-    let url = book.cover_url;
-    
-    if (url.includes('dropbox.com')) {
-      // Force dl=1 for Dropbox URLs in Safari
-      url = url.replace('?dl=0', '?raw=1');
-      if (isSafari) {
-        url = `${url}&_t=${timestamp}`;
-      }
-    }
-
-    const timeoutId = setTimeout(() => {
-      if (isActive && isLoading) {
-        console.log(`Image load timeout for book: ${book.title}`);
-        setPrimaryImageFailed(true);
-        setIsLoading(false);
-      }
-    }, 10000); // 10 second timeout
-
-    img.onload = () => {
-      if (isActive) {
-        setIsLoading(false);
-        setPrimaryImageFailed(false);
-        clearTimeout(timeoutId);
-      }
+    const loadImage = () => {
+      if (!isMounted) return;
+      
+      setIsLoading(false);
+      setPrimaryImageFailed(false);
     };
     
-    img.onerror = () => {
-      if (isActive) {
-        console.log(`Primary image load failed for book: ${book.title}`);
-        setIsLoading(false);
-        setPrimaryImageFailed(true);
-        clearTimeout(timeoutId);
-      }
+    const handleError = () => {
+      if (!isMounted) return;
+      
+      console.log(`Primary image load failed for book: ${book.title}`);
+      setIsLoading(false);
+      setPrimaryImageFailed(true);
     };
-
-    img.src = url;
     
-    // For Safari, explicitly set crossOrigin
-    if (isSafari) {
-      img.crossOrigin = "anonymous";
+    img.onload = loadImage;
+    img.onerror = handleError;
+    
+    // Process Dropbox URL
+    let imageUrl = book.cover_url;
+    if (imageUrl?.includes('dropbox.com')) {
+      // Force dl=1 for direct download on mobile Safari
+      imageUrl = imageUrl.replace('?dl=0', '?raw=1&dl=1');
+      // Add cache buster for mobile Safari
+      imageUrl = `${imageUrl}&_=${Date.now()}`;
     }
+    
+    // Set crossOrigin for CORS
+    img.crossOrigin = "anonymous";
+    img.src = imageUrl;
 
     return () => {
-      isActive = false;
-      clearTimeout(timeoutId);
+      isMounted = false;
       img.onload = null;
       img.onerror = null;
     };
-  }, [book.cover_url, book.title, isLoading, isSafari]);
-
-  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
+  }, [book.cover_url, book.title]);
 
   return (
     <div className="aspect-square relative overflow-hidden rounded-md">
@@ -136,8 +120,10 @@ const BookCover = ({ book }: { book: Book }) => {
           isLoading ? 'opacity-50' : 'opacity-100'
         }`}
         loading={isMobile ? "lazy" : "eager"}
-        crossOrigin="anonymous"
-        onError={() => setPrimaryImageFailed(true)}
+        onError={(e) => {
+          console.log('Image error event triggered');
+          setPrimaryImageFailed(true);
+        }}
       />
     </div>
   );
