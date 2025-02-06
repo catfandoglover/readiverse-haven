@@ -58,7 +58,7 @@ const QuestionsCards = () => {
         .from('great_questions')
         .select(`
           *,
-          book_questions!inner (
+          book_questions (
             books (*)
           )
         `)
