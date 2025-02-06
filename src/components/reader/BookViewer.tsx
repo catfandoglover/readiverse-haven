@@ -79,135 +79,6 @@ const BookViewer = ({
       if (!book) return;
       try {
         await book.ready;
-        
-        book.spine.hooks.content.register((contents: any) => {
-          const baseUrl = contents.baseUrl || '';
-          console.log('Content base URL:', baseUrl);
-          
-          contents.addStylesheetRules([
-            ['img', [
-              ['max-width', '100%'],
-              ['height', 'auto'],
-              ['object-fit', 'contain'],
-              ['margin', '0 auto'],
-              ['display', 'block']
-            ]],
-          ]);
-
-          const handleImageLoad = async (img: HTMLImageElement): Promise<void> => {
-            return new Promise((resolve) => {
-              const originalSrc = img.getAttribute('src');
-              console.log('Processing image with src:', originalSrc);
-              
-              if (!originalSrc) {
-                console.log('No src attribute found on image');
-                resolve();
-                return;
-              }
-
-              // For data URLs, use them directly
-              if (originalSrc.startsWith('data:')) {
-                console.log('Using data URL directly:', originalSrc.substring(0, 50) + '...');
-                img.src = originalSrc;
-                resolve();
-                return;
-              }
-
-              // For blob URLs, use them directly
-              if (originalSrc.startsWith('blob:')) {
-                console.log('Using blob URL directly:', originalSrc);
-                img.src = originalSrc;
-                resolve();
-                return;
-              }
-
-              // For absolute URLs, verify and use them directly
-              if (originalSrc.startsWith('http')) {
-                console.log('Using absolute URL:', originalSrc);
-                img.src = originalSrc;
-                resolve();
-                return;
-              }
-
-              // For relative URLs, we need to handle them carefully
-              try {
-                // First try to resolve against baseUrl
-                const absoluteUrl = new URL(originalSrc, baseUrl).href;
-                console.log('Resolved relative URL:', {
-                  original: originalSrc,
-                  base: baseUrl,
-                  resolved: absoluteUrl
-                });
-
-                // Create a temporary image to test the URL
-                const tempImg = new Image();
-                
-                tempImg.onload = () => {
-                  console.log('Successfully loaded image:', absoluteUrl);
-                  img.src = absoluteUrl;
-                  resolve();
-                };
-
-                tempImg.onerror = () => {
-                  console.error('Failed to load image:', absoluteUrl);
-                  // Try an alternative approach for mobile
-                  if (isMobile) {
-                    // Try to load directly from book resources
-                    book.resources.get(originalSrc).then(resource => {
-                      if (resource) {
-                        console.log('Found resource in book:', originalSrc);
-                        return resource.href;
-                      }
-                      throw new Error('Resource not found in book');
-                    }).then(href => {
-                      console.log('Using resource href:', href);
-                      img.src = href;
-                    }).catch(error => {
-                      console.error('Failed to load resource:', error);
-                    }).finally(() => {
-                      resolve();
-                    });
-                  } else {
-                    resolve();
-                  }
-                };
-
-                tempImg.src = absoluteUrl;
-              } catch (error) {
-                console.error('Error processing image URL:', error, {
-                  originalSrc,
-                  baseUrl
-                });
-                resolve();
-              }
-            });
-          };
-
-          const originalLoad = contents.load.bind(contents);
-          contents.load = async function(url: string) {
-            try {
-              const result = await originalLoad(url);
-              const doc = contents.document;
-              
-              if (doc) {
-                const images = Array.from(doc.querySelectorAll('img'))
-                  .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
-                
-                console.log(`Found ${images.length} images to process in ${url}`);
-                
-                // Process images sequentially
-                for (const img of images) {
-                  await handleImageLoad(img);
-                }
-              }
-              return result;
-            } catch (error) {
-              console.error('Error in content load:', error);
-              return originalLoad(url);
-            }
-          };
-        });
-
         await book.loaded.spine;
         await book.loaded.navigation;
         setIsBookReady(true);
@@ -218,7 +89,7 @@ const BookViewer = ({
     };
 
     initializeBook();
-  }, [book, isMobile]);
+  }, [book]);
 
   useEffect(() => {
     const epubContainer = document.querySelector(".epub-view");
