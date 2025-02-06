@@ -10,6 +10,7 @@ import {
   useCarousel 
 } from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 type Book = Database['public']['Tables']['books']['Row'];
@@ -97,6 +98,7 @@ const BookCover = ({ book }: { book: Book }) => {
 
 const QuestionsCards = () => {
   const [visibleQuestions, setVisibleQuestions] = useState(6);
+  const isMobile = useIsMobile();
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
@@ -119,8 +121,6 @@ const QuestionsCards = () => {
         throw questionsError;
       }
 
-      console.log('Raw questions data:', questionsData);
-
       const transformedQuestions = questionsData.map((question: any) => {
         const uniqueBooks = new Map();
         
@@ -131,17 +131,12 @@ const QuestionsCards = () => {
         });
         
         const uniqueBooksArray = Array.from(uniqueBooks.values());
-        
-        console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
-          uniqueBooksArray.map((book: Book) => book.title));
-        
         return {
           ...question,
           books: uniqueBooksArray
         };
       });
 
-      console.log('Transformed questions:', transformedQuestions);
       return transformedQuestions as QuestionWithBooks[];
     }
   });
@@ -154,6 +149,18 @@ const QuestionsCards = () => {
 
   const handleLoadMore = () => {
     setVisibleQuestions(prev => Math.min((prev + 6), questions?.length || 0));
+  };
+
+  const getOptimizedImageUrl = (url: string | null) => {
+    if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
+    
+    // If it's a Dropbox URL, modify it for direct access
+    if (url.includes('dropbox.com')) {
+      // Replace ?dl=0 with ?raw=1 for direct access
+      return url.replace('?dl=0', '?raw=1');
+    }
+    
+    return url;
   };
 
   if (isLoading) {
@@ -192,7 +199,18 @@ const QuestionsCards = () => {
                       onClick={() => handleBookClick(book)}
                     >
                       <div className="cursor-pointer transition-transform hover:scale-105">
-                        <BookCover book={book} />
+                        <div className="aspect-square relative overflow-hidden rounded-md">
+                          <img
+                            src={getOptimizedImageUrl(book.cover_url)}
+                            alt={book.title || 'Book cover'}
+                            className="object-contain w-full h-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
+                            }}
+                            loading={isMobile ? "lazy" : "eager"}
+                          />
+                        </div>
                       </div>
                     </CarouselItem>
                   ))}
