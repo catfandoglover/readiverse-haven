@@ -88,34 +88,71 @@ const BookViewer = ({
               ['max-width', '100%'],
               ['height', 'auto'],
               ['object-fit', 'contain'],
-              ['display', 'inline-block']
+              ['display', 'inline-block'],
+              ['margin', '0 auto']
             ]],
           ]);
 
-          // Fix image paths before the content is loaded
+          // Intercept content loading to handle images
           const originalLoad = contents.load.bind(contents);
           contents.load = async function(url: string) {
-            const result = await originalLoad(url);
-            const doc = contents.document;
-            if (doc) {
-              const images = doc.querySelectorAll('img');
-              images.forEach((img: HTMLImageElement) => {
-                if (img.src && !img.src.startsWith('http')) {
-                  const absolutePath = new URL(img.src, baseUrl).href;
-                  img.src = absolutePath;
-                }
-                // Add error handling to prevent broken image icons
-                img.onerror = function() {
-                  console.error('Failed to load image:', img.src);
-                  // Retry loading with the absolute path
-                  if (!img.src.startsWith(baseUrl)) {
-                    const retryPath = new URL(img.getAttribute('src') || '', baseUrl).href;
-                    img.src = retryPath;
+            try {
+              const result = await originalLoad(url);
+              const doc = contents.document;
+              
+              if (doc) {
+                const images = doc.querySelectorAll('img');
+                images.forEach((img: HTMLImageElement) => {
+                  // Store original src for retry attempts
+                  const originalSrc = img.getAttribute('src');
+                  
+                  // Function to create absolute URL
+                  const getAbsoluteUrl = (src: string) => {
+                    try {
+                      return new URL(src, baseUrl).href;
+                    } catch (e) {
+                      console.error('Error creating absolute URL:', e);
+                      return src;
+                    }
+                  };
+
+                  // Set absolute path immediately
+                  if (originalSrc && !originalSrc.startsWith('http')) {
+                    img.src = getAbsoluteUrl(originalSrc);
                   }
-                };
-              });
+
+                  // Preload image
+                  const preloadImage = (src: string) => {
+                    return new Promise((resolve, reject) => {
+                      const tempImg = new Image();
+                      tempImg.onload = () => resolve(src);
+                      tempImg.onerror = reject;
+                      tempImg.src = src;
+                    });
+                  };
+
+                  // Handle image loading errors
+                  img.onerror = async function() {
+                    console.error('Failed to load image:', img.src);
+                    
+                    try {
+                      // Try loading with absolute path first
+                      const absolutePath = getAbsoluteUrl(originalSrc || '');
+                      await preloadImage(absolutePath);
+                      img.src = absolutePath;
+                    } catch (error) {
+                      console.error('Error in image retry:', error);
+                      // If all attempts fail, remove the broken image
+                      img.style.display = 'none';
+                    }
+                  };
+                });
+              }
+              return result;
+            } catch (error) {
+              console.error('Error in content load:', error);
+              return originalLoad(url);
             }
-            return result;
           };
         });
 
