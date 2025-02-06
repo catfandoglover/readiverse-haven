@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -184,7 +185,7 @@ const QuestionsCards = () => {
           }}
         >
           <div className="p-6">
-            <h3 className="text-xl font-georgia mb-4 text-white">
+            <h3 className="text-xl font-oxanium mb-4 text-white">
               {question.question}
             </h3>
             
