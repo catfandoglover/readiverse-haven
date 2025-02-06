@@ -10,6 +10,8 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Received request to sync Notion questions');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request');

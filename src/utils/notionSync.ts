@@ -16,7 +16,8 @@ export async function triggerNotionSync() {
     return data;
   } catch (error) {
     console.error('Error triggering Edge Function:', error);
-    throw error;
+    // Don't throw the error, just log it
+    return null;
   }
 }
 
