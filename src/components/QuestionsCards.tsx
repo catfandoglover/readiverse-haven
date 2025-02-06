@@ -185,7 +185,7 @@ const QuestionsCards = () => {
           }}
         >
           <div className="p-6">
-            <h3 className="text-base font-oxanium mb-4 text-white text-center">
+            <h3 className="text-base font-oxanium mb-4 text-[#E9E7E2] text-center">
               {question.question}
             </h3>
             
@@ -214,7 +214,7 @@ const QuestionsCards = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4 py-6">
         <Button 
           variant="outline" 
-          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
+          className="text-[#E9E7E2] border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
           onClick={handleLoadMore}
           disabled={visibleQuestions >= (questions?.length || 0)}
         >
@@ -222,7 +222,7 @@ const QuestionsCards = () => {
         </Button>
         <Button 
           variant="outline"
-          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
+          className="text-[#E9E7E2] border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
         >
           What do you want to ask
         </Button>
@@ -232,4 +232,3 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
-
