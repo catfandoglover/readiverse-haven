@@ -58,7 +58,7 @@ const QuestionsCards = () => {
         .from('great_questions')
         .select(`
           *,
-          book_questions (
+          book_questions!inner (
             books (*)
           )
         `)
@@ -77,13 +77,11 @@ const QuestionsCards = () => {
         const uniqueBooks = new Map();
         
         // Add each book to the Map (this automatically handles duplicates)
-        if (question.book_questions) {
-          question.book_questions.forEach((bq: any) => {
-            if (bq.books) {
-              uniqueBooks.set(bq.books.id, bq.books);
-            }
-          });
-        }
+        question.book_questions.forEach((bq: any) => {
+          if (bq.books) {
+            uniqueBooks.set(bq.books.id, bq.books);
+          }
+        });
         
         // Convert the Map values back to an array
         const uniqueBooksArray = Array.from(uniqueBooks.values());
