@@ -176,6 +176,10 @@ const QuestionsCards = () => {
 
   return (
     <div className="space-y-6 p-4">
+      <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-8">
+        Ask the Great Questions
+      </h1>
+      
       {displayedQuestions.map((question) => (
         <Card 
           key={question.id}
