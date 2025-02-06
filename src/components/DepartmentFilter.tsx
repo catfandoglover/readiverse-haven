@@ -9,15 +9,6 @@ interface DepartmentFilterProps {
   onClose: () => void;
 }
 
-const departments = [
-  "Literature",
-  "Philosophy",
-  "History",
-  "Science",
-  "Politics",
-  "Arts"
-];
-
 const DepartmentFilter = ({ isOpen, onClose }: DepartmentFilterProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -26,7 +17,7 @@ const DepartmentFilter = ({ isOpen, onClose }: DepartmentFilterProps) => {
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex justify-between items-center">
-            <span>Filter by Field</span>
+            <span>Search</span>
             <Button 
               variant="ghost" 
               size="icon"
@@ -37,25 +28,13 @@ const DepartmentFilter = ({ isOpen, onClose }: DepartmentFilterProps) => {
           </SheetTitle>
         </SheetHeader>
         
-        <div className="mt-6 space-y-6">
+        <div className="mt-6">
           <Input
             placeholder="Search books..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full"
           />
-          
-          <div className="grid grid-cols-2 gap-4">
-            {departments.map((dept) => (
-              <Button
-                key={dept}
-                variant="outline"
-                className="justify-start border-[#FEF7CD] text-foreground hover:bg-[#FEF7CD]/10"
-              >
-                {dept}
-              </Button>
-            ))}
-          </div>
         </div>
       </SheetContent>
     </Sheet>
