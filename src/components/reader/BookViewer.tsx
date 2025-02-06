@@ -79,6 +79,26 @@ const BookViewer = ({
       if (!book) return;
       try {
         await book.ready;
+        
+        // Configure book to handle image loading correctly
+        book.spine.hooks.content.register((contents: any) => {
+          const baseUrl = contents.baseUrl || '';
+          contents.addStylesheetRules([
+            ['img', ['max-width', '100%'], ['height', 'auto'], ['object-fit', 'contain']],
+          ]);
+
+          // Fix image paths for preview environment
+          contents.on('load', () => {
+            const images = contents.document.querySelectorAll('img');
+            images.forEach((img: HTMLImageElement) => {
+              if (img.src && !img.src.startsWith('http')) {
+                const absolutePath = new URL(img.src, baseUrl).href;
+                img.src = absolutePath;
+              }
+            });
+          });
+        });
+
         await book.loaded.spine;
         await book.loaded.navigation;
         setIsBookReady(true);
