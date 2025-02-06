@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,7 +176,7 @@ const QuestionsCards = () => {
   return (
     <div className="space-y-6 p-4">
       <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-8 uppercase">
-        Ask the Great Questions
+        The Great Questions
       </h1>
       
       {displayedQuestions.map((question) => (
