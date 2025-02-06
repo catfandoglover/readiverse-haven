@@ -15,9 +15,12 @@ const Home = () => {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const navigate = useNavigate();
 
-  const { data: books = [] } = useQuery<Book[]>(['books'], async () => {
-    const { data } = await supabase.from('books').select('*');
-    return data;
+  const { data: books = [] } = useQuery({
+    queryKey: ['books'],
+    queryFn: async () => {
+      const { data } = await supabase.from('books').select('*');
+      return data || [];
+    }
   });
 
   return (

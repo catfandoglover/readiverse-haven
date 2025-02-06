@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import Home from "./components/Home";
 import Bookshelf from "./components/Bookshelf";
 import Reader from "./components/Reader";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/bookshelf" element={<Bookshelf />} />
-              <Route path="/reader" element={<Reader />} />
+              <Route path="/reader" element={<Reader metadata={{ coverUrl: '', title: '', author: '' }} />} />
             </Routes>
           </ErrorBoundary>
         </Router>
