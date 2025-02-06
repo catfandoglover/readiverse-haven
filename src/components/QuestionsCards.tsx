@@ -103,8 +103,6 @@ const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
-      console.log('Fetching questions and books...');
-      
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
@@ -156,7 +154,6 @@ const QuestionsCards = () => {
     
     // If it's a Dropbox URL, modify it for direct access
     if (url.includes('dropbox.com')) {
-      // Replace ?dl=0 with ?raw=1 for direct access
       return url.replace('?dl=0', '?raw=1');
     }
     
@@ -205,10 +202,13 @@ const QuestionsCards = () => {
                             alt={book.title || 'Book cover'}
                             className="object-contain w-full h-full"
                             onError={(e) => {
+                              console.error(`Image failed to load for book: ${book.title}, URL: ${book.cover_url}`);
                               const target = e.target as HTMLImageElement;
                               target.src = '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
                             }}
-                            loading={isMobile ? "lazy" : "eager"}
+                            loading={isMobile ? "eager" : "lazy"}
+                            decoding="async"
+                            crossOrigin="anonymous"
                           />
                         </div>
                       </div>
