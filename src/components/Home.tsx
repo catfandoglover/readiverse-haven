@@ -7,11 +7,13 @@ import { Button } from "./ui/button";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
 import QuestionsCards from "./QuestionsCards";
+import { useNavigate } from "react-router-dom";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Home = () => {
   const [isGridView, setIsGridView] = useState(false);
+  const navigate = useNavigate();
   
   const { data: books, isLoading } = useQuery({
     queryKey: ['books'],
@@ -35,7 +37,7 @@ const Home = () => {
   };
 
   const handleNavigation = (path: string) => {
-    window.location.href = path;
+    navigate(path);
   };
 
   return (
@@ -81,47 +83,47 @@ const Home = () => {
             
             <div className="px-4 pb-24">
               {isGridView ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
-              {books?.map((book) => (
-                <div
-                  key={book.id}
-                  className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => handleBookClick(book.Cover_super)}
-                >
-                  <img
-                    src={book.cover_url || '/placeholder.svg'}
-                    alt={book.title}
-                    className="w-full h-full object-cover rounded-md shadow-sm"
-                    loading="lazy"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4">
+                  {books?.map((book) => (
+                    <div
+                      key={book.id}
+                      className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleBookClick(book.Cover_super)}
+                    >
+                      <img
+                        src={book.cover_url || '/placeholder.svg'}
+                        alt={book.title}
+                        className="w-full h-full object-cover rounded-md shadow-sm"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
               ) : (
-            <div className="space-y-6 py-4">
-              {books?.map((book) => (
-                <Card 
-                  key={book.id} 
-                  className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                  onClick={() => handleBookClick(book.Cover_super)}
-                >
-                  <div className="w-24 h-24 flex-shrink-0">
-                    <img
-                      src={book.cover_url || '/placeholder.svg'}
-                      alt={book.title}
-                      className="w-full h-full object-cover rounded-md shadow-sm"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
-                    {book.author && (
-                      <p className="text-muted-foreground text-sm">{book.author}</p>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
+                <div className="space-y-6 py-4">
+                  {books?.map((book) => (
+                    <Card 
+                      key={book.id} 
+                      className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                      onClick={() => handleBookClick(book.Cover_super)}
+                    >
+                      <div className="w-24 h-24 flex-shrink-0">
+                        <img
+                          src={book.cover_url || '/placeholder.svg'}
+                          alt={book.title}
+                          className="w-full h-full object-cover rounded-md shadow-sm"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
+                        {book.author && (
+                          <p className="text-muted-foreground text-sm">{book.author}</p>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
           </div>
