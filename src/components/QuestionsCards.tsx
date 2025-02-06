@@ -58,11 +58,11 @@ const QuestionsCards = () => {
         .from('great_questions')
         .select(`
           *,
-          book_questions (
-            book_id,
+          book_questions!inner (
             books (*)
           )
         `)
+        .order('created_at', { ascending: false })
         .limit(18);
 
       if (questionsError) {
@@ -70,15 +70,20 @@ const QuestionsCards = () => {
         throw questionsError;
       }
 
+      console.log('Raw questions data:', questionsData);
+
       const transformedQuestions = questionsData.map((question: any) => {
+        // Create a Map to store unique books by their ID
         const uniqueBooks = new Map();
         
+        // Add each book to the Map (this automatically handles duplicates)
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
             uniqueBooks.set(bq.books.id, bq.books);
           }
         });
         
+        // Convert the Map values back to an array
         const uniqueBooksArray = Array.from(uniqueBooks.values());
         
         console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
