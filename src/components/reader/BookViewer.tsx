@@ -88,12 +88,29 @@ const BookViewer = ({
               ['max-width', '100%'],
               ['height', 'auto'],
               ['object-fit', 'contain'],
-              ['display', 'inline-block'],
+              ['display', 'block'],
               ['margin', '0 auto']
             ]],
           ]);
 
-          // Intercept content loading to handle images
+          // Create a function to validate and fix image URLs
+          const getValidImageUrl = (src: string): string => {
+            try {
+              // If it's already an absolute URL, return it
+              if (src.startsWith('http')) return src;
+              
+              // If it's a data URL, return it
+              if (src.startsWith('data:')) return src;
+              
+              // Otherwise, try to create an absolute URL
+              return new URL(src, baseUrl).href;
+            } catch (error) {
+              console.error('Error creating image URL:', error);
+              return src;
+            }
+          };
+
+          // Intercept content loading
           const originalLoad = contents.load.bind(contents);
           contents.load = async function(url: string) {
             try {
@@ -103,49 +120,26 @@ const BookViewer = ({
               if (doc) {
                 const images = doc.querySelectorAll('img');
                 images.forEach((img: HTMLImageElement) => {
-                  // Store original src for retry attempts
                   const originalSrc = img.getAttribute('src');
+                  if (!originalSrc) return;
+
+                  // Create a new image element to preload
+                  const preloader = new Image();
                   
-                  // Function to create absolute URL
-                  const getAbsoluteUrl = (src: string) => {
-                    try {
-                      return new URL(src, baseUrl).href;
-                    } catch (e) {
-                      console.error('Error creating absolute URL:', e);
-                      return src;
-                    }
+                  // Set up success handler
+                  preloader.onload = () => {
+                    img.src = preloader.src;
+                  };
+                  
+                  // Set up error handler
+                  preloader.onerror = () => {
+                    console.error('Failed to load image:', originalSrc);
+                    img.style.display = 'none';
                   };
 
-                  // Set absolute path immediately
-                  if (originalSrc && !originalSrc.startsWith('http')) {
-                    img.src = getAbsoluteUrl(originalSrc);
-                  }
-
-                  // Preload image
-                  const preloadImage = (src: string) => {
-                    return new Promise((resolve, reject) => {
-                      const tempImg = new Image();
-                      tempImg.onload = () => resolve(src);
-                      tempImg.onerror = reject;
-                      tempImg.src = src;
-                    });
-                  };
-
-                  // Handle image loading errors
-                  img.onerror = async function() {
-                    console.error('Failed to load image:', img.src);
-                    
-                    try {
-                      // Try loading with absolute path first
-                      const absolutePath = getAbsoluteUrl(originalSrc || '');
-                      await preloadImage(absolutePath);
-                      img.src = absolutePath;
-                    } catch (error) {
-                      console.error('Error in image retry:', error);
-                      // If all attempts fail, remove the broken image
-                      img.style.display = 'none';
-                    }
-                  };
+                  // Start loading with validated URL
+                  const validUrl = getValidImageUrl(originalSrc);
+                  preloader.src = validUrl;
                 });
               }
               return result;
