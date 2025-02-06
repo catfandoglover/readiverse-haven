@@ -88,17 +88,16 @@ const BookViewer = ({
               ['height', 'auto'],
               ['object-fit', 'contain'],
               ['margin', '0 auto'],
-              ['display', 'block'],
-              ['opacity', '0'],
-              ['transition', 'opacity 0.3s ease-in']
+              ['display', 'block']
             ]],
           ]);
 
-          const preloadImage = (img: HTMLImageElement): Promise<void> => {
+          const handleImageLoad = (img: HTMLImageElement): Promise<void> => {
             return new Promise((resolve) => {
-              const src = img.getAttribute('src');
-              if (!src) {
-                img.style.display = 'none';
+              const originalSrc = img.getAttribute('src');
+              
+              if (!originalSrc) {
+                console.log('No src attribute found on image');
                 resolve();
                 return;
               }
@@ -107,40 +106,48 @@ const BookViewer = ({
               const tempImg = new Image();
               
               tempImg.onload = () => {
-                // Update original image
-                if (src.startsWith('http') || src.startsWith('data:')) {
-                  img.src = src;
-                } else {
-                  try {
-                    img.src = new URL(src, baseUrl).href;
-                  } catch (error) {
-                    console.error('Error creating URL:', error);
-                    img.style.display = 'none';
-                    resolve();
-                    return;
+                try {
+                  // For absolute URLs, use them directly
+                  if (originalSrc.startsWith('http') || originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
+                    img.src = originalSrc;
+                  } else {
+                    // For relative URLs, try to resolve against baseUrl
+                    const absoluteUrl = new URL(originalSrc, baseUrl).href;
+                    img.src = absoluteUrl;
                   }
+                  console.log('Successfully loaded image:', img.src);
+                } catch (error) {
+                  console.error('Error setting image src:', error, {
+                    originalSrc,
+                    baseUrl
+                  });
                 }
-                img.style.opacity = '1';
                 resolve();
               };
 
               tempImg.onerror = () => {
-                console.error('Failed to load image:', src);
-                img.style.display = 'none';
+                console.error('Failed to load image:', originalSrc, {
+                  baseUrl,
+                  currentLocation
+                });
                 resolve();
               };
 
-              // Start loading
-              if (src.startsWith('http') || src.startsWith('data:')) {
-                tempImg.src = src;
-              } else {
-                try {
-                  tempImg.src = new URL(src, baseUrl).href;
-                } catch (error) {
-                  console.error('Error creating URL:', error);
-                  img.style.display = 'none';
-                  resolve();
+              // Start loading the image
+              try {
+                if (originalSrc.startsWith('http') || originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
+                  tempImg.src = originalSrc;
+                } else {
+                  const absoluteUrl = new URL(originalSrc, baseUrl).href;
+                  tempImg.src = absoluteUrl;
+                  console.log('Loading image with absolute URL:', absoluteUrl);
                 }
+              } catch (error) {
+                console.error('Error creating image URL:', error, {
+                  originalSrc,
+                  baseUrl
+                });
+                resolve();
               }
             });
           };
@@ -155,7 +162,12 @@ const BookViewer = ({
                 const images = Array.from(doc.querySelectorAll('img'))
                   .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
                 
-                await Promise.all(images.map(preloadImage));
+                console.log(`Found ${images.length} images to process`);
+                
+                // Process images sequentially to avoid overwhelming the browser
+                for (const img of images) {
+                  await handleImageLoad(img);
+                }
               }
               return result;
             } catch (error) {
