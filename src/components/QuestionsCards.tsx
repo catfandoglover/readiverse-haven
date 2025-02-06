@@ -54,12 +54,13 @@ const QuestionsCards = () => {
     queryFn: async () => {
       console.log('Fetching questions and books...');
       
+      // First get all questions
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
           *,
-          book_questions!inner (
-            books (*)
+          book_questions!inner(
+            books(*)
           )
         `)
         .order('created_at', { ascending: false })
@@ -76,7 +77,7 @@ const QuestionsCards = () => {
         // Create a Map to store unique books by their ID
         const uniqueBooks = new Map();
         
-        // Add each book to the Map (this automatically handles duplicates)
+        // Process each book_question relationship
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
             uniqueBooks.set(bq.books.id, bq.books);
@@ -87,7 +88,7 @@ const QuestionsCards = () => {
         const uniqueBooksArray = Array.from(uniqueBooks.values());
         
         console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
-          uniqueBooksArray.map((book: Book) => book.id));
+          uniqueBooksArray.map((book: Book) => book.title));
         
         return {
           ...question,
