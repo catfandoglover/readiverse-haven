@@ -29,24 +29,24 @@
 
   /* Apply dark theme to Home and Bookshelf components */
   .home-page, .bookshelf-page {
-    --background: 240 10% 3.9%;
+    --background: 280 3% 16%;  /* This corresponds to #2A282A */
     --foreground: 34 6% 90%;
-    --card: 240 10% 3.9%;
+    --card: 280 3% 16%;       /* This corresponds to #2A282A */
     --card-foreground: 34 6% 90%;
-    --popover: 240 10% 3.9%;
+    --popover: 280 3% 16%;    /* This corresponds to #2A282A */
     --popover-foreground: 34 6% 90%;
     --primary: 34 6% 90%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+    --primary-foreground: 280 3% 16%;  /* This corresponds to #2A282A */
+    --secondary: 280 3% 16%;   /* This corresponds to #2A282A */
     --secondary-foreground: 34 6% 90%;
-    --muted: 240 3.7% 15.9%;
+    --muted: 280 3% 16%;      /* This corresponds to #2A282A */
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --accent: 280 3% 16%;     /* This corresponds to #2A282A */
     --accent-foreground: 34 6% 90%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 34 6% 90%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 280 3% 16%;     /* This corresponds to #2A282A */
+    --input: 280 3% 16%;      /* This corresponds to #2A282A */
     --ring: 240 4.9% 83.9%;
   }
  
