@@ -56,6 +56,7 @@ const BookCover = ({ book }: { book: Book }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [primaryImageFailed, setPrimaryImageFailed] = useState(false);
   const isMobile = useIsMobile();
+  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
 
   useEffect(() => {
     if (!book.cover_url) {
@@ -64,31 +65,46 @@ const BookCover = ({ book }: { book: Book }) => {
       return;
     }
 
+    let isMounted = true;
     const img = new Image();
-    img.onload = () => {
+    
+    const loadImage = () => {
+      if (!isMounted) return;
+      
       setIsLoading(false);
       setPrimaryImageFailed(false);
     };
     
-    img.onerror = () => {
+    const handleError = () => {
+      if (!isMounted) return;
+      
       console.log(`Primary image load failed for book: ${book.title}`);
       setIsLoading(false);
       setPrimaryImageFailed(true);
     };
     
-    const url = book.cover_url.includes('dropbox.com')
-      ? book.cover_url.replace('?dl=0', '?raw=1')
-      : book.cover_url;
+    img.onload = loadImage;
+    img.onerror = handleError;
     
-    img.src = url;
+    // Process Dropbox URL
+    let imageUrl = book.cover_url;
+    if (imageUrl?.includes('dropbox.com')) {
+      // Force dl=1 for direct download on mobile Safari
+      imageUrl = imageUrl.replace('?dl=0', '?raw=1&dl=1');
+      // Add cache buster for mobile Safari
+      imageUrl = `${imageUrl}&_=${Date.now()}`;
+    }
+    
+    // Set crossOrigin for CORS
+    img.crossOrigin = "anonymous";
+    img.src = imageUrl;
 
     return () => {
+      isMounted = false;
       img.onload = null;
       img.onerror = null;
     };
   }, [book.cover_url, book.title]);
-
-  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
 
   return (
     <div className="aspect-square relative overflow-hidden rounded-md">
@@ -104,6 +120,10 @@ const BookCover = ({ book }: { book: Book }) => {
           isLoading ? 'opacity-50' : 'opacity-100'
         }`}
         loading={isMobile ? "lazy" : "eager"}
+        onError={(e) => {
+          console.log('Image error event triggered');
+          setPrimaryImageFailed(true);
+        }}
       />
     </div>
   );
