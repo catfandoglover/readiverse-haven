@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,13 +5,14 @@ import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Toggle } from "./ui/toggle";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Bookshelf = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isGridView, setIsGridView] = useState(false);
   
   const { data: books = [], isLoading } = useQuery({
@@ -64,6 +64,10 @@ const Bookshelf = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const isCurrentPath = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -162,7 +166,7 @@ const Bookshelf = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <Button 
-              variant="ghost" 
+              variant={isCurrentPath('/') ? 'default' : 'ghost'} 
               size="icon" 
               className="flex flex-col items-center gap-1 w-14 text-foreground"
               onClick={() => handleNavigation('/')}
@@ -171,7 +175,7 @@ const Bookshelf = () => {
               <span className="text-xs font-oxanium">Discover</span>
             </Button>
             <Button 
-              variant="ghost" 
+              variant={isCurrentPath('/bookshelf') ? 'default' : 'ghost'} 
               size="icon" 
               className="flex flex-col items-center gap-1 w-14 text-foreground"
               onClick={() => handleNavigation('/bookshelf')}

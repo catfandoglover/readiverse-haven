@@ -8,13 +8,14 @@ import { Button } from "./ui/button";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
 import QuestionsCards from "./QuestionsCards";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Home = () => {
   const [isGridView, setIsGridView] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   
   const { data: books, isLoading } = useQuery({
     queryKey: ['books'],
@@ -39,6 +40,10 @@ const Home = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const isCurrentPath = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -133,7 +138,7 @@ const Home = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <Button 
-              variant="ghost" 
+              variant={isCurrentPath('/') ? 'default' : 'ghost'} 
               size="icon" 
               className="flex flex-col items-center gap-1 w-14 text-foreground"
               onClick={() => handleNavigation('/')}
@@ -142,7 +147,7 @@ const Home = () => {
               <span className="text-xs font-oxanium">Discover</span>
             </Button>
             <Button 
-              variant="ghost" 
+              variant={isCurrentPath('/bookshelf') ? 'default' : 'ghost'} 
               size="icon" 
               className="flex flex-col items-center gap-1 w-14 text-foreground"
               onClick={() => handleNavigation('/bookshelf')}
