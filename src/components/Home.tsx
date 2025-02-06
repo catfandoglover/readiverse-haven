@@ -46,7 +46,7 @@ const Home = () => {
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-georgia text-foreground">Discover</h1>
+            <h1 className="text-2xl font-oxanium text-foreground">Discover</h1>
             <div className="flex gap-4 items-center">
               <Button
                 variant="ghost"
@@ -139,7 +139,7 @@ const Home = () => {
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
-              <span className="text-xs">Discover</span>
+              <span className="text-xs font-oxanium">Discover</span>
             </Button>
             <Button 
               variant="ghost" 
@@ -148,7 +148,7 @@ const Home = () => {
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
-              <span className="text-xs">Bookshelf</span>
+              <span className="text-xs font-oxanium">Bookshelf</span>
             </Button>
           </div>
         </nav>

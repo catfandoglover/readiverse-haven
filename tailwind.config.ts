@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -19,6 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				oxanium: ['Oxanium', 'sans-serif'],
 				georgia: ['Georgia', 'serif'],
 				helvetica: ['Helvetica', 'Arial', 'sans-serif'],
 				times: ['Times New Roman', 'serif']
