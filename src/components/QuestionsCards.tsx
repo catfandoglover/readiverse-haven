@@ -52,50 +52,6 @@ const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean 
   );
 };
 
-const BookCover = ({ book }: { book: Book }) => {
-  const [imageError, setImageError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleImageLoad = () => {
-    console.log(`Image loaded successfully for book: ${book.title}`);
-    setIsLoading(false);
-  };
-
-  const handleImageError = () => {
-    console.error(`Image failed to load for book: ${book.title}, URL: ${book.cover_url}`);
-    setImageError(true);
-    setIsLoading(false);
-  };
-
-  // Reset error state if cover_url changes
-  React.useEffect(() => {
-    setImageError(false);
-    setIsLoading(true);
-  }, [book.cover_url]);
-
-  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
-  const imageUrl = book.cover_url || fallbackImage;
-
-  return (
-    <div className="aspect-square relative overflow-hidden rounded-md">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-          <div className="animate-pulse">Loading...</div>
-        </div>
-      )}
-      <img
-        src={imageUrl}
-        alt={book.title || 'Book cover'}
-        className={`object-contain w-full h-full transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        }`}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
-    </div>
-  );
-};
-
 const QuestionsCards = () => {
   const [visibleQuestions, setVisibleQuestions] = useState(6);
   const isMobile = useIsMobile();
@@ -152,7 +108,6 @@ const QuestionsCards = () => {
   const getOptimizedImageUrl = (url: string | null) => {
     if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
     
-    // If it's a Dropbox URL, modify it for direct access
     if (url.includes('dropbox.com')) {
       return url.replace('?dl=0', '?raw=1');
     }
@@ -206,9 +161,7 @@ const QuestionsCards = () => {
                               const target = e.target as HTMLImageElement;
                               target.src = '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
                             }}
-                            loading={isMobile ? "eager" : "lazy"}
-                            decoding="async"
-                            crossOrigin="anonymous"
+                            loading="eager"
                           />
                         </div>
                       </div>
