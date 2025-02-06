@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import Home from "./components/Home";
-import Library from "./components/Library";
+import Bookshelf from "./components/Bookshelf";
 import Index from "./pages/Index";
 
 const queryClient = new QueryClient({
@@ -26,7 +26,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/library" element={<Library />} />
+            <Route path="/bookshelf" element={<Bookshelf />} />
             <Route path="/:bookSlug" element={<Index />} />
           </Routes>
         </BrowserRouter>

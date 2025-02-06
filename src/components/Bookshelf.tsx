@@ -70,7 +70,7 @@ const Library = () => {
     <div className="flex flex-col h-screen bg-background library-page">
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-georgia text-foreground">Library</h1>
+          <h1 className="text-4xl font-georgia text-foreground">Bookshelf</h1>
           <div className="flex gap-4 items-center">
             <Button
               variant="ghost"

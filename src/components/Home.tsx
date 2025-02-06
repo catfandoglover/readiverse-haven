@@ -155,10 +155,10 @@ const Home = () => {
             variant="ghost" 
             size="icon" 
             className="flex flex-col items-center gap-1 w-14 text-foreground"
-            onClick={() => handleNavigation('/library')}
+            onClick={() => handleNavigation('/bookshelf')}
           >
             <LibraryBig className="h-6 w-6" />
-            <span className="text-xs">Library</span>
+            <span className="text-xs">Bookshelf</span>
           </Button>
         </div>
       </nav>
