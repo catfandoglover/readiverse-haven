@@ -26,7 +26,7 @@ const DepartmentFilter = ({ isOpen, onClose }: DepartmentFilterProps) => {
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex justify-between items-center">
-            <span>Filter by Department</span>
+            <span>Filter by Field</span>
             <Button 
               variant="ghost" 
               size="icon"
