@@ -185,7 +185,7 @@ const QuestionsCards = () => {
           }}
         >
           <div className="p-6">
-            <h3 className="text-xl font-oxanium mb-4 text-white">
+            <h3 className="text-base font-oxanium mb-4 text-white text-center">
               {question.question}
             </h3>
             
@@ -232,3 +232,4 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
+
