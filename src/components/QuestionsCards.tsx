@@ -94,7 +94,7 @@ const BookCover = ({ book }: { book: Book }) => {
   return (
     <div className="aspect-square relative overflow-hidden rounded-md">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#2A282A]/10">
           <div className="animate-pulse">Loading...</div>
         </div>
       )}
@@ -189,7 +189,7 @@ const QuestionsCards = () => {
               {question.question}
             </h3>
             
-            <div className="bg-black/30 backdrop-blur-sm rounded-lg p-4">
+            <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
               <Carousel>
                 <CarouselContent className="-ml-1">
                   {question.books.map((book) => (
