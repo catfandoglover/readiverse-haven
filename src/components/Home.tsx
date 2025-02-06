@@ -26,7 +26,7 @@ const Home = () => {
       if (error) throw error;
       return data as Book[];
     },
-    staleTime: 30000, // Cache data for 30 seconds
+    staleTime: 30000,
     refetchOnMount: false
   });
 
@@ -41,7 +41,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300 home-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-6 py-8 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
