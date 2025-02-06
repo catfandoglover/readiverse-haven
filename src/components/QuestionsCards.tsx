@@ -18,7 +18,7 @@ interface QuestionWithBooks extends Question {
   books: Book[];
 }
 
-const CarouselProgress = ({ books }: { books: Book[] }) => {
+const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean }) => {
   const { api } = useCarousel();
   const [activeIndex, setActiveIndex] = React.useState(0);
 
@@ -30,9 +30,17 @@ const CarouselProgress = ({ books }: { books: Book[] }) => {
     });
   }, [api]);
 
+  // Calculate how many dots to show (max 6)
+  const maxDots = 6;
+  const dotsToShow = Math.min(maxDots, books.length);
+  
+  // Only show the last dot if there are no more records to show
+  const shouldShowLastDot = !hasMore || books.length <= maxDots;
+  const visibleDots = shouldShowLastDot ? dotsToShow : dotsToShow - 1;
+
   return (
     <div className="flex justify-center gap-2 mt-2">
-      {books.map((_, idx) => (
+      {Array.from({ length: visibleDots }).map((_, idx) => (
         <img
           key={idx}
           src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png"
@@ -54,7 +62,6 @@ const QuestionsCards = () => {
     queryFn: async () => {
       console.log('Fetching questions and books...');
       
-      // First get all questions
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
@@ -74,17 +81,14 @@ const QuestionsCards = () => {
       console.log('Raw questions data:', questionsData);
 
       const transformedQuestions = questionsData.map((question: any) => {
-        // Create a Map to store unique books by their ID
         const uniqueBooks = new Map();
         
-        // Process each book_question relationship
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
             uniqueBooks.set(bq.books.id, bq.books);
           }
         });
         
-        // Convert the Map values back to an array
         const uniqueBooksArray = Array.from(uniqueBooks.values());
         
         console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
@@ -120,6 +124,7 @@ const QuestionsCards = () => {
   }
 
   const displayedQuestions = questions?.slice(0, visibleQuestions) || [];
+  const hasMoreQuestions = questions ? visibleQuestions < questions.length : false;
 
   return (
     <div className="space-y-6 p-4">
@@ -161,7 +166,7 @@ const QuestionsCards = () => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselProgress books={question.books} />
+                <CarouselProgress books={question.books} hasMore={hasMoreQuestions} />
               </Carousel>
             </div>
           </div>
