@@ -57,38 +57,55 @@ const BookCover = ({ book }: { book: Book }) => {
   const [loadError, setLoadError] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const maxAttempts = 3;
-  const retryDelay = 2000;
+  const retryDelay = 3000; // Increased to 3 seconds for mobile
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Reset states when book changes
+    let timeoutId: NodeJS.Timeout;
+    
+    const loadImage = () => {
+      const img = new Image();
+      img.onload = () => {
+        setIsLoading(false);
+        setLoadError(false);
+      };
+      
+      img.onerror = () => {
+        if (loadAttempts < maxAttempts) {
+          console.log(`Retrying image load for book: ${book.title}, attempt ${loadAttempts + 1}`);
+          timeoutId = setTimeout(() => {
+            setLoadAttempts(prev => prev + 1);
+          }, retryDelay);
+        } else {
+          console.error(`Failed to load image after ${maxAttempts} attempts for book: ${book.title}`);
+          setLoadError(true);
+          setIsLoading(false);
+        }
+      };
+      
+      img.src = getOptimizedImageUrl(book.cover_url);
+    };
+
     setIsLoading(true);
     setLoadError(false);
-    setLoadAttempts(0);
-  }, [book.cover_url]);
+    loadImage();
 
-  const handleImageLoad = () => {
-    setIsLoading(false);
-    setLoadError(false);
-  };
-
-  const handleImageError = () => {
-    if (loadAttempts < maxAttempts) {
-      console.log(`Retrying image load for book: ${book.title}, attempt ${loadAttempts + 1}`);
-      setTimeout(() => {
-        setLoadAttempts(prev => prev + 1);
-      }, retryDelay);
-    } else {
-      console.error(`Failed to load image after ${maxAttempts} attempts for book: ${book.title}, URL: ${book.cover_url}`);
-      setLoadError(true);
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [book.cover_url, loadAttempts, maxAttempts, book.title]);
 
   const getOptimizedImageUrl = (url: string | null) => {
     if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
     
     if (url.includes('dropbox.com')) {
-      return url.replace('?dl=0', '?raw=1');
+      // Add mobile-specific query params for Dropbox
+      const optimizedUrl = url.replace('?dl=0', '?raw=1');
+      return isMobile 
+        ? `${optimizedUrl}&size=medium` 
+        : optimizedUrl;
     }
     
     return url;
@@ -102,15 +119,12 @@ const BookCover = ({ book }: { book: Book }) => {
         </div>
       )}
       <img
-        key={`${book.cover_url}-${loadAttempts}`} // Force reload on retry
         src={loadError ? "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" : getOptimizedImageUrl(book.cover_url)}
         alt={book.title || 'Book cover'}
         className={`object-contain w-full h-full transition-opacity duration-300 ${
           isLoading && !loadError ? 'opacity-50' : 'opacity-100'
         }`}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        loading="eager"
+        loading={isMobile ? "lazy" : "eager"}
       />
     </div>
   );
