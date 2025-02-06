@@ -84,19 +84,39 @@ const BookViewer = ({
         book.spine.hooks.content.register((contents: any) => {
           const baseUrl = contents.baseUrl || '';
           contents.addStylesheetRules([
-            ['img', ['max-width', '100%'], ['height', 'auto'], ['object-fit', 'contain']],
+            ['img', [
+              ['max-width', '100%'],
+              ['height', 'auto'],
+              ['object-fit', 'contain'],
+              ['display', 'inline-block']
+            ]],
           ]);
 
-          // Fix image paths for preview environment
-          contents.on('load', () => {
-            const images = contents.document.querySelectorAll('img');
-            images.forEach((img: HTMLImageElement) => {
-              if (img.src && !img.src.startsWith('http')) {
-                const absolutePath = new URL(img.src, baseUrl).href;
-                img.src = absolutePath;
-              }
-            });
-          });
+          // Fix image paths before the content is loaded
+          const originalLoad = contents.load.bind(contents);
+          contents.load = async function(url: string) {
+            const result = await originalLoad(url);
+            const doc = contents.document;
+            if (doc) {
+              const images = doc.querySelectorAll('img');
+              images.forEach((img: HTMLImageElement) => {
+                if (img.src && !img.src.startsWith('http')) {
+                  const absolutePath = new URL(img.src, baseUrl).href;
+                  img.src = absolutePath;
+                }
+                // Add error handling to prevent broken image icons
+                img.onerror = function() {
+                  console.error('Failed to load image:', img.src);
+                  // Retry loading with the absolute path
+                  if (!img.src.startsWith(baseUrl)) {
+                    const retryPath = new URL(img.getAttribute('src') || '', baseUrl).href;
+                    img.src = retryPath;
+                  }
+                };
+              });
+            }
+            return result;
+          };
         });
 
         await book.loaded.spine;
