@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
@@ -57,7 +57,14 @@ const BookCover = ({ book }: { book: Book }) => {
   const [loadError, setLoadError] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const maxAttempts = 3;
-  const retryDelay = 2000; // 2 seconds
+  const retryDelay = 2000;
+
+  useEffect(() => {
+    // Reset states when book changes
+    setIsLoading(true);
+    setLoadError(false);
+    setLoadAttempts(0);
+  }, [book.cover_url]);
 
   const handleImageLoad = () => {
     setIsLoading(false);
@@ -69,7 +76,6 @@ const BookCover = ({ book }: { book: Book }) => {
       console.log(`Retrying image load for book: ${book.title}, attempt ${loadAttempts + 1}`);
       setTimeout(() => {
         setLoadAttempts(prev => prev + 1);
-        setIsLoading(true);
       }, retryDelay);
     } else {
       console.error(`Failed to load image after ${maxAttempts} attempts for book: ${book.title}, URL: ${book.cover_url}`);
@@ -96,10 +102,11 @@ const BookCover = ({ book }: { book: Book }) => {
         </div>
       )}
       <img
+        key={`${book.cover_url}-${loadAttempts}`} // Force reload on retry
         src={loadError ? "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" : getOptimizedImageUrl(book.cover_url)}
         alt={book.title || 'Book cover'}
         className={`object-contain w-full h-full transition-opacity duration-300 ${
-          isLoading ? 'opacity-50' : 'opacity-100'
+          isLoading && !loadError ? 'opacity-50' : 'opacity-100'
         }`}
         onLoad={handleImageLoad}
         onError={handleImageError}
