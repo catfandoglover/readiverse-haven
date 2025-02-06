@@ -87,28 +87,50 @@ const BookViewer = ({
               ['max-width', '100%'],
               ['height', 'auto'],
               ['object-fit', 'contain'],
-              ['display', 'none'], // Initially hide images
-              ['margin', '0 auto']
+              ['margin', '0 auto'],
+              ['display', 'block'],
+              ['opacity', '0'],
+              ['transition', 'opacity 0.3s ease-in']
             ]],
           ]);
 
-          const preloadImage = (img: HTMLImageElement, src: string): Promise<void> => {
-            return new Promise((resolve, reject) => {
+          const preloadImage = (img: HTMLImageElement): Promise<void> => {
+            return new Promise((resolve) => {
+              const src = img.getAttribute('src');
+              if (!src) {
+                img.style.display = 'none';
+                resolve();
+                return;
+              }
+
+              // Create new image for preloading
               const tempImg = new Image();
               
               tempImg.onload = () => {
-                img.src = tempImg.src;
-                img.style.display = 'block'; // Show image only after successful load
+                // Update original image
+                if (src.startsWith('http') || src.startsWith('data:')) {
+                  img.src = src;
+                } else {
+                  try {
+                    img.src = new URL(src, baseUrl).href;
+                  } catch (error) {
+                    console.error('Error creating URL:', error);
+                    img.style.display = 'none';
+                    resolve();
+                    return;
+                  }
+                }
+                img.style.opacity = '1';
                 resolve();
               };
-              
+
               tempImg.onerror = () => {
                 console.error('Failed to load image:', src);
                 img.style.display = 'none';
-                reject();
+                resolve();
               };
 
-              // Handle absolute URLs
+              // Start loading
               if (src.startsWith('http') || src.startsWith('data:')) {
                 tempImg.src = src;
               } else {
@@ -116,7 +138,8 @@ const BookViewer = ({
                   tempImg.src = new URL(src, baseUrl).href;
                 } catch (error) {
                   console.error('Error creating URL:', error);
-                  reject();
+                  img.style.display = 'none';
+                  resolve();
                 }
               }
             });
@@ -129,23 +152,10 @@ const BookViewer = ({
               const doc = contents.document;
               
               if (doc) {
-                // Properly type the NodeList as HTMLImageElement[]
-                const images = Array.from(doc.querySelectorAll('img')).filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
+                const images = Array.from(doc.querySelectorAll('img'))
+                  .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
                 
-                const imageLoadPromises = images.map(img => {
-                  const src = img.getAttribute('src');
-                  return src ? preloadImage(img, src) : Promise.resolve();
-                });
-
-                // Load all images concurrently
-                Promise.allSettled(imageLoadPromises).then(results => {
-                  results.forEach((result, index) => {
-                    if (result.status === 'rejected') {
-                      const img = images[index];
-                      if (img) img.style.display = 'none';
-                    }
-                  });
-                });
+                await Promise.all(images.map(preloadImage));
               }
               return result;
             } catch (error) {
