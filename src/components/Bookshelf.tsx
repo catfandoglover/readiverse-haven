@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +66,7 @@ const Library = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background library-page">
+    <div className="flex flex-col h-screen bg-background bookshelf-page">
       <header className="px-6 py-8 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-georgia text-foreground">Bookshelf</h1>
@@ -105,8 +104,8 @@ const Library = () => {
       <div className="flex-1 overflow-auto px-4 pb-16">
         {!books?.length ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>Your library is empty.</p>
-            <p>Start reading books to add them to your library!</p>
+            <p>Your bookshelf is empty.</p>
+            <p>Start reading books to add them to your bookshelf!</p>
           </div>
         ) : isGridView ? (
           <div className={`grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
@@ -171,10 +170,10 @@ const Library = () => {
             variant="ghost" 
             size="icon" 
             className="flex flex-col items-center gap-1 w-14 text-foreground"
-            onClick={() => handleNavigation('/library')}
+            onClick={() => handleNavigation('/bookshelf')}
           >
             <LibraryBig className="h-6 w-6" />
-            <span className="text-xs">Library</span>
+            <span className="text-xs">Bookshelf</span>
           </Button>
         </div>
       </nav>
