@@ -54,75 +54,54 @@ const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean 
 
 const BookCover = ({ book }: { book: Book }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const maxAttempts = 3;
-  const retryDelay = 3000; // Increased to 3 seconds for mobile
+  const [primaryImageFailed, setPrimaryImageFailed] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    const loadImage = () => {
-      const img = new Image();
-      img.onload = () => {
-        setIsLoading(false);
-        setLoadError(false);
-      };
-      
-      img.onerror = () => {
-        if (loadAttempts < maxAttempts) {
-          console.log(`Retrying image load for book: ${book.title}, attempt ${loadAttempts + 1}`);
-          timeoutId = setTimeout(() => {
-            setLoadAttempts(prev => prev + 1);
-          }, retryDelay);
-        } else {
-          console.error(`Failed to load image after ${maxAttempts} attempts for book: ${book.title}`);
-          setLoadError(true);
-          setIsLoading(false);
-        }
-      };
-      
-      img.src = getOptimizedImageUrl(book.cover_url);
-    };
+    if (!book.cover_url) {
+      setIsLoading(false);
+      setPrimaryImageFailed(true);
+      return;
+    }
 
-    setIsLoading(true);
-    setLoadError(false);
-    loadImage();
+    const img = new Image();
+    img.onload = () => {
+      setIsLoading(false);
+      setPrimaryImageFailed(false);
+    };
+    
+    img.onerror = () => {
+      console.log(`Primary image load failed for book: ${book.title}`);
+      setIsLoading(false);
+      setPrimaryImageFailed(true);
+    };
+    
+    const url = book.cover_url.includes('dropbox.com')
+      ? book.cover_url.replace('?dl=0', '?raw=1')
+      : book.cover_url;
+    
+    img.src = url;
 
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      img.onload = null;
+      img.onerror = null;
     };
-  }, [book.cover_url, loadAttempts, maxAttempts, book.title]);
+  }, [book.cover_url, book.title]);
 
-  const getOptimizedImageUrl = (url: string | null) => {
-    if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
-    
-    if (url.includes('dropbox.com')) {
-      // Add mobile-specific query params for Dropbox
-      const optimizedUrl = url.replace('?dl=0', '?raw=1');
-      return isMobile 
-        ? `${optimizedUrl}&size=medium` 
-        : optimizedUrl;
-    }
-    
-    return url;
-  };
+  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
 
   return (
     <div className="aspect-square relative overflow-hidden rounded-md">
-      {isLoading && !loadError && (
+      {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/10">
           <div className="animate-pulse">Loading...</div>
         </div>
       )}
       <img
-        src={loadError ? "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" : getOptimizedImageUrl(book.cover_url)}
+        src={primaryImageFailed ? fallbackImage : book.cover_url || fallbackImage}
         alt={book.title || 'Book cover'}
         className={`object-contain w-full h-full transition-opacity duration-300 ${
-          isLoading && !loadError ? 'opacity-50' : 'opacity-100'
+          isLoading ? 'opacity-50' : 'opacity-100'
         }`}
         loading={isMobile ? "lazy" : "eager"}
       />
@@ -250,5 +229,3 @@ const QuestionsCards = () => {
     </div>
   );
 };
-
-export default QuestionsCards;
