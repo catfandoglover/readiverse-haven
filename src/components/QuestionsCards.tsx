@@ -229,3 +229,5 @@ const QuestionsCards = () => {
     </div>
   );
 };
+
+export default QuestionsCards;
