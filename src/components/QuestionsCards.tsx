@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +10,6 @@ import {
   useCarousel 
 } from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
-import DepartmentFilter from "./DepartmentFilter";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 type Book = Database['public']['Tables']['books']['Row'];
@@ -50,14 +48,12 @@ const CarouselProgress = ({ books }: { books: Book[] }) => {
 
 const QuestionsCards = () => {
   const [visibleQuestions, setVisibleQuestions] = useState(6);
-  const [isDepartmentFilterOpen, setIsDepartmentFilterOpen] = useState(false);
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions-with-books'],
     queryFn: async () => {
       console.log('Fetching questions and books...');
       
-      // First, fetch all questions with their book relationships
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
         .select(`
@@ -74,19 +70,15 @@ const QuestionsCards = () => {
         throw questionsError;
       }
 
-      // Transform the data to get unique books per question
       const transformedQuestions = questionsData.map((question: any) => {
-        // Create a Map to store unique books by their ID
         const uniqueBooks = new Map();
         
-        // Add each book to the Map (this automatically handles duplicates)
         question.book_questions.forEach((bq: any) => {
           if (bq.books) {
             uniqueBooks.set(bq.books.id, bq.books);
           }
         });
         
-        // Convert the Map values back to an array
         const uniqueBooksArray = Array.from(uniqueBooks.values());
         
         console.log(`Question "${question.question}" has ${uniqueBooksArray.length} unique books:`, 
@@ -185,19 +177,7 @@ const QuestionsCards = () => {
         >
           What do you want to ask
         </Button>
-        <Button 
-          variant="outline"
-          className="text-foreground border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
-          onClick={() => setIsDepartmentFilterOpen(true)}
-        >
-          Sort by Department
-        </Button>
       </div>
-
-      <DepartmentFilter 
-        isOpen={isDepartmentFilterOpen}
-        onClose={() => setIsDepartmentFilterOpen(false)}
-      />
     </div>
   );
 };
