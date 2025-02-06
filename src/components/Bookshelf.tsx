@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +71,7 @@ const Bookshelf = () => {
       <div className="flex flex-col min-h-screen">
         <header className="px-6 py-8 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
-            <h1 className="text-4xl font-georgia text-foreground">Bookshelf</h1>
+            <h1 className="text-2xl font-georgia text-foreground">Bookshelf</h1>
             <div className="flex gap-4 items-center">
               <Button
                 variant="ghost"
