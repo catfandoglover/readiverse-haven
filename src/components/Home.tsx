@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
@@ -6,27 +6,12 @@ import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Toggle } from "./ui/toggle";
-import { triggerNotionSync } from "@/utils/notionSync";
 import QuestionsCards from "./QuestionsCards";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 const Home = () => {
   const [isGridView, setIsGridView] = useState(false);
-  
-  useEffect(() => {
-    const syncNotionData = async () => {
-      try {
-        console.log('Triggering Notion sync...');
-        await triggerNotionSync();
-        console.log('Notion sync completed');
-      } catch (error) {
-        console.error('Error syncing with Notion:', error);
-      }
-    };
-
-    syncNotionData();
-  }, []); // Run once when component mounts
   
   const { data: books, isLoading } = useQuery({
     queryKey: ['books'],
