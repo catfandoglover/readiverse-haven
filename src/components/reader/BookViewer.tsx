@@ -129,7 +129,9 @@ const BookViewer = ({
               const doc = contents.document;
               
               if (doc) {
-                const images = Array.from(doc.querySelectorAll('img'));
+                // Properly type the NodeList as HTMLImageElement[]
+                const images = Array.from(doc.querySelectorAll('img')).filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
+                
                 const imageLoadPromises = images.map(img => {
                   const src = img.getAttribute('src');
                   return src ? preloadImage(img, src) : Promise.resolve();
