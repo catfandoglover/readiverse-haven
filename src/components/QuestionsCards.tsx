@@ -52,6 +52,63 @@ const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean 
   );
 };
 
+const BookCover = ({ book }: { book: Book }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
+  const maxAttempts = 3;
+  const retryDelay = 2000; // 2 seconds
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    setLoadError(false);
+  };
+
+  const handleImageError = () => {
+    if (loadAttempts < maxAttempts) {
+      console.log(`Retrying image load for book: ${book.title}, attempt ${loadAttempts + 1}`);
+      setTimeout(() => {
+        setLoadAttempts(prev => prev + 1);
+        setIsLoading(true);
+      }, retryDelay);
+    } else {
+      console.error(`Failed to load image after ${maxAttempts} attempts for book: ${book.title}, URL: ${book.cover_url}`);
+      setLoadError(true);
+      setIsLoading(false);
+    }
+  };
+
+  const getOptimizedImageUrl = (url: string | null) => {
+    if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
+    
+    if (url.includes('dropbox.com')) {
+      return url.replace('?dl=0', '?raw=1');
+    }
+    
+    return url;
+  };
+
+  return (
+    <div className="aspect-square relative overflow-hidden rounded-md">
+      {isLoading && !loadError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+          <div className="animate-pulse">Loading...</div>
+        </div>
+      )}
+      <img
+        src={loadError ? "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" : getOptimizedImageUrl(book.cover_url)}
+        alt={book.title || 'Book cover'}
+        className={`object-contain w-full h-full transition-opacity duration-300 ${
+          isLoading ? 'opacity-50' : 'opacity-100'
+        }`}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        loading="eager"
+      />
+    </div>
+  );
+};
+
 const QuestionsCards = () => {
   const [visibleQuestions, setVisibleQuestions] = useState(6);
   const isMobile = useIsMobile();
@@ -105,16 +162,6 @@ const QuestionsCards = () => {
     setVisibleQuestions(prev => Math.min((prev + 6), questions?.length || 0));
   };
 
-  const getOptimizedImageUrl = (url: string | null) => {
-    if (!url) return "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
-    
-    if (url.includes('dropbox.com')) {
-      return url.replace('?dl=0', '?raw=1');
-    }
-    
-    return url;
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -151,19 +198,7 @@ const QuestionsCards = () => {
                       onClick={() => handleBookClick(book)}
                     >
                       <div className="cursor-pointer transition-transform hover:scale-105">
-                        <div className="aspect-square relative overflow-hidden rounded-md">
-                          <img
-                            src={getOptimizedImageUrl(book.cover_url)}
-                            alt={book.title || 'Book cover'}
-                            className="object-contain w-full h-full"
-                            onError={(e) => {
-                              console.error(`Image failed to load for book: ${book.title}, URL: ${book.cover_url}`);
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png';
-                            }}
-                            loading="eager"
-                          />
-                        </div>
+                        <BookCover book={book} />
                       </div>
                     </CarouselItem>
                   ))}
