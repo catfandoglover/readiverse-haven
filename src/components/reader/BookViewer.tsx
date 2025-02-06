@@ -82,6 +82,8 @@ const BookViewer = ({
         
         book.spine.hooks.content.register((contents: any) => {
           const baseUrl = contents.baseUrl || '';
+          console.log('Content base URL:', baseUrl);
+          
           contents.addStylesheetRules([
             ['img', [
               ['max-width', '100%'],
@@ -92,9 +94,10 @@ const BookViewer = ({
             ]],
           ]);
 
-          const handleImageLoad = (img: HTMLImageElement): Promise<void> => {
+          const handleImageLoad = async (img: HTMLImageElement): Promise<void> => {
             return new Promise((resolve) => {
               const originalSrc = img.getAttribute('src');
+              console.log('Processing image with src:', originalSrc);
               
               if (!originalSrc) {
                 console.log('No src attribute found on image');
@@ -102,48 +105,76 @@ const BookViewer = ({
                 return;
               }
 
-              // Create new image for preloading
-              const tempImg = new Image();
-              
-              tempImg.onload = () => {
-                try {
-                  // For absolute URLs, use them directly
-                  if (originalSrc.startsWith('http') || originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
-                    img.src = originalSrc;
-                  } else {
-                    // For relative URLs, try to resolve against baseUrl
-                    const absoluteUrl = new URL(originalSrc, baseUrl).href;
-                    img.src = absoluteUrl;
-                  }
-                  console.log('Successfully loaded image:', img.src);
-                } catch (error) {
-                  console.error('Error setting image src:', error, {
-                    originalSrc,
-                    baseUrl
-                  });
-                }
+              // For data URLs, use them directly
+              if (originalSrc.startsWith('data:')) {
+                console.log('Using data URL directly:', originalSrc.substring(0, 50) + '...');
+                img.src = originalSrc;
                 resolve();
-              };
+                return;
+              }
 
-              tempImg.onerror = () => {
-                console.error('Failed to load image:', originalSrc, {
-                  baseUrl,
-                  currentLocation
-                });
+              // For blob URLs, use them directly
+              if (originalSrc.startsWith('blob:')) {
+                console.log('Using blob URL directly:', originalSrc);
+                img.src = originalSrc;
                 resolve();
-              };
+                return;
+              }
 
-              // Start loading the image
+              // For absolute URLs, verify and use them directly
+              if (originalSrc.startsWith('http')) {
+                console.log('Using absolute URL:', originalSrc);
+                img.src = originalSrc;
+                resolve();
+                return;
+              }
+
+              // For relative URLs, we need to handle them carefully
               try {
-                if (originalSrc.startsWith('http') || originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
-                  tempImg.src = originalSrc;
-                } else {
-                  const absoluteUrl = new URL(originalSrc, baseUrl).href;
-                  tempImg.src = absoluteUrl;
-                  console.log('Loading image with absolute URL:', absoluteUrl);
-                }
+                // First try to resolve against baseUrl
+                const absoluteUrl = new URL(originalSrc, baseUrl).href;
+                console.log('Resolved relative URL:', {
+                  original: originalSrc,
+                  base: baseUrl,
+                  resolved: absoluteUrl
+                });
+
+                // Create a temporary image to test the URL
+                const tempImg = new Image();
+                
+                tempImg.onload = () => {
+                  console.log('Successfully loaded image:', absoluteUrl);
+                  img.src = absoluteUrl;
+                  resolve();
+                };
+
+                tempImg.onerror = () => {
+                  console.error('Failed to load image:', absoluteUrl);
+                  // Try an alternative approach for mobile
+                  if (isMobile) {
+                    // Try to load directly from book resources
+                    book.resources.get(originalSrc).then(resource => {
+                      if (resource) {
+                        console.log('Found resource in book:', originalSrc);
+                        return resource.href;
+                      }
+                      throw new Error('Resource not found in book');
+                    }).then(href => {
+                      console.log('Using resource href:', href);
+                      img.src = href;
+                    }).catch(error => {
+                      console.error('Failed to load resource:', error);
+                    }).finally(() => {
+                      resolve();
+                    });
+                  } else {
+                    resolve();
+                  }
+                };
+
+                tempImg.src = absoluteUrl;
               } catch (error) {
-                console.error('Error creating image URL:', error, {
+                console.error('Error processing image URL:', error, {
                   originalSrc,
                   baseUrl
                 });
@@ -162,9 +193,9 @@ const BookViewer = ({
                 const images = Array.from(doc.querySelectorAll('img'))
                   .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
                 
-                console.log(`Found ${images.length} images to process`);
+                console.log(`Found ${images.length} images to process in ${url}`);
                 
-                // Process images sequentially to avoid overwhelming the browser
+                // Process images sequentially
                 for (const img of images) {
                   await handleImageLoad(img);
                 }
@@ -187,7 +218,7 @@ const BookViewer = ({
     };
 
     initializeBook();
-  }, [book]);
+  }, [book, isMobile]);
 
   useEffect(() => {
     const epubContainer = document.querySelector(".epub-view");
