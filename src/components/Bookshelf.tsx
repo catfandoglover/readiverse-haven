@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,8 +75,8 @@ const Bookshelf = () => {
     <div className="min-h-screen bg-background transition-colors duration-300 bookshelf-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
-          <div className="flex justify-end items-center gap-4">
-            <div className="flex gap-2">
+          <div className="flex justify-end items-center space-x-4">
+            <div className="flex space-x-4">
               <Toggle
                 pressed={!isGridView}
                 onPressedChange={() => setIsGridView(false)}
