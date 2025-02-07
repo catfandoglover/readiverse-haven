@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,7 +79,7 @@ const Bookshelf = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
+              className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             >
               <img 
                 src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
@@ -92,7 +93,7 @@ const Bookshelf = () => {
                   pressed={!isGridView}
                   onPressedChange={() => setIsGridView(false)}
                   aria-label="List view"
-                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
                 >
                   <List className="h-4 w-4" />
                 </Toggle>
@@ -100,7 +101,7 @@ const Bookshelf = () => {
                   pressed={isGridView}
                   onPressedChange={() => setIsGridView(true)}
                   aria-label="Grid view"
-                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
                 >
                   <Grid className="h-4 w-4" />
                 </Toggle>
@@ -108,7 +109,7 @@ const Bookshelf = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
+                className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                 onClick={() => handleNavigation('/search')}
               >
                 <Search className="h-5 w-5" />
@@ -178,7 +179,7 @@ const Bookshelf = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
@@ -187,7 +188,7 @@ const Bookshelf = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
