@@ -19,11 +19,15 @@ const DNAAssessment = () => {
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
-  const { data: currentQuestion, isLoading } = useQuery({
+  const { data: currentQuestion, isLoading, error } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
       console.log('Fetching question for:', { upperCategory, currentPosition });
       
+      if (!upperCategory) {
+        throw new Error('Category is required');
+      }
+
       const { data, error } = await supabase
         .from('dna_tree_structure')
         .select(`
@@ -50,6 +54,7 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
+    retry: false
   });
 
   const handleAnswer = (answer: "A" | "B") => {
@@ -114,6 +119,33 @@ const DNAAssessment = () => {
     setCurrentPosition(nextQuestion.tree_position);
     setSelectedAnswer(null);
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#1A1F2C] text-white">
+        <header className="px-4 py-3">
+          <button 
+            onClick={() => navigate('/dna')}
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-white/10 transition-all duration-200"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </header>
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+          <h1 className="text-2xl font-serif text-center mb-8">
+            No questions found for this category
+          </h1>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dna')}
+            className="bg-white/5 border-white/20 hover:bg-white/10"
+          >
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
