@@ -70,6 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const accessToken = searchParams.get('access_token');
 
     if (accessToken) {
+      console.log('Received Outseta access token:', accessToken);
       outsetaRef.current.setAccessToken(accessToken);
       setSearchParams({});
     }
@@ -77,6 +78,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const updateUser = async () => {
       try {
         const outsetaUser = await outsetaRef.current.getUser();
+        const currentToken = outsetaRef.current.getAccessToken();
+        console.log('Current Outseta JWT token:', currentToken);
+        console.log('Outseta user info:', outsetaUser);
         setUser(outsetaUser);
       } catch (error) {
         console.error('Failed to fetch user:', error);
