@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
-import { Compass, LibraryBig, Search, Zap } from "lucide-react";
+import { Compass, LibraryBig, Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -54,7 +54,11 @@ const Home = () => {
               size="icon"
               className="text-foreground"
             >
-              <Zap className="h-5 w-5" />
+              <img 
+                src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
+                alt="Lightning" 
+                className="h-5 w-5"
+              />
             </Button>
             <Button
               variant="ghost"

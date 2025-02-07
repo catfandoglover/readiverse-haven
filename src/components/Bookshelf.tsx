@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Compass, LibraryBig, Search, Grid, List, Zap } from "lucide-react";
+import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -81,7 +81,11 @@ const Bookshelf = () => {
               size="icon"
               className="text-foreground"
             >
-              <Zap className="h-5 w-5" />
+              <img 
+                src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
+                alt="Lightning" 
+                className="h-5 w-5"
+              />
             </Button>
             <div className="flex items-center space-x-4">
               <div className="flex space-x-4">
