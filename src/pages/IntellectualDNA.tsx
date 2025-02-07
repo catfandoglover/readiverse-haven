@@ -4,17 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-const categories = [
-  { name: 'ETHICS', title: 'Ethics', description: 'Explore questions of right and wrong' },
-  { name: 'AESTHETICS', title: 'Aesthetics', description: 'Discover your relationship with beauty' },
-  { name: 'POLITICS', title: 'Politics', description: 'Understand your political foundations' },
-  { name: 'THEOLOGY', title: 'Theology', description: 'Examine your views on the divine' },
-  { name: 'ONTOLOGY', title: 'Ontology', description: 'Question the nature of reality' },
-  { name: 'EPISTEMOLOGY', title: 'Epistemology', description: 'Explore how we know what we know' }
-] as const;
 
 const IntellectualDNA = () => {
   const navigate = useNavigate();
@@ -37,8 +27,8 @@ const IntellectualDNA = () => {
     navigate(path);
   };
 
-  const handleStartAssessment = (category: string) => {
-    navigate(`/dna/${category.toLowerCase()}`);
+  const handleStartAssessment = () => {
+    navigate('/dna/ethics');
   };
 
   const isCurrentPath = (path: string) => {
@@ -64,33 +54,17 @@ const IntellectualDNA = () => {
             My DNA
           </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {categories.map((category) => {
-              const categoryProgress = progress?.find(p => p.category === category.name);
-              
-              return (
-                <Card 
-                  key={category.name}
-                  className="p-6 bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => handleStartAssessment(category.name)}
-                >
-                  <h3 className="text-lg font-oxanium text-[#E9E7E2] mb-2">{category.title}</h3>
-                  <p className="text-sm text-[#E9E7E2]/60 mb-4">{category.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-[#E9E7E2]/40">
-                      {categoryProgress?.completed ? 'Completed' : 'Not started'}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      {categoryProgress?.completed ? 'Review' : 'Start'}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+          <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+            <p className="text-[#E9E7E2]/60 text-center mb-8">
+              Discover your intellectual DNA through our comprehensive assessment
+            </p>
+            <Button
+              onClick={handleStartAssessment}
+              className="w-full py-6 text-lg"
+              size="lg"
+            >
+              Start Assessment
+            </Button>
           </div>
         </div>
 
