@@ -138,18 +138,18 @@ const Home = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <Button 
-              variant={isCurrentPath('/') ? 'default' : 'ghost'} 
+              variant="ghost"
               size="icon" 
-              className="flex flex-col items-center gap-1 w-14 text-foreground"
+              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/') ? 'border-t-2 border-primary rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
               <span className="text-xs font-oxanium">Discover</span>
             </Button>
             <Button 
-              variant={isCurrentPath('/bookshelf') ? 'default' : 'ghost'} 
+              variant="ghost"
               size="icon" 
-              className="flex flex-col items-center gap-1 w-14 text-foreground"
+              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/bookshelf') ? 'border-t-2 border-primary rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
