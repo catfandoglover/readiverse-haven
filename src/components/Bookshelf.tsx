@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,14 +165,14 @@ const Bookshelf = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <button 
-              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
               <span className="text-xs font-oxanium">Discover</span>
             </button>
             <button 
-              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
@@ -185,3 +186,4 @@ const Bookshelf = () => {
 };
 
 export default Bookshelf;
+
