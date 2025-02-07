@@ -6,8 +6,7 @@ import { Card } from "@/components/ui/card";
 import { 
   Carousel, 
   CarouselContent, 
-  CarouselItem,
-  useCarousel 
+  CarouselItem
 } from "@/components/ui/carousel";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
@@ -22,37 +21,6 @@ const categories = [
   'POLITICS',
   'THEOLOGY'
 ] as const;
-
-const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
-  const { api } = useCarousel();
-  const [activeIndex, setActiveIndex] = React.useState(0);
-
-  React.useEffect(() => {
-    if (!api) return;
-
-    api.on('select', () => {
-      setActiveIndex(api.selectedScrollSnap());
-    });
-  }, [api]);
-
-  const maxDots = 5;
-  const visibleDots = Math.min(maxDots, totalItems);
-
-  return (
-    <div className="flex justify-center gap-2 mt-4">
-      {Array.from({ length: visibleDots }).map((_, idx) => (
-        <img
-          key={idx}
-          src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png"
-          alt={`Slide ${idx + 1}`}
-          className={`w-4 h-4 transition-opacity duration-300 mix-blend-screen ${
-            idx === activeIndex ? 'opacity-100' : 'opacity-30'
-          }`}
-        />
-      ))}
-    </div>
-  );
-};
 
 const CategoryQuestions = ({ category, questions }: { category: string, questions: Question[] }) => {
   if (!questions.length) return null;
@@ -93,7 +61,6 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselProgress totalItems={questions.length} />
       </Carousel>
     </div>
   );
@@ -148,3 +115,4 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
+
