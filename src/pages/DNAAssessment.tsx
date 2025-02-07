@@ -22,7 +22,7 @@ const DNAAssessment = () => {
   const { data: currentQuestion, isLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
-      console.log('Fetching question for:', { upperCategory, currentPosition }); // Debug log
+      console.log('Fetching question for:', { upperCategory, currentPosition });
       
       const { data, error } = await supabase
         .from('dna_tree_structure')
@@ -38,19 +38,18 @@ const DNAAssessment = () => {
         .maybeSingle();
       
       if (error) {
-        console.error('Error fetching question:', error); // Debug log
+        console.error('Error fetching question:', error);
         throw error;
       }
       
       if (!data) {
-        console.error('No question found for:', { upperCategory, currentPosition }); // Debug log
+        console.error('No question found for:', { upperCategory, currentPosition });
         throw new Error('Question not found');
       }
 
-      console.log('Found question:', data); // Debug log
+      console.log('Found question:', data);
       return data;
     },
-    retry: false,
   });
 
   const handleAnswer = (answer: "A" | "B") => {
