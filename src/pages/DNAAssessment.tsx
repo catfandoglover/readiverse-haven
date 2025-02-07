@@ -14,11 +14,11 @@ const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
+  const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  const { data: currentQuestion, isLoading } = useQuery({
-    queryKey: ['dna-question', category],
+  const { data: currentQuestion, isLoading, refetch } = useQuery({
+    queryKey: ['dna-question', category, currentPosition],
     queryFn: async () => {
-      // For now, just get the first question for the category
       const { data, error } = await supabase
         .from('dna_tree_structure')
         .select(`
@@ -29,7 +29,7 @@ const DNAAssessment = () => {
           )
         `)
         .eq('category', category?.toUpperCase() as DNACategory)
-        .eq('tree_position', 'Q1')
+        .eq('tree_position', currentPosition)
         .single();
       
       if (error) throw error;
@@ -41,10 +41,52 @@ const DNAAssessment = () => {
     setSelectedAnswer(answer);
   };
 
-  const handleContinue = () => {
-    if (!selectedAnswer) return;
-    // We'll implement the navigation logic later
-    console.log("Selected answer:", selectedAnswer);
+  const handleContinue = async () => {
+    if (!selectedAnswer || !currentQuestion) return;
+
+    // Get the next question ID based on the selected answer
+    const nextQuestionId = selectedAnswer === "A" 
+      ? currentQuestion.next_question_a_id 
+      : currentQuestion.next_question_b_id;
+
+    // If there's no next question, the assessment is complete
+    if (!nextQuestionId) {
+      // Save progress and navigate back
+      const { error } = await supabase
+        .from('dna_assessment_progress')
+        .upsert({
+          category: category?.toUpperCase() as DNACategory,
+          completed: true,
+          current_position: currentPosition,
+          responses: {} // You might want to store the responses here
+        });
+
+      if (error) {
+        console.error('Error saving progress:', error);
+      }
+
+      navigate('/dna');
+      return;
+    }
+
+    // Get the tree position for the next question
+    const { data: nextQuestion, error } = await supabase
+      .from('dna_tree_structure')
+      .select('tree_position')
+      .eq('id', nextQuestionId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching next question:', error);
+      return;
+    }
+
+    // Update the current position and reset the selected answer
+    setCurrentPosition(nextQuestion.tree_position);
+    setSelectedAnswer(null);
+    
+    // Refetch the question data with the new position
+    refetch();
   };
 
   if (isLoading) {
