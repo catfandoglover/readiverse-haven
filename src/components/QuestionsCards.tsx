@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
@@ -10,16 +11,10 @@ import {
   useCarousel 
 } from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
-type Book = Database['public']['Tables']['books']['Row'];
 
-interface QuestionWithBooks extends Question {
-  books: Book[];
-}
-
-const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean }) => {
+const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
   const { api } = useCarousel();
   const [activeIndex, setActiveIndex] = React.useState(0);
 
@@ -31,13 +26,11 @@ const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean 
     });
   }, [api]);
 
-  const maxDots = 6;
-  const dotsToShow = Math.min(maxDots, books.length);
-  const shouldShowLastDot = !hasMore || books.length <= maxDots;
-  const visibleDots = shouldShowLastDot ? dotsToShow : dotsToShow - 1;
+  const maxDots = 5;
+  const visibleDots = Math.min(maxDots, totalItems);
 
   return (
-    <div className="flex justify-center gap-2 mt-2">
+    <div className="flex justify-center gap-2 mt-4">
       {Array.from({ length: visibleDots }).map((_, idx) => (
         <img
           key={idx}
@@ -52,78 +45,13 @@ const CarouselProgress = ({ books, hasMore }: { books: Book[], hasMore: boolean 
   );
 };
 
-const BookCover = ({ book }: { book: Book }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [primaryImageFailed, setPrimaryImageFailed] = useState(false);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (!book.cover_url) {
-      setIsLoading(false);
-      setPrimaryImageFailed(true);
-      return;
-    }
-
-    const img = new Image();
-    img.onload = () => {
-      setIsLoading(false);
-      setPrimaryImageFailed(false);
-    };
-    
-    img.onerror = () => {
-      console.log(`Primary image load failed for book: ${book.title}`);
-      setIsLoading(false);
-      setPrimaryImageFailed(true);
-    };
-    
-    const url = book.cover_url.includes('dropbox.com')
-      ? book.cover_url.replace('?dl=0', '?raw=1')
-      : book.cover_url;
-    
-    img.src = url;
-
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [book.cover_url, book.title]);
-
-  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
-
-  return (
-    <div className="aspect-square relative overflow-hidden rounded-md">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#2A282A]/10">
-          <div className="animate-pulse">Loading...</div>
-        </div>
-      )}
-      <img
-        src={primaryImageFailed ? fallbackImage : book.cover_url || fallbackImage}
-        alt={book.title || 'Book cover'}
-        className={`object-contain w-full h-full transition-opacity duration-300 ${
-          isLoading ? 'opacity-50' : 'opacity-100'
-        }`}
-        loading={isMobile ? "lazy" : "eager"}
-      />
-    </div>
-  );
-};
-
 const QuestionsCards = () => {
-  const [visibleQuestions, setVisibleQuestions] = useState(6);
-  const isMobile = useIsMobile();
-
   const { data: questions, isLoading } = useQuery({
-    queryKey: ['questions-with-books'],
+    queryKey: ['questions'],
     queryFn: async () => {
       const { data: questionsData, error: questionsError } = await supabase
         .from('great_questions')
-        .select(`
-          *,
-          book_questions!inner(
-            books(*)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(18);
 
@@ -132,35 +60,9 @@ const QuestionsCards = () => {
         throw questionsError;
       }
 
-      const transformedQuestions = questionsData.map((question: any) => {
-        const uniqueBooks = new Map();
-        
-        question.book_questions.forEach((bq: any) => {
-          if (bq.books) {
-            uniqueBooks.set(bq.books.id, bq.books);
-          }
-        });
-        
-        const uniqueBooksArray = Array.from(uniqueBooks.values());
-        return {
-          ...question,
-          books: uniqueBooksArray
-        };
-      });
-
-      return transformedQuestions as QuestionWithBooks[];
+      return questionsData as Question[];
     }
   });
-
-  const handleBookClick = (book: Book) => {
-    if (book.Cover_super) {
-      window.open(book.Cover_super, '_blank');
-    }
-  };
-
-  const handleLoadMore = () => {
-    setVisibleQuestions(prev => Math.min((prev + 6), questions?.length || 0));
-  };
 
   if (isLoading) {
     return (
@@ -170,64 +72,62 @@ const QuestionsCards = () => {
     );
   }
 
-  const displayedQuestions = questions?.slice(0, visibleQuestions) || [];
-  const hasMoreQuestions = questions ? visibleQuestions < questions.length : false;
-
   return (
     <div className="space-y-6 p-4">
       <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-8 uppercase">
         The Great Questions
       </h1>
       
-      {displayedQuestions.map((question) => (
-        <Card 
-          key={question.id}
-          className="overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
-          }}
-        >
-          <div className="p-6">
-            <h3 className="text-base font-oxanium mb-4 text-[#E9E7E2] text-center">
-              {question.question}
-            </h3>
-            
-            <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
-              <Carousel>
-                <CarouselContent className="-ml-1">
-                  {question.books.map((book) => (
-                    <CarouselItem 
-                      key={book.id} 
-                      className="pl-1 basis-full sm:basis-1/3"
-                      onClick={() => handleBookClick(book)}
-                    >
-                      <div className="cursor-pointer transition-transform hover:scale-105">
-                        <BookCover book={book} />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselProgress books={question.books} hasMore={hasMoreQuestions} />
-              </Carousel>
-            </div>
-          </div>
-        </Card>
-      ))}
+      <Carousel>
+        <CarouselContent>
+          {questions?.map((question) => (
+            <CarouselItem key={question.id} className="md:basis-1/1">
+              <Card 
+                className="overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
+                }}
+              >
+                <div className="p-6">
+                  <h3 className="text-base font-oxanium mb-4 text-[#E9E7E2] text-center">
+                    {question.question}
+                  </h3>
+                  
+                  <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
+                    <div className="aspect-[4/3] relative overflow-hidden rounded-md">
+                      <img
+                        src={`https://source.unsplash.com/random/800x600?book,reading&sig=${question.id}`}
+                        alt="Question illustration"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselProgress totalItems={questions?.length || 0} />
+      </Carousel>
       
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4 py-6">
+      <div className="flex flex-col gap-3 py-6">
         <Button 
-          variant="outline" 
-          className="text-[#E9E7E2] border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
-          onClick={handleLoadMore}
-          disabled={visibleQuestions >= (questions?.length || 0)}
+          variant="secondary"
+          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
         >
-          More Questions
+          Show more
         </Button>
         <Button 
-          variant="outline"
-          className="text-[#E9E7E2] border-[#FEF7CD] hover:bg-[#FEF7CD]/10"
+          variant="secondary"
+          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
         >
-          What do you want to ask
+          Edit vibes
+        </Button>
+        <Button 
+          variant="secondary"
+          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
+        >
+          New vibes
         </Button>
       </div>
     </div>
