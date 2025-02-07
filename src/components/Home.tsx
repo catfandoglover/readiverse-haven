@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,7 @@ import { Database } from "@/integrations/supabase/types";
 import { Compass, LibraryBig, Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
