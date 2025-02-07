@@ -278,27 +278,6 @@ export type Database = {
           },
         ]
       }
-      test_auth: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          id: number
-          person_uid: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          id?: number
-          person_uid?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          id?: number
-          person_uid?: string | null
-        }
-        Relationships: []
-      }
       user_library: {
         Row: {
           added_at: string

@@ -10,18 +10,6 @@ import {
   useCarousel
 } from "@/components/ui/carousel";
 import { Database } from "@/integrations/supabase/types";
-import { useToast } from "@/hooks/use-toast";
-
-declare global {
-  interface Window {
-    Outseta?: {
-      auth: {
-        open: () => void;
-      };
-      getAccessToken: () => string | null;
-    }
-  }
-}
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -66,54 +54,6 @@ const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
 };
 
 const CategoryBooks = ({ category, books }: { category: string, books: Book[] }) => {
-  const { toast } = useToast();
-
-  const handleAddToBookshelf = async (book: Book) => {
-    const { data: user } = await supabase.auth.getUser();
-      
-    if (!user.user) {
-      // If user is not authenticated, open Outseta modal
-      if (window.Outseta) {
-        window.Outseta.auth.open();
-      } else {
-        console.error('Outseta is not initialized');
-      }
-      return;
-    }
-
-    // If user is authenticated, proceed with adding to bookshelf
-    try {
-      const { error } = await supabase
-        .from('user_library')
-        .insert([
-          { user_id: user.user.id, book_id: book.id }
-        ]);
-
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          toast({
-            title: "Already in bookshelf",
-            description: "This book is already in your bookshelf",
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "Added to bookshelf",
-          description: `${book.title} has been added to your bookshelf`,
-        });
-      }
-    } catch (error) {
-      console.error('Error adding book to library:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add book to bookshelf",
-        variant: "destructive",
-      });
-    }
-  };
-
   const categoryBooks = books.filter(book => 
     book.categories?.includes(category)
   );
@@ -131,12 +71,10 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
           {categoryBooks.map((book) => (
             <CarouselItem key={book.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card 
-                className="flex-none hover:bg-accent/50 transition-colors bg-card text-card-foreground"
+                className="flex-none hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                onClick={() => window.open(book.Cover_super || undefined, '_blank')}
               >
-                <div 
-                  className="aspect-[2/3] w-full cursor-pointer"
-                  onClick={() => window.open(book.Cover_super || undefined, '_blank')}
-                >
+                <div className="aspect-[2/3] w-full">
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
@@ -144,12 +82,6 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
                     loading="lazy"
                   />
                 </div>
-                <button
-                  onClick={() => handleAddToBookshelf(book)}
-                  className="w-full mt-2 px-3 py-1.5 text-sm font-medium text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 rounded-md"
-                >
-                  Add to Bookshelf
-                </button>
               </Card>
             </CarouselItem>
           ))}
