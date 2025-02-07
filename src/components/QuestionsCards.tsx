@@ -79,9 +79,9 @@ const QuestionsCards = () => {
       </h1>
       
       <Carousel>
-        <CarouselContent>
+        <CarouselContent className="-ml-2 md:-ml-4">
           {questions?.map((question) => (
-            <CarouselItem key={question.id} className="md:basis-1/1">
+            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card 
                 className="overflow-hidden"
                 style={{
@@ -135,3 +135,4 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
+
