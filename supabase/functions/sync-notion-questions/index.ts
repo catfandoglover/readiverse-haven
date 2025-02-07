@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Client } from "https://deno.land/x/notion_sdk/src/mod.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
@@ -48,17 +49,28 @@ serve(async (req) => {
     
     const response = await notion.databases.query({
       database_id: notionDatabaseId,
-      page_size: 5, // Reduced batch size to prevent timeouts
+      page_size: 100, // Increased to handle more questions
     });
 
     console.log(`Processing ${response.results.length} questions`);
     let successCount = 0;
+
+    // Default illustrations based on category
+    const defaultIllustrations = {
+      'ETHICS': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+      'THEOLOGY': 'https://images.unsplash.com/photo-1473177104440-ffee2f376098',
+      'POLITICS': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7',
+      'AESTHETICS': 'https://images.unsplash.com/photo-1466442929976-97f336a657be',
+      'ONTOLOGY': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+      'EPISTEMOLOGY': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
+    };
 
     for (const page of response.results) {
       try {
         const properties = page.properties;
         const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
         const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
+        const category = properties.Category?.select?.name || 'Uncategorized';
         
         const classicsRelation = properties['The Classics']?.relation || [];
         
@@ -74,14 +86,18 @@ serve(async (req) => {
           }
         }
 
+        // Ensure we have a valid illustration
+        const illustration = defaultIllustrations[category.toUpperCase()] || defaultIllustrations['ETHICS'];
+
         const { error: questionError } = await supabase
           .from('great_questions')
           .upsert({
             notion_id: page.id,
-            category: properties.Category?.select?.name || 'Uncategorized',
+            category: category.toUpperCase(),
             category_number: categoryNumber,
             question: questionText,
-            related_classics: relatedUrls
+            related_classics: relatedUrls,
+            illustration // Add default illustration based on category
           }, {
             onConflict: 'notion_id'
           });
