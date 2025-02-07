@@ -196,7 +196,7 @@ export type Database = {
           category_number: string | null
           created_at: string
           id: string
-          illustration: string
+          illustration: string | null
           notion_id: string
           question: string
           related_classics: string[] | null
@@ -206,7 +206,7 @@ export type Database = {
           category_number?: string | null
           created_at?: string
           id?: string
-          illustration: string
+          illustration?: string | null
           notion_id: string
           question: string
           related_classics?: string[] | null
@@ -216,7 +216,7 @@ export type Database = {
           category_number?: string | null
           created_at?: string
           id?: string
-          illustration?: string
+          illustration?: string | null
           notion_id?: string
           question?: string
           related_classics?: string[] | null
