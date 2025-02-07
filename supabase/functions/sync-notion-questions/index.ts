@@ -13,7 +13,6 @@ const corsHeaders = {
 serve(async (req) => {
   console.log('Received request to sync Notion questions');
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request');
     return new Response(null, { 
@@ -57,7 +56,7 @@ serve(async (req) => {
 
     // Default illustrations based on category
     const defaultIllustrations = {
-      'ETHICS': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+      'ETHICS': 'https://images.unsplash.com/photo-1473177104440-ffee2f376098',
       'THEOLOGY': 'https://images.unsplash.com/photo-1473177104440-ffee2f376098',
       'POLITICS': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7',
       'AESTHETICS': 'https://images.unsplash.com/photo-1466442929976-97f336a657be',
@@ -65,15 +64,24 @@ serve(async (req) => {
       'EPISTEMOLOGY': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
     };
 
+    // Global fallback illustration
     const defaultIllustration = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
 
     for (const page of response.results) {
       try {
         const properties = page.properties;
+        
+        // Extract and validate required fields
         const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
-        const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
+        const questionText = properties['Question']?.rich_text?.[0]?.plain_text;
         const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
         
+        // Skip if question text is missing
+        if (!questionText) {
+          console.log('Skipping question with missing text');
+          continue;
+        }
+
         const classicsRelation = properties['The Classics']?.relation || [];
         
         const relatedUrls = [];
@@ -88,8 +96,10 @@ serve(async (req) => {
           }
         }
 
-        // Always ensure we have a valid illustration
+        // Get category-specific illustration or fall back to default
         const illustration = defaultIllustrations[category] || defaultIllustration;
+
+        console.log(`Processing question: "${questionText}" with category ${category}`);
 
         const { data, error: questionError } = await supabase
           .from('great_questions')

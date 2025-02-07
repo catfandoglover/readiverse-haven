@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export async function triggerNotionSync() {
   try {
@@ -10,23 +11,24 @@ export async function triggerNotionSync() {
 
     if (error) {
       console.error('Error from Edge Function:', error);
+      toast.error('Failed to sync with Notion');
       throw error;
     }
     
     console.log('Sync response:', data);
+    toast.success('Successfully synced with Notion');
     return data;
   } catch (error) {
     console.error('Error triggering Edge Function:', error);
-    // Don't throw the error, just log it
+    toast.error('Failed to sync with Notion');
     return null;
   }
 }
 
-// Immediately make the function available globally when this module loads
+// Make the function available globally
 globalThis.triggerNotionSync = triggerNotionSync;
 
 // Also expose it on window for browser environments
 if (typeof window !== 'undefined') {
   (window as any).triggerNotionSync = triggerNotionSync;
 }
-
