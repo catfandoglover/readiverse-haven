@@ -76,18 +76,9 @@ const Home = () => {
             <QuestionsCards />
             
             <div className="px-4 pb-24">
-              <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase">
-                  Read Classics
-                </h1>
-                <Button 
-                  variant="ghost" 
-                  className="text-sm text-[#E9E7E2] hover:text-primary transition-colors"
-                  onClick={() => handleNavigation('/all-books')}
-                >
-                  VIEW ALL
-                </Button>
-              </div>
+              <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8">
+                Read Classics
+              </h1>
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-4 pb-4 min-w-min">
                   {books?.map((book) => (
@@ -107,6 +98,15 @@ const Home = () => {
                     </Card>
                   ))}
                 </div>
+              </div>
+              <div className="flex justify-center mt-2">
+                <Button 
+                  variant="ghost" 
+                  className="text-sm text-[#E9E7E2] hover:text-primary transition-colors"
+                  onClick={() => handleNavigation('/all-books')}
+                >
+                  VIEW ALL
+                </Button>
               </div>
             </div>
           </div>
