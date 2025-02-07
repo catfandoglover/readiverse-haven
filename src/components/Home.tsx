@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { Database } from "@/integrations/supabase/types";
 import { Compass, LibraryBig, Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useToast } from "./ui/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -13,6 +15,7 @@ type Icon = Database['public']['Tables']['icons']['Row'];
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
@@ -47,6 +50,50 @@ const Home = () => {
   const handleBookClick = (coverUrl: string | null) => {
     if (coverUrl) {
       window.open(coverUrl, '_blank');
+    }
+  };
+
+  const handleAddToBookshelf = async (book: Book) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      
+      if (!user.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to add books to your bookshelf",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('user_library')
+        .insert([
+          { user_id: user.user.id, book_id: book.id }
+        ]);
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          toast({
+            title: "Already in bookshelf",
+            description: "This book is already in your bookshelf",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Added to bookshelf",
+          description: `${book.title} has been added to your bookshelf`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding book to library:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add book to bookshelf",
+        variant: "destructive",
+      });
     }
   };
 
@@ -95,9 +142,11 @@ const Home = () => {
                     <Card 
                       key={book.id} 
                       className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                      onClick={() => handleBookClick(book.Cover_super)}
                     >
-                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                      <div 
+                        className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]"
+                        onClick={() => handleBookClick(book.Cover_super)}
+                      >
                         <img
                           src={book.cover_url || '/placeholder.svg'}
                           alt={book.title}
@@ -105,6 +154,12 @@ const Home = () => {
                           loading="lazy"
                         />
                       </div>
+                      <button
+                        onClick={() => handleAddToBookshelf(book)}
+                        className="w-full mt-2 px-3 py-1.5 text-sm font-medium text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 rounded-md"
+                      >
+                        Add to Bookshelf
+                      </button>
                     </Card>
                   ))}
                 </div>
