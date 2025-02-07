@@ -79,7 +79,7 @@ const Bookshelf = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-[#E9E7E2]"
+              className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
             >
               <img 
                 src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
