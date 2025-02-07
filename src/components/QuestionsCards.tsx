@@ -112,24 +112,12 @@ const QuestionsCards = () => {
         <CarouselProgress totalItems={questions?.length || 0} />
       </Carousel>
       
-      <div className="flex flex-col gap-3 py-6">
+      <div className="flex justify-center mt-8">
         <Button 
           variant="secondary"
-          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
+          className="px-8 py-2 text-[#E9E7E2] bg-[#9b87f5] hover:bg-[#7E69AB] transition-colors duration-300"
         >
-          Show more
-        </Button>
-        <Button 
-          variant="secondary"
-          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
-        >
-          Edit vibes
-        </Button>
-        <Button 
-          variant="secondary"
-          className="w-full text-[#E9E7E2] bg-[#2A282A]/50 hover:bg-[#2A282A]/70"
-        >
-          New vibes
+          View all
         </Button>
       </div>
     </div>
