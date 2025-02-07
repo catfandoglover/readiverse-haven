@@ -74,35 +74,33 @@ const Bookshelf = () => {
     <div className="min-h-screen bg-background transition-colors duration-300 bookshelf-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
-          <div className="flex justify-end items-center">
-            <div className="flex gap-4 items-center">
-              <Button
-                variant="ghost"
-                size="icon"
+          <div className="flex justify-end items-center gap-4">
+            <div className="flex gap-2">
+              <Toggle
+                pressed={!isGridView}
+                onPressedChange={() => setIsGridView(false)}
+                aria-label="List view"
                 className="text-foreground"
-                onClick={() => handleNavigation('/search')}
               >
-                <Search className="h-5 w-5" />
-              </Button>
-              <div className="flex gap-2">
-                <Toggle
-                  pressed={!isGridView}
-                  onPressedChange={() => setIsGridView(false)}
-                  aria-label="List view"
-                  className="text-foreground"
-                >
-                  <List className="h-4 w-4" />
-                </Toggle>
-                <Toggle
-                  pressed={isGridView}
-                  onPressedChange={() => setIsGridView(true)}
-                  aria-label="Grid view"
-                  className="text-foreground"
-                >
-                  <Grid className="h-4 w-4" />
-                </Toggle>
-              </div>
+                <List className="h-4 w-4" />
+              </Toggle>
+              <Toggle
+                pressed={isGridView}
+                onPressedChange={() => setIsGridView(true)}
+                aria-label="Grid view"
+                className="text-foreground"
+              >
+                <Grid className="h-4 w-4" />
+              </Toggle>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground"
+              onClick={() => handleNavigation('/search')}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
           </div>
         </header>
 
