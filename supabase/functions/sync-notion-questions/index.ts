@@ -49,7 +49,7 @@ serve(async (req) => {
     
     const response = await notion.databases.query({
       database_id: notionDatabaseId,
-      page_size: 100, // Increased to handle more questions
+      page_size: 100,
     });
 
     console.log(`Processing ${response.results.length} questions`);
@@ -65,12 +65,14 @@ serve(async (req) => {
       'EPISTEMOLOGY': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
     };
 
+    const defaultIllustration = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
+
     for (const page of response.results) {
       try {
         const properties = page.properties;
         const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
         const questionText = properties['Question']?.rich_text?.[0]?.plain_text || 'No question text';
-        const category = properties.Category?.select?.name || 'Uncategorized';
+        const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
         
         const classicsRelation = properties['The Classics']?.relation || [];
         
@@ -86,18 +88,18 @@ serve(async (req) => {
           }
         }
 
-        // Ensure we have a valid illustration
-        const illustration = defaultIllustrations[category.toUpperCase()] || defaultIllustrations['ETHICS'];
+        // Always ensure we have a valid illustration
+        const illustration = defaultIllustrations[category] || defaultIllustration;
 
-        const { error: questionError } = await supabase
+        const { data, error: questionError } = await supabase
           .from('great_questions')
           .upsert({
             notion_id: page.id,
-            category: category.toUpperCase(),
+            category: category,
             category_number: categoryNumber,
             question: questionText,
             related_classics: relatedUrls,
-            illustration // Add default illustration based on category
+            illustration: illustration
           }, {
             onConflict: 'notion_id'
           });
@@ -106,8 +108,9 @@ serve(async (req) => {
           console.error('Error upserting question:', questionError);
           throw questionError;
         }
+
         successCount++;
-        console.log(`Successfully processed question ${successCount}`);
+        console.log(`Successfully processed question ${successCount}: ${questionText}`);
       } catch (pageError) {
         console.error('Error processing page:', pageError);
       }
