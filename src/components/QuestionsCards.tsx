@@ -83,15 +83,17 @@ const QuestionsCards = () => {
           {questions?.map((question) => (
             <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card 
-                className="overflow-hidden"
+                className="overflow-hidden h-full"
                 style={{
                   background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
                 }}
               >
-                <div className="p-6">
-                  <h3 className="text-base font-oxanium mb-4 text-[#E9E7E2] text-center">
-                    {question.question}
-                  </h3>
+                <div className="p-6 flex flex-col h-full">
+                  <div className="flex-1 mb-4">
+                    <h3 className="text-base font-oxanium text-[#E9E7E2] text-center line-clamp-3">
+                      {question.question}
+                    </h3>
+                  </div>
                   
                   <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
                     <div className="aspect-[4/3] relative overflow-hidden rounded-md">
@@ -135,4 +137,3 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
-
