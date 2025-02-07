@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { createSupabaseClient } from '@/integrations/supabase/client';
+import { exchangeToken } from '@/integrations/supabase/token-exchange';
+import { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
 interface OutsetaUser {
   email: string;
@@ -14,6 +18,7 @@ interface AuthContextType {
   openLogin: (options?: any) => void;
   openSignup: (options?: any) => void;
   openProfile: (options?: any) => void;
+  supabase: SupabaseClient<Database> | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [status, setStatus] = useState<'init' | 'ready'>('init');
   const [user, setUser] = useState<OutsetaUser | null>(null);
+  const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
   
   // Save a reference to Outseta
   const outsetaRef = useRef(getOutseta());
@@ -81,6 +87,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const currentToken = outsetaRef.current.getAccessToken();
         console.log('Current Outseta JWT token:', currentToken);
         console.log('Outseta user info:', outsetaUser);
+        
+        // Exchange Outseta JWT for Supabase JWT and create client
+        if (currentToken) {
+          try {
+            const supabaseJwt = await exchangeToken(currentToken);
+            const supabaseClient = createSupabaseClient(supabaseJwt);
+            setSupabase(supabaseClient);
+          } catch (error) {
+            console.error('Failed to exchange token:', error);
+            setSupabase(null);
+          }
+        } else {
+          setSupabase(null);
+        }
+        
         setUser(outsetaUser);
       } catch (error) {
         console.error('Failed to fetch user:', error);
@@ -107,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = () => {
     outsetaRef.current.setAccessToken('');
     setUser(null);
+    setSupabase(null);
   };
 
   const openLogin = (options = {}) => {
@@ -141,6 +163,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         openLogin,
         openSignup,
         openProfile,
+        supabase,
       }}
     >
       {children}
