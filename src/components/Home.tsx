@@ -140,7 +140,7 @@ const Home = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/') ? 'border-t-2 border-primary rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/') ? 'border-b-2 border-primary rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
@@ -149,7 +149,7 @@ const Home = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/bookshelf') ? 'border-t-2 border-primary rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/bookshelf') ? 'border-b-2 border-primary rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
