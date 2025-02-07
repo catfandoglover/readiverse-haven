@@ -81,7 +81,7 @@ const Home = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-[#E9E7E2]"
+              className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
               onClick={() => handleNavigation('/search')}
             >
               <Search className="h-5 w-5" />

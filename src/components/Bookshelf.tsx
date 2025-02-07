@@ -93,7 +93,7 @@ const Bookshelf = () => {
                   pressed={!isGridView}
                   onPressedChange={() => setIsGridView(false)}
                   aria-label="List view"
-                  className="text-[#E9E7E2]"
+                  className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
                 >
                   <List className="h-4 w-4" />
                 </Toggle>
@@ -101,7 +101,7 @@ const Bookshelf = () => {
                   pressed={isGridView}
                   onPressedChange={() => setIsGridView(true)}
                   aria-label="Grid view"
-                  className="text-[#E9E7E2]"
+                  className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
                 >
                   <Grid className="h-4 w-4" />
                 </Toggle>
@@ -109,7 +109,7 @@ const Bookshelf = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-[#E9E7E2]"
+                className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
                 onClick={() => handleNavigation('/search')}
               >
                 <Search className="h-5 w-5" />
