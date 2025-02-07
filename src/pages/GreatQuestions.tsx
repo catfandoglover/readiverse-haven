@@ -51,7 +51,7 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
           {questions.map((question) => (
             <Card 
               key={question.id}
-              className="flex-none w-[85vw] md:w-[400px] overflow-hidden"
+              className="flex-none w-[85vw] md:w-[400px] overflow-hidden border-0"
               style={{
                 background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
               }}
@@ -149,7 +149,7 @@ const GreatQuestions = () => {
       </header>
 
       <div className="p-4 pb-[60px]">
-        <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
+        <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
           The Great Questions
         </h1>
         
