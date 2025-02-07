@@ -34,7 +34,9 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
       <Carousel
         opts={{
           align: "start",
-          dragFree: true
+          dragFree: true,
+          watchDrag: true,
+          dragThreshold: 1
         }}
       >
         <CarouselContent className="-ml-2 md:-ml-4">
