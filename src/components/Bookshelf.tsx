@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
+import { Compass, LibraryBig, Search, Grid, List, Zap } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -75,33 +75,42 @@ const Bookshelf = () => {
     <div className="min-h-screen bg-background transition-colors duration-300 bookshelf-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
-          <div className="flex justify-end items-center space-x-4">
-            <div className="flex space-x-4">
-              <Toggle
-                pressed={!isGridView}
-                onPressedChange={() => setIsGridView(false)}
-                aria-label="List view"
-                className="text-foreground"
-              >
-                <List className="h-4 w-4" />
-              </Toggle>
-              <Toggle
-                pressed={isGridView}
-                onPressedChange={() => setIsGridView(true)}
-                aria-label="Grid view"
-                className="text-foreground"
-              >
-                <Grid className="h-4 w-4" />
-              </Toggle>
-            </div>
+          <div className="flex justify-between items-center">
             <Button
               variant="ghost"
               size="icon"
               className="text-foreground"
-              onClick={() => handleNavigation('/search')}
             >
-              <Search className="h-5 w-5" />
+              <Zap className="h-5 w-5" />
             </Button>
+            <div className="flex items-center space-x-4">
+              <div className="flex space-x-4">
+                <Toggle
+                  pressed={!isGridView}
+                  onPressedChange={() => setIsGridView(false)}
+                  aria-label="List view"
+                  className="text-foreground"
+                >
+                  <List className="h-4 w-4" />
+                </Toggle>
+                <Toggle
+                  pressed={isGridView}
+                  onPressedChange={() => setIsGridView(true)}
+                  aria-label="Grid view"
+                  className="text-foreground"
+                >
+                  <Grid className="h-4 w-4" />
+                </Toggle>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-foreground"
+                onClick={() => handleNavigation('/search')}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </header>
 

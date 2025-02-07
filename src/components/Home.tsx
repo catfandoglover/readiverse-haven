@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "./ui/button";
-import { Compass, LibraryBig, Search } from "lucide-react";
+import { Compass, LibraryBig, Search, Zap } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -48,7 +48,14 @@ const Home = () => {
     <div className="min-h-screen bg-background transition-colors duration-300 home-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
-          <div className="flex justify-end items-center">
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground"
+            >
+              <Zap className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
