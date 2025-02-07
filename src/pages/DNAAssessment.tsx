@@ -16,7 +16,7 @@ const DNAAssessment = () => {
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  const { data: currentQuestion, isLoading, refetch } = useQuery({
+  const { data: currentQuestion, isLoading, error } = useQuery({
     queryKey: ['dna-question', category, currentPosition],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,9 +30,10 @@ const DNAAssessment = () => {
         `)
         .eq('category', category?.toUpperCase() as DNACategory)
         .eq('tree_position', currentPosition)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('Question not found');
       return data;
     },
   });
@@ -83,23 +84,56 @@ const DNAAssessment = () => {
       .from('dna_tree_structure')
       .select('tree_position')
       .eq('id', nextQuestionId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching next question:', error);
       return;
     }
 
+    if (!nextQuestion) {
+      console.error('Next question not found');
+      return;
+    }
+
     // Update the current position and reset the selected answer
     setCurrentPosition(nextQuestion.tree_position);
     setSelectedAnswer(null);
-    
-    // Refetch the question data with the new position
-    refetch();
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[#1A1F2C] text-white flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (error || !currentQuestion) {
+    return (
+      <div className="min-h-screen bg-[#1A1F2C] text-white">
+        <header className="px-4 py-3">
+          <button 
+            onClick={() => navigate('/dna')}
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-white/10 transition-all duration-200"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </header>
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+          <h1 className="text-2xl font-serif text-center mb-8">
+            Question not found
+          </h1>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dna')}
+            className="bg-white/5 border-white/20 hover:bg-white/10"
+          >
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
