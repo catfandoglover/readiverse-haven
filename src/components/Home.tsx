@@ -68,7 +68,9 @@ const Home = () => {
       const { data: user } = await supabase.auth.getUser();
       
       if (!user.user) {
-        window.Outseta?.auth.open();
+        if (typeof window !== 'undefined' && window.Outseta) {
+          window.Outseta.auth.open();
+        }
         return;
       }
 

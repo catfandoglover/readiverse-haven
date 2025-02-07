@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +75,9 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
       const { data: user } = await supabase.auth.getUser();
       
       if (!user.user) {
-        window.Outseta?.auth.open();
+        if (typeof window !== 'undefined' && window.Outseta) {
+          window.Outseta.auth.open();
+        }
         return;
       }
 
