@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,8 +116,8 @@ const QuestionsCards = () => {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-8 uppercase">
+    <div className="space-y-12 p-4">
+      <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase">
         The Great Questions
       </h1>
       
@@ -153,7 +152,7 @@ const QuestionsCards = () => {
         </div>
       </div>
       
-      <div className="flex justify-center mt-8">
+      <div className="flex justify-center">
         <Button 
           variant="secondary"
           className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
@@ -167,4 +166,3 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
-
