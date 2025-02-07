@@ -120,7 +120,7 @@ const GreatQuestions = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse">Loading questions...</div>
+        <div className="animate-pulse text-[#E9E7E2]">Loading questions...</div>
       </div>
     );
   }
@@ -131,7 +131,7 @@ const GreatQuestions = () => {
   }, {} as Record<string, Question[]>);
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-[#2A282A] p-4 home-page">
       <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
         The Great Questions
       </h1>
