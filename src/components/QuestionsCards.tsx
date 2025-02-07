@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
-const QuestionImage = ({ src, alt }: { src: string | null; alt: string }) => {
+export const QuestionImage = ({ src, alt }: { src: string | null; alt: string }) => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [hasError, setHasError] = React.useState(false);
   const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
@@ -130,4 +129,3 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
-
