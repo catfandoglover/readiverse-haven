@@ -44,6 +44,14 @@ const DNAAssessment = () => {
   const handleContinue = async () => {
     if (!selectedAnswer || !currentQuestion) return;
 
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('Error getting user:', userError);
+      navigate('/auth');
+      return;
+    }
+
     // Get the next question ID based on the selected answer
     const nextQuestionId = selectedAnswer === "A" 
       ? currentQuestion.next_question_a_id 
@@ -55,6 +63,7 @@ const DNAAssessment = () => {
       const { error } = await supabase
         .from('dna_assessment_progress')
         .upsert({
+          user_id: user.id,
           category: category?.toUpperCase() as DNACategory,
           completed: true,
           current_position: currentPosition,
