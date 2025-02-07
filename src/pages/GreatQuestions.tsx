@@ -28,7 +28,7 @@ const categories = [
 const getCategorySubheader = (category: string) => {
   const subheaders: Record<string, string> = {
     'AESTHETICS': 'VIEWS ON BEAUTY',
-    'EPISTEMOLOGY': 'VIEWS ON KNOWLEDGE, TRUTH',
+    'EPISTEMOLOGY': 'VIEWS ON KNOWLEDGE',
     'ETHICS': 'VIEWS ON THE GOOD',
     'ONTOLOGY': 'VIEWS ON REALITY',
     'POLITICS': 'VIEWS ON POWER',
