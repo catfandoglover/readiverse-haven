@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useBook } from '@/hooks/useBook';
 import Reader from "@/components/Reader";
 import Header from "@/components/ui/header";
+import { SupabaseAuthTest } from '@/components/auth/SupabaseAuthTest';
 import type { BookMetadata } from "@/types/reader";
 
 const defaultMetadata: BookMetadata = {
@@ -23,6 +24,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <SupabaseAuthTest />
       <main className="flex-1">
         <Reader 
           metadata={metadata}
