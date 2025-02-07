@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,7 +156,7 @@ const QuestionsCards = () => {
       <div className="flex justify-center mt-8">
         <Button 
           variant="secondary"
-          className="px-8 py-2 text-[#E9E7E2] bg-[#9b87f5] hover:bg-[#7E69AB] transition-colors duration-300"
+          className="px-8 py-2 text-[#E9E7E2] bg-[#9b87f5] hover:bg-[#7E69AB] transition-colors duration-300 font-oxanium"
         >
           View all
         </Button>
