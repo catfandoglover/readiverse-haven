@@ -45,6 +45,48 @@ const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
   );
 };
 
+const QuestionImage = ({ src, alt }: { src: string | null; alt: string }) => {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
+  const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
+
+  const handleLoad = () => {
+    console.log('Image loaded successfully:', src);
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    console.error('Error loading image:', src);
+    setHasError(true);
+    setIsLoading(false);
+  };
+
+  if (!src) {
+    return <img src={fallbackImage} alt={alt} className="w-full h-full object-cover" />;
+  }
+
+  return (
+    <>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+          <div className="animate-pulse">Loading...</div>
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={handleLoad}
+        onError={handleError}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+        style={{ display: hasError ? 'none' : 'block' }}
+      />
+      {hasError && <img src={fallbackImage} alt={alt} className="w-full h-full object-cover" />}
+    </>
+  );
+};
+
 const QuestionsCards = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions'],
@@ -97,10 +139,9 @@ const QuestionsCards = () => {
                   
                   <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
                     <div className="aspect-[4/3] relative overflow-hidden rounded-md">
-                      <img
-                        src={question.illustration}
-                        alt="Question illustration"
-                        className="w-full h-full object-cover"
+                      <QuestionImage 
+                        src={question.illustration} 
+                        alt={`Illustration for "${question.question}"`}
                       />
                     </div>
                   </div>
