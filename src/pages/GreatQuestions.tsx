@@ -27,12 +27,12 @@ const categories = [
 
 const getCategorySubheader = (category: string) => {
   const subheaders: Record<string, string> = {
-    'AESTHETICS': 'VIEWS ON BEAUTY',
-    'EPISTEMOLOGY': 'VIEWS ON KNOWLEDGE',
-    'ETHICS': 'VIEWS ON THE GOOD',
-    'ONTOLOGY': 'VIEWS ON REALITY',
-    'POLITICS': 'VIEWS ON POWER',
-    'THEOLOGY': 'VIEWS ON THE DIVINE'
+    'AESTHETICS': 'QUESTIONS OF BEAUTY',
+    'EPISTEMOLOGY': 'QUESTIONS OF KNOWLEDGE',
+    'ETHICS': 'QUESTIONS OF THE GOOD',
+    'ONTOLOGY': 'QUESTIONS OF REALITY',
+    'POLITICS': 'QUESTIONS OF POWER',
+    'THEOLOGY': 'QUESTIONS OF THE DIVINE'
   };
   return subheaders[category];
 };
@@ -61,7 +61,7 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {questions.map((question) => (
-            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-[85vw] md:basis-[45%] lg:basis-[32%]">
+            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card 
                 className="overflow-hidden h-full border-0"
                 style={{
