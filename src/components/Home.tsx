@@ -6,26 +6,27 @@ import { Compass, LibraryBig, Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
 
-declare global {
-  interface Window {
-    Outseta?: {
-      auth: {
-        open: () => void;
-      };
-      getAccessToken: () => string | null;
-    };
-  }
-}
-
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [showAuthDialog, setShowAuthDialog] = React.useState(false);
+  const [pendingBook, setPendingBook] = React.useState<Book | null>(null);
   
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
@@ -68,9 +69,8 @@ const Home = () => {
       const { data: user } = await supabase.auth.getUser();
       
       if (!user.user) {
-        if (typeof window !== 'undefined' && window.Outseta) {
-          window.Outseta.auth.open();
-        }
+        setPendingBook(book);
+        setShowAuthDialog(true);
         return;
       }
 
@@ -113,10 +113,35 @@ const Home = () => {
     return location.pathname === path;
   };
 
+  const handleAuthAction = (action: 'login' | 'register') => {
+    setShowAuthDialog(false);
+    navigate(`/auth?action=${action}${pendingBook ? `&redirect=${location.pathname}` : ''}`);
+  };
+
   const isLoading = booksLoading || iconsLoading;
 
   return (
     <>
+      <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Authentication Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please sign in or create an account to add books to your bookshelf.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleAuthAction('login')}>
+              Sign In
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => handleAuthAction('register')}>
+              Create Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="min-h-screen bg-background transition-colors duration-300 home-page">
         <div className="flex flex-col min-h-screen pb-[60px]">
           <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">

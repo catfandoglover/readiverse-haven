@@ -9,46 +9,12 @@
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@200..800&display=swap" />
-    <script>
-      window.o_options = {
-        domain: 'lightninginspiration.outseta.com',
-        load: 'auth,nocode,profile',
-        tokenStorage: "cookie",
-        auth: {
-          mode: 'popup',
-          widgetMode: 'login|register',
-          disableCloseOnClickOutside: true,
-          disableClose: false,
-          postLoginUrl: window.location.href,
-          authenticationCallbackUrl: window.location.href,
-          defaultAuthenticationSuccessUrl: window.location.href
-        }
-      };
-    </script>
   </head>
+
   <body>
     <div id="root"></div>
-    <!-- Load Outseta first -->
-    <script 
-      src="https://cdn.outseta.com/outseta.min.js" 
-      data-options="o_options"
-      crossorigin="anonymous"
-    ></script>
-    <!-- Then load application scripts -->
-    <script>
-      // Ensure Outseta is loaded before proceeding
-      window.onload = function() {
-        const gptengineerScript = document.createElement('script');
-        gptengineerScript.src = 'https://cdn.gpteng.co/gptengineer.js';
-        gptengineerScript.type = 'module';
-        document.body.appendChild(gptengineerScript);
-
-        const mainScript = document.createElement('script');
-        mainScript.src = '/src/main.tsx';
-        mainScript.type = 'module';
-        document.body.appendChild(mainScript);
-      };
-    </script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
 
