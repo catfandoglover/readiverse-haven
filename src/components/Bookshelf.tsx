@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,44 +75,34 @@ const Bookshelf = () => {
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-            >
+            <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
               <img 
                 src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
                 alt="Lightning" 
                 className="h-5 w-5"
               />
-            </Button>
+            </button>
             <div className="flex items-center space-x-4">
               <div className="flex space-x-4">
-                <Toggle
-                  pressed={!isGridView}
-                  onPressedChange={() => setIsGridView(false)}
-                  aria-label="List view"
-                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
+                <button
+                  onClick={() => setIsGridView(false)}
+                  className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${!isGridView ? 'bg-accent text-accent-foreground' : ''}`}
                 >
                   <List className="h-4 w-4" />
-                </Toggle>
-                <Toggle
-                  pressed={isGridView}
-                  onPressedChange={() => setIsGridView(true)}
-                  aria-label="Grid view"
-                  className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
+                </button>
+                <button
+                  onClick={() => setIsGridView(true)}
+                  className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isGridView ? 'bg-accent text-accent-foreground' : ''}`}
                 >
                   <Grid className="h-4 w-4" />
-                </Toggle>
+                </button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+              <button
                 onClick={() => handleNavigation('/search')}
+                className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
               >
                 <Search className="h-5 w-5" />
-              </Button>
+              </button>
             </div>
           </div>
         </header>
@@ -176,24 +165,20 @@ const Bookshelf = () => {
 
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
-            <Button 
-              variant="ghost"
-              size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+            <button 
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
               <span className="text-xs font-oxanium">Discover</span>
-            </Button>
-            <Button 
-              variant="ghost"
-              size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+            </button>
+            <button 
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
               <span className="text-xs font-oxanium">Bookshelf</span>
-            </Button>
+            </button>
           </div>
         </nav>
       </div>
