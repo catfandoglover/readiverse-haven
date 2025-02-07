@@ -3,16 +3,11 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem
-} from "@/components/ui/carousel";
-import { Database } from "@/integrations/supabase/types";
-import { QuestionImage } from "@/components/QuestionsCards";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Compass, LibraryBig, Search } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Database } from "@/integrations/supabase/types";
+import { QuestionImage } from "@/components/QuestionsCards";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -51,44 +46,36 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
         </p>
       </div>
       
-      <Carousel
-        opts={{
-          align: "start",
-          dragFree: true,
-          watchDrag: true,
-          dragThreshold: 1
-        }}
-      >
-        <CarouselContent className="-ml-2 md:-ml-4">
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex gap-4 pb-4 min-w-min">
           {questions.map((question) => (
-            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-              <Card 
-                className="overflow-hidden h-full border-0"
-                style={{
-                  background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
-                }}
-              >
-                <div className="p-6 flex flex-col h-full">
-                  <div className="flex-1 mb-4">
-                    <h3 className="text-base md:text-lg font-oxanium text-[#E9E7E2] text-center line-clamp-3">
-                      {question.question}
-                    </h3>
-                  </div>
-                  
-                  <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
-                    <div className="aspect-[4/3] relative overflow-hidden rounded-md">
-                      <QuestionImage 
-                        src={question.illustration} 
-                        alt={`Illustration for "${question.question}"`}
-                      />
-                    </div>
+            <Card 
+              key={question.id}
+              className="flex-none w-[85vw] md:w-[400px] overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
+              }}
+            >
+              <div className="p-6 flex flex-col h-full">
+                <div className="flex-1 mb-4">
+                  <h3 className="text-base md:text-lg font-oxanium text-[#E9E7E2] text-center line-clamp-3">
+                    {question.question}
+                  </h3>
+                </div>
+                
+                <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
+                  <div className="aspect-[4/3] relative overflow-hidden rounded-md">
+                    <QuestionImage 
+                      src={question.illustration} 
+                      alt={`Illustration for "${question.question}"`}
+                    />
                   </div>
                 </div>
-              </Card>
-            </CarouselItem>
+              </div>
+            </Card>
           ))}
-        </CarouselContent>
-      </Carousel>
+        </div>
+      </div>
     </div>
   );
 };
@@ -120,7 +107,6 @@ const GreatQuestions = () => {
 
   const isCurrentPath = (path: string) => {
     if (path === '/') {
-      // Check if current path is / or any of its sub-pages (great-questions is a sub-page)
       return location.pathname === '/' || location.pathname === '/great-questions';
     }
     return location.pathname === path;
