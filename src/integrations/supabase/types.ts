@@ -54,6 +54,7 @@ export type Database = {
           epub_file_url: string
           id: string
           Notion_URL: string | null
+          randomizer: number | null
           slug: string
           title: string
         }
@@ -65,6 +66,7 @@ export type Database = {
           epub_file_url: string
           id?: string
           Notion_URL?: string | null
+          randomizer?: number | null
           slug: string
           title: string
         }
@@ -76,6 +78,7 @@ export type Database = {
           epub_file_url?: string
           id?: string
           Notion_URL?: string | null
+          randomizer?: number | null
           slug?: string
           title?: string
         }

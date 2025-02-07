@@ -21,7 +21,7 @@ const Home = () => {
       const { data, error } = await supabase
         .from('books')
         .select('*')
-        .order('title');
+        .order('randomizer');
       
       if (error) throw error;
       return data as Book[];
@@ -79,29 +79,31 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-8 uppercase mt-8">
                 Read Classics
               </h1>
-              <div className="space-y-6 py-4">
-                {books?.map((book) => (
-                  <Card 
-                    key={book.id} 
-                    className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                    onClick={() => handleBookClick(book.Cover_super)}
-                  >
-                    <div className="w-24 h-24 flex-shrink-0">
-                      <img
-                        src={book.cover_url || '/placeholder.svg'}
-                        alt={book.title}
-                        className="w-full h-full object-cover rounded-md shadow-sm"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
-                      {book.author && (
-                        <p className="text-muted-foreground text-sm">{book.author}</p>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-4 pb-4 min-w-min">
+                  {books?.map((book) => (
+                    <Card 
+                      key={book.id} 
+                      className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                      onClick={() => handleBookClick(book.Cover_super)}
+                    >
+                      <div className="aspect-[2/3] w-full">
+                        <img
+                          src={book.cover_url || '/placeholder.svg'}
+                          alt={book.title}
+                          className="w-full h-full object-cover rounded-t-lg"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-sm line-clamp-2 mb-1">{book.title}</h3>
+                        {book.author && (
+                          <p className="text-muted-foreground text-xs line-clamp-1">{book.author}</p>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -135,4 +137,3 @@ const Home = () => {
 };
 
 export default Home;
-
