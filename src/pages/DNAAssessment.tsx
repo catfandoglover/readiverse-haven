@@ -16,9 +16,14 @@ const DNAAssessment = () => {
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  const { data: currentQuestion, isLoading, error } = useQuery({
-    queryKey: ['dna-question', category, currentPosition],
+  // Convert category to uppercase to match the enum type
+  const upperCategory = category?.toUpperCase() as DNACategory;
+
+  const { data: currentQuestion, isLoading } = useQuery({
+    queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
+      console.log('Fetching question for:', { upperCategory, currentPosition }); // Debug log
+      
       const { data, error } = await supabase
         .from('dna_tree_structure')
         .select(`
@@ -28,14 +33,24 @@ const DNAAssessment = () => {
             category_number
           )
         `)
-        .eq('category', category?.toUpperCase() as DNACategory)
+        .eq('category', upperCategory)
         .eq('tree_position', currentPosition)
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error('Question not found');
+      if (error) {
+        console.error('Error fetching question:', error); // Debug log
+        throw error;
+      }
+      
+      if (!data) {
+        console.error('No question found for:', { upperCategory, currentPosition }); // Debug log
+        throw new Error('Question not found');
+      }
+
+      console.log('Found question:', data); // Debug log
       return data;
     },
+    retry: false,
   });
 
   const handleAnswer = (answer: "A" | "B") => {
@@ -65,7 +80,7 @@ const DNAAssessment = () => {
         .from('dna_assessment_progress')
         .upsert({
           user_id: user.id,
-          category: category?.toUpperCase() as DNACategory,
+          category: upperCategory,
           completed: true,
           current_position: currentPosition,
           responses: {} // You might want to store the responses here
@@ -109,7 +124,7 @@ const DNAAssessment = () => {
     );
   }
 
-  if (error || !currentQuestion) {
+  if (!currentQuestion) {
     return (
       <div className="min-h-screen bg-[#1A1F2C] text-white">
         <header className="px-4 py-3">
@@ -147,16 +162,16 @@ const DNAAssessment = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2 text-sm text-[#E9E7E2]/60">
-          <span>{currentQuestion?.question?.category_number?.split(' ')[1]}</span>
+          <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
-          <span>31</span>
+          <span>5</span>
         </div>
       </header>
 
       {/* Progress Bar */}
       <div className="px-4 pt-2">
         <Progress 
-          value={((Number(currentQuestion?.question?.category_number?.split(' ')[1]) || 1) / 31) * 100} 
+          value={(Number(currentPosition?.split('Q')[1]) / 5) * 100} 
           className="h-1 bg-white/10"
         />
       </div>
@@ -164,7 +179,7 @@ const DNAAssessment = () => {
       {/* Question Content */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
         <h1 className="text-3xl font-serif text-center mb-16 max-w-2xl">
-          {currentQuestion?.question?.question}
+          {currentQuestion.question?.question}
         </h1>
 
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
@@ -207,3 +222,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
