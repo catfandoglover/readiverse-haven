@@ -28,7 +28,7 @@ const DNAAssessment = () => {
         .from('dna_tree_structure')
         .select(`
           *,
-          question: great_questions!dna_tree_structure_question_id_fkey (
+          question:great_questions!dna_tree_structure_question_id_fkey (
             question,
             category_number
           )
@@ -222,4 +222,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
