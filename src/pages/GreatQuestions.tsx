@@ -119,13 +119,13 @@ const GreatQuestions = () => {
   }, {} as Record<string, Question[]>);
 
   return (
-    <div className="min-h-screen bg-[#2A282A] pb-[60px]">
-      <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-[#2A282A]">
+    <div className="min-h-screen bg-[#2A282A]">
+      <header className="px-4 py-3 sticky top-0 z-10 bg-[#2A282A]">
         <div className="flex justify-between items-center">
           <Button
             variant="ghost"
             size="icon"
-            className="text-foreground"
+            className="text-[#E9E7E2]"
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="h-5 w-5" />
@@ -133,7 +133,7 @@ const GreatQuestions = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="text-foreground"
+            className="text-[#E9E7E2]"
             onClick={() => handleNavigation('/search')}
           >
             <Search className="h-5 w-5" />
@@ -141,7 +141,7 @@ const GreatQuestions = () => {
         </div>
       </header>
 
-      <div className="p-4">
+      <div className="p-4 pb-[60px]">
         <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
           The Great Questions
         </h1>
@@ -155,12 +155,12 @@ const GreatQuestions = () => {
         ))}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-[#2A282A] py-2 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#2A282A] py-2 z-50">
         <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
           <Button 
             variant="ghost"
             size="icon" 
-            className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/') ? 'border-b-2 border-primary rounded-none' : ''}`}
+            className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
             onClick={() => handleNavigation('/')}
           >
             <Compass className="h-6 w-6" />
@@ -169,7 +169,7 @@ const GreatQuestions = () => {
           <Button 
             variant="ghost"
             size="icon" 
-            className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/bookshelf') ? 'border-b-2 border-primary rounded-none' : ''}`}
+            className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
             onClick={() => handleNavigation('/bookshelf')}
           >
             <LibraryBig className="h-6 w-6" />
@@ -182,4 +182,3 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
-
