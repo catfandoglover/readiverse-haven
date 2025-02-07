@@ -70,7 +70,7 @@ const Home = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
+              className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <img 
                 src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
@@ -81,7 +81,7 @@ const Home = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground"
+              className="h-10 w-10 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => handleNavigation('/search')}
             >
               <Search className="h-5 w-5" />
@@ -167,7 +167,7 @@ const Home = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
@@ -176,7 +176,7 @@ const Home = () => {
             <Button 
               variant="ghost"
               size="icon" 
-              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+              className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-colors ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
