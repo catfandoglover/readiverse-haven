@@ -4,9 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
-import { Button } from "./ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Toggle } from "./ui/toggle";
 
 type Book = Database['public']['Tables']['books']['Row'];
 

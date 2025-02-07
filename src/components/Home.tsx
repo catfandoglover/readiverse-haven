@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Database } from "@/integrations/supabase/types";
-import { Button } from "./ui/button";
 import { Compass, LibraryBig, Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -111,13 +110,12 @@ const Home = () => {
                 </div>
               </div>
               <div className="flex justify-center mt-4">
-                <Button 
-                  variant="secondary"
+                <button 
                   className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
                   onClick={() => handleNavigation('/all-books')}
                 >
                   VIEW ALL
-                </Button>
+                </button>
               </div>
 
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8 mt-16">
@@ -143,13 +141,12 @@ const Home = () => {
                 </div>
               </div>
               <div className="flex justify-center mt-4">
-                <Button 
-                  variant="secondary"
+                <button 
                   className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
                   onClick={() => handleNavigation('/all-icons')}
                 >
                   VIEW ALL
-                </Button>
+                </button>
               </div>
             </div>
           </div>

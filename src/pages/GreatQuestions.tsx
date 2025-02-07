@@ -1,9 +1,7 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft, Compass, LibraryBig, Search } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
@@ -129,22 +127,18 @@ const GreatQuestions = () => {
     <div className="min-h-screen bg-[#2A282A]">
       <header className="px-4 py-3 sticky top-0 z-10 bg-[#2A282A]">
         <div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-[#E9E7E2]"
+          <button
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-[#E9E7E2]"
+          </button>
+          <button
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             onClick={() => handleNavigation('/search')}
           >
             <Search className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
       </header>
 
@@ -164,24 +158,20 @@ const GreatQuestions = () => {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2A282A] py-2 z-50">
         <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
-          <Button 
-            variant="ghost"
-            size="icon" 
-            className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+          <button 
+            className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
             onClick={() => handleNavigation('/')}
           >
             <Compass className="h-6 w-6" />
             <span className="text-xs font-oxanium">Discover</span>
-          </Button>
-          <Button 
-            variant="ghost"
-            size="icon" 
-            className={`flex flex-col items-center gap-1 w-14 text-[#E9E7E2] ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
+          </button>
+          <button 
+            className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#E9E7E2] rounded-none' : ''}`}
             onClick={() => handleNavigation('/bookshelf')}
           >
             <LibraryBig className="h-6 w-6" />
             <span className="text-xs font-oxanium">Bookshelf</span>
-          </Button>
+          </button>
         </div>
       </nav>
     </div>
@@ -189,4 +179,3 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
-
