@@ -22,5 +22,11 @@ export async function triggerNotionSync() {
   }
 }
 
-// Make the function available globally for console access
-(window as any).triggerNotionSync = triggerNotionSync;
+// Immediately make the function available globally when this module loads
+globalThis.triggerNotionSync = triggerNotionSync;
+
+// Also expose it on window for browser environments
+if (typeof window !== 'undefined') {
+  (window as any).triggerNotionSync = triggerNotionSync;
+}
+
