@@ -76,6 +76,9 @@ const Home = () => {
             <QuestionsCards />
             
             <div className="px-4 pb-24">
+              <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] mb-8 uppercase mt-8">
+                Read Classics
+              </h1>
               <div className="space-y-6 py-4">
                 {books?.map((book) => (
                   <Card 
@@ -132,3 +135,4 @@ const Home = () => {
 };
 
 export default Home;
+
