@@ -91,15 +91,9 @@ const Home = () => {
                         <img
                           src={book.cover_url || '/placeholder.svg'}
                           alt={book.title}
-                          className="w-full h-full object-cover rounded-t-lg"
+                          className="w-full h-full object-cover rounded-lg"
                           loading="lazy"
                         />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-sm line-clamp-2 mb-1">{book.title}</h3>
-                        {book.author && (
-                          <p className="text-muted-foreground text-xs line-clamp-1">{book.author}</p>
-                        )}
                       </div>
                     </Card>
                   ))}
