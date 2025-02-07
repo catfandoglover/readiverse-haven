@@ -1,21 +1,30 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import type { Book, Rendition } from "epubjs";
-import type Section from "epubjs/types/section";
+import type { Book, Rendition, Location } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
-import type { Highlight } from "@/types/highlight";
+import type { Highlight } from '@/types/highlight';
 import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Copy, Share2, Highlighter } from "lucide-react";
 
 interface BookViewerProps {
   book: Book;
   currentLocation: string | null;
   onLocationChange: (location: any) => void;
   fontSize: number;
-  fontFamily: 'georgia' | 'helvetica' | 'times';
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
   textAlign?: 'left' | 'justify' | 'center';
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
@@ -38,9 +47,14 @@ const BookViewer = ({
   const [isBookReady, setIsBookReady] = useState(false);
   const [isRenditionReady, setIsRenditionReady] = useState(false);
   const [container, setContainer] = useState<Element | null>(null);
-  const selectionTimeoutRef = useRef<NodeJS.Timeout>();
+  const [selectedText, setSelectedText] = useState<{
+    cfiRange: string;
+    text: string;
+  } | null>(null);
+  const [showTextDialog, setShowTextDialog] = useState(false);
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
+  const pendingHighlightRef = useRef<{ cfiRange: string; text: string } | null>(null);
 
   const {
     rendition,
@@ -54,7 +68,7 @@ const BookViewer = ({
     theme,
     currentLocation,
     onLocationChange,
-    onTextSelect,
+    undefined, // We'll handle text selection separately
     highlights
   );
 
@@ -87,12 +101,10 @@ const BookViewer = ({
     const deltaX = Math.abs(touchEnd.x - touchStartRef.current.x);
     const deltaY = Math.abs(touchEnd.y - touchStartRef.current.y);
 
-    // If significant movement, don't process as selection
     if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
       return;
     }
 
-    // Handle double tap
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       e.preventDefault();
       return;
@@ -100,6 +112,67 @@ const BookViewer = ({
 
     lastTapRef.current = now;
   }, []);
+
+  const handleHighlightText = () => {
+    if (selectedText && onTextSelect) {
+      onTextSelect(selectedText.cfiRange, selectedText.text);
+      clearSelection();
+      setShowTextDialog(false);
+      toast({
+        description: "Text highlighted successfully",
+      });
+    }
+  };
+
+  const handleCopyText = async () => {
+    if (selectedText) {
+      try {
+        await navigator.clipboard.writeText(selectedText.text);
+        clearSelection();
+        setShowTextDialog(false);
+        toast({
+          description: "Text copied to clipboard",
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          description: "Failed to copy text",
+        });
+      }
+    }
+  };
+
+  const handleShareText = async () => {
+    if (selectedText) {
+      try {
+        await navigator.share({
+          text: selectedText.text,
+        });
+        clearSelection();
+        setShowTextDialog(false);
+        toast({
+          description: "Text shared successfully",
+        });
+      } catch (error) {
+        // If share is not supported or user cancels, try copy instead
+        handleCopyText();
+      }
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedText(null);
+    if (rendition) {
+      const contents = rendition.getContents();
+      if (Array.isArray(contents)) {
+        contents.forEach(content => {
+          if (content.window?.getSelection) {
+            content.window.getSelection()?.removeAllRanges();
+          }
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (!rendition) return;
@@ -110,49 +183,25 @@ const BookViewer = ({
         if (!selection) return;
 
         const text = selection.toString().trim();
-        if (!text || !onTextSelect) return;
+        if (!text) return;
 
-        // Clear any existing timeout
-        if (selectionTimeoutRef.current) {
-          clearTimeout(selectionTimeoutRef.current);
-        }
-
-        onTextSelect(cfiRange, text);
-        toast({
-          description: "Text highlighted successfully",
-        });
-
-        // Set new timeout for clearing selection
-        selectionTimeoutRef.current = setTimeout(() => {
-          selection.removeAllRanges();
-        }, 250);
+        setSelectedText({ cfiRange, text });
+        setShowTextDialog(true);
       } catch (error) {
-        console.error('Error creating highlight:', error);
+        console.error('Error handling text selection:', error);
         toast({
           variant: "destructive",
-          description: "Failed to create highlight",
+          description: "Failed to process text selection",
         });
       }
     };
 
     rendition.on("selected", handleTextSelection);
 
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart, { passive: true });
-      container.addEventListener('touchend', handleTouchEnd);
-    }
-
     return () => {
-      if (selectionTimeoutRef.current) {
-        clearTimeout(selectionTimeoutRef.current);
-      }
       rendition.off("selected", handleTextSelection);
-      if (container) {
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchend', handleTouchEnd);
-      }
     };
-  }, [rendition, onTextSelect, container, handleTouchStart, handleTouchEnd, toast]);
+  }, [rendition, toast]);
 
   useEffect(() => {
     const initializeBook = async () => {
@@ -236,17 +285,155 @@ const BookViewer = ({
   useEffect(() => {
     if (!rendition || !isRenditionReady) return;
     
-    // Ensure rendition is fully ready before reapplying highlights
     const timeoutId = setTimeout(() => {
-      reapplyHighlights();
+      highlights.forEach(highlight => {
+        try {
+          rendition.annotations.remove(highlight.cfiRange, 'highlight');
+          rendition.annotations.add(
+            "highlight",
+            highlight.cfiRange,
+            {},
+            undefined,
+            `highlight-${highlight.color}`,
+            {
+              "fill": "#CCFF33",
+              "fill-opacity": "0.3",
+              "mix-blend-mode": "multiply"
+            }
+          );
+        } catch (error) {
+          console.error('Error applying highlight:', error);
+        }
+      });
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [highlights, rendition, isRenditionReady, reapplyHighlights]);
+  }, [highlights, rendition, isRenditionReady]);
+
+  useEffect(() => {
+    if (!rendition || !isRenditionReady) return;
+    
+    const handleRemoveHighlight = (event: CustomEvent) => {
+      const { cfiRange } = event.detail;
+      if (!cfiRange || !rendition) return;
+
+      try {
+        // First remove the annotation
+        rendition.annotations.remove(cfiRange, 'highlight');
+
+        // Get all contents and remove highlight elements
+        const contents = rendition.getContents();
+        if (Array.isArray(contents)) {
+          contents.forEach(content => {
+            if (content?.document) {
+              // Find and remove the specific highlight element
+              const highlights = content.document.querySelectorAll(`[data-epubcfi="${cfiRange}"]`);
+              highlights.forEach(highlight => {
+                const parent = highlight.parentNode;
+                if (parent) {
+                  // Instead of removing the element, unwrap it to preserve text
+                  while (highlight.firstChild) {
+                    parent.insertBefore(highlight.firstChild, highlight);
+                  }
+                  parent.removeChild(highlight);
+                }
+              });
+            }
+          });
+        }
+
+        // Force a redraw of the current section
+        const location = rendition.currentLocation();
+        let currentSection: string | undefined;
+
+        // Handle different location types
+        if (location && typeof location === 'object') {
+          if ('start' in location && location.start && typeof location.start === 'object' && 'cfi' in location.start) {
+            currentSection = location.start.cfi as string;
+          } else if ('cfi' in location && typeof location.cfi === 'string') {
+            currentSection = location.cfi;
+          }
+        }
+        
+        if (currentSection) {
+          rendition.display(currentSection).then(() => {
+            // After redraw, reapply remaining highlights
+            highlights.forEach(h => {
+              if (h.cfiRange !== cfiRange) {
+                rendition.annotations.add(
+                  "highlight",
+                  h.cfiRange,
+                  {},
+                  undefined,
+                  `highlight-${h.color}`,
+                  {
+                    "fill": h.color,
+                    "fill-opacity": "0.3",
+                    "mix-blend-mode": "multiply"
+                  }
+                );
+              }
+            });
+          });
+        }
+
+      } catch (error) {
+        console.error('Error removing highlight:', error);
+        toast({
+          variant: "destructive",
+          description: "Failed to remove highlight",
+        });
+      }
+    };
+
+    window.addEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    
+    return () => {
+      window.removeEventListener('removeHighlight', handleRemoveHighlight as EventListener);
+    };
+  }, [rendition, isRenditionReady, toast, highlights]);
 
   return (
     <div className="relative">
       <ViewerContainer theme={theme} setContainer={setContainer} />
+      <Dialog open={showTextDialog} onOpenChange={setShowTextDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Text Options</DialogTitle>
+            <DialogDescription>
+              Choose what you'd like to do with the selected text:
+              <div className="mt-2 p-4 bg-muted rounded-md">
+                {selectedText?.text}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleHighlightText}
+            >
+              <Highlighter className="h-4 w-4" />
+              Highlight
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleCopyText}
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
+            <Button
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={handleShareText}
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

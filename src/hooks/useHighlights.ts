@@ -24,7 +24,7 @@ export const useHighlights = (bookKey: string | null) => {
   const saveHighlights = (newHighlights: Highlight[]) => {
     if (!bookKey) return;
     localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
-    setHighlights(prev => [...prev, ...newHighlights.filter(nh => !prev.some(ph => ph.id === nh.id))]);
+    setHighlights(newHighlights);
   };
 
   const addHighlight = (cfiRange: string, text: string) => {
@@ -39,7 +39,7 @@ export const useHighlights = (bookKey: string | null) => {
       bookKey
     };
 
-    const newHighlights = [newHighlight];
+    const newHighlights = [...highlights, newHighlight];
     saveHighlights(newHighlights);
     
     toast({

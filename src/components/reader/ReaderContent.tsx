@@ -21,7 +21,7 @@ import BookmarkDialog from './BookmarkDialog';
 interface ReaderContentProps {
   book: Book;
   fontSize: number;
-  fontFamily: 'georgia' | 'helvetica' | 'times';
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
   textAlign: 'left' | 'justify' | 'center';
   brightness: number;
   currentLocation: string | null;
@@ -39,7 +39,7 @@ interface ReaderContentProps {
   currentChapterTitle: string;
   showBookmarkDialog: boolean;
   onFontSizeChange: (value: number[]) => void;
-  onFontFamilyChange: (value: 'georgia' | 'helvetica' | 'times') => void;
+  onFontFamilyChange: (value: 'lexend' | 'georgia' | 'helvetica' | 'times') => void;
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   onBrightnessChange: (value: number[]) => void;
   onBookmarkClick: () => void;

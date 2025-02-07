@@ -22,7 +22,7 @@ interface HighlightsMenuProps {
 }
 
 const colorClasses: Record<HighlightColor, string> = {
-  yellow: 'bg-yellow-200'
+  yellow: 'bg-[#CCFF33]'
 };
 
 const HighlightsMenu = ({

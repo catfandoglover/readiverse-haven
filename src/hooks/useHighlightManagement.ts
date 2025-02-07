@@ -25,15 +25,17 @@ export const useHighlightManagement = (
     
     try {
       // Clear existing highlights first
-      rendition.views().forEach(view => {
-        if (view) {
-          clearHighlights(view);
-        }
-      });
+      const contents = rendition.getContents();
+      if (Array.isArray(contents)) {
+        contents.forEach(content => {
+          clearHighlights(content);
+        });
+      }
 
       // Add all highlights
       highlights.forEach(highlight => {
         try {
+          rendition.annotations.remove(highlight.cfiRange, 'highlight');
           rendition.annotations.add(
             "highlight",
             highlight.cfiRange,

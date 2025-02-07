@@ -11,8 +11,8 @@ import {
 interface FontControlsProps {
   fontSize: number;
   onFontSizeChange: (value: number[]) => void;
-  fontFamily: 'georgia' | 'helvetica' | 'times';
-  onFontFamilyChange: (value: 'georgia' | 'helvetica' | 'times') => void;
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
+  onFontFamilyChange: (value: 'lexend' | 'georgia' | 'helvetica' | 'times') => void;
 }
 
 const FontControls = ({
@@ -39,12 +39,13 @@ const FontControls = ({
         <span className="text-sm font-medium">Font</span>
         <Select
           value={fontFamily}
-          onValueChange={(value: 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
+          onValueChange={(value: 'lexend' | 'georgia' | 'helvetica' | 'times') => onFontFamilyChange(value)}
         >
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Select font" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="lexend">Lexend</SelectItem>
             <SelectItem value="georgia">Georgia</SelectItem>
             <SelectItem value="helvetica">Helvetica</SelectItem>
             <SelectItem value="times">Times New Roman</SelectItem>

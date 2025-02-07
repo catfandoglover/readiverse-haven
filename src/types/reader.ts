@@ -24,8 +24,8 @@ export interface SearchResult {
 export interface ReaderControlsProps {
   fontSize: number;
   onFontSizeChange: (value: number[]) => void;
-  fontFamily: 'georgia' | 'helvetica' | 'times';
-  onFontFamilyChange: (value: 'georgia' | 'helvetica' | 'times') => void;
+  fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times';
+  onFontFamilyChange: (value: 'lexend' | 'georgia' | 'helvetica' | 'times') => void;
   textAlign: 'left' | 'justify' | 'center';
   onTextAlignChange: (value: 'left' | 'justify' | 'center') => void;
   brightness: number;
