@@ -87,6 +87,91 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_assessment_progress: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"]
+          completed: boolean | null
+          created_at: string
+          current_position: string
+          id: string
+          responses: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["dna_category"]
+          completed?: boolean | null
+          created_at?: string
+          current_position: string
+          id?: string
+          responses?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["dna_category"]
+          completed?: boolean | null
+          created_at?: string
+          current_position?: string
+          id?: string
+          responses?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dna_tree_structure: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at: string
+          id: string
+          next_question_a_id: string | null
+          next_question_b_id: string | null
+          question_id: string
+          tree_position: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          next_question_a_id?: string | null
+          next_question_b_id?: string | null
+          question_id: string
+          tree_position: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          next_question_a_id?: string | null
+          next_question_b_id?: string | null
+          question_id?: string
+          tree_position?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_tree_structure_next_question_a_id_fkey"
+            columns: ["next_question_a_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_tree_structure_next_question_b_id_fkey"
+            columns: ["next_question_b_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_tree_structure_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_links: {
         Row: {
           created_at: string
@@ -336,6 +421,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      dna_category:
+        | "ETHICS"
+        | "AESTHETICS"
+        | "POLITICS"
+        | "THEOLOGY"
+        | "ONTOLOGY"
+        | "EPISTEMOLOGY"
       question_category:
         | "AESTHETICS"
         | "EPISTEMOLOGY"
