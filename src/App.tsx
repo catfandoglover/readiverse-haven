@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import Home from "./components/Home";
 import Bookshelf from "./components/Bookshelf";
+import IntellectualDNA from "./pages/IntellectualDNA";
 import Index from "./pages/Index";
 import GreatQuestions from "./pages/GreatQuestions";
 
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/bookshelf" element={<Bookshelf />} />
+            <Route path="/dna" element={<IntellectualDNA />} />
             <Route path="/great-questions" element={<GreatQuestions />} />
             <Route path="/:bookSlug" element={<Index />} />
           </Routes>

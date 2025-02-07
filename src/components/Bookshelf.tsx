@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
-import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
+import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -178,6 +178,13 @@ const Bookshelf = () => {
               <LibraryBig className="h-6 w-6" />
               <span className="text-xs font-oxanium">Bookshelf</span>
             </button>
+            <button 
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
+              onClick={() => handleNavigation('/dna')}
+            >
+              <Dna className="h-6 w-6" />
+              <span className="text-xs font-oxanium">DNA</span>
+            </button>
           </div>
         </nav>
       </div>
@@ -186,4 +193,3 @@ const Bookshelf = () => {
 };
 
 export default Bookshelf;
-
