@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,17 +11,17 @@ import {
 } from "@/components/ui/carousel";
 import { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useNavigate } from "react-router-dom";
+
+declare global {
+  interface Window {
+    Outseta?: {
+      auth: {
+        open: () => void;
+      };
+      getAccessToken: () => string | null;
+    }
+  }
+}
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -66,17 +67,16 @@ const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
 
 const CategoryBooks = ({ category, books }: { category: string, books: Book[] }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [showAuthDialog, setShowAuthDialog] = React.useState(false);
-  const [pendingBook, setPendingBook] = React.useState<Book | null>(null);
 
   const handleAddToBookshelf = async (book: Book) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       
       if (!user.user) {
-        setPendingBook(book);
-        setShowAuthDialog(true);
+        // Open Outseta modal if user is not authenticated
+        if (window.Outseta) {
+          window.Outseta.auth.open();
+        }
         return;
       }
 
@@ -111,11 +111,6 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
     }
   };
 
-  const handleAuthAction = (action: 'login' | 'register') => {
-    setShowAuthDialog(false);
-    navigate(`/auth?action=${action}${pendingBook ? `&redirect=/all-books` : ''}`);
-  };
-
   const categoryBooks = books.filter(book => 
     book.categories?.includes(category)
   );
@@ -123,64 +118,42 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
   if (!categoryBooks.length) return null;
 
   return (
-    <>
-      <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Authentication Required</AlertDialogTitle>
-            <AlertDialogDescription>
-              Please sign in or create an account to add books to your bookshelf.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleAuthAction('login')}>
-              Sign In
-            </AlertDialogAction>
-            <AlertDialogAction onClick={() => handleAuthAction('register')}>
-              Create Account
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <div className="space-y-6 mb-12">
-        <h2 className="text-3xl font-oxanium text-center text-[#E9E7E2] uppercase">
-          {category}
-        </h2>
-        
-        <Carousel>
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {categoryBooks.map((book) => (
-              <CarouselItem key={book.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                <Card 
-                  className="flex-none hover:bg-accent/50 transition-colors bg-card text-card-foreground"
+    <div className="space-y-6 mb-12">
+      <h2 className="text-3xl font-oxanium text-center text-[#E9E7E2] uppercase">
+        {category}
+      </h2>
+      
+      <Carousel>
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {categoryBooks.map((book) => (
+            <CarouselItem key={book.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+              <Card 
+                className="flex-none hover:bg-accent/50 transition-colors bg-card text-card-foreground"
+              >
+                <div 
+                  className="aspect-[2/3] w-full cursor-pointer"
+                  onClick={() => window.open(book.Cover_super || undefined, '_blank')}
                 >
-                  <div 
-                    className="aspect-[2/3] w-full cursor-pointer"
-                    onClick={() => window.open(book.Cover_super || undefined, '_blank')}
-                  >
-                    <img
-                      src={book.cover_url || '/placeholder.svg'}
-                      alt={book.title}
-                      className="w-full h-full object-cover rounded-lg"
-                      loading="lazy"
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleAddToBookshelf(book)}
-                    className="w-full mt-2 px-3 py-1.5 text-sm font-medium text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 rounded-md"
-                  >
-                    Add to Bookshelf
-                  </button>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselProgress totalItems={categoryBooks.length} />
-        </Carousel>
-      </div>
-    </>
+                  <img
+                    src={book.cover_url || '/placeholder.svg'}
+                    alt={book.title}
+                    className="w-full h-full object-cover rounded-lg"
+                    loading="lazy"
+                  />
+                </div>
+                <button
+                  onClick={() => handleAddToBookshelf(book)}
+                  className="w-full mt-2 px-3 py-1.5 text-sm font-medium text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 rounded-md"
+                >
+                  Add to Bookshelf
+                </button>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselProgress totalItems={categoryBooks.length} />
+      </Carousel>
+    </div>
   );
 };
 
