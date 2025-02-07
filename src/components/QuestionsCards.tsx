@@ -80,7 +80,7 @@ const QuestionsCards = () => {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 mb-8">
       <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-16">
         The Great Questions
       </h1>

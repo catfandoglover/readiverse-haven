@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,7 +76,7 @@ const Home = () => {
             <QuestionsCards />
             
             <div className="px-4">
-              <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-16">
+              <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8">
                 Read Classics
               </h1>
               <div className="overflow-x-auto scrollbar-hide">
