@@ -120,4 +120,3 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
-
