@@ -282,7 +282,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      question_category:
+        | "AESTHETICS"
+        | "EPISTEMOLOGY"
+        | "ETHICS"
+        | "ONTOLOGY"
+        | "POLITICS"
+        | "THEOLOGY"
     }
     CompositeTypes: {
       [_ in never]: never

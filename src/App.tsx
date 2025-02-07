@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import Home from "./components/Home";
 import Bookshelf from "./components/Bookshelf";
 import Index from "./pages/Index";
+import GreatQuestions from "./pages/GreatQuestions";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/bookshelf" element={<Bookshelf />} />
+            <Route path="/great-questions" element={<GreatQuestions />} />
             <Route path="/:bookSlug" element={<Index />} />
           </Routes>
         </BrowserRouter>
