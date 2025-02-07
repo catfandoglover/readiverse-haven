@@ -25,14 +25,31 @@ const categories = [
   'THEOLOGY'
 ] as const;
 
+const getCategorySubheader = (category: string) => {
+  const subheaders: Record<string, string> = {
+    'AESTHETICS': 'VIEWS ON BEAUTY',
+    'EPISTEMOLOGY': 'VIEWS ON KNOWLEDGE, TRUTH',
+    'ETHICS': 'VIEWS ON THE GOOD',
+    'ONTOLOGY': 'VIEWS ON REALITY',
+    'POLITICS': 'VIEWS ON POWER',
+    'THEOLOGY': 'VIEWS ON THE DIVINE'
+  };
+  return subheaders[category];
+};
+
 const CategoryQuestions = ({ category, questions }: { category: string, questions: Question[] }) => {
   if (!questions.length) return null;
 
   return (
     <div className="space-y-6 mb-12">
-      <h2 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase">
-        {category}
-      </h2>
+      <div className="space-y-1">
+        <h2 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase">
+          {category}
+        </h2>
+        <p className="text-sm font-oxanium text-center text-[#75869660] uppercase">
+          {getCategorySubheader(category)}
+        </p>
+      </div>
       
       <Carousel
         opts={{
@@ -182,3 +199,4 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
+
