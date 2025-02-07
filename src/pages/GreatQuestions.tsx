@@ -114,7 +114,7 @@ const GreatQuestions = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="flex items-center justify-center min-h-[50vh] bg-[#2A282A]">
         <div className="animate-pulse text-[#E9E7E2]">Loading questions...</div>
       </div>
     );
