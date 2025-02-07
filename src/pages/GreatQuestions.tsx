@@ -63,7 +63,7 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
           {questions.map((question) => (
             <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
               <Card 
-                className="overflow-hidden h-full"
+                className="overflow-hidden h-full border-0"
                 style={{
                   background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
                 }}
