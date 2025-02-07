@@ -4,49 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem,
-  useCarousel 
-} from "./ui/carousel";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
-const CarouselProgress = ({ totalItems }: { totalItems: number }) => {
-  const { api } = useCarousel();
-  const [activeIndex, setActiveIndex] = React.useState(0);
-
-  React.useEffect(() => {
-    if (!api) return;
-
-    api.on('select', () => {
-      setActiveIndex(api.selectedScrollSnap());
-    });
-  }, [api]);
-
-  const maxDots = 5;
-  const visibleDots = Math.min(maxDots, totalItems);
-
-  return (
-    <div className="flex justify-center gap-2 mt-4">
-      {Array.from({ length: visibleDots }).map((_, idx) => (
-        <img
-          key={idx}
-          src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png"
-          alt={`Slide ${idx + 1}`}
-          className={`w-4 h-4 transition-opacity duration-300 mix-blend-screen ${
-            idx === activeIndex ? 'opacity-100' : 'opacity-30'
-          }`}
-        />
-      ))}
-    </div>
-  );
-};
-
-export const QuestionImage = ({ src, alt }: { src: string | null; alt: string }) => {
+const QuestionImage = ({ src, alt }: { src: string | null; alt: string }) => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [hasError, setHasError] = React.useState(false);
   const fallbackImage = "/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png";
@@ -117,7 +80,7 @@ const QuestionsCards = () => {
   }
 
   return (
-    <div className="space-y-12 p-4">
+    <div className="space-y-8 p-4">
       <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase">
         The Great Questions
       </h1>
@@ -153,7 +116,7 @@ const QuestionsCards = () => {
         </div>
       </div>
       
-      <div className="flex justify-center -mt-4">
+      <div className="flex justify-center mb-8">
         <Button 
           variant="secondary"
           className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
@@ -167,3 +130,4 @@ const QuestionsCards = () => {
 };
 
 export default QuestionsCards;
+
