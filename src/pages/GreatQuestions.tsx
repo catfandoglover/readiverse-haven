@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/carousel";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Compass, LibraryBig, Search } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -74,6 +77,9 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
 };
 
 const GreatQuestions = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const { data: questions, isLoading } = useQuery({
     queryKey: ['all-questions'],
     queryFn: async () => {
@@ -91,6 +97,14 @@ const GreatQuestions = () => {
     }
   });
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  const isCurrentPath = (path: string) => {
+    return location.pathname === path;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -105,20 +119,67 @@ const GreatQuestions = () => {
   }, {} as Record<string, Question[]>);
 
   return (
-    <div className="min-h-screen bg-[#2A282A] p-4 home-page">
-      <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
-        The Great Questions
-      </h1>
-      
-      {categories.map(category => (
-        <CategoryQuestions 
-          key={category} 
-          category={category} 
-          questions={questionsByCategory[category]} 
-        />
-      ))}
+    <div className="min-h-screen bg-[#2A282A] pb-[60px]">
+      <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-[#2A282A]">
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-foreground"
+            onClick={() => navigate('/')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-foreground"
+            onClick={() => handleNavigation('/search')}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+        </div>
+      </header>
+
+      <div className="p-4">
+        <h1 className="text-3xl font-oxanium text-center text-[#E9E7E2] mb-12 uppercase">
+          The Great Questions
+        </h1>
+        
+        {categories.map(category => (
+          <CategoryQuestions 
+            key={category} 
+            category={category} 
+            questions={questionsByCategory[category]} 
+          />
+        ))}
+      </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-[#2A282A] py-2 z-50">
+        <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
+          <Button 
+            variant="ghost"
+            size="icon" 
+            className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/') ? 'border-b-2 border-primary rounded-none' : ''}`}
+            onClick={() => handleNavigation('/')}
+          >
+            <Compass className="h-6 w-6" />
+            <span className="text-xs font-oxanium">Discover</span>
+          </Button>
+          <Button 
+            variant="ghost"
+            size="icon" 
+            className={`flex flex-col items-center gap-1 w-14 text-foreground ${isCurrentPath('/bookshelf') ? 'border-b-2 border-primary rounded-none' : ''}`}
+            onClick={() => handleNavigation('/bookshelf')}
+          >
+            <LibraryBig className="h-6 w-6" />
+            <span className="text-xs font-oxanium">Bookshelf</span>
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 };
 
 export default GreatQuestions;
+
