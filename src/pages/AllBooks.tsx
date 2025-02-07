@@ -69,17 +69,20 @@ const CategoryBooks = ({ category, books }: { category: string, books: Book[] })
   const { toast } = useToast();
 
   const handleAddToBookshelf = async (book: Book) => {
-    try {
-      const { data: user } = await supabase.auth.getUser();
+    const { data: user } = await supabase.auth.getUser();
       
-      if (!user.user) {
-        // Open Outseta modal if user is not authenticated
-        if (window.Outseta) {
-          window.Outseta.auth.open();
-        }
-        return;
+    if (!user.user) {
+      // If user is not authenticated, open Outseta modal
+      if (window.Outseta) {
+        window.Outseta.auth.open();
+      } else {
+        console.error('Outseta is not initialized');
       }
+      return;
+    }
 
+    // If user is authenticated, proceed with adding to bookshelf
+    try {
       const { error } = await supabase
         .from('user_library')
         .insert([
