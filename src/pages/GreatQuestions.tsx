@@ -27,12 +27,12 @@ const categories = [
 
 const getCategorySubheader = (category: string) => {
   const subheaders: Record<string, string> = {
-    'AESTHETICS': 'QUESTIONS OF BEAUTY',
-    'EPISTEMOLOGY': 'QUESTIONS OF KNOWLEDGE',
-    'ETHICS': 'QUESTIONS OF THE GOOD',
-    'ONTOLOGY': 'QUESTIONS OF REALITY',
-    'POLITICS': 'QUESTIONS OF POWER',
-    'THEOLOGY': 'QUESTIONS OF THE DIVINE'
+    'AESTHETICS': 'QUESTION BEAUTY',
+    'EPISTEMOLOGY': 'QUESTION KNOWLEDGE',
+    'ETHICS': 'QUESTION THE GOOD',
+    'ONTOLOGY': 'QUESTION REALITY',
+    'POLITICS': 'QUESTION POWER',
+    'THEOLOGY': 'QUESTION THE DIVINE'
   };
   return subheaders[category];
 };
