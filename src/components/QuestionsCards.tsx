@@ -123,7 +123,7 @@ const QuestionsCards = () => {
       <Carousel>
         <CarouselContent className="-ml-2 md:-ml-4">
           {questions?.map((question) => (
-            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={question.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/2 lg:basis-1/3">
               <Card 
                 className="overflow-hidden h-full"
                 style={{
