@@ -6,6 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Database } from "@/integrations/supabase/types";
+
+type DNACategory = Database["public"]["Enums"]["dna_category"];
 
 const DNAAssessment = () => {
   const { category } = useParams();
@@ -20,12 +23,12 @@ const DNAAssessment = () => {
         .from('dna_tree_structure')
         .select(`
           *,
-          question:question_id(
+          question: great_questions!dna_tree_structure_question_id_fkey (
             question,
             category_number
           )
         `)
-        .eq('category', category?.toUpperCase())
+        .eq('category', category?.toUpperCase() as DNACategory)
         .eq('tree_position', 'Q1')
         .single();
       
