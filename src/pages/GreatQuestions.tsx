@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { ArrowLeft, Compass, LibraryBig, Search } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
+import { NotionSyncButton } from "@/components/NotionSyncButton";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -133,6 +135,7 @@ const GreatQuestions = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
+          <NotionSyncButton />
           <button
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             onClick={() => handleNavigation('/search')}
