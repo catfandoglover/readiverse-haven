@@ -156,7 +156,7 @@ const QuestionsCards = () => {
       <div className="flex justify-center mt-8">
         <Button 
           variant="secondary"
-          className="px-8 py-2 text-[#E9E7E2] bg-[#9b87f5] hover:bg-[#7E69AB] transition-colors duration-300 font-oxanium"
+          className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
         >
           View all
         </Button>
