@@ -26,9 +26,5 @@ export async function triggerNotionSync() {
 }
 
 // Make the function available globally
-globalThis.triggerNotionSync = triggerNotionSync;
+(window as any).triggerNotionSync = triggerNotionSync;
 
-// Also expose it on window for browser environments
-if (typeof window !== 'undefined') {
-  (window as any).triggerNotionSync = triggerNotionSync;
-}
