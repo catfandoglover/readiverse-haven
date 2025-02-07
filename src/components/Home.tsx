@@ -156,6 +156,13 @@ const Home = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <button 
+              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
+              onClick={() => handleNavigation('/dna')}
+            >
+              <Dna className="h-6 w-6" />
+              <span className="text-xs font-oxanium">DNA</span>
+            </button>
+            <button 
               className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
               onClick={() => handleNavigation('/')}
             >
@@ -168,13 +175,6 @@ const Home = () => {
             >
               <LibraryBig className="h-6 w-6" />
               <span className="text-xs font-oxanium">Bookshelf</span>
-            </button>
-            <button 
-              className={`h-10 w-14 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
-              onClick={() => handleNavigation('/dna')}
-            >
-              <Dna className="h-6 w-6" />
-              <span className="text-xs font-oxanium">DNA</span>
             </button>
           </div>
         </nav>
