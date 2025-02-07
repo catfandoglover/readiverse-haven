@@ -46,7 +46,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 home-page">
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen pb-[60px]">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
             <Button
@@ -75,7 +75,7 @@ const Home = () => {
           <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
             <QuestionsCards />
             
-            <div className="px-4 pb-24">
+            <div className="px-4">
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-12">
                 Read Classics
               </h1>
@@ -112,7 +112,7 @@ const Home = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
           <div className="flex justify-center items-center gap-8 max-w-md mx-auto px-4">
             <Button 
               variant="ghost"
@@ -140,3 +140,4 @@ const Home = () => {
 };
 
 export default Home;
+
