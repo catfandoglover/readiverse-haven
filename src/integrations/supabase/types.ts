@@ -138,6 +138,33 @@ export type Database = {
         }
         Relationships: []
       }
+      icons: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          illustration: string
+          name: string
+          randomizer: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          illustration: string
+          name: string
+          randomizer?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          illustration?: string
+          name?: string
+          randomizer?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
