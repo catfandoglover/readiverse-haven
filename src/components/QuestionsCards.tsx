@@ -96,7 +96,7 @@ const QuestionsCards = () => {
                   <div className="bg-[#2A282A]/30 backdrop-blur-sm rounded-lg p-4">
                     <div className="aspect-[4/3] relative overflow-hidden rounded-md">
                       <img
-                        src={`https://source.unsplash.com/random/800x600?book,reading&sig=${question.id}`}
+                        src={question.illustration}
                         alt="Question illustration"
                         className="w-full h-full object-cover"
                       />
