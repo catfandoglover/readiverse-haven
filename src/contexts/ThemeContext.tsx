@@ -11,7 +11,7 @@ export interface Theme {
 
 export const themes: Record<ThemeType, Theme> = {
   light: { background: '#ffffff', text: '#2A282A', accent: '#007AFF' },
-  dark: { background: '#2A282A', text: '#ffffff', accent: '#0A84FF' },
+  dark: { background: '#1A1F2C', text: '#E9E7E2', accent: '#9b87f5' },
   sepia: { background: '#F4ECD8', text: '#5B4636', accent: '#BC4B51' }
 };
 
@@ -22,13 +22,13 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: themes.light,
-  themeType: 'light',
+  theme: themes.dark,
+  themeType: 'dark',
   setThemeType: () => {}
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [themeType, setThemeType] = useState<ThemeType>('light');
+  const [themeType, setThemeType] = useState<ThemeType>('dark');
 
   const value = {
     theme: themes[themeType],

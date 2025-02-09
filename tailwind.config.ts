@@ -26,7 +26,7 @@ export default {
 				times: ['Times New Roman', 'serif']
 			},
 			colors: {
-				border: 'hsl(var(--border))',
+				border: 'hsl(var(--border) / 0.1)',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
