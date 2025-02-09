@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -298,6 +297,30 @@ const DNAAssessment = () => {
             console.error('Error updating assessment results:', updateError);
             toast.error('Error saving category results');
             return;
+          }
+
+          // If this is the last category, analyze the results with Claude
+          if (!nextCategory) {
+            try {
+              const { data: analysisResponse, error: analysisError } = await supabase.functions
+                .invoke('analyze-dna', {
+                  body: {
+                    assessmentId,
+                    answers: updatedAnswers
+                  }
+                });
+
+              if (analysisError) {
+                console.error('Error analyzing DNA results:', analysisError);
+                toast.error('Error analyzing results');
+              } else {
+                console.log('DNA analysis complete:', analysisResponse);
+                toast.success('Analysis complete!');
+              }
+            } catch (error) {
+              console.error('Error in DNA analysis:', error);
+              toast.error('Error analyzing results');
+            }
           }
 
           if (nextCategory) {

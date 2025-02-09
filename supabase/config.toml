@@ -25,3 +25,7 @@ enabled = true
 
 [functions.sync-notion-questions]
 verify_jwt = false
+
+[functions.analyze-dna]
+verify_jwt = false
+
