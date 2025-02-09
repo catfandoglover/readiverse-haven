@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -37,6 +38,7 @@ const DNAAssessment = () => {
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
   const [showExitAlert, setShowExitAlert] = React.useState(false);
+  const [answers, setAnswers] = React.useState<string>("");
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -147,48 +149,39 @@ const DNAAssessment = () => {
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
 
-  // Prefetch first question of next category when nearing the end of current category
-  React.useEffect(() => {
-    const prefetchNextCategoryFirstQuestion = async () => {
-      if (!nextCategory || !currentQuestion || currentQuestionNumber < 4) return;
+  // Store answers when completing a category
+  const storeAnswers = async () => {
+    const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+    const existingResults = await supabase
+      .from('dna_assessment_results')
+      .select('*')
+      .eq('name', name)
+      .maybeSingle();
 
-      console.log('Prefetching first question of next category:', nextCategory);
+    if (existingResults.data) {
+      // Update existing results
+      const { error } = await supabase
+        .from('dna_assessment_results')
+        .update({ [upperCategory]: answers })
+        .eq('id', existingResults.data.id);
 
-      try {
-        await queryClient.prefetchQuery({
-          queryKey: ['dna-question', nextCategory, 'Q1'],
-          queryFn: async () => {
-            const { data, error } = await supabase
-              .from('dna_tree_structure')
-              .select(`
-                *,
-                question:great_questions!dna_tree_structure_question_id_fkey (
-                  question,
-                  category_number,
-                  answer_a,
-                  answer_b
-                )
-              `)
-              .eq('category', nextCategory)
-              .eq('tree_position', 'Q1')
-              .maybeSingle();
+      if (error) console.error('Error updating results:', error);
+    } else {
+      // Create new results
+      const { error } = await supabase
+        .from('dna_assessment_results')
+        .insert([{ name, [upperCategory]: answers }]);
 
-            if (error) throw error;
-            console.log(`Prefetched first question of next category: ${nextCategory}`);
-            return data;
-          },
-          staleTime: 5 * 60 * 1000,
-        });
-      } catch (error) {
-        console.error('Error prefetching next category first question:', error);
-      }
-    };
-
-    prefetchNextCategoryFirstQuestion();
-  }, [currentQuestionNumber, nextCategory, queryClient]);
+      if (error) console.error('Error inserting results:', error);
+    }
+  };
 
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion) return;
+
+    // Update answers string
+    const newAnswers = answers + answer;
+    setAnswers(newAnswers);
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -197,6 +190,9 @@ const DNAAssessment = () => {
 
     // If there's no next question, the current category is complete
     if (!nextQuestionId) {
+      // Store answers for the completed category
+      await storeAnswers();
+      
       // Find the current category index
       const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
       
@@ -206,6 +202,7 @@ const DNAAssessment = () => {
         navigate(`/dna/${nextCategory}`);
         setCurrentPosition("Q1");
         setCurrentQuestionNumber(prev => prev + 1);
+        setAnswers(""); // Reset answers for new category
         return;
       }
       
@@ -248,17 +245,6 @@ const DNAAssessment = () => {
     navigate('/dna');
     setShowExitAlert(false);
   };
-
-  // Log current state for debugging
-  console.log('Current state:', {
-    questionLoading,
-    currentQuestion,
-    question: currentQuestion?.question,
-    answerA: currentQuestion?.question?.answer_a,
-    answerB: currentQuestion?.question?.answer_b,
-    currentQuestionNumber,
-    nextCategory
-  });
 
   if (questionLoading) {
     return (
@@ -376,3 +362,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
