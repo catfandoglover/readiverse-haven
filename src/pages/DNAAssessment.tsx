@@ -17,26 +17,8 @@ const DNAAssessment = () => {
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  // Get the current authenticated user
-  const [userId, setUserId] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      } else {
-        // If no user is found, redirect to login or show a message
-        toast({
-          variant: "destructive",
-          title: "Authentication required",
-          description: "Please log in to take the assessment"
-        });
-        navigate('/login');
-      }
-    };
-    getUser();
-  }, [navigate, toast]);
+  // Hardcoded user ID for development
+  const [userId] = React.useState("3157cbda-131b-449e-954e-1ad658739f39");
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
