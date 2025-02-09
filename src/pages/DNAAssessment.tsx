@@ -279,12 +279,12 @@ const DNAAssessment = () => {
         />
       </div>
       <div className="flex-1 flex flex-col px-4 relative">
-        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8 mb-20">
+        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8 mb-20 translate-y-[-25%]">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
             {currentQuestion.question?.question}
           </h1>
         </div>
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute bottom-24 left-1/2 -translate-x-1/2">
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
