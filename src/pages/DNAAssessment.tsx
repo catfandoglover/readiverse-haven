@@ -42,6 +42,12 @@ const DNAAssessment = () => {
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
+  // Get the index of the current category and determine the next category
+  const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
+  const nextCategory = currentCategoryIndex < categoryOrder.length - 1 
+    ? categoryOrder[currentCategoryIndex + 1] 
+    : null;
+
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
@@ -130,7 +136,7 @@ const DNAAssessment = () => {
                 console.log(`Prefetched question: ${nextQuestion.category} - ${nextQuestion.tree_position}`);
                 return data;
               },
-              staleTime: 5 * 60 * 1000, // Consider prefetched data fresh for 5 minutes
+              staleTime: 5 * 60 * 1000,
             });
           }
         } catch (error) {
@@ -141,6 +147,46 @@ const DNAAssessment = () => {
 
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
+
+  // Prefetch first question of next category when nearing the end of current category
+  React.useEffect(() => {
+    const prefetchNextCategoryFirstQuestion = async () => {
+      if (!nextCategory || !currentQuestion || currentQuestionNumber < 4) return;
+
+      console.log('Prefetching first question of next category:', nextCategory);
+
+      try {
+        await queryClient.prefetchQuery({
+          queryKey: ['dna-question', nextCategory, 'Q1'],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('dna_tree_structure')
+              .select(`
+                *,
+                question:great_questions!dna_tree_structure_question_id_fkey (
+                  question,
+                  category_number,
+                  answer_a,
+                  answer_b
+                )
+              `)
+              .eq('category', nextCategory)
+              .eq('tree_position', 'Q1')
+              .maybeSingle();
+
+            if (error) throw error;
+            console.log(`Prefetched first question of next category: ${nextCategory}`);
+            return data;
+          },
+          staleTime: 5 * 60 * 1000,
+        });
+      } catch (error) {
+        console.error('Error prefetching next category first question:', error);
+      }
+    };
+
+    prefetchNextCategoryFirstQuestion();
+  }, [currentQuestionNumber, nextCategory, queryClient]);
 
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion) return;
@@ -210,7 +256,9 @@ const DNAAssessment = () => {
     currentQuestion,
     question: currentQuestion?.question,
     answerA: currentQuestion?.question?.answer_a,
-    answerB: currentQuestion?.question?.answer_b
+    answerB: currentQuestion?.question?.answer_b,
+    currentQuestionNumber,
+    nextCategory
   });
 
   if (questionLoading) {
