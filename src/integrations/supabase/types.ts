@@ -445,7 +445,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      decision_tree_view: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"] | null
+          next_question_a: string | null
+          next_question_b: string | null
+          question: string | null
+          tree_position: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
