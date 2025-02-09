@@ -19,11 +19,12 @@ const categoryOrder: DNACategory[] = [
   "AESTHETICS"
 ];
 
+const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
+
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
-  const [totalQuestions, setTotalQuestions] = React.useState(0);
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
 
   // Convert category to uppercase to match the enum type
@@ -120,22 +121,6 @@ const DNAAssessment = () => {
     }
   };
 
-  // Query to get total questions for the assessment
-  React.useEffect(() => {
-    const fetchTotalQuestions = async () => {
-      const { count, error } = await supabase
-        .from('dna_tree_structure')
-        .select('*', { count: 'exact', head: true })
-        .not('next_question_a_id', 'is', null);
-
-      if (!error && count !== null) {
-        setTotalQuestions(count);
-      }
-    };
-
-    fetchTotalQuestions();
-  }, []);
-
   if (questionLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
@@ -198,8 +183,8 @@ const DNAAssessment = () => {
     );
   }
 
-  // Calculate progress based on actual questions answered
-  const progressPercentage = (currentQuestionNumber / totalQuestions) * 100;
+  // Calculate progress based on the fixed total of 30 questions
+  const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -213,7 +198,7 @@ const DNAAssessment = () => {
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
           <span>{currentQuestionNumber}</span>
           <span>/</span>
-          <span>{totalQuestions}</span>
+          <span>{TOTAL_QUESTIONS}</span>
         </div>
       </header>
       <div className="px-4">
