@@ -21,7 +21,9 @@ export const clearLastVisited = (section: keyof typeof sections) => {
 };
 
 export const saveScrollPosition = (path: string, position: number) => {
-  localStorage.setItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`, position.toString());
+  if (position > 0) {
+    localStorage.setItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`, position.toString());
+  }
 };
 
 export const getScrollPosition = (path: string): number => {
@@ -32,4 +34,3 @@ export const getScrollPosition = (path: string): number => {
 export const clearScrollPosition = (path: string) => {
   localStorage.removeItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`);
 };
-

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -85,15 +85,20 @@ const GreatQuestions = () => {
   const location = useLocation();
   const [isInitialMount, setIsInitialMount] = React.useState(true);
 
+  const restoreScrollPosition = useCallback(() => {
+    const savedPosition = getScrollPosition(location.pathname);
+    if (savedPosition && savedPosition > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: savedPosition,
+          behavior: 'instant'
+        });
+      });
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
-
-    const restoreScrollPosition = () => {
-      const savedPosition = getScrollPosition(location.pathname);
-      if (savedPosition) {
-        window.scrollTo(0, savedPosition);
-      }
-    };
 
     if (isInitialMount) {
       restoreScrollPosition();
@@ -103,38 +108,29 @@ const GreatQuestions = () => {
     const handleScroll = () => {
       if (!isInitialMount) {
         const currentPosition = window.scrollY;
-        saveScrollPosition(location.pathname, currentPosition);
+        if (currentPosition > 0) {
+          saveScrollPosition(location.pathname, currentPosition);
+        }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    const debouncedHandleScroll = () => {
+      requestAnimationFrame(handleScroll);
+    };
+
+    window.addEventListener('scroll', debouncedHandleScroll, { passive: true });
     
     return () => {
       handleScroll();
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', debouncedHandleScroll);
     };
-  }, [location.pathname, isInitialMount]);
-  
-  const { data: questions, isLoading } = useQuery({
-    queryKey: ['all-questions'],
-    queryFn: async () => {
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('great_questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        throw questionsError;
-      }
-
-      return questionsData as Question[];
-    }
-  });
+  }, [location.pathname, isInitialMount, restoreScrollPosition]);
 
   const handleNavigation = (path: string) => {
     const currentPosition = window.scrollY;
-    saveScrollPosition(location.pathname, currentPosition);
+    if (currentPosition > 0) {
+      saveScrollPosition(location.pathname, currentPosition);
+    }
 
     if (path === '/' && location.pathname !== '/') {
       navigate('/');
@@ -159,6 +155,23 @@ const GreatQuestions = () => {
     }
     return false;
   };
+
+  const { data: questions, isLoading } = useQuery({
+    queryKey: ['all-questions'],
+    queryFn: async () => {
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('great_questions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
+
+      return questionsData as Question[];
+    }
+  });
 
   if (isLoading) {
     return (
