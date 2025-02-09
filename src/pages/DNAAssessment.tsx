@@ -302,6 +302,7 @@ const DNAAssessment = () => {
           // If this is the last category, analyze the results with Claude
           if (!nextCategory) {
             try {
+              console.log('Starting DNA analysis...');
               const { data: analysisResponse, error: analysisError } = await supabase.functions
                 .invoke('analyze-dna', {
                   body: {
@@ -313,27 +314,23 @@ const DNAAssessment = () => {
               if (analysisError) {
                 console.error('Error analyzing DNA results:', analysisError);
                 toast.error('Error analyzing results');
-                // Still navigate to DNA home even if analysis fails
                 navigate('/dna');
                 return;
               }
 
               console.log('DNA analysis complete:', analysisResponse);
-              toast.success('Assessment completed! Redirecting to results...', {
-                duration: 2000,
-                onDismiss: () => {
-                  navigate('/dna');
-                }
+              
+              // Immediate navigation
+              navigate('/dna');
+              
+              // Show success toast after navigation
+              toast.success('Assessment completed! View your results below', {
+                duration: 3000
               });
-              // Ensure navigation happens even if toast is dismissed early
-              setTimeout(() => {
-                navigate('/dna');
-              }, 2000);
 
             } catch (error) {
               console.error('Error in DNA analysis:', error);
               toast.error('Error analyzing results');
-              // Ensure navigation happens even if there's an error
               navigate('/dna');
             }
           } else {
@@ -368,7 +365,6 @@ const DNAAssessment = () => {
         } catch (error) {
           console.error('Error updating assessment:', error);
           toast.error('Error saving your progress');
-          // Navigate to /dna if this was the last category
           if (!nextCategory) {
             navigate('/dna');
           }
