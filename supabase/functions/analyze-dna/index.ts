@@ -101,15 +101,15 @@ Your final output should look like this:
 
 Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
 
-    console.log('Sending request to Claude API...');
+    console.log('Sending request to Claude API with updated headers...');
     
-    // Call Claude API with correct headers and endpoint
+    // Call Claude API with the correct endpoint and headers for v3
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey!,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'x-api-key': anthropicApiKey!
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
@@ -117,7 +117,8 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
         messages: [{
           role: 'user',
           content: prompt
-        }]
+        }],
+        temperature: 0.7
       })
     });
 
