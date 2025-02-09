@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -42,6 +41,7 @@ const DNAAssessment = () => {
   const [answers, setAnswers] = React.useState<string>("");
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -54,6 +54,62 @@ const DNAAssessment = () => {
 
   // Calculate progress percentage
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
+
+  // Initialize or get assessment ID
+  React.useEffect(() => {
+    const initializeAssessment = async () => {
+      if (!assessmentId && currentCategoryIndex === 0) {
+        try {
+          setIsInitializing(true);
+          const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+          
+          // Create the assessment
+          const { data: newAssessment, error: createError } = await supabase
+            .from('dna_assessment_results')
+            .insert([{ name }])
+            .select()
+            .maybeSingle();
+
+          if (createError) {
+            console.error('Error creating assessment:', createError);
+            toast.error('Error starting assessment');
+            return;
+          }
+
+          if (!newAssessment) {
+            console.error('No assessment created');
+            toast.error('Error creating assessment');
+            return;
+          }
+
+          // Verify the assessment exists
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('dna_assessment_results')
+            .select('id')
+            .eq('id', newAssessment.id)
+            .maybeSingle();
+
+          if (verifyError || !verifyData) {
+            console.error('Error verifying assessment:', verifyError);
+            toast.error('Error verifying assessment');
+            return;
+          }
+
+          setAssessmentId(newAssessment.id);
+          console.log('Created and verified new assessment with ID:', newAssessment.id);
+        } catch (error) {
+          console.error('Error in assessment initialization:', error);
+          toast.error('Error initializing assessment');
+        } finally {
+          setIsInitializing(false);
+        }
+      } else {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeAssessment();
+  }, [assessmentId, currentCategoryIndex]);
 
   // Query for current question
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
@@ -93,35 +149,10 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
-    enabled: !!upperCategory && !isTransitioning,
+    enabled: !!upperCategory && !isTransitioning && !isInitializing,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
-
-  // Initialize or get assessment ID
-  React.useEffect(() => {
-    const initializeAssessment = async () => {
-      if (!assessmentId && currentCategoryIndex === 0) {
-        const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-        const { data, error } = await supabase
-          .from('dna_assessment_results')
-          .insert([{ name }])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating assessment:', error);
-          toast.error('Error starting assessment');
-          return;
-        }
-
-        setAssessmentId(data.id);
-        console.log('Created new assessment with ID:', data.id);
-      }
-    };
-
-    initializeAssessment();
-  }, [assessmentId, currentCategoryIndex]);
 
   // Prefetch next possible questions
   React.useEffect(() => {
@@ -218,110 +249,116 @@ const DNAAssessment = () => {
       if (!nextQuestionId) {
         setIsTransitioning(true);
 
-        // Get current answers from the assessment
-        const { data: currentData, error: fetchError } = await supabase
-          .from('dna_assessment_results')
-          .select('answers')
-          .eq('id', assessmentId)
-          .maybeSingle();
+        try {
+          // Get current answers from the assessment
+          const { data: currentData, error: fetchError } = await supabase
+            .from('dna_assessment_results')
+            .select('answers')
+            .eq('id', assessmentId)
+            .maybeSingle();
 
-        if (fetchError) {
-          console.error('Error fetching current answers:', fetchError);
-          toast.error('Error updating results');
-          return;
-        }
+          if (fetchError) {
+            console.error('Error fetching current answers:', fetchError);
+            toast.error('Error updating results');
+            return;
+          }
 
-        if (!currentData) {
-          console.error('Assessment not found:', assessmentId);
-          toast.error('Error: Assessment not found');
-          return;
-        }
+          if (!currentData) {
+            console.error('Assessment not found:', assessmentId);
+            toast.error('Error: Assessment not found');
+            return;
+          }
 
-        console.log('Current answers data:', currentData);
+          console.log('Current answers data:', currentData);
 
-        // Prepare the new answers object with type safety
-        const currentAnswers = (currentData?.answers as Record<string, string>) || {};
-        const updatedAnswers = {
-          ...currentAnswers,
-          [upperCategory]: newAnswers
-        };
+          // Prepare the new answers object with type safety
+          const currentAnswers = (currentData?.answers as Record<string, string>) || {};
+          const updatedAnswers = {
+            ...currentAnswers,
+            [upperCategory]: newAnswers
+          };
 
-        // Create an update object with both the answers JSON and the specific sequence column
-        const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
-        const updateData = {
-          answers: updatedAnswers,
-          [sequenceColumnName]: newAnswers
-        };
+          // Create an update object with both the answers JSON and the specific sequence column
+          const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
+          const updateData = {
+            answers: updatedAnswers,
+            [sequenceColumnName]: newAnswers
+          };
 
-        console.log('Updating assessment with:', updateData);
+          console.log('Updating assessment with:', updateData);
 
-        // Update assessment results with explicit select of updated fields
-        const { data: updateResult, error: updateError } = await supabase
-          .from('dna_assessment_results')
-          .update(updateData)
-          .eq('id', assessmentId)
-          .select(`
-            id,
-            answers,
-            ethics_sequence,
-            epistemology_sequence,
-            politics_sequence,
-            theology_sequence,
-            ontology_sequence,
-            aesthetics_sequence
-          `)
-          .maybeSingle();
+          // Update assessment results with explicit select of updated fields
+          const { data: updateResult, error: updateError } = await supabase
+            .from('dna_assessment_results')
+            .update(updateData)
+            .eq('id', assessmentId)
+            .select(`
+              id,
+              answers,
+              ethics_sequence,
+              epistemology_sequence,
+              politics_sequence,
+              theology_sequence,
+              ontology_sequence,
+              aesthetics_sequence
+            `)
+            .maybeSingle();
 
-        if (updateError) {
-          console.error('Error updating assessment results:', updateError);
-          toast.error('Error saving category results');
-          return;
-        }
+          if (updateError) {
+            console.error('Error updating assessment results:', updateError);
+            toast.error('Error saving category results');
+            return;
+          }
 
-        if (!updateResult) {
-          console.error('No assessment found to update');
-          toast.error('Error: Could not update assessment');
-          return;
-        }
+          if (!updateResult) {
+            console.error('No assessment found to update');
+            toast.error('Error: Could not update assessment');
+            return;
+          }
 
-        console.log('Successfully updated assessment with sequences:', updateResult);
+          console.log('Successfully updated assessment with sequences:', updateResult);
 
-        if (currentCategoryIndex < categoryOrder.length - 1) {
-          const nextCategory = categoryOrder[currentCategoryIndex + 1];
+          if (currentCategoryIndex < categoryOrder.length - 1) {
+            const nextCategory = categoryOrder[currentCategoryIndex + 1];
+            
+            await queryClient.prefetchQuery({
+              queryKey: ['dna-question', nextCategory, 'Q1'],
+              queryFn: async () => {
+                const { data, error } = await supabase
+                  .from('dna_tree_structure')
+                  .select(`
+                    *,
+                    question:great_questions!dna_tree_structure_question_id_fkey (
+                      question,
+                      category_number,
+                      answer_a,
+                      answer_b
+                    )
+                  `)
+                  .eq('category', nextCategory)
+                  .eq('tree_position', 'Q1')
+                  .maybeSingle();
+
+                if (error) throw error;
+                return data;
+              },
+            });
+
+            navigate(`/dna/${nextCategory.toLowerCase()}`);
+            setCurrentPosition("Q1");
+            setCurrentQuestionNumber(prev => prev + 1);
+            setAnswers("");
+            setIsTransitioning(false);
+            return;
+          }
           
-          await queryClient.prefetchQuery({
-            queryKey: ['dna-question', nextCategory, 'Q1'],
-            queryFn: async () => {
-              const { data, error } = await supabase
-                .from('dna_tree_structure')
-                .select(`
-                  *,
-                  question:great_questions!dna_tree_structure_question_id_fkey (
-                    question,
-                    category_number,
-                    answer_a,
-                    answer_b
-                  )
-                `)
-                .eq('category', nextCategory)
-                .eq('tree_position', 'Q1')
-                .maybeSingle();
-
-              if (error) throw error;
-              return data;
-            },
-          });
-
-          navigate(`/dna/${nextCategory.toLowerCase()}`);
-          setCurrentPosition("Q1");
-          setCurrentQuestionNumber(prev => prev + 1);
-          setAnswers("");
-          setIsTransitioning(false);
+          navigate('/dna');
           return;
+        } catch (error) {
+          console.error('Error updating assessment:', error);
+          toast.error('Error saving your progress');
+          setIsTransitioning(false);
         }
-        
-        navigate('/dna');
-        return;
       }
 
       try {
@@ -361,7 +398,7 @@ const DNAAssessment = () => {
     setShowExitAlert(false);
   };
 
-  if (questionLoading || isTransitioning) {
+  if (questionLoading || isTransitioning || isInitializing) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <header className="px-4 py-3 flex items-center justify-between relative z-50">
@@ -379,7 +416,9 @@ const DNAAssessment = () => {
           />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="font-oxanium text-lg">Loading next question...</div>
+          <div className="font-oxanium text-lg">
+            {isInitializing ? 'Initializing assessment...' : 'Loading next question...'}
+          </div>
         </div>
       </div>
     );
