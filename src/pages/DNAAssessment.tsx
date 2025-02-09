@@ -313,21 +313,27 @@ const DNAAssessment = () => {
               if (analysisError) {
                 console.error('Error analyzing DNA results:', analysisError);
                 toast.error('Error analyzing results');
-              } else {
-                console.log('DNA analysis complete:', analysisResponse);
-                toast.success('DNA analysis complete!', {
-                  duration: 3000,
-                  onDismiss: () => {
-                    navigate('/dna');
-                  }
-                });
-                // Directly navigate to /dna after successful analysis
+                // Still navigate to DNA home even if analysis fails
                 navigate('/dna');
+                return;
               }
+
+              console.log('DNA analysis complete:', analysisResponse);
+              toast.success('Assessment completed! Redirecting to results...', {
+                duration: 2000,
+                onDismiss: () => {
+                  navigate('/dna');
+                }
+              });
+              // Ensure navigation happens even if toast is dismissed early
+              setTimeout(() => {
+                navigate('/dna');
+              }, 2000);
+
             } catch (error) {
               console.error('Error in DNA analysis:', error);
               toast.error('Error analyzing results');
-              // Still navigate to /dna in case of error
+              // Ensure navigation happens even if there's an error
               navigate('/dna');
             }
           } else {
@@ -362,7 +368,7 @@ const DNAAssessment = () => {
         } catch (error) {
           console.error('Error updating assessment:', error);
           toast.error('Error saving your progress');
-          // Navigate to /dna in case of error
+          // Navigate to /dna if this was the last category
           if (!nextCategory) {
             navigate('/dna');
           }
