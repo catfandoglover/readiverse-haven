@@ -101,15 +101,15 @@ Your final output should look like this:
 
 Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
 
-    console.log('Sending request to Claude API with prompt length:', prompt.length);
+    console.log('Sending request to Claude API...');
     
-    // Call Claude API with the updated endpoint and format
+    // Call Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
-        'x-api-key': anthropicApiKey!
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
@@ -121,21 +121,13 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       })
     });
 
-    console.log('Claude API response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Claude API error:', errorText);
-      throw new Error(`Claude API returned status ${response.status}`);
-    }
-
     const claudeResponse = await response.json();
     console.log('Received response from Claude:', claudeResponse);
 
     // Check if the response has the expected structure
     if (!claudeResponse.content || !Array.isArray(claudeResponse.content) || !claudeResponse.content[0]?.text) {
       console.error('Unexpected Claude API response structure:', claudeResponse);
-      throw new Error('Invalid response from Claude API');
+      throw new Error('Invalid response structure from Claude API');
     }
 
     const analysisText = claudeResponse.content[0].text;
