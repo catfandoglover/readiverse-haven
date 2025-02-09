@@ -190,7 +190,7 @@ const IntellectualDNA = () => {
         </div>
 
         <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-          <DialogContent className="sm:top-[25%] translate-y-[-25%]">
+          <DialogContent className="sm:top-[15%] translate-y-[-15%]">
             <DialogHeader>
               <DialogTitle>Enter Your Name</DialogTitle>
               <DialogDescription>
