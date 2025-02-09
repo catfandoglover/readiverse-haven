@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
-import { useAuth } from "@supabase/auth-helpers-react";
+import { useSession } from "@supabase/auth-helpers-react";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -17,7 +17,8 @@ const DNAAssessment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
-  const user = useAuth();
+  const session = useSession();
+  const user = session?.user;
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
