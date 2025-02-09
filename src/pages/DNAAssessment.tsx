@@ -13,7 +13,6 @@ type DNACategory = Database["public"]["Enums"]["dna_category"];
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
-  const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
   // Convert category to uppercase to match the enum type
@@ -57,12 +56,8 @@ const DNAAssessment = () => {
     retry: false
   });
 
-  const handleAnswer = (answer: "A" | "B") => {
-    setSelectedAnswer(answer);
-  };
-
-  const handleContinue = async () => {
-    if (!selectedAnswer || !currentQuestion) return;
+  const handleAnswer = async (answer: "A" | "B") => {
+    if (!currentQuestion) return;
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
@@ -73,7 +68,7 @@ const DNAAssessment = () => {
     }
 
     // Get the next question ID based on the selected answer
-    const nextQuestionId = selectedAnswer === "A" 
+    const nextQuestionId = answer === "A" 
       ? currentQuestion.next_question_a_id 
       : currentQuestion.next_question_b_id;
 
@@ -115,9 +110,8 @@ const DNAAssessment = () => {
       return;
     }
 
-    // Update the current position and reset the selected answer
+    // Update the current position
     setCurrentPosition(nextQuestion.tree_position);
-    setSelectedAnswer(null);
   };
 
   if (error) {
@@ -216,11 +210,7 @@ const DNAAssessment = () => {
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
           <Button
             variant="outline"
-            className={`w-full py-6 text-lg font-medium ${
-              selectedAnswer === "A"
-                ? "bg-white/20 border-white/50"
-                : "bg-white/5 border-white/20 hover:bg-white/10"
-            }`}
+            className="w-full py-6 text-lg font-medium bg-white/5 border-white/20 hover:bg-white/10"
             onClick={() => handleAnswer("A")}
           >
             YES
@@ -228,23 +218,10 @@ const DNAAssessment = () => {
           
           <Button
             variant="outline"
-            className={`w-full py-6 text-lg font-medium ${
-              selectedAnswer === "B"
-                ? "bg-white/20 border-white/50"
-                : "bg-white/5 border-white/20 hover:bg-white/10"
-            }`}
+            className="w-full py-6 text-lg font-medium bg-white/5 border-white/20 hover:bg-white/10"
             onClick={() => handleAnswer("B")}
           >
             NO
-          </Button>
-
-          <Button
-            variant="outline"
-            className="w-full py-6 text-lg font-medium mt-8 bg-transparent border-white/20 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleContinue}
-            disabled={!selectedAnswer}
-          >
-            Continue
           </Button>
         </div>
       </div>
