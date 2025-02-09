@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -124,29 +123,16 @@ const DNAAssessment = () => {
       if (!currentQuestion.next_question_a_id || !currentQuestion.next_question_b_id) {
         const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
         if (currentCategoryIndex < categoryOrder.length - 1) {
-          const nextCategory = categoryOrder[currentCategoryIndex + 1];
-          await queryClient.prefetchQuery({
-            queryKey: ['dna-question', nextCategory, 'Q1'],
-            queryFn: async () => {
-              const { data, error } = await supabase
-                .from('dna_tree_structure')
-                .select(`
-                  *,
-                  question:great_questions!dna_tree_structure_question_id_fkey (
-                    question,
-                    category_number
-                  )
-                `)
-                .eq('category', nextCategory)
-                .eq('tree_position', 'Q1')
-                .maybeSingle();
-
-              if (error) throw error;
-              console.log(`Prefetched first question of next category: ${nextCategory}`);
-              return data;
-            },
-          });
+          const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
+          navigate(`/dna/${nextCategory}`);
+          setCurrentPosition("Q1");
+          setCurrentQuestionNumber(prev => prev + 1);
+          return;
         }
+        
+        // If we're at the last category, go back to DNA home
+        navigate('/dna');
+        return;
       }
     };
 
@@ -268,7 +254,6 @@ const DNAAssessment = () => {
     );
   }
 
-  // Calculate progress based on the fixed total of 30 questions
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
   return (
@@ -294,13 +279,13 @@ const DNAAssessment = () => {
       </div>
       <div className="flex-1 flex flex-col px-4">
         {/* Question container with minimum height */}
-        <div className="flex-1 flex items-center justify-center min-h-[300px] py-8">
+        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
             {currentQuestion.question?.question}
           </h1>
         </div>
         {/* Fixed position buttons container */}
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mb-16">
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mb-8">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
@@ -322,4 +307,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
