@@ -6,6 +6,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
@@ -27,6 +37,7 @@ const DNAAssessment = () => {
   const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
+  const [showExitAlert, setShowExitAlert] = React.useState(false);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -193,6 +204,15 @@ const DNAAssessment = () => {
     }
   };
 
+  const handleExit = () => {
+    setShowExitAlert(true);
+  };
+
+  const confirmExit = () => {
+    navigate('/dna');
+    setShowExitAlert(false);
+  };
+
   if (questionLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
@@ -206,7 +226,7 @@ const DNAAssessment = () => {
       <div className="min-h-screen bg-background text-foreground">
         <header className="px-4 py-3">
           <button 
-            onClick={() => navigate('/dna')}
+            onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -218,7 +238,7 @@ const DNAAssessment = () => {
           </h1>
           <Button
             variant="outline"
-            onClick={() => navigate('/dna')}
+            onClick={handleExit}
             className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
           >
             GO BACK
@@ -233,7 +253,7 @@ const DNAAssessment = () => {
       <div className="min-h-screen bg-background text-foreground">
         <header className="px-4 py-3">
           <button 
-            onClick={() => navigate('/dna')}
+            onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -245,7 +265,7 @@ const DNAAssessment = () => {
           </h1>
           <Button
             variant="outline"
-            onClick={() => navigate('/dna')}
+            onClick={handleExit}
             className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
           >
             GO BACK
@@ -261,7 +281,7 @@ const DNAAssessment = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-4 py-3 flex items-center justify-between">
         <button 
-          onClick={() => navigate('/dna')}
+          onClick={handleExit}
           className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -301,8 +321,24 @@ const DNAAssessment = () => {
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to exit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress will not be saved and you will need to retake the assessment from the beginning.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit}>Exit Assessment</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
 export default DNAAssessment;
+
