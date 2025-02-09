@@ -26,8 +26,12 @@ serve(async (req) => {
     console.log('Processing DNA analysis for assessment:', assessmentId);
     console.log('Answers:', answers);
 
-    // Prepare the prompt for Claude
-    const prompt = `Below are the answers to a philosophical assessment categorized by different areas of philosophy. Each category contains a sequence of binary answers (A/B) representing the person's choices through a decision tree. Please analyze these answers and provide insights about the person's philosophical worldview:
+    // Prepare the prompt for Claude with the framework context
+    const prompt = `I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category contains a sequence of binary answers (A/B) representing the person's choices through a carefully designed decision tree that explores fundamental philosophical questions.
+
+The framework is designed to decode one's intellectual ancestry and philosophical worldview by analyzing their responses to key questions in each domain. Each answer sequence represents a path through a complex decision tree of philosophical positions.
+
+Here are the answers provided for each category:
 
 Ethics: ${answers.ETHICS || 'Not answered'}
 Epistemology: ${answers.EPISTEMOLOGY || 'Not answered'}
@@ -36,7 +40,24 @@ Theology: ${answers.THEOLOGY || 'Not answered'}
 Ontology: ${answers.ONTOLOGY || 'Not answered'}
 Aesthetics: ${answers.AESTHETICS || 'Not answered'}
 
-Please provide a comprehensive analysis of their philosophical worldview based on these answers. Include potential contradictions, interesting patterns, and what these choices might reveal about their deeper beliefs and values.`;
+Based on these answer sequences, please:
+
+1. Create a profile with:
+   - A mythopoetic title that captures their philosophical essence
+   - Their key intellectual lineages and philosophical ancestors
+   - Notable patterns or unique combinations in their thinking
+
+2. Analyze:
+   - Their core philosophical commitments
+   - Potential tensions or harmonies between different aspects of their worldview
+   - How their views in one domain influence or relate to others
+
+3. Reflect on:
+   - The broader implications of their philosophical outlook
+   - How their worldview might shape their approach to contemporary challenges
+   - Potential areas for intellectual growth or exploration
+
+Please write this analysis in an engaging, narrative style that balances academic insight with accessible language. Focus on making meaningful connections between their various philosophical positions while maintaining intellectual rigor.`;
 
     // Call Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -100,3 +121,4 @@ Please provide a comprehensive analysis of their philosophical worldview based o
     );
   }
 });
+
