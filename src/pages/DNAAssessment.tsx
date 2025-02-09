@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -300,11 +299,22 @@ const DNAAssessment = () => {
             return;
           }
 
-          // If this is the last category, analyze the results with Claude
+          // If this is the last category, handle completion
           if (!nextCategory) {
+            console.log('Assessment complete, navigating to results...');
+            
+            // Immediate navigation first
+            navigate('/dna');
+            
+            // Show success toast
+            toast.success('Assessment completed! View your results below', {
+              duration: 3000
+            });
+
+            // Then trigger analysis in the background
             try {
               console.log('Starting DNA analysis...');
-              const { data: analysisResponse, error: analysisError } = await supabase.functions
+              const { error: analysisError } = await supabase.functions
                 .invoke('analyze-dna', {
                   body: {
                     assessmentId,
@@ -315,24 +325,14 @@ const DNAAssessment = () => {
               if (analysisError) {
                 console.error('Error analyzing DNA results:', analysisError);
                 toast.error('Error analyzing results');
-                navigate('/dna');
                 return;
               }
 
-              console.log('DNA analysis complete:', analysisResponse);
-              
-              // Immediate navigation
-              navigate('/dna');
-              
-              // Show success toast after navigation
-              toast.success('Assessment completed! View your results below', {
-                duration: 3000
-              });
+              console.log('DNA analysis complete');
 
             } catch (error) {
               console.error('Error in DNA analysis:', error);
               toast.error('Error analyzing results');
-              navigate('/dna');
             }
           } else {
             await queryClient.prefetchQuery({
