@@ -115,9 +115,9 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer sk-${openrouterApiKey}`, // Added "sk-" prefix as required by OpenRouter
-        'HTTP-Referer': 'https://lovable.dev', // Required by OpenRouter
-        'X-Title': 'DNA Analysis' // Required by OpenRouter
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'DNA Analysis'
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-sonnet',
@@ -177,3 +177,4 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
+
