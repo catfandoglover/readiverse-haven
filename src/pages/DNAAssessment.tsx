@@ -116,7 +116,7 @@ const DNAAssessment = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#1A1F2C] text-white">
+      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
         <header className="px-4 py-3">
           <button 
             onClick={() => navigate('/dna')}
@@ -126,15 +126,15 @@ const DNAAssessment = () => {
           </button>
         </header>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-          <h1 className="text-2xl font-serif text-center mb-8">
+          <h1 className="text-2xl font-oxanium text-center mb-8">
             No questions found for this category
           </h1>
           <Button
             variant="outline"
             onClick={() => navigate('/dna')}
-            className="bg-white/5 border-white/20 hover:bg-white/10"
+            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
           >
-            Go Back
+            GO BACK
           </Button>
         </div>
       </div>
@@ -143,15 +143,15 @@ const DNAAssessment = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#1A1F2C] text-white flex items-center justify-center">
-        <div>Loading...</div>
+      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
+        <div className="font-oxanium">Loading...</div>
       </div>
     );
   }
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-[#1A1F2C] text-white">
+      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
         <header className="px-4 py-3">
           <button 
             onClick={() => navigate('/dna')}
@@ -161,15 +161,15 @@ const DNAAssessment = () => {
           </button>
         </header>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-          <h1 className="text-2xl font-serif text-center mb-8">
+          <h1 className="text-2xl font-oxanium text-center mb-8">
             Question not found
           </h1>
           <Button
             variant="outline"
             onClick={() => navigate('/dna')}
-            className="bg-white/5 border-white/20 hover:bg-white/10"
+            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
           >
-            Go Back
+            GO BACK
           </Button>
         </div>
       </div>
@@ -177,7 +177,7 @@ const DNAAssessment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white">
+    <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
       {/* Header */}
       <header className="px-4 py-3 flex items-center justify-between">
         <button 
@@ -186,7 +186,7 @@ const DNAAssessment = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-2 text-sm text-[#E9E7E2]/60">
+        <div className="flex items-center gap-2 text-sm font-oxanium text-[#E9E7E2]/60">
           <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
           <span>5</span>
@@ -203,14 +203,14 @@ const DNAAssessment = () => {
 
       {/* Question Content */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
-        <h1 className="text-3xl font-serif text-center mb-16 max-w-2xl">
+        <h1 className="text-3xl font-oxanium text-center mb-16 max-w-2xl">
           {currentQuestion.question?.question}
         </h1>
 
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-medium bg-white/5 border-white/20 hover:bg-white/10"
+            className="w-full py-6 text-lg font-oxanium bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
             onClick={() => handleAnswer("A")}
           >
             YES
@@ -218,7 +218,7 @@ const DNAAssessment = () => {
           
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-medium bg-white/5 border-white/20 hover:bg-white/10"
+            className="w-full py-6 text-lg font-oxanium bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
             onClick={() => handleAnswer("B")}
           >
             NO
