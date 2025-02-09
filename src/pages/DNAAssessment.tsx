@@ -302,12 +302,14 @@ const DNAAssessment = () => {
   const buttonTextA = currentQuestion.question?.answer_a || "Yes";
   const buttonTextB = currentQuestion.question?.answer_b || "No";
 
+  const buttonStyles = "w-full py-6 text-lg text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10";
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-4 py-3 flex items-center justify-between relative z-50">
         <button 
           onClick={handleExit}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
           type="button"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -333,14 +335,14 @@ const DNAAssessment = () => {
         <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+            className={buttonStyles}
             onClick={() => handleAnswer("A")}
           >
             {buttonTextA}
           </Button>
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+            className={buttonStyles}
             onClick={() => handleAnswer("B")}
           >
             {buttonTextB}
@@ -357,8 +359,15 @@ const DNAAssessment = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmExit}>Exit Assessment</AlertDialogAction>
+            <AlertDialogCancel className="text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmExit}
+              className="text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+            >
+              Exit Assessment
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
