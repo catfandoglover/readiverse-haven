@@ -115,7 +115,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openrouterApiKey}`, // Added "Bearer " prefix
+        'Authorization': `Bearer sk-${openrouterApiKey}`, // Added "sk-" prefix as required by OpenRouter
         'HTTP-Referer': 'https://lovable.dev', // Required by OpenRouter
         'X-Title': 'DNA Analysis' // Required by OpenRouter
       },
