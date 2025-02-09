@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -178,7 +177,6 @@ const DNAAssessment = () => {
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
 
-  // Store answer and handle navigation
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion || !assessmentId) return;
 
@@ -232,6 +230,8 @@ const DNAAssessment = () => {
           return;
         }
 
+        console.log('Current answers data:', currentData);
+
         // Prepare the new answers object with type safety
         const currentAnswers = (currentData?.answers as Record<string, string>) || {};
         const updatedAnswers = {
@@ -249,16 +249,19 @@ const DNAAssessment = () => {
         console.log('Updating assessment with:', updateData);
 
         // Update assessment results
-        const { error: updateError } = await supabase
+        const { data: updateResult, error: updateError } = await supabase
           .from('dna_assessment_results')
           .update(updateData)
-          .eq('id', assessmentId);
+          .eq('id', assessmentId)
+          .select();
 
         if (updateError) {
           console.error('Error updating assessment results:', updateError);
           toast.error('Error saving category results');
           return;
         }
+
+        console.log('Successfully updated assessment with sequences:', updateResult);
 
         if (currentCategoryIndex < categoryOrder.length - 1) {
           const nextCategory = categoryOrder[currentCategoryIndex + 1];
