@@ -21,10 +21,8 @@ serve(async (req) => {
   }
 
   try {
-    // Log the API key existence (not the actual value)
-    console.log('OpenRouter API key present:', !!openrouterApiKey);
-    
     if (!openrouterApiKey) {
+      console.error('OpenRouter API key is not configured');
       throw new Error('OpenRouter API key is not configured');
     }
 
@@ -108,9 +106,9 @@ Your final output should look like this:
 
 Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
 
-    console.log('Sending request to OpenRouter API...');
+    console.log('Sending request to OpenRouter API with required headers...');
     
-    // Call OpenRouter API with proper headers and error logging
+    // Call OpenRouter API with proper headers and error handling
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
