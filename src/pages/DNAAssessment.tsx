@@ -189,8 +189,8 @@ const DNAAssessment = () => {
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
   // Get the positions of the next questions to extract labels from their tree_position
-  const nextA = currentQuestion.next_a?.tree_position || "";
-  const nextB = currentQuestion.next_b?.tree_position || "";
+  const nextA = currentQuestion.next_a?.[0]?.tree_position || "";
+  const nextB = currentQuestion.next_b?.[0]?.tree_position || "";
   
   // Extract answer labels from tree positions (format: "Q1|ANSWER")
   const answerA = nextA.split("|")[1] || "YES";
