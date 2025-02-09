@@ -26,27 +26,25 @@ serve(async (req) => {
     console.log('Processing DNA analysis for assessment:', assessmentId);
     console.log('Answers:', answers);
 
+    // Format answers_json for the prompt
+    const answers_json = JSON.stringify(answers, null, 2);
+
     // Prepare the prompt for Claude with the enhanced framework
     const prompt = `You are a sophisticated AI tasked with creating personalized philosophical profiles based on users' responses to a series of questions. Your goal is to interpret these responses and craft a mythopoetic narrative that captures the essence of the individual's worldview.
 
-I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category contains a sequence of binary answers (A/B) representing the person's choices through a carefully designed decision tree that explores fundamental philosophical questions.
-
 First, here are the user's answers to the philosophical questions:
 
-Ethics: ${answers.ETHICS || 'Not answered'}
-Epistemology: ${answers.EPISTEMOLOGY || 'Not answered'}
-Politics: ${answers.POLITICS || 'Not answered'}
-Theology: ${answers.THEOLOGY || 'Not answered'}
-Ontology: ${answers.ONTOLOGY || 'Not answered'}
-Aesthetics: ${answers.AESTHETICS || 'Not answered'}
+<answers_json>
+${answers_json}
+</answers_json>
 
 Please analyze these answers and create a profile for the user. Follow these steps:
 
-1. Extract the 5-letter answer sequences for each philosophical category from the answers.
+1. Extract the 5-letter answer sequences for each philosophical category (Theology, Ontology, Epistemology, Ethics, Politics, and Aesthetics) from the answers_json.
 
-2. Based on your analysis of the answer sequences, generate a mythopoetic title that poetically captures the essence of their philosophical leanings.
+2. Based on your analysis of the answer sequences, generate a mythopoetic title for the user. This title should poetically capture the essence of their philosophical leanings.
 
-3. Create a list of basic information in this format:
+3. Create a list of basic information in the following format:
 
 <name>
 [Generated Name]
@@ -80,32 +78,32 @@ Please analyze these answers and create a profile for the user. Follow these ste
 [5-letter answer sequence]
 </aesthetics>
 
-4. Work through your interpretation:
-a. Extract and list the 5-letter answer sequences for each category
-b. Interpret the meaning of each sequence
-c. Identify connections between different philosophical categories
-d. Consider how each philosophical category might influence the others
-e. Brainstorm mythopoetic themes and imagery based on your interpretations
-f. Think about potential mythological or archetypal figures that align with the user's philosophical profile
+4. Write a narrative prose profile that weaves together the user's philosophical tendencies into a cohesive and poetic description. This profile should reflect the user's worldview as indicated by their answers across all six categories.
 
-5. Write a narrative prose profile that:
-- Weaves together the user's philosophical tendencies into a cohesive and poetic description
-- Reflects their worldview across all six categories
-- Makes meaningful connections between their various philosophical positions
-- Balances academic insight with accessible language
-- Maintains intellectual rigor while being engaging
+Before providing your final output, work through your interpretation inside <interpretation> tags:
 
-Format your response exactly like this:
+a. Extract and list the 5-letter answer sequences for each category.
+b. Interpret the meaning of each sequence.
+c. Identify connections between different philosophical categories.
+d. Consider how each philosophical category might influence the others.
+e. Brainstorm mythopoetic themes and imagery based on your interpretations.
+f. Think about potential mythological or archetypal figures that align with the user's philosophical profile.
+
+Your final output should look like this:
 
 <basic_info>
 [List of basic information as specified above]
 </basic_info>
 
 <profile>
-[Your narrative prose profile]
-</profile>`;
+[Narrative prose profile]
+</profile>
 
-    // Call Claude API with the Sonnet model
+Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
+
+    console.log('Sending request to Claude API...');
+    
+    // Call Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -126,8 +124,10 @@ Format your response exactly like this:
     const claudeResponse = await response.json();
     console.log('Received response from Claude:', claudeResponse);
 
-    if (!claudeResponse.content || !claudeResponse.content[0].text) {
-      throw new Error('Invalid response from Claude API');
+    // Check if the response has the expected structure
+    if (!claudeResponse.content || !Array.isArray(claudeResponse.content) || !claudeResponse.content[0]?.text) {
+      console.error('Unexpected Claude API response structure:', claudeResponse);
+      throw new Error('Invalid response structure from Claude API');
     }
 
     const analysisText = claudeResponse.content[0].text;
