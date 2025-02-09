@@ -26,12 +26,12 @@ serve(async (req) => {
     console.log('Processing DNA analysis for assessment:', assessmentId);
     console.log('Answers:', answers);
 
-    // Prepare the prompt for Claude with the framework context
-    const prompt = `I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category contains a sequence of binary answers (A/B) representing the person's choices through a carefully designed decision tree that explores fundamental philosophical questions.
+    // Prepare the prompt for Claude with the enhanced framework
+    const prompt = `You are a sophisticated AI tasked with creating personalized philosophical profiles based on users' responses to a series of questions. Your goal is to interpret these responses and craft a mythopoetic narrative that captures the essence of the individual's worldview.
 
-The framework is designed to decode one's intellectual ancestry and philosophical worldview by analyzing their responses to key questions in each domain. Each answer sequence represents a path through a complex decision tree of philosophical positions.
+I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category contains a sequence of binary answers (A/B) representing the person's choices through a carefully designed decision tree that explores fundamental philosophical questions.
 
-Here are the answers provided for each category:
+First, here are the user's answers to the philosophical questions:
 
 Ethics: ${answers.ETHICS || 'Not answered'}
 Epistemology: ${answers.EPISTEMOLOGY || 'Not answered'}
@@ -40,24 +40,70 @@ Theology: ${answers.THEOLOGY || 'Not answered'}
 Ontology: ${answers.ONTOLOGY || 'Not answered'}
 Aesthetics: ${answers.AESTHETICS || 'Not answered'}
 
-Based on these answer sequences, please:
+Please analyze these answers and create a profile for the user. Follow these steps:
 
-1. Create a profile with:
-   - A mythopoetic title that captures their philosophical essence
-   - Their key intellectual lineages and philosophical ancestors
-   - Notable patterns or unique combinations in their thinking
+1. Extract the 5-letter answer sequences for each philosophical category from the answers.
 
-2. Analyze:
-   - Their core philosophical commitments
-   - Potential tensions or harmonies between different aspects of their worldview
-   - How their views in one domain influence or relate to others
+2. Based on your analysis of the answer sequences, generate a mythopoetic title that poetically captures the essence of their philosophical leanings.
 
-3. Reflect on:
-   - The broader implications of their philosophical outlook
-   - How their worldview might shape their approach to contemporary challenges
-   - Potential areas for intellectual growth or exploration
+3. Create a list of basic information in this format:
 
-Please write this analysis in an engaging, narrative style that balances academic insight with accessible language. Focus on making meaningful connections between their various philosophical positions while maintaining intellectual rigor.`;
+<name>
+[Generated Name]
+</name>
+
+<mythopoetic_title>
+[Generated Mythopoetic Title]
+</mythopoetic_title>
+
+<theology>
+[5-letter answer sequence]
+</theology>
+
+<ontology>
+[5-letter answer sequence]
+</ontology>
+
+<epistemology>
+[5-letter answer sequence]
+</epistemology>
+
+<ethics>
+[5-letter answer sequence]
+</ethics>
+
+<politics>
+[5-letter answer sequence]
+</politics>
+
+<aesthetics>
+[5-letter answer sequence]
+</aesthetics>
+
+4. Work through your interpretation:
+a. Extract and list the 5-letter answer sequences for each category
+b. Interpret the meaning of each sequence
+c. Identify connections between different philosophical categories
+d. Consider how each philosophical category might influence the others
+e. Brainstorm mythopoetic themes and imagery based on your interpretations
+f. Think about potential mythological or archetypal figures that align with the user's philosophical profile
+
+5. Write a narrative prose profile that:
+- Weaves together the user's philosophical tendencies into a cohesive and poetic description
+- Reflects their worldview across all six categories
+- Makes meaningful connections between their various philosophical positions
+- Balances academic insight with accessible language
+- Maintains intellectual rigor while being engaging
+
+Format your response exactly like this:
+
+<basic_info>
+[List of basic information as specified above]
+</basic_info>
+
+<profile>
+[Your narrative prose profile]
+</profile>`;
 
     // Call Claude API with the Sonnet model
     const response = await fetch('https://api.anthropic.com/v1/messages', {
