@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, ArrowLeft } from "lucide-react";
@@ -68,7 +67,7 @@ const IntellectualDNA = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2">
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
           <div className="flex justify-between items-center max-w-sm mx-auto px-8">
             <button 
               className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'border-b-2 border-b-gradient-to-r from-[#9b87f5] to-[#7E69AB] rounded-none' : ''}`}
