@@ -65,7 +65,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 home-page">
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
+        <header className="px-4 py-3 border-b border-border sticky top-0 z-50 bg-background">
           <div className="flex justify-between items-center">
             <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
               <img 
@@ -83,7 +83,7 @@ const Home = () => {
           </div>
         </header>
 
-        <div className="flex-1 relative pb-24">
+        <div className="flex-1 relative pb-24 overflow-x-hidden">
           <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
             <QuestionsCards />
             
@@ -91,7 +91,7 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8">
                 Read Classics
               </h1>
-              <div className="overflow-x-auto scrollbar-hide">
+              <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
                   {books?.map((book) => (
                     <Card 
@@ -124,7 +124,7 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8 mt-16">
                 Encounter Icons
               </h1>
-              <div className="overflow-x-auto scrollbar-hide">
+              <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
                   {icons?.map((icon) => (
                     <Card 
