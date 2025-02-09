@@ -182,7 +182,10 @@ const DNAAssessment = () => {
   // Calculate overall progress
   const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
   const questionNumber = parseInt(currentPosition.substring(1));
-  const totalProgress = ((currentCategoryIndex * 5) + questionNumber) / (categoryOrder.length * 5) * 100;
+  const questionCount = 5; // Fixed number of questions per category
+  const totalQuestions = categoryOrder.length * questionCount;
+  const currentQuestionOverall = (currentCategoryIndex * questionCount) + questionNumber;
+  const totalProgress = (currentQuestionOverall / totalQuestions) * 100;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -194,9 +197,9 @@ const DNAAssessment = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{((currentCategoryIndex * 5) + questionNumber)}</span>
+          <span>{currentQuestionOverall}</span>
           <span>/</span>
-          <span>{categoryOrder.length * 5}</span>
+          <span>{totalQuestions}</span>
         </div>
       </header>
       <div className="px-4">
