@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -7,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -189,7 +189,6 @@ const DNAAssessment = () => {
 
   return (
     <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
-      {/* Header */}
       <header className="px-4 py-3 flex items-center justify-between">
         <button 
           onClick={() => navigate('/dna')}
@@ -203,21 +202,16 @@ const DNAAssessment = () => {
           <span>30</span>
         </div>
       </header>
-
-      {/* Progress Bar */}
       <div className="px-4">
         <Progress 
           value={(Number(currentPosition?.split('Q')[1]) / 30) * 100}
           className="bg-[#CCFF23]/10"
         />
       </div>
-
-      {/* Question Content */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
         <h1 className="text-3xl font-oxanium text-center mb-16 max-w-2xl">
           {currentQuestion.question?.question}
         </h1>
-
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
           <Button
             variant="outline"
@@ -226,7 +220,6 @@ const DNAAssessment = () => {
           >
             YES
           </Button>
-          
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
