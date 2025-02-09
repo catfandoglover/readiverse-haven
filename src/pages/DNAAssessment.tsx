@@ -339,8 +339,8 @@ const DNAAssessment = () => {
       <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to exit?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
+            <AlertDialogDescription className="font-oxanium">
               Your progress will not be saved and you will need to retake the assessment from the beginning.
             </AlertDialogDescription>
           </AlertDialogHeader>
