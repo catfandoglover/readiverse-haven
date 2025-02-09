@@ -10,7 +10,6 @@ import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
-// Define the order of categories
 const categoryOrder: DNACategory[] = [
   "ETHICS",
   "EPISTEMOLOGY",
@@ -24,6 +23,8 @@ const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
+  const [totalQuestions, setTotalQuestions] = React.useState(0);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -84,6 +85,7 @@ const DNAAssessment = () => {
         const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
         navigate(`/dna/${nextCategory}`);
         setCurrentPosition("Q1");
+        setCurrentQuestionNumber(prev => prev + 1);
         return;
       }
       
@@ -110,12 +112,29 @@ const DNAAssessment = () => {
         return;
       }
 
-      // Update the current position
+      // Update the current position and increment question number
       setCurrentPosition(nextQuestion.tree_position);
+      setCurrentQuestionNumber(prev => prev + 1);
     } catch (error) {
       console.error('Error in question transition:', error);
     }
   };
+
+  // Query to get total questions for the assessment
+  React.useEffect(() => {
+    const fetchTotalQuestions = async () => {
+      const { count, error } = await supabase
+        .from('dna_tree_structure')
+        .select('*', { count: 'exact', head: true })
+        .not('next_question_a_id', 'is', null);
+
+      if (!error && count !== null) {
+        setTotalQuestions(count);
+      }
+    };
+
+    fetchTotalQuestions();
+  }, []);
 
   if (questionLoading) {
     return (
@@ -179,10 +198,8 @@ const DNAAssessment = () => {
     );
   }
 
-  // Calculate overall progress
-  const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
-  const questionNumber = parseInt(currentPosition.substring(1));
-  const totalProgress = ((currentCategoryIndex * 5) + questionNumber) / (categoryOrder.length * 5) * 100;
+  // Calculate progress based on actual questions answered
+  const progressPercentage = (currentQuestionNumber / totalQuestions) * 100;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -194,14 +211,14 @@ const DNAAssessment = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{((currentCategoryIndex * 5) + questionNumber)}</span>
+          <span>{currentQuestionNumber}</span>
           <span>/</span>
-          <span>{categoryOrder.length * 5}</span>
+          <span>{totalQuestions}</span>
         </div>
       </header>
       <div className="px-4">
         <Progress 
-          value={totalProgress}
+          value={progressPercentage}
           className="bg-secondary/10"
         />
       </div>
