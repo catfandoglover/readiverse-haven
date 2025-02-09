@@ -10,12 +10,12 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 }
 
-const BATCH_SIZE = 50; // Increased from 10 to 50 for faster processing
-const DELAY_BETWEEN_BATCHES = 1500; // Increased delay to prevent rate limiting
-const MAX_RETRIES = 5; // Increased max retries
+const BATCH_SIZE = 20; // Reduced batch size for more reliable processing
+const DELAY_BETWEEN_BATCHES = 2000; // Increased delay between batches
+const MAX_RETRIES = 7; // Increased max retries
+const MAX_CONCURRENT_REQUESTS = 3; // Limit concurrent requests
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -62,9 +62,10 @@ serve(async (req) => {
     let startCursor: string | undefined = undefined;
     let totalProcessed = 0;
     let pageCount = 0;
-    let currentBatchSize = 0;
     let failedQuestions = 0;
+    let retryQueue: any[] = [];
 
+    // Function to process a single question with retries
     async function processQuestion(page: any, retryCount = 0): Promise<boolean> {
       try {
         const properties = page.properties;
@@ -80,12 +81,18 @@ serve(async (req) => {
 
         const classicsRelation = properties['The Classics']?.relation || [];
         
+        // Process related classics in smaller chunks
         const relatedUrls = [];
-        for (const relation of classicsRelation) {
+        for (let i = 0; i < classicsRelation.length; i++) {
           try {
+            const relation = classicsRelation[i];
             const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
             if (relatedPage.url) {
               relatedUrls.push(relatedPage.url);
+            }
+            // Add small delay between related page requests
+            if (i < classicsRelation.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 100));
             }
           } catch (error) {
             console.error(`Error fetching related classic for question "${questionText}":`, error);
@@ -117,15 +124,20 @@ serve(async (req) => {
       } catch (error) {
         if (retryCount < MAX_RETRIES) {
           console.log(`Retrying question after error (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          // Exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          await new Promise(resolve => setTimeout(resolve, delay));
           return processQuestion(page, retryCount + 1);
         }
         console.error('Error processing question after max retries:', error);
         failedQuestions++;
+        // Add to retry queue for a final attempt
+        retryQueue.push(page);
         return false;
       }
     }
 
+    // Main processing loop
     while (hasMore) {
       try {
         pageCount++;
@@ -139,19 +151,27 @@ serve(async (req) => {
 
         console.log(`Received ${response.results.length} questions from current page`);
         
-        // Process each question in the current batch
-        currentBatchSize = response.results.length;
+        // Process questions in smaller concurrent batches
+        const currentBatch = response.results;
         let successfulProcessed = 0;
-
-        for (const page of response.results) {
-          const success = await processQuestion(page);
-          if (success) {
-            successfulProcessed++;
-            totalProcessed++;
+        
+        // Process in chunks of MAX_CONCURRENT_REQUESTS
+        for (let i = 0; i < currentBatch.length; i += MAX_CONCURRENT_REQUESTS) {
+          const chunk = currentBatch.slice(i, i + MAX_CONCURRENT_REQUESTS);
+          const results = await Promise.all(
+            chunk.map(page => processQuestion(page))
+          );
+          
+          successfulProcessed += results.filter(Boolean).length;
+          totalProcessed += results.filter(Boolean).length;
+          
+          // Add delay between chunks
+          if (i + MAX_CONCURRENT_REQUESTS < currentBatch.length) {
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
 
-        console.log(`Successfully processed ${successfulProcessed}/${currentBatchSize} questions in current batch`);
+        console.log(`Successfully processed ${successfulProcessed}/${currentBatch.length} questions in current batch`);
         console.log(`Total processed so far: ${totalProcessed}`);
 
         // Update pagination info
@@ -163,7 +183,7 @@ serve(async (req) => {
           hasMore = false;
         }
 
-        // Add delay between batches to prevent rate limiting
+        // Add delay between batches
         if (hasMore) {
           console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before processing next batch...`);
           await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
@@ -171,9 +191,30 @@ serve(async (req) => {
 
       } catch (batchError) {
         console.error('Error processing batch:', batchError);
-        // Don't throw here, try to continue with next batch
+        // Increased delay on batch error
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES * 2));
       }
+    }
+
+    // Process retry queue if there are any failed questions
+    if (retryQueue.length > 0) {
+      console.log(`Attempting to process ${retryQueue.length} failed questions...`);
+      let recoveredQuestions = 0;
+
+      for (const page of retryQueue) {
+        try {
+          const success = await processQuestion(page, 0);
+          if (success) {
+            recoveredQuestions++;
+            failedQuestions--;
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error('Final retry failed for question:', error);
+        }
+      }
+
+      console.log(`Recovered ${recoveredQuestions} questions from retry queue`);
     }
 
     const summary = {
@@ -182,6 +223,7 @@ serve(async (req) => {
       totalProcessed,
       pagesProcessed: pageCount,
       failedQuestions,
+      retriedQuestions: retryQueue.length,
       status: failedQuestions === 0 ? "success" : "completed_with_errors"
     };
 
