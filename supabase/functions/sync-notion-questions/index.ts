@@ -1,7 +1,7 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Client } from "https://deno.land/x/notion_sdk/src/mod.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
+import { Client } from "https://deno.land/x/notion_sdk@v2.2.3/src/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,10 +11,8 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('Received request to sync Notion questions');
-  
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request');
     return new Response(null, { 
       headers: corsHeaders,
       status: 204
@@ -65,78 +63,84 @@ serve(async (req) => {
     const defaultIllustration = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
 
     while (hasMore) {
-      console.log(`Fetching page of results${startCursor ? ' starting from cursor: ' + startCursor : ''}`);
-      
-      const response = await notion.databases.query({
-        database_id: notionDatabaseId,
-        start_cursor: startCursor,
-        page_size: 100,
-      });
+      try {
+        console.log(`Fetching page of results${startCursor ? ' starting from cursor: ' + startCursor : ''}`);
+        
+        const response = await notion.databases.query({
+          database_id: notionDatabaseId,
+          start_cursor: startCursor,
+          page_size: 100,
+        });
 
-      console.log(`Processing ${response.results.length} questions from current page`);
+        console.log(`Processing ${response.results.length} questions from current page`);
 
-      for (const page of response.results) {
-        try {
-          const properties = page.properties;
-          
-          // Extract and validate required fields
-          const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
-          const questionText = properties['Question']?.rich_text?.[0]?.plain_text;
-          const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
-          
-          // Skip if question text is missing
-          if (!questionText) {
-            console.log('Skipping question with missing text');
-            continue;
-          }
-
-          const classicsRelation = properties['The Classics']?.relation || [];
-          
-          const relatedUrls = [];
-          for (const relation of classicsRelation) {
-            try {
-              const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
-              if (relatedPage.url) {
-                relatedUrls.push(relatedPage.url);
-              }
-            } catch (error) {
-              console.error('Error fetching related classic:', error);
+        for (const page of response.results) {
+          try {
+            const properties = page.properties;
+            
+            // Extract and validate required fields
+            const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
+            const questionText = properties['Question']?.rich_text?.[0]?.plain_text;
+            const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
+            
+            // Skip if question text is missing
+            if (!questionText) {
+              console.log('Skipping question with missing text');
+              continue;
             }
+
+            const classicsRelation = properties['The Classics']?.relation || [];
+            
+            const relatedUrls = [];
+            for (const relation of classicsRelation) {
+              try {
+                const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
+                if (relatedPage.url) {
+                  relatedUrls.push(relatedPage.url);
+                }
+              } catch (error) {
+                console.error('Error fetching related classic:', error);
+              }
+            }
+
+            // Get category-specific illustration or fall back to default
+            const illustration = defaultIllustrations[category] || defaultIllustration;
+
+            console.log(`Processing question: "${questionText}" with category ${category}`);
+
+            const { data, error: questionError } = await supabase
+              .from('great_questions')
+              .upsert({
+                notion_id: page.id,
+                category: category,
+                category_number: categoryNumber,
+                question: questionText,
+                related_classics: relatedUrls,
+                illustration: illustration
+              }, {
+                onConflict: 'notion_id'
+              });
+
+            if (questionError) {
+              console.error('Error upserting question:', questionError);
+              throw questionError;
+            }
+
+            totalProcessed++;
+            console.log(`Successfully processed question ${totalProcessed}: ${questionText}`);
+          } catch (pageError) {
+            console.error('Error processing page:', pageError);
           }
-
-          // Get category-specific illustration or fall back to default
-          const illustration = defaultIllustrations[category] || defaultIllustration;
-
-          console.log(`Processing question: "${questionText}" with category ${category}`);
-
-          const { data, error: questionError } = await supabase
-            .from('great_questions')
-            .upsert({
-              notion_id: page.id,
-              category: category,
-              category_number: categoryNumber,
-              question: questionText,
-              related_classics: relatedUrls,
-              illustration: illustration
-            }, {
-              onConflict: 'notion_id'
-            });
-
-          if (questionError) {
-            console.error('Error upserting question:', questionError);
-            throw questionError;
-          }
-
-          totalProcessed++;
-          console.log(`Successfully processed question ${totalProcessed}: ${questionText}`);
-        } catch (pageError) {
-          console.error('Error processing page:', pageError);
         }
-      }
 
-      // Update pagination info for next iteration
-      hasMore = response.has_more;
-      startCursor = response.next_cursor || undefined;
+        // Update pagination info for next iteration
+        hasMore = response.has_more;
+        startCursor = response.next_cursor || undefined;
+
+      } catch (batchError) {
+        console.error('Error processing batch:', batchError);
+        throw batchError;
+      }
     }
 
     console.log('Sync completed successfully');
@@ -166,3 +170,4 @@ serve(async (req) => {
     );
   }
 });
+
