@@ -208,7 +208,7 @@ const DNAAssessment = () => {
         />
       </div>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
-        <h1 className="text-3xl font-oxanium text-center mb-16 max-w-2xl">
+        <h1 className="text-3xl font-baskerville text-center mb-16 max-w-2xl">
           {currentQuestion.question?.question}
         </h1>
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">

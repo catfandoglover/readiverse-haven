@@ -23,7 +23,8 @@ export default {
 				oxanium: ['Oxanium', 'sans-serif'],
 				georgia: ['Georgia', 'serif'],
 				helvetica: ['Helvetica', 'Arial', 'sans-serif'],
-				times: ['Times New Roman', 'serif']
+				times: ['Times New Roman', 'serif'],
+				baskerville: ['Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif']
 			},
 			colors: {
 				border: 'hsl(var(--border) / 0.1)',
