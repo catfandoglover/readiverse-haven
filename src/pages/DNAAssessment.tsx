@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -9,29 +10,18 @@ import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
-const categoryOrder: DNACategory[] = [
-  "ETHICS",
-  "EPISTEMOLOGY",
-  "POLITICS",
-  "THEOLOGY",
-  "ONTOLOGY",
-  "AESTHETICS"
-];
-
-const questionsPerCategory = 5;
-
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
-  const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
+  const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
   const { data: currentQuestion, isLoading: questionLoading, error } = useQuery({
-    queryKey: ['dna-question', upperCategory, currentQuestionNumber],
+    queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
-      console.log('Fetching question for:', { upperCategory, currentQuestionNumber });
+      console.log('Fetching question for:', { upperCategory, currentPosition });
       
       if (!upperCategory) {
         throw new Error('Category is required');
@@ -47,7 +37,7 @@ const DNAAssessment = () => {
           )
         `)
         .eq('category', upperCategory)
-        .eq('tree_position', `Q${currentQuestionNumber}`)
+        .eq('tree_position', currentPosition)
         .maybeSingle();
       
       if (error) {
@@ -56,7 +46,7 @@ const DNAAssessment = () => {
       }
       
       if (!data) {
-        console.error('No question found for:', { upperCategory, currentQuestionNumber });
+        console.error('No question found for:', { upperCategory, currentPosition });
         throw new Error('Question not found');
       }
 
@@ -67,25 +57,49 @@ const DNAAssessment = () => {
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    // Store the answer if needed
-    // ... keep existing code for storing answers if any
+    if (!currentQuestion) return;
 
-    // If we've completed all questions in this category
-    if (currentQuestionNumber >= questionsPerCategory) {
-      const currentCategoryIndex = categoryOrder.indexOf(upperCategory);
-      
-      // If there's a next category, move to it
-      if (currentCategoryIndex < categoryOrder.length - 1) {
-        const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
-        navigate(`/dna/${nextCategory}`);
-        setCurrentQuestionNumber(1);
-      } else {
-        // All categories completed
-        navigate('/dna');
+    // Get the next question ID based on the selected answer
+    const nextQuestionId = answer === "A" 
+      ? currentQuestion.next_question_a_id 
+      : currentQuestion.next_question_b_id;
+
+    // If there's no next question, the current category is complete
+    if (!nextQuestionId) {
+      // If we're finishing Ethics, move to Epistemology and reset position to Q1
+      if (upperCategory === 'ETHICS') {
+        navigate('/dna/epistemology');
+        setCurrentPosition("Q1");
+        return;
       }
-    } else {
-      // Move to next question in current category
-      setCurrentQuestionNumber(prev => prev + 1);
+      
+      // For other categories, just go back to DNA home
+      navigate('/dna');
+      return;
+    }
+
+    try {
+      // Get the tree position for the next question
+      const { data: nextQuestion, error: nextQuestionError } = await supabase
+        .from('dna_tree_structure')
+        .select('tree_position')
+        .eq('id', nextQuestionId)
+        .maybeSingle();
+
+      if (nextQuestionError) {
+        console.error('Error fetching next question:', nextQuestionError);
+        return;
+      }
+
+      if (!nextQuestion) {
+        console.error('Next question not found for ID:', nextQuestionId);
+        return;
+      }
+
+      // Update the current position
+      setCurrentPosition(nextQuestion.tree_position);
+    } catch (error) {
+      console.error('Error in question transition:', error);
     }
   };
 
@@ -151,12 +165,6 @@ const DNAAssessment = () => {
     );
   }
 
-  // Calculate total progress across all categories
-  const currentCategoryIndex = categoryOrder.indexOf(upperCategory);
-  const totalQuestions = categoryOrder.length * questionsPerCategory;
-  const questionsCompleted = (currentCategoryIndex * questionsPerCategory) + currentQuestionNumber;
-  const progressPercentage = (questionsCompleted / totalQuestions) * 100;
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="px-4 py-3 flex items-center justify-between">
@@ -167,14 +175,14 @@ const DNAAssessment = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{questionsCompleted}</span>
+          <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
-          <span>{totalQuestions}</span>
+          <span>31</span>
         </div>
       </header>
       <div className="px-4">
         <Progress 
-          value={progressPercentage}
+          value={(Number(currentPosition?.split('Q')[1]) / 31) * 100}
           className="bg-secondary/10"
         />
       </div>
