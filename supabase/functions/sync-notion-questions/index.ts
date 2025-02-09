@@ -10,6 +10,10 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 }
 
+const BATCH_SIZE = 10; // Process questions in smaller batches
+const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay between batches
+const MAX_RETRIES = 3;
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -42,14 +46,6 @@ serve(async (req) => {
     const notion = new Client({ auth: notionApiKey });
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Starting to fetch all questions from Notion database...');
-    
-    let allResults = [];
-    let hasMore = true;
-    let startCursor: string | undefined = undefined;
-    let totalProcessed = 0;
-    let pageCount = 0;
-
     // Default illustrations based on category
     const defaultIllustrations = {
       'ETHICS': 'https://images.unsplash.com/photo-1473177104440-ffee2f376098',
@@ -60,8 +56,73 @@ serve(async (req) => {
       'EPISTEMOLOGY': 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
     };
 
-    // Global fallback illustration
     const defaultIllustration = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158';
+
+    let hasMore = true;
+    let startCursor: string | undefined = undefined;
+    let totalProcessed = 0;
+    let pageCount = 0;
+    let currentBatchSize = 0;
+
+    async function processQuestion(page: any, retryCount = 0): Promise<boolean> {
+      try {
+        const properties = page.properties;
+        
+        const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
+        const questionText = properties['Question']?.rich_text?.[0]?.plain_text;
+        const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
+        
+        if (!questionText) {
+          console.log('Skipping question with missing text');
+          return true;
+        }
+
+        const classicsRelation = properties['The Classics']?.relation || [];
+        
+        const relatedUrls = [];
+        for (const relation of classicsRelation) {
+          try {
+            const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
+            if (relatedPage.url) {
+              relatedUrls.push(relatedPage.url);
+            }
+          } catch (error) {
+            console.error('Error fetching related classic:', error);
+          }
+        }
+
+        const illustration = defaultIllustrations[category] || defaultIllustration;
+
+        console.log(`Processing question ${totalProcessed + 1}: "${questionText}" with category ${category}`);
+
+        const { error: questionError } = await supabase
+          .from('great_questions')
+          .upsert({
+            notion_id: page.id,
+            category: category,
+            category_number: categoryNumber,
+            question: questionText,
+            related_classics: relatedUrls,
+            illustration: illustration
+          }, {
+            onConflict: 'notion_id'
+          });
+
+        if (questionError) {
+          throw questionError;
+        }
+
+        return true;
+      } catch (error) {
+        if (retryCount < MAX_RETRIES) {
+          console.log(`Retrying question after error (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return processQuestion(page, retryCount + 1);
+        }
+        console.error('Error processing question after max retries:', error);
+        return false;
+      }
+    }
 
     while (hasMore) {
       try {
@@ -71,90 +132,45 @@ serve(async (req) => {
         const response = await notion.databases.query({
           database_id: notionDatabaseId,
           start_cursor: startCursor,
-          page_size: 100,
+          page_size: BATCH_SIZE,
         });
 
         console.log(`Received ${response.results.length} questions from current page`);
-        console.log(`Has more pages: ${response.has_more}`);
-        console.log(`Next cursor: ${response.next_cursor}`);
+        
+        // Process each question in the current batch
+        currentBatchSize = response.results.length;
+        let successfulProcessed = 0;
 
         for (const page of response.results) {
-          try {
-            const properties = page.properties;
-            
-            // Extract and validate required fields
-            const categoryNumber = properties['Category Number']?.title?.[0]?.plain_text || null;
-            const questionText = properties['Question']?.rich_text?.[0]?.plain_text;
-            const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
-            
-            // Skip if question text is missing
-            if (!questionText) {
-              console.log('Skipping question with missing text');
-              continue;
-            }
-
-            const classicsRelation = properties['The Classics']?.relation || [];
-            
-            const relatedUrls = [];
-            for (const relation of classicsRelation) {
-              try {
-                const relatedPage = await notion.pages.retrieve({ page_id: relation.id });
-                if (relatedPage.url) {
-                  relatedUrls.push(relatedPage.url);
-                }
-              } catch (error) {
-                console.error('Error fetching related classic:', error);
-              }
-            }
-
-            // Get category-specific illustration or fall back to default
-            const illustration = defaultIllustrations[category] || defaultIllustration;
-
-            console.log(`Processing question: "${questionText}" with category ${category}`);
-
-            const { data, error: questionError } = await supabase
-              .from('great_questions')
-              .upsert({
-                notion_id: page.id,
-                category: category,
-                category_number: categoryNumber,
-                question: questionText,
-                related_classics: relatedUrls,
-                illustration: illustration
-              }, {
-                onConflict: 'notion_id'
-              });
-
-            if (questionError) {
-              console.error('Error upserting question:', questionError);
-              throw questionError;
-            }
-
+          const success = await processQuestion(page);
+          if (success) {
+            successfulProcessed++;
             totalProcessed++;
-            console.log(`Successfully processed question ${totalProcessed}: ${questionText}`);
-          } catch (pageError) {
-            console.error('Error processing page:', pageError);
           }
         }
 
-        // Update pagination info for next iteration
+        console.log(`Successfully processed ${successfulProcessed}/${currentBatchSize} questions in current batch`);
+        console.log(`Total processed so far: ${totalProcessed}`);
+
+        // Update pagination info
         hasMore = response.has_more;
         startCursor = response.next_cursor || undefined;
 
-        // If we have more pages but no next cursor, something's wrong
         if (hasMore && !startCursor) {
           console.error('Has more pages but no cursor provided. Breaking loop to prevent infinite iteration.');
           hasMore = false;
         }
 
-        // Add a small delay between pagination requests to prevent rate limiting
+        // Add delay between batches to prevent rate limiting
         if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before processing next batch...`);
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
         }
 
       } catch (batchError) {
         console.error('Error processing batch:', batchError);
-        throw batchError;
+        // Don't throw here, try to continue with next batch
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES * 2));
       }
     }
 
