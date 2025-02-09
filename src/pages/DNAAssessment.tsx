@@ -42,7 +42,7 @@ const DNAAssessment = () => {
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
-  const { data: currentQuestion, isLoading: questionLoading, error } = useQuery({
+  const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
       console.log('Fetching question for:', { upperCategory, currentPosition });
@@ -79,7 +79,9 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
-    enabled: !!upperCategory
+    enabled: !!upperCategory,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Prefetch next possible questions whenever current question changes
@@ -115,7 +117,9 @@ const DNAAssessment = () => {
                     *,
                     question:great_questions!dna_tree_structure_question_id_fkey (
                       question,
-                      category_number
+                      category_number,
+                      answer_a,
+                      answer_b
                     )
                   `)
                   .eq('category', nextQuestion.category)
@@ -126,32 +130,17 @@ const DNAAssessment = () => {
                 console.log(`Prefetched question: ${nextQuestion.category} - ${nextQuestion.tree_position}`);
                 return data;
               },
+              staleTime: 5 * 60 * 1000, // Consider prefetched data fresh for 5 minutes
             });
           }
         } catch (error) {
           console.error('Error prefetching next question:', error);
         }
       }
-
-      // Also prefetch first question of next category if we're near the end
-      if (!currentQuestion.next_question_a_id || !currentQuestion.next_question_b_id) {
-        const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
-        if (currentCategoryIndex < categoryOrder.length - 1) {
-          const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
-          navigate(`/dna/${nextCategory}`);
-          setCurrentPosition("Q1");
-          setCurrentQuestionNumber(prev => prev + 1);
-          return;
-        }
-        
-        // If we're at the last category, go back to DNA home
-        navigate('/dna');
-        return;
-      }
     };
 
     prefetchNextQuestions();
-  }, [currentQuestion, upperCategory, queryClient]);
+  }, [currentQuestion, queryClient]);
 
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion) return;
@@ -223,33 +212,6 @@ const DNAAssessment = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="px-4 py-3 relative z-50">
-          <button 
-            onClick={handleExit}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        </header>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-          <h1 className="text-2xl font-oxanium text-center mb-8">
-            No questions found for this category
-          </h1>
-          <Button
-            variant="outline"
-            onClick={handleExit}
-            className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
-          >
-            GO BACK
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   if (!currentQuestion) {
     return (
       <div className="min-h-screen bg-background text-foreground">
@@ -308,20 +270,24 @@ const DNAAssessment = () => {
           </h1>
         </div>
         <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
-          <Button
-            variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
-            onClick={() => handleAnswer("A")}
-          >
-            {currentQuestion.question?.answer_a || "YES"}
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
-            onClick={() => handleAnswer("B")}
-          >
-            {currentQuestion.question?.answer_b || "NO"}
-          </Button>
+          {!questionLoading && currentQuestion.question && (
+            <>
+              <Button
+                variant="outline"
+                className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+                onClick={() => handleAnswer("A")}
+              >
+                {currentQuestion.question.answer_a}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+                onClick={() => handleAnswer("B")}
+              >
+                {currentQuestion.question.answer_b}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
