@@ -59,7 +59,7 @@ Based on these answer sequences, please:
 
 Please write this analysis in an engaging, narrative style that balances academic insight with accessible language. Focus on making meaningful connections between their various philosophical positions while maintaining intellectual rigor.`;
 
-    // Call Claude API
+    // Call Claude API with the Sonnet model
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -68,7 +68,7 @@ Please write this analysis in an engaging, narrative style that balances academi
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-opus-20240229',
+        model: 'claude-3-sonnet-20240229',
         max_tokens: 1024,
         messages: [{
           role: 'user',
@@ -121,4 +121,3 @@ Please write this analysis in an engaging, narrative style that balances academi
     );
   }
 });
-
