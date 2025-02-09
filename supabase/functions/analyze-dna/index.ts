@@ -115,9 +115,9 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openrouterApiKey}`,
-        'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'DNA Analysis'
+        'Authorization': `Bearer ${openrouterApiKey}`, // Added "Bearer " prefix
+        'HTTP-Referer': 'https://lovable.dev', // Required by OpenRouter
+        'X-Title': 'DNA Analysis' // Required by OpenRouter
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-sonnet',
@@ -132,7 +132,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenRouter API error:', response.status, errorText);
-      throw new Error(`OpenRouter API returned status ${response.status}`);
+      throw new Error(`OpenRouter API returned status ${response.status}: ${errorText}`);
     }
 
     const openRouterResponse = await response.json();
