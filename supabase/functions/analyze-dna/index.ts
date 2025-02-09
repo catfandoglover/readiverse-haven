@@ -108,8 +108,8 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey!,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'x-api-key': anthropicApiKey!
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
