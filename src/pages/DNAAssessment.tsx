@@ -240,20 +240,30 @@ const DNAAssessment = () => {
         };
 
         // Create an update object with both the answers JSON and the specific sequence column
-        const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence`;
-        const updateData: Record<string, any> = {
+        const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
+        const updateData = {
           answers: updatedAnswers,
           [sequenceColumnName]: newAnswers
         };
 
         console.log('Updating assessment with:', updateData);
 
-        // Update assessment results
+        // Update assessment results with explicit select of updated fields
         const { data: updateResult, error: updateError } = await supabase
           .from('dna_assessment_results')
           .update(updateData)
           .eq('id', assessmentId)
-          .select();
+          .select(`
+            id,
+            answers,
+            ethics_sequence,
+            epistemology_sequence,
+            politics_sequence,
+            theology_sequence,
+            ontology_sequence,
+            aesthetics_sequence
+          `)
+          .single();
 
         if (updateError) {
           console.error('Error updating assessment results:', updateError);
