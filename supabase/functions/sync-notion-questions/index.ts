@@ -10,9 +10,9 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 }
 
-const BATCH_SIZE = 10; // Process questions in smaller batches
-const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay between batches
-const MAX_RETRIES = 3;
+const BATCH_SIZE = 50; // Increased from 10 to 50 for faster processing
+const DELAY_BETWEEN_BATCHES = 1500; // Increased delay to prevent rate limiting
+const MAX_RETRIES = 5; // Increased max retries
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -63,6 +63,7 @@ serve(async (req) => {
     let totalProcessed = 0;
     let pageCount = 0;
     let currentBatchSize = 0;
+    let failedQuestions = 0;
 
     async function processQuestion(page: any, retryCount = 0): Promise<boolean> {
       try {
@@ -73,7 +74,7 @@ serve(async (req) => {
         const category = (properties.Category?.select?.name || 'ETHICS').toUpperCase();
         
         if (!questionText) {
-          console.log('Skipping question with missing text');
+          console.log(`Skipping question with missing text (ID: ${page.id})`);
           return true;
         }
 
@@ -87,13 +88,13 @@ serve(async (req) => {
               relatedUrls.push(relatedPage.url);
             }
           } catch (error) {
-            console.error('Error fetching related classic:', error);
+            console.error(`Error fetching related classic for question "${questionText}":`, error);
           }
         }
 
         const illustration = defaultIllustrations[category] || defaultIllustration;
 
-        console.log(`Processing question ${totalProcessed + 1}: "${questionText}" with category ${category}`);
+        console.log(`Processing question ${totalProcessed + 1}: "${questionText.substring(0, 50)}..." (Category: ${category})`);
 
         const { error: questionError } = await supabase
           .from('great_questions')
@@ -120,6 +121,7 @@ serve(async (req) => {
           return processQuestion(page, retryCount + 1);
         }
         console.error('Error processing question after max retries:', error);
+        failedQuestions++;
         return false;
       }
     }
@@ -174,14 +176,19 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Sync completed successfully. Processed ${totalProcessed} questions across ${pageCount} pages.`);
+    const summary = {
+      message: "Notion sync completed",
+      timestamp: new Date().toISOString(),
+      totalProcessed,
+      pagesProcessed: pageCount,
+      failedQuestions,
+      status: failedQuestions === 0 ? "success" : "completed_with_errors"
+    };
+
+    console.log('Sync summary:', summary);
+
     return new Response(
-      JSON.stringify({
-        message: "Successfully synced questions from Notion",
-        timestamp: new Date().toISOString(),
-        totalProcessed: totalProcessed,
-        pagesProcessed: pageCount
-      }),
+      JSON.stringify(summary),
       { 
         headers: corsHeaders,
         status: 200,
@@ -202,4 +209,3 @@ serve(async (req) => {
     );
   }
 });
-
