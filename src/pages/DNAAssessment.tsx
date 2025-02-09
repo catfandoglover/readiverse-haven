@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -213,11 +212,14 @@ const DNAAssessment = () => {
           .from('dna_assessment_results')
           .update({ 
             [upperCategory]: newAnswers,
-            answers: supabase.sql`jsonb_set(
-              COALESCE(answers, '{}'::jsonb),
-              ${`{${upperCategory}}`},
-              ${JSON.stringify(newAnswers)}
-            )`
+            answers: {
+              ...((await supabase
+                .from('dna_assessment_results')
+                .select('answers')
+                .eq('id', assessmentId)
+                .single()).data?.answers || {}),
+              [upperCategory]: newAnswers
+            }
           })
           .eq('id', assessmentId);
 
