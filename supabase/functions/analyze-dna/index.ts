@@ -21,6 +21,13 @@ serve(async (req) => {
   }
 
   try {
+    // Log the API key existence (not the actual value)
+    console.log('OpenRouter API key present:', !!openrouterApiKey);
+    
+    if (!openrouterApiKey) {
+      throw new Error('OpenRouter API key is not configured');
+    }
+
     const { assessmentId, answers } = await req.json();
     
     console.log('Processing DNA analysis for assessment:', assessmentId);
@@ -103,7 +110,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
 
     console.log('Sending request to OpenRouter API...');
     
-    // Call OpenRouter API
+    // Call OpenRouter API with proper headers and error logging
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
