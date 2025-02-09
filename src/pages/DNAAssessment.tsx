@@ -17,33 +17,8 @@ const DNAAssessment = () => {
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  // Check authentication status on mount
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          variant: "destructive",
-          title: "Authentication required",
-          description: "Please sign in to take the assessment"
-        });
-        navigate('/auth');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate, toast]);
-
-  // Get the current user's ID from the session
-  const { data: session } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
-  });
-
-  const userId = session?.user?.id;
+  // Temporary hardcoded user ID
+  const userId = "3157cbda-131b-449e-954e-1ad658739f39";
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -87,7 +62,7 @@ const DNAAssessment = () => {
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion || !userId) return;
+    if (!currentQuestion) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
