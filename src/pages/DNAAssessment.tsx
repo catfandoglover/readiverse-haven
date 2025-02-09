@@ -186,18 +186,18 @@ const DNAAssessment = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-2 text-sm font-oxanium text-[#E9E7E2]/60">
+        <div className="flex items-center gap-2 text-sm font-oxanium text-[#E9E7E2]">
           <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
-          <span>5</span>
+          <span>30</span>
         </div>
       </header>
 
       {/* Progress Bar */}
-      <div className="px-4 pt-2">
+      <div className="px-4">
         <Progress 
-          value={(Number(currentPosition?.split('Q')[1]) / 5) * 100}
-          className="bg-white/10"
+          value={(Number(currentPosition?.split('Q')[1]) / 30) * 100}
+          className="bg-[#CCFF23]/10"
         />
       </div>
 
@@ -230,3 +230,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
