@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
@@ -20,25 +19,8 @@ const DNAAssessment = () => {
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
-  // First check if user is authenticated
-  const { data: authData, isLoading: authLoading } = useQuery({
-    queryKey: ['auth-check'],
-    queryFn: async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
-        throw new Error('Not authenticated');
-      }
-      return user;
-    },
-    retry: false,
-  });
-
-  // Handle authentication redirect
-  React.useEffect(() => {
-    if (!authLoading && !authData) {
-      navigate('/auth');
-    }
-  }, [authData, authLoading, navigate]);
+  // Hardcoded user ID for testing
+  const mockUserId = "3157cbda-131b-449e-954e-1ad658739f39";
 
   const { data: currentQuestion, isLoading: questionLoading, error } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
@@ -75,12 +57,11 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
-    enabled: !!authData,
     retry: false
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion || !authData) return;
+    if (!currentQuestion) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -93,7 +74,7 @@ const DNAAssessment = () => {
       const { error } = await supabase
         .from('dna_assessment_progress')
         .upsert({
-          user_id: authData.id,
+          user_id: mockUserId,
           category: upperCategory,
           completed: true,
           current_position: currentPosition,
@@ -144,11 +125,10 @@ const DNAAssessment = () => {
     setCurrentPosition(nextQuestion.tree_position);
   };
 
-  // Handle authentication loading
-  if (authLoading) {
+  if (questionLoading) {
     return (
       <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
-        <div className="font-oxanium">Checking authentication...</div>
+        <div className="font-oxanium">Loading...</div>
       </div>
     );
   }
@@ -176,14 +156,6 @@ const DNAAssessment = () => {
             GO BACK
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (questionLoading) {
-    return (
-      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
-        <div className="font-oxanium">Loading...</div>
       </div>
     );
   }
