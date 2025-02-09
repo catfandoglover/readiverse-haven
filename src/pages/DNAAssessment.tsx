@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -50,6 +49,10 @@ const DNAAssessment = () => {
     ? categoryOrder[currentCategoryIndex + 1] 
     : null;
 
+  // Calculate progress percentage here so it's available throughout the component
+  const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
+
+  // Fix the type in the prefetch query
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
@@ -88,8 +91,8 @@ const DNAAssessment = () => {
       return data;
     },
     enabled: !!upperCategory && !isTransitioning,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Prefetch next possible questions whenever current question changes
@@ -180,32 +183,25 @@ const DNAAssessment = () => {
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion) return;
 
-    // Update answers string
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
 
-    // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
       ? currentQuestion.next_question_a_id 
       : currentQuestion.next_question_b_id;
 
-    // If there's no next question, the current category is complete
     if (!nextQuestionId) {
       setIsTransitioning(true);
-      
-      // Store answers for the completed category
       await storeAnswers();
       
-      // Find the current category index
       const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
       
-      // If we're not at the last category, move to the next one
       if (currentCategoryIndex < categoryOrder.length - 1) {
-        const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
+        const nextCategory = categoryOrder[currentCategoryIndex + 1];
         
-        // Prefetch the first question of the next category
+        // Fix the type here by using the enum value directly
         await queryClient.prefetchQuery({
-          queryKey: ['dna-question', nextCategory.toUpperCase(), 'Q1'],
+          queryKey: ['dna-question', nextCategory, 'Q1'],
           queryFn: async () => {
             const { data, error } = await supabase
               .from('dna_tree_structure')
@@ -218,7 +214,7 @@ const DNAAssessment = () => {
                   answer_b
                 )
               `)
-              .eq('category', nextCategory.toUpperCase())
+              .eq('category', nextCategory)
               .eq('tree_position', 'Q1')
               .maybeSingle();
 
@@ -227,15 +223,14 @@ const DNAAssessment = () => {
           },
         });
 
-        navigate(`/dna/${nextCategory}`);
+        navigate(`/dna/${nextCategory.toLowerCase()}`);
         setCurrentPosition("Q1");
         setCurrentQuestionNumber(prev => prev + 1);
-        setAnswers(""); // Reset answers for new category
+        setAnswers("");
         setIsTransitioning(false);
         return;
       }
       
-      // If we're at the last category, go back to DNA home
       navigate('/dna');
       return;
     }
@@ -327,8 +322,6 @@ const DNAAssessment = () => {
     );
   }
 
-  const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
-
   // Default button text if answer_a and answer_b are not available
   const buttonTextA = currentQuestion.question?.answer_a || "Yes";
   const buttonTextB = currentQuestion.question?.answer_b || "No";
@@ -407,4 +400,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-

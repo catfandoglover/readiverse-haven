@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
@@ -173,12 +174,15 @@ const IntellectualDNA = () => {
 
         <div className="flex-1 p-4">
           <h1 className="text-2xl font-oxanium text-center text-foreground uppercase mb-8">
-            My DNA
+            Trace Your Intellectual DNA
           </h1>
           
           <div className="flex flex-col items-center justify-center max-w-md mx-auto">
-            <p className="text-foreground/60 text-center mb-8">
-              Discover your intellectual DNA through our comprehensive assessment
+            <p className="text-foreground/80 text-center mb-8 leading-relaxed">
+              Your intellectual DNA contains traces of the conversations that have shaped your inner and outer world. By decoding it, you discover not just who you are, but who you can become.
+            </p>
+            <p className="text-foreground/80 text-center mb-8 leading-relaxed">
+              Picture a dinner party across centuries. Plato and Kant debate whether goodness exists beyond mind. Einstein sketches relativity on napkins while Aristotle challenges him, mapping causality in wine stains. Augustine and Nietzsche clash over God and meaning, until Wittgenstein cuts in: "You're trapped in language games." This isn't fantasy. It's the Great Conversation. Your seat is waiting.
             </p>
             <Button
               onClick={handleStartAssessment}
