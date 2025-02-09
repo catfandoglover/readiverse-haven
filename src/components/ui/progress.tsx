@@ -11,11 +11,12 @@ const Progress = React.forwardRef<
   <ProgressPrimitive.Root
     ref={ref}
     className={cn(
-      "relative h-1 w-full overflow-hidden rounded-full",
+      "relative h-1 w-full overflow-hidden rounded-full bg-none",  // Added bg-none to reset any background
       className
     )}
     style={{
-      background: "linear-gradient(to right, rgba(205, 245, 81, 0.1), rgba(205, 245, 81, 0.05))"
+      background: "linear-gradient(to right, rgba(205, 245, 81, 0.1), rgba(205, 245, 81, 0.05))",
+      backgroundImage: "linear-gradient(to right, rgba(205, 245, 81, 0.1), rgba(205, 245, 81, 0.05))" // Added explicit backgroundImage
     }}
     {...props}
   >
