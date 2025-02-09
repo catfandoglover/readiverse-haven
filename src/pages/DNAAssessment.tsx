@@ -302,7 +302,7 @@ const DNAAssessment = () => {
   const buttonTextA = currentQuestion.question?.answer_a || "Yes";
   const buttonTextB = currentQuestion.question?.answer_b || "No";
 
-  const buttonStyles = "w-full py-6 text-lg text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10";
+  const buttonStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10";
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -327,22 +327,22 @@ const DNAAssessment = () => {
         />
       </div>
       <div className="flex-1 flex flex-col px-4 relative">
-        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8 mb-20 translate-y-[-25%]">
+        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8 mb-20">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
             {currentQuestion.question?.question}
           </h1>
         </div>
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
+        <div className="flex justify-center gap-4 w-full max-w-lg mx-auto absolute left-1/2 top-1/2 -translate-x-1/2">
           <Button
             variant="outline"
-            className={buttonStyles}
+            className={`${buttonStyles} w-40`}
             onClick={() => handleAnswer("A")}
           >
             {buttonTextA}
           </Button>
           <Button
             variant="outline"
-            className={buttonStyles}
+            className={`${buttonStyles} w-40`}
             onClick={() => handleAnswer("B")}
           >
             {buttonTextB}
