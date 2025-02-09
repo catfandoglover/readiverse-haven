@@ -46,8 +46,9 @@ serve(async (req) => {
     
     let allResults = [];
     let hasMore = true;
-    let startCursor = undefined;
+    let startCursor: string | undefined = undefined;
     let totalProcessed = 0;
+    let pageCount = 0;
 
     // Default illustrations based on category
     const defaultIllustrations = {
@@ -64,7 +65,8 @@ serve(async (req) => {
 
     while (hasMore) {
       try {
-        console.log(`Fetching page of results${startCursor ? ' starting from cursor: ' + startCursor : ''}`);
+        pageCount++;
+        console.log(`Fetching page ${pageCount} of results${startCursor ? ' starting from cursor: ' + startCursor : ''}`);
         
         const response = await notion.databases.query({
           database_id: notionDatabaseId,
@@ -72,7 +74,9 @@ serve(async (req) => {
           page_size: 100,
         });
 
-        console.log(`Processing ${response.results.length} questions from current page`);
+        console.log(`Received ${response.results.length} questions from current page`);
+        console.log(`Has more pages: ${response.has_more}`);
+        console.log(`Next cursor: ${response.next_cursor}`);
 
         for (const page of response.results) {
           try {
@@ -137,18 +141,30 @@ serve(async (req) => {
         hasMore = response.has_more;
         startCursor = response.next_cursor || undefined;
 
+        // If we have more pages but no next cursor, something's wrong
+        if (hasMore && !startCursor) {
+          console.error('Has more pages but no cursor provided. Breaking loop to prevent infinite iteration.');
+          hasMore = false;
+        }
+
+        // Add a small delay between pagination requests to prevent rate limiting
+        if (hasMore) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
       } catch (batchError) {
         console.error('Error processing batch:', batchError);
         throw batchError;
       }
     }
 
-    console.log('Sync completed successfully');
+    console.log(`Sync completed successfully. Processed ${totalProcessed} questions across ${pageCount} pages.`);
     return new Response(
       JSON.stringify({
         message: "Successfully synced questions from Notion",
         timestamp: new Date().toISOString(),
-        totalProcessed: totalProcessed
+        totalProcessed: totalProcessed,
+        pagesProcessed: pageCount
       }),
       { 
         headers: corsHeaders,
