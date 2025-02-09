@@ -87,4 +87,3 @@ const DNAResults = () => {
 };
 
 export default DNAResults;
-

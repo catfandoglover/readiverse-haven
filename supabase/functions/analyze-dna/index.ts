@@ -167,4 +167,3 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
-
