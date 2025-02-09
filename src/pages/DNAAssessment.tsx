@@ -224,7 +224,7 @@ const DNAAssessment = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-background text-foreground">
-        <header className="px-4 py-3">
+        <header className="px-4 py-3 relative z-50">
           <button 
             onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
@@ -251,7 +251,7 @@ const DNAAssessment = () => {
   if (!currentQuestion) {
     return (
       <div className="min-h-screen bg-background text-foreground">
-        <header className="px-4 py-3">
+        <header className="px-4 py-3 relative z-50">
           <button 
             onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
@@ -279,10 +279,11 @@ const DNAAssessment = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="px-4 py-3 flex items-center justify-between">
+      <header className="px-4 py-3 flex items-center justify-between relative z-50">
         <button 
           onClick={handleExit}
           className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+          type="button"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
