@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +14,25 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
+import { Database } from "@/integrations/supabase/types";
+
+type DNACategory = Database["public"]["Enums"]["dna_category"];
+
+const categories: DNACategory[] = [
+  "ETHICS",
+  "EPISTEMOLOGY",
+  "POLITICS",
+  "THEOLOGY",
+  "ONTOLOGY",
+  "AESTHETICS"
+];
 
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [name, setName] = useState("");
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -41,6 +54,50 @@ const IntellectualDNA = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [location.pathname]);
+
+  // Prefetch questions for all categories
+  useEffect(() => {
+    const prefetchQuestions = async () => {
+      console.log('Starting to prefetch questions for all categories');
+      
+      for (const category of categories) {
+        console.log(`Prefetching questions for category: ${category}`);
+        
+        // Prefetch initial question (Q1) for each category
+        await queryClient.prefetchQuery({
+          queryKey: ['dna-question', category, 'Q1'],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('dna_tree_structure')
+              .select(`
+                *,
+                question:great_questions!dna_tree_structure_question_id_fkey (
+                  question,
+                  category_number
+                )
+              `)
+              .eq('category', category)
+              .eq('tree_position', 'Q1')
+              .maybeSingle();
+
+            if (error) {
+              console.error('Error prefetching questions:', error);
+              throw error;
+            }
+
+            console.log(`Successfully prefetched Q1 for ${category}`);
+            return data;
+          },
+        });
+      }
+      
+      console.log('Completed prefetching questions for all categories');
+    };
+
+    if (showNameDialog) {
+      prefetchQuestions();
+    }
+  }, [showNameDialog, queryClient]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
