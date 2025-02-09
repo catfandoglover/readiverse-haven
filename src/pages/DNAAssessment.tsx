@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -278,12 +279,14 @@ const DNAAssessment = () => {
         />
       </div>
       <div className="flex-1 flex flex-col px-4">
+        {/* Question container with minimum height */}
         <div className="flex-1 flex items-center justify-center min-h-[200px] py-8">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
             {currentQuestion.question?.question}
           </h1>
         </div>
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mt-4 mb-50">
+        {/* Buttons container - increased bottom margin to mb-28 */}
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mt-4 mb-28">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
