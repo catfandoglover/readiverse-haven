@@ -152,57 +152,39 @@ export type Database = {
       }
       dna_assessment_results: {
         Row: {
-          AESTHETICS: string | null
           aesthetics_sequence: string | null
           answers: Json | null
           created_at: string
-          EPISTEMOLOGY: string | null
           epistemology_sequence: string | null
-          ETHICS: string | null
           ethics_sequence: string | null
           id: string
           name: string
-          ONTOLOGY: string | null
           ontology_sequence: string | null
-          POLITICS: string | null
           politics_sequence: string | null
-          THEOLOGY: string | null
           theology_sequence: string | null
         }
         Insert: {
-          AESTHETICS?: string | null
           aesthetics_sequence?: string | null
           answers?: Json | null
           created_at?: string
-          EPISTEMOLOGY?: string | null
           epistemology_sequence?: string | null
-          ETHICS?: string | null
           ethics_sequence?: string | null
           id?: string
           name: string
-          ONTOLOGY?: string | null
           ontology_sequence?: string | null
-          POLITICS?: string | null
           politics_sequence?: string | null
-          THEOLOGY?: string | null
           theology_sequence?: string | null
         }
         Update: {
-          AESTHETICS?: string | null
           aesthetics_sequence?: string | null
           answers?: Json | null
           created_at?: string
-          EPISTEMOLOGY?: string | null
           epistemology_sequence?: string | null
-          ETHICS?: string | null
           ethics_sequence?: string | null
           id?: string
           name?: string
-          ONTOLOGY?: string | null
           ontology_sequence?: string | null
-          POLITICS?: string | null
           politics_sequence?: string | null
-          THEOLOGY?: string | null
           theology_sequence?: string | null
         }
         Relationships: []
