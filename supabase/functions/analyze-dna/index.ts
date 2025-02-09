@@ -34,8 +34,23 @@ serve(async (req) => {
     console.log('Processing DNA analysis for assessment:', assessmentId);
     console.log('Answers:', answers);
 
-    // Format answers_json for the prompt
-    const answers_json = JSON.stringify(answers, null, 2);
+    // Fetch the user's name from the assessment
+    const { data: assessmentData, error: assessmentError } = await supabase
+      .from('dna_assessment_results')
+      .select('name')
+      .eq('id', assessmentId)
+      .single();
+
+    if (assessmentError) {
+      console.error('Error fetching assessment:', assessmentError);
+      throw assessmentError;
+    }
+
+    const userName = assessmentData.name;
+    console.log('Found user name:', userName);
+
+    // Format answers_json for the prompt, including the user's name
+    const answers_json = JSON.stringify({ name: userName, answers }, null, 2);
 
     // Prepare the prompt for the model with the enhanced framework
     const prompt = `I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category represents a complex tree of philosophical inquiry, where each answer leads to deeper, more nuanced questions.
@@ -80,7 +95,7 @@ Format your response as follows:
 
 <basic_info>
 <name>
-[Their provided name or "Seeker of Wisdom" if anonymous]
+[Their provided name from the answers_json]
 </name>
 
 <mythopoetic_title>
