@@ -103,7 +103,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
 
     console.log('Sending request to Claude API...');
     
-    // Call Claude API
+    // Call Claude API with correct headers and endpoint
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -122,7 +122,8 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     });
 
     if (!response.ok) {
-      console.error('Claude API error:', response.status, await response.text());
+      const errorText = await response.text();
+      console.error('Claude API error:', response.status, errorText);
       throw new Error(`Claude API returned status ${response.status}`);
     }
 
@@ -138,7 +139,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     const content = claudeResponse.content[0];
     if (!content || typeof content.text !== 'string') {
       console.error('Invalid content structure in Claude response:', content);
-      throw new Error('Invalid response structure from Claude API - invalid content format');
+      throw new Error('Invalid content format from Claude API');
     }
 
     const analysisText = content.text;
@@ -179,4 +180,3 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
-
