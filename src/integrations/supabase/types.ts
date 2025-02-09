@@ -153,6 +153,7 @@ export type Database = {
       dna_assessment_results: {
         Row: {
           AESTHETICS: string | null
+          answers: Json | null
           created_at: string
           EPISTEMOLOGY: string | null
           ETHICS: string | null
@@ -164,6 +165,7 @@ export type Database = {
         }
         Insert: {
           AESTHETICS?: string | null
+          answers?: Json | null
           created_at?: string
           EPISTEMOLOGY?: string | null
           ETHICS?: string | null
@@ -175,6 +177,7 @@ export type Database = {
         }
         Update: {
           AESTHETICS?: string | null
+          answers?: Json | null
           created_at?: string
           EPISTEMOLOGY?: string | null
           ETHICS?: string | null
@@ -185,6 +188,48 @@ export type Database = {
           THEOLOGY?: string | null
         }
         Relationships: []
+      }
+      dna_question_responses: {
+        Row: {
+          answer: string
+          assessment_id: string
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          answer: string
+          assessment_id: string
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          answer?: string
+          assessment_id?: string
+          category?: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_question_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_question_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dna_tree_structure: {
         Row: {

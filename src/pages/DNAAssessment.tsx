@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -16,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -39,6 +41,7 @@ const DNAAssessment = () => {
   const [showExitAlert, setShowExitAlert] = React.useState(false);
   const [answers, setAnswers] = React.useState<string>("");
   const [isTransitioning, setIsTransitioning] = React.useState(false);
+  const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -49,10 +52,10 @@ const DNAAssessment = () => {
     ? categoryOrder[currentCategoryIndex + 1] 
     : null;
 
-  // Calculate progress percentage here so it's available throughout the component
+  // Calculate progress percentage
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
-  // Fix the type in the prefetch query
+  // Query for current question
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
@@ -95,22 +98,44 @@ const DNAAssessment = () => {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Prefetch next possible questions whenever current question changes
+  // Initialize or get assessment ID
+  React.useEffect(() => {
+    const initializeAssessment = async () => {
+      if (!assessmentId && currentCategoryIndex === 0) {
+        const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+        const { data, error } = await supabase
+          .from('dna_assessment_results')
+          .insert([{ name }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating assessment:', error);
+          toast.error('Error starting assessment');
+          return;
+        }
+
+        setAssessmentId(data.id);
+      }
+    };
+
+    initializeAssessment();
+  }, [assessmentId, currentCategoryIndex]);
+
+  // Prefetch next possible questions
   React.useEffect(() => {
     const prefetchNextQuestions = async () => {
       if (!currentQuestion) return;
 
       console.log('Starting to prefetch next possible questions');
 
-      // Prefetch both possible next questions
       const nextQuestionIds = [
         currentQuestion.next_question_a_id,
         currentQuestion.next_question_b_id
-      ].filter(Boolean); // Remove null values
+      ].filter(Boolean);
 
       for (const nextId of nextQuestionIds) {
         try {
-          // First get the tree position for the next question
           const { data: nextQuestion } = await supabase
             .from('dna_tree_structure')
             .select('tree_position, category')
@@ -118,7 +143,6 @@ const DNAAssessment = () => {
             .single();
 
           if (nextQuestion) {
-            // Prefetch the full question data
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextQuestion.category, nextQuestion.tree_position],
               queryFn: async () => {
@@ -153,111 +177,119 @@ const DNAAssessment = () => {
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
 
-  // Store answers when completing a category
-  const storeAnswers = async () => {
-    const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-    const existingResults = await supabase
-      .from('dna_assessment_results')
-      .select('*')
-      .eq('name', name)
-      .maybeSingle();
-
-    if (existingResults.data) {
-      // Update existing results
-      const { error } = await supabase
-        .from('dna_assessment_results')
-        .update({ [upperCategory]: answers })
-        .eq('id', existingResults.data.id);
-
-      if (error) console.error('Error updating results:', error);
-    } else {
-      // Create new results
-      const { error } = await supabase
-        .from('dna_assessment_results')
-        .insert([{ name, [upperCategory]: answers }]);
-
-      if (error) console.error('Error inserting results:', error);
-    }
-  };
-
+  // Store answer and handle navigation
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || !assessmentId) return;
 
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
 
-    const nextQuestionId = answer === "A" 
-      ? currentQuestion.next_question_a_id 
-      : currentQuestion.next_question_b_id;
-
-    if (!nextQuestionId) {
-      setIsTransitioning(true);
-      await storeAnswers();
-      
-      const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
-      
-      if (currentCategoryIndex < categoryOrder.length - 1) {
-        const nextCategory = categoryOrder[currentCategoryIndex + 1];
-        
-        // Fix the type here by using the enum value directly
-        await queryClient.prefetchQuery({
-          queryKey: ['dna-question', nextCategory, 'Q1'],
-          queryFn: async () => {
-            const { data, error } = await supabase
-              .from('dna_tree_structure')
-              .select(`
-                *,
-                question:great_questions!dna_tree_structure_question_id_fkey (
-                  question,
-                  category_number,
-                  answer_a,
-                  answer_b
-                )
-              `)
-              .eq('category', nextCategory)
-              .eq('tree_position', 'Q1')
-              .maybeSingle();
-
-            if (error) throw error;
-            return data;
-          },
+    try {
+      // Store individual question response
+      const { error: responseError } = await supabase
+        .from('dna_question_responses')
+        .insert({
+          assessment_id: assessmentId,
+          category: upperCategory,
+          question_id: currentQuestion.id,
+          answer
         });
 
-        navigate(`/dna/${nextCategory.toLowerCase()}`);
-        setCurrentPosition("Q1");
+      if (responseError) {
+        console.error('Error storing question response:', responseError);
+        toast.error('Error saving your answer');
+        return;
+      }
+
+      const nextQuestionId = answer === "A" 
+        ? currentQuestion.next_question_a_id 
+        : currentQuestion.next_question_b_id;
+
+      if (!nextQuestionId) {
+        setIsTransitioning(true);
+
+        // Update category results
+        const { error: updateError } = await supabase
+          .from('dna_assessment_results')
+          .update({ 
+            [upperCategory]: newAnswers,
+            answers: supabase.sql`jsonb_set(
+              COALESCE(answers, '{}'::jsonb),
+              ${`{${upperCategory}}`},
+              ${JSON.stringify(newAnswers)}
+            )`
+          })
+          .eq('id', assessmentId);
+
+        if (updateError) {
+          console.error('Error updating assessment results:', updateError);
+          toast.error('Error saving category results');
+          return;
+        }
+
+        if (currentCategoryIndex < categoryOrder.length - 1) {
+          const nextCategory = categoryOrder[currentCategoryIndex + 1];
+          
+          await queryClient.prefetchQuery({
+            queryKey: ['dna-question', nextCategory, 'Q1'],
+            queryFn: async () => {
+              const { data, error } = await supabase
+                .from('dna_tree_structure')
+                .select(`
+                  *,
+                  question:great_questions!dna_tree_structure_question_id_fkey (
+                    question,
+                    category_number,
+                    answer_a,
+                    answer_b
+                  )
+                `)
+                .eq('category', nextCategory)
+                .eq('tree_position', 'Q1')
+                .maybeSingle();
+
+              if (error) throw error;
+              return data;
+            },
+          });
+
+          navigate(`/dna/${nextCategory.toLowerCase()}`);
+          setCurrentPosition("Q1");
+          setCurrentQuestionNumber(prev => prev + 1);
+          setAnswers("");
+          setIsTransitioning(false);
+          return;
+        }
+        
+        navigate('/dna');
+        return;
+      }
+
+      try {
+        const { data: nextQuestion, error: nextQuestionError } = await supabase
+          .from('dna_tree_structure')
+          .select('tree_position')
+          .eq('id', nextQuestionId)
+          .maybeSingle();
+
+        if (nextQuestionError) {
+          console.error('Error fetching next question:', nextQuestionError);
+          return;
+        }
+
+        if (!nextQuestion) {
+          console.error('Next question not found for ID:', nextQuestionId);
+          return;
+        }
+
+        setCurrentPosition(nextQuestion.tree_position);
         setCurrentQuestionNumber(prev => prev + 1);
-        setAnswers("");
-        setIsTransitioning(false);
-        return;
+      } catch (error) {
+        console.error('Error in question transition:', error);
       }
-      
-      navigate('/dna');
-      return;
-    }
-
-    try {
-      // Get the tree position for the next question
-      const { data: nextQuestion, error: nextQuestionError } = await supabase
-        .from('dna_tree_structure')
-        .select('tree_position')
-        .eq('id', nextQuestionId)
-        .maybeSingle();
-
-      if (nextQuestionError) {
-        console.error('Error fetching next question:', nextQuestionError);
-        return;
-      }
-
-      if (!nextQuestion) {
-        console.error('Next question not found for ID:', nextQuestionId);
-        return;
-      }
-
-      // Update the current position and increment question number
-      setCurrentPosition(nextQuestion.tree_position);
-      setCurrentQuestionNumber(prev => prev + 1);
     } catch (error) {
-      console.error('Error in question transition:', error);
+      console.error('Error handling answer:', error);
+      toast.error('Error processing your answer');
     }
   };
 
@@ -274,7 +306,7 @@ const DNAAssessment = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <header className="px-4 py-3 flex items-center justify-between relative z-50">
-          <div className="h-10 w-10" /> {/* Placeholder for consistent layout */}
+          <div className="h-10 w-10" />
           <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
@@ -322,7 +354,6 @@ const DNAAssessment = () => {
     );
   }
 
-  // Default button text if answer_a and answer_b are not available
   const buttonTextA = currentQuestion.question?.answer_a || "Yes";
   const buttonTextB = currentQuestion.question?.answer_b || "No";
 
