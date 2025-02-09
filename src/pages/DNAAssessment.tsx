@@ -46,9 +46,7 @@ const DNAAssessment = () => {
           question:great_questions!dna_tree_structure_question_id_fkey (
             question,
             category_number
-          ),
-          next_a:dna_tree_structure!dna_tree_structure_next_question_a_id_fkey (tree_position),
-          next_b:dna_tree_structure!dna_tree_structure_next_question_b_id_fkey (tree_position)
+          )
         `)
         .eq('category', upperCategory)
         .eq('tree_position', currentPosition)
@@ -188,14 +186,6 @@ const DNAAssessment = () => {
   // Calculate progress based on the fixed total of 30 questions
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
-  // Get the positions of the next questions to extract labels from their tree_position
-  const nextA = currentQuestion.next_a?.[0]?.tree_position || "";
-  const nextB = currentQuestion.next_b?.[0]?.tree_position || "";
-  
-  // Extract answer labels from tree positions (format: "Q1|ANSWER")
-  const answerA = nextA.split("|")[1] || "YES";
-  const answerB = nextB.split("|")[1] || "NO";
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="px-4 py-3 flex items-center justify-between">
@@ -218,7 +208,7 @@ const DNAAssessment = () => {
         />
       </div>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
-        <h1 className="text-3xl font-baskervville text-center mb-16 max-w-2xl">
+        <h1 className="text-3xl font-baskerville text-center mb-16 max-w-2xl">
           {currentQuestion.question?.question}
         </h1>
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
@@ -227,14 +217,14 @@ const DNAAssessment = () => {
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("A")}
           >
-            {answerA}
+            YES
           </Button>
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("B")}
           >
-            {answerB}
+            NO
           </Button>
         </div>
       </div>
@@ -243,4 +233,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
