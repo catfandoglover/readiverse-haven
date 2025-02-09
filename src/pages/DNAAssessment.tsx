@@ -2,7 +2,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +24,7 @@ const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
 
@@ -67,6 +68,90 @@ const DNAAssessment = () => {
     },
     enabled: !!upperCategory
   });
+
+  // Prefetch next possible questions whenever current question changes
+  React.useEffect(() => {
+    const prefetchNextQuestions = async () => {
+      if (!currentQuestion) return;
+
+      console.log('Starting to prefetch next possible questions');
+
+      // Prefetch both possible next questions
+      const nextQuestionIds = [
+        currentQuestion.next_question_a_id,
+        currentQuestion.next_question_b_id
+      ].filter(Boolean); // Remove null values
+
+      for (const nextId of nextQuestionIds) {
+        try {
+          // First get the tree position for the next question
+          const { data: nextQuestion } = await supabase
+            .from('dna_tree_structure')
+            .select('tree_position, category')
+            .eq('id', nextId)
+            .single();
+
+          if (nextQuestion) {
+            // Prefetch the full question data
+            await queryClient.prefetchQuery({
+              queryKey: ['dna-question', nextQuestion.category, nextQuestion.tree_position],
+              queryFn: async () => {
+                const { data, error } = await supabase
+                  .from('dna_tree_structure')
+                  .select(`
+                    *,
+                    question:great_questions!dna_tree_structure_question_id_fkey (
+                      question,
+                      category_number
+                    )
+                  `)
+                  .eq('category', nextQuestion.category)
+                  .eq('tree_position', nextQuestion.tree_position)
+                  .maybeSingle();
+
+                if (error) throw error;
+                console.log(`Prefetched question: ${nextQuestion.category} - ${nextQuestion.tree_position}`);
+                return data;
+              },
+            });
+          }
+        } catch (error) {
+          console.error('Error prefetching next question:', error);
+        }
+      }
+
+      // Also prefetch first question of next category if we're near the end
+      if (!currentQuestion.next_question_a_id || !currentQuestion.next_question_b_id) {
+        const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
+        if (currentCategoryIndex < categoryOrder.length - 1) {
+          const nextCategory = categoryOrder[currentCategoryIndex + 1];
+          await queryClient.prefetchQuery({
+            queryKey: ['dna-question', nextCategory, 'Q1'],
+            queryFn: async () => {
+              const { data, error } = await supabase
+                .from('dna_tree_structure')
+                .select(`
+                  *,
+                  question:great_questions!dna_tree_structure_question_id_fkey (
+                    question,
+                    category_number
+                  )
+                `)
+                .eq('category', nextCategory)
+                .eq('tree_position', 'Q1')
+                .maybeSingle();
+
+              if (error) throw error;
+              console.log(`Prefetched first question of next category: ${nextCategory}`);
+              return data;
+            },
+          });
+        }
+      }
+    };
+
+    prefetchNextQuestions();
+  }, [currentQuestion, upperCategory, queryClient]);
 
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion) return;
@@ -233,3 +318,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
