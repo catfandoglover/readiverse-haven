@@ -182,7 +182,7 @@ const IntellectualDNA = () => {
               Your intellectual DNA contains traces of the conversations that have shaped your inner and outer world. By decoding it, you discover not just who you are, but who you can become.
             </p>
             <p className="text-foreground/80 text-center mb-8 leading-relaxed">
-              Picture a dinner party across centuries. Plato and Kant debate whether goodness exists beyond mind. Einstein sketches relativity on napkins while Aristotle challenges him, mapping causality in wine stains. Augustine and Nietzsche clash over God and meaning, until Wittgenstein cuts in: "You're trapped in language games." This isn't fantasy. It's the Great Conversation. Your seat is waiting.
+              Learning is a practice that can change your life. The history of thought is not simply a catalogue of theories that are either right or wrong, but a great conversation, one that you can join.
             </p>
             <Button
               onClick={handleStartAssessment}
@@ -255,3 +255,4 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
+
