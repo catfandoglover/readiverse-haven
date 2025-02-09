@@ -216,7 +216,7 @@ const DNAAssessment = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-1 text-sm font-oxanium text-[#E9E7E2] mr-5">
+        <div className="flex items-center gap-1 text-sm font-oxanium text-[#E9E7E2] mr-3">
           <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
           <span>30</span>
@@ -254,3 +254,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
