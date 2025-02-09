@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -227,13 +228,15 @@ const DNAAssessment = () => {
           [upperCategory]: newAnswers
         };
 
-        // Update category results
+        // Update category results with both columns
+        const updateData = {
+          answers: updatedAnswers,
+          [`${upperCategory.toLowerCase()}_sequence`]: newAnswers
+        };
+
         const { error: updateError } = await supabase
           .from('dna_assessment_results')
-          .update({ 
-            [upperCategory]: newAnswers,
-            answers: updatedAnswers
-          })
+          .update(updateData)
           .eq('id', assessmentId);
 
         if (updateError) {
