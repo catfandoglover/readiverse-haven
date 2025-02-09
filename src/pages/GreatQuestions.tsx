@@ -89,21 +89,25 @@ const GreatQuestions = () => {
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
 
+    // Handle initial scroll restoration
     if (isInitialMount) {
-      // Only restore scroll position on initial mount
-      const savedPosition = getScrollPosition(location.pathname);
-      if (savedPosition) {
-        window.scrollTo({
-          top: savedPosition,
-          behavior: 'instant'
-        });
-      }
-      setIsInitialMount(false);
+      requestAnimationFrame(() => {
+        const savedPosition = getScrollPosition(location.pathname);
+        if (savedPosition) {
+          window.scrollTo({
+            top: savedPosition,
+            behavior: 'instant'
+          });
+        }
+        setIsInitialMount(false);
+      });
     }
 
     // Save scroll position when component unmounts or location changes
     const handleScroll = () => {
-      saveScrollPosition(location.pathname, window.scrollY);
+      if (!isInitialMount) {
+        saveScrollPosition(location.pathname, window.scrollY);
+      }
     };
 
     // Throttle scroll event handler
@@ -144,7 +148,8 @@ const GreatQuestions = () => {
 
   const handleNavigation = (path: string) => {
     // Save current scroll position before navigating
-    saveScrollPosition(location.pathname, window.scrollY);
+    const currentPosition = window.scrollY;
+    saveScrollPosition(location.pathname, currentPosition);
 
     if (path === '/' && location.pathname !== '/') {
       navigate('/');
