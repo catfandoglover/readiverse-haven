@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -31,6 +32,13 @@ const DNAAssessment = () => {
     },
     retry: false,
   });
+
+  // Handle authentication redirect
+  React.useEffect(() => {
+    if (!authLoading && !authData) {
+      navigate('/auth');
+    }
+  }, [authData, authLoading, navigate]);
 
   const { data: currentQuestion, isLoading: questionLoading, error } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
@@ -143,14 +151,6 @@ const DNAAssessment = () => {
         <div className="font-oxanium">Checking authentication...</div>
       </div>
     );
-  }
-
-  // If not authenticated, redirect to auth page
-  if (!authData) {
-    React.useEffect(() => {
-      navigate('/auth');
-    }, [navigate]);
-    return null;
   }
 
   if (error) {
