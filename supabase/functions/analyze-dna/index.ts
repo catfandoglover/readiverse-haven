@@ -101,7 +101,7 @@ Your final output should look like this:
 
 Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
 
-    console.log('Sending request to Claude API...');
+    console.log('Sending request to Claude API with prompt length:', prompt.length);
     
     // Call Claude API with the updated endpoint and format
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -121,8 +121,11 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       })
     });
 
+    console.log('Claude API response status:', response.status);
+
     if (!response.ok) {
-      console.error('Claude API error:', await response.text());
+      const errorText = await response.text();
+      console.error('Claude API error:', errorText);
       throw new Error(`Claude API returned status ${response.status}`);
     }
 
