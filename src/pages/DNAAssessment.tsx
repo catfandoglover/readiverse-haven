@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
@@ -14,7 +13,6 @@ type DNACategory = Database["public"]["Enums"]["dna_category"];
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
   // Convert category to uppercase to match the enum type
@@ -68,13 +66,10 @@ const DNAAssessment = () => {
 
     // If there's no next question, the current category is complete
     if (!nextQuestionId) {
-      // If we're finishing Ethics, move to Epistemology
+      // If we're finishing Ethics, move to Epistemology and reset position to Q1
       if (upperCategory === 'ETHICS') {
-        toast({
-          title: "Ethics assessment complete",
-          description: "Moving on to Epistemology questions",
-        });
         navigate('/dna/epistemology');
+        setCurrentPosition("Q1");
         return;
       }
       
@@ -93,21 +88,11 @@ const DNAAssessment = () => {
 
       if (nextQuestionError) {
         console.error('Error fetching next question:', nextQuestionError);
-        toast({
-          variant: "destructive",
-          title: "Error fetching next question",
-          description: "Please try again"
-        });
         return;
       }
 
       if (!nextQuestion) {
         console.error('Next question not found for ID:', nextQuestionId);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Next question not found"
-        });
         return;
       }
 
@@ -115,11 +100,6 @@ const DNAAssessment = () => {
       setCurrentPosition(nextQuestion.tree_position);
     } catch (error) {
       console.error('Error in question transition:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading next question",
-        description: "Please try again"
-      });
     }
   };
 
@@ -232,4 +212,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
