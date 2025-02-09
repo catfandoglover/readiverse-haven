@@ -1,10 +1,11 @@
+
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 
 const IntellectualDNA = () => {
   const navigate = useNavigate();
@@ -12,6 +13,23 @@ const IntellectualDNA = () => {
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
+
+    // Restore scroll position when component mounts
+    const savedPosition = getScrollPosition(location.pathname);
+    if (savedPosition) {
+      window.scrollTo(0, savedPosition);
+    }
+
+    // Save scroll position when component unmounts or location changes
+    const handleScroll = () => {
+      saveScrollPosition(location.pathname, window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      handleScroll(); // Save final position before unmounting
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [location.pathname]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
@@ -127,3 +145,4 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
+

@@ -1,5 +1,6 @@
 
 const LAST_VISITED_KEY_PREFIX = 'last-visited-';
+const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 
 export const sections = {
   dna: '/dna',
@@ -18,3 +19,17 @@ export const getLastVisited = (section: keyof typeof sections): string => {
 export const clearLastVisited = (section: keyof typeof sections) => {
   localStorage.removeItem(`${LAST_VISITED_KEY_PREFIX}${section}`);
 };
+
+export const saveScrollPosition = (path: string, position: number) => {
+  localStorage.setItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`, position.toString());
+};
+
+export const getScrollPosition = (path: string): number => {
+  const position = localStorage.getItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`);
+  return position ? parseInt(position, 10) : 0;
+};
+
+export const clearScrollPosition = (path: string) => {
+  localStorage.removeItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`);
+};
+
