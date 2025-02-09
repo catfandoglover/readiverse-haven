@@ -196,8 +196,8 @@ const DNAAssessment = () => {
       {/* Progress Bar */}
       <div className="px-4 pt-2">
         <Progress 
-          value={(Number(currentPosition?.split('Q')[1]) / 5) * 100} 
-          className="h-1 bg-white/10"
+          value={(Number(currentPosition?.split('Q')[1]) / 5) * 100}
+          className="bg-white/10"
         />
       </div>
 
