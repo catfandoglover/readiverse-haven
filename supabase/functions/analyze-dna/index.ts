@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -29,7 +29,7 @@ serve(async (req) => {
     // Format answers_json for the prompt
     const answers_json = JSON.stringify(answers, null, 2);
 
-    // Prepare the prompt for Claude with the enhanced framework
+    // Prepare the prompt for the model with the enhanced framework
     const prompt = `You are a sophisticated AI tasked with creating personalized philosophical profiles based on users' responses to a series of questions. Your goal is to interpret these responses and craft a mythopoetic narrative that captures the essence of the individual's worldview.
 
 First, here are the user's answers to the philosophical questions:
@@ -101,19 +101,19 @@ Your final output should look like this:
 
 Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
 
-    console.log('Sending request to Claude API with updated headers...');
+    console.log('Sending request to OpenRouter API...');
     
-    // Call Claude API with the correct endpoint and headers for v3
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Call OpenRouter API
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
-        'x-api-key': anthropicApiKey!
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'DNA Analysis'
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 1024,
+        model: 'anthropic/claude-3-sonnet',
         messages: [{
           role: 'user',
           content: prompt
@@ -124,27 +124,16 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Claude API error:', response.status, errorText);
-      throw new Error(`Claude API returned status ${response.status}`);
+      console.error('OpenRouter API error:', response.status, errorText);
+      throw new Error(`OpenRouter API returned status ${response.status}`);
     }
 
-    const claudeResponse = await response.json();
-    console.log('Received response from Claude:', claudeResponse);
+    const openRouterResponse = await response.json();
+    console.log('Received response from OpenRouter:', openRouterResponse);
 
-    // Validate the response structure
-    if (!claudeResponse || !claudeResponse.content || !Array.isArray(claudeResponse.content)) {
-      console.error('Unexpected Claude API response structure:', claudeResponse);
-      throw new Error('Invalid response structure from Claude API - missing content array');
-    }
-
-    const content = claudeResponse.content[0];
-    if (!content || typeof content.text !== 'string') {
-      console.error('Invalid content structure in Claude response:', content);
-      throw new Error('Invalid content format from Claude API');
-    }
-
-    const analysisText = content.text;
-    console.log('Extracted analysis text:', analysisText);
+    // Extract the generated text from OpenRouter's response
+    const generatedText = openRouterResponse.choices[0].message.content;
+    console.log('Extracted analysis text:', generatedText);
 
     // Store the analysis in Supabase
     const { data: analysisData, error: analysisError } = await supabase
@@ -152,8 +141,8 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       .insert({
         assessment_id: assessmentId,
         analysis_type: 'CLAUDE',
-        analysis_text: analysisText,
-        raw_response: claudeResponse
+        analysis_text: generatedText,
+        raw_response: openRouterResponse
       })
       .select()
       .single();
