@@ -207,19 +207,32 @@ const DNAAssessment = () => {
       if (!nextQuestionId) {
         setIsTransitioning(true);
 
+        // Get current answers from the assessment
+        const { data: currentData, error: fetchError } = await supabase
+          .from('dna_assessment_results')
+          .select('answers')
+          .eq('id', assessmentId)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching current answers:', fetchError);
+          toast.error('Error updating results');
+          return;
+        }
+
+        // Prepare the new answers object with type safety
+        const currentAnswers = (currentData?.answers as Record<string, string>) || {};
+        const updatedAnswers = {
+          ...currentAnswers,
+          [upperCategory]: newAnswers
+        };
+
         // Update category results
         const { error: updateError } = await supabase
           .from('dna_assessment_results')
           .update({ 
             [upperCategory]: newAnswers,
-            answers: {
-              ...((await supabase
-                .from('dna_assessment_results')
-                .select('answers')
-                .eq('id', assessmentId)
-                .single()).data?.answers || {}),
-              [upperCategory]: newAnswers
-            }
+            answers: updatedAnswers
           })
           .eq('id', assessmentId);
 
