@@ -116,6 +116,7 @@ const DNAAssessment = () => {
         }
 
         setAssessmentId(data.id);
+        console.log('Created new assessment with ID:', data.id);
       }
     };
 
@@ -186,20 +187,30 @@ const DNAAssessment = () => {
 
     try {
       // Store individual question response
-      const { error: responseError } = await supabase
+      console.log('Storing question response:', {
+        assessment_id: assessmentId,
+        category: upperCategory,
+        question_id: currentQuestion.id,
+        answer
+      });
+
+      const { data: responseData, error: responseError } = await supabase
         .from('dna_question_responses')
         .insert({
           assessment_id: assessmentId,
           category: upperCategory,
           question_id: currentQuestion.id,
           answer
-        });
+        })
+        .select();
 
       if (responseError) {
         console.error('Error storing question response:', responseError);
         toast.error('Error saving your answer');
         return;
       }
+
+      console.log('Successfully stored question response:', responseData);
 
       const nextQuestionId = answer === "A" 
         ? currentQuestion.next_question_a_id 
