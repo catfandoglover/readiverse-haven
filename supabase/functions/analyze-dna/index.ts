@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -37,7 +38,7 @@ serve(async (req) => {
     const answers_json = JSON.stringify(answers, null, 2);
 
     // Prepare the prompt for the model with the enhanced framework
-    const prompt = `You are a sophisticated AI tasked with creating personalized philosophical profiles based on users' responses to a series of questions. Your goal is to interpret these responses and craft a mythopoetic narrative that captures the essence of the individual's worldview.
+    const prompt = `I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category represents a complex tree of philosophical inquiry, where each answer leads to deeper, more nuanced questions.
 
 First, here are the user's answers to the philosophical questions:
 
@@ -45,68 +46,82 @@ First, here are the user's answers to the philosophical questions:
 ${answers_json}
 </answers_json>
 
-Please analyze these answers and create a profile for the user. Follow these steps:
+Please analyze these answers and create a profile for the user. Your response should be at the level of a PhD student in philosophy with the inspirational tone and rigor of Maria Montessori, who believed in the profound capacity of each individual to develop their intellectual and spiritual potential.
 
-1. Extract the 5-letter answer sequences for each philosophical category (Theology, Ontology, Epistemology, Ethics, Politics, and Aesthetics) from the answers_json.
+Context on the Mission and Purpose:
+Your thoughts have ancestors. Every idea you hold has been shaped by the great conversation that spans human history. From Sappho's understanding of love to Popper's theory of knowledge, from Mencius's ethics to Aquinas's theology, we are all part of an ongoing dialogue with the past.
 
-2. Based on your analysis of the answer sequences, generate a mythopoetic title for the user. This title should poetically capture the essence of their philosophical leanings.
+Learning is not just about acquiring information—it is a transformative practice that can change your life. The history of thought is not simply a catalogue of theories that are either right or wrong, but a great conversation that you can join.
 
-3. Create a list of basic information in the following format:
+Steps for Analysis:
 
+1. Extract and analyze the 5-letter answer sequences for each philosophical category:
+- THEOLOGY: Exploring questions of divine reality, faith, and ultimate meaning
+- ONTOLOGY: Investigating the nature of being, reality, and existence
+- EPISTEMOLOGY: Examining how we know what we know
+- ETHICS: Contemplating right action and the nature of goodness
+- POLITICS: Understanding power, justice, and collective organization
+- AESTHETICS: Exploring beauty, art, and sensory experience
+
+2. For each category, provide:
+a) The 5-letter sequence derived from their answers
+b) A brief interpretation of what this sequence reveals about their philosophical orientation
+c) Connections to major thinkers and traditions that align with their viewpoint
+
+3. Generate a mythopoetic title that captures the essence of their philosophical DNA. This should be both poetic and philosophically precise.
+
+4. Create a narrative profile that:
+a) Weaves together their philosophical tendencies into a coherent worldview
+b) Identifies the intellectual lineage their thinking follows
+c) Suggests paths for further philosophical exploration
+d) Connects their theoretical orientations to practical implications
+
+Format your response as follows:
+
+<basic_info>
 <name>
-[Generated Name]
+[Their provided name or "Seeker of Wisdom" if anonymous]
 </name>
 
 <mythopoetic_title>
-[Generated Mythopoetic Title]
+[A title that poetically captures their philosophical essence]
 </mythopoetic_title>
 
 <theology>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </theology>
 
 <ontology>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </ontology>
 
 <epistemology>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </epistemology>
 
 <ethics>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </ethics>
 
 <politics>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </politics>
 
 <aesthetics>
-[5-letter answer sequence]
+[5-letter sequence] - [Brief interpretation]
 </aesthetics>
-
-4. Write a narrative prose profile that weaves together the user's philosophical tendencies into a cohesive and poetic description. This profile should reflect the user's worldview as indicated by their answers across all six categories.
-
-Before providing your final output, work through your interpretation inside <interpretation> tags:
-
-a. Extract and list the 5-letter answer sequences for each category.
-b. Interpret the meaning of each sequence.
-c. Identify connections between different philosophical categories.
-d. Consider how each philosophical category might influence the others.
-e. Brainstorm mythopoetic themes and imagery based on your interpretations.
-f. Think about potential mythological or archetypal figures that align with the user's philosophical profile.
-
-Your final output should look like this:
-
-<basic_info>
-[List of basic information as specified above]
 </basic_info>
 
 <profile>
-[Narrative prose profile]
+[Write a thorough, academically rigorous yet inspirational analysis that:
+- Examines the interplay between their various philosophical positions
+- Connects their thinking to historical philosophical traditions
+- Suggests directions for further intellectual exploration
+- Reflects on the practical implications of their philosophical orientation
+The tone should combine philosophical depth with the warmth and encouragement of a wise mentor.]
 </profile>
 
-Remember to infuse your writing with a mythopoetic style, drawing connections between the user's philosophical leanings and broader themes of human experience and understanding.`;
+Remember that this analysis should serve not just as a description of their current philosophical position, but as an invitation to deeper engagement with the great conversation of human thought.`;
 
     console.log('Sending request to OpenRouter API with required headers...');
     
@@ -177,3 +192,4 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
+
