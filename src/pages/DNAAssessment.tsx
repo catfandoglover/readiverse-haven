@@ -228,12 +228,16 @@ const DNAAssessment = () => {
           [upperCategory]: newAnswers
         };
 
-        // Update category results with both columns
-        const updateData = {
+        // Create an update object with both the answers JSON and the specific sequence column
+        const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence`;
+        const updateData: Record<string, any> = {
           answers: updatedAnswers,
-          [`${upperCategory.toLowerCase()}_sequence`]: newAnswers
+          [sequenceColumnName]: newAnswers
         };
 
+        console.log('Updating assessment with:', updateData);
+
+        // Update assessment results
         const { error: updateError } = await supabase
           .from('dna_assessment_results')
           .update(updateData)
