@@ -285,8 +285,8 @@ const DNAAssessment = () => {
             {currentQuestion.question?.question}
           </h1>
         </div>
-        {/* Buttons container - reduced bottom margin and added top margin to push it closer to question */}
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mt-4 mb-4">
+        {/* Buttons container - increased bottom margin */}
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mt-4 mb-16">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
