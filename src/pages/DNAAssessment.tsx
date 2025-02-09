@@ -57,7 +57,9 @@ const DNAAssessment = () => {
           *,
           question:great_questions!dna_tree_structure_question_id_fkey (
             question,
-            category_number
+            category_number,
+            answer_a,
+            answer_b
           )
         `)
         .eq('category', upperCategory)
@@ -311,14 +313,14 @@ const DNAAssessment = () => {
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("A")}
           >
-            YES
+            {currentQuestion.question?.answer_a || "YES"}
           </Button>
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("B")}
           >
-            NO
+            {currentQuestion.question?.answer_b || "NO"}
           </Button>
         </div>
       </div>

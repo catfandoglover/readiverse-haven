@@ -279,6 +279,8 @@ export type Database = {
       }
       great_questions: {
         Row: {
+          answer_a: string | null
+          answer_b: string | null
           category: string
           category_number: string | null
           created_at: string
@@ -289,6 +291,8 @@ export type Database = {
           related_classics: string[] | null
         }
         Insert: {
+          answer_a?: string | null
+          answer_b?: string | null
           category: string
           category_number?: string | null
           created_at?: string
@@ -299,6 +303,8 @@ export type Database = {
           related_classics?: string[] | null
         }
         Update: {
+          answer_a?: string | null
+          answer_b?: string | null
           category?: string
           category_number?: string | null
           created_at?: string
