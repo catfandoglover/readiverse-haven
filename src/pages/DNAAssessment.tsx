@@ -242,6 +242,9 @@ const DNAAssessment = () => {
 
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
+  // Only show buttons if we have the question data and answers
+  const showButtons = currentQuestion && currentQuestion.question?.answer_a && currentQuestion.question?.answer_b;
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-4 py-3 flex items-center justify-between relative z-50">
@@ -271,7 +274,7 @@ const DNAAssessment = () => {
           </h1>
         </div>
         <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
-          {!questionLoading && currentQuestion.question && (
+          {showButtons && (
             <>
               <Button
                 variant="outline"
