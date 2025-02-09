@@ -39,6 +39,7 @@ const DNAAssessment = () => {
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
   const [showExitAlert, setShowExitAlert] = React.useState(false);
   const [answers, setAnswers] = React.useState<string>("");
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -86,7 +87,7 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
-    enabled: !!upperCategory,
+    enabled: !!upperCategory && !isTransitioning,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
@@ -190,6 +191,8 @@ const DNAAssessment = () => {
 
     // If there's no next question, the current category is complete
     if (!nextQuestionId) {
+      setIsTransitioning(true);
+      
       // Store answers for the completed category
       await storeAnswers();
       
@@ -199,10 +202,36 @@ const DNAAssessment = () => {
       // If we're not at the last category, move to the next one
       if (currentCategoryIndex < categoryOrder.length - 1) {
         const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
+        
+        // Prefetch the first question of the next category
+        await queryClient.prefetchQuery({
+          queryKey: ['dna-question', nextCategory.toUpperCase(), 'Q1'],
+          queryFn: async () => {
+            const { data, error } = await supabase
+              .from('dna_tree_structure')
+              .select(`
+                *,
+                question:great_questions!dna_tree_structure_question_id_fkey (
+                  question,
+                  category_number,
+                  answer_a,
+                  answer_b
+                )
+              `)
+              .eq('category', nextCategory.toUpperCase())
+              .eq('tree_position', 'Q1')
+              .maybeSingle();
+
+            if (error) throw error;
+            return data;
+          },
+        });
+
         navigate(`/dna/${nextCategory}`);
         setCurrentPosition("Q1");
         setCurrentQuestionNumber(prev => prev + 1);
         setAnswers(""); // Reset answers for new category
+        setIsTransitioning(false);
         return;
       }
       
@@ -246,10 +275,26 @@ const DNAAssessment = () => {
     setShowExitAlert(false);
   };
 
-  if (questionLoading) {
+  if (questionLoading || isTransitioning) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="font-oxanium">Loading...</div>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <header className="px-4 py-3 flex items-center justify-between relative z-50">
+          <div className="h-10 w-10" /> {/* Placeholder for consistent layout */}
+          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+            <span>{currentQuestionNumber}</span>
+            <span>/</span>
+            <span>{TOTAL_QUESTIONS}</span>
+          </div>
+        </header>
+        <div className="px-4">
+          <Progress 
+            value={progressPercentage}
+            className="bg-secondary/10"
+          />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="font-oxanium text-lg">Loading next question...</div>
+        </div>
       </div>
     );
   }
