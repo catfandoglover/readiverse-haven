@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -7,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Database } from "@/integrations/supabase/types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
