@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
 import { NotionSyncButton } from "@/components/NotionSyncButton";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -82,6 +83,10 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
 const GreatQuestions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    saveLastVisited('discover', location.pathname);
+  }, [location.pathname]);
   
   const { data: questions, isLoading } = useQuery({
     queryKey: ['all-questions'],
@@ -101,7 +106,15 @@ const GreatQuestions = () => {
   });
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    if (path === '/' && location.pathname !== '/') {
+      navigate('/');
+    } else if (path === '/dna') {
+      navigate(getLastVisited('dna'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
+    } else {
+      navigate(path);
+    }
   };
 
   const isCurrentSection = (path: string) => {

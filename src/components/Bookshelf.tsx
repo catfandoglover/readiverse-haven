@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -12,11 +13,14 @@ const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGridView, setIsGridView] = useState(false);
-  
+
+  useEffect(() => {
+    saveLastVisited('bookshelf', location.pathname);
+  }, [location.pathname]);
+
   const { data: books = [], isLoading } = useQuery({
     queryKey: ['user-bookshelf'],
     queryFn: async () => {
-      // Get all library items from localStorage
       const libraryItems = Object.keys(localStorage)
         .filter(key => key.startsWith('book-progress-'))
         .map(key => {
@@ -61,7 +65,15 @@ const Bookshelf = () => {
   };
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    if (path === '/bookshelf' && location.pathname !== '/bookshelf') {
+      navigate('/bookshelf');
+    } else if (path === '/') {
+      navigate(getLastVisited('discover'));
+    } else if (path === '/dna') {
+      navigate(getLastVisited('dna'));
+    } else {
+      navigate(path);
+    }
   };
 
   const isCurrentPath = (path: string) => {

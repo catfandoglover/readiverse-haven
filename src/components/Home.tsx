@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
@@ -8,6 +7,7 @@ import { Database } from "@/integrations/supabase/types";
 import { Compass, LibraryBig, Search, Dna } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -24,7 +24,11 @@ type Concept = {
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  useEffect(() => {
+    saveLastVisited('discover', location.pathname);
+  }, [location.pathname]);
+
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
@@ -77,7 +81,15 @@ const Home = () => {
   };
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    if (path === '/' && location.pathname !== '/') {
+      navigate('/');
+    } else if (path === '/dna') {
+      navigate(getLastVisited('dna'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
+    } else {
+      navigate(path);
+    }
   };
 
   const isCurrentPath = (path: string) => {

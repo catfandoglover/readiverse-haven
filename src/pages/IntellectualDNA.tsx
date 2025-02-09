@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    saveLastVisited('dna', location.pathname);
+  }, [location.pathname]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
@@ -23,7 +28,15 @@ const IntellectualDNA = () => {
   });
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    if (path === '/dna' && location.pathname !== '/dna') {
+      navigate('/dna');
+    } else if (path === '/') {
+      navigate(getLastVisited('discover'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
+    } else {
+      navigate(path);
+    }
   };
 
   const handleStartAssessment = () => {
