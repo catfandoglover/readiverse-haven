@@ -284,7 +284,7 @@ const DNAAssessment = () => {
             {currentQuestion.question?.question}
           </h1>
         </div>
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute bottom-12 left-1/2 -translate-x-1/2">
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute bottom-24 left-1/2 -translate-x-1/2">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
