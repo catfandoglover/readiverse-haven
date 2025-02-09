@@ -15,7 +15,7 @@ const Progress = React.forwardRef<
       className
     )}
     style={{
-      background: "linear-gradient(to right, #cdf551, rgba(205, 245, 81, 0.8))"
+      background: "linear-gradient(to right, #e3ff6b, rgba(227, 255, 107, 0.9))"
     }}
     {...props}
   >
@@ -23,7 +23,7 @@ const Progress = React.forwardRef<
       className="h-full w-full flex-1 transition-all relative"
       style={{ 
         transform: `translateX(-${100 - (value || 0)}%)`,
-        background: "linear-gradient(to right, #9b87f5, #7E69AB)",
+        background: "linear-gradient(to right, #b29eff, #9b87f5)",
       }}
     >
       <div 
