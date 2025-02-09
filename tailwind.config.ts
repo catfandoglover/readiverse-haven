@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,7 +23,8 @@ export default {
 				georgia: ['Georgia', 'serif'],
 				helvetica: ['Helvetica', 'Arial', 'sans-serif'],
 				times: ['Times New Roman', 'serif'],
-				baskerville: ['Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif']
+				baskerville: ['Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
+				baskervville: ['Baskervville', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif']
 			},
 			colors: {
 				border: 'hsl(var(--border) / 0.1)',

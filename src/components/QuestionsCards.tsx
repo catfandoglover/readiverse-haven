@@ -97,7 +97,7 @@ const QuestionsCards = () => {
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex-1 mb-4">
-                  <h3 className="text-base md:text-lg font-oxanium text-[#E9E7E2] text-center line-clamp-3">
+                  <h3 className="text-base md:text-lg font-baskervville text-[#E9E7E2] text-center line-clamp-3">
                     {question.question}
                   </h3>
                 </div>
