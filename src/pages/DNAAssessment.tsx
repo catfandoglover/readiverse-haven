@@ -66,8 +66,19 @@ const DNAAssessment = () => {
       ? currentQuestion.next_question_a_id 
       : currentQuestion.next_question_b_id;
 
-    // If there's no next question, the assessment is complete
+    // If there's no next question, the current category is complete
     if (!nextQuestionId) {
+      // If we're finishing Ethics, move to Epistemology
+      if (upperCategory === 'ETHICS') {
+        toast({
+          title: "Ethics assessment complete",
+          description: "Moving on to Epistemology questions",
+        });
+        navigate('/dna/epistemology');
+        return;
+      }
+      
+      // For other categories, just go back to DNA home
       navigate('/dna');
       return;
     }
@@ -186,12 +197,12 @@ const DNAAssessment = () => {
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
           <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
-          <span>30</span>
+          <span>31</span>
         </div>
       </header>
       <div className="px-4">
         <Progress 
-          value={(Number(currentPosition?.split('Q')[1]) / 30) * 100}
+          value={(Number(currentPosition?.split('Q')[1]) / 31) * 100}
           className="bg-secondary/10"
         />
       </div>
@@ -221,3 +232,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
