@@ -7,18 +7,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Database } from "@/integrations/supabase/types";
+import { useToast } from "@/components/ui/use-toast";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
-  const { data: currentQuestion, isLoading, error } = useQuery({
+  // First check if user is authenticated
+  const { data: authData, isLoading: authLoading } = useQuery({
+    queryKey: ['auth-check'],
+    queryFn: async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        throw new Error('Not authenticated');
+      }
+      return user;
+    },
+    retry: false,
+  });
+
+  const { data: currentQuestion, isLoading: questionLoading, error } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
       console.log('Fetching question for:', { upperCategory, currentPosition });
@@ -53,19 +68,12 @@ const DNAAssessment = () => {
       console.log('Found question:', data);
       return data;
     },
+    enabled: !!authData,
     retry: false
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion) return;
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('Error getting user:', userError);
-      navigate('/auth');
-      return;
-    }
+    if (!currentQuestion || !authData) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -78,7 +86,7 @@ const DNAAssessment = () => {
       const { error } = await supabase
         .from('dna_assessment_progress')
         .upsert({
-          user_id: user.id,
+          user_id: authData.id,
           category: upperCategory,
           completed: true,
           current_position: currentPosition,
@@ -87,6 +95,11 @@ const DNAAssessment = () => {
 
       if (error) {
         console.error('Error saving progress:', error);
+        toast({
+          variant: "destructive",
+          title: "Error saving progress",
+          description: "Please try again"
+        });
       }
 
       navigate('/dna');
@@ -102,17 +115,44 @@ const DNAAssessment = () => {
 
     if (error) {
       console.error('Error fetching next question:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching next question",
+        description: "Please try again"
+      });
       return;
     }
 
     if (!nextQuestion) {
       console.error('Next question not found');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Next question not found"
+      });
       return;
     }
 
     // Update the current position
     setCurrentPosition(nextQuestion.tree_position);
   };
+
+  // Handle authentication loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
+        <div className="font-oxanium">Checking authentication...</div>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to auth page
+  if (!authData) {
+    React.useEffect(() => {
+      navigate('/auth');
+    }, [navigate]);
+    return null;
+  }
 
   if (error) {
     return (
@@ -141,7 +181,7 @@ const DNAAssessment = () => {
     );
   }
 
-  if (isLoading) {
+  if (questionLoading) {
     return (
       <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
         <div className="font-oxanium">Loading...</div>
@@ -230,4 +270,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
