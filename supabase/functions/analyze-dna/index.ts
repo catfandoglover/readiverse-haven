@@ -103,7 +103,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
 
     console.log('Sending request to Claude API...');
     
-    // Call Claude API
+    // Call Claude API with the updated endpoint and format
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -120,6 +120,11 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
         }]
       })
     });
+
+    if (!response.ok) {
+      console.error('Claude API error:', await response.text());
+      throw new Error(`Claude API returned status ${response.status}`);
+    }
 
     const claudeResponse = await response.json();
     console.log('Received response from Claude:', claudeResponse);
