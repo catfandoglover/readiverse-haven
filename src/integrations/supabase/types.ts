@@ -87,6 +87,36 @@ export type Database = {
         }
         Relationships: []
       }
+      concepts: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          illustration: string
+          randomizer: number
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          illustration: string
+          randomizer?: number
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          illustration?: string
+          randomizer?: number
+          title?: string
+        }
+        Relationships: []
+      }
       dna_assessment_progress: {
         Row: {
           category: Database["public"]["Enums"]["dna_category"]

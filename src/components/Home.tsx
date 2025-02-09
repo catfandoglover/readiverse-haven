@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
+type Concept = {
+  id: string;
+  title: string;
+  description: string | null;
+  illustration: string;
+  category: string | null;
+  randomizer: number;
+  created_at: string;
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -45,6 +55,21 @@ const Home = () => {
     refetchOnMount: false
   });
 
+  const { data: concepts, isLoading: conceptsLoading } = useQuery({
+    queryKey: ['concepts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('concepts')
+        .select('*')
+        .order('randomizer');
+      
+      if (error) throw error;
+      return data as Concept[];
+    },
+    staleTime: 30000,
+    refetchOnMount: false
+  });
+
   const handleBookClick = (coverUrl: string | null) => {
     if (coverUrl) {
       window.open(coverUrl, '_blank');
@@ -59,7 +84,7 @@ const Home = () => {
     return location.pathname === path;
   };
 
-  const isLoading = booksLoading || iconsLoading;
+  const isLoading = booksLoading || iconsLoading || conceptsLoading;
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 home-page">
@@ -157,7 +182,21 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {/* Placeholder for concepts content */}
+                  {concepts?.map((concept) => (
+                    <Card 
+                      key={concept.id} 
+                      className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                    >
+                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                        <img
+                          src={concept.illustration || '/placeholder.svg'}
+                          alt={concept.title}
+                          className="w-full h-full object-cover rounded-lg relative z-10"
+                          loading="lazy"
+                        />
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               </div>
               <div className="flex justify-center mt-4 mb-4">
