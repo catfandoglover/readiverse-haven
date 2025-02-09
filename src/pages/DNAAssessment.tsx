@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -299,6 +298,10 @@ const DNAAssessment = () => {
 
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
+  // Default button text if answer_a and answer_b are not available
+  const buttonTextA = currentQuestion.question?.answer_a || "Yes";
+  const buttonTextB = currentQuestion.question?.answer_b || "No";
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-4 py-3 flex items-center justify-between relative z-50">
@@ -328,24 +331,20 @@ const DNAAssessment = () => {
           </h1>
         </div>
         <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto absolute top-[50%] left-1/2 -translate-x-1/2">
-          {!questionLoading && currentQuestion.question && (
-            <>
-              <Button
-                variant="outline"
-                className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
-                onClick={() => handleAnswer("A")}
-              >
-                {currentQuestion.question.answer_a}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
-                onClick={() => handleAnswer("B")}
-              >
-                {currentQuestion.question.answer_b}
-              </Button>
-            </>
-          )}
+          <Button
+            variant="outline"
+            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+            onClick={() => handleAnswer("A")}
+          >
+            {buttonTextA}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
+            onClick={() => handleAnswer("B")}
+          >
+            {buttonTextB}
+          </Button>
         </div>
       </div>
 
