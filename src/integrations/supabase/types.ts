@@ -200,6 +200,27 @@ export type Database = {
             referencedRelation: "great_questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_next_question_a"
+            columns: ["next_question_a_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_next_question_b"
+            columns: ["next_question_b_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_question"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       external_links: {
