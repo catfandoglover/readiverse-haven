@@ -1,15 +1,25 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showNameDialog, setShowNameDialog] = useState(false);
+  const [name, setName] = useState("");
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -58,7 +68,15 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    navigate('/dna/ethics');
+    setShowNameDialog(true);
+  };
+
+  const handleNameSubmit = () => {
+    if (name.trim()) {
+      sessionStorage.setItem('dna_assessment_name', name.trim());
+      setShowNameDialog(false);
+      navigate('/dna/ethics');
+    }
   };
 
   const isCurrentSection = (path: string) => {
@@ -114,6 +132,32 @@ const IntellectualDNA = () => {
           </div>
         </div>
 
+        <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter Your Name</DialogTitle>
+              <DialogDescription>
+                Please enter your name to begin the DNA assessment.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <Input
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleNameSubmit();
+                  }
+                }}
+              />
+              <Button onClick={handleNameSubmit} disabled={!name.trim()}>
+                Begin Assessment
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
           <div className="flex justify-between items-center max-w-sm mx-auto px-8">
             <button 
@@ -145,4 +189,3 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
-

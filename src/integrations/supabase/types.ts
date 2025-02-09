@@ -150,6 +150,42 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_assessment_results: {
+        Row: {
+          aesthetics: string | null
+          created_at: string
+          epistemology: string | null
+          ethics: string | null
+          id: string
+          name: string
+          ontology: string | null
+          politics: string | null
+          theology: string | null
+        }
+        Insert: {
+          aesthetics?: string | null
+          created_at?: string
+          epistemology?: string | null
+          ethics?: string | null
+          id?: string
+          name: string
+          ontology?: string | null
+          politics?: string | null
+          theology?: string | null
+        }
+        Update: {
+          aesthetics?: string | null
+          created_at?: string
+          epistemology?: string | null
+          ethics?: string | null
+          id?: string
+          name?: string
+          ontology?: string | null
+          politics?: string | null
+          theology?: string | null
+        }
+        Relationships: []
+      }
       dna_tree_structure: {
         Row: {
           category: Database["public"]["Enums"]["dna_category"]
