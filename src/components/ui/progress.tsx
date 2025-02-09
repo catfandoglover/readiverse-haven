@@ -15,7 +15,7 @@ const Progress = React.forwardRef<
       className
     )}
     style={{
-      background: "linear-gradient(to right, #FEF7CD, rgba(205, 245, 81, 0.9))"
+      background: "linear-gradient(to right, #cdf551, rgba(205, 245, 81, 0.8))"
     }}
     {...props}
   >
@@ -27,15 +27,9 @@ const Progress = React.forwardRef<
       }}
     >
       <div 
-        className="absolute right-0 top-0 h-full"
+        className="absolute right-0 top-0 h-full w-[2px] bg-white/20 blur-[1px]"
         style={{
-          width: '2px',
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.7), rgba(255,255,255,0.1))',
-          boxShadow: `
-            1px 0 0 rgba(255,255,255,0.7),
-            2px 0 1px rgba(255,255,255,0.3),
-            -1px 0 0 rgba(255,255,255,0.5)
-          `
+          boxShadow: "0 0 2px rgba(255, 255, 255, 0.2)"
         }}
       />
     </ProgressPrimitive.Indicator>
