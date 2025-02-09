@@ -272,7 +272,7 @@ const DNAAssessment = () => {
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-4 py-3 flex items-center justify-between">
         <button 
           onClick={() => navigate('/dna')}
@@ -292,11 +292,15 @@ const DNAAssessment = () => {
           className="bg-secondary/10"
         />
       </div>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
-        <h1 className="text-3xl font-baskerville text-center mb-16 max-w-2xl">
-          {currentQuestion.question?.question}
-        </h1>
-        <div className="flex flex-col items-center gap-4 w-full max-w-xs">
+      <div className="flex-1 flex flex-col px-4">
+        {/* Question container with minimum height */}
+        <div className="flex-1 flex items-center justify-center min-h-[300px] py-8">
+          <h1 className="text-3xl font-baskerville text-center max-w-2xl">
+            {currentQuestion.question?.question}
+          </h1>
+        </div>
+        {/* Fixed position buttons container */}
+        <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto mb-16">
           <Button
             variant="outline"
             className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
