@@ -81,7 +81,7 @@ const DNAAssessment = () => {
     },
     enabled: !!upperCategory,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (previously cacheTime)
   });
 
   // Prefetch next possible questions whenever current question changes
@@ -219,6 +219,7 @@ const DNAAssessment = () => {
           <button 
             onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+            type="button"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
