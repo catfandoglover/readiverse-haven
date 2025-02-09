@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -222,11 +223,17 @@ const DNAAssessment = () => {
           .from('dna_assessment_results')
           .select('answers')
           .eq('id', assessmentId)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
           console.error('Error fetching current answers:', fetchError);
           toast.error('Error updating results');
+          return;
+        }
+
+        if (!currentData) {
+          console.error('Assessment not found:', assessmentId);
+          toast.error('Error: Assessment not found');
           return;
         }
 
@@ -263,11 +270,17 @@ const DNAAssessment = () => {
             ontology_sequence,
             aesthetics_sequence
           `)
-          .single();
+          .maybeSingle();
 
         if (updateError) {
           console.error('Error updating assessment results:', updateError);
           toast.error('Error saving category results');
+          return;
+        }
+
+        if (!updateResult) {
+          console.error('No assessment found to update');
+          toast.error('Error: Could not update assessment');
           return;
         }
 
