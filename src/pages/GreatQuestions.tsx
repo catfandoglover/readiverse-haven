@@ -84,14 +84,21 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
 const GreatQuestions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isInitialMount, setIsInitialMount] = React.useState(true);
 
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
 
-    // Restore scroll position when component mounts
-    const savedPosition = getScrollPosition(location.pathname);
-    if (savedPosition) {
-      window.scrollTo(0, savedPosition);
+    if (isInitialMount) {
+      // Only restore scroll position on initial mount
+      const savedPosition = getScrollPosition(location.pathname);
+      if (savedPosition) {
+        window.scrollTo({
+          top: savedPosition,
+          behavior: 'instant'
+        });
+      }
+      setIsInitialMount(false);
     }
 
     // Save scroll position when component unmounts or location changes
@@ -99,12 +106,24 @@ const GreatQuestions = () => {
       saveScrollPosition(location.pathname, window.scrollY);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Throttle scroll event handler
+    let timeoutId: NodeJS.Timeout;
+    const throttledHandleScroll = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(handleScroll, 100);
+    };
+
+    window.addEventListener('scroll', throttledHandleScroll);
     return () => {
       handleScroll(); // Save final position before unmounting
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', throttledHandleScroll);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [location.pathname]);
+  }, [location.pathname, isInitialMount]);
   
   const { data: questions, isLoading } = useQuery({
     queryKey: ['all-questions'],
@@ -124,6 +143,9 @@ const GreatQuestions = () => {
   });
 
   const handleNavigation = (path: string) => {
+    // Save current scroll position before navigating
+    saveScrollPosition(location.pathname, window.scrollY);
+
     if (path === '/' && location.pathname !== '/') {
       navigate('/');
     } else if (path === '/dna') {
