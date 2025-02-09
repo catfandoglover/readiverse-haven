@@ -315,15 +315,22 @@ const DNAAssessment = () => {
                 toast.error('Error analyzing results');
               } else {
                 console.log('DNA analysis complete:', analysisResponse);
-                toast.success('Analysis complete!');
+                toast.success('DNA analysis complete!', {
+                  duration: 3000,
+                  onDismiss: () => {
+                    navigate('/dna');
+                  }
+                });
+                // Directly navigate to /dna after successful analysis
+                navigate('/dna');
               }
             } catch (error) {
               console.error('Error in DNA analysis:', error);
               toast.error('Error analyzing results');
+              // Still navigate to /dna in case of error
+              navigate('/dna');
             }
-          }
-
-          if (nextCategory) {
+          } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
               queryFn: async () => {
@@ -351,12 +358,14 @@ const DNAAssessment = () => {
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
             setAnswers("");
-          } else {
-            navigate('/dna');
           }
         } catch (error) {
           console.error('Error updating assessment:', error);
           toast.error('Error saving your progress');
+          // Navigate to /dna in case of error
+          if (!nextCategory) {
+            navigate('/dna');
+          }
         } finally {
           setIsTransitioning(false);
         }
