@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -21,10 +20,13 @@ serve(async (req) => {
   }
 
   try {
+    // Verify API key configuration
+    console.log('Checking OpenRouter API key configuration...');
     if (!openrouterApiKey) {
       console.error('OpenRouter API key is not configured');
       throw new Error('OpenRouter API key is not configured');
     }
+    console.log('OpenRouter API key is configured');
 
     const { assessmentId, answers } = await req.json();
     
@@ -175,4 +177,3 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
-
