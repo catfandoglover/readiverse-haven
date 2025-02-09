@@ -121,16 +121,28 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
       })
     });
 
+    if (!response.ok) {
+      console.error('Claude API error:', response.status, await response.text());
+      throw new Error(`Claude API returned status ${response.status}`);
+    }
+
     const claudeResponse = await response.json();
     console.log('Received response from Claude:', claudeResponse);
 
-    // Check if the response has the expected structure
-    if (!claudeResponse.content || !Array.isArray(claudeResponse.content) || !claudeResponse.content[0]?.text) {
+    // Validate the response structure
+    if (!claudeResponse || !claudeResponse.content || !Array.isArray(claudeResponse.content)) {
       console.error('Unexpected Claude API response structure:', claudeResponse);
-      throw new Error('Invalid response structure from Claude API');
+      throw new Error('Invalid response structure from Claude API - missing content array');
     }
 
-    const analysisText = claudeResponse.content[0].text;
+    const content = claudeResponse.content[0];
+    if (!content || typeof content.text !== 'string') {
+      console.error('Invalid content structure in Claude response:', content);
+      throw new Error('Invalid response structure from Claude API - invalid content format');
+    }
+
+    const analysisText = content.text;
+    console.log('Extracted analysis text:', analysisText);
 
     // Store the analysis in Supabase
     const { data: analysisData, error: analysisError } = await supabase
@@ -167,3 +179,4 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
+
