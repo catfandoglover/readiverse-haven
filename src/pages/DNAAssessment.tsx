@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
-import { useSession } from "@supabase/auth-helpers-react";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -17,8 +16,6 @@ const DNAAssessment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
-  const session = useSession();
-  const user = session?.user;
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -62,7 +59,7 @@ const DNAAssessment = () => {
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion || !user) return;
+    if (!currentQuestion) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -71,37 +68,7 @@ const DNAAssessment = () => {
 
     // If there's no next question, the assessment is complete
     if (!nextQuestionId) {
-      try {
-        // Save progress and navigate back
-        const { error: saveError } = await supabase
-          .from('dna_assessment_progress')
-          .upsert({
-            user_id: user.id,
-            category: upperCategory,
-            completed: true,
-            current_position: currentPosition,
-            responses: {} // You might want to store the responses here
-          });
-
-        if (saveError) {
-          console.error('Error saving progress:', saveError);
-          toast({
-            variant: "destructive",
-            title: "Error saving progress",
-            description: "Please try again"
-          });
-          return;
-        }
-
-        navigate('/dna');
-      } catch (error) {
-        console.error('Error in completion flow:', error);
-        toast({
-          variant: "destructive",
-          title: "Error completing assessment",
-          description: "Please try again"
-        });
-      }
+      navigate('/dna');
       return;
     }
 
@@ -133,27 +100,6 @@ const DNAAssessment = () => {
         return;
       }
 
-      // Save the current progress
-      const { error: saveError } = await supabase
-        .from('dna_assessment_progress')
-        .upsert({
-          user_id: user.id,
-          category: upperCategory,
-          completed: false,
-          current_position: nextQuestion.tree_position,
-          responses: {} // You might want to store the responses here
-        });
-
-      if (saveError) {
-        console.error('Error saving progress:', saveError);
-        toast({
-          variant: "destructive",
-          title: "Error saving progress",
-          description: "Please try again"
-        });
-        return;
-      }
-
       // Update the current position
       setCurrentPosition(nextQuestion.tree_position);
     } catch (error) {
@@ -165,14 +111,6 @@ const DNAAssessment = () => {
       });
     }
   };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="font-oxanium">Please sign in to access the assessment</div>
-      </div>
-    );
-  }
 
   if (questionLoading) {
     return (
