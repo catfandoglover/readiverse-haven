@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -66,7 +67,16 @@ const DNAAssessment = () => {
           // Create the assessment
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
-            .insert([{ name }])
+            .insert([{ 
+              name,
+              answers: {},
+              ethics_sequence: '',
+              epistemology_sequence: '',
+              politics_sequence: '',
+              theology_sequence: '',
+              ontology_sequence: '',
+              aesthetics_sequence: ''
+            }])
             .select()
             .maybeSingle();
 
@@ -82,10 +92,13 @@ const DNAAssessment = () => {
             return;
           }
 
-          // Verify the assessment exists
+          setAssessmentId(newAssessment.id);
+          console.log('Created new assessment with ID:', newAssessment.id);
+          
+          // Verify the assessment exists and is properly initialized
           const { data: verifyData, error: verifyError } = await supabase
             .from('dna_assessment_results')
-            .select('id')
+            .select('*')
             .eq('id', newAssessment.id)
             .maybeSingle();
 
@@ -95,8 +108,7 @@ const DNAAssessment = () => {
             return;
           }
 
-          setAssessmentId(newAssessment.id);
-          console.log('Created and verified new assessment with ID:', newAssessment.id);
+          console.log('Verified assessment exists:', verifyData);
         } catch (error) {
           console.error('Error in assessment initialization:', error);
           toast.error('Error initializing assessment');
@@ -172,7 +184,7 @@ const DNAAssessment = () => {
             .from('dna_tree_structure')
             .select('tree_position, category')
             .eq('id', nextId)
-            .single();
+            .maybeSingle();
 
           if (nextQuestion) {
             await queryClient.prefetchQuery({
@@ -224,23 +236,20 @@ const DNAAssessment = () => {
         answer
       });
 
-      const { data: responseData, error: responseError } = await supabase
+      const { error: responseError } = await supabase
         .from('dna_question_responses')
         .insert({
           assessment_id: assessmentId,
           category: upperCategory,
           question_id: currentQuestion.id,
           answer
-        })
-        .select();
+        });
 
       if (responseError) {
         console.error('Error storing question response:', responseError);
         toast.error('Error saving your answer');
         return;
       }
-
-      console.log('Successfully stored question response:', responseData);
 
       const nextQuestionId = answer === "A" 
         ? currentQuestion.next_question_a_id 
@@ -263,14 +272,6 @@ const DNAAssessment = () => {
             return;
           }
 
-          if (!currentData) {
-            console.error('Assessment not found:', assessmentId);
-            toast.error('Error: Assessment not found');
-            return;
-          }
-
-          console.log('Current answers data:', currentData);
-
           // Prepare the new answers object with type safety
           const currentAnswers = (currentData?.answers as Record<string, string>) || {};
           const updatedAnswers = {
@@ -287,22 +288,11 @@ const DNAAssessment = () => {
 
           console.log('Updating assessment with:', updateData);
 
-          // Update assessment results with explicit select of updated fields
-          const { data: updateResult, error: updateError } = await supabase
+          // Update assessment results
+          const { error: updateError } = await supabase
             .from('dna_assessment_results')
             .update(updateData)
-            .eq('id', assessmentId)
-            .select(`
-              id,
-              answers,
-              ethics_sequence,
-              epistemology_sequence,
-              politics_sequence,
-              theology_sequence,
-              ontology_sequence,
-              aesthetics_sequence
-            `)
-            .maybeSingle();
+            .eq('id', assessmentId);
 
           if (updateError) {
             console.error('Error updating assessment results:', updateError);
@@ -310,17 +300,7 @@ const DNAAssessment = () => {
             return;
           }
 
-          if (!updateResult) {
-            console.error('No assessment found to update');
-            toast.error('Error: Could not update assessment');
-            return;
-          }
-
-          console.log('Successfully updated assessment with sequences:', updateResult);
-
-          if (currentCategoryIndex < categoryOrder.length - 1) {
-            const nextCategory = categoryOrder[currentCategoryIndex + 1];
-            
+          if (nextCategory) {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
               queryFn: async () => {
@@ -348,17 +328,16 @@ const DNAAssessment = () => {
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
             setAnswers("");
-            setIsTransitioning(false);
-            return;
+          } else {
+            navigate('/dna');
           }
-          
-          navigate('/dna');
-          return;
         } catch (error) {
           console.error('Error updating assessment:', error);
           toast.error('Error saving your progress');
+        } finally {
           setIsTransitioning(false);
         }
+        return;
       }
 
       try {
