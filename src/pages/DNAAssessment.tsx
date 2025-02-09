@@ -16,23 +16,9 @@ const DNAAssessment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
-  const [session, setSession] = React.useState<any>(null);
 
-  React.useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Hardcoded user ID for testing
+  const mockUserId = "3157cbda-131b-449e-954e-1ad658739f39";
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -76,14 +62,7 @@ const DNAAssessment = () => {
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion || !session?.user?.id) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please sign in to save your progress"
-      });
-      return;
-    }
+    if (!currentQuestion) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -97,7 +76,7 @@ const DNAAssessment = () => {
         const { error: saveError } = await supabase
           .from('dna_assessment_progress')
           .upsert({
-            user_id: session.user.id,
+            user_id: mockUserId,
             category: upperCategory,
             completed: true,
             current_position: currentPosition,
@@ -275,4 +254,3 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
-
