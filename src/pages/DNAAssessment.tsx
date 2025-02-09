@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -70,59 +71,78 @@ const DNAAssessment = () => {
 
     // If there's no next question, the assessment is complete
     if (!nextQuestionId) {
-      // Save progress and navigate back
-      const { error } = await supabase
-        .from('dna_assessment_progress')
-        .upsert({
-          user_id: mockUserId,
-          category: upperCategory,
-          completed: true,
-          current_position: currentPosition,
-          responses: {} // You might want to store the responses here
-        });
+      try {
+        // Save progress and navigate back
+        const { error: saveError } = await supabase
+          .from('dna_assessment_progress')
+          .upsert({
+            user_id: mockUserId,
+            category: upperCategory,
+            completed: true,
+            current_position: currentPosition,
+            responses: {} // You might want to store the responses here
+          });
 
-      if (error) {
-        console.error('Error saving progress:', error);
+        if (saveError) {
+          console.error('Error saving progress:', saveError);
+          toast({
+            variant: "destructive",
+            title: "Error saving progress",
+            description: "Please try again"
+          });
+          return;
+        }
+
+        navigate('/dna');
+      } catch (error) {
+        console.error('Error in completion flow:', error);
         toast({
           variant: "destructive",
-          title: "Error saving progress",
+          title: "Error completing assessment",
           description: "Please try again"
         });
       }
-
-      navigate('/dna');
       return;
     }
 
-    // Get the tree position for the next question
-    const { data: nextQuestion, error } = await supabase
-      .from('dna_tree_structure')
-      .select('tree_position')
-      .eq('id', nextQuestionId)
-      .maybeSingle();
+    try {
+      // Get the tree position for the next question
+      const { data: nextQuestion, error: nextQuestionError } = await supabase
+        .from('dna_tree_structure')
+        .select('tree_position')
+        .eq('id', nextQuestionId)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching next question:', error);
+      if (nextQuestionError) {
+        console.error('Error fetching next question:', nextQuestionError);
+        toast({
+          variant: "destructive",
+          title: "Error fetching next question",
+          description: "Please try again"
+        });
+        return;
+      }
+
+      if (!nextQuestion) {
+        console.error('Next question not found for ID:', nextQuestionId);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Next question not found"
+        });
+        return;
+      }
+
+      // Update the current position
+      setCurrentPosition(nextQuestion.tree_position);
+    } catch (error) {
+      console.error('Error in question transition:', error);
       toast({
         variant: "destructive",
-        title: "Error fetching next question",
+        title: "Error loading next question",
         description: "Please try again"
       });
-      return;
     }
-
-    if (!nextQuestion) {
-      console.error('Next question not found');
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Next question not found"
-      });
-      return;
-    }
-
-    // Update the current position
-    setCurrentPosition(nextQuestion.tree_position);
   };
 
   if (questionLoading) {
