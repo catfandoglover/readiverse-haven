@@ -17,8 +17,26 @@ const DNAAssessment = () => {
   const { toast } = useToast();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
 
-  // Hardcoded user ID for testing
-  const mockUserId = "3157cbda-131b-449e-954e-1ad658739f39";
+  // Get the current authenticated user
+  const [userId, setUserId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        // If no user is found, redirect to login or show a message
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "Please log in to take the assessment"
+        });
+        navigate('/login');
+      }
+    };
+    getUser();
+  }, [navigate, toast]);
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
@@ -62,7 +80,7 @@ const DNAAssessment = () => {
   });
 
   const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || !userId) return;
 
     // Get the next question ID based on the selected answer
     const nextQuestionId = answer === "A" 
@@ -76,7 +94,7 @@ const DNAAssessment = () => {
         const { error: saveError } = await supabase
           .from('dna_assessment_progress')
           .upsert({
-            user_id: mockUserId,
+            user_id: userId,
             category: upperCategory,
             completed: true,
             current_position: currentPosition,
@@ -133,6 +151,27 @@ const DNAAssessment = () => {
         return;
       }
 
+      // Save the current progress
+      const { error: saveError } = await supabase
+        .from('dna_assessment_progress')
+        .upsert({
+          user_id: userId,
+          category: upperCategory,
+          completed: false,
+          current_position: nextQuestion.tree_position,
+          responses: {} // You might want to store the responses here
+        });
+
+      if (saveError) {
+        console.error('Error saving progress:', saveError);
+        toast({
+          variant: "destructive",
+          title: "Error saving progress",
+          description: "Please try again"
+        });
+        return;
+      }
+
       // Update the current position
       setCurrentPosition(nextQuestion.tree_position);
     } catch (error) {
@@ -147,7 +186,7 @@ const DNAAssessment = () => {
 
   if (questionLoading) {
     return (
-      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2] flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="font-oxanium">Loading...</div>
       </div>
     );
@@ -155,11 +194,11 @@ const DNAAssessment = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
+      <div className="min-h-screen bg-background text-foreground">
         <header className="px-4 py-3">
           <button 
             onClick={() => navigate('/dna')}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-white/10 transition-all duration-200"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -171,7 +210,7 @@ const DNAAssessment = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/dna')}
-            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+            className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
           >
             GO BACK
           </Button>
@@ -182,11 +221,11 @@ const DNAAssessment = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
+      <div className="min-h-screen bg-background text-foreground">
         <header className="px-4 py-3">
           <button 
             onClick={() => navigate('/dna')}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-white/10 transition-all duration-200"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -198,7 +237,7 @@ const DNAAssessment = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/dna')}
-            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+            className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
           >
             GO BACK
           </Button>
@@ -208,15 +247,15 @@ const DNAAssessment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#32303c] text-[#E9E7E2]">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="px-4 py-3 flex items-center justify-between">
         <button 
           onClick={() => navigate('/dna')}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-white/10 transition-all duration-200"
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-1 text-sm font-oxanium text-[#E9E7E2] mr-3">
+        <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
           <span>{currentPosition?.split('Q')[1]}</span>
           <span>/</span>
           <span>30</span>
@@ -225,7 +264,7 @@ const DNAAssessment = () => {
       <div className="px-4">
         <Progress 
           value={(Number(currentPosition?.split('Q')[1]) / 30) * 100}
-          className="bg-[#CCFF23]/10"
+          className="bg-secondary/10"
         />
       </div>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 py-8">
@@ -235,14 +274,14 @@ const DNAAssessment = () => {
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("A")}
           >
             YES
           </Button>
           <Button
             variant="outline"
-            className="w-full py-6 text-lg font-oxanium bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+            className="w-full py-6 text-lg font-oxanium bg-background hover:bg-accent transition-colors duration-300"
             onClick={() => handleAnswer("B")}
           >
             NO
