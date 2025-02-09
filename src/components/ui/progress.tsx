@@ -12,9 +12,11 @@ const Progress = React.forwardRef<
     ref={ref}
     className={cn(
       "relative h-1 w-full overflow-hidden rounded-full",
-      "bg-gradient-to-r from-[rgba(205,245,81,0.1)] to-[rgba(205,245,81,0.05)]",
       className
     )}
+    style={{
+      background: "linear-gradient(to right, rgba(205, 245, 81, 0.1), rgba(205, 245, 81, 0.05))"
+    }}
     {...props}
   >
     <ProgressPrimitive.Indicator
