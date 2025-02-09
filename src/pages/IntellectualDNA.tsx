@@ -31,8 +31,17 @@ const IntellectualDNA = () => {
     navigate('/dna/ethics');
   };
 
-  const isCurrentPath = (path: string) => {
-    return location.pathname === path;
+  const isCurrentSection = (path: string) => {
+    if (path === '/dna') {
+      return location.pathname.startsWith('/dna');
+    }
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    if (path === '/bookshelf') {
+      return location.pathname.startsWith('/bookshelf');
+    }
+    return false;
   };
 
   return (
@@ -71,24 +80,30 @@ const IntellectualDNA = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-background py-2 z-50">
           <div className="flex justify-between items-center max-w-sm mx-auto px-8">
             <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentPath('/dna') ? 'border-b-2 border-[#9b87f5]' : ''}`}
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/dna') ? 'border-b-2 border-[#9b87f5]' : ''}`}
               onClick={() => handleNavigation('/dna')}
             >
-              <Dna className="h-6 w-6" />
+              <div className={`relative ${isCurrentSection('/dna') ? 'after:absolute after:bottom-[-8px] after:left-[-20px] after:right-[-20px] after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]' : ''}`}>
+                <Dna className="h-6 w-6" />
+              </div>
               <span className="text-xs font-oxanium">My DNA</span>
             </button>
             <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentPath('/') ? 'border-b-2 border-[#9b87f5]' : ''}`}
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/') ? 'border-b-2 border-[#9b87f5]' : ''}`}
               onClick={() => handleNavigation('/')}
             >
-              <Compass className="h-6 w-6" />
+              <div className={`relative ${isCurrentSection('/') ? 'after:absolute after:bottom-[-8px] after:left-[-20px] after:right-[-20px] after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]' : ''}`}>
+                <Compass className="h-6 w-6" />
+              </div>
               <span className="text-xs font-oxanium">Discover</span>
             </button>
             <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'border-b-2 border-[#9b87f5]' : ''}`}
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/bookshelf') ? 'border-b-2 border-[#9b87f5]' : ''}`}
               onClick={() => handleNavigation('/bookshelf')}
             >
-              <LibraryBig className="h-6 w-6" />
+              <div className={`relative ${isCurrentSection('/bookshelf') ? 'after:absolute after:bottom-[-8px] after:left-[-20px] after:right-[-20px] after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]' : ''}`}>
+                <LibraryBig className="h-6 w-6" />
+              </div>
               <span className="text-xs font-oxanium">Bookshelf</span>
             </button>
           </div>
@@ -99,3 +114,4 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
+
