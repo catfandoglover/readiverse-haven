@@ -117,6 +117,41 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_analysis_results: {
+        Row: {
+          analysis_text: string
+          analysis_type: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id: string
+          created_at: string
+          id: string
+          raw_response: Json | null
+        }
+        Insert: {
+          analysis_text: string
+          analysis_type: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id: string
+          created_at?: string
+          id?: string
+          raw_response?: Json | null
+        }
+        Update: {
+          analysis_text?: string
+          analysis_type?: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          raw_response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_analysis_results_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dna_assessment_progress: {
         Row: {
           category: Database["public"]["Enums"]["dna_category"]
@@ -575,6 +610,7 @@ export type Database = {
         | "THEOLOGY"
         | "ONTOLOGY"
         | "EPISTEMOLOGY"
+      dna_result_type: "CLAUDE"
       question_category:
         | "AESTHETICS"
         | "EPISTEMOLOGY"
