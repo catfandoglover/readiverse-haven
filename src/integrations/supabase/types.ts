@@ -183,14 +183,14 @@ export type Database = {
             foreignKeyName: "dna_tree_structure_next_question_a_id_fkey"
             columns: ["next_question_a_id"]
             isOneToOne: false
-            referencedRelation: "great_questions"
+            referencedRelation: "dna_tree_structure"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "dna_tree_structure_next_question_b_id_fkey"
             columns: ["next_question_b_id"]
             isOneToOne: false
-            referencedRelation: "great_questions"
+            referencedRelation: "dna_tree_structure"
             referencedColumns: ["id"]
           },
           {
