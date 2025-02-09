@@ -10,6 +10,16 @@ import { Database } from "@/integrations/supabase/types";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
+// Define the order of categories
+const categoryOrder: DNACategory[] = [
+  "ETHICS",
+  "EPISTEMOLOGY",
+  "POLITICS",
+  "THEOLOGY",
+  "ONTOLOGY",
+  "AESTHETICS"
+];
+
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
@@ -66,14 +76,18 @@ const DNAAssessment = () => {
 
     // If there's no next question, the current category is complete
     if (!nextQuestionId) {
-      // If we're finishing Ethics, move to Epistemology and reset position to Q1
-      if (upperCategory === 'ETHICS') {
-        navigate('/dna/epistemology');
+      // Find the current category index
+      const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
+      
+      // If we're not at the last category, move to the next one
+      if (currentCategoryIndex < categoryOrder.length - 1) {
+        const nextCategory = categoryOrder[currentCategoryIndex + 1].toLowerCase();
+        navigate(`/dna/${nextCategory}`);
         setCurrentPosition("Q1");
         return;
       }
       
-      // For other categories, just go back to DNA home
+      // If we're at the last category, go back to DNA home
       navigate('/dna');
       return;
     }
@@ -165,6 +179,11 @@ const DNAAssessment = () => {
     );
   }
 
+  // Calculate overall progress
+  const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
+  const questionNumber = parseInt(currentPosition.substring(1));
+  const totalProgress = ((currentCategoryIndex * 5) + questionNumber) / (categoryOrder.length * 5) * 100;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="px-4 py-3 flex items-center justify-between">
@@ -175,14 +194,14 @@ const DNAAssessment = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{currentPosition?.split('Q')[1]}</span>
+          <span>{((currentCategoryIndex * 5) + questionNumber)}</span>
           <span>/</span>
-          <span>31</span>
+          <span>{categoryOrder.length * 5}</span>
         </div>
       </header>
       <div className="px-4">
         <Progress 
-          value={(Number(currentPosition?.split('Q')[1]) / 31) * 100}
+          value={totalProgress}
           className="bg-secondary/10"
         />
       </div>
