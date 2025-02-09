@@ -127,7 +127,7 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     // Check if the response has the expected structure
     if (!claudeResponse.content || !Array.isArray(claudeResponse.content) || !claudeResponse.content[0]?.text) {
       console.error('Unexpected Claude API response structure:', claudeResponse);
-      throw new Error('Invalid response structure from Claude API');
+      throw new Error('Invalid response from Claude API');
     }
 
     const analysisText = claudeResponse.content[0].text;
@@ -167,3 +167,4 @@ Remember to infuse your writing with a mythopoetic style, drawing connections be
     );
   }
 });
+
