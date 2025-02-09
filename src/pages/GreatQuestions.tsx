@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,43 +88,30 @@ const GreatQuestions = () => {
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
 
-    // Handle initial scroll restoration
+    const restoreScrollPosition = () => {
+      const savedPosition = getScrollPosition(location.pathname);
+      if (savedPosition) {
+        window.scrollTo(0, savedPosition);
+      }
+    };
+
     if (isInitialMount) {
-      requestAnimationFrame(() => {
-        const savedPosition = getScrollPosition(location.pathname);
-        if (savedPosition) {
-          window.scrollTo({
-            top: savedPosition,
-            behavior: 'instant'
-          });
-        }
-        setIsInitialMount(false);
-      });
+      restoreScrollPosition();
+      setIsInitialMount(false);
     }
 
-    // Save scroll position when component unmounts or location changes
     const handleScroll = () => {
       if (!isInitialMount) {
-        saveScrollPosition(location.pathname, window.scrollY);
+        const currentPosition = window.scrollY;
+        saveScrollPosition(location.pathname, currentPosition);
       }
     };
 
-    // Throttle scroll event handler
-    let timeoutId: NodeJS.Timeout;
-    const throttledHandleScroll = () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = setTimeout(handleScroll, 100);
-    };
-
-    window.addEventListener('scroll', throttledHandleScroll);
+    window.addEventListener('scroll', handleScroll);
+    
     return () => {
-      handleScroll(); // Save final position before unmounting
-      window.removeEventListener('scroll', throttledHandleScroll);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      handleScroll();
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [location.pathname, isInitialMount]);
   
@@ -147,7 +133,6 @@ const GreatQuestions = () => {
   });
 
   const handleNavigation = (path: string) => {
-    // Save current scroll position before navigating
     const currentPosition = window.scrollY;
     saveScrollPosition(location.pathname, currentPosition);
 
@@ -252,4 +237,3 @@ const GreatQuestions = () => {
 };
 
 export default GreatQuestions;
-
