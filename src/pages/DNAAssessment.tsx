@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -413,8 +414,8 @@ const DNAAssessment = () => {
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <header className="px-4 py-3 flex items-center justify-between relative z-50">
+      <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
+        <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
           <div className="h-10 w-10" />
           <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
             <span>{currentQuestionNumber}</span>
@@ -439,8 +440,8 @@ const DNAAssessment = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="px-4 py-3 relative z-50">
+      <div className="min-h-[100dvh] bg-background text-foreground">
+        <header className="sticky top-0 px-4 py-3 relative z-50 bg-background">
           <button 
             onClick={handleExit}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
@@ -449,7 +450,7 @@ const DNAAssessment = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
         </header>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-4rem)] px-4">
           <h1 className="text-2xl font-oxanium text-center mb-8">
             Question not found
           </h1>
@@ -471,8 +472,8 @@ const DNAAssessment = () => {
   const buttonStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10";
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="px-4 py-3 flex items-center justify-between relative z-50">
+    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
+      <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
         <button 
           onClick={handleExit}
           className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
@@ -492,13 +493,13 @@ const DNAAssessment = () => {
           className="bg-secondary/10"
         />
       </div>
-      <div className="flex-1 flex flex-col px-4 relative">
-        <div className="flex-1 flex items-center justify-center min-h-[200px] py-8 mb-20 translate-y-[-25%]">
+      <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
+        <div className="flex-1 flex items-center justify-center py-8 mb-20">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
             {currentQuestion.question?.question}
           </h1>
         </div>
-        <div className="flex justify-center gap-4 w-full max-w-lg mx-auto absolute left-1/2 top-1/2 -translate-x-1/2">
+        <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
           <Button
             variant="outline"
             className={`${buttonStyles} w-40`}
