@@ -71,7 +71,7 @@ ${answers_json}
     console.log('Sending requests to OpenRouter API with required headers...');
     
     // Make parallel requests to both models
-    const [sonnetResponse, nextModelResponse] = await Promise.all([
+    const [sonnetResponse, deepseekResponse] = await Promise.all([
       // Request for Claude-3-Sonnet
       fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -90,17 +90,17 @@ ${answers_json}
           temperature: 0.7
         })
       }),
-      // Request for recommended next model
+      // Request for Deepseek
       fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${openrouterApiKey}`,
           'HTTP-Referer': 'https://lovable.dev',
-          'X-Title': 'DNA Analysis - Next'
+          'X-Title': 'DNA Analysis - Deepseek'
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3-opus',
+          model: 'deepseek-ai/deepseek-coder-33b-instruct',
           messages: [{
             role: 'user',
             content: prompt
@@ -110,22 +110,22 @@ ${answers_json}
       })
     ]);
 
-    if (!sonnetResponse.ok || !nextModelResponse.ok) {
+    if (!sonnetResponse.ok || !deepseekResponse.ok) {
       const errorText = await sonnetResponse.text();
       console.error('OpenRouter API error:', sonnetResponse.status, errorText);
       throw new Error(`OpenRouter API returned status ${sonnetResponse.status}: ${errorText}`);
     }
 
-    const [sonnetData, nextModelData] = await Promise.all([
+    const [sonnetData, deepseekData] = await Promise.all([
       sonnetResponse.json(),
-      nextModelResponse.json()
+      deepseekResponse.json()
     ]);
 
-    console.log('Received responses from OpenRouter:', { sonnetData, nextModelData });
+    console.log('Received responses from OpenRouter:', { sonnetData, deepseekData });
 
     // Extract the generated texts
     const sonnetAnalysis = sonnetData.choices[0].message.content;
-    const nextModelAnalysis = nextModelData.choices[0].message.content;
+    const deepseekAnalysis = deepseekData.choices[0].message.content;
 
     // Store both analyses in Supabase
     const { data: analysisData, error: analysisError } = await supabase
@@ -139,9 +139,9 @@ ${answers_json}
         },
         {
           assessment_id: assessmentId,
-          analysis_type: 'CLAUDE_OPUS',
-          analysis_text: nextModelAnalysis,
-          raw_response: nextModelData
+          analysis_type: 'DEEPSEEK',
+          analysis_text: deepseekAnalysis,
+          raw_response: deepseekData
         }
       ])
       .select();
@@ -169,3 +169,4 @@ ${answers_json}
     );
   }
 });
+
