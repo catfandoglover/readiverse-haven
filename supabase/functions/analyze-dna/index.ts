@@ -170,9 +170,11 @@ Remember to format your response with XML-style tags:
             content: prompt
           }
         ],
-        max_tokens: 25000, // Increased token limit for full responses
-        temperature: 0.7,  // Added for consistent outputs
-        top_p: 0.9        // Added for better response quality
+        max_tokens: 25000,
+        temperature: 0.7,
+        top_p: 0.9,
+        stream: false,
+        stop: null
       })
     });
 
