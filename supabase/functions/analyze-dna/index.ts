@@ -169,7 +169,10 @@ Remember to format your response with XML-style tags:
             role: "user",
             content: prompt
           }
-        ]
+        ],
+        max_tokens: 4000, // Increased token limit for longer responses
+        temperature: 0.7,  // Added for consistent outputs
+        top_p: 0.9        // Added for better response quality
       })
     });
 
