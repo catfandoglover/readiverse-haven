@@ -72,7 +72,7 @@ ${answers_json}
     
     // Make parallel requests to both models
     const [sonnetResponse, deepseekResponse] = await Promise.all([
-      // Request for Claude-3-Sonnet
+      // Request for Claude-3.5-Sonnet
       fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -82,7 +82,7 @@ ${answers_json}
           'X-Title': 'DNA Analysis - Sonnet'
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3-sonnet',
+          model: 'anthropic/claude-3.5-sonnet',
           messages: [{
             role: 'user',
             content: prompt
