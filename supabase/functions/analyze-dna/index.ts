@@ -151,24 +151,25 @@ Remember to format your response with XML-style tags:
 [Generated profile following the new guidelines]
 </profile>`;
 
-    console.log('Sending request to OpenRouter API with required headers...');
+    console.log('Sending request to OpenRouter API...');
     
-    // Call OpenRouter API with proper headers and error handling
+    // Make the API request to OpenRouter with proper headers and model specification
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${openrouterApiKey}`,
         'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'DNA Analysis'
+        'X-Title': 'DNA Analysis',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-sonnet',
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
-        temperature: 0.7
+        model: "anthropic/claude-3.5-sonnet",
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
       })
     });
 
@@ -220,4 +221,3 @@ Remember to format your response with XML-style tags:
     );
   }
 });
-
