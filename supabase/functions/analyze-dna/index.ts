@@ -100,7 +100,7 @@ ${answers_json}
           'X-Title': 'DNA Analysis - Deepseek'
         },
         body: JSON.stringify({
-          model: 'deepseek-ai/deepseek-coder-33b-instruct',
+          model: 'deepseek/deepseek-r1-distill-llama-8b',
           messages: [{
             role: 'user',
             content: prompt
