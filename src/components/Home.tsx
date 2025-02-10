@@ -1,11 +1,12 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
+import { Compass, LibraryBig, Search, UserRound } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
-import { Compass, LibraryBig, Search } from "lucide-react";
-import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
+import QuestionsCards from "./QuestionsCards";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -72,12 +73,18 @@ const Home = () => {
                 className="h-5 w-5"
               />
             </button>
-            <button
-              onClick={() => handleNavigation('/search')}
-              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button className="h-10 px-4 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 gap-2">
+                <UserRound className="h-5 w-5" />
+                <span className="hidden sm:inline">My Account</span>
+              </button>
+              <button
+                onClick={() => handleNavigation('/search')}
+                className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -176,3 +183,4 @@ const Home = () => {
 };
 
 export default Home;
+

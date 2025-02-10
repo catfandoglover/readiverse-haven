@@ -87,6 +87,258 @@ export type Database = {
         }
         Relationships: []
       }
+      concepts: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          illustration: string
+          randomizer: number
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          illustration: string
+          randomizer?: number
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          illustration?: string
+          randomizer?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      dna_analysis_results: {
+        Row: {
+          analysis_text: string
+          analysis_type: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id: string
+          created_at: string
+          id: string
+          raw_response: Json | null
+        }
+        Insert: {
+          analysis_text: string
+          analysis_type: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id: string
+          created_at?: string
+          id?: string
+          raw_response?: Json | null
+        }
+        Update: {
+          analysis_text?: string
+          analysis_type?: Database["public"]["Enums"]["dna_result_type"]
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          raw_response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_analysis_results_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_assessment_progress: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"]
+          completed: boolean | null
+          created_at: string
+          current_position: string
+          id: string
+          responses: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["dna_category"]
+          completed?: boolean | null
+          created_at?: string
+          current_position: string
+          id?: string
+          responses?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["dna_category"]
+          completed?: boolean | null
+          created_at?: string
+          current_position?: string
+          id?: string
+          responses?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dna_assessment_results: {
+        Row: {
+          aesthetics_sequence: string | null
+          answers: Json | null
+          created_at: string
+          epistemology_sequence: string | null
+          ethics_sequence: string | null
+          id: string
+          name: string
+          ontology_sequence: string | null
+          politics_sequence: string | null
+          theology_sequence: string | null
+        }
+        Insert: {
+          aesthetics_sequence?: string | null
+          answers?: Json | null
+          created_at?: string
+          epistemology_sequence?: string | null
+          ethics_sequence?: string | null
+          id?: string
+          name: string
+          ontology_sequence?: string | null
+          politics_sequence?: string | null
+          theology_sequence?: string | null
+        }
+        Update: {
+          aesthetics_sequence?: string | null
+          answers?: Json | null
+          created_at?: string
+          epistemology_sequence?: string | null
+          ethics_sequence?: string | null
+          id?: string
+          name?: string
+          ontology_sequence?: string | null
+          politics_sequence?: string | null
+          theology_sequence?: string | null
+        }
+        Relationships: []
+      }
+      dna_question_responses: {
+        Row: {
+          answer: string
+          assessment_id: string
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          answer: string
+          assessment_id: string
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          answer?: string
+          assessment_id?: string
+          category?: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_question_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_question_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_tree_structure: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at: string
+          id: string
+          next_question_a_id: string | null
+          next_question_b_id: string | null
+          question_id: string
+          tree_position: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          next_question_a_id?: string | null
+          next_question_b_id?: string | null
+          question_id: string
+          tree_position: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["dna_category"]
+          created_at?: string
+          id?: string
+          next_question_a_id?: string | null
+          next_question_b_id?: string | null
+          question_id?: string
+          tree_position?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_tree_structure_next_question_a_id_fkey"
+            columns: ["next_question_a_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_tree_structure_next_question_b_id_fkey"
+            columns: ["next_question_b_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_tree_structure_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_next_question_a"
+            columns: ["next_question_a_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_next_question_b"
+            columns: ["next_question_b_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_question"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_links: {
         Row: {
           created_at: string
@@ -107,31 +359,37 @@ export type Database = {
       }
       great_questions: {
         Row: {
+          answer_a: string | null
+          answer_b: string | null
           category: string
           category_number: string | null
           created_at: string
           id: string
-          illustration: string
+          illustration: string | null
           notion_id: string
           question: string
           related_classics: string[] | null
         }
         Insert: {
+          answer_a?: string | null
+          answer_b?: string | null
           category: string
           category_number?: string | null
           created_at?: string
           id?: string
-          illustration: string
+          illustration?: string | null
           notion_id: string
           question: string
           related_classics?: string[] | null
         }
         Update: {
+          answer_a?: string | null
+          answer_b?: string | null
           category?: string
           category_number?: string | null
           created_at?: string
           id?: string
-          illustration?: string
+          illustration?: string | null
           notion_id?: string
           question?: string
           related_classics?: string[] | null
@@ -330,12 +588,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      decision_tree_view: {
+        Row: {
+          category: Database["public"]["Enums"]["dna_category"] | null
+          next_question_a: string | null
+          next_question_b: string | null
+          question: string | null
+          tree_position: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
+      dna_category:
+        | "ETHICS"
+        | "AESTHETICS"
+        | "POLITICS"
+        | "THEOLOGY"
+        | "ONTOLOGY"
+        | "EPISTEMOLOGY"
+      dna_result_type: "CLAUDE"
       question_category:
         | "AESTHETICS"
         | "EPISTEMOLOGY"
