@@ -52,7 +52,7 @@ serve(async (req) => {
     // Format answers_json for the prompt, including the user's name
     const answers_json = JSON.stringify({ name: userName, answers }, null, 2);
 
-    // Prepare the prompt for the models with the new framework
+    // Prepare the prompt for the model with the new framework
     const prompt = `#Background
 Metaframework of philosophical DNA
 
@@ -66,95 +66,146 @@ Here are the user's answers to the philosophical questions:
 ${answers_json}
 </answers_json>
 
-# Philosophical Profile Generator Guidelines...`; // ... keep existing code (rest of the prompt)
+# Philosophical Profile Generator Guidelines
 
-    console.log('Sending requests to OpenRouter API with required headers...');
+## Input Required
+Six 5-letter sequences (XXXXX) representing paths through philosophical decision trees in:
+- Theology
+- Ontology 
+- Epistemology
+- Ethics
+- Politics
+- Aesthetics
+
+Extract and analyze the 5-letter answer sequences for each philosophical category from the answers JSON
+
+## Output Structure
+
+### Primary Section
+[Domain Archetype] [Brief poetic subtitle]
+
+[Single paragraph capturing philosophical essence - focus on reconciliation of contradictions and problem-solving approach]
+
+### Core Dynamics
+- Key Tensions (3)
+- Natural Strengths (3)
+- Growth Edges (3)
+
+### Domain Analyses
+One sentence per domain capturing characteristic approach
+
+### Thinker Analysis
+For each domain (Theology, Ontology, Epistemology, Ethics, Politics, Aesthetics):
+
+**Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - key argument
+
+**Challenging Voices** (5 per domain):
+- Thinker, Work (date) - key argument
+
+## Requirements
+
+### Temporal Distribution
+- No thinkers after 1980
+- Minimum 20% pre-medieval thinkers
+- Representative spread across available periods
+
+### Cultural Distribution
+- 70% Western philosophical traditions
+- 30% Non-Western philosophical traditions
+
+### Selection Criteria
+- Mix of iconic and lesser-known influential voices
+- Thinkers must reflect specific decision tree paths
+- Arguments summarized in one distinctive line
+- Each thinker paired with most relevant major work
+- Maintain diverse perspectives within constraints
+
+### Domain Description Requirements
+- Specific to individual's pattern
+- Avoid generic characterizations
+- Connect to decision tree choices
+
+### Archetype Generation
+Use provided first/second word elements based on pattern analysis:
+- Analyze ratio and sequence
+- Select from domain-specific options
+- Apply integration rules
+- Verify metaphoric coherence
+
+Remember to format your response with XML-style tags:
+
+<basic_info>
+<name>
+[User's name from answers_json]
+</name>
+
+<mythopoetic_title>
+[Generated title following the archetype system]
+</mythopoetic_title>
+
+[Include other domain tags and analysis as before...]
+</basic_info>
+
+<profile>
+[Generated profile following the new guidelines]
+</profile>`;
+
+    console.log('Sending request to OpenRouter API with required headers...');
     
-    // Make parallel requests to both models
-    const [sonnetResponse, deepseekResponse] = await Promise.all([
-      // Request for Claude-3.5-Sonnet
-      fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openrouterApiKey}`,
-          'HTTP-Referer': 'https://lovable.dev',
-          'X-Title': 'DNA Analysis - Sonnet'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-sonnet',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
-          temperature: 0.7
-        })
-      }),
-      // Request for Deepseek
-      fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openrouterApiKey}`,
-          'HTTP-Referer': 'https://lovable.dev',
-          'X-Title': 'DNA Analysis - Deepseek'
-        },
-        body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-distill-llama-8b',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
-          temperature: 0.7
-        })
+    // Call OpenRouter API with proper headers and error handling
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'DNA Analysis'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-sonnet',
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        temperature: 0.7
       })
-    ]);
+    });
 
-    if (!sonnetResponse.ok || !deepseekResponse.ok) {
-      const errorText = await sonnetResponse.text();
-      console.error('OpenRouter API error:', sonnetResponse.status, errorText);
-      throw new Error(`OpenRouter API returned status ${sonnetResponse.status}: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenRouter API error:', response.status, errorText);
+      throw new Error(`OpenRouter API returned status ${response.status}: ${errorText}`);
     }
 
-    const [sonnetData, deepseekData] = await Promise.all([
-      sonnetResponse.json(),
-      deepseekResponse.json()
-    ]);
+    const openRouterResponse = await response.json();
+    console.log('Received response from OpenRouter:', openRouterResponse);
 
-    console.log('Received responses from OpenRouter:', { sonnetData, deepseekData });
+    // Extract the generated text from OpenRouter's response
+    const generatedText = openRouterResponse.choices[0].message.content;
+    console.log('Extracted analysis text:', generatedText);
 
-    // Extract the generated texts
-    const sonnetAnalysis = sonnetData.choices[0].message.content;
-    const deepseekAnalysis = deepseekData.choices[0].message.content;
-
-    // Store both analyses in Supabase
+    // Store the analysis in Supabase
     const { data: analysisData, error: analysisError } = await supabase
       .from('dna_analysis_results')
-      .insert([
-        {
-          assessment_id: assessmentId,
-          analysis_type: 'CLAUDE_SONNET',
-          analysis_text: sonnetAnalysis,
-          raw_response: sonnetData
-        },
-        {
-          assessment_id: assessmentId,
-          analysis_type: 'DEEPSEEK',
-          analysis_text: deepseekAnalysis,
-          raw_response: deepseekData
-        }
-      ])
-      .select();
+      .insert({
+        assessment_id: assessmentId,
+        analysis_type: 'CLAUDE',
+        analysis_text: generatedText,
+        raw_response: openRouterResponse
+      })
+      .select()
+      .single();
 
     if (analysisError) {
-      console.error('Error storing analyses:', analysisError);
+      console.error('Error storing analysis:', analysisError);
       throw analysisError;
     }
 
-    console.log('Analyses stored successfully:', analysisData);
+    console.log('Analysis stored successfully:', analysisData);
 
     return new Response(
-      JSON.stringify({ analyses: analysisData }),
+      JSON.stringify({ analysis: analysisData }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
