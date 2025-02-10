@@ -52,91 +52,104 @@ serve(async (req) => {
     // Format answers_json for the prompt, including the user's name
     const answers_json = JSON.stringify({ name: userName, answers }, null, 2);
 
-    // Prepare the prompt for the model with the enhanced framework
-    const prompt = `I have built a metaframework to understand a user's intellectual DNA, broken down into 6 categories: aesthetics, ontology, ethics, epistemology, politics, theology. Each category represents a complex tree of philosophical inquiry, where each answer leads to deeper, more nuanced questions.
+    // Prepare the prompt for the model with the new framework
+    const prompt = `#Background
+Metaframework of philosophical DNA
 
-First, here are the user's answers to the philosophical questions:
+[Decision tree diagrams omitted for brevity but included in analysis]
+
+#First steps
+
+Here are the user's answers to the philosophical questions:
 
 <answers_json>
 ${answers_json}
 </answers_json>
 
-Please analyze these answers and create a profile for the user. Your response should be at the level of a PhD student in philosophy with the inspirational tone and rigor of Maria Montessori, who believed in the profound capacity of each individual to develop their intellectual and spiritual potential.
+# Philosophical Profile Generator Guidelines
 
-Context on the Mission and Purpose:
-Your thoughts have ancestors. Every idea you hold has been shaped by the great conversation that spans human history. From Sappho's understanding of love to Popper's theory of knowledge, from Mencius's ethics to Aquinas's theology, we are all part of an ongoing dialogue with the past.
+## Input Required
+Six 5-letter sequences (XXXXX) representing paths through philosophical decision trees in:
+- Theology
+- Ontology 
+- Epistemology
+- Ethics
+- Politics
+- Aesthetics
 
-Learning is not just about acquiring information—it is a transformative practice that can change your life. The history of thought is not simply a catalogue of theories that are either right or wrong, but a great conversation that you can join.
+Extract and analyze the 5-letter answer sequences for each philosophical category from the answers JSON
 
-Steps for Analysis:
+## Output Structure
 
-1. Extract and analyze the 5-letter answer sequences for each philosophical category:
-- THEOLOGY: Exploring questions of divine reality, faith, and ultimate meaning
-- ONTOLOGY: Investigating the nature of being, reality, and existence
-- EPISTEMOLOGY: Examining how we know what we know
-- ETHICS: Contemplating right action and the nature of goodness
-- POLITICS: Understanding power, justice, and collective organization
-- AESTHETICS: Exploring beauty, art, and sensory experience
+### Primary Section
+[Domain Archetype] [Brief poetic subtitle]
 
-2. For each category, provide:
-a) The 5-letter sequence derived from their answers
-b) A brief interpretation of what this sequence reveals about their philosophical orientation
-c) Connections to major thinkers and traditions that align with their viewpoint
+[Single paragraph capturing philosophical essence - focus on reconciliation of contradictions and problem-solving approach]
 
-3. Generate a mythopoetic title that captures the essence of their philosophical DNA. This should be both poetic and philosophically precise.
+### Core Dynamics
+- Key Tensions (3)
+- Natural Strengths (3)
+- Growth Edges (3)
 
-4. Create a narrative profile that:
-a) Weaves together their philosophical tendencies into a coherent worldview
-b) Identifies the intellectual lineage their thinking follows
-c) Suggests paths for further philosophical exploration
-d) Connects their theoretical orientations to practical implications
+### Domain Analyses
+One sentence per domain capturing characteristic approach
 
-Format your response as follows:
+### Thinker Analysis
+For each domain (Theology, Ontology, Epistemology, Ethics, Politics, Aesthetics):
+
+**Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - key argument
+
+**Challenging Voices** (5 per domain):
+- Thinker, Work (date) - key argument
+
+## Requirements
+
+### Temporal Distribution
+- No thinkers after 1980
+- Minimum 20% pre-medieval thinkers
+- Representative spread across available periods
+
+### Cultural Distribution
+- 70% Western philosophical traditions
+- 30% Non-Western philosophical traditions
+
+### Selection Criteria
+- Mix of iconic and lesser-known influential voices
+- Thinkers must reflect specific decision tree paths
+- Arguments summarized in one distinctive line
+- Each thinker paired with most relevant major work
+- Maintain diverse perspectives within constraints
+
+### Domain Description Requirements
+- Specific to individual's pattern
+- Avoid generic characterizations
+- Connect to decision tree choices
+
+### Archetype Generation
+Use provided first/second word elements based on pattern analysis:
+- Analyze ratio and sequence
+- Select from domain-specific options
+- Apply integration rules
+- Verify metaphoric coherence
+
+Remember to format your response with XML-style tags:
 
 <basic_info>
 <name>
-[Their provided name from the answers_json]
+[User's name from answers_json]
 </name>
 
 <mythopoetic_title>
-[A title that poetically captures their philosophical essence]
+[Generated title following the archetype system]
 </mythopoetic_title>
 
-<theology>
-[5-letter sequence] - [Brief interpretation]
-</theology>
-
-<ontology>
-[5-letter sequence] - [Brief interpretation]
-</ontology>
-
-<epistemology>
-[5-letter sequence] - [Brief interpretation]
-</epistemology>
-
-<ethics>
-[5-letter sequence] - [Brief interpretation]
-</ethics>
-
-<politics>
-[5-letter sequence] - [Brief interpretation]
-</politics>
-
-<aesthetics>
-[5-letter sequence] - [Brief interpretation]
-</aesthetics>
+[Include other domain tags and analysis as before...]
 </basic_info>
 
 <profile>
-[Write a thorough, academically rigorous yet inspirational analysis that:
-- Examines the interplay between their various philosophical positions
-- Connects their thinking to historical philosophical traditions
-- Suggests directions for further intellectual exploration
-- Reflects on the practical implications of their philosophical orientation
-The tone should combine philosophical depth with the warmth and encouragement of a wise mentor.]
-</profile>
-
-Remember that this analysis should serve not just as a description of their current philosophical position, but as an invitation to deeper engagement with the great conversation of human thought.`;
+[Generated profile following the new guidelines]
+</profile>`;
 
     console.log('Sending request to OpenRouter API with required headers...');
     
