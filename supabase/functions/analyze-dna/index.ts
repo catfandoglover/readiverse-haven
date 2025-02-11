@@ -15,7 +15,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function generateAnalysis(answers_json: string, section: number): Promise<string> {
+async function generateAnalysis(answers_json: string, section: number): Promise<{ content: string, raw_response: any }> {
   const prompt = getPromptForSection(section, answers_json);
 
   try {
@@ -47,7 +47,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return {
+      content: data.choices[0].message.content,
+      raw_response: data
+    };
   } catch (error) {
     console.error('Error generating analysis:', error);
     throw new Error(`Failed to generate analysis: ${error.message}`);
@@ -55,12 +58,15 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 }
 
 // Function to aggregate all three sections of analysis
-async function generateCompleteAnalysis(answers_json: string): Promise<string> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: string, raw_responses: any[] }> {
   const section1 = await generateAnalysis(answers_json, 1);
   const section2 = await generateAnalysis(answers_json, 2);
   const section3 = await generateAnalysis(answers_json, 3);
   
-  return `${section1}\n${section2}\n${section3}`;
+  return {
+    analysis: `${section1.content}\n${section2.content}\n${section3.content}`,
+    raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
+  };
 }
 
 serve(async (req) => {
@@ -77,13 +83,14 @@ serve(async (req) => {
       }
 
       // Generate complete analysis text combining all three sections
-      const analysis = await generateCompleteAnalysis(answers_json);
+      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
       
       // Store complete analysis in the database
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
         analysis_text: analysis,
-        analysis_type: 'section_1' // Since we're now storing everything in one entry
+        analysis_type: 'section_1', // Since we're now storing everything in one entry
+        raw_response: raw_responses // Store the raw responses as JSONB
       });
 
       if (storeError) {
