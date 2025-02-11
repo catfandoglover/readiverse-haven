@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -18,12 +17,15 @@ const corsHeaders = {
 function parsePhilosophicalProfile(text: string): Record<string, string> {
   const profile: Record<string, string> = {};
   
+  // First, remove the outer philosophical_profile tags and get just the inner content
+  const cleanedText = text.replace(/<\/?philosophical_profile>/g, '');
+  
   // Define a regex pattern that matches XML-like tags and their content
   const tagPattern = /<([^>]+)>([\s\S]*?)<\/\1>/g;
   
   // Find all matches in the text
   let match;
-  while ((match = tagPattern.exec(text)) !== null) {
+  while ((match = tagPattern.exec(cleanedText)) !== null) {
     const [_, tag, content] = match;
     // Clean up the content by removing extra whitespace and newlines
     profile[tag] = content.trim();
@@ -82,7 +84,18 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ analysi
   const section2 = await generateAnalysis(answers_json, 2);
   const section3 = await generateAnalysis(answers_json, 3);
   
-  const combinedContent = `${section1.content}\n${section2.content}\n${section3.content}`;
+  // Extract the content from each philosophical_profile section
+  const extractContent = (text: string) => {
+    const match = text.match(/<philosophical_profile>([\s\S]*?)<\/philosophical_profile>/);
+    return match ? match[1] : text;
+  };
+
+  const combinedContent = `<philosophical_profile>
+    ${extractContent(section1.content)}
+    ${extractContent(section2.content)}
+    ${extractContent(section3.content)}
+  </philosophical_profile>`;
+  
   console.log('Combined content before parsing:', combinedContent);
   const parsedContent = parsePhilosophicalProfile(combinedContent);
   console.log('Final parsed content:', JSON.stringify(parsedContent, null, 2));
