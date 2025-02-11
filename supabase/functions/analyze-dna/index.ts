@@ -132,6 +132,13 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     }
 
     const data = await response.json();
+    
+    // Validate the response structure
+    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      console.error('Unexpected API response structure:', data);
+      throw new Error('Invalid API response structure');
+    }
+
     console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
     return {
       content: data.choices[0].message.content,
@@ -144,24 +151,29 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 }
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: string, raw_responses: any[], parsed_content: Record<string, string> }> {
-  const section1 = await generateAnalysis(answers_json, 1);
-  const section2 = await generateAnalysis(answers_json, 2);
-  const section3 = await generateAnalysis(answers_json, 3);
-  
-  const combinedContent = `<philosophical_profile>
-    ${section1.content}
-    ${section2.content}
-    ${section3.content}
-  </philosophical_profile>`;
-  
-  console.log('Combined content before parsing:', combinedContent);
-  const parsedContent = parsePhilosophicalProfile(combinedContent);
-  
-  return {
-    analysis: combinedContent,
-    raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response],
-    parsed_content: parsedContent
-  };
+  try {
+    const section1 = await generateAnalysis(answers_json, 1);
+    const section2 = await generateAnalysis(answers_json, 2);
+    const section3 = await generateAnalysis(answers_json, 3);
+    
+    const combinedContent = `<philosophical_profile>
+      ${section1.content}
+      ${section2.content}
+      ${section3.content}
+    </philosophical_profile>`;
+    
+    console.log('Combined content before parsing:', combinedContent);
+    const parsedContent = parsePhilosophicalProfile(combinedContent);
+    
+    return {
+      analysis: combinedContent,
+      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response],
+      parsed_content: parsedContent
+    };
+  } catch (error) {
+    console.error('Error in generateCompleteAnalysis:', error);
+    throw error;
+  }
 }
 
 serve(async (req) => {
