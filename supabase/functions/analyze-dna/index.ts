@@ -1,7 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getPromptForSection } from './prompts.ts';
 
 const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -355,163 +355,86 @@ function parsePhilosophicalProfile(section1: string, section2: string, section3:
 }
 
 async function generateAnalysis(answers_json: string, section: number): Promise<string> {
-  const basePrompt = `Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is..."
+  const prompt = getPromptForSection(section, answers_json);
 
-Here are your answers to the philosophical questions:
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'Lovable.dev'
+      },
+      body: JSON.stringify({
+        model: 'mistralai/mistral-7b-instruct',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always structure your response exactly according to the XML template provided, filling in each section thoughtfully while maintaining the tags.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      })
+    });
 
-<answers_json>
-${answers_json}
-</answers_json>`;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-  let sectionPrompt = '';
-  
-  if (section === 1) {
-    sectionPrompt = `
-### **For Section 1 (Theology & Ontology)**
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error generating analysis:', error);
+    throw new Error(`Failed to generate analysis: ${error.message}`);
+  }
+}
 
-# **Philosophical Profile Generator Guidelines**
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-## **Input Required**
-Analysis of answers from the philosophical decision trees representing your philosophical DNA.
+  try {
+    if (req.method === 'POST') {
+      const { answers_json, section } = await req.json();
+      
+      if (!answers_json || !section) {
+        throw new Error('Missing required fields: answers_json and section are required');
+      }
 
-## **Output Structure Required for this Section**
+      const analysis = await generateAnalysis(answers_json, section);
+      
+      return new Response(
+        JSON.stringify({ analysis }),
+        { 
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    }
 
-<philosophical_profile>
-
-<primary_section>
-  <archetype>[Domain Archetype]</archetype>
-  <archetype_definition>[Brief poetic subtitle capturing your essence]</archetype_definition>
-  <introduction>
-    [Single paragraph capturing your philosophical essence—focus on how you reconcile contradictions and approach problem-solving]
-  </introduction>
-</primary_section>
-
-<core_dynamics>
-  <key_tension_1>[Key tension in your thinking]</key_tension_1>
-  <key_tension_2>[Key tension in your thinking]</key_tension_2>
-  <key_tension_3>[Key tension in your thinking]</key_tension_3>
-  
-  <natural_strength_1>[Your Natural Strength]</natural_strength_1>
-  <natural_strength_2>[Your Natural Strength]</natural_strength_2>
-  <natural_strength_3>[Your Natural Strength]</natural_strength_3>
-  
-  <growth_edges_1>[Your Growth Edge]</growth_edges_1>
-  <growth_edges_2>[Your Growth Edge]</growth_edges_2>
-  <growth_edges_3>[Your Growth Edge]</growth_edges_3>
-</core_dynamics>
-
-<domain_analyses>
-  <theology_introduction>
-    Your approach to theology is...
-  </theology_introduction>
-  <ontology_introduction>
-    Your approach to ontology is...
-  </ontology_introduction>
-</domain_analyses>
-
-<thinker_analysis>
-  <theology_kindred_spirit_1>[Thinker]</theology_kindred_spirit_1>
-  <theology_kindred_spirit_1_classic>[Work (Date)]</theology_kindred_spirit_1_classic>
-  <theology_kindred_spirit_1_rationale>[how their argument resonates with you]</theology_kindred_spirit_1_rationale>
-
-  <theology_kindred_spirit_2>[Thinker]</theology_kindred_spirit_2>
-  <theology_kindred_spirit_2_classic>[Work (Date)]</theology_kindred_spirit_2_classic>
-  <theology_kindred_spirit_2_rationale>[how their argument resonates with you]</theology_kindred_spirit_2_rationale>
-
-  <theology_kindred_spirit_3>[Thinker]</theology_kindred_spirit_3>
-  <theology_kindred_spirit_3_classic>[Work (Date)]</theology_kindred_spirit_3_classic>
-  <theology_kindred_spirit_3_rationale>[how their argument resonates with you]</theology_kindred_spirit_3_rationale>
-
-  <theology_kindred_spirit_4>[Thinker]</theology_kindred_spirit_4>
-  <theology_kindred_spirit_4_classic>[Work (Date)]</theology_kindred_spirit_4_classic>
-  <theology_kindred_spirit_4_rationale>[how their argument resonates with you]</theology_kindred_spirit_4_rationale>
-
-  <theology_kindred_spirit_5>[Thinker]</theology_kindred_spirit_5>
-  <theology_kindred_spirit_5_classic>[Work (Date)]</theology_kindred_spirit_5_classic>
-  <theology_kindred_spirit_5_rationale>[how their argument resonates with you]</theology_kindred_spirit_5_rationale>
-
-  <theology_challenging_voice_1>[Thinker]</theology_challenging_voice_1>
-  <theology_challenging_voice_1_classic>[Work (Date)]</theology_challenging_voice_1_classic>
-  <theology_challenging_voice_1_rationale>[how their argument challenges you]</theology_challenging_voice_1_rationale>
-
-  <theology_challenging_voice_2>[Thinker]</theology_challenging_voice_2>
-  <theology_challenging_voice_2_classic>[Work (Date)]</theology_challenging_voice_2_classic>
-  <theology_challenging_voice_2_rationale>[how their argument challenges you]</theology_challenging_voice_2_rationale>
-
-  <theology_challenging_voice_3>[Thinker]</theology_challenging_voice_3>
-  <theology_challenging_voice_3_classic>[Work (Date)]</theology_challenging_voice_3_classic>
-  <theology_challenging_voice_3_rationale>[how their argument challenges you]</theology_challenging_voice_3_rationale>
-
-  <theology_challenging_voice_4>[Thinker]</theology_challenging_voice_4>
-  <theology_challenging_voice_4_classic>[Work (Date)]</theology_challenging_voice_4_classic>
-  <theology_challenging_voice_4_rationale>[how their argument challenges you]</theology_challenging_voice_4_rationale>
-
-  <theology_challenging_voice_5>[Thinker]</theology_challenging_voice_5>
-  <theology_challenging_voice_5_classic>[Work (Date)]</theology_challenging_voice_5_classic>
-  <theology_challenging_voice_5_rationale>[how their argument challenges you]</theology_challenging_voice_5_rationale>
-
-  <ontology_kindred_spirit_1>[Thinker]</ontology_kindred_spirit_1>
-  <ontology_kindred_spirit_1_classic>[Work (Date)]</ontology_kindred_spirit_1_classic>
-  <ontology_kindred_spirit_1_rationale>[how their argument resonates with you]</ontology_kindred_spirit_1_rationale>
-
-  <ontology_kindred_spirit_2>[Thinker]</ontology_kindred_spirit_2>
-  <ontology_kindred_spirit_2_classic>[Work (Date)]</ontology_kindred_spirit_2_classic>
-  <ontology_kindred_spirit_2_rationale>[how their argument resonates with you]</ontology_kindred_spirit_2_rationale>
-
-  <ontology_kindred_spirit_3>[Thinker]</ontology_kindred_spirit_3>
-  <ontology_kindred_spirit_3_classic>[Work (Date)]</ontology_kindred_spirit_3_classic>
-  <ontology_kindred_spirit_3_rationale>[how their argument resonates with you]</ontology_kindred_spirit_3_rationale>
-
-  <ontology_kindred_spirit_4>[Thinker]</ontology_kindred_spirit_4>
-  <ontology_kindred_spirit_4_classic>[Work (Date)]</ontology_kindred_spirit_4_classic>
-  <ontology_kindred_spirit_4_rationale>[how their argument resonates with you]</ontology_kindred_spirit_4_rationale>
-
-  <ontology_kindred_spirit_5>[Thinker]</ontology_kindred_spirit_5>
-  <ontology_kindred_spirit_5_classic>[Work (Date)]</ontology_kindred_spirit_5_classic>
-  <ontology_kindred_spirit_5_rationale>[how their argument resonates with you]</ontology_kindred_spirit_5_rationale>
-
-  <ontology_challenging_voice_1>[Thinker]</ontology_challenging_voice_1>
-  <ontology_challenging_voice_1_classic>[Work (Date)]</ontology_challenging_voice_1_classic>
-  <ontology_challenging_voice_1_rationale>[how their argument challenges you]</ontology_challenging_voice_1_rationale>
-
-  <ontology_challenging_voice_2>[Thinker]</ontology_challenging_voice_2>
-  <ontology_challenging_voice_2_classic>[Work (Date)]</ontology_challenging_voice_2_classic>
-  <ontology_challenging_voice_2_rationale>[how their argument challenges you]</ontology_challenging_voice_2_rationale>
-
-  <ontology_challenging_voice_3>[Thinker]</ontology_challenging_voice_3>
-  <ontology_challenging_voice_3_classic>[Work (Date)]</ontology_challenging_voice_3_classic>
-  <ontology_challenging_voice_3_rationale>[how their argument challenges you]</ontology_challenging_voice_3_rationale>
-
-  <ontology_challenging_voice_4>[Thinker]</ontology_challenging_voice_4>
-  <ontology_challenging_voice_4_classic>[Work (Date)]</ontology_challenging_voice_4_classic>
-  <ontology_challenging_voice_4_rationale>[how their argument challenges you]</ontology_challenging_voice_4_rationale>
-
-  <ontology_challenging_voice_5>[Thinker]</ontology_challenging_voice_5>
-  <ontology_challenging_voice_5_classic>[Work (Date)]</ontology_challenging_voice_5_classic>
-  <ontology_challenging_voice_5_rationale>[how their argument challenges you]</ontology_challenging_voice_5_rationale>
-</thinker_analysis>
-
-</philosophical_profile>`;
-  } else if (section === 2) {
-    sectionPrompt = `
-### **For Section 2 (Epistemology & Ethics)**
-
-<philosophical_profile>
-
-<domain_analyses>
-  <epistemology_introduction>
-    Your approach to epistemology is...
-  </epistemology_introduction>
-  <ethics_introduction>
-    Your approach to ethics is...
-  </ethics_introduction>
-</domain_analyses>
-
-<thinker_analysis>
-  <epistemology_kindred_spirit_1>[Thinker]</epistemology_kindred_spirit_1>
-  <epistemology_kindred_spirit_1_classic>[Work (Date)]</epistemology_kindred_spirit_1_classic>
-  <epistemology_kindred_spirit_1_rationale>[how their argument resonates with you]</epistemology_kindred_spirit_1_rationale>
-
-  <epistemology_kindred_spirit_2>[Thinker]</epistemology_kindred_spirit_2>
-  <epistemology_kindred_spirit_2_classic>[Work (Date)]</epistemology_kindred_spirit_2_classic>
-  <epistemology_kindred_spirit_2_rationale>[how their argument resonates with you]</epistemology_kindred_
+    return new Response('Method not allowed', { 
+      status: 405,
+      headers: corsHeaders,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { 
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }
+});
