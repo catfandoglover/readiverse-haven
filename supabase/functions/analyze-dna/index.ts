@@ -15,9 +15,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_response: any }> {
-  // Use the first section prompt as it contains all the fields we need
-  const prompt = getPromptForSection(1, answers_json);
+async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
+  const prompt = getPromptForSection(section, answers_json);
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -54,7 +53,7 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ analysi
       throw new Error('Invalid API response structure');
     }
 
-    console.log('Raw AI response:', data.choices[0].message.content);
+    console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
     
     // Parse the JSON response
     let parsedContent: Record<string, string>;
@@ -67,11 +66,34 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ analysi
     }
 
     return {
-      analysis: parsedContent,
+      content: parsedContent,
       raw_response: data
     };
   } catch (error) {
     console.error('Error generating analysis:', error);
+    throw error;
+  }
+}
+
+async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_responses: any[] }> {
+  try {
+    const section1 = await generateAnalysis(answers_json, 1);
+    const section2 = await generateAnalysis(answers_json, 2);
+    const section3 = await generateAnalysis(answers_json, 3);
+    
+    // Merge all sections
+    const combinedContent = {
+      ...section1.content,
+      ...section2.content,
+      ...section3.content
+    };
+    
+    return {
+      analysis: combinedContent,
+      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
+    };
+  } catch (error) {
+    console.error('Error in generateCompleteAnalysis:', error);
     throw error;
   }
 }
@@ -83,46 +105,30 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const { answers_json, assessment_id, profile_image_url } = await req.json();
+      const { answers_json, assessment_id, user_name, profile_image_url } = await req.json();
       
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
 
-      // Fetch the name from dna_assessment_results
-      const { data: assessmentData, error: assessmentError } = await supabase
-        .from('dna_assessment_results')
-        .select('name')
-        .eq('id', assessment_id)
-        .single();
-
-      if (assessmentError) {
-        console.error('Error fetching assessment data:', assessmentError);
-        throw assessmentError;
-      }
-
-      if (!assessmentData) {
-        throw new Error('Assessment not found');
-      }
-
-      const { analysis, raw_response } = await generateCompleteAnalysis(answers_json);
+      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
       
       // Log the database insert data
       console.log('Database insert data:', {
         assessment_id,
-        name: assessmentData.name,
+        user_name,
         profile_image_url,
-        raw_response: raw_response,
+        raw_response: raw_responses,
         ...analysis
       });
 
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
-        name: assessmentData.name,
+        user_name: user_name,
         profile_image_url: profile_image_url,
         analysis_text: JSON.stringify(analysis),
         analysis_type: 'section_1',
-        raw_response: raw_response,
+        raw_response: raw_responses,
         ...analysis
       });
 
