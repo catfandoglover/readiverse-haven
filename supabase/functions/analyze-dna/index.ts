@@ -105,7 +105,7 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const { answers_json, assessment_id, user_name } = await req.json();
+      const { answers_json, assessment_id, user_name, profile_image_url } = await req.json();
       
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
@@ -117,6 +117,7 @@ serve(async (req) => {
       console.log('Database insert data:', {
         assessment_id,
         user_name,
+        profile_image_url,
         raw_response: raw_responses,
         ...analysis
       });
@@ -124,6 +125,7 @@ serve(async (req) => {
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
         user_name: user_name,
+        profile_image_url: profile_image_url,
         analysis_text: JSON.stringify(analysis),
         analysis_type: 'section_1',
         raw_response: raw_responses,
