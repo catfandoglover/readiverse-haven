@@ -131,7 +131,20 @@ Remember to:
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  console.log('OpenRouter API response:', JSON.stringify(data, null, 2));
+
+  if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+    console.error('Invalid response format from OpenRouter API:', data);
+    throw new Error('Invalid response format from OpenRouter API');
+  }
+
+  const firstChoice = data.choices[0];
+  if (!firstChoice || !firstChoice.message || typeof firstChoice.message.content !== 'string') {
+    console.error('Invalid choice format from OpenRouter API:', firstChoice);
+    throw new Error('Invalid choice format in OpenRouter API response');
+  }
+
+  return firstChoice.message.content;
 }
 
 serve(async (req) => {
