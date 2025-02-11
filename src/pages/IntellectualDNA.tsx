@@ -5,7 +5,6 @@ import { Compass, LibraryBig, Dna, Search } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loading } from "@/components/ui/loading";
 import {
   Dialog,
   DialogContent,
@@ -112,14 +111,6 @@ const IntellectualDNA = () => {
       return data;
     },
   });
-
-  if (progressLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Loading />
-      </div>
-    );
-  }
 
   const handleNavigation = (path: string) => {
     if (path === '/dna' && location.pathname !== '/dna') {
@@ -264,3 +255,4 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
+
