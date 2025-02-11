@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -415,8 +414,8 @@ serve(async (req) => {
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
         analysis_text: analysis,
-        analysis_type: section === 1 ? 'SECTION_1' : 
-                      section === 2 ? 'SECTION_2' : 'SECTION_3'
+        analysis_type: section === 1 ? 'section_1' : 
+                      section === 2 ? 'section_2' : 'section_3'
       });
 
       if (storeError) {

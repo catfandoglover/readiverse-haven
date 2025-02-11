@@ -1210,7 +1210,7 @@ export type Database = {
         | "THEOLOGY"
         | "ONTOLOGY"
         | "EPISTEMOLOGY"
-      dna_result_type: "CLAUDE"
+      dna_result_type: "section_1" | "section_2" | "section_3"
       question_category:
         | "AESTHETICS"
         | "EPISTEMOLOGY"
