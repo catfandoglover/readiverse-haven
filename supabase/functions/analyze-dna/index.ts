@@ -176,7 +176,7 @@ serve(async (req) => {
     // Combine all sections
     const completeAnalysis = `${section1}\n\n${section2}\n\n${section3}`;
 
-    // Store the complete analysis in Supabase
+    // Store the complete analysis in Supabase using the original schema
     const { data: analysisData, error: analysisError } = await supabase
       .from('dna_analysis_results')
       .insert({
@@ -184,9 +184,9 @@ serve(async (req) => {
         analysis_type: 'CLAUDE',
         analysis_text: completeAnalysis,
         raw_response: {
-          section1: section1,
-          section2: section2,
-          section3: section3
+          section1,
+          section2,
+          section3
         }
       })
       .select()
@@ -215,3 +215,4 @@ serve(async (req) => {
     );
   }
 });
+
