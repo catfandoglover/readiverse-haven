@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -158,94 +157,212 @@ function parsePhilosophicalProfile(analysisText: string) {
 }
 
 async function generateAnalysis(answers_json: string, section: number): Promise<string> {
-  const basePrompt = `#Background
-Metaframework of philosophical DNA
-
-[Decision tree diagrams omitted for brevity but included in analysis]
-
-Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is...".`;
-
-  let sectionPrompt = '';
-  
-  if (section === 1) {
-    sectionPrompt = `
-# Philosophical Profile Generator Guidelines
-
-## Input Required
-Analysis of answers from the philosophical decision trees representing your philosophical DNA.
-
-## Output Structure Required for this Section
-
-### Primary Section
-[Domain Archetype] [Brief poetic subtitle capturing your essence]
-
-[Single paragraph capturing your philosophical essence - focus on how you reconcile contradictions and approach problem-solving]
-
-### Core Dynamics
-- Key Tensions in your thinking (3)
-- Your Natural Strengths (3)
-- Your Growth Edges (3)
-
-### Domain Analyses (Only Theology and Ontology for this section)
-For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
-
-### Thinker Analysis (Only for Theology and Ontology)
-For each domain:
-
-**Your Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - how their key argument resonates with your thinking
-
-**Your Challenging Voices** (5 per domain):
-- Thinker, Work (date) - how their key argument challenges your approach`;
-  } else if (section === 2) {
-    sectionPrompt = `
-### Domain Analyses (Only Epistemology and Ethics for this section)
-For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
-
-### Thinker Analysis (Only for Epistemology and Ethics)
-For each domain:
-
-**Your Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - how their key argument resonates with your thinking
-
-**Your Challenging Voices** (5 per domain):
-- Thinker, Work (date) - how their key argument challenges your approach
-
-Remember to maintain second person perspective throughout this section, explicitly using "you" and "your" in each analysis.`;
-  } else {
-    sectionPrompt = `
-### Domain Analyses (Only Politics and Aesthetics for this section)
-For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
-
-### Thinker Analysis (Only for Politics and Aesthetics)
-For each domain:
-
-**Your Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - how their key argument resonates with your thinking
-
-**Your Challenging Voices** (5 per domain):
-- Thinker, Work (date) - how their key argument challenges your approach
-
-## Concluding Analysis
-Brief synthesis of your overall philosophical profile, highlighting key themes and potential directions for your development. Address your unique combination of approaches and where your philosophical journey might lead you next.`;
-  }
-
-  const fullPrompt = `${basePrompt}
+  const basePrompt = `Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is..."
 
 Here are your answers to the philosophical questions:
 
 <answers_json>
 ${answers_json}
-</answers_json>
+</answers_json>`;
+
+  let sectionPrompt = '';
+  
+  if (section === 1) {
+    sectionPrompt = `
+### **For Section 1 (Theology & Ontology)**
+
+# **Philosophical Profile Generator Guidelines**
+
+## **Input Required**
+Analysis of answers from the philosophical decision trees representing your philosophical DNA.
+
+## **Output Structure Required for this Section**
+
+<philosophical_profile>
+
+<primary_section>
+  <archetype>[Domain Archetype]</archetype>
+  <archetype_definition>[Brief poetic subtitle capturing your essence]</archetype_definition>
+  <introduction>
+    [Single paragraph capturing your philosophical essence—focus on how you reconcile contradictions and approach problem-solving]
+  </introduction>
+</primary_section>
+
+<core_dynamics>
+  <key_tension_1>[Key tension in your thinking]</key_tension_1>
+  <key_tension_2>[Key tension in your thinking]</key_tension_2>
+  <key_tension_3>[Key tension in your thinking]</key_tension_3>
+  
+  <natural_strength_1>[Your Natural Strength]</natural_strength_1>
+  <natural_strength_2>[Your Natural Strength]</natural_strength_2>
+  <natural_strength_3>[Your Natural Strength]</natural_strength_3>
+  
+  <growth_edges_1>[Your Growth Edge]</growth_edges_1>
+  <growth_edges_2>[Your Growth Edge]</growth_edges_2>
+  <growth_edges_3>[Your Growth Edge]</growth_edges_3>
+</core_dynamics>
+
+<domain_analyses>
+  <theology_introduction>
+    Your approach to theology is...
+  </theology_introduction>
+  <ontology_introduction>
+    Your approach to ontology is...
+  </ontology_introduction>
+</domain_analyses>
+
+<thinker_analysis>
+  <theology_kindred_spirits>
+    <theology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_1>
+    <theology_kindred_spirit_2>[Thinker, Work (Date)]</theology_kindred_spirit_2>
+    <theology_kindred_spirit_3>[Thinker, Work (Date)]</theology_kindred_spirit_3>
+    <theology_kindred_spirit_4>[Thinker, Work (Date)]</theology_kindred_spirit_4>
+    <theology_kindred_spirit_5>[Thinker, Work (Date)]</theology_kindred_spirit_5>
+  </theology_kindred_spirits>
+
+  <theology_challenging_voices>
+    <theology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_1>
+    <theology_challenging_voice_2>[Thinker, Work (Date)]</theology_challenging_voice_2>
+    <theology_challenging_voice_3>[Thinker, Work (Date)]</theology_challenging_voice_3>
+    <theology_challenging_voice_4>[Thinker, Work (Date)]</theology_challenging_voice_4>
+    <theology_challenging_voice_5>[Thinker, Work (Date)]</theology_challenging_voice_5>
+  </theology_challenging_voices>
+
+  <ontology_kindred_spirits>
+    <ontology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_1>
+    <ontology_kindred_spirit_2>[Thinker, Work (Date)]</ontology_kindred_spirit_2>
+    <ontology_kindred_spirit_3>[Thinker, Work (Date)]</ontology_kindred_spirit_3>
+    <ontology_kindred_spirit_4>[Thinker, Work (Date)]</ontology_kindred_spirit_4>
+    <ontology_kindred_spirit_5>[Thinker, Work (Date)]</ontology_kindred_spirit_5>
+  </ontology_kindred_spirits>
+
+  <ontology_challenging_voices>
+    <ontology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_1>
+    <ontology_challenging_voice_2>[Thinker, Work (Date)]</ontology_challenging_voice_2>
+    <ontology_challenging_voice_3>[Thinker, Work (Date)]</ontology_challenging_voice_3>
+    <ontology_challenging_voice_4>[Thinker, Work (Date)]</ontology_challenging_voice_4>
+    <ontology_challenging_voice_5>[Thinker, Work (Date)]</ontology_challenging_voice_5>
+  </ontology_challenging_voices>
+</thinker_analysis>
+
+</philosophical_profile>`;
+  } else if (section === 2) {
+    sectionPrompt = `
+### **For Section 2 (Epistemology & Ethics)**
+
+<philosophical_profile>
+
+<domain_analyses>
+  <epistemology_introduction>
+    Your approach to epistemology is...
+  </epistemology_introduction>
+  <ethics_introduction>
+    Your approach to ethics is...
+  </ethics_introduction>
+</domain_analyses>
+
+<thinker_analysis>
+  <epistemology_kindred_spirits>
+    <epistemology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_1>
+    <epistemology_kindred_spirit_2>[Thinker, Work (Date)]</epistemology_kindred_spirit_2>
+    <epistemology_kindred_spirit_3>[Thinker, Work (Date)]</epistemology_kindred_spirit_3>
+    <epistemology_kindred_spirit_4>[Thinker, Work (Date)]</epistemology_kindred_spirit_4>
+    <epistemology_kindred_spirit_5>[Thinker, Work (Date)]</epistemology_kindred_spirit_5>
+  </epistemology_kindred_spirits>
+
+  <epistemology_challenging_voices>
+    <epistemology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_1>
+    <epistemology_challenging_voice_2>[Thinker, Work (Date)]</epistemology_challenging_voice_2>
+    <epistemology_challenging_voice_3>[Thinker, Work (Date)]</epistemology_challenging_voice_3>
+    <epistemology_challenging_voice_4>[Thinker, Work (Date)]</epistemology_challenging_voice_4>
+    <epistemology_challenging_voice_5>[Thinker, Work (Date)]</epistemology_challenging_voice_5>
+  </epistemology_challenging_voices>
+
+  <ethics_kindred_spirits>
+    <ethics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_1>
+    <ethics_kindred_spirit_2>[Thinker, Work (Date)]</ethics_kindred_spirit_2>
+    <ethics_kindred_spirit_3>[Thinker, Work (Date)]</ethics_kindred_spirit_3>
+    <ethics_kindred_spirit_4>[Thinker, Work (Date)]</ethics_kindred_spirit_4>
+    <ethics_kindred_spirit_5>[Thinker, Work (Date)]</ethics_kindred_spirit_5>
+  </ethics_kindred_spirits>
+
+  <ethics_challenging_voices>
+    <ethics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_1>
+    <ethics_challenging_voice_2>[Thinker, Work (Date)]</ethics_challenging_voice_2>
+    <ethics_challenging_voice_3>[Thinker, Work (Date)]</ethics_challenging_voice_3>
+    <ethics_challenging_voice_4>[Thinker, Work (Date)]</ethics_challenging_voice_4>
+    <ethics_challenging_voice_5>[Thinker, Work (Date)]</ethics_challenging_voice_5>
+  </ethics_challenging_voices>
+</thinker_analysis>
+
+</philosophical_profile>`;
+  } else {
+    sectionPrompt = `
+### **For Section 3 (Politics & Aesthetics)**
+
+<philosophical_profile>
+
+<domain_analyses>
+  <politics_introduction>
+    Your approach to politics is...
+  </politics_introduction>
+  <aesthetics_introduction>
+    Your approach to aesthetics is...
+  </aesthetics_introduction>
+</domain_analyses>
+
+<thinker_analysis>
+  <politics_kindred_spirits>
+    <politics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_1>
+    <politics_kindred_spirit_2>[Thinker, Work (Date)]</politics_kindred_spirit_2>
+    <politics_kindred_spirit_3>[Thinker, Work (Date)]</politics_kindred_spirit_3>
+    <politics_kindred_spirit_4>[Thinker, Work (Date)]</politics_kindred_spirit_4>
+    <politics_kindred_spirit_5>[Thinker, Work (Date)]</politics_kindred_spirit_5>
+  </politics_kindred_spirits>
+
+  <politics_challenging_voices>
+    <politics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_1>
+    <politics_challenging_voice_2>[Thinker, Work (Date)]</politics_challenging_voice_2>
+    <politics_challenging_voice_3>[Thinker, Work (Date)]</politics_challenging_voice_3>
+    <politics_challenging_voice_4>[Thinker, Work (Date)]</politics_challenging_voice_4>
+    <politics_challenging_voice_5>[Thinker, Work (Date)]</politics_challenging_voice_5>
+  </politics_challenging_voices>
+
+  <aesthetics_kindred_spirits>
+    <aesthetics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_1>
+    <aesthetics_kindred_spirit_2>[Thinker, Work (Date)]</aesthetics_kindred_spirit_2>
+    <aesthetics_kindred_spirit_3>[Thinker, Work (Date)]</aesthetics_kindred_spirit_3>
+    <aesthetics_kindred_spirit_4>[Thinker, Work (Date)]</aesthetics_kindred_spirit_4>
+    <aesthetics_kindred_spirit_5>[Thinker, Work (Date)]</aesthetics_kindred_spirit_5>
+  </aesthetics_kindred_spirits>
+
+  <aesthetics_challenging_voices>
+    <aesthetics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_1>
+    <aesthetics_challenging_voice_2>[Thinker, Work (Date)]</aesthetics_challenging_voice_2>
+    <aesthetics_challenging_voice_3>[Thinker, Work (Date)]</aesthetics_challenging_voice_3>
+    <aesthetics_challenging_voice_4>[Thinker, Work (Date)]</aesthetics_challenging_voice_4>
+    <aesthetics_challenging_voice_5>[Thinker, Work (Date)]</aesthetics_challenging_voice_5>
+  </aesthetics_challenging_voices>
+</thinker_analysis>
+
+<concluding_analysis>
+<conclusion>[Brief synthesis of your overall philosophical profile, highlighting key themes and potential directions for your development.]</conclusion>
+<next_steps>[Practical suggestions on how to refine and evolve your philosophical thinking.]</next_steps>
+</concluding_analysis>
+
+</philosophical_profile>`;
+  }
+
+  const fullPrompt = `${basePrompt}
 
 ${sectionPrompt}
 
 Remember to:
 1. Always use second person ("you", "your") throughout the analysis
-2. Format your response with XML-style tags appropriate for this section
+2. Follow the exact XML structure provided
 3. Make the analysis feel personal and directly addressed to the subject
 4. Begin each domain analysis with "Your approach to..."
-5. Frame all observations in terms of your personal philosophical tendencies`;
+5. Frame all observations in terms of personal philosophical tendencies`;
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -329,6 +446,7 @@ serve(async (req) => {
 
     // Format answers_json for the prompt, including the user's name
     const answers_json = JSON.stringify({ name: userName, answers }, null, 2);
+    console.log('Formatted answers_json:', answers_json);
 
     // Generate all three sections sequentially
     console.log('Generating section 1...');
