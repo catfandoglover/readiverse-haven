@@ -411,12 +411,12 @@ serve(async (req) => {
       // Generate analysis text
       const analysis = await generateAnalysis(answers_json, section);
       
-      // Store analysis in the database
+      // Store analysis in the database with correct enum values
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
         analysis_text: analysis,
-        analysis_type: section === 1 ? 'THEOLOGY_ONTOLOGY' : 
-                      section === 2 ? 'EPISTEMOLOGY_ETHICS' : 'POLITICS_AESTHETICS'
+        analysis_type: section === 1 ? 'SECTION_1' : 
+                      section === 2 ? 'SECTION_2' : 'SECTION_3'
       });
 
       if (storeError) {
