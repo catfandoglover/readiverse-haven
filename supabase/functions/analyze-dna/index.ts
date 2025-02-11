@@ -18,7 +18,9 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   const basePrompt = `#Background
 Metaframework of philosophical DNA
 
-[Decision tree diagrams omitted for brevity but included in analysis]`;
+[Decision tree diagrams omitted for brevity but included in analysis]
+
+Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is...".`;
 
   let sectionPrompt = '';
   
@@ -27,65 +29,65 @@ Metaframework of philosophical DNA
 # Philosophical Profile Generator Guidelines
 
 ## Input Required
-Analysis of answers from the philosophical decision trees representing the user's philosophical DNA.
+Analysis of answers from the philosophical decision trees representing your philosophical DNA.
 
 ## Output Structure Required for this Section
 
 ### Primary Section
-[Domain Archetype] [Brief poetic subtitle]
+[Domain Archetype] [Brief poetic subtitle capturing your essence]
 
-[Single paragraph capturing philosophical essence - focus on reconciliation of contradictions and problem-solving approach]
+[Single paragraph capturing your philosophical essence - focus on how you reconcile contradictions and approach problem-solving]
 
 ### Core Dynamics
-- Key Tensions (3)
-- Natural Strengths (3)
-- Growth Edges (3)
+- Key Tensions in your thinking (3)
+- Your Natural Strengths (3)
+- Your Growth Edges (3)
 
 ### Domain Analyses (Only Theology and Ontology for this section)
-One sentence per domain capturing characteristic approach
+One sentence per domain capturing your characteristic approach
 
 ### Thinker Analysis (Only for Theology and Ontology)
 For each domain:
 
-**Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - key argument
+**Your Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - how their key argument resonates with your thinking
 
-**Challenging Voices** (5 per domain):
-- Thinker, Work (date) - key argument`;
+**Your Challenging Voices** (5 per domain):
+- Thinker, Work (date) - how their key argument challenges your approach`;
   } else if (section === 2) {
     sectionPrompt = `
 ### Domain Analyses (Only Epistemology and Ethics for this section)
-One sentence per domain capturing characteristic approach
+One sentence per domain capturing your characteristic approach
 
 ### Thinker Analysis (Only for Epistemology and Ethics)
 For each domain:
 
-**Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - key argument
+**Your Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - how their key argument resonates with your thinking
 
-**Challenging Voices** (5 per domain):
-- Thinker, Work (date) - key argument`;
+**Your Challenging Voices** (5 per domain):
+- Thinker, Work (date) - how their key argument challenges your approach`;
   } else {
     sectionPrompt = `
 ### Domain Analyses (Only Politics and Aesthetics for this section)
-One sentence per domain capturing characteristic approach
+One sentence per domain capturing your characteristic approach
 
 ### Thinker Analysis (Only for Politics and Aesthetics)
 For each domain:
 
-**Kindred Spirits** (5 per domain):
-- Thinker, Work (date) - key argument
+**Your Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - how their key argument resonates with your thinking
 
-**Challenging Voices** (5 per domain):
-- Thinker, Work (date) - key argument
+**Your Challenging Voices** (5 per domain):
+- Thinker, Work (date) - how their key argument challenges your approach
 
 ## Concluding Analysis
-Brief synthesis of the overall philosophical profile, highlighting key themes and potential developmental directions.`;
+Brief synthesis of your overall philosophical profile, highlighting key themes and potential directions for your development.`;
   }
 
   const fullPrompt = `${basePrompt}
 
-Here are the user's answers to the philosophical questions:
+Here are your answers to the philosophical questions:
 
 <answers_json>
 ${answers_json}
@@ -93,7 +95,10 @@ ${answers_json}
 
 ${sectionPrompt}
 
-Remember to format your response with XML-style tags appropriate for this section.`;
+Remember to:
+1. Always use second person ("you", "your") throughout the analysis
+2. Format your response with XML-style tags appropriate for this section
+3. Make the analysis feel personal and directly addressed to the subject`;
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
