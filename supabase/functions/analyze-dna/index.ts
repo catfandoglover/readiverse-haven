@@ -29,6 +29,7 @@ function parsePhilosophicalProfile(text: string): Record<string, string> {
     profile[tag] = content.trim();
   }
   
+  console.log('Parsed profile:', JSON.stringify(profile, null, 2));
   return profile;
 }
 
@@ -64,6 +65,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     }
 
     const data = await response.json();
+    console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
     return {
       content: data.choices[0].message.content,
       raw_response: data
@@ -81,7 +83,9 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ analysi
   const section3 = await generateAnalysis(answers_json, 3);
   
   const combinedContent = `${section1.content}\n${section2.content}\n${section3.content}`;
+  console.log('Combined content before parsing:', combinedContent);
   const parsedContent = parsePhilosophicalProfile(combinedContent);
+  console.log('Final parsed content:', JSON.stringify(parsedContent, null, 2));
   
   return {
     analysis: combinedContent,
@@ -106,6 +110,42 @@ serve(async (req) => {
       // Generate complete analysis text combining all three sections
       const { analysis, raw_responses, parsed_content } = await generateCompleteAnalysis(answers_json);
       
+      // Log the database insert data
+      console.log('Database insert data:', {
+        assessment_id,
+        raw_response: raw_responses,
+        archetype: parsed_content.archetype,
+        introduction: parsed_content.introduction,
+        archetype_definition: parsed_content.archetype_definition,
+        key_tension_1: parsed_content.key_tension_1,
+        key_tension_2: parsed_content.key_tension_2,
+        key_tension_3: parsed_content.key_tension_3,
+        natural_strength_1: parsed_content.natural_strength_1,
+        natural_strength_2: parsed_content.natural_strength_2,
+        natural_strength_3: parsed_content.natural_strength_3,
+        growth_edges_1: parsed_content.growth_edges_1,
+        growth_edges_2: parsed_content.growth_edges_2,
+        growth_edges_3: parsed_content.growth_edges_3,
+        conclusion: parsed_content.conclusion,
+        next_steps: parsed_content.next_steps,
+        
+        // Introductions for each section
+        theology_introduction: parsed_content.theology_introduction,
+        ontology_introduction: parsed_content.ontology_introduction,
+        epistemology_introduction: parsed_content.epistemology_introduction,
+        ethics_introduction: parsed_content.ethics_introduction,
+        politics_introduction: parsed_content.politics_introduction,
+        aesthetics_introduction: parsed_content.aesthetics_introduction,
+        
+        // Map all the kindred spirits, challenging voices, and their rationales
+        ...Object.entries(parsed_content).reduce((acc, [key, value]) => {
+          if (key.match(/(theology|ontology|epistemology|ethics|politics|aesthetics)_(kindred_spirit|challenging_voice)_[1-5](_classic|_rationale)?$/)) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      });
+
       // Store complete analysis in the database
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
@@ -147,6 +187,7 @@ serve(async (req) => {
 
       if (storeError) {
         console.error('Error storing analysis:', storeError);
+        console.error('Store error details:', JSON.stringify(storeError, null, 2));
         throw storeError;
       }
       
