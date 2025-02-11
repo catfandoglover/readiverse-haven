@@ -1,3 +1,4 @@
+
 export function getPromptForSection(section: number, answers_json: string): string {
   const basePrompt = `Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is..."
 
@@ -221,7 +222,7 @@ Format your response as a FLAT JSON object with NO nesting. Use the exact field 
   "aesthetics_challenging_voice_5_rationale": "How their argument challenges",
   "conclusion": "Brief synthesis of overall philosophical profile",
   "next_steps": "Practical suggestions for development"
-}`;
+}`
   };
 
   return `${basePrompt}\n\n${templates[section as keyof typeof templates]}`;
