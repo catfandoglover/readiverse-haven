@@ -113,11 +113,7 @@ const IntellectualDNA = () => {
   });
 
   if (progressLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Loading />
-      </div>
-    );
+    return <Loading />;
   }
 
   const handleNavigation = (path: string) => {
