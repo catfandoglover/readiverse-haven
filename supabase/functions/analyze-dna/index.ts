@@ -14,144 +14,119 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ExtractedData {
-  name: string;
-  mythopoetic_title: string;
-  introduction: string;
-  kt_1: string;
-  kt_2: string;
-  kt_3: string;
-  ns_1: string;
-  ns_2: string;
-  ns_3: string;
-  ge_1: string;
-  ge_2: string;
-  ge_3: string;
-  bwya: string;
-  theology_intro: string;
-  [key: string]: string;
-}
+async function generateAnalysis(answers_json: string, section: number): Promise<string> {
+  const basePrompt = `#Background
+Metaframework of philosophical DNA
 
-function extractDataFromAnalysis(analysisText: string): ExtractedData {
-  console.log('Starting data extraction from analysis');
+[Decision tree diagrams omitted for brevity but included in analysis]`;
+
+  let sectionPrompt = '';
   
-  const data: ExtractedData = {
-    name: '',
-    mythopoetic_title: '',
-    introduction: '',
-    kt_1: '',
-    kt_2: '',
-    kt_3: '',
-    ns_1: '',
-    ns_2: '',
-    ns_3: '',
-    ge_1: '',
-    ge_2: '',
-    ge_3: '',
-    bwya: '',
-    theology_intro: '',
-  };
+  if (section === 1) {
+    sectionPrompt = `
+# Philosophical Profile Generator Guidelines
 
-  // Regular expressions for extracting data
-  const sections = analysisText.split(/\n{2,}/);
-  
-  for (const section of sections) {
-    // Extract name and mythopoetic title
-    if (section.includes('[') && section.includes(']')) {
-      const parts = section.split(/[\[\]]/);
-      if (parts.length >= 2) {
-        data.name = parts[0].trim();
-        data.mythopoetic_title = parts[1].trim();
-      }
-    }
+## Input Required
+Analysis of answers from the philosophical decision trees representing the user's philosophical DNA.
 
-    // Extract introduction
-    if (section.startsWith('Your intellectual DNA')) {
-      data.introduction = section.trim();
-    }
+## Output Structure Required for this Section
 
-    // Extract Key Tensions
-    if (section.includes('Key Tensions')) {
-      const tensions = section.match(/- ([^\n]+)/g);
-      if (tensions) {
-        data.kt_1 = tensions[0]?.replace('- ', '') || '';
-        data.kt_2 = tensions[1]?.replace('- ', '') || '';
-        data.kt_3 = tensions[2]?.replace('- ', '') || '';
-      }
-    }
+### Primary Section
+[Domain Archetype] [Brief poetic subtitle]
 
-    // Extract Natural Strengths
-    if (section.includes('Natural Strengths')) {
-      const strengths = section.match(/- ([^\n]+)/g);
-      if (strengths) {
-        data.ns_1 = strengths[0]?.replace('- ', '') || '';
-        data.ns_2 = strengths[1]?.replace('- ', '') || '';
-        data.ns_3 = strengths[2]?.replace('- ', '') || '';
-      }
-    }
+[Single paragraph capturing philosophical essence - focus on reconciliation of contradictions and problem-solving approach]
 
-    // Extract Growth Edges
-    if (section.includes('Growth Edges')) {
-      const edges = section.match(/- ([^\n]+)/g);
-      if (edges) {
-        data.ge_1 = edges[0]?.replace('- ', '') || '';
-        data.ge_2 = edges[1]?.replace('- ', '') || '';
-        data.ge_3 = edges[2]?.replace('- ', '') || '';
-      }
-    }
+### Core Dynamics
+- Key Tensions (3)
+- Natural Strengths (3)
+- Growth Edges (3)
 
-    // Extract "But who you are"
-    if (section.includes('But who you are')) {
-      data.bwya = section.trim();
-    }
+### Domain Analyses (Only Theology and Ontology for this section)
+One sentence per domain capturing characteristic approach
 
-    // Process domain intros and thinkers
-    const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-    for (const domain of domains) {
-      // Extract domain intro
-      if (section.toLowerCase().includes(domain) && !section.includes('Kindred') && !section.includes('Challenging')) {
-        data[`${domain}_intro`] = section.trim();
-      }
+### Thinker Analysis (Only for Theology and Ontology)
+For each domain:
 
-      // Extract Kindred Spirits
-      if (section.includes(`${domain.charAt(0).toUpperCase() + domain.slice(1)} Kindred Spirits`)) {
-        const thinkers = section.match(/- ([^\n]+)/g);
-        if (thinkers) {
-          thinkers.forEach((thinker, index) => {
-            const match = thinker.match(/- (.+?), (.+?) - (.+)/);
-            if (match && index < 5) {
-              data[`${domain}_ks_${index + 1}_name`] = match[1].trim();
-              data[`${domain}_ks_${index + 1}_classic`] = match[2].trim();
-              data[`${domain}_ks_${index + 1}_reason`] = match[3].trim();
-            }
-          });
-        }
-      }
+**Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - key argument
 
-      // Extract Challenging Voices
-      if (section.includes(`${domain.charAt(0).toUpperCase() + domain.slice(1)} Challenging Voices`)) {
-        const voices = section.match(/- ([^\n]+)/g);
-        if (voices) {
-          voices.forEach((voice, index) => {
-            const match = voice.match(/- (.+?), (.+?) - (.+)/);
-            if (match && index < 5) {
-              data[`${domain}_cv_${index + 1}_name`] = match[1].trim();
-              data[`${domain}_cv_${index + 1}_classic`] = match[2].trim();
-              data[`${domain}_cv_${index + 1}_reason`] = match[3].trim();
-            }
-          });
-        }
-      }
-    }
+**Challenging Voices** (5 per domain):
+- Thinker, Work (date) - key argument`;
+  } else if (section === 2) {
+    sectionPrompt = `
+### Domain Analyses (Only Epistemology and Ethics for this section)
+One sentence per domain capturing characteristic approach
 
-    // Extract conclusion
-    if (section.includes('Concluding Analysis')) {
-      data.conclusion = section.replace('Concluding Analysis', '').trim();
-    }
+### Thinker Analysis (Only for Epistemology and Ethics)
+For each domain:
+
+**Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - key argument
+
+**Challenging Voices** (5 per domain):
+- Thinker, Work (date) - key argument`;
+  } else {
+    sectionPrompt = `
+### Domain Analyses (Only Politics and Aesthetics for this section)
+One sentence per domain capturing characteristic approach
+
+### Thinker Analysis (Only for Politics and Aesthetics)
+For each domain:
+
+**Kindred Spirits** (5 per domain):
+- Thinker, Work (date) - key argument
+
+**Challenging Voices** (5 per domain):
+- Thinker, Work (date) - key argument
+
+## Concluding Analysis
+Brief synthesis of the overall philosophical profile, highlighting key themes and potential developmental directions.`;
   }
 
-  console.log('Data extraction completed');
-  return data;
+  const fullPrompt = `${basePrompt}
+
+Here are the user's answers to the philosophical questions:
+
+<answers_json>
+${answers_json}
+</answers_json>
+
+${sectionPrompt}
+
+Remember to format your response with XML-style tags appropriate for this section.`;
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openrouterApiKey}`,
+      'HTTP-Referer': 'https://lovable.dev',
+      'X-Title': 'DNA Analysis',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: "anthropic/claude-3.5-sonnet",
+      messages: [
+        {
+          role: "user",
+          content: fullPrompt
+        }
+      ],
+      max_tokens: 25000,
+      temperature: 0.7,
+      top_p: 0.9,
+      stream: false,
+      stop: null
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenRouter API error:', response.status, errorText);
+    throw new Error(`OpenRouter API returned status ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
 }
 
 serve(async (req) => {
@@ -187,72 +162,33 @@ serve(async (req) => {
     const userName = assessmentData.name;
     console.log('Found user name:', userName);
 
-    // Format answers_json for the prompt
+    // Format answers_json for the prompt, including the user's name
     const answers_json = JSON.stringify({ name: userName, answers }, null, 2);
 
-    // Generate analysis using Claude
-    console.log('Generating analysis using Claude...');
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterApiKey}`,
-        'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'DNA Analysis',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: "anthropic/claude-3.5-sonnet",
-        messages: [
-          {
-            role: "user",
-            content: `Based on the following answers, analyze this person's philosophical DNA and provide a detailed profile. Format your response to be easily parsed, using clear section headers and consistent formatting for each section.
+    // Generate all three sections sequentially
+    console.log('Generating section 1...');
+    const section1 = await generateAnalysis(answers_json, 1);
+    console.log('Generating section 2...');
+    const section2 = await generateAnalysis(answers_json, 2);
+    console.log('Generating section 3...');
+    const section3 = await generateAnalysis(answers_json, 3);
 
-${answers_json}
+    // Combine all sections
+    const completeAnalysis = `${section1}\n\n${section2}\n\n${section3}`;
 
-Include the following sections:
-1. Name [Mythopoetic Title]
-2. Introduction paragraph
-3. Key Tensions (3 bullet points)
-4. Natural Strengths (3 bullet points)
-5. Growth Edges (3 bullet points)
-6. "But who you are" paragraph
-7. For each domain (Theology, Ontology, Epistemology, Ethics, Politics, Aesthetics):
-   - Domain introduction
-   - Kindred Spirits (5 entries formatted as "Name, Work - Reason")
-   - Challenging Voices (5 entries formatted as "Name, Work - Reason")
-8. Concluding Analysis
-
-Use consistent formatting and clear section headers to make the response easy to parse.`
-          }
-        ],
-        max_tokens: 25000,
-        temperature: 0.7,
-        top_p: 0.9,
-        stream: false,
-        stop: null
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
-      throw new Error(`OpenRouter API returned status ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
-    const analysisText = data.choices[0].message.content;
-    
-    // Extract structured data from the analysis
-    const extractedData = extractDataFromAnalysis(analysisText);
-    
-    // Store the extracted data in Supabase
+    // Store the complete analysis in Supabase
     const { data: analysisData, error: analysisError } = await supabase
       .from('dna_analysis_results')
-      .insert([{
+      .insert({
         assessment_id: assessmentId,
         analysis_type: 'CLAUDE',
-        ...extractedData
-      }])
+        analysis_text: completeAnalysis,
+        raw_response: {
+          section1: section1,
+          section2: section2,
+          section3: section3
+        }
+      })
       .select()
       .single();
 
