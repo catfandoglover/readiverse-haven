@@ -105,10 +105,26 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const { answers_json, assessment_id, user_name, profile_image_url } = await req.json();
+      const { answers_json, assessment_id, profile_image_url } = await req.json();
       
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
+      }
+
+      // Fetch the name from dna_assessment_results
+      const { data: assessmentData, error: assessmentError } = await supabase
+        .from('dna_assessment_results')
+        .select('name')
+        .eq('id', assessment_id)
+        .maybeSingle();
+
+      if (assessmentError) {
+        console.error('Error fetching assessment data:', assessmentError);
+        throw assessmentError;
+      }
+
+      if (!assessmentData) {
+        throw new Error('Assessment not found');
       }
 
       const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
@@ -116,15 +132,15 @@ serve(async (req) => {
       // Log the database insert data
       console.log('Database insert data:', {
         assessment_id,
-        user_name,
+        name: assessmentData.name,
         profile_image_url,
-        raw_response: raw_responses,
+        raw_responses,
         ...analysis
       });
 
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
-        user_name: user_name,
+        name: assessmentData.name,
         profile_image_url: profile_image_url,
         analysis_text: JSON.stringify(analysis),
         analysis_type: 'section_1',
