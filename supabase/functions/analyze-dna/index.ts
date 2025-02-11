@@ -14,6 +14,149 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function extractContent(text: string, startTag: string, endTag: string): string | null {
+  const startIndex = text.indexOf(startTag);
+  if (startIndex === -1) return null;
+  
+  const endIndex = text.indexOf(endTag, startIndex + startTag.length);
+  if (endIndex === -1) return null;
+  
+  return text.substring(startIndex + startTag.length, endIndex).trim();
+}
+
+function parseSection(text: string, tag: string): string | null {
+  return extractContent(text, `<${tag}>`, `</${tag}>`);
+}
+
+function parsePhilosophicalProfile(analysisText: string) {
+  const profile: Record<string, string | null> = {
+    archetype: null,
+    introduction: null,
+    key_tension_1: null,
+    key_tension_2: null,
+    key_tension_3: null,
+    natural_strength_1: null,
+    natural_strength_2: null,
+    natural_strength_3: null,
+    growth_edges_1: null,
+    growth_edges_2: null,
+    growth_edges_3: null,
+    conclusion: null,
+    next_steps: null,
+  };
+
+  // Extract archetype and introduction
+  const primarySection = parseSection(analysisText, 'primary_section') || 
+                        parseSection(analysisText, 'primary');
+  if (primarySection) {
+    profile.archetype = extractContent(primarySection, '<archetype>', '</archetype>');
+    profile.archetype_definition = extractContent(primarySection, '<subtitle>', '</subtitle>');
+    profile.introduction = extractContent(primarySection, '<essence>', '</essence>') ||
+                          primarySection.split('\n').slice(2).join('\n').trim();
+  }
+
+  // Extract core dynamics
+  const coreDynamics = parseSection(analysisText, 'core_dynamics');
+  if (coreDynamics) {
+    const keyTensions = coreDynamics.split('- ').filter(s => s.trim());
+    const strengthsStart = coreDynamics.indexOf('natural_strengths>') !== -1 ? 
+      coreDynamics.indexOf('natural_strengths>') : 
+      coreDynamics.indexOf('Natural Strengths');
+    const growthEdgesStart = coreDynamics.indexOf('growth_edges>') !== -1 ?
+      coreDynamics.indexOf('growth_edges>') :
+      coreDynamics.indexOf('Growth Edges');
+
+    if (strengthsStart !== -1 && growthEdgesStart !== -1) {
+      const tensionsSection = coreDynamics.substring(0, strengthsStart).split('- ').filter(s => s.trim());
+      const strengthsSection = coreDynamics.substring(strengthsStart, growthEdgesStart).split('- ').filter(s => s.trim());
+      const growthSection = coreDynamics.substring(growthEdgesStart).split('- ').filter(s => s.trim());
+
+      tensionsSection.slice(1, 4).forEach((tension, i) => {
+        profile[`key_tension_${i + 1}`] = tension.trim();
+      });
+
+      strengthsSection.slice(1, 4).forEach((strength, i) => {
+        profile[`natural_strength_${i + 1}`] = strength.trim();
+      });
+
+      growthSection.slice(1, 4).forEach((edge, i) => {
+        profile[`growth_edges_${i + 1}`] = edge.trim();
+      });
+    }
+  }
+
+  // Extract domain introductions
+  const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
+  domains.forEach(domain => {
+    const domainSection = parseSection(analysisText, domain) || 
+                         extractContent(analysisText, `Your approach to ${domain}`, '\n') ||
+                         extractContent(analysisText, `${domain.charAt(0).toUpperCase() + domain.slice(1)}:`, '\n');
+    if (domainSection) {
+      profile[`${domain}_introduction`] = domainSection.trim();
+    }
+  });
+
+  // Parse thinker analysis for each domain
+  domains.forEach(domain => {
+    const domainPattern = new RegExp(`${domain}_kindred>|${domain.charAt(0).toUpperCase() + domain.slice(1)} Kindred Spirits`);
+    const challengingPattern = new RegExp(`${domain}_challenging>|${domain.charAt(0).toUpperCase() + domain.slice(1)} Challenging Voices`);
+    
+    const fullText = analysisText;
+    const kindredStart = fullText.search(domainPattern);
+    const challengingStart = fullText.search(challengingPattern);
+    
+    if (kindredStart !== -1) {
+      const kindredSection = fullText.substring(kindredStart, challengingStart !== -1 ? challengingStart : undefined);
+      const kindredMatches = kindredSection.match(/- (.*?), [""].*? \((.*?)\)(.*)/g);
+      
+      if (kindredMatches) {
+        kindredMatches.slice(0, 5).forEach((match, i) => {
+          const [name, work, rationale] = match.split(/,|\(/);
+          profile[`${domain}_kindred_spirit_${i + 1}`] = name.replace('- ', '').trim();
+          if (work) {
+            profile[`${domain}_kindred_spirit_${i + 1}_classic`] = work.trim();
+          }
+          if (rationale) {
+            profile[`${domain}_kindred_spirit_${i + 1}_rationale`] = rationale.replace(')', '').trim();
+          }
+        });
+      }
+    }
+
+    if (challengingStart !== -1) {
+      const challengingSection = fullText.substring(challengingStart);
+      const challengingMatches = challengingSection.match(/- (.*?), [""].*? \((.*?)\)(.*)/g);
+      
+      if (challengingMatches) {
+        challengingMatches.slice(0, 5).forEach((match, i) => {
+          const [name, work, rationale] = match.split(/,|\(/);
+          profile[`${domain}_challenging_voice_${i + 1}`] = name.replace('- ', '').trim();
+          if (work) {
+            profile[`${domain}_challenging_voice_${i + 1}_classic`] = work.trim();
+          }
+          if (rationale) {
+            profile[`${domain}_challenging_voice_${i + 1}_rationale`] = rationale.replace(')', '').trim();
+          }
+        });
+      }
+    }
+  });
+
+  // Extract conclusion and next steps
+  const concludingAnalysis = parseSection(analysisText, 'concluding_analysis');
+  if (concludingAnalysis) {
+    const parts = concludingAnalysis.split('\n');
+    if (parts.length >= 2) {
+      profile.conclusion = parts[0].trim();
+      profile.next_steps = parts.slice(1).join('\n').trim();
+    } else {
+      profile.conclusion = concludingAnalysis.trim();
+    }
+  }
+
+  return profile;
+}
+
 async function generateAnalysis(answers_json: string, section: number): Promise<string> {
   const basePrompt = `#Background
 Metaframework of philosophical DNA
@@ -113,7 +256,7 @@ Remember to:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: "anthropic/claude-3.5-sonnet",
+      model: "anthropic/claude-3-sonnet",
       messages: [
         {
           role: "user",
@@ -197,8 +340,13 @@ serve(async (req) => {
 
     // Combine all sections
     const completeAnalysis = `${section1}\n\n${section2}\n\n${section3}`;
+    
+    // Parse the complete analysis
+    console.log('Parsing complete analysis...');
+    const parsedProfile = parsePhilosophicalProfile(completeAnalysis);
+    console.log('Parsed profile:', parsedProfile);
 
-    // Store the complete analysis in Supabase using the original schema
+    // Store the complete analysis in Supabase
     const { data: analysisData, error: analysisError } = await supabase
       .from('dna_analysis_results')
       .insert({
@@ -209,7 +357,8 @@ serve(async (req) => {
           section1,
           section2,
           section3
-        }
+        },
+        ...parsedProfile
       })
       .select()
       .single();
@@ -237,4 +386,3 @@ serve(async (req) => {
     );
   }
 });
-
