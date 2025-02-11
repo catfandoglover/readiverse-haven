@@ -44,7 +44,7 @@ Analysis of answers from the philosophical decision trees representing your phil
 - Your Growth Edges (3)
 
 ### Domain Analyses (Only Theology and Ontology for this section)
-One sentence per domain capturing your characteristic approach
+For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
 
 ### Thinker Analysis (Only for Theology and Ontology)
 For each domain:
@@ -57,7 +57,7 @@ For each domain:
   } else if (section === 2) {
     sectionPrompt = `
 ### Domain Analyses (Only Epistemology and Ethics for this section)
-One sentence per domain capturing your characteristic approach
+For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
 
 ### Thinker Analysis (Only for Epistemology and Ethics)
 For each domain:
@@ -66,11 +66,13 @@ For each domain:
 - Thinker, Work (date) - how their key argument resonates with your thinking
 
 **Your Challenging Voices** (5 per domain):
-- Thinker, Work (date) - how their key argument challenges your approach`;
+- Thinker, Work (date) - how their key argument challenges your approach
+
+Remember to maintain second person perspective throughout this section, explicitly using "you" and "your" in each analysis.`;
   } else {
     sectionPrompt = `
 ### Domain Analyses (Only Politics and Aesthetics for this section)
-One sentence per domain capturing your characteristic approach
+For each domain, write a sentence capturing your characteristic approach, starting with "Your approach to..."
 
 ### Thinker Analysis (Only for Politics and Aesthetics)
 For each domain:
@@ -82,7 +84,7 @@ For each domain:
 - Thinker, Work (date) - how their key argument challenges your approach
 
 ## Concluding Analysis
-Brief synthesis of your overall philosophical profile, highlighting key themes and potential directions for your development.`;
+Brief synthesis of your overall philosophical profile, highlighting key themes and potential directions for your development. Address your unique combination of approaches and where your philosophical journey might lead you next.`;
   }
 
   const fullPrompt = `${basePrompt}
@@ -98,7 +100,9 @@ ${sectionPrompt}
 Remember to:
 1. Always use second person ("you", "your") throughout the analysis
 2. Format your response with XML-style tags appropriate for this section
-3. Make the analysis feel personal and directly addressed to the subject`;
+3. Make the analysis feel personal and directly addressed to the subject
+4. Begin each domain analysis with "Your approach to..."
+5. Frame all observations in terms of your personal philosophical tendencies`;
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
