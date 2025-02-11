@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Loading } from "@/components/ui/loading";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -430,9 +431,7 @@ const DNAAssessment = () => {
           />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="font-oxanium text-lg">
-            {isInitializing ? 'Initializing assessment...' : 'Loading next question...'}
-          </div>
+          <Loading />
         </div>
       </div>
     );
