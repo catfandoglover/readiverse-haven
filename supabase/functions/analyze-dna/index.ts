@@ -14,23 +14,77 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function findNestedContent(text: string, tag: string): string | null {
+  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 's');
+  const match = text.match(regex);
+  return match ? match[1].trim() : null;
+}
+
 function parsePhilosophicalProfile(text: string): Record<string, string> {
   const profile: Record<string, string> = {};
   
-  // First, remove the outer philosophical_profile tags and get just the inner content
-  const cleanedText = text.replace(/<\/?philosophical_profile>/g, '');
-  
-  // Define a regex pattern that matches XML-like tags and their content
-  const tagPattern = /<([^>]+)>([\s\S]*?)<\/\1>/g;
-  
-  // Find all matches in the text
-  let match;
-  while ((match = tagPattern.exec(cleanedText)) !== null) {
-    const [_, tag, content] = match;
-    // Clean up the content by removing extra whitespace and newlines
-    profile[tag] = content.trim();
+  // First find the primary section content
+  const primarySection = findNestedContent(text, 'primary_section');
+  if (primarySection) {
+    profile.archetype = findNestedContent(primarySection, 'archetype') || '';
+    profile.archetype_definition = findNestedContent(primarySection, 'archetype_definition') || '';
+    profile.introduction = findNestedContent(primarySection, 'introduction') || '';
   }
-  
+
+  // Find core dynamics
+  const coreDynamics = findNestedContent(text, 'core_dynamics');
+  if (coreDynamics) {
+    profile.key_tension_1 = findNestedContent(coreDynamics, 'key_tension_1') || '';
+    profile.key_tension_2 = findNestedContent(coreDynamics, 'key_tension_2') || '';
+    profile.key_tension_3 = findNestedContent(coreDynamics, 'key_tension_3') || '';
+    profile.natural_strength_1 = findNestedContent(coreDynamics, 'natural_strength_1') || '';
+    profile.natural_strength_2 = findNestedContent(coreDynamics, 'natural_strength_2') || '';
+    profile.natural_strength_3 = findNestedContent(coreDynamics, 'natural_strength_3') || '';
+    profile.growth_edges_1 = findNestedContent(coreDynamics, 'growth_edges_1') || '';
+    profile.growth_edges_2 = findNestedContent(coreDynamics, 'growth_edges_2') || '';
+    profile.growth_edges_3 = findNestedContent(coreDynamics, 'growth_edges_3') || '';
+  }
+
+  // Find domain analyses
+  const domainAnalyses = findNestedContent(text, 'domain_analyses');
+  if (domainAnalyses) {
+    profile.theology_introduction = findNestedContent(domainAnalyses, 'theology_introduction') || '';
+    profile.ontology_introduction = findNestedContent(domainAnalyses, 'ontology_introduction') || '';
+    profile.epistemology_introduction = findNestedContent(domainAnalyses, 'epistemology_introduction') || '';
+    profile.ethics_introduction = findNestedContent(domainAnalyses, 'ethics_introduction') || '';
+    profile.politics_introduction = findNestedContent(domainAnalyses, 'politics_introduction') || '';
+    profile.aesthetics_introduction = findNestedContent(domainAnalyses, 'aesthetics_introduction') || '';
+  }
+
+  // Find thinker analysis
+  const thinkerAnalysis = findNestedContent(text, 'thinker_analysis');
+  if (thinkerAnalysis) {
+    // Process each domain's thinkers
+    ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'].forEach(domain => {
+      // Process kindred spirits
+      for (let i = 1; i <= 5; i++) {
+        const baseKey = `${domain}_kindred_spirit_${i}`;
+        profile[baseKey] = findNestedContent(thinkerAnalysis, baseKey) || '';
+        profile[`${baseKey}_classic`] = findNestedContent(thinkerAnalysis, `${baseKey}_classic`) || '';
+        profile[`${baseKey}_rationale`] = findNestedContent(thinkerAnalysis, `${baseKey}_rationale`) || '';
+      }
+      // Process challenging voices
+      for (let i = 1; i <= 5; i++) {
+        const baseKey = `${domain}_challenging_voice_${i}`;
+        profile[baseKey] = findNestedContent(thinkerAnalysis, baseKey) || '';
+        profile[`${baseKey}_classic`] = findNestedContent(thinkerAnalysis, `${baseKey}_classic`) || '';
+        profile[`${baseKey}_rationale`] = findNestedContent(thinkerAnalysis, `${baseKey}_rationale`) || '';
+      }
+    });
+  }
+
+  // Find concluding analysis
+  const concludingAnalysis = findNestedContent(text, 'concluding_analysis');
+  if (concludingAnalysis) {
+    profile.conclusion = findNestedContent(concludingAnalysis, 'conclusion') || '';
+    profile.next_steps = findNestedContent(concludingAnalysis, 'next_steps') || '';
+  }
+
   console.log('Parsed profile:', JSON.stringify(profile, null, 2));
   return profile;
 }
