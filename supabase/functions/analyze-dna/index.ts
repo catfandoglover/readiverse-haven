@@ -30,112 +30,72 @@ function parsePhilosophicalProfile(text: string): Record<string, string> {
   const profile: Record<string, string> = {};
   
   const sections = findAllInstancesContent(text, 'philosophical_profile');
-  const combinedText = sections.join('\n');
+  console.log('Found sections:', sections.length);
   
-  // First find the primary section content
-  const primarySection = findNestedContent(combinedText, 'primary_section');
-  if (primarySection) {
-    profile.archetype = findNestedContent(primarySection, 'archetype') || '';
-    profile.archetype_definition = findNestedContent(primarySection, 'archetype_definition') || '';
-    profile.introduction = findNestedContent(primarySection, 'introduction') || '';
-  }
+  sections.forEach((section, index) => {
+    console.log(`Processing section ${index + 1}`);
+    
+    const primarySection = findNestedContent(section, 'primary_section');
+    if (primarySection) {
+      profile.archetype = profile.archetype || findNestedContent(primarySection, 'archetype') || '';
+      profile.archetype_definition = profile.archetype_definition || findNestedContent(primarySection, 'archetype_definition') || '';
+      profile.introduction = profile.introduction || findNestedContent(primarySection, 'introduction') || '';
+    }
 
-  // Find core dynamics
-  const coreDynamics = findNestedContent(combinedText, 'core_dynamics');
-  if (coreDynamics) {
-    profile.key_tension_1 = findNestedContent(coreDynamics, 'key_tension_1') || '';
-    profile.key_tension_2 = findNestedContent(coreDynamics, 'key_tension_2') || '';
-    profile.key_tension_3 = findNestedContent(coreDynamics, 'key_tension_3') || '';
-    profile.natural_strength_1 = findNestedContent(coreDynamics, 'natural_strength_1') || '';
-    profile.natural_strength_2 = findNestedContent(coreDynamics, 'natural_strength_2') || '';
-    profile.natural_strength_3 = findNestedContent(coreDynamics, 'natural_strength_3') || '';
-    profile.growth_edges_1 = findNestedContent(coreDynamics, 'growth_edges_1') || '';
-    profile.growth_edges_2 = findNestedContent(coreDynamics, 'growth_edges_2') || '';
-    profile.growth_edges_3 = findNestedContent(coreDynamics, 'growth_edges_3') || '';
-  }
+    const coreDynamics = findNestedContent(section, 'core_dynamics');
+    if (coreDynamics) {
+      profile.key_tension_1 = profile.key_tension_1 || findNestedContent(coreDynamics, 'key_tension_1') || '';
+      profile.key_tension_2 = profile.key_tension_2 || findNestedContent(coreDynamics, 'key_tension_2') || '';
+      profile.key_tension_3 = profile.key_tension_3 || findNestedContent(coreDynamics, 'key_tension_3') || '';
+      profile.natural_strength_1 = profile.natural_strength_1 || findNestedContent(coreDynamics, 'natural_strength_1') || '';
+      profile.natural_strength_2 = profile.natural_strength_2 || findNestedContent(coreDynamics, 'natural_strength_2') || '';
+      profile.natural_strength_3 = profile.natural_strength_3 || findNestedContent(coreDynamics, 'natural_strength_3') || '';
+      profile.growth_edges_1 = profile.growth_edges_1 || findNestedContent(coreDynamics, 'growth_edges_1') || '';
+      profile.growth_edges_2 = profile.growth_edges_2 || findNestedContent(coreDynamics, 'growth_edges_2') || '';
+      profile.growth_edges_3 = profile.growth_edges_3 || findNestedContent(coreDynamics, 'growth_edges_3') || '';
+    }
 
-  // Find domain analyses from all sections
-  const domainSections = findAllInstancesContent(combinedText, 'domain_analyses');
-  domainSections.forEach(section => {
-    // Try to extract each domain introduction, keeping the first non-empty value found
-    if (!profile.theology_introduction) {
-      profile.theology_introduction = findNestedContent(section, 'theology_introduction') || '';
+    const domainAnalyses = findNestedContent(section, 'domain_analyses');
+    if (domainAnalyses) {
+      profile.theology_introduction = profile.theology_introduction || findNestedContent(domainAnalyses, 'theology_introduction') || '';
+      profile.ontology_introduction = profile.ontology_introduction || findNestedContent(domainAnalyses, 'ontology_introduction') || '';
+      profile.epistemology_introduction = profile.epistemology_introduction || findNestedContent(domainAnalyses, 'epistemology_introduction') || '';
+      profile.ethics_introduction = profile.ethics_introduction || findNestedContent(domainAnalyses, 'ethics_introduction') || '';
+      profile.politics_introduction = profile.politics_introduction || findNestedContent(domainAnalyses, 'politics_introduction') || '';
+      profile.aesthetics_introduction = profile.aesthetics_introduction || findNestedContent(domainAnalyses, 'aesthetics_introduction') || '';
     }
-    if (!profile.ontology_introduction) {
-      profile.ontology_introduction = findNestedContent(section, 'ontology_introduction') || '';
-    }
-    if (!profile.epistemology_introduction) {
-      profile.epistemology_introduction = findNestedContent(section, 'epistemology_introduction') || '';
-    }
-    if (!profile.ethics_introduction) {
-      profile.ethics_introduction = findNestedContent(section, 'ethics_introduction') || '';
-    }
-    if (!profile.politics_introduction) {
-      profile.politics_introduction = findNestedContent(section, 'politics_introduction') || '';
-    }
-    if (!profile.aesthetics_introduction) {
-      profile.aesthetics_introduction = findNestedContent(section, 'aesthetics_introduction') || '';
-    }
-  });
 
-  // Find thinker analysis from all sections
-  const thinkerSections = findAllInstancesContent(combinedText, 'thinker_analysis');
-  thinkerSections.forEach(section => {
-    ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'].forEach(domain => {
-      // Process kindred spirits
-      for (let i = 1; i <= 5; i++) {
-        const baseKey = `${domain}_kindred_spirit_${i}`;
-        if (!profile[baseKey]) {
-          profile[baseKey] = findNestedContent(section, baseKey) || '';
-          profile[`${baseKey}_classic`] = findNestedContent(section, `${baseKey}_classic`) || '';
-          profile[`${baseKey}_rationale`] = findNestedContent(section, `${baseKey}_rationale`) || '';
+    const thinkerAnalysis = findNestedContent(section, 'thinker_analysis');
+    if (thinkerAnalysis) {
+      ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'].forEach(domain => {
+        for (let i = 1; i <= 5; i++) {
+          const ksBase = `${domain}_kindred_spirit_${i}`;
+          profile[ksBase] = profile[ksBase] || findNestedContent(thinkerAnalysis, ksBase) || '';
+          profile[`${ksBase}_classic`] = profile[`${ksBase}_classic`] || findNestedContent(thinkerAnalysis, `${ksBase}_classic`) || '';
+          profile[`${ksBase}_rationale`] = profile[`${ksBase}_rationale`] || findNestedContent(thinkerAnalysis, `${ksBase}_rationale`) || '';
+
+          const cvBase = `${domain}_challenging_voice_${i}`;
+          profile[cvBase] = profile[cvBase] || findNestedContent(thinkerAnalysis, cvBase) || '';
+          profile[`${cvBase}_classic`] = profile[`${cvBase}_classic`] || findNestedContent(thinkerAnalysis, `${cvBase}_classic`) || '';
+          profile[`${cvBase}_rationale`] = profile[`${cvBase}_rationale`] || findNestedContent(thinkerAnalysis, `${cvBase}_rationale`) || '';
         }
-      }
-      // Process challenging voices
-      for (let i = 1; i <= 5; i++) {
-        const baseKey = `${domain}_challenging_voice_${i}`;
-        if (!profile[baseKey]) {
-          profile[baseKey] = findNestedContent(section, baseKey) || '';
-          profile[`${baseKey}_classic`] = findNestedContent(section, `${baseKey}_classic`) || '';
-          profile[`${baseKey}_rationale`] = findNestedContent(section, `${baseKey}_rationale`) || '';
-        }
-      }
-    });
-  });
+      });
+    }
 
-  // Find concluding analysis
-  const concludingSection = findNestedContent(combinedText, 'concluding_analysis');
-  if (concludingSection) {
-    profile.conclusion = findNestedContent(concludingSection, 'conclusion') || '';
-    profile.next_steps = findNestedContent(concludingSection, 'next_steps') || '';
-  }
-
-  // Ensure all fields are initialized with empty strings if not found
-  const allDomains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  allDomains.forEach(domain => {
-    for (let i = 1; i <= 5; i++) {
-      // Initialize kindred spirits fields
-      const ksBase = `${domain}_kindred_spirit_${i}`;
-      profile[ksBase] = profile[ksBase] || '';
-      profile[`${ksBase}_classic`] = profile[`${ksBase}_classic`] || '';
-      profile[`${ksBase}_rationale`] = profile[`${ksBase}_rationale`] || '';
-
-      // Initialize challenging voices fields
-      const cvBase = `${domain}_challenging_voice_${i}`;
-      profile[cvBase] = profile[cvBase] || '';
-      profile[`${cvBase}_classic`] = profile[`${cvBase}_classic`] || '';
-      profile[`${cvBase}_rationale`] = profile[`${cvBase}_rationale`] || '';
+    const concludingAnalysis = findNestedContent(section, 'concluding_analysis');
+    if (concludingAnalysis) {
+      profile.conclusion = profile.conclusion || findNestedContent(concludingAnalysis, 'conclusion') || '';
+      profile.next_steps = profile.next_steps || findNestedContent(concludingAnalysis, 'next_steps') || '';
     }
   });
 
-  // Log debug information
   const populatedFields = Object.entries(profile)
     .filter(([_, value]) => value && value.length > 0)
     .map(([key]) => key);
   
   console.log('Populated fields:', populatedFields);
   console.log('Total fields populated:', populatedFields.length);
-  console.log('Parsed profile:', JSON.stringify(profile, null, 2));
+  console.log('Fields with content:', Object.keys(profile).filter(key => profile[key]));
   
   return profile;
 }
@@ -183,22 +143,15 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-// Function to aggregate all three sections of analysis
 async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: string, raw_responses: any[], parsed_content: Record<string, string> }> {
   const section1 = await generateAnalysis(answers_json, 1);
   const section2 = await generateAnalysis(answers_json, 2);
   const section3 = await generateAnalysis(answers_json, 3);
   
-  // Extract the content from each philosophical_profile section
-  const extractContent = (text: string) => {
-    const match = text.match(/<philosophical_profile>([\s\S]*?)<\/philosophical_profile>/);
-    return match ? match[1] : text;
-  };
-
   const combinedContent = `<philosophical_profile>
-    ${extractContent(section1.content)}
-    ${extractContent(section2.content)}
-    ${extractContent(section3.content)}
+    ${section1.content}
+    ${section2.content}
+    ${section3.content}
   </philosophical_profile>`;
   
   console.log('Combined content before parsing:', combinedContent);
@@ -224,10 +177,8 @@ serve(async (req) => {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
 
-      // Generate complete analysis text combining all three sections
       const { analysis, raw_responses, parsed_content } = await generateCompleteAnalysis(answers_json);
       
-      // Log the database insert data
       console.log('Database insert data:', {
         assessment_id,
         raw_response: raw_responses,
@@ -246,7 +197,6 @@ serve(async (req) => {
         conclusion: parsed_content.conclusion,
         next_steps: parsed_content.next_steps,
         
-        // Introductions for each section
         theology_introduction: parsed_content.theology_introduction,
         ontology_introduction: parsed_content.ontology_introduction,
         epistemology_introduction: parsed_content.epistemology_introduction,
@@ -254,7 +204,6 @@ serve(async (req) => {
         politics_introduction: parsed_content.politics_introduction,
         aesthetics_introduction: parsed_content.aesthetics_introduction,
         
-        // Map all the kindred spirits, challenging voices, and their rationales
         ...Object.entries(parsed_content).reduce((acc, [key, value]) => {
           if (key.match(/(theology|ontology|epistemology|ethics|politics|aesthetics)_(kindred_spirit|challenging_voice)_[1-5](_classic|_rationale)?$/)) {
             acc[key] = value;
@@ -263,13 +212,11 @@ serve(async (req) => {
         }, {} as Record<string, string>)
       });
 
-      // Store complete analysis in the database
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
         analysis_text: analysis,
-        analysis_type: 'section_1', // Since we're now storing everything in one entry
-        raw_response: raw_responses, // Store the raw responses as JSONB
-        // Map all parsed content fields to their corresponding columns
+        analysis_type: 'section_1',
+        raw_response: raw_responses,
         archetype: parsed_content.archetype,
         introduction: parsed_content.introduction,
         archetype_definition: parsed_content.archetype_definition,
@@ -285,7 +232,6 @@ serve(async (req) => {
         conclusion: parsed_content.conclusion,
         next_steps: parsed_content.next_steps,
         
-        // Introductions for each section
         theology_introduction: parsed_content.theology_introduction,
         ontology_introduction: parsed_content.ontology_introduction,
         epistemology_introduction: parsed_content.epistemology_introduction,
@@ -293,7 +239,6 @@ serve(async (req) => {
         politics_introduction: parsed_content.politics_introduction,
         aesthetics_introduction: parsed_content.aesthetics_introduction,
         
-        // Map all the kindred spirits, challenging voices, and their rationales
         ...Object.entries(parsed_content).reduce((acc, [key, value]) => {
           if (key.match(/(theology|ontology|epistemology|ethics|politics|aesthetics)_(kindred_spirit|challenging_voice)_[1-5](_classic|_rationale)?$/)) {
             acc[key] = value;
@@ -304,7 +249,6 @@ serve(async (req) => {
 
       if (storeError) {
         console.error('Error storing analysis:', storeError);
-        console.error('Store error details:', JSON.stringify(storeError, null, 2));
         throw storeError;
       }
       
