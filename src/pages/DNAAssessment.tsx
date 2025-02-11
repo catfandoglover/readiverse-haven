@@ -43,6 +43,58 @@ const DNAAssessment = () => {
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
 
+  const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
+    console.log('Starting DNA analysis...');
+
+    // Analyze section 1: Theology & Ontology
+    try {
+      const { error: section1Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 1,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section1Error) {
+        console.error('Error analyzing DNA results section 1:', section1Error);
+        throw section1Error;
+      }
+
+      // Analyze section 2: Epistemology & Ethics
+      const { error: section2Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 2,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section2Error) {
+        console.error('Error analyzing DNA results section 2:', section2Error);
+        throw section2Error;
+      }
+
+      // Analyze section 3: Politics & Aesthetics
+      const { error: section3Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 3,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section3Error) {
+        console.error('Error analyzing DNA results section 3:', section3Error);
+        throw section3Error;
+      }
+
+    } catch (error) {
+      console.error('Error in DNA analysis:', error);
+      toast.error('Error analyzing results');
+    }
+  };
+
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
@@ -312,28 +364,7 @@ const DNAAssessment = () => {
             });
 
             // Then trigger analysis in the background
-            try {
-              console.log('Starting DNA analysis...');
-              const { error: analysisError } = await supabase.functions
-                .invoke('analyze-dna', {
-                  body: {
-                    assessmentId,
-                    answers: updatedAnswers
-                  }
-                });
-
-              if (analysisError) {
-                console.error('Error analyzing DNA results:', analysisError);
-                toast.error('Error analyzing results');
-                return;
-              }
-
-              console.log('DNA analysis complete');
-
-            } catch (error) {
-              console.error('Error in DNA analysis:', error);
-              toast.error('Error analyzing results');
-            }
+            await initAnalysis(updatedAnswers, assessmentId);
           } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],

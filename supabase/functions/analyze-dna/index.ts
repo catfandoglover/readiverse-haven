@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -401,13 +402,27 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const { answers_json, section } = await req.json();
+      const { answers_json, section, assessment_id } = await req.json();
       
-      if (!answers_json || !section) {
-        throw new Error('Missing required fields: answers_json and section are required');
+      if (!answers_json || !section || !assessment_id) {
+        throw new Error('Missing required fields: answers_json, section, and assessment_id are required');
       }
 
+      // Generate analysis text
       const analysis = await generateAnalysis(answers_json, section);
+      
+      // Store analysis in the database
+      const { error: storeError } = await supabase.from('dna_analysis_results').insert({
+        assessment_id: assessment_id,
+        analysis_text: analysis,
+        analysis_type: section === 1 ? 'THEOLOGY_ONTOLOGY' : 
+                      section === 2 ? 'EPISTEMOLOGY_ETHICS' : 'POLITICS_AESTHETICS'
+      });
+
+      if (storeError) {
+        console.error('Error storing analysis:', storeError);
+        throw storeError;
+      }
       
       return new Response(
         JSON.stringify({ analysis }),
