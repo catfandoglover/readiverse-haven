@@ -15,16 +15,25 @@ const corsHeaders = {
 };
 
 function findNestedContent(text: string, tag: string): string | null {
-  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 's');
+  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 'si');
   const match = text.match(regex);
   return match ? match[1].trim() : null;
+}
+
+function findAllInstancesContent(text: string, tag: string): string[] {
+  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 'sig');
+  const matches = text.matchAll(regex);
+  return Array.from(matches).map(match => match[1].trim());
 }
 
 function parsePhilosophicalProfile(text: string): Record<string, string> {
   const profile: Record<string, string> = {};
   
+  const sections = findAllInstancesContent(text, 'philosophical_profile');
+  const combinedText = sections.join('\n');
+  
   // First find the primary section content
-  const primarySection = findNestedContent(text, 'primary_section');
+  const primarySection = findNestedContent(combinedText, 'primary_section');
   if (primarySection) {
     profile.archetype = findNestedContent(primarySection, 'archetype') || '';
     profile.archetype_definition = findNestedContent(primarySection, 'archetype_definition') || '';
@@ -32,7 +41,7 @@ function parsePhilosophicalProfile(text: string): Record<string, string> {
   }
 
   // Find core dynamics
-  const coreDynamics = findNestedContent(text, 'core_dynamics');
+  const coreDynamics = findNestedContent(combinedText, 'core_dynamics');
   if (coreDynamics) {
     profile.key_tension_1 = findNestedContent(coreDynamics, 'key_tension_1') || '';
     profile.key_tension_2 = findNestedContent(coreDynamics, 'key_tension_2') || '';
@@ -45,47 +54,71 @@ function parsePhilosophicalProfile(text: string): Record<string, string> {
     profile.growth_edges_3 = findNestedContent(coreDynamics, 'growth_edges_3') || '';
   }
 
-  // Find domain analyses
-  const domainAnalyses = findNestedContent(text, 'domain_analyses');
-  if (domainAnalyses) {
-    profile.theology_introduction = findNestedContent(domainAnalyses, 'theology_introduction') || '';
-    profile.ontology_introduction = findNestedContent(domainAnalyses, 'ontology_introduction') || '';
-    profile.epistemology_introduction = findNestedContent(domainAnalyses, 'epistemology_introduction') || '';
-    profile.ethics_introduction = findNestedContent(domainAnalyses, 'ethics_introduction') || '';
-    profile.politics_introduction = findNestedContent(domainAnalyses, 'politics_introduction') || '';
-    profile.aesthetics_introduction = findNestedContent(domainAnalyses, 'aesthetics_introduction') || '';
-  }
+  // Find domain analyses from all sections
+  const domainSections = findAllInstancesContent(combinedText, 'domain_analyses');
+  domainSections.forEach(section => {
+    // Try to extract each domain introduction, keeping the first non-empty value found
+    if (!profile.theology_introduction) {
+      profile.theology_introduction = findNestedContent(section, 'theology_introduction') || '';
+    }
+    if (!profile.ontology_introduction) {
+      profile.ontology_introduction = findNestedContent(section, 'ontology_introduction') || '';
+    }
+    if (!profile.epistemology_introduction) {
+      profile.epistemology_introduction = findNestedContent(section, 'epistemology_introduction') || '';
+    }
+    if (!profile.ethics_introduction) {
+      profile.ethics_introduction = findNestedContent(section, 'ethics_introduction') || '';
+    }
+    if (!profile.politics_introduction) {
+      profile.politics_introduction = findNestedContent(section, 'politics_introduction') || '';
+    }
+    if (!profile.aesthetics_introduction) {
+      profile.aesthetics_introduction = findNestedContent(section, 'aesthetics_introduction') || '';
+    }
+  });
 
-  // Find thinker analysis
-  const thinkerAnalysis = findNestedContent(text, 'thinker_analysis');
-  if (thinkerAnalysis) {
-    // Process each domain's thinkers
+  // Find thinker analysis from all sections
+  const thinkerSections = findAllInstancesContent(combinedText, 'thinker_analysis');
+  thinkerSections.forEach(section => {
     ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'].forEach(domain => {
       // Process kindred spirits
       for (let i = 1; i <= 5; i++) {
         const baseKey = `${domain}_kindred_spirit_${i}`;
-        profile[baseKey] = findNestedContent(thinkerAnalysis, baseKey) || '';
-        profile[`${baseKey}_classic`] = findNestedContent(thinkerAnalysis, `${baseKey}_classic`) || '';
-        profile[`${baseKey}_rationale`] = findNestedContent(thinkerAnalysis, `${baseKey}_rationale`) || '';
+        if (!profile[baseKey]) {
+          profile[baseKey] = findNestedContent(section, baseKey) || '';
+          profile[`${baseKey}_classic`] = findNestedContent(section, `${baseKey}_classic`) || '';
+          profile[`${baseKey}_rationale`] = findNestedContent(section, `${baseKey}_rationale`) || '';
+        }
       }
       // Process challenging voices
       for (let i = 1; i <= 5; i++) {
         const baseKey = `${domain}_challenging_voice_${i}`;
-        profile[baseKey] = findNestedContent(thinkerAnalysis, baseKey) || '';
-        profile[`${baseKey}_classic`] = findNestedContent(thinkerAnalysis, `${baseKey}_classic`) || '';
-        profile[`${baseKey}_rationale`] = findNestedContent(thinkerAnalysis, `${baseKey}_rationale`) || '';
+        if (!profile[baseKey]) {
+          profile[baseKey] = findNestedContent(section, baseKey) || '';
+          profile[`${baseKey}_classic`] = findNestedContent(section, `${baseKey}_classic`) || '';
+          profile[`${baseKey}_rationale`] = findNestedContent(section, `${baseKey}_rationale`) || '';
+        }
       }
     });
-  }
+  });
 
   // Find concluding analysis
-  const concludingAnalysis = findNestedContent(text, 'concluding_analysis');
-  if (concludingAnalysis) {
-    profile.conclusion = findNestedContent(concludingAnalysis, 'conclusion') || '';
-    profile.next_steps = findNestedContent(concludingAnalysis, 'next_steps') || '';
+  const concludingSection = findNestedContent(combinedText, 'concluding_analysis');
+  if (concludingSection) {
+    profile.conclusion = findNestedContent(concludingSection, 'conclusion') || '';
+    profile.next_steps = findNestedContent(concludingSection, 'next_steps') || '';
   }
 
+  // Add additional logging to track what was found
+  const populatedFields = Object.entries(profile)
+    .filter(([_, value]) => value && value.length > 0)
+    .map(([key]) => key);
+  
+  console.log('Populated fields:', populatedFields);
+  console.log('Total fields populated:', populatedFields.length);
   console.log('Parsed profile:', JSON.stringify(profile, null, 2));
+  
   return profile;
 }
 
@@ -152,7 +185,6 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ analysi
   
   console.log('Combined content before parsing:', combinedContent);
   const parsedContent = parsePhilosophicalProfile(combinedContent);
-  console.log('Final parsed content:', JSON.stringify(parsedContent, null, 2));
   
   return {
     analysis: combinedContent,
