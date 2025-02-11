@@ -15,114 +15,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function extractContent(text: string, tag: string): string {
-  // Simpler, more forgiving regex pattern
-  const pattern = new RegExp(`<${tag}>(.*?)</${tag}>`, 'is');
-  const match = text.match(pattern);
-  return match ? match[1].trim() : '';
-}
-
-function parseSection(text: string, profile: Record<string, string>) {
-  // Primary section
-  const primarySection = extractContent(text, 'primary_section');
-  if (primarySection) {
-    profile.archetype = profile.archetype || extractContent(primarySection, 'archetype');
-    profile.archetype_definition = profile.archetype_definition || extractContent(primarySection, 'archetype_definition');
-    profile.introduction = profile.introduction || extractContent(primarySection, 'introduction');
-  }
-
-  // Core dynamics
-  const coreDynamics = extractContent(text, 'core_dynamics');
-  if (coreDynamics) {
-    profile.key_tension_1 = profile.key_tension_1 || extractContent(coreDynamics, 'key_tension_1');
-    profile.key_tension_2 = profile.key_tension_2 || extractContent(coreDynamics, 'key_tension_2');
-    profile.key_tension_3 = profile.key_tension_3 || extractContent(coreDynamics, 'key_tension_3');
-    profile.natural_strength_1 = profile.natural_strength_1 || extractContent(coreDynamics, 'natural_strength_1');
-    profile.natural_strength_2 = profile.natural_strength_2 || extractContent(coreDynamics, 'natural_strength_2');
-    profile.natural_strength_3 = profile.natural_strength_3 || extractContent(coreDynamics, 'natural_strength_3');
-    profile.growth_edges_1 = profile.growth_edges_1 || extractContent(coreDynamics, 'growth_edges_1');
-    profile.growth_edges_2 = profile.growth_edges_2 || extractContent(coreDynamics, 'growth_edges_2');
-    profile.growth_edges_3 = profile.growth_edges_3 || extractContent(coreDynamics, 'growth_edges_3');
-  }
-
-  // Domain analyses
-  const domainAnalyses = extractContent(text, 'domain_analyses');
-  if (domainAnalyses) {
-    const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-    domains.forEach(domain => {
-      const key = `${domain}_introduction`;
-      profile[key] = profile[key] || extractContent(domainAnalyses, key);
-    });
-  }
-
-  // Thinker analysis
-  const thinkerAnalysis = extractContent(text, 'thinker_analysis');
-  if (thinkerAnalysis) {
-    const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-    domains.forEach(domain => {
-      for (let i = 1; i <= 5; i++) {
-        ['kindred_spirit', 'challenging_voice'].forEach(type => {
-          const base = `${domain}_${type}_${i}`;
-          profile[base] = profile[base] || extractContent(thinkerAnalysis, base);
-          profile[`${base}_classic`] = profile[`${base}_classic`] || extractContent(thinkerAnalysis, `${base}_classic`);
-          profile[`${base}_rationale`] = profile[`${base}_rationale`] || extractContent(thinkerAnalysis, `${base}_rationale`);
-        });
-      }
-    });
-  }
-
-  // Concluding analysis
-  const concludingAnalysis = extractContent(text, 'concluding_analysis');
-  if (concludingAnalysis) {
-    profile.conclusion = profile.conclusion || extractContent(concludingAnalysis, 'conclusion');
-    profile.next_steps = profile.next_steps || extractContent(concludingAnalysis, 'next_steps');
-  }
-}
-
-function parsePhilosophicalProfile(responses: string[]): Record<string, string> {
-  const profile: Record<string, string> = {};
-  
-  // Initialize all possible fields with empty strings
-  const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  domains.forEach(domain => {
-    profile[`${domain}_introduction`] = '';
-    for (let i = 1; i <= 5; i++) {
-      ['kindred_spirit', 'challenging_voice'].forEach(type => {
-        const base = `${domain}_${type}_${i}`;
-        profile[base] = '';
-        profile[`${base}_classic`] = '';
-        profile[`${base}_rationale`] = '';
-      });
-    }
-  });
-
-  // Core fields initialization
-  ['archetype', 'archetype_definition', 'introduction', 
-   'key_tension_1', 'key_tension_2', 'key_tension_3',
-   'natural_strength_1', 'natural_strength_2', 'natural_strength_3',
-   'growth_edges_1', 'growth_edges_2', 'growth_edges_3',
-   'conclusion', 'next_steps'].forEach(field => {
-    profile[field] = '';
-  });
-
-  // Parse each response separately
-  responses.forEach((response, index) => {
-    console.log(`Processing response ${index + 1}`);
-    parseSection(response, profile);
-  });
-
-  // Log results
-  const populatedFields = Object.entries(profile)
-    .filter(([_, value]) => value.length > 0)
-    .map(([key]) => key);
-
-  console.log('Total fields populated:', populatedFields.length);
-  console.log('Populated fields:', populatedFields);
-  
-  return profile;
-}
-
-async function generateAnalysis(answers_json: string, section: number): Promise<{ content: string, raw_response: any }> {
+async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
   const prompt = getPromptForSection(section, answers_json);
 
   try {
@@ -139,7 +32,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         messages: [
           {
             role: 'system',
-            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always structure your response exactly according to the XML template provided, filling in each section thoughtfully while maintaining the tags.'
+            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always return your response as a valid JSON object with the exact field names specified in the template.'
           },
           {
             role: 'user',
@@ -161,8 +54,19 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     }
 
     console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
+    
+    // Parse the JSON response
+    let parsedContent: Record<string, string>;
+    try {
+      parsedContent = JSON.parse(data.choices[0].message.content);
+    } catch (e) {
+      console.error('Error parsing JSON response:', e);
+      console.error('Raw content:', data.choices[0].message.content);
+      throw new Error('Invalid JSON response from AI');
+    }
+
     return {
-      content: data.choices[0].message.content,
+      content: parsedContent,
       raw_response: data
     };
   } catch (error) {
@@ -171,25 +75,22 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: string, raw_responses: any[], parsed_content: Record<string, string> }> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_responses: any[] }> {
   try {
     const section1 = await generateAnalysis(answers_json, 1);
     const section2 = await generateAnalysis(answers_json, 2);
     const section3 = await generateAnalysis(answers_json, 3);
     
-    const responses = [section1.content, section2.content, section3.content];
-    const parsedContent = parsePhilosophicalProfile(responses);
-    
-    const combinedContent = `<philosophical_profile>
-      ${section1.content}
-      ${section2.content}
-      ${section3.content}
-    </philosophical_profile>`;
+    // Merge all sections
+    const combinedContent = {
+      ...section1.content,
+      ...section2.content,
+      ...section3.content
+    };
     
     return {
       analysis: combinedContent,
-      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response],
-      parsed_content: parsedContent
+      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
     };
   } catch (error) {
     console.error('Error in generateCompleteAnalysis:', error);
@@ -210,74 +111,21 @@ serve(async (req) => {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
 
-      const { analysis, raw_responses, parsed_content } = await generateCompleteAnalysis(answers_json);
+      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
       
+      // Log the database insert data
       console.log('Database insert data:', {
         assessment_id,
         raw_response: raw_responses,
-        archetype: parsed_content.archetype,
-        introduction: parsed_content.introduction,
-        archetype_definition: parsed_content.archetype_definition,
-        key_tension_1: parsed_content.key_tension_1,
-        key_tension_2: parsed_content.key_tension_2,
-        key_tension_3: parsed_content.key_tension_3,
-        natural_strength_1: parsed_content.natural_strength_1,
-        natural_strength_2: parsed_content.natural_strength_2,
-        natural_strength_3: parsed_content.natural_strength_3,
-        growth_edges_1: parsed_content.growth_edges_1,
-        growth_edges_2: parsed_content.growth_edges_2,
-        growth_edges_3: parsed_content.growth_edges_3,
-        conclusion: parsed_content.conclusion,
-        next_steps: parsed_content.next_steps,
-        
-        theology_introduction: parsed_content.theology_introduction,
-        ontology_introduction: parsed_content.ontology_introduction,
-        epistemology_introduction: parsed_content.epistemology_introduction,
-        ethics_introduction: parsed_content.ethics_introduction,
-        politics_introduction: parsed_content.politics_introduction,
-        aesthetics_introduction: parsed_content.aesthetics_introduction,
-        
-        ...Object.entries(parsed_content).reduce((acc, [key, value]) => {
-          if (key.match(/(theology|ontology|epistemology|ethics|politics|aesthetics)_(kindred_spirit|challenging_voice)_[1-5](_classic|_rationale)?$/)) {
-            acc[key] = value;
-          }
-          return acc;
-        }, {} as Record<string, string>)
+        ...analysis
       });
 
       const { error: storeError } = await supabase.from('dna_analysis_results').insert({
         assessment_id: assessment_id,
-        analysis_text: analysis,
+        analysis_text: JSON.stringify(analysis),
         analysis_type: 'section_1',
         raw_response: raw_responses,
-        archetype: parsed_content.archetype,
-        introduction: parsed_content.introduction,
-        archetype_definition: parsed_content.archetype_definition,
-        key_tension_1: parsed_content.key_tension_1,
-        key_tension_2: parsed_content.key_tension_2,
-        key_tension_3: parsed_content.key_tension_3,
-        natural_strength_1: parsed_content.natural_strength_1,
-        natural_strength_2: parsed_content.natural_strength_2,
-        natural_strength_3: parsed_content.natural_strength_3,
-        growth_edges_1: parsed_content.growth_edges_1,
-        growth_edges_2: parsed_content.growth_edges_2,
-        growth_edges_3: parsed_content.growth_edges_3,
-        conclusion: parsed_content.conclusion,
-        next_steps: parsed_content.next_steps,
-        
-        theology_introduction: parsed_content.theology_introduction,
-        ontology_introduction: parsed_content.ontology_introduction,
-        epistemology_introduction: parsed_content.epistemology_introduction,
-        ethics_introduction: parsed_content.ethics_introduction,
-        politics_introduction: parsed_content.politics_introduction,
-        aesthetics_introduction: parsed_content.aesthetics_introduction,
-        
-        ...Object.entries(parsed_content).reduce((acc, [key, value]) => {
-          if (key.match(/(theology|ontology|epistemology|ethics|politics|aesthetics)_(kindred_spirit|challenging_voice)_[1-5](_classic|_rationale)?$/)) {
-            acc[key] = value;
-          }
-          return acc;
-        }, {} as Record<string, string>)
+        ...analysis
       });
 
       if (storeError) {
@@ -286,7 +134,7 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ analysis, parsed_content }),
+        JSON.stringify({ analysis }),
         { 
           headers: {
             ...corsHeaders,
