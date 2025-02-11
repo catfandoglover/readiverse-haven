@@ -279,28 +279,28 @@ Analysis of answers from the philosophical decision trees representing your phil
 
 <thinker_analysis>
   <theology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_1>
-  <theology_kindred_spirit_2>[Thinker, Work (Date)]</theology_kindred_spirit_2>
-  <theology_kindred_spirit_3>[Thinker, Work (Date)]</theology_kindred_spirit_3>
-  <theology_kindred_spirit_4>[Thinker, Work (Date)]</theology_kindred_spirit_4>
-  <theology_kindred_spirit_5>[Thinker, Work (Date)]</theology_kindred_spirit_5>
+  <theology_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_2>
+  <theology_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_3>
+  <theology_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_4>
+  <theology_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</theology_kindred_spirit_5>
 
   <theology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_1>
-  <theology_challenging_voice_2>[Thinker, Work (Date)]</theology_challenging_voice_2>
-  <theology_challenging_voice_3>[Thinker, Work (Date)]</theology_challenging_voice_3>
-  <theology_challenging_voice_4>[Thinker, Work (Date)]</theology_challenging_voice_4>
-  <theology_challenging_voice_5>[Thinker, Work (Date)]</theology_challenging_voice_5>
+  <theology_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_2>
+  <theology_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_3>
+  <theology_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_4>
+  <theology_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</theology_challenging_voice_5>
 
   <ontology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_1>
-  <ontology_kindred_spirit_2>[Thinker, Work (Date)]</ontology_kindred_spirit_2>
-  <ontology_kindred_spirit_3>[Thinker, Work (Date)]</ontology_kindred_spirit_3>
-  <ontology_kindred_spirit_4>[Thinker, Work (Date)]</ontology_kindred_spirit_4>
-  <ontology_kindred_spirit_5>[Thinker, Work (Date)]</ontology_kindred_spirit_5>
+  <ontology_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_2>
+  <ontology_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_3>
+  <ontology_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_4>
+  <ontology_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</ontology_kindred_spirit_5>
 
   <ontology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_1>
-  <ontology_challenging_voice_2>[Thinker, Work (Date)]</ontology_challenging_voice_2>
-  <ontology_challenging_voice_3>[Thinker, Work (Date)]</ontology_challenging_voice_3>
-  <ontology_challenging_voice_4>[Thinker, Work (Date)]</ontology_challenging_voice_4>
-  <ontology_challenging_voice_5>[Thinker, Work (Date)]</ontology_challenging_voice_5>
+  <ontology_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_2>
+  <ontology_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_3>
+  <ontology_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_4>
+  <ontology_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</ontology_challenging_voice_5>
 </thinker_analysis>
 
 </philosophical_profile>`;
@@ -321,28 +321,28 @@ Analysis of answers from the philosophical decision trees representing your phil
 
 <thinker_analysis>
   <epistemology_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_1>
-  <epistemology_kindred_spirit_2>[Thinker, Work (Date)]</epistemology_kindred_spirit_2>
-  <epistemology_kindred_spirit_3>[Thinker, Work (Date)]</epistemology_kindred_spirit_3>
-  <epistemology_kindred_spirit_4>[Thinker, Work (Date)]</epistemology_kindred_spirit_4>
-  <epistemology_kindred_spirit_5>[Thinker, Work (Date)]</epistemology_kindred_spirit_5>
+  <epistemology_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_2>
+  <epistemology_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_3>
+  <epistemology_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_4>
+  <epistemology_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</epistemology_kindred_spirit_5>
 
   <epistemology_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_1>
-  <epistemology_challenging_voice_2>[Thinker, Work (Date)]</epistemology_challenging_voice_2>
-  <epistemology_challenging_voice_3>[Thinker, Work (Date)]</epistemology_challenging_voice_3>
-  <epistemology_challenging_voice_4>[Thinker, Work (Date)]</epistemology_challenging_voice_4>
-  <epistemology_challenging_voice_5>[Thinker, Work (Date)]</epistemology_challenging_voice_5>
+  <epistemology_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_2>
+  <epistemology_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_3>
+  <epistemology_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_4>
+  <epistemology_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</epistemology_challenging_voice_5>
 
   <ethics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_1>
-  <ethics_kindred_spirit_2>[Thinker, Work (Date)]</ethics_kindred_spirit_2>
-  <ethics_kindred_spirit_3>[Thinker, Work (Date)]</ethics_kindred_spirit_3>
-  <ethics_kindred_spirit_4>[Thinker, Work (Date)]</ethics_kindred_spirit_4>
-  <ethics_kindred_spirit_5>[Thinker, Work (Date)]</ethics_kindred_spirit_5>
+  <ethics_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_2>
+  <ethics_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_3>
+  <ethics_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_4>
+  <ethics_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</ethics_kindred_spirit_5>
 
   <ethics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_1>
-  <ethics_challenging_voice_2>[Thinker, Work (Date)]</ethics_challenging_voice_2>
-  <ethics_challenging_voice_3>[Thinker, Work (Date)]</ethics_challenging_voice_3>
-  <ethics_challenging_voice_4>[Thinker, Work (Date)]</ethics_challenging_voice_4>
-  <ethics_challenging_voice_5>[Thinker, Work (Date)]</ethics_challenging_voice_5>
+  <ethics_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_2>
+  <ethics_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_3>
+  <ethics_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_4>
+  <ethics_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</ethics_challenging_voice_5>
 </thinker_analysis>
 
 </philosophical_profile>`;
@@ -363,28 +363,28 @@ Analysis of answers from the philosophical decision trees representing your phil
 
 <thinker_analysis>
   <politics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_1>
-  <politics_kindred_spirit_2>[Thinker, Work (Date)]</politics_kindred_spirit_2>
-  <politics_kindred_spirit_3>[Thinker, Work (Date)]</politics_kindred_spirit_3>
-  <politics_kindred_spirit_4>[Thinker, Work (Date)]</politics_kindred_spirit_4>
-  <politics_kindred_spirit_5>[Thinker, Work (Date)]</politics_kindred_spirit_5>
+  <politics_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_2>
+  <politics_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_3>
+  <politics_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_4>
+  <politics_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</politics_kindred_spirit_5>
 
   <politics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_1>
-  <politics_challenging_voice_2>[Thinker, Work (Date)]</politics_challenging_voice_2>
-  <politics_challenging_voice_3>[Thinker, Work (Date)]</politics_challenging_voice_3>
-  <politics_challenging_voice_4>[Thinker, Work (Date)]</politics_challenging_voice_4>
-  <politics_challenging_voice_5>[Thinker, Work (Date)]</politics_challenging_voice_5>
+  <politics_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_2>
+  <politics_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_3>
+  <politics_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_4>
+  <politics_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</politics_challenging_voice_5>
 
   <aesthetics_kindred_spirit_1>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_1>
-  <aesthetics_kindred_spirit_2>[Thinker, Work (Date)]</aesthetics_kindred_spirit_2>
-  <aesthetics_kindred_spirit_3>[Thinker, Work (Date)]</aesthetics_kindred_spirit_3>
-  <aesthetics_kindred_spirit_4>[Thinker, Work (Date)]</aesthetics_kindred_spirit_4>
-  <aesthetics_kindred_spirit_5>[Thinker, Work (Date)]</aesthetics_kindred_spirit_5>
+  <aesthetics_kindred_spirit_2>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_2>
+  <aesthetics_kindred_spirit_3>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_3>
+  <aesthetics_kindred_spirit_4>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_4>
+  <aesthetics_kindred_spirit_5>[Thinker, Work (Date) - how their argument resonates with you]</aesthetics_kindred_spirit_5>
 
   <aesthetics_challenging_voice_1>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_1>
-  <aesthetics_challenging_voice_2>[Thinker, Work (Date)]</aesthetics_challenging_voice_2>
-  <aesthetics_challenging_voice_3>[Thinker, Work (Date)]</aesthetics_challenging_voice_3>
-  <aesthetics_challenging_voice_4>[Thinker, Work (Date)]</aesthetics_challenging_voice_4>
-  <aesthetics_challenging_voice_5>[Thinker, Work (Date)]</aesthetics_challenging_voice_5>
+  <aesthetics_challenging_voice_2>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_2>
+  <aesthetics_challenging_voice_3>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_3>
+  <aesthetics_challenging_voice_4>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_4>
+  <aesthetics_challenging_voice_5>[Thinker, Work (Date) - how their argument challenges you]</aesthetics_challenging_voice_5>
 </thinker_analysis>
 
 <concluding_analysis>
