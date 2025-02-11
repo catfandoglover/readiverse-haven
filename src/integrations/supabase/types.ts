@@ -325,6 +325,7 @@ export type Database = {
           theology_kindred_spirit_5: string | null
           theology_kindred_spirit_5_classic: string | null
           theology_kindred_spirit_5_rationale: string | null
+          user_name: string | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
@@ -533,6 +534,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          user_name?: string | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
@@ -741,6 +743,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          user_name?: string | null
         }
         Relationships: [
           {
