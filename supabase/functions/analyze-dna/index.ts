@@ -30,6 +30,7 @@ function parseSection(text: string, tag: string): string | null {
 function parsePhilosophicalProfile(analysisText: string) {
   const profile: Record<string, string | null> = {
     archetype: null,
+    archetype_definition: null,
     introduction: null,
     key_tension_1: null,
     key_tension_2: null,
@@ -40,116 +41,178 @@ function parsePhilosophicalProfile(analysisText: string) {
     growth_edges_1: null,
     growth_edges_2: null,
     growth_edges_3: null,
+    theology_introduction: null,
+    ontology_introduction: null,
+    epistemology_introduction: null,
+    ethics_introduction: null,
+    politics_introduction: null,
+    aesthetics_introduction: null,
+    theology_kindred_spirit_1: null,
+    theology_kindred_spirit_2: null,
+    theology_kindred_spirit_3: null,
+    theology_kindred_spirit_4: null,
+    theology_kindred_spirit_5: null,
+    theology_challenging_voice_1: null,
+    theology_challenging_voice_2: null,
+    theology_challenging_voice_3: null,
+    theology_challenging_voice_4: null,
+    theology_challenging_voice_5: null,
+    ontology_kindred_spirit_1: null,
+    ontology_kindred_spirit_2: null,
+    ontology_kindred_spirit_3: null,
+    ontology_kindred_spirit_4: null,
+    ontology_kindred_spirit_5: null,
+    ontology_challenging_voice_1: null,
+    ontology_challenging_voice_2: null,
+    ontology_challenging_voice_3: null,
+    ontology_challenging_voice_4: null,
+    ontology_challenging_voice_5: null,
+    epistemology_kindred_spirit_1: null,
+    epistemology_kindred_spirit_2: null,
+    epistemology_kindred_spirit_3: null,
+    epistemology_kindred_spirit_4: null,
+    epistemology_kindred_spirit_5: null,
+    epistemology_challenging_voice_1: null,
+    epistemology_challenging_voice_2: null,
+    epistemology_challenging_voice_3: null,
+    epistemology_challenging_voice_4: null,
+    epistemology_challenging_voice_5: null,
+    ethics_kindred_spirit_1: null,
+    ethics_kindred_spirit_2: null,
+    ethics_kindred_spirit_3: null,
+    ethics_kindred_spirit_4: null,
+    ethics_kindred_spirit_5: null,
+    ethics_challenging_voice_1: null,
+    ethics_challenging_voice_2: null,
+    ethics_challenging_voice_3: null,
+    ethics_challenging_voice_4: null,
+    ethics_challenging_voice_5: null,
+    politics_kindred_spirit_1: null,
+    politics_kindred_spirit_2: null,
+    politics_kindred_spirit_3: null,
+    politics_kindred_spirit_4: null,
+    politics_kindred_spirit_5: null,
+    politics_challenging_voice_1: null,
+    politics_challenging_voice_2: null,
+    politics_challenging_voice_3: null,
+    politics_challenging_voice_4: null,
+    politics_challenging_voice_5: null,
+    aesthetics_kindred_spirit_1: null,
+    aesthetics_kindred_spirit_2: null,
+    aesthetics_kindred_spirit_3: null,
+    aesthetics_kindred_spirit_4: null,
+    aesthetics_kindred_spirit_5: null,
+    aesthetics_challenging_voice_1: null,
+    aesthetics_challenging_voice_2: null,
+    aesthetics_challenging_voice_3: null,
+    aesthetics_challenging_voice_4: null,
+    aesthetics_challenging_voice_5: null,
     conclusion: null,
-    next_steps: null,
+    next_steps: null
   };
 
-  // Extract archetype and introduction
-  const primarySection = parseSection(analysisText, 'primary_section') || 
-                        parseSection(analysisText, 'primary');
-  if (primarySection) {
-    profile.archetype = extractContent(primarySection, '<archetype>', '</archetype>');
-    profile.archetype_definition = extractContent(primarySection, '<subtitle>', '</subtitle>');
-    profile.introduction = extractContent(primarySection, '<essence>', '</essence>') ||
-                          primarySection.split('\n').slice(2).join('\n').trim();
+  // Parse section 1 - Primary information and Theology/Ontology
+  const section1 = JSON.parse(analysisText).section1;
+  if (section1) {
+    // Extract from primary_section
+    const primarySection = parseSection(section1, 'primary_section');
+    if (primarySection) {
+      profile.archetype = extractContent(primarySection, '<archetype>', '</archetype>');
+      profile.archetype_definition = extractContent(primarySection, '<archetype_definition>', '</archetype_definition>');
+      profile.introduction = extractContent(primarySection, '<introduction>', '</introduction>');
+    }
+
+    // Extract core dynamics
+    const coreDynamics = parseSection(section1, 'core_dynamics');
+    if (coreDynamics) {
+      profile.key_tension_1 = extractContent(coreDynamics, '<key_tension_1>', '</key_tension_1>');
+      profile.key_tension_2 = extractContent(coreDynamics, '<key_tension_2>', '</key_tension_2>');
+      profile.key_tension_3 = extractContent(coreDynamics, '<key_tension_3>', '</key_tension_3>');
+      profile.natural_strength_1 = extractContent(coreDynamics, '<natural_strength_1>', '</natural_strength_1>');
+      profile.natural_strength_2 = extractContent(coreDynamics, '<natural_strength_2>', '</natural_strength_2>');
+      profile.natural_strength_3 = extractContent(coreDynamics, '<natural_strength_3>', '</natural_strength_3>');
+      profile.growth_edges_1 = extractContent(coreDynamics, '<growth_edges_1>', '</growth_edges_1>');
+      profile.growth_edges_2 = extractContent(coreDynamics, '<growth_edges_2>', '</growth_edges_2>');
+      profile.growth_edges_3 = extractContent(coreDynamics, '<growth_edges_3>', '</growth_edges_3>');
+    }
+
+    // Extract domain introductions
+    const domainAnalyses = parseSection(section1, 'domain_analyses');
+    if (domainAnalyses) {
+      profile.theology_introduction = extractContent(domainAnalyses, '<theology_introduction>', '</theology_introduction>');
+      profile.ontology_introduction = extractContent(domainAnalyses, '<ontology_introduction>', '</ontology_introduction>');
+    }
+
+    // Extract thinkers
+    const thinkerAnalysis = parseSection(section1, 'thinker_analysis');
+    if (thinkerAnalysis) {
+      ['theology', 'ontology'].forEach(domain => {
+        for (let i = 1; i <= 5; i++) {
+          const kindredTag = `<${domain}_kindred_spirit_${i}>`;
+          const kindredEndTag = `</${domain}_kindred_spirit_${i}>`;
+          const challengingTag = `<${domain}_challenging_voice_${i}>`;
+          const challengingEndTag = `</${domain}_challenging_voice_${i}>`;
+
+          profile[`${domain}_kindred_spirit_${i}`] = extractContent(thinkerAnalysis, kindredTag, kindredEndTag);
+          profile[`${domain}_challenging_voice_${i}`] = extractContent(thinkerAnalysis, challengingTag, challengingEndTag);
+        }
+      });
+    }
   }
 
-  // Extract core dynamics
-  const coreDynamics = parseSection(analysisText, 'core_dynamics');
-  if (coreDynamics) {
-    const keyTensions = coreDynamics.split('- ').filter(s => s.trim());
-    const strengthsStart = coreDynamics.indexOf('natural_strengths>') !== -1 ? 
-      coreDynamics.indexOf('natural_strengths>') : 
-      coreDynamics.indexOf('Natural Strengths');
-    const growthEdgesStart = coreDynamics.indexOf('growth_edges>') !== -1 ?
-      coreDynamics.indexOf('growth_edges>') :
-      coreDynamics.indexOf('Growth Edges');
+  // Parse section 2 - Epistemology and Ethics
+  const section2 = JSON.parse(analysisText).section2;
+  if (section2) {
+    const domainAnalyses = parseSection(section2, 'domain_analyses');
+    if (domainAnalyses) {
+      profile.epistemology_introduction = extractContent(domainAnalyses, '<epistemology_introduction>', '</epistemology_introduction>');
+      profile.ethics_introduction = extractContent(domainAnalyses, '<ethics_introduction>', '</ethics_introduction>');
+    }
 
-    if (strengthsStart !== -1 && growthEdgesStart !== -1) {
-      const tensionsSection = coreDynamics.substring(0, strengthsStart).split('- ').filter(s => s.trim());
-      const strengthsSection = coreDynamics.substring(strengthsStart, growthEdgesStart).split('- ').filter(s => s.trim());
-      const growthSection = coreDynamics.substring(growthEdgesStart).split('- ').filter(s => s.trim());
+    const thinkerAnalysis = parseSection(section2, 'thinker_analysis');
+    if (thinkerAnalysis) {
+      ['epistemology', 'ethics'].forEach(domain => {
+        for (let i = 1; i <= 5; i++) {
+          const kindredTag = `<${domain}_kindred_spirit_${i}>`;
+          const kindredEndTag = `</${domain}_kindred_spirit_${i}>`;
+          const challengingTag = `<${domain}_challenging_voice_${i}>`;
+          const challengingEndTag = `</${domain}_challenging_voice_${i}>`;
 
-      tensionsSection.slice(1, 4).forEach((tension, i) => {
-        profile[`key_tension_${i + 1}`] = tension.trim();
-      });
-
-      strengthsSection.slice(1, 4).forEach((strength, i) => {
-        profile[`natural_strength_${i + 1}`] = strength.trim();
-      });
-
-      growthSection.slice(1, 4).forEach((edge, i) => {
-        profile[`growth_edges_${i + 1}`] = edge.trim();
+          profile[`${domain}_kindred_spirit_${i}`] = extractContent(thinkerAnalysis, kindredTag, kindredEndTag);
+          profile[`${domain}_challenging_voice_${i}`] = extractContent(thinkerAnalysis, challengingTag, challengingEndTag);
+        }
       });
     }
   }
 
-  // Extract domain introductions
-  const domains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  domains.forEach(domain => {
-    const domainSection = parseSection(analysisText, domain) || 
-                         extractContent(analysisText, `Your approach to ${domain}`, '\n') ||
-                         extractContent(analysisText, `${domain.charAt(0).toUpperCase() + domain.slice(1)}:`, '\n');
-    if (domainSection) {
-      profile[`${domain}_introduction`] = domainSection.trim();
-    }
-  });
-
-  // Parse thinker analysis for each domain
-  domains.forEach(domain => {
-    const domainPattern = new RegExp(`${domain}_kindred>|${domain.charAt(0).toUpperCase() + domain.slice(1)} Kindred Spirits`);
-    const challengingPattern = new RegExp(`${domain}_challenging>|${domain.charAt(0).toUpperCase() + domain.slice(1)} Challenging Voices`);
-    
-    const fullText = analysisText;
-    const kindredStart = fullText.search(domainPattern);
-    const challengingStart = fullText.search(challengingPattern);
-    
-    if (kindredStart !== -1) {
-      const kindredSection = fullText.substring(kindredStart, challengingStart !== -1 ? challengingStart : undefined);
-      const kindredMatches = kindredSection.match(/- (.*?), [""].*? \((.*?)\)(.*)/g);
-      
-      if (kindredMatches) {
-        kindredMatches.slice(0, 5).forEach((match, i) => {
-          const [name, work, rationale] = match.split(/,|\(/);
-          profile[`${domain}_kindred_spirit_${i + 1}`] = name.replace('- ', '').trim();
-          if (work) {
-            profile[`${domain}_kindred_spirit_${i + 1}_classic`] = work.trim();
-          }
-          if (rationale) {
-            profile[`${domain}_kindred_spirit_${i + 1}_rationale`] = rationale.replace(')', '').trim();
-          }
-        });
-      }
+  // Parse section 3 - Politics and Aesthetics + Conclusion
+  const section3 = JSON.parse(analysisText).section3;
+  if (section3) {
+    const domainAnalyses = parseSection(section3, 'domain_analyses');
+    if (domainAnalyses) {
+      profile.politics_introduction = extractContent(domainAnalyses, '<politics_introduction>', '</politics_introduction>');
+      profile.aesthetics_introduction = extractContent(domainAnalyses, '<aesthetics_introduction>', '</aesthetics_introduction>');
     }
 
-    if (challengingStart !== -1) {
-      const challengingSection = fullText.substring(challengingStart);
-      const challengingMatches = challengingSection.match(/- (.*?), [""].*? \((.*?)\)(.*)/g);
-      
-      if (challengingMatches) {
-        challengingMatches.slice(0, 5).forEach((match, i) => {
-          const [name, work, rationale] = match.split(/,|\(/);
-          profile[`${domain}_challenging_voice_${i + 1}`] = name.replace('- ', '').trim();
-          if (work) {
-            profile[`${domain}_challenging_voice_${i + 1}_classic`] = work.trim();
-          }
-          if (rationale) {
-            profile[`${domain}_challenging_voice_${i + 1}_rationale`] = rationale.replace(')', '').trim();
-          }
-        });
-      }
-    }
-  });
+    const thinkerAnalysis = parseSection(section3, 'thinker_analysis');
+    if (thinkerAnalysis) {
+      ['politics', 'aesthetics'].forEach(domain => {
+        for (let i = 1; i <= 5; i++) {
+          const kindredTag = `<${domain}_kindred_spirit_${i}>`;
+          const kindredEndTag = `</${domain}_kindred_spirit_${i}>`;
+          const challengingTag = `<${domain}_challenging_voice_${i}>`;
+          const challengingEndTag = `</${domain}_challenging_voice_${i}>`;
 
-  // Extract conclusion and next steps
-  const concludingAnalysis = parseSection(analysisText, 'concluding_analysis');
-  if (concludingAnalysis) {
-    const parts = concludingAnalysis.split('\n');
-    if (parts.length >= 2) {
-      profile.conclusion = parts[0].trim();
-      profile.next_steps = parts.slice(1).join('\n').trim();
-    } else {
-      profile.conclusion = concludingAnalysis.trim();
+          profile[`${domain}_kindred_spirit_${i}`] = extractContent(thinkerAnalysis, kindredTag, kindredEndTag);
+          profile[`${domain}_challenging_voice_${i}`] = extractContent(thinkerAnalysis, challengingTag, challengingEndTag);
+        }
+      });
+    }
+
+    const concludingAnalysis = parseSection(section3, 'concluding_analysis');
+    if (concludingAnalysis) {
+      profile.conclusion = extractContent(concludingAnalysis, '<conclusion>', '</conclusion>');
+      profile.next_steps = extractContent(concludingAnalysis, '<next_steps>', '</next_steps>');
     }
   }
 
