@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, LibraryBig, Dna, Search } from "lucide-react";
@@ -113,7 +114,11 @@ const IntellectualDNA = () => {
   });
 
   if (progressLoading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Loading />
+      </div>
+    );
   }
 
   const handleNavigation = (path: string) => {
