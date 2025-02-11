@@ -15,13 +15,13 @@ const corsHeaders = {
 };
 
 function findNestedContent(text: string, tag: string): string | null {
-  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 'si');
+  const regex = new RegExp(`<${tag}[^>]*>\\s*([\\s\\S]*?)\\s*</${tag}>`, 'si');
   const match = text.match(regex);
   return match ? match[1].trim() : null;
 }
 
 function findAllInstancesContent(text: string, tag: string): string[] {
-  const regex = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 'sig');
+  const regex = new RegExp(`<${tag}[^>]*>\\s*([\\s\\S]*?)\\s*</${tag}>`, 'sig');
   const matches = text.matchAll(regex);
   return Array.from(matches).map(match => match[1].trim());
 }
@@ -110,7 +110,25 @@ function parsePhilosophicalProfile(text: string): Record<string, string> {
     profile.next_steps = findNestedContent(concludingSection, 'next_steps') || '';
   }
 
-  // Add additional logging to track what was found
+  // Ensure all fields are initialized with empty strings if not found
+  const allDomains = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
+  allDomains.forEach(domain => {
+    for (let i = 1; i <= 5; i++) {
+      // Initialize kindred spirits fields
+      const ksBase = `${domain}_kindred_spirit_${i}`;
+      profile[ksBase] = profile[ksBase] || '';
+      profile[`${ksBase}_classic`] = profile[`${ksBase}_classic`] || '';
+      profile[`${ksBase}_rationale`] = profile[`${ksBase}_rationale`] || '';
+
+      // Initialize challenging voices fields
+      const cvBase = `${domain}_challenging_voice_${i}`;
+      profile[cvBase] = profile[cvBase] || '';
+      profile[`${cvBase}_classic`] = profile[`${cvBase}_classic`] || '';
+      profile[`${cvBase}_rationale`] = profile[`${cvBase}_rationale`] || '';
+    }
+  });
+
+  // Log debug information
   const populatedFields = Object.entries(profile)
     .filter(([_, value]) => value && value.length > 0)
     .map(([key]) => key);
