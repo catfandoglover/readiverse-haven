@@ -29,7 +29,12 @@ const Index = () => {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
-      const { error } = await supabase
+      console.log('Attempting to add book with:', {
+        bookId,
+        userId: user.accountUid
+      });
+
+      const { data, error } = await supabase
         .from('user_books')
         .insert({
           book_id: bookId,
@@ -37,12 +42,15 @@ const Index = () => {
           status: 'reading',
           current_page: 0
         })
-        .select()
-        .single();
+        .select();
 
-      if (error && error.code !== '23505') { // Ignore unique violation errors
+      if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
+
+      console.log('Insert response:', data);
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -50,6 +58,7 @@ const Index = () => {
       });
     },
     onError: (error) => {
+      console.error('Mutation error:', error);
       toast({
         variant: "destructive",
         description: error instanceof Error ? error.message : "Failed to add book to bookshelf",
