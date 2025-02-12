@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useBook } from '@/hooks/useBook';
 import Reader from "@/components/Reader";
+import Header from "@/components/ui/header";
+import { SupabaseAuthTest } from '@/components/auth/SupabaseAuthTest';
 import type { BookMetadata } from "@/types/reader";
 
 const defaultMetadata: BookMetadata = {
@@ -20,13 +22,17 @@ const Index = () => {
   } : defaultMetadata;
 
   return (
-    <div className="min-h-screen">
-      <Reader 
-        metadata={metadata}
-        preloadedBookUrl={book?.epub_file_url}
-        isLoading={isLoading} 
-        error={error}
-      />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <SupabaseAuthTest />
+      <main className="flex-1">
+        <Reader 
+          metadata={metadata}
+          preloadedBookUrl={book?.epub_file_url}
+          isLoading={isLoading} 
+          error={error}
+        />
+      </main>
     </div>
   );
 };
