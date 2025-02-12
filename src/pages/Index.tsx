@@ -30,12 +30,10 @@ const Index = () => {
       }
 
       const { error } = await supabase
-        .from('user_books')
+        .from('user_library')
         .insert({
           book_id: bookId,
-          outseta_user_id: user.accountUid,
-          status: 'reading',
-          current_page: 0
+          user_id: user.accountUid
         });
 
       if (error && error.code !== '23505') { // Ignore unique violation errors

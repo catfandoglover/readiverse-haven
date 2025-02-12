@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/OutsetaAuthContext';
 import { Button } from '@/components/ui/button';
