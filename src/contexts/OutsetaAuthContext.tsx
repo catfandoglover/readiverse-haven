@@ -159,11 +159,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const logout = () => {
-    outsetaRef.current.setAccessToken('');
-    localStorage.removeItem('outseta_token');
-    setUser(null);
-    setSupabase(null);
+  const logout = async () => {
+    try {
+      // Clear Outseta token
+      outsetaRef.current.setAccessToken('');
+      localStorage.removeItem('outseta_token');
+
+      // Clear Supabase session if it exists
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+
+      // Reset state
+      setUser(null);
+      setSupabase(null);
+
+      // Force reload the page to ensure clean state
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Force reload even if there's an error to ensure clean state
+      window.location.href = '/';
+    }
   };
 
   const openLogin = (options = {}) => {
