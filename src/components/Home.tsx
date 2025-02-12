@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search } from "lucide-react";
@@ -7,6 +7,9 @@ import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import QuestionsCards from "./QuestionsCards";
 import { LoginButtons } from "@/components/auth/LoginButtons";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "./ui/button";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -14,6 +17,8 @@ type Icon = Database['public']['Tables']['icons']['Row'];
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
+  const { user } = useAuth();
   
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
@@ -28,6 +33,38 @@ const Home = () => {
     },
     staleTime: 30000,
     refetchOnMount: false
+  });
+
+  const addToBookshelf = useMutation({
+    mutationFn: async (bookId: string) => {
+      if (!user) {
+        throw new Error('You must be logged in to add books to your bookshelf');
+      }
+
+      const { error } = await supabase
+        .from('user_books')
+        .insert({
+          book_id: bookId,
+          outseta_user_id: user.accountUid,
+          status: 'reading',
+          current_page: 0
+        });
+
+      if (error && error.code !== '23505') { // Ignore unique violation errors
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast({
+        description: "Book added to your bookshelf",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        description: error instanceof Error ? error.message : "Failed to add book to bookshelf",
+      });
+    }
   });
 
   const { data: icons, isLoading: iconsLoading } = useQuery({
@@ -101,15 +138,30 @@ const Home = () => {
                     <Card 
                       key={book.id} 
                       className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                      onClick={() => handleBookClick(book.Cover_super)}
                     >
-                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                      <div 
+                        onClick={() => handleBookClick(book.Cover_super)}
+                        className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]"
+                      >
                         <img
                           src={book.cover_url || '/placeholder.svg'}
                           alt={book.title}
                           className="w-full h-full object-cover rounded-lg relative z-10"
                           loading="lazy"
                         />
+                      </div>
+                      <div className="p-2 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          className="text-[#E9E7E2] text-sm hover:text-[#9b87f5]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToBookshelf.mutate(book.id);
+                          }}
+                          disabled={addToBookshelf.isPending}
+                        >
+                          {addToBookshelf.isPending ? "ADDING..." : "ADD TO BOOKSHELF"}
+                        </Button>
                       </div>
                     </Card>
                   ))}
