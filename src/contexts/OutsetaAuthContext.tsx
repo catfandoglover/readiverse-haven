@@ -83,13 +83,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const updateUser = async () => {
       try {
-        const outsetaUser = await outsetaRef.current.getUser();
+        console.log('Auth State Check:', {
+          storedToken: localStorage.getItem('outseta_token'),
+          hasOutsetaClient: !!window.Outseta,
+          currentToken: outsetaRef.current?.getAccessToken?.(),
+          location: window.location.pathname
+        });
+
+        // First check for stored token
+        const storedToken = localStorage.getItem('outseta_token');
+        if (storedToken) {
+          outsetaRef.current.setAccessToken(storedToken);
+        }
+
         const currentToken = outsetaRef.current.getAccessToken();
-        console.log('Current Outseta JWT token:', currentToken);
-        console.log('Outseta user info:', outsetaUser);
-        
-        // Exchange Outseta JWT for Supabase JWT and create client
         if (currentToken) {
+          // Store token for persistence
+          localStorage.setItem('outseta_token', currentToken);
+          
+          const outsetaUser = await outsetaRef.current.getUser();
+          console.log('Outseta user info:', outsetaUser);
+          
           try {
             const supabaseJwt = await exchangeToken(currentToken);
             const supabaseClient = createSupabaseClient(supabaseJwt);
@@ -98,14 +112,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('Failed to exchange token:', error);
             setSupabase(null);
           }
+          
+          setUser(outsetaUser);
         } else {
+          setUser(null);
           setSupabase(null);
+          localStorage.removeItem('outseta_token');
         }
-        
-        setUser(outsetaUser);
       } catch (error) {
         console.error('Failed to fetch user:', error);
         setUser(null);
+        setSupabase(null);
+        localStorage.removeItem('outseta_token');
       }
       setStatus('ready');
     };
@@ -113,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Set up user event handling
     handleOutsetaUserEvents(updateUser);
 
-    if (outsetaRef.current.getAccessToken()) {
+    if (outsetaRef.current.getAccessToken() || localStorage.getItem('outseta_token')) {
       updateUser();
     } else {
       setStatus('ready');
@@ -125,8 +143,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [searchParams, setSearchParams]);
 
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'outseta_token') {
+        console.log('Storage changed in another tab:', {
+          newValue: e.newValue,
+          oldValue: e.oldValue
+        });
+        updateUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const logout = () => {
     outsetaRef.current.setAccessToken('');
+    localStorage.removeItem('outseta_token');
     setUser(null);
     setSupabase(null);
   };
