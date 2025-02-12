@@ -21,11 +21,11 @@ const Index = () => {
   });
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, supabase: authenticatedSupabase } = useAuth();
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user?.accountUid) {
+      if (!user?.accountUid || !authenticatedSupabase) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
@@ -34,7 +34,7 @@ const Index = () => {
         userId: user.accountUid
       });
 
-      const { data, error } = await supabase
+      const { data, error } = await authenticatedSupabase
         .from('user_books')
         .insert({
           book_id: bookId,
