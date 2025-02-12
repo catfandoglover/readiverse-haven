@@ -3,6 +3,9 @@ import { useBook } from '@/hooks/useBook';
 import Reader from "@/components/Reader";
 import Header from "@/components/ui/header";
 import { SupabaseAuthTest } from '@/components/auth/SupabaseAuthTest';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import type { BookMetadata } from "@/types/reader";
 
 const defaultMetadata: BookMetadata = {
@@ -13,7 +16,60 @@ const defaultMetadata: BookMetadata = {
 
 const Index = () => {
   const { bookSlug } = useParams();
-  const { data: book, isLoading, error } = useBook(bookSlug);
+  const { data: book, isLoading } = useBook(bookSlug);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const addToLibrary = async () => {
+      if (book?.id) {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (!user) {
+            console.error('No authenticated user found');
+            return;
+          }
+
+          const { error } = await supabase
+            .from('user_library')
+            .insert({
+              book_id: book.id,
+              user_id: user.id
+            });
+
+          if (error && error.code !== '23505') { // Ignore unique violation errors
+            console.error('Error adding book to library:', error);
+            toast({
+              description: "Failed to add book to library",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error('Error in addToLibrary:', error);
+        }
+      }
+    };
+
+    addToLibrary();
+  }, [book?.id, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse">Loading book...</div>
+      </div>
+    );
+  }
+
+  if (!book) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-destructive">Book not found</div>
+      </div>
+    );
+  }
 
   const metadata = book ? {
     coverUrl: book.Cover_super || "/placeholder.svg",
@@ -29,8 +85,6 @@ const Index = () => {
         <Reader 
           metadata={metadata}
           preloadedBookUrl={book?.epub_file_url}
-          isLoading={isLoading} 
-          error={error}
         />
       </main>
     </div>

@@ -6,9 +6,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/OutsetaAuthContext";
+import Home from "@/components/Home";
+import Bookshelf from "@/components/Bookshelf";
 import Index from "@/pages/Index";
+import GreatQuestions from "@/pages/GreatQuestions";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -20,7 +30,9 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/bookshelf" element={<Bookshelf />} />
+                <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/:bookSlug" element={<Index />} />
               </Routes>
             </ErrorBoundary>
