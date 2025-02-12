@@ -83,6 +83,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const updateUser = async () => {
       try {
+        console.log('Auth State Check:', {
+          storedToken: localStorage.getItem('outseta_token'),
+          hasOutsetaClient: !!window.Outseta,
+          currentToken: outsetaRef.current?.getAccessToken?.(),
+          location: window.location.pathname
+        });
+
         // First check for stored token
         const storedToken = localStorage.getItem('outseta_token');
         if (storedToken) {
@@ -124,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Set up user event handling
     handleOutsetaUserEvents(updateUser);
 
-    if (outsetaRef.current.getAccessToken()) {
+    if (outsetaRef.current.getAccessToken() || localStorage.getItem('outseta_token')) {
       updateUser();
     } else {
       setStatus('ready');
@@ -135,6 +142,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       handleOutsetaUserEvents(() => {});
     };
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'outseta_token') {
+        console.log('Storage changed in another tab:', {
+          newValue: e.newValue,
+          oldValue: e.oldValue
+        });
+        updateUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const logout = () => {
     outsetaRef.current.setAccessToken('');
