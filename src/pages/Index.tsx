@@ -26,31 +26,38 @@ const Index = () => {
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
       if (!user?.accountUid || !authenticatedSupabase) {
+        console.error('Auth check failed:', { user, authenticatedSupabase });
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
-      console.log('Attempting to add book with:', {
+      console.log('Adding book to bookshelf:', {
         bookId,
-        userId: user.accountUid
+        userId: user.accountUid,
+        hasAuthClient: !!authenticatedSupabase
       });
 
-      const { data, error } = await authenticatedSupabase
-        .from('user_books')
-        .insert({
-          book_id: bookId,
-          outseta_user_id: user.accountUid,
-          status: 'reading',
-          current_page: 0
-        })
-        .select();
+      try {
+        const { data, error } = await authenticatedSupabase
+          .from('user_books')
+          .insert({
+            book_id: bookId,
+            outseta_user_id: user.accountUid,
+            status: 'reading',
+            current_page: 0
+          })
+          .select();
 
-      if (error) {
-        console.error('Supabase error:', error);
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+
+        console.log('Insert successful:', data);
+        return data;
+      } catch (error) {
+        console.error('Error adding book:', error);
         throw error;
       }
-
-      console.log('Insert response:', data);
-      return data;
     },
     onSuccess: () => {
       toast({
@@ -61,7 +68,9 @@ const Index = () => {
       console.error('Mutation error:', error);
       toast({
         variant: "destructive",
-        description: error instanceof Error ? error.message : "Failed to add book to bookshelf",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to add book to bookshelf. Please make sure you're logged in.",
       });
     }
   });
@@ -97,7 +106,16 @@ const Index = () => {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => addToBookshelf.mutate(book.id)}
+                  onClick={() => {
+                    if (!user) {
+                      toast({
+                        variant: "destructive",
+                        description: "Please log in to add books to your bookshelf",
+                      });
+                      return;
+                    }
+                    addToBookshelf.mutate(book.id);
+                  }}
                   disabled={addToBookshelf.isPending}
                 >
                   {addToBookshelf.isPending ? "Adding..." : "Add to Bookshelf"}
