@@ -1,6 +1,25 @@
-
 export function getPromptForSection(section: number, answers_json: string): string {
-  const basePrompt = `Important: Always write your response in the second person, addressing the subject directly as "you". For example, use phrases like "Your philosophical DNA...", "You tend to...", "Your approach is..."
+  const systemRequirements = `Requirements:
+Temporal Distribution
+- Select no thinkers after 1980
+- Include minimum 20% pre-medieval thinkers
+- Represent spread across available periods
+Cultural Distribution
+- Draw 70% from Western philosophical traditions
+- Draw 30% from Non-Western philosophical traditions
+Selection Criteria
+- Mix iconic and lesser-known influential voices
+- Choose thinkers reflecting your specific decision tree paths
+- Summarize arguments in one distinctive line
+- Pair each thinker with their most relevant major work
+- Maintain diverse perspectives within constraints
+Domain Description Requirements
+- Specific to your philosophical pattern
+- Avoid generic characterizations
+- Connect to your decision tree choices
+- Always written in second person ("you," "your")`;
+
+  const basePrompt = `${systemRequirements}
 
 Here are your answers to the philosophical questions:
 
@@ -14,18 +33,19 @@ Format your response as a FLAT JSON object with NO nesting. Use the exact field 
 {
   "archetype": "Domain Archetype",
   "archetype_definition": "Brief poetic subtitle capturing essence",
-  "introduction": "Single paragraph capturing philosophical essence",
-  "key_tension_1": "Key tension in thinking",
-  "key_tension_2": "Key tension in thinking",
-  "key_tension_3": "Key tension in thinking",
-  "natural_strength_1": "Natural Strength",
-  "natural_strength_2": "Natural Strength",
-  "natural_strength_3": "Natural Strength",
-  "growth_edges_1": "Growth Edge",
-  "growth_edges_2": "Growth Edge",
-  "growth_edges_3": "Growth Edge",
-  "theology_introduction": "Approach to theology",
-  "ontology_introduction": "Approach to ontology",
+  "introduction": "Opening paragraph describing how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making. Written in direct address: 'You are...' 'Your approach...'",
+  "key_tension_1": "One of three primary dialectics you navigate, written as 'You find yourself balancing...' or 'You often wrestle with...'",
+  "key_tension_2": "One of three primary dialectics you navigate, written as 'You find yourself balancing...' or 'You often wrestle with...'",
+  "key_tension_3": "One of three primary dialectics you navigate, written as 'You find yourself balancing...' or 'You often wrestle with...'",
+  "natural_strength_1": "One of three inherent capacities you bring, written as 'You excel at...' or 'Your natural ability to...'",
+  "natural_strength_2": "Three inherent capacities you bring, written as 'You excel at...' or 'Your natural ability to...'",
+  "natural_strength_3": "Three inherent capacities you bring, written as 'You excel at...' or 'Your natural ability to...'",
+  "growth_edges_1": "One of three areas where you're called to develop, written as 'You are learning to...' or 'Your path invites you to...'",
+  "growth_edges_2": "One of three areas where you're called to develop, written as 'You are learning to...' or 'Your path invites you to...'",
+  "growth_edges_3": "One of three areas where you're called to develop, written as 'You are learning to...' or 'Your path invites you to...'",
+  "become_who_you_are": "Single-sentence affirmation validating your core strength while addressing your key tension. Written as direct encouragement: 'Trust your capacity to...'",
+  "theology_introduction": "1-2 sentences capturing your characteristic approach to theology, written as 'In theology, you tend to...'",
+  "ontology_introduction": "1-2 sentences capturing your characteristic approach to ontology, written as 'In ontology, you tend to...'",
   "theology_kindred_spirit_1": "Thinker name",
   "theology_kindred_spirit_1_classic": "Work (Date)",
   "theology_kindred_spirit_1_rationale": "How their argument resonates",
@@ -91,8 +111,8 @@ Format your response as a FLAT JSON object with NO nesting. Use the exact field 
     2: `For Section 2 (Epistemology & Ethics), provide a JSON object with these exact fields:
 
 {
-  "epistemology_introduction": "Approach to epistemology",
-  "ethics_introduction": "Approach to ethics",
+  "epistemology_introduction": "1-2 sentences capturing your characteristic approach to epistemology, written as 'In epistemology, you tend to...'",
+  "ethics_introduction": "1-2 sentences capturing your characteristic approach to ethics, written as 'In ethics, you tend to...'",
   "epistemology_kindred_spirit_1": "Thinker name",
   "epistemology_kindred_spirit_1_classic": "Work (Date)",
   "epistemology_kindred_spirit_1_rationale": "How their argument resonates",
@@ -158,8 +178,8 @@ Format your response as a FLAT JSON object with NO nesting. Use the exact field 
     3: `For Section 3 (Politics & Aesthetics), provide a JSON object with these exact fields:
 
 {
-  "politics_introduction": "Approach to politics",
-  "aesthetics_introduction": "Approach to aesthetics",
+  "politics_introduction": "1-2 sentences capturing your characteristic approach to politics, written as 'In politics, you tend to...'",
+  "aesthetics_introduction": "1-2 sentences capturing your characteristic approach to aesthetics, written as 'In aesthetics, you tend to...'",
   "politics_kindred_spirit_1": "Thinker name",
   "politics_kindred_spirit_1_classic": "Work (Date)",
   "politics_kindred_spirit_1_rationale": "How their argument resonates",

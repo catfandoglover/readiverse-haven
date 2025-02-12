@@ -155,6 +155,7 @@ export type Database = {
           archetype: string | null
           archetype_definition: string | null
           assessment_id: string
+          become_who_you_are: string | null
           conclusion: string | null
           created_at: string
           epistemology_challenging_voice_1: string | null
@@ -365,6 +366,7 @@ export type Database = {
           archetype?: string | null
           archetype_definition?: string | null
           assessment_id: string
+          become_who_you_are?: string | null
           conclusion?: string | null
           created_at?: string
           epistemology_challenging_voice_1?: string | null
@@ -575,6 +577,7 @@ export type Database = {
           archetype?: string | null
           archetype_definition?: string | null
           assessment_id?: string
+          become_who_you_are?: string | null
           conclusion?: string | null
           created_at?: string
           epistemology_challenging_voice_1?: string | null
