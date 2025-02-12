@@ -25,39 +25,38 @@ const Index = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user?.accountUid || !authenticatedSupabase) {
-        console.error('Auth check failed:', { user, authenticatedSupabase });
+      if (!user?.accountUid) {
         throw new Error('You must be logged in to add books to your bookshelf');
+      }
+
+      if (!authenticatedSupabase) {
+        throw new Error('Authentication client not available');
       }
 
       console.log('Adding book to bookshelf:', {
         bookId,
-        userId: user.accountUid,
-        hasAuthClient: !!authenticatedSupabase
+        outsetaUserId: user.accountUid,
+        isAuthenticatedClient: !!authenticatedSupabase
       });
 
-      try {
-        const { data, error } = await authenticatedSupabase
-          .from('user_books')
-          .insert({
-            book_id: bookId,
-            outseta_user_id: user.accountUid,
-            status: 'reading',
-            current_page: 0
-          })
-          .select();
+      const { data, error } = await authenticatedSupabase
+        .from('user_books')
+        .insert({
+          book_id: bookId,
+          outseta_user_id: user.accountUid,
+          status: 'reading',
+          current_page: 0
+        })
+        .select('*')
+        .single();
 
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
-        }
-
-        console.log('Insert successful:', data);
-        return data;
-      } catch (error) {
-        console.error('Error adding book:', error);
+      if (error) {
+        console.error('Failed to add book:', error);
         throw error;
       }
+
+      console.log('Successfully added book:', data);
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -107,7 +106,7 @@ const Index = () => {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    if (!user) {
+                    if (!user?.accountUid) {
                       toast({
                         variant: "destructive",
                         description: "Please log in to add books to your bookshelf",
