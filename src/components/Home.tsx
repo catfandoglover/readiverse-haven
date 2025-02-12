@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, supabase: authenticatedSupabase } = useAuth();
   
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
@@ -37,11 +38,16 @@ const Home = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user) {
+      if (!user || !authenticatedSupabase) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
-      const { error } = await supabase
+      console.log('Adding book to bookshelf:', {
+        bookId,
+        userId: user.accountUid
+      });
+
+      const { error } = await authenticatedSupabase
         .from('user_books')
         .insert({
           book_id: bookId,
@@ -50,7 +56,8 @@ const Home = () => {
           current_page: 0
         });
 
-      if (error && error.code !== '23505') { // Ignore unique violation errors
+      if (error) {
+        console.error('Error adding book:', error);
         throw error;
       }
     },
@@ -60,6 +67,7 @@ const Home = () => {
       });
     },
     onError: (error) => {
+      console.error('Mutation error:', error);
       toast({
         variant: "destructive",
         description: error instanceof Error ? error.message : "Failed to add book to bookshelf",
