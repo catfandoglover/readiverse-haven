@@ -25,16 +25,20 @@ const Index = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user) {
+      if (!user?.accountUid) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
       const { error } = await supabase
-        .from('user_library')
+        .from('user_books')
         .insert({
           book_id: bookId,
-          user_id: user.accountUid
-        });
+          outseta_user_id: user.accountUid,
+          status: 'reading',
+          current_page: 0
+        })
+        .select()
+        .single();
 
       if (error && error.code !== '23505') { // Ignore unique violation errors
         throw error;

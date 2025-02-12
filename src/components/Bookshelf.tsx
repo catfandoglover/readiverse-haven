@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,6 +6,7 @@ import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -12,40 +14,40 @@ const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGridView, setIsGridView] = useState(false);
+  const { user } = useAuth();
   
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf'],
+    queryKey: ['user-bookshelf', user?.accountUid],
     queryFn: async () => {
-      const libraryItems = Object.keys(localStorage)
-        .filter(key => key.startsWith('book-progress-'))
-        .map(key => {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
-            if (!data.bookId) return null;
-            const urlMatch = data.bookId.match(/gutenberg\.org\/(\d+)$/);
-            return urlMatch ? `gutenberg-${urlMatch[1]}` : null;
-          } catch (error) {
-            console.error('Error parsing localStorage item:', error);
-            return null;
-          }
-        })
-        .filter(Boolean);
+      if (!user?.accountUid) return [];
 
-      if (!libraryItems.length) return [];
+      const { data: bookData, error } = await supabase
+        .from('user_books')
+        .select(`
+          book:book_id (
+            id,
+            title,
+            author,
+            cover_url,
+            Cover_super,
+            slug
+          )
+        `)
+        .eq('outseta_user_id', user.accountUid)
+        .order('last_read_at', { ascending: false });
 
-      const { data: booksData, error: booksError } = await supabase
-        .from('books')
-        .select('*')
-        .in('slug', libraryItems)
-        .order('title');
-      
-      if (booksError) throw booksError;
-      return booksData as Book[];
+      if (error) {
+        console.error('Error fetching bookshelf:', error);
+        return [];
+      }
+
+      // Transform the nested data structure to match the expected Book type
+      return bookData.map(item => item.book) as Book[];
     },
+    enabled: !!user?.accountUid,
     staleTime: 1000 * 60 * 5,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    initialData: [],
   });
 
   const handleBookClick = (slug: string) => {
