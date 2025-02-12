@@ -81,99 +81,6 @@ const BookViewer = ({
 
   const { clearHighlights, reapplyHighlights } = useHighlightManagement(rendition, highlights);
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    };
-  }, []);
-
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-    const MOVE_THRESHOLD = 10;
-
-    const touchEnd = {
-      x: e.changedTouches[0].clientX,
-      y: e.changedTouches[0].clientY
-    };
-
-    const deltaX = Math.abs(touchEnd.x - touchStartRef.current.x);
-    const deltaY = Math.abs(touchEnd.y - touchStartRef.current.y);
-
-    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
-      return;
-    }
-
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      e.preventDefault();
-      return;
-    }
-
-    lastTapRef.current = now;
-  }, []);
-
-  const handleHighlightText = () => {
-    if (selectedText && onTextSelect) {
-      onTextSelect(selectedText.cfiRange, selectedText.text);
-      clearSelection();
-      setShowTextDialog(false);
-      toast({
-        description: "Text highlighted successfully",
-      });
-    }
-  };
-
-  const handleCopyText = async () => {
-    if (selectedText) {
-      try {
-        await navigator.clipboard.writeText(selectedText.text);
-        clearSelection();
-        setShowTextDialog(false);
-        toast({
-          description: "Text copied to clipboard",
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          description: "Failed to copy text",
-        });
-      }
-    }
-  };
-
-  const handleShareText = async () => {
-    if (selectedText) {
-      try {
-        await navigator.share({
-          text: selectedText.text,
-        });
-        clearSelection();
-        setShowTextDialog(false);
-        toast({
-          description: "Text shared successfully",
-        });
-      } catch (error) {
-        // If share is not supported or user cancels, try copy instead
-        handleCopyText();
-      }
-    }
-  };
-
-  const clearSelection = () => {
-    setSelectedText(null);
-    if (rendition) {
-      const contents = rendition.getContents();
-      if (Array.isArray(contents)) {
-        contents.forEach(content => {
-          if (content.window?.getSelection) {
-            content.window.getSelection()?.removeAllRanges();
-          }
-        });
-      }
-    }
-  };
-
   useEffect(() => {
     if (!rendition) return;
 
@@ -223,14 +130,34 @@ const BookViewer = ({
   useEffect(() => {
     if (!isBookReady || !container || !book) return;
 
-    if (rendition) {
-      rendition.destroy();
-    }
+    let currentRendition = rendition;
+    
+    const cleanup = () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      if (debouncedContainerResize?.cancel) {
+        debouncedContainerResize.cancel();
+      }
+      if (currentRendition) {
+        try {
+          // Safely destroy the rendition
+          if (typeof currentRendition.destroy === 'function') {
+            currentRendition.destroy();
+          }
+        } catch (error) {
+          console.error('Error destroying rendition:', error);
+        }
+      }
+    };
+
+    cleanup();
 
     const newRendition = setupRendition(container);
     if (!newRendition) return;
 
     setRendition(newRendition);
+    currentRendition = newRendition;
     
     newRendition.on("rendered", () => {
       setIsRenditionReady(true);
@@ -254,10 +181,6 @@ const BookViewer = ({
 
     displayLocation();
 
-    if (resizeObserver) {
-      resizeObserver.disconnect();
-    }
-
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         debouncedContainerResize(entry.target);
@@ -267,17 +190,7 @@ const BookViewer = ({
     observer.observe(container);
     setResizeObserver(observer);
 
-    return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (debouncedContainerResize?.cancel) {
-        debouncedContainerResize.cancel();
-      }
-      if (newRendition) {
-        newRendition.destroy();
-      }
-    };
+    return cleanup;
   }, [book, isMobile, textAlign, fontFamily, theme, isBookReady, container]);
 
   useFontSizeEffect(rendition, fontSize, highlights, isRenditionReady);
@@ -411,7 +324,16 @@ const BookViewer = ({
             <Button
               variant="outline"
               className="w-full sm:w-auto flex items-center gap-2"
-              onClick={handleHighlightText}
+              onClick={() => {
+                if (selectedText && onTextSelect) {
+                  onTextSelect(selectedText.cfiRange, selectedText.text);
+                  setSelectedText(null);
+                  setShowTextDialog(false);
+                  toast({
+                    description: "Text highlighted successfully",
+                  });
+                }
+              }}
             >
               <Highlighter className="h-4 w-4" />
               Highlight
@@ -419,14 +341,51 @@ const BookViewer = ({
             <Button
               variant="outline"
               className="w-full sm:w-auto flex items-center gap-2"
-              onClick={handleCopyText}
+              onClick={async () => {
+                if (selectedText) {
+                  try {
+                    await navigator.clipboard.writeText(selectedText.text);
+                    setSelectedText(null);
+                    setShowTextDialog(false);
+                    toast({
+                      description: "Text copied to clipboard",
+                    });
+                  } catch (error) {
+                    toast({
+                      variant: "destructive",
+                      description: "Failed to copy text",
+                    });
+                  }
+                }
+              }}
             >
               <Copy className="h-4 w-4" />
               Copy
             </Button>
             <Button
               className="w-full sm:w-auto flex items-center gap-2"
-              onClick={handleShareText}
+              onClick={async () => {
+                if (selectedText) {
+                  try {
+                    await navigator.share({
+                      text: selectedText.text,
+                    });
+                    setSelectedText(null);
+                    setShowTextDialog(false);
+                    toast({
+                      description: "Text shared successfully",
+                    });
+                  } catch (error) {
+                    // If share is not supported or user cancels, try copy instead
+                    await navigator.clipboard.writeText(selectedText.text);
+                    setSelectedText(null);
+                    setShowTextDialog(false);
+                    toast({
+                      description: "Text copied to clipboard",
+                    });
+                  }
+                }
+              }}
             >
               <Share2 className="h-4 w-4" />
               Share

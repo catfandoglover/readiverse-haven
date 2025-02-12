@@ -64,9 +64,8 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
       });
     } catch (error) {
       toast({
-        title: "Error loading book",
-        description: "Please try again with a valid EPUB file",
         variant: "destructive",
+        description: "Please try again with a valid EPUB file",
       });
     }
   };
@@ -245,9 +244,8 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
     if (preloadedBookUrl && !book) {
       loadBookFromUrl(preloadedBookUrl).catch(() => {
         toast({
-          title: "Error loading book",
-          description: "Unable to load the book from URL",
           variant: "destructive",
+          description: "Unable to load the book from URL",
         });
       });
     }
