@@ -161,9 +161,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      // Clear Outseta token
+      console.log('Starting logout process...');
+      
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear Outseta token and logout
       outsetaRef.current.setAccessToken('');
-      localStorage.removeItem('outseta_token');
+      await outsetaRef.current.auth.logout();
 
       // Clear Supabase session if it exists
       if (supabase) {
@@ -174,12 +180,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSupabase(null);
 
-      // Force reload the page to ensure clean state
-      window.location.href = '/';
+      console.log('Logout completed, reloading page...');
+      
+      // Force a hard reload of the page
+      window.location.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
       // Force reload even if there's an error to ensure clean state
-      window.location.href = '/';
+      window.location.replace('/');
     }
   };
 
