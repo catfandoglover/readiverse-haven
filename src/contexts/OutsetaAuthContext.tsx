@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
@@ -8,7 +9,7 @@ import type { Database } from '@/integrations/supabase/types';
 interface OutsetaUser {
   email: string;
   accountUid: string;
-  // Add other user properties as needed
+  Uid: string; // Add the Uid property
 }
 
 interface AuthContextType {
@@ -63,6 +64,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Save a reference to Outseta
   const outsetaRef = useRef(getOutseta());
 
+  // Define updateUser function at the correct scope
+  const updateUser = async () => {
+    try {
+      console.log('Auth State Check:', {
+        storedToken: localStorage.getItem('outseta_token'),
+        hasOutsetaClient: !!window.Outseta,
+        currentToken: outsetaRef.current?.getAccessToken?.(),
+        location: window.location.pathname
+      });
+
+      // First check for stored token
+      const storedToken = localStorage.getItem('outseta_token');
+      if (storedToken) {
+        outsetaRef.current.setAccessToken(storedToken);
+      }
+
+      const currentToken = outsetaRef.current.getAccessToken();
+      if (currentToken) {
+        // Store token for persistence
+        localStorage.setItem('outseta_token', currentToken);
+        
+        const outsetaUser = await outsetaRef.current.getUser();
+        console.log('Outseta user info:', outsetaUser);
+        
+        try {
+          const supabaseJwt = await exchangeToken(currentToken);
+          const supabaseClient = createSupabaseClient(supabaseJwt);
+          setSupabase(supabaseClient);
+        } catch (error) {
+          console.error('Failed to exchange token:', error);
+          setSupabase(null);
+        }
+        
+        setUser(outsetaUser);
+      } else {
+        setUser(null);
+        setSupabase(null);
+        localStorage.removeItem('outseta_token');
+      }
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      setUser(null);
+      setSupabase(null);
+      localStorage.removeItem('outseta_token');
+    }
+    setStatus('ready');
+  };
+
   useEffect(() => {
     // Set up handling of user related events
     const handleOutsetaUserEvents = (onEvent: () => void) => {
@@ -80,53 +129,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       outsetaRef.current.setAccessToken(accessToken);
       setSearchParams({});
     }
-
-    const updateUser = async () => {
-      try {
-        console.log('Auth State Check:', {
-          storedToken: localStorage.getItem('outseta_token'),
-          hasOutsetaClient: !!window.Outseta,
-          currentToken: outsetaRef.current?.getAccessToken?.(),
-          location: window.location.pathname
-        });
-
-        // First check for stored token
-        const storedToken = localStorage.getItem('outseta_token');
-        if (storedToken) {
-          outsetaRef.current.setAccessToken(storedToken);
-        }
-
-        const currentToken = outsetaRef.current.getAccessToken();
-        if (currentToken) {
-          // Store token for persistence
-          localStorage.setItem('outseta_token', currentToken);
-          
-          const outsetaUser = await outsetaRef.current.getUser();
-          console.log('Outseta user info:', outsetaUser);
-          
-          try {
-            const supabaseJwt = await exchangeToken(currentToken);
-            const supabaseClient = createSupabaseClient(supabaseJwt);
-            setSupabase(supabaseClient);
-          } catch (error) {
-            console.error('Failed to exchange token:', error);
-            setSupabase(null);
-          }
-          
-          setUser(outsetaUser);
-        } else {
-          setUser(null);
-          setSupabase(null);
-          localStorage.removeItem('outseta_token');
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setUser(null);
-        setSupabase(null);
-        localStorage.removeItem('outseta_token');
-      }
-      setStatus('ready');
-    };
 
     // Set up user event handling
     handleOutsetaUserEvents(updateUser);
