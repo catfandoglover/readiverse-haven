@@ -6,6 +6,7 @@ import { Compass, LibraryBig, Search } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import QuestionsCards from "./QuestionsCards";
+import { LoginButtons } from "@/components/auth/LoginButtons";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -73,9 +74,9 @@ const Home = () => {
               />
             </button>
             <div className="flex items-center space-x-4">
-              <button className="h-10 px-4 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
-                <span>My Account</span>
-              </button>
+              <div className="h-10 px-4 inline-flex items-center justify-center">
+                <LoginButtons />
+              </div>
               <button
                 onClick={() => handleNavigation('/search')}
                 className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
