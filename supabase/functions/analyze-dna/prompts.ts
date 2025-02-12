@@ -1,5 +1,27 @@
+
 export function getPromptForSection(section: number, answers_json: string): string {
-  const systemRequirements = `Requirements:
+  const archetypeGuide = `Archetype Generation Guidelines:
+First Word Elements should be chosen from:
+- Light Elements: Dawn (emerging), Twilight (balanced), Horizon (boundary), Star (guiding), Moon (reflected)
+- Earth Elements: Mountain (height), River (flow), Forest (complexity), Cave (depth), Garden (cultivation)
+- Space Elements: Bridge (connection), Gate (threshold), Path (journey), Tower (perspective), Well (depth)
+- Fire Elements: Flame (transformation), Forge (creation), Hearth (nurture), Beacon (guidance), Spark (inspiration)
+
+Second Word Elements should be chosen from:
+- Knowledge Actions: Weaver (integration), Seeker (exploration), Builder (construction), Keeper (preservation), Navigator (guidance)
+- Wisdom Roles: Sage (understanding), Explorer (discovery), Architect (design), Guardian (protection), Alchemist (transformation)
+- Bridge Roles: Mediator (connection), Harmonizer (balance), Translator (interpretation), Walker (journey), Dancer (flow)
+
+Archetype Rules:
+1. Pattern Analysis: Consider dominant patterns in philosophical answers
+2. Element Selection: Choose first word based on pattern type and domain
+3. Role Assignment: Choose second word based on action patterns
+4. Verify philosophical accuracy and poetic resonance
+5. Ensure metaphoric coherence and distinctiveness`;
+
+  const systemRequirements = `${archetypeGuide}
+
+Thinker Selection Requirements:
 Temporal Distribution
 - Select no thinkers after 1980
 - Include minimum 20% pre-medieval thinkers
@@ -31,7 +53,7 @@ Format your response as a FLAT JSON object with NO nesting. Use the exact field 
     1: `For Section 1 (Theology & Ontology), provide a JSON object with these exact fields:
 
 {
-  "archetype": "Domain Archetype",
+  "archetype": "Domain Archetype (format: [First Word] [Second Word], chosen from the approved elements list)",
   "archetype_definition": "Brief poetic subtitle capturing essence",
   "introduction": "Opening paragraph describing how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making. Written in direct address: 'You are...' 'Your approach...'",
   "key_tension_1": "One of three primary dialectics you navigate, written as 'You find yourself balancing...' or 'You often wrestle with...'",
