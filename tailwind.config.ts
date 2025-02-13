@@ -19,7 +19,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				oxanium: ['Oxanium', 'sans-serif'],
+				lexend: ['Lexend', 'sans-serif'],
 				georgia: ['Georgia', 'serif'],
 				helvetica: ['Helvetica', 'Arial', 'sans-serif'],
 				times: ['Times New Roman', 'serif'],

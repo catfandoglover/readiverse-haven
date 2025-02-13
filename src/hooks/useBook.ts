@@ -9,24 +9,45 @@ export const useBook = (slug: string | undefined) => {
     queryKey: ['book', slug],
     queryFn: async () => {
       if (!slug) return null;
+
+      console.log('Fetching book with slug:', slug);
       
       try {
-        console.log('Fetching book with slug:', slug);
         const { data, error } = await supabase
           .from('books')
           .select('*')
-          .eq('slug', slug)
-          .maybeSingle();
+          .eq('slug', slug.toLowerCase())
+          .single();
 
         if (error) {
-          console.error('Error fetching book:', error);
-          throw error;
+          console.log('Initial query error:', error);
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('books')
+            .select()
+            .filter('slug', 'eq', slug)
+            .limit(1);
+
+          if (retryError) {
+            console.log('Retry query error:', retryError);
+            return null;
+          }
+
+          const result = retryData?.[0] || null;
+          console.log('Retry query result:', {
+            found: !!result,
+            hasEpubUrl: result?.epub_file_url ? 'yes' : 'no'
+          });
+          return result;
         }
 
-        console.log('Book data received:', data);
+        console.log('Query result:', {
+          found: !!data,
+          hasEpubUrl: data?.epub_file_url ? 'yes' : 'no'
+        });
         return data;
       } catch (error) {
-        console.error('Unexpected error in useBook:', error);
+        console.log('Unexpected error in useBook:', error);
         return null;
       }
     },

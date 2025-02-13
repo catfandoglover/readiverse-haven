@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import type { Rendition, Contents } from "epubjs";
+import type { Rendition } from "epubjs";
 import type { Highlight } from "@/types/highlight";
 
 export const useHighlightManagement = (
   rendition: Rendition | null,
   highlights: Highlight[] = []
 ) => {
-  const clearHighlights = useCallback((contents: Contents) => {
+  const clearHighlights = useCallback((contents: any) => {
     try {
       const contentsArray = Array.isArray(contents) ? contents : [contents];
       contentsArray.forEach((content) => {
@@ -24,25 +24,38 @@ export const useHighlightManagement = (
     if (!rendition) return;
     
     try {
+      // Clear existing highlights first
+      const contents = rendition.getContents();
+      if (Array.isArray(contents)) {
+        contents.forEach(content => {
+          clearHighlights(content);
+        });
+      }
+
+      // Add all highlights
       highlights.forEach(highlight => {
-        rendition.annotations.remove(highlight.cfiRange, "highlight");
-        rendition.annotations.add(
-          "highlight",
-          highlight.cfiRange,
-          {},
-          undefined,
-          "highlight-yellow",
-          {
-            "fill": "yellow",
-            "fill-opacity": "0.3",
-            "mix-blend-mode": "multiply"
-          }
-        );
+        try {
+          rendition.annotations.remove(highlight.cfiRange, 'highlight');
+          rendition.annotations.add(
+            "highlight",
+            highlight.cfiRange,
+            {},
+            undefined,
+            `highlight-${highlight.color}`,
+            {
+              "fill": highlight.color,
+              "fill-opacity": "0.3",
+              "mix-blend-mode": "multiply"
+            }
+          );
+        } catch (error) {
+          console.error('Error applying highlight:', error);
+        }
       });
     } catch (error) {
       console.error('Error reapplying highlights:', error);
     }
-  }, [rendition, highlights]);
+  }, [rendition, highlights, clearHighlights]);
 
   return {
     clearHighlights,

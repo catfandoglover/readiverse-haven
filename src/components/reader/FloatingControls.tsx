@@ -13,6 +13,7 @@ interface FloatingControlsProps {
   onColorSelect: (color: 'yellow') => void;
   onHighlightSelect: (cfiRange: string) => void;
   onRemoveHighlight: (id: string) => void;
+  bookKey: string | null;
 }
 
 const FloatingControls = ({
@@ -23,7 +24,8 @@ const FloatingControls = ({
   selectedColor,
   onColorSelect,
   onHighlightSelect,
-  onRemoveHighlight
+  onRemoveHighlight,
+  bookKey
 }: FloatingControlsProps) => {
   const isMobile = useIsMobile();
 
@@ -35,6 +37,7 @@ const FloatingControls = ({
             currentLocation={currentLocation}
             onLocationSelect={onLocationSelect}
             onBookmarkClick={onBookmarkClick}
+            bookKey={bookKey}
           />
         </div>
         <div className={isMobile ? "hidden" : "block"}>

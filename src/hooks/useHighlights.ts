@@ -22,10 +22,9 @@ export const useHighlights = (bookKey: string | null) => {
   }, [bookKey]);
 
   const saveHighlights = (newHighlights: Highlight[]) => {
-    if (bookKey) {
-      localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
-      setHighlights(newHighlights);
-    }
+    if (!bookKey) return;
+    localStorage.setItem(`highlights-${bookKey}`, JSON.stringify(newHighlights));
+    setHighlights(newHighlights);
   };
 
   const addHighlight = (cfiRange: string, text: string) => {

@@ -9,7 +9,21 @@ import SessionTimer from '../SessionTimer';
 import BookmarkControls from './BookmarkControls';
 import type { ReaderControlsProps } from '@/types/reader';
 
-export const DesktopControls = (props: ReaderControlsProps) => {
+export const DesktopControls = ({
+  fontSize,
+  onFontSizeChange,
+  fontFamily,
+  onFontFamilyChange,
+  textAlign,
+  onTextAlignChange,
+  brightness,
+  onBrightnessChange,
+  currentLocation,
+  onBookmarkClick,
+  onLocationChange,
+  sessionTime,
+  bookKey
+}: ReaderControlsProps) => {
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -22,9 +36,10 @@ export const DesktopControls = (props: ReaderControlsProps) => {
     <>
       <div className="hidden md:flex fixed top-4 right-4 z-50 flex-col items-center gap-2">
         <BookmarkControls
-          currentLocation={props.currentLocation}
-          onBookmarkClick={props.onBookmarkClick}
-          onLocationChange={props.onLocationChange}
+          currentLocation={currentLocation}
+          onBookmarkClick={onBookmarkClick}
+          onLocationChange={onLocationChange}
+          bookKey={bookKey}
         />
       </div>
 
@@ -42,18 +57,18 @@ export const DesktopControls = (props: ReaderControlsProps) => {
       <div className="hidden md:flex items-center flex-1 justify-center">
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4">
           <FontControls
-            fontSize={props.fontSize}
-            onFontSizeChange={props.onFontSizeChange}
-            fontFamily={props.fontFamily}
-            onFontFamilyChange={props.onFontFamilyChange}
+            fontSize={fontSize}
+            onFontSizeChange={onFontSizeChange}
+            fontFamily={fontFamily}
+            onFontFamilyChange={onFontFamilyChange}
           />
           <AlignmentControls
-            textAlign={props.textAlign}
-            onTextAlignChange={props.onTextAlignChange}
+            textAlign={textAlign}
+            onTextAlignChange={onTextAlignChange}
           />
           <BrightnessControl
-            brightness={props.brightness}
-            onBrightnessChange={props.onBrightnessChange}
+            brightness={brightness}
+            onBrightnessChange={onBrightnessChange}
           />
           <div className="hidden md:block">
             <Drawer>
@@ -63,12 +78,12 @@ export const DesktopControls = (props: ReaderControlsProps) => {
                   size="icon"
                   className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
                 >
-                  <SessionTimer seconds={props.sessionTime} showIcon={true} />
+                  <SessionTimer seconds={sessionTime} showIcon={true} />
                 </Button>
               </DrawerTrigger>
               <DrawerContent>
                 <div className="p-4 flex justify-center">
-                  <SessionTimer seconds={props.sessionTime} className="text-lg" showIcon={false} />
+                  <SessionTimer seconds={sessionTime} className="text-lg" showIcon={false} />
                 </div>
               </DrawerContent>
             </Drawer>

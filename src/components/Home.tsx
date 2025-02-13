@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -8,6 +8,9 @@ import { Compass, LibraryBig, Search, Dna } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
+import { LoginButtons } from "@/components/auth/LoginButtons";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = Database['public']['Tables']['icons']['Row'];
@@ -24,6 +27,8 @@ type Concept = {
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
+  const { user, supabase: authenticatedSupabase } = useAuth();
 
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
@@ -32,7 +37,7 @@ const Home = () => {
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await authenticatedSupabase
         .from('books')
         .select('*')
         .order('randomizer');
@@ -42,6 +47,42 @@ const Home = () => {
     },
     staleTime: 30000,
     refetchOnMount: false
+  });
+
+  const addToBookshelf = useMutation({
+    mutationFn: async (bookId: string) => {
+      if (!user?.Account?.Uid) {
+        throw new Error('You must be logged in to add books to your bookshelf');
+      }
+
+      console.log('Adding book to bookshelf:', {
+        bookId,
+        userId: user.Account.Uid
+      });
+
+      const { error } = await authenticatedSupabase
+        .from('user_books')
+        .insert({
+          book_id: bookId,
+          outseta_user_id: user.Account.Uid,
+          status: 'reading',
+          current_page: 0
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        description: "Book added to your bookshelf",
+      });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast({
+        variant: "destructive",
+        description: error instanceof Error ? error.message : "Failed to add book to bookshelf",
+      });
+    }
   });
 
   const { data: icons, isLoading: iconsLoading } = useQuery({
@@ -110,12 +151,17 @@ const Home = () => {
                 className="h-5 w-5"
               />
             </button>
-            <button
-              onClick={() => handleNavigation('/search')}
-              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <div className="h-10 px-4 inline-flex items-center justify-center">
+                <LoginButtons />
+              </div>
+              <button
+                onClick={() => handleNavigation('/search')}
+                className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -133,15 +179,30 @@ const Home = () => {
                     <Card 
                       key={book.id} 
                       className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                      onClick={() => handleBookClick(book.Cover_super)}
                     >
-                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                      <div 
+                        onClick={() => handleBookClick(book.Cover_super)}
+                        className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]"
+                      >
                         <img
                           src={book.cover_url || '/placeholder.svg'}
                           alt={book.title}
                           className="w-full h-full object-cover rounded-lg relative z-10"
                           loading="lazy"
                         />
+                      </div>
+                      <div className="p-2 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          className="text-[#E9E7E2] text-sm hover:text-[#9b87f5]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToBookshelf.mutate(book.id);
+                          }}
+                          disabled={addToBookshelf.isPending}
+                        >
+                          {addToBookshelf.isPending ? "ADDING..." : "ADD TO BOOKSHELF"}
+                        </Button>
                       </div>
                     </Card>
                   ))}

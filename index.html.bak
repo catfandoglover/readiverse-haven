@@ -6,22 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Readiverse Haven</title>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Outseta Configuration -->
-    <script>
-      var o_options = {
-        domain: "lightninginspiration.outseta.com",
-        monitorDom: true,
-        load: "auth,profile",
-        cookieDomain: ".lightninginspiration.com",
-        cookieSameSite: "Lax",
-        cookieSecure: true
-      };
-    </script>
-    <!-- Outseta External Script -->
-    <script
-      src="https://cdn.outseta.com/outseta.min.js"
-      data-options="o_options"
-    ></script>
   </head>
   <body>
     <div id="root"></div>

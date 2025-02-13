@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -13,44 +13,43 @@ const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGridView, setIsGridView] = useState(false);
+  const { user, supabase } = useAuth();
 
   useEffect(() => {
     saveLastVisited('bookshelf', location.pathname);
   }, [location.pathname]);
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf'],
+    queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      const libraryItems = Object.keys(localStorage)
-        .filter(key => key.startsWith('book-progress-'))
-        .map(key => {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
-            if (!data.bookId) return null;
-            const urlMatch = data.bookId.match(/gutenberg\.org\/(\d+)$/);
-            return urlMatch ? `gutenberg-${urlMatch[1]}` : null;
-          } catch (error) {
-            console.error('Error parsing localStorage item:', error);
-            return null;
-          }
-        })
-        .filter(Boolean);
+      if (!user?.Account?.Uid || !supabase) return [];
 
-      if (!libraryItems.length) return [];
+      const { data: bookData, error } = await supabase
+        .from('user_books')
+        .select(`
+          book:book_id (
+            id,
+            title,
+            author,
+            cover_url,
+            Cover_super,
+            slug
+          )
+        `)
+        .eq('outseta_user_id', user.Account.Uid)
+        .order('last_read_at', { ascending: false });
 
-      const { data: booksData, error: booksError } = await supabase
-        .from('books')
-        .select('*')
-        .in('slug', libraryItems)
-        .order('title');
-      
-      if (booksError) throw booksError;
-      return booksData as Book[];
+      if (error) {
+        console.error('Error fetching bookshelf:', error);
+        return [];
+      }
+
+      return bookData.map(item => item.book) as Book[];
     },
-    staleTime: 1000 * 60 * 5,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    initialData: [],
+    enabled: !!user?.Account?.Uid && !!supabase,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const handleBookClick = (slug: string) => {
@@ -93,6 +92,9 @@ const Bookshelf = () => {
               />
             </button>
             <div className="flex items-center space-x-4">
+              <button className="h-10 px-4 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
+                <span>My Account</span>
+              </button>
               <div className="flex space-x-4">
                 <button
                   onClick={() => setIsGridView(false)}

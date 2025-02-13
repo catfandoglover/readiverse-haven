@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type ThemeType = 'light' | 'dark' | 'sepia';
 
@@ -29,6 +28,13 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [themeType, setThemeType] = useState<ThemeType>('dark');
+
+  useEffect(() => {
+    // Remove any existing theme classes
+    document.documentElement.classList.remove('light', 'dark', 'sepia');
+    // Add the new theme class
+    document.documentElement.classList.add(themeType);
+  }, [themeType]);
 
   const value = {
     theme: themes[themeType],
