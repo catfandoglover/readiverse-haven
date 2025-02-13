@@ -145,7 +145,8 @@ const Index = () => {
                     
                     console.log('Add to bookshelf clicked:', {
                       bookId: book.id,
-                      userId: user.accountUid
+                      userId: user.accountUid,
+                      userObject: user
                     });
                     
                     addToBookshelf.mutate(book.id);
