@@ -1,23 +1,187 @@
 <lov-code>
 export function getPromptForSection(section: number, answers_json: string): string {
   const archetypeGuide = `Archetype Generation Guidelines:
-First Word Elements should be chosen from:
-- Light Elements: Dawn (emerging), Twilight (balanced), Horizon (boundary), Star (guiding), Moon (reflected)
-- Earth Elements: Mountain (height), River (flow), Forest (complexity), Cave (depth), Garden (cultivation)
-- Space Elements: Bridge (connection), Gate (threshold), Path (journey), Tower (perspective), Well (depth)
-- Fire Elements: Flame (transformation), Forge (creation), Hearth (nurture), Beacon (guidance), Spark (inspiration)
 
-Second Word Elements should be chosen from:
-- Knowledge Actions: Weaver (integration), Seeker (exploration), Builder (construction), Keeper (preservation), Navigator (guidance)
-- Wisdom Roles: Sage (understanding), Explorer (discovery), Architect (design), Guardian (protection), Alchemist (transformation)
-- Bridge Roles: Mediator (connection), Harmonizer (balance), Translator (interpretation), Walker (journey), Dancer (flow)
+```mermaid
+# Mythopoetic Archetype Generation System
+## Core Components
+### First Word Elements (Nature/State)
+1. **Light Elements**
+- Dawn (emerging understanding)
+- Twilight (balanced insight)
+- Horizon (boundary sight)
+- Star (guiding light)
+- Moon (reflected wisdom)
+2. **Earth Elements**
+- Mountain (height/depth)
+- River (flow/change)
+- Forest (complexity)
+- Cave (inner depth)
+- Garden (cultivation)
+3. **Space Elements**
+- Bridge (connection)
+- Gate (threshold)
+- Path (journey)
+- Tower (perspective)
+- Well (depth)
+4. **Fire Elements**
+- Flame (transformation)
+- Forge (creation)
+- Hearth (nurture)
+- Beacon (guidance)
+- Spark (inspiration)
+### Second Word Elements (Action/Role)
+1. **Knowledge Actions**
+- Weaver (integration)
+- Seeker (exploration)
+- Builder (construction)
+- Keeper (preservation)
+- Navigator (guidance)
+2. **Wisdom Roles**
+- Sage (understanding)
+- Explorer (discovery)
+- Architect (design)
+- Guardian (protection)
+- Alchemist (transformation)
+3. **Bridge Roles**
+- Mediator (connection)
+- Harmonizer (balance)
+- Translator (interpretation)
+- Walker (journey)
+- Dancer (flow)
+## Pattern Analysis Guide
+### Primary Patterns
+1. **For AAAAA pattern:**
+First Word Options:
+- Tower (pure system)
+- Mountain (height)
+- Star (guidance)
+Second Word Options:
+- Architect
+- Builder
+- Sage
+2. **For BBBBB pattern:**
+First Word Options:
+- River (flow)
+- Forest (complexity)
+- Garden (growth)
+Second Word Options:
+- Explorer
+- Weaver
+- Dancer
+3. **For Mixed Patterns:**
+Analyze ratio and sequence
+### For Alternating Patterns (ABABA):
+First Word Options:
+- Bridge
+- Twilight
+- Horizon
+Second Word Options:
+- Harmonizer
+- Mediator
+- Walker
+## Domain-Specific Archetypes
+### Theology
+First Words:
+- Temple
+- Sanctuary
+- Shrine
+- Light
+- Peak
+Second Words:
+- Seeker
+- Mystic
+- Sage
+- Keeper
+- Walker
+### Ontology
+First Words:
+- Foundation
+- Crystal
+- Mountain
+- Root
+- Core
+Second Words:
+- Architect
+- Builder
+- Weaver
+- Shaper
+- Keeper
+[Continue for other domains...]
+## Integration Rules
+1. Pattern Analysis:
+```
+Analyze:
+- Dominant letters (A/B ratio)
+- Pattern sequence
+- Domain context
+```
+2. Element Selection:
+```
+Choose first word based on:
+- Pattern type
+- Domain nature
+- Overall profile
+```
+3. Role Assignment:
+```
+Choose second word based on:
+- Action pattern
+- Integration needs
+- Profile balance
+```
+4. Resonance Check:
+```
+Verify:
+- Metaphoric coherence
+- Philosophical accuracy
+- Poetic resonance
+```
+## Quality Guidelines
+1. Archetype Criteria:
+- Must capture philosophical orientation
+- Should feel mythologically resonant
+- Must maintain consistency across profiles
+- Should be immediately evocative
+2. Combination Rules:
+- Elements must complement
+- Avoid redundancy
+- Maintain metaphoric coherence
+- Create clear image
+3. Verification Steps:
+- Check pattern match
+- Verify philosophical fit
+- Test resonance
+- Ensure distinctiveness
 
-Archetype Rules:
-1. Pattern Analysis: Consider dominant patterns in philosophical answers
-2. Element Selection: Choose first word based on pattern type and domain
-3. Role Assignment: Choose second word based on action patterns
-4. Verify philosophical accuracy and poetic resonance
-5. Ensure metaphoric coherence and distinctiveness`;
+## Application Process
+1. For Overall Archetype:
+```
+a) Analyze full pattern across domains
+b) Identify dominant tendencies
+c) Select appropriate elements
+d) Test combination
+e) Verify fit
+```
+2. For Domain Archetypes:
+```
+a) Analyze specific pattern
+b) Consider domain context
+c) Select domain-appropriate elements
+d) Test combination
+e) Verify domain fit
+```
+3. Quality Control:
+```
+a) Check consistency
+b) Verify distinctiveness
+c) Test resonance
+d) Confirm accuracy
+```
+Remember: Archetypes should be both meaningful 
+and memorable, capturing deep philosophical 
+patterns while remaining accessible and 
+evocative.```;
 
   const questionTrees = {
     theology: `Here is the decision tree showing how the questions for theology are structured and lead to different paths of inquiry:
