@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useBook } from "@/hooks/useBook";
 import Reader from "@/components/Reader";
@@ -24,10 +25,12 @@ const Index = () => {
           }
 
           const { error } = await supabase
-            .from('user_library')
+            .from('user_books')
             .insert({
               book_id: book.id,
-              user_id: user.id
+              outseta_user_id: user.id,
+              status: 'reading',
+              current_page: 0
             });
 
           if (error && error.code !== '23505') { // Ignore unique violation errors
