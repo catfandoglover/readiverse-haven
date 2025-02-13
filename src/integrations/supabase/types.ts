@@ -1166,32 +1166,54 @@ export type Database = {
         }
         Relationships: []
       }
-      user_library: {
+      user_books: {
         Row: {
-          added_at: string
           book_id: string
+          created_at: string | null
+          current_cfi: string | null
+          current_page: number | null
           id: string
-          user_id: string
+          last_read_at: string | null
+          outseta_user_id: string
+          status: string | null
+          updated_at: string | null
         }
         Insert: {
-          added_at?: string
           book_id: string
+          created_at?: string | null
+          current_cfi?: string | null
+          current_page?: number | null
           id?: string
-          user_id: string
+          last_read_at?: string | null
+          outseta_user_id: string
+          status?: string | null
+          updated_at?: string | null
         }
         Update: {
-          added_at?: string
           book_id?: string
+          created_at?: string | null
+          current_cfi?: string | null
+          current_page?: number | null
           id?: string
-          user_id?: string
+          last_read_at?: string | null
+          outseta_user_id?: string
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_library_book_id_fkey"
+            foreignKeyName: "user_books_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_books_outseta_user_id_fkey"
+            columns: ["outseta_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["outseta_user_id"]
           },
         ]
       }

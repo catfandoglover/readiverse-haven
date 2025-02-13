@@ -18,6 +18,9 @@ const corsHeaders = {
 async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
   const prompt = getPromptForSection(section, answers_json);
 
+  console.log(`Generating analysis for section ${section} with prompt:`, prompt);
+  console.log('Using answers:', answers_json);
+
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -28,7 +31,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         'X-Title': 'Lovable.dev'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'anthropic/claude-3-sonnet',
         messages: [
           {
             role: 'system',
@@ -43,7 +46,9 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenRouter API error (${response.status}):`, errorText);
+      throw new Error(`OpenRouter API returned status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
@@ -75,29 +80,6 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_responses: any[] }> {
-  try {
-    const section1 = await generateAnalysis(answers_json, 1);
-    const section2 = await generateAnalysis(answers_json, 2);
-    const section3 = await generateAnalysis(answers_json, 3);
-    
-    // Merge all sections
-    const combinedContent = {
-      ...section1.content,
-      ...section2.content,
-      ...section3.content
-    };
-    
-    return {
-      analysis: combinedContent,
-      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
-    };
-  } catch (error) {
-    console.error('Error in generateCompleteAnalysis:', error);
-    throw error;
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -110,6 +92,9 @@ serve(async (req) => {
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
+
+      console.log('Received request with:', { assessment_id, profile_image_url });
+      console.log('Answers JSON:', answers_json);
 
       // Fetch the name from dna_assessment_results
       const { data: assessmentData, error: assessmentError } = await supabase
@@ -127,41 +112,55 @@ serve(async (req) => {
         throw new Error('Assessment not found');
       }
 
-      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
-      
-      // Log the database insert data
-      console.log('Database insert data:', {
-        assessment_id,
-        name: assessmentData.name,
-        profile_image_url,
-        raw_responses,
-        ...analysis
-      });
+      try {
+        const section1 = await generateAnalysis(answers_json, 1);
+        const section2 = await generateAnalysis(answers_json, 2);
+        const section3 = await generateAnalysis(answers_json, 3);
+        
+        // Merge all sections
+        const analysis = {
+          ...section1.content,
+          ...section2.content,
+          ...section3.content
+        };
+        
+        // Log the database insert data
+        console.log('Database insert data:', {
+          assessment_id,
+          name: assessmentData.name,
+          profile_image_url,
+          raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response],
+          ...analysis
+        });
 
-      const { error: storeError } = await supabase.from('dna_analysis_results').insert({
-        assessment_id: assessment_id,
-        name: assessmentData.name,
-        profile_image_url: profile_image_url,
-        analysis_text: JSON.stringify(analysis),
-        analysis_type: 'section_1',
-        raw_response: raw_responses,
-        ...analysis
-      });
+        const { error: storeError } = await supabase.from('dna_analysis_results').insert({
+          assessment_id: assessment_id,
+          name: assessmentData.name,
+          profile_image_url: profile_image_url,
+          analysis_text: JSON.stringify(analysis),
+          analysis_type: 'section_1',
+          raw_response: [section1.raw_response, section2.raw_response, section3.raw_response],
+          ...analysis
+        });
 
-      if (storeError) {
-        console.error('Error storing analysis:', storeError);
-        throw storeError;
-      }
-      
-      return new Response(
-        JSON.stringify({ analysis }),
-        { 
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
+        if (storeError) {
+          console.error('Error storing analysis:', storeError);
+          throw storeError;
+        }
+        
+        return new Response(
+          JSON.stringify({ analysis }),
+          { 
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
           },
-        },
-      );
+        );
+      } catch (analysisError) {
+        console.error('Error in analysis generation:', analysisError);
+        throw analysisError;
+      }
     }
 
     return new Response('Method not allowed', { 
