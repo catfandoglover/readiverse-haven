@@ -1,4 +1,4 @@
-
+<lov-code>
 export function getPromptForSection(section: number, answers_json: string): string {
   const contextualPreface = `Here are the philosophical decision trees that generated these answers:
 
@@ -445,9 +445,9 @@ dangerous to be known?"]
     ABB -->|No| ABBB["Should we prioritize 
 equality or excellence?"]
     
-    BAA -->|Yes| BAAA["Is it better to be just 
+    BAA -->|Just| BAAAA["Is it better to be just 
 or to be merciful?"]
-    BAA -->|No| BAAB["Should we value wisdom 
+    BAA -->|Merciful| BAAAB["Should we value wisdom 
 above happiness?"]
     
     BAB -->|Yes| BABA["Is radical change 
@@ -819,3 +819,142 @@ First Words:
 Second Words:
 - Seeker
 - Mystic
+- Sage
+- Keeper
+- Walker
+
+### Ontology
+First Words:
+- Foundation
+- Crystal
+- Mountain
+- Root
+- Core
+Second Words:
+- Architect
+- Builder
+- Weaver
+- Shaper
+- Keeper
+
+### Epistemology
+First Words:
+- Path
+- Mirror
+- Gate
+- Well
+- Lantern
+Second Words:
+- Seeker
+- Explorer
+- Navigator
+- Sage
+- Translator
+
+### Ethics
+First Words:
+- Compass
+- Beacon
+- Balance
+- Heart
+- Garden
+Second Words:
+- Guardian
+- Judge
+- Harmonizer
+- Keeper
+- Weaver
+
+### Politics
+First Words:
+- Bridge
+- Forum
+- Tower
+- Gate
+- Plaza
+Second Words:
+- Builder
+- Mediator
+- Architect
+- Guardian
+- Harmonizer
+
+### Aesthetics
+First Words:
+- Prism
+- Canvas
+- Spring
+- Garden
+- Mirror
+Second Words:
+- Creator
+- Dancer
+- Alchemist
+- Weaver
+- Sage
+\`\`\`
+
+  Requirements for pairs of thinkers listed:
+  Temporal Distribution:
+  -Select no thinkers after 1980
+  -Include minimum 20% pre-medieval thinkers
+  -Represent spread across available periods
+  Cultural Distribution:
+  -Draw 70% from Western philosophical traditions
+  -Draw 30% from Non-Western philosophical traditions
+  Selection Criteria:
+  -Mix iconic and lesser-known influential voices
+  -Choose thinkers reflecting the user's specific decision tree paths
+  -Summarize arguments in one distinctive line
+  -Pair each thinker with their most relevant major work
+
+  Given these philosophical assessment answers: ${answers_json}`;
+
+  const template: Record<number, string> = {
+    1: `${contextualPreface}
+
+You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
+
+1. Format Requirements:
+- Return ONLY the JSON object, nothing else
+- No markdown, no mermaid diagrams, no additional formatting
+- No explanations or text outside the JSON
+- No quotes within field values
+- All text must be in second person (you/your)
+
+2. Content Guidelines:
+- All fields marked as [2-3 sentences] must be exactly 2-3 sentences long
+- Be concise and direct
+- No metaphors or poetic language unless explicitly requested
+- No bullet points or lists within values
+
+Return this exact JSON structure:
+{
+  "archetype": "[Exactly two words: First Word] [Second Word]",
+  "archetype_definition": "[Single sentence, max 10 words]",
+  "introduction": "[2-3 sentences] Factual overview of philosophical approach",
+  "key_tension_1": "[2-3 sentences] Main philosophical tension and navigation",
+  "key_tension_2": "[2-3 sentences] Second philosophical tension and navigation",
+  "key_tension_3": "[2-3 sentences] Third philosophical tension and navigation",
+  "natural_strength_1": "[2-3 sentences] First philosophical strength and context",
+  "natural_strength_2": "[2-3 sentences] Second philosophical strength and context",
+  "natural_strength_3": "[2-3 sentences] Third philosophical strength and context",
+  "growth_edges_1": "[2-3 sentences] First growth area with challenge and potential",
+  "growth_edges_2": "[2-3 sentences] Second growth area with challenge and potential",
+  "growth_edges_3": "[2-3 sentences] Third growth area with challenge and potential",
+  "become_who_you_are": "[Single sentence affirmation]",
+  "theology_introduction": "[2-3 sentences] Theology approach overview",
+  "ontology_introduction": "[2-3 sentences] Ontology approach overview",
+  "theology_kindred_spirit_1": "[Single name]",
+  "theology_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "theology_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "theology_kindred_spirit_2": "[Single name]",
+  "theology_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "theology_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "theology_challenging_voice_1": "[Single name]",
+  "theology_challenging_voice_1_classic": "[Work title] ([Year])",
+  "theology_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "theology_challenging_voice_2": "[Single name]",
+  "theology_challenging_voice_2_classic": "[Work title] ([Year])",
+  "theology_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation",
+  "ontology_kindred_spirit_1": "[Single name]",
