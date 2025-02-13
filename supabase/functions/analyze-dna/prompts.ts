@@ -1,7 +1,29 @@
-
 export function getPromptForSection(section: number, answers_json: string): string {
+  const contextualPreface = `Here are the philosophical decision trees that generated these answers:
+
+[Mermaid diagrams of all 6 philosophical domains with their decision trees]
+
+Requirements for pairs of thinkers listed:
+Temporal Distribution:
+-Select no thinkers after 1980
+-Include minimum 20% pre-medieval thinkers
+-Represent spread across available periods
+Cultural Distribution:
+-Draw 70% from Western philosophical traditions
+-Draw 30% from Non-Western philosophical traditions
+Selection Criteria:
+-Mix iconic and lesser-known influential voices
+-Choose thinkers reflecting the user's specific decision tree paths
+-Summarize arguments in one distinctive line
+-Pair each thinker with their most relevant major work
+
+Mythopoetic Archetype Requirements:
+[Complete mythopoetic archetype generation system and rules]
+
+Given these philosophical assessment answers: ${answers_json}`;
+
   const template: Record<number, string> = {
-    1: `Given these philosophical assessment answers: ${answers_json}
+    1: `${contextualPreface}
 
 You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
 
@@ -97,7 +119,7 @@ Return this exact JSON structure:
   "ontology_challenging_voice_5_rationale": "[1-2 sentences] Challenge explanation"
 }`,
 
-    2: `Given these philosophical assessment answers: ${answers_json}
+    2: `${contextualPreface}
 
 You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
 
@@ -180,7 +202,7 @@ Return this exact JSON structure:
   "ethics_challenging_voice_5_rationale": "[1-2 sentences] Challenge explanation"
 }`,
 
-    3: `Given these philosophical assessment answers: ${answers_json}
+    3: `${contextualPreface}
 
 You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
 
@@ -268,4 +290,3 @@ Return this exact JSON structure:
 
   return template[section] || '';
 }
-
