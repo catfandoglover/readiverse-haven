@@ -1,4 +1,3 @@
-<lov-code>
 export function getPromptForSection(section: number, answers_json: string): string {
   const contextualPreface = `Here are the philosophical decision trees that generated these answers:
 
@@ -40,7 +39,7 @@ trustworthy?"]
     
     BB -->|Yes| BBA["Should faith seek 
 understanding?"]
-    BB -->|No| BBB["Does divine hiddenness 
+    BB -->|No| BBB["Is divine hiddenness 
 matter?"]
     
     AAA -->|Yes| AAAA["Can finite minds grasp 
@@ -958,3 +957,115 @@ Return this exact JSON structure:
   "theology_challenging_voice_2_classic": "[Work title] ([Year])",
   "theology_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation",
   "ontology_kindred_spirit_1": "[Single name]",
+  "ontology_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "ontology_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "ontology_kindred_spirit_2": "[Single name]",
+  "ontology_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "ontology_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "ontology_challenging_voice_1": "[Single name]",
+  "ontology_challenging_voice_1_classic": "[Work title] ([Year])",
+  "ontology_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "ontology_challenging_voice_2": "[Single name]",
+  "ontology_challenging_voice_2_classic": "[Work title] ([Year])",
+  "ontology_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation"
+}`,
+
+    2: `${contextualPreface}
+
+You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
+
+1. Format Requirements:
+- Return ONLY the JSON object, nothing else
+- No markdown, no mermaid diagrams, no additional formatting
+- No explanations or text outside the JSON
+- No quotes within field values
+- All text must be in second person (you/your)
+
+2. Content Guidelines:
+- All rationale fields must be 1-2 sentences
+- Be concise and direct
+- No metaphors or poetic language
+- No bullet points or lists within values
+
+Return this exact JSON structure:
+{
+  "epistemology_introduction": "[2-3 sentences] Epistemology approach overview",
+  "ethics_introduction": "[2-3 sentences] Ethics approach overview",
+  "epistemology_kindred_spirit_1": "[Single name]",
+  "epistemology_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "epistemology_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "epistemology_kindred_spirit_2": "[Single name]",
+  "epistemology_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "epistemology_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "epistemology_challenging_voice_1": "[Single name]",
+  "epistemology_challenging_voice_1_classic": "[Work title] ([Year])",
+  "epistemology_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "epistemology_challenging_voice_2": "[Single name]",
+  "epistemology_challenging_voice_2_classic": "[Work title] ([Year])",
+  "epistemology_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation",
+  "ethics_kindred_spirit_1": "[Single name]",
+  "ethics_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "ethics_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "ethics_kindred_spirit_2": "[Single name]",
+  "ethics_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "ethics_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "ethics_challenging_voice_1": "[Single name]",
+  "ethics_challenging_voice_1_classic": "[Work title] ([Year])",
+  "ethics_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "ethics_challenging_voice_2": "[Single name]",
+  "ethics_challenging_voice_2_classic": "[Work title] ([Year])",
+  "ethics_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation"
+}`,
+
+    3: `${contextualPreface}
+
+You must return ONLY a valid JSON object with no additional text, markdown, or formatting. Follow these strict requirements:
+
+1. Format Requirements:
+- Return ONLY the JSON object, nothing else
+- No markdown, no mermaid diagrams, no additional formatting
+- No explanations or text outside the JSON
+- No quotes within field values
+- All text must be in second person (you/your)
+
+2. Content Guidelines:
+- All rationale fields must be 1-2 sentences
+- Be concise and direct
+- No metaphors or poetic language
+- No bullet points or lists within values
+
+Return this exact JSON structure:
+{
+  "politics_introduction": "[2-3 sentences] Politics approach overview",
+  "aesthetics_introduction": "[2-3 sentences] Aesthetics approach overview",
+  "politics_kindred_spirit_1": "[Single name]",
+  "politics_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "politics_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "politics_kindred_spirit_2": "[Single name]",
+  "politics_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "politics_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "politics_challenging_voice_1": "[Single name]",
+  "politics_challenging_voice_1_classic": "[Work title] ([Year])",
+  "politics_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "politics_challenging_voice_2": "[Single name]",
+  "politics_challenging_voice_2_classic": "[Work title] ([Year])",
+  "politics_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation",
+  "aesthetics_kindred_spirit_1": "[Single name]",
+  "aesthetics_kindred_spirit_1_classic": "[Work title] ([Year])",
+  "aesthetics_kindred_spirit_1_rationale": "[1-2 sentences] Connection explanation",
+  "aesthetics_kindred_spirit_2": "[Single name]",
+  "aesthetics_kindred_spirit_2_classic": "[Work title] ([Year])",
+  "aesthetics_kindred_spirit_2_rationale": "[1-2 sentences] Connection explanation",
+  "aesthetics_challenging_voice_1": "[Single name]",
+  "aesthetics_challenging_voice_1_classic": "[Work title] ([Year])",
+  "aesthetics_challenging_voice_1_rationale": "[1-2 sentences] Connection explanation",
+  "aesthetics_challenging_voice_2": "[Single name]",
+  "aesthetics_challenging_voice_2_classic": "[Work title] ([Year])",
+  "aesthetics_challenging_voice_2_rationale": "[1-2 sentences] Connection explanation",
+  "conclusion": "[3-4 sentences] Overall synthesis of philosophical profile",
+  "next_steps": "[2-3 sentences] Concrete areas for philosophical exploration"
+}`
+  };
+
+  return template[section] || '';
+}
