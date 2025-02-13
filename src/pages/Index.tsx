@@ -36,7 +36,8 @@ const Index = () => {
       console.log('Adding book to bookshelf:', {
         bookId,
         outsetaUserId: user.accountUid,
-        isAuthenticatedClient: !!authenticatedSupabase
+        isAuthenticatedClient: !!authenticatedSupabase,
+        userInfo: user
       });
 
       const { data, error } = await authenticatedSupabase
@@ -52,6 +53,9 @@ const Index = () => {
 
       if (error) {
         console.error('Failed to add book:', error);
+        if (error.message.includes('duplicate')) {
+          throw new Error('This book is already in your bookshelf');
+        }
         throw error;
       }
 
@@ -65,6 +69,12 @@ const Index = () => {
     },
     onError: (error) => {
       console.error('Mutation error:', error);
+      
+      // Clear any stale authentication state if we get an auth error
+      if (error.message.includes('authentication')) {
+        window.location.reload();
+      }
+      
       toast({
         variant: "destructive",
         description: error instanceof Error 
