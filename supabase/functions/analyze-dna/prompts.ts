@@ -64,7 +64,22 @@ Please analyze the theology and ontology sections and return a JSON with these e
   "ontology_kindred_spirit_4_rationale": "Resonance explanation",
   "ontology_kindred_spirit_5": "Name",
   "ontology_kindred_spirit_5_classic": "Work (Date)",
-  "ontology_kindred_spirit_5_rationale": "Resonance explanation"
+  "ontology_kindred_spirit_5_rationale": "Resonance explanation",
+  "ontology_challenging_voice_1": "Name",
+  "ontology_challenging_voice_1_classic": "Work (Date)",
+  "ontology_challenging_voice_1_rationale": "Challenge explanation",
+  "ontology_challenging_voice_2": "Name",
+  "ontology_challenging_voice_2_classic": "Work (Date)",
+  "ontology_challenging_voice_2_rationale": "Challenge explanation",
+  "ontology_challenging_voice_3": "Name",
+  "ontology_challenging_voice_3_classic": "Work (Date)",
+  "ontology_challenging_voice_3_rationale": "Challenge explanation",
+  "ontology_challenging_voice_4": "Name",
+  "ontology_challenging_voice_4_classic": "Work (Date)",
+  "ontology_challenging_voice_4_rationale": "Challenge explanation",
+  "ontology_challenging_voice_5": "Name",
+  "ontology_challenging_voice_5_classic": "Work (Date)",
+  "ontology_challenging_voice_5_rationale": "Challenge explanation"
 }`,
 
     2: `Given these philosophical assessment answers: ${answers_json}
@@ -117,7 +132,22 @@ Please analyze the epistemology and ethics sections and return a JSON with these
   "ethics_kindred_spirit_4_rationale": "Resonance explanation",
   "ethics_kindred_spirit_5": "Name",
   "ethics_kindred_spirit_5_classic": "Work (Date)",
-  "ethics_kindred_spirit_5_rationale": "Resonance explanation"
+  "ethics_kindred_spirit_5_rationale": "Resonance explanation",
+  "ethics_challenging_voice_1": "Name",
+  "ethics_challenging_voice_1_classic": "Work (Date)",
+  "ethics_challenging_voice_1_rationale": "Challenge explanation",
+  "ethics_challenging_voice_2": "Name",
+  "ethics_challenging_voice_2_classic": "Work (Date)",
+  "ethics_challenging_voice_2_rationale": "Challenge explanation",
+  "ethics_challenging_voice_3": "Name",
+  "ethics_challenging_voice_3_classic": "Work (Date)",
+  "ethics_challenging_voice_3_rationale": "Challenge explanation",
+  "ethics_challenging_voice_4": "Name",
+  "ethics_challenging_voice_4_classic": "Work (Date)",
+  "ethics_challenging_voice_4_rationale": "Challenge explanation",
+  "ethics_challenging_voice_5": "Name",
+  "ethics_challenging_voice_5_classic": "Work (Date)",
+  "ethics_challenging_voice_5_rationale": "Challenge explanation"
 }`,
 
     3: `Given these philosophical assessment answers: ${answers_json}
@@ -170,7 +200,24 @@ Please analyze the politics and aesthetics sections and return a JSON with these
   "aesthetics_kindred_spirit_4_rationale": "Resonance explanation",
   "aesthetics_kindred_spirit_5": "Name",
   "aesthetics_kindred_spirit_5_classic": "Work (Date)",
-  "aesthetics_kindred_spirit_5_rationale": "Resonance explanation"
+  "aesthetics_kindred_spirit_5_rationale": "Resonance explanation",
+  "aesthetics_challenging_voice_1": "Name",
+  "aesthetics_challenging_voice_1_classic": "Work (Date)",
+  "aesthetics_challenging_voice_1_rationale": "Challenge explanation",
+  "aesthetics_challenging_voice_2": "Name",
+  "aesthetics_challenging_voice_2_classic": "Work (Date)",
+  "aesthetics_challenging_voice_2_rationale": "Challenge explanation",
+  "aesthetics_challenging_voice_3": "Name",
+  "aesthetics_challenging_voice_3_classic": "Work (Date)",
+  "aesthetics_challenging_voice_3_rationale": "Challenge explanation",
+  "aesthetics_challenging_voice_4": "Name",
+  "aesthetics_challenging_voice_4_classic": "Work (Date)",
+  "aesthetics_challenging_voice_4_rationale": "Challenge explanation",
+  "aesthetics_challenging_voice_5": "Name",
+  "aesthetics_challenging_voice_5_classic": "Work (Date)",
+  "aesthetics_challenging_voice_5_rationale": "Challenge explanation",
+  "conclusion": "Overall synthesis of your philosophical profile",
+  "next_steps": "Suggested areas for further philosophical exploration"
 }`
   };
 
