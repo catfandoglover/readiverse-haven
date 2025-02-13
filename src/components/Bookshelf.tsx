@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,9 +16,9 @@ const Bookshelf = () => {
   const { user } = useAuth();
   
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.accountUid],
+    queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.accountUid) return [];
+      if (!user?.Account?.Uid) return [];
 
       const { data: bookData, error } = await supabase
         .from('user_books')
@@ -33,7 +32,7 @@ const Bookshelf = () => {
             slug
           )
         `)
-        .eq('outseta_user_id', user.accountUid)
+        .eq('outseta_user_id', user.Account.Uid)
         .order('last_read_at', { ascending: false });
 
       if (error) {
@@ -41,10 +40,9 @@ const Bookshelf = () => {
         return [];
       }
 
-      // Transform the nested data structure to match the expected Book type
       return bookData.map(item => item.book) as Book[];
     },
-    enabled: !!user?.accountUid,
+    enabled: !!user?.Account?.Uid,
     staleTime: 1000 * 60 * 5,
     refetchOnMount: false,
     refetchOnWindowFocus: false,

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,28 +37,25 @@ const Home = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user || !authenticatedSupabase) {
+      if (!user?.Account?.Uid) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
       console.log('Adding book to bookshelf:', {
         bookId,
-        userId: user.accountUid
+        userId: user.Account.Uid
       });
 
       const { error } = await authenticatedSupabase
         .from('user_books')
         .insert({
           book_id: bookId,
-          outseta_user_id: user.accountUid,
+          outseta_user_id: user.Account.Uid,
           status: 'reading',
           current_page: 0
         });
 
-      if (error) {
-        console.error('Error adding book:', error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       toast({

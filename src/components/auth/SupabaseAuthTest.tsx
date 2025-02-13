@@ -17,7 +17,7 @@ export function SupabaseAuthTest() {
       const { data: insertData, error: insertError } = await supabase
         .from('test_auth')
         .insert([
-          { content: 'Test content', person_uid: user.accountUid }
+          { content: 'Test content', person_uid: user.Account.Uid }
         ])
         .select()
         .single();
@@ -28,7 +28,7 @@ export function SupabaseAuthTest() {
       const { data: readData, error: readError } = await supabase
         .from('test_auth')
         .select('*')
-        .eq('person_uid', user.accountUid);
+        .eq('person_uid', user.Account.Uid);
 
       console.log('Read result:', { readData, readError });
     } catch (error) {
