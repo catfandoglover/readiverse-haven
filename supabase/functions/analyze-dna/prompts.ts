@@ -1,6 +1,6 @@
 
 export function getPromptForSection(section: number, answers_json: string): string {
-  const template = {
+  const template: Record<number, string> = {
     1: `Given these philosophical assessment answers: ${answers_json}
 
 Please analyze the theology and ontology sections and return a JSON with these exact fields:
@@ -66,6 +66,7 @@ Please analyze the theology and ontology sections and return a JSON with these e
   "ontology_kindred_spirit_5_classic": "Work (Date)",
   "ontology_kindred_spirit_5_rationale": "Resonance explanation"
 }`,
+
     2: `Given these philosophical assessment answers: ${answers_json}
 
 Please analyze the epistemology and ethics sections and return a JSON with these exact fields:
@@ -118,6 +119,7 @@ Please analyze the epistemology and ethics sections and return a JSON with these
   "ethics_kindred_spirit_5_classic": "Work (Date)",
   "ethics_kindred_spirit_5_rationale": "Resonance explanation"
 }`,
+
     3: `Given these philosophical assessment answers: ${answers_json}
 
 Please analyze the politics and aesthetics sections and return a JSON with these exact fields:
@@ -169,8 +171,8 @@ Please analyze the politics and aesthetics sections and return a JSON with these
   "aesthetics_kindred_spirit_5": "Name",
   "aesthetics_kindred_spirit_5_classic": "Work (Date)",
   "aesthetics_kindred_spirit_5_rationale": "Resonance explanation"
-}`;
+}`
   };
 
-  return template[section as keyof typeof template] || '';
+  return template[section] || '';
 }
