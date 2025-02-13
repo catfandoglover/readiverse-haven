@@ -43,9 +43,9 @@ const Bookshelf = () => {
       return bookData.map(item => item.book) as Book[];
     },
     enabled: !!user?.Account?.Uid && !!supabase,
-    staleTime: 1000 * 60 * 5,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   const handleBookClick = (slug: string) => {
