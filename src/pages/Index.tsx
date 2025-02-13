@@ -28,12 +28,12 @@ const Index = () => {
       // 1. Log the complete authentication state
       console.log('Authentication State:', {
         userPresent: !!user,
-        outsetaId: user?.accountUid,
+        outsetaId: user?.Account?.Uid,
         hasAuthenticatedClient: !!authenticatedSupabase,
         fullUserObject: user
       });
 
-      if (!user?.accountUid) {
+      if (!user?.Account?.Uid) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
@@ -45,7 +45,7 @@ const Index = () => {
       // 2. Log the exact data we're trying to insert
       const newBookEntry = {
         book_id: bookId,
-        outseta_user_id: user.accountUid,
+        outseta_user_id: user.Account.Uid,
         status: 'reading',
         current_page: 0
       };
@@ -135,7 +135,7 @@ const Index = () => {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    if (!user?.accountUid) {
+                    if (!user?.Account?.Uid) {
                       toast({
                         variant: "destructive",
                         description: "Please log in to add books to your bookshelf",
@@ -145,7 +145,7 @@ const Index = () => {
                     
                     console.log('Add to bookshelf clicked:', {
                       bookId: book.id,
-                      userId: user.accountUid,
+                      userId: user.Account.Uid,
                       userObject: user
                     });
                     
