@@ -3,20 +3,26 @@ export function getPromptForSection(section: number, answers_json: string): stri
   const template: Record<number, string> = {
     1: `Given these philosophical assessment answers: ${answers_json}
 
-Please analyze the theology and ontology sections and return a JSON with these exact fields:
+Please analyze the theology and ontology sections and return a JSON object. Follow these guidelines:
+- All responses must be valid JSON
+- Do not include quotes within field values
+- Use 2-3 sentences for key_tension, natural_strength, and growth_edge fields
+- Write in second person (you/your)
+
+Return a JSON with these exact fields:
 {
-  "archetype": "Domain Archetype (format: [First Word] [Second Word], follow guidelines)",
+  "archetype": "[First Word] [Second Word]",
   "archetype_definition": "Brief poetic subtitle capturing essence",
   "introduction": "Opening paragraph describing philosophical approach",
-  "key_tension_1": "A 2-3 sentence exploration of a primary philosophical tension you navigate, describing both poles and how you tend to move between them",
-  "key_tension_2": "A 2-3 sentence exploration of a second philosophical tension you navigate, describing both poles and how you tend to move between them",
-  "key_tension_3": "A 2-3 sentence exploration of a third philosophical tension you navigate, describing both poles and how you tend to move between them",
-  "natural_strength_1": "A 2-3 sentence description of a core philosophical capacity that comes naturally to you, including both its power and its optimal context",
-  "natural_strength_2": "A 2-3 sentence description of a second core philosophical capacity that comes naturally to you, including both its power and its optimal context",
-  "natural_strength_3": "A 2-3 sentence description of a third core philosophical capacity that comes naturally to you, including both its power and its optimal context",
-  "growth_edges_1": "A 2-3 sentence description of an area where philosophical growth is needed, including both the challenge and the potential for development",
-  "growth_edges_2": "A 2-3 sentence description of a second area where philosophical growth is needed, including both the challenge and the potential for development",
-  "growth_edges_3": "A 2-3 sentence description of a third area where philosophical growth is needed, including both the challenge and the potential for development",
+  "key_tension_1": "Explore a primary philosophical tension in your thinking, describing its opposing poles and your navigation between them",
+  "key_tension_2": "Explore a second philosophical tension in your thinking, describing its opposing poles and your navigation between them",
+  "key_tension_3": "Explore a third philosophical tension in your thinking, describing its opposing poles and your navigation between them",
+  "natural_strength_1": "Describe a core philosophical capacity that emerges naturally in your thinking, including its power and optimal context for expression",
+  "natural_strength_2": "Describe a second core philosophical capacity that emerges naturally in your thinking, including its power and optimal context for expression",
+  "natural_strength_3": "Describe a third core philosophical capacity that emerges naturally in your thinking, including its power and optimal context for expression",
+  "growth_edges_1": "Describe an area where your philosophical thinking needs development, including current challenges and growth potential",
+  "growth_edges_2": "Describe a second area where your philosophical thinking needs development, including current challenges and growth potential",
+  "growth_edges_3": "Describe a third area where your philosophical thinking needs development, including current challenges and growth potential",
   "become_who_you_are": "Affirmation statement",
   "theology_introduction": "Theology approach summary",
   "ontology_introduction": "Ontology approach summary",
