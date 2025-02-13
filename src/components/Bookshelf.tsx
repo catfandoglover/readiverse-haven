@@ -1,6 +1,6 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
@@ -13,12 +13,12 @@ const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGridView, setIsGridView] = useState(false);
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   
   const { data: books = [], isLoading } = useQuery({
     queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.Account?.Uid) return [];
+      if (!user?.Account?.Uid || !supabase) return [];
 
       const { data: bookData, error } = await supabase
         .from('user_books')
@@ -42,7 +42,7 @@ const Bookshelf = () => {
 
       return bookData.map(item => item.book) as Book[];
     },
-    enabled: !!user?.Account?.Uid,
+    enabled: !!user?.Account?.Uid && !!supabase,
     staleTime: 1000 * 60 * 5,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
