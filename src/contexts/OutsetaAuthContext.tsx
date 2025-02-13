@@ -8,7 +8,11 @@ import type { Database } from '@/integrations/supabase/types';
 
 interface OutsetaUser {
   email: string;
-  accountUid: string;
+  Account: {
+    Uid: string;
+    Name: string;
+    // Add other Account properties as needed
+  };
   // Add other user properties as needed
 }
 
