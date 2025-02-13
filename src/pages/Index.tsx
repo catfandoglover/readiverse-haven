@@ -25,38 +25,55 @@ const Index = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
+      // 1. Log the complete authentication state
+      console.log('Authentication State:', {
+        userPresent: !!user,
+        outsetaId: user?.accountUid,
+        hasAuthenticatedClient: !!authenticatedSupabase,
+        fullUserObject: user
+      });
+
       if (!user?.accountUid) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
       if (!authenticatedSupabase) {
-        throw new Error('Authentication client not available');
+        console.error('No authenticated Supabase client available');
+        throw new Error('Authentication error: Please try logging out and back in');
       }
 
-      console.log('Adding book to bookshelf:', {
-        bookId,
-        outsetaUserId: user.accountUid,
-        isAuthenticatedClient: !!authenticatedSupabase,
-        userInfo: user
-      });
+      // 2. Log the exact data we're trying to insert
+      const newBookEntry = {
+        book_id: bookId,
+        outseta_user_id: user.accountUid,
+        status: 'reading',
+        current_page: 0
+      };
+      
+      console.log('Attempting to insert book entry:', newBookEntry);
 
+      // 3. Try the insert with explicit error logging
       const { data, error } = await authenticatedSupabase
         .from('user_books')
-        .insert({
-          book_id: bookId,
-          outseta_user_id: user.accountUid,
-          status: 'reading',
-          current_page: 0
-        })
+        .insert(newBookEntry)
         .select('*')
         .single();
 
       if (error) {
-        console.error('Failed to add book:', error);
+        // 4. Detailed error logging
+        console.error('Database error details:', {
+          error,
+          errorMessage: error.message,
+          errorCode: error.code,
+          details: error.details
+        });
+        
         if (error.message.includes('duplicate')) {
           throw new Error('This book is already in your bookshelf');
         }
-        throw error;
+        
+        // Throw a more specific error
+        throw new Error(`Failed to add book: ${error.message}`);
       }
 
       console.log('Successfully added book:', data);
@@ -70,17 +87,19 @@ const Index = () => {
     onError: (error) => {
       console.error('Mutation error:', error);
       
-      // Clear any stale authentication state if we get an auth error
-      if (error.message.includes('authentication')) {
-        window.location.reload();
-      }
-      
       toast({
         variant: "destructive",
         description: error instanceof Error 
           ? error.message 
-          : "Failed to add book to bookshelf. Please make sure you're logged in.",
+          : "Failed to add book to bookshelf. Please try logging out and back in.",
       });
+
+      // If we get an auth error, force a complete reload to refresh auth state
+      if (error instanceof Error && 
+          (error.message.includes('auth') || error.message.includes('Authentication'))) {
+        console.log('Authentication error detected, refreshing page...');
+        window.location.replace('/');
+      }
     }
   });
 
@@ -123,6 +142,12 @@ const Index = () => {
                       });
                       return;
                     }
+                    
+                    console.log('Add to bookshelf clicked:', {
+                      bookId: book.id,
+                      userId: user.accountUid
+                    });
+                    
                     addToBookshelf.mutate(book.id);
                   }}
                   disabled={addToBookshelf.isPending}
