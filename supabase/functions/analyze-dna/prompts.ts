@@ -1,3 +1,4 @@
+
 export function getPromptForSection(section: number, answers_json: string): string {
   const template: Record<number, string> = {
     1: `Given these philosophical assessment answers: ${answers_json}
@@ -267,3 +268,4 @@ Return this exact JSON structure:
 
   return template[section] || '';
 }
+
