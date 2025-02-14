@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
+import { ScrollArea } from "./ui/scroll-area";
 import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -110,7 +110,7 @@ const Bookshelf = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 bookshelf-page">
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
           <div className="flex justify-between items-center">
             <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
@@ -145,7 +145,7 @@ const Bookshelf = () => {
           </div>
         </header>
 
-        <div className="flex-1 relative">
+        <ScrollArea className="flex-1 overflow-y-auto">
           <div className={`px-4 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
             {!books?.length ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -199,9 +199,9 @@ const Bookshelf = () => {
               </div>
             )}
           </div>
-        </div>
+        </ScrollArea>
 
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
+        <nav className="border-t border-border bg-background py-2 z-50">
           <div className="flex justify-between items-center max-w-sm mx-auto px-8">
             <button 
               className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
