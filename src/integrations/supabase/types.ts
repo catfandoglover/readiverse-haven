@@ -1202,6 +1202,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_user_books_book"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_user_books_book_id"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_books_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
@@ -1231,7 +1245,19 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      debug_auth_state: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          has_jwt: boolean
+          jwt_claims: Json
+          role_name: string
+          user_id: string
+        }[]
+      }
+      debug_jwt: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       dna_category:

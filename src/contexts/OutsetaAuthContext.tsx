@@ -1,7 +1,6 @@
-
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { createSupabaseClient } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { exchangeToken } from '@/integrations/supabase/token-exchange';
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
@@ -93,7 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         try {
           const supabaseJwt = await exchangeToken(currentToken);
-          const supabaseClient = createSupabaseClient(supabaseJwt);
+          const supabaseClient = supabase; // Updated to use the correct supabase client
           setSupabase(supabaseClient);
         } catch (error) {
           console.error('Failed to exchange token:', error);

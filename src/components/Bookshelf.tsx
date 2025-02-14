@@ -18,38 +18,41 @@ const Bookshelf = () => {
   const { data: books = [], isLoading } = useQuery({
     queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.Account?.Uid || !supabase) return [];
-
-      const { data: bookData, error } = await supabase
-        .from('user_books')
-        .select(`
-          book:book_id (
-            id,
-            title,
-            author,
-            cover_url,
-            Cover_super,
-            slug
-          )
-        `)
-        .eq('outseta_user_id', user.Account.Uid)
-        .order('last_read_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching bookshelf:', error);
+      if (!user?.Account?.Uid || !supabase) {
+        console.log('Missing required data:', { hasUser: !!user, hasAccount: !!user?.Account, hasSupabase: !!supabase });
         return [];
       }
 
-      return bookData.map(item => item.book) as Book[];
+      try {
+        const { data: books, error } = await supabase
+          .from('user_books')
+          .select('*, books(*)')
+          .eq('outseta_user_id', user.Account.Uid)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching bookshelf:', error);
+          return [];
+        }
+
+        return books
+          .filter(item => item.books)
+          .map(item => item.books) as Book[];
+      } catch (error) {
+        console.error('Unexpected error fetching books:', error);
+        return [];
+      }
     },
     enabled: !!user?.Account?.Uid && !!supabase,
-    staleTime: 0, // Always consider data stale
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const handleBookClick = (slug: string) => {
-    navigate(`/${slug}`);
+    if (slug) {
+      navigate(`/${slug}`);
+    }
   };
 
   const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
@@ -60,7 +63,9 @@ const Bookshelf = () => {
   };
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    if (path) {
+      navigate(path);
+    }
   };
 
   const isCurrentPath = (path: string) => {
