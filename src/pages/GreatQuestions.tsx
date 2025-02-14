@@ -191,7 +191,7 @@ const GreatQuestions = () => {
       <header className="px-4 py-3 sticky top-0 z-10 bg-background">
         <div className="flex justify-between items-center">
           <button
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-white/10 transition-all duration-200"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="h-5 w-5" />
