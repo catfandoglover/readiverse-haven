@@ -24,9 +24,24 @@ const Bookshelf = () => {
       }
 
       try {
-        const { data: books, error } = await supabase
+        const { data: userBooks, error } = await supabase
           .from('user_books')
-          .select('*, books(*)')
+          .select(`
+            book_id,
+            books!user_books_book_id_fkey (
+              id,
+              title,
+              author,
+              cover_url,
+              Cover_super,
+              categories,
+              created_at,
+              epub_file_url,
+              Notion_URL,
+              randomizer,
+              slug
+            )
+          `)
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
@@ -35,7 +50,7 @@ const Bookshelf = () => {
           return [];
         }
 
-        return books
+        return userBooks
           .filter(item => item.books)
           .map(item => item.books) as Book[];
       } catch (error) {
