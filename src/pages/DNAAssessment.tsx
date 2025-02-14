@@ -475,7 +475,7 @@ const DNAAssessment = () => {
         <header className="sticky top-0 px-4 py-3 relative z-50 bg-background">
           <button 
             onClick={handleExit}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
             type="button"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -488,9 +488,9 @@ const DNAAssessment = () => {
           <Button
             variant="outline"
             onClick={handleExit}
-            className="px-8 py-2 text-foreground bg-background hover:bg-accent transition-colors duration-300 font-oxanium"
+            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]"
           >
-            GO BACK
+            <span>GO BACK</span>
           </Button>
         </div>
       </div>
@@ -500,14 +500,14 @@ const DNAAssessment = () => {
   const buttonTextA = currentQuestion.question?.answer_a || "Yes";
   const buttonTextB = currentQuestion.question?.answer_b || "No";
 
-  const buttonStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10";
+  const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
       <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
         <button 
           onClick={handleExit}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
           type="button"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -533,17 +533,17 @@ const DNAAssessment = () => {
         <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
           <Button
             variant="outline"
-            className={`${buttonStyles} w-40`}
+            className={`${buttonGradientStyles} w-40`}
             onClick={() => handleAnswer("A")}
           >
-            {buttonTextA}
+            <span>{buttonTextA}</span>
           </Button>
           <Button
             variant="outline"
-            className={`${buttonStyles} w-40`}
+            className={`${buttonGradientStyles} w-40`}
             onClick={() => handleAnswer("B")}
           >
-            {buttonTextB}
+            <span>{buttonTextB}</span>
           </Button>
         </div>
       </div>
@@ -557,14 +557,14 @@ const DNAAssessment = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10">
-              Cancel
+            <AlertDialogCancel className={`${buttonGradientStyles}`}>
+              <span>Cancel</span>
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmExit}
-              className="text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-colors duration-300 font-oxanium border-2 border-transparent hover:border-[#9b87f5] relative after:absolute after:inset-0 after:p-[2px] after:rounded-md after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB] after:-z-10"
+              className={`${buttonGradientStyles}`}
             >
-              Exit Assessment
+              <span>Exit Assessment</span>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
