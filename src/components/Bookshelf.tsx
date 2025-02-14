@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -24,6 +25,11 @@ const Bookshelf = () => {
     queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
       if (!user?.Account?.Uid || !supabase) return [];
+
+      console.log('Fetching books for user:', {
+        userId: user.Account.Uid,
+        hasSupabaseClient: !!supabase
+      });
 
       const { data: bookData, error } = await supabase
         .from('user_books')
