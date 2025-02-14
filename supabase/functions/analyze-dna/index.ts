@@ -135,6 +135,7 @@ serve(async (req) => {
         name: assessmentData.name,
         profile_image_url,
         raw_responses,
+        analysis_type: 'section_1', // Adding required analysis_type
         ...analysis
       });
 
@@ -144,6 +145,7 @@ serve(async (req) => {
         profile_image_url: profile_image_url,
         analysis_text: JSON.stringify(analysis),
         raw_response: raw_responses,
+        analysis_type: 'section_1', // Adding required analysis_type
         ...analysis
       });
 
