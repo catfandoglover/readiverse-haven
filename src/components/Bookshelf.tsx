@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -81,7 +80,11 @@ const Bookshelf = () => {
   });
 
   const handleBookClick = (slug: string, epub_file_url: string) => {
-    navigate(`/read/${slug}`, { state: { bookUrl: epub_file_url } });
+    if (slug.startsWith('http')) {
+      window.location.href = slug;
+    } else {
+      navigate(`/read/${slug}`, { state: { bookUrl: epub_file_url } });
+    }
   };
 
   const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
