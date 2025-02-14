@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -79,8 +80,8 @@ const Bookshelf = () => {
     enabled: !!user?.Account?.Uid && !!supabase
   });
 
-  const handleBookClick = (slug: string) => {
-    navigate(`/${slug}`);
+  const handleBookClick = (slug: string, epub_file_url: string) => {
+    navigate(`/read/${slug}`, { state: { bookUrl: epub_file_url } });
   };
 
   const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
@@ -157,13 +158,14 @@ const Bookshelf = () => {
                 <div
                   key={book.id}
                   className="aspect-square cursor-pointer relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 transition-all duration-300"
-                  onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                  onClick={() => handleBookClick(book.slug, book.epub_file_url)}
                 >
                   <img
                     src={book.cover_url || '/placeholder.svg'}
                     alt={book.title}
                     className="w-full h-full object-cover rounded-md shadow-sm relative z-10"
                     loading="lazy"
+                    onClick={(e) => handleCoverClick(book.Cover_super, e)}
                   />
                 </div>
               ))}
@@ -174,7 +176,7 @@ const Bookshelf = () => {
                 <Card 
                   key={book.id} 
                   className="flex gap-4 p-4 hover:bg-accent/50 transition-all duration-300 cursor-pointer bg-card text-card-foreground relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-[1px] after:rounded-md after:bg-card after:z-[0] hover:after:bg-accent/50 [&>*]:relative [&>*]:z-[1]"
-                  onClick={() => handleBookClick(book.slug)}
+                  onClick={() => handleBookClick(book.slug, book.epub_file_url)}
                 >
                   <div 
                     className="w-24 h-24 flex-shrink-0 cursor-pointer"
