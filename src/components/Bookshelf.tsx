@@ -29,7 +29,8 @@ const Bookshelf = () => {
           hasUser: !!user,
           hasAccount: !!user?.Account,
           accountId: user?.Account?.Uid,
-          hasSupabase: !!supabase
+          hasSupabase: !!supabase,
+          supabaseInstance: !!supabase
         });
         return [];
       }
@@ -52,7 +53,7 @@ const Bookshelf = () => {
               slug
             )
           `)
-          .eq('outseta_user_id', user.Account.Uid)
+          .eq('outseta_user_id', user.Uid) // Changed from Account.Uid to Uid
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -71,7 +72,7 @@ const Bookshelf = () => {
         return [];
       }
     },
-    enabled: !!user?.Account?.Uid && !!supabase,
+    enabled: !!user?.Uid && !!supabase,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
