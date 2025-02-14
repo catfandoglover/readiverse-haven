@@ -1231,7 +1231,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      debug_jwt: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       dna_category:

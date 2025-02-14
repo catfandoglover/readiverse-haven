@@ -22,38 +22,54 @@ const Bookshelf = () => {
   }, [location.pathname]);
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.Account?.Uid],
+    queryKey: ['user-bookshelf', user?.Uid],
     queryFn: async () => {
-      if (!user?.Account?.Uid || !supabase) return [];
-
-      console.log('Fetching books for user:', {
-        userId: user.Account.Uid,
-        hasSupabaseClient: !!supabase
-      });
-
-      const { data: bookData, error } = await supabase
-        .from('user_books')
-        .select(`
-          book:book_id (
-            id,
-            title,
-            author,
-            cover_url,
-            Cover_super,
-            slug
-          )
-        `)
-        .eq('outseta_user_id', user.Account.Uid)
-        .order('last_read_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching bookshelf:', error);
+      if (!user?.Uid || !supabase) {
+        console.log('Missing required data:', {
+          hasUser: !!user,
+          userId: user?.Uid,
+          hasSupabase: !!supabase
+        });
         return [];
       }
 
-      return bookData.map(item => item.book) as Book[];
+      console.log('Fetching books for user:', {
+        userId: user.Uid,
+        hasSupabaseClient: !!supabase
+      });
+
+      try {
+        const { data: bookData, error } = await supabase
+          .from('user_books')
+          .select(`
+            book:book_id (
+              id,
+              title,
+              author,
+              cover_url,
+              Cover_super,
+              slug
+            )
+          `)
+          .eq('outseta_user_id', user.Uid);
+
+        if (error) {
+          console.error('Error fetching bookshelf:', error);
+          return [];
+        }
+
+        console.log('Successfully fetched books:', {
+          count: bookData?.length,
+          firstBook: bookData?.[0]?.book
+        });
+
+        return bookData.map(item => item.book) as Book[];
+      } catch (error) {
+        console.error('Unexpected error fetching books:', error);
+        return [];
+      }
     },
-    enabled: !!user?.Account?.Uid && !!supabase,
+    enabled: !!user?.Uid && !!supabase,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
