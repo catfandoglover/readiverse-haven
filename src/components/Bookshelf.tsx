@@ -39,12 +39,9 @@ const Bookshelf = () => {
       });
 
       try {
-        const { data: userBooks, error } = await supabase
+        const { data: books, error } = await supabase
           .from('user_books')
-          .select(`
-            book_id,
-            books!user_books_book_id_fkey (*)
-          `)
+          .select('*, books(*)')
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
@@ -54,12 +51,12 @@ const Bookshelf = () => {
         }
 
         console.log('Successfully fetched books:', {
-          count: userBooks?.length,
-          books: userBooks
+          count: books?.length,
+          books: books
         });
 
         // Transform the data to match the Book type
-        return userBooks
+        return books
           .filter(item => item.books) // Filter out any null books
           .map(item => item.books) as Book[];
       } catch (error) {
