@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -42,7 +43,7 @@ const Bookshelf = () => {
         const { data: bookData, error } = await supabase
           .from('user_books')
           .select(`
-            book_id (
+            book_id:books!inner (
               id,
               title,
               author,
@@ -64,6 +65,7 @@ const Bookshelf = () => {
           firstBook: bookData?.[0]?.book_id
         });
 
+        // Transform the data to match the Book type
         return bookData.map(item => item.book_id) as Book[];
       } catch (error) {
         console.error('Unexpected error fetching books:', error);

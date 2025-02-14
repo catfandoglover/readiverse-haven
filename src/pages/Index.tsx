@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,7 +107,7 @@ const Home = () => {
   const { data: icons, isLoading: iconsLoading } = useQuery({
     queryKey: ['icons'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await authenticatedSupabase
         .from('icons')
         .select('*')
         .order('randomizer');
@@ -122,7 +122,7 @@ const Home = () => {
   const { data: concepts, isLoading: conceptsLoading } = useQuery({
     queryKey: ['concepts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await authenticatedSupabase
         .from('concepts')
         .select('*')
         .order('randomizer');
