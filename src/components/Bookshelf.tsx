@@ -42,16 +42,7 @@ const Bookshelf = () => {
       try {
         const { data: bookData, error } = await supabase
           .from('user_books')
-          .select(`
-            book_id:books!inner (
-              id,
-              title,
-              author,
-              cover_url,
-              Cover_super,
-              slug
-            )
-          `)
+          .select('*, books!book_id(*)')
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
@@ -62,11 +53,13 @@ const Bookshelf = () => {
 
         console.log('Successfully fetched books:', {
           count: bookData?.length,
-          firstBook: bookData?.[0]?.book_id
+          firstBook: bookData?.[0]?.books
         });
 
         // Transform the data to match the Book type
-        return bookData.map(item => item.book_id) as Book[];
+        return bookData
+          .filter(item => item.books) // Filter out any null books
+          .map(item => item.books) as Book[];
       } catch (error) {
         console.error('Unexpected error fetching books:', error);
         return [];
