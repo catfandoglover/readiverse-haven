@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -131,6 +132,7 @@ serve(async (req) => {
         profile_image_url,
         raw_response: sections.map(s => s.raw_response),
         analysis_text: JSON.stringify(sections.map(s => s.analysis)),
+        analysis_type: 'complete', // Added the required analysis_type field
         ...sections[0].analysis, // General profile
         ...sections[1].analysis, // Theology, Epistemology, Ethics, Politics
         ...sections[2].analysis  // Ontology and Aesthetics
