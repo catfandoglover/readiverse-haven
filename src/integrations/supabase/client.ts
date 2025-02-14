@@ -20,4 +20,5 @@ export const createSupabaseClient = (customToken?: string) => {
 };
 
 // Default client instance
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createSupabaseClient();
+
