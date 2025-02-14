@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -75,22 +74,18 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_responses: any[] }> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }> }> {
   try {
     const section1 = await generateAnalysis(answers_json, 1);
     const section2 = await generateAnalysis(answers_json, 2);
     const section3 = await generateAnalysis(answers_json, 3);
     
-    // Merge all sections
-    const combinedContent = {
-      ...section1.content,
-      ...section2.content,
-      ...section3.content
-    };
-    
     return {
-      analysis: combinedContent,
-      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
+      sections: [
+        { analysis: section1.content, raw_response: section1.raw_response },
+        { analysis: section2.content, raw_response: section2.raw_response },
+        { analysis: section3.content, raw_response: section3.raw_response }
+      ]
     };
   } catch (error) {
     console.error('Error in generateCompleteAnalysis:', error);
@@ -127,35 +122,41 @@ serve(async (req) => {
         throw new Error('Assessment not found');
       }
 
-      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
+      const { sections } = await generateCompleteAnalysis(answers_json);
       
-      // Log the database insert data
-      console.log('Database insert data:', {
-        assessment_id,
-        name: assessmentData.name,
-        profile_image_url,
-        raw_responses,
-        analysis_type: 'section_1', // Adding required analysis_type
-        ...analysis
-      });
+      // Store each section separately
+      for (let i = 0; i < sections.length; i++) {
+        const sectionNumber = i + 1;
+        const section = sections[i];
+        
+        // Log the database insert data for each section
+        console.log(`Database insert data for section ${sectionNumber}:`, {
+          assessment_id,
+          name: assessmentData.name,
+          profile_image_url,
+          raw_response: section.raw_response,
+          analysis_type: `section_${sectionNumber}`,
+          ...section.analysis
+        });
 
-      const { error: storeError } = await supabase.from('dna_analysis_results').insert({
-        assessment_id: assessment_id,
-        name: assessmentData.name,
-        profile_image_url: profile_image_url,
-        analysis_text: JSON.stringify(analysis),
-        raw_response: raw_responses,
-        analysis_type: 'section_1', // Adding required analysis_type
-        ...analysis
-      });
+        const { error: storeError } = await supabase.from('dna_analysis_results').insert({
+          assessment_id: assessment_id,
+          name: assessmentData.name,
+          profile_image_url: profile_image_url,
+          analysis_text: JSON.stringify(section.analysis),
+          raw_response: section.raw_response,
+          analysis_type: `section_${sectionNumber}`,
+          ...section.analysis
+        });
 
-      if (storeError) {
-        console.error('Error storing analysis:', storeError);
-        throw storeError;
+        if (storeError) {
+          console.error(`Error storing analysis for section ${sectionNumber}:`, storeError);
+          throw storeError;
+        }
       }
       
       return new Response(
-        JSON.stringify({ analysis }),
+        JSON.stringify({ success: true, message: 'All sections analyzed and stored successfully' }),
         { 
           headers: {
             ...corsHeaders,
