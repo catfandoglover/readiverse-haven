@@ -1217,35 +1217,6 @@ export type Database = {
           },
         ]
       }
-      user_library: {
-        Row: {
-          added_at: string
-          book_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string
-          book_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string
-          book_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_library_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       decision_tree_view: {

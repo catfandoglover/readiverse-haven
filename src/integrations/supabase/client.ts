@@ -6,22 +6,6 @@ const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYzOTkxMzUsImV4cCI6MjA1MTk3NTEzNX0.9Jk5x5wDao4IbddZKPAUvoh_ZcZqtBSKZgiYlZRMCRQ";
 
 // Import the supabase client like this:
-// import { supabase, createSupabaseClient } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client";
 
-// Default anonymous client
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-// Create a new client with custom auth
-export const createSupabaseClient = (accessToken: string) => {
-  return createClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
-    }
-  );
-};
