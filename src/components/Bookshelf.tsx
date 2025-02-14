@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -21,20 +22,20 @@ const Bookshelf = () => {
   }, [location.pathname]);
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.Uid],
+    queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.Uid || !supabase) {
+      if (!user?.Account?.Uid || !supabase) {
         console.log('Missing required data:', {
           hasUser: !!user,
-          hasUid: !!user?.Uid,
-          uid: user?.Uid,
+          hasAccount: !!user?.Account,
+          accountUid: user?.Account?.Uid,
           hasSupabase: !!supabase
         });
         return [];
       }
 
       console.log('Fetching books for account:', {
-        uid: user.Uid,
+        accountUid: user.Account.Uid,
         hasSupabaseClient: !!supabase
       });
 
@@ -51,7 +52,7 @@ const Bookshelf = () => {
               slug
             )
           `)
-          .eq('outseta_user_id', user.Uid)
+          .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -70,7 +71,7 @@ const Bookshelf = () => {
         return [];
       }
     },
-    enabled: !!user?.Uid && !!supabase,
+    enabled: !!user?.Account?.Uid && !!supabase,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
