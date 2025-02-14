@@ -43,7 +43,7 @@ const Bookshelf = () => {
         const { data: bookData, error } = await supabase
           .from('user_books')
           .select(`
-            book:book_id (
+            book:books!fk_user_books_book (
               id,
               title,
               author,
