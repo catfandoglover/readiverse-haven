@@ -124,39 +124,33 @@ serve(async (req) => {
 
       const { sections } = await generateCompleteAnalysis(answers_json);
       
-      // Store each section separately
-      for (let i = 0; i < sections.length; i++) {
-        const sectionNumber = i + 1;
-        const section = sections[i];
-        
-        // Log the database insert data for each section
-        console.log(`Database insert data for section ${sectionNumber}:`, {
-          assessment_id,
-          name: assessmentData.name,
-          profile_image_url,
-          raw_response: section.raw_response,
-          analysis_type: `section_${sectionNumber}`,
-          ...section.analysis
-        });
+      // Combine all sections into a single record
+      const combinedAnalysis = {
+        assessment_id,
+        name: assessmentData.name,
+        profile_image_url,
+        raw_response: sections.map(s => s.raw_response),
+        analysis_text: JSON.stringify(sections.map(s => s.analysis)),
+        ...sections[0].analysis, // General profile
+        ...sections[1].analysis, // Theology, Epistemology, Ethics, Politics
+        ...sections[2].analysis  // Ontology and Aesthetics
+      };
 
-        const { error: storeError } = await supabase.from('dna_analysis_results').insert({
-          assessment_id: assessment_id,
-          name: assessmentData.name,
-          profile_image_url: profile_image_url,
-          analysis_text: JSON.stringify(section.analysis),
-          raw_response: section.raw_response,
-          analysis_type: `section_${sectionNumber}`,
-          ...section.analysis
-        });
+      // Log the combined data
+      console.log('Combined analysis data:', combinedAnalysis);
 
-        if (storeError) {
-          console.error(`Error storing analysis for section ${sectionNumber}:`, storeError);
-          throw storeError;
-        }
+      // Store everything in a single record
+      const { error: storeError } = await supabase
+        .from('dna_analysis_results')
+        .insert(combinedAnalysis);
+
+      if (storeError) {
+        console.error('Error storing combined analysis:', storeError);
+        throw storeError;
       }
       
       return new Response(
-        JSON.stringify({ success: true, message: 'All sections analyzed and stored successfully' }),
+        JSON.stringify({ success: true, message: 'Analysis stored successfully' }),
         { 
           headers: {
             ...corsHeaders,
