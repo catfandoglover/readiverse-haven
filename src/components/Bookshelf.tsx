@@ -4,7 +4,7 @@ import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 
@@ -36,19 +36,31 @@ const Bookshelf = () => {
       try {
         const { data: userBooksData, error } = await supabase
           .from('user_books')
-          .select(`
-            books!inner (*)
-          `)
-          .eq('outseta_user_id', user.Account.Uid)
-          .order('created_at', { ascending: false });
+          .select('book_id')
+          .eq('outseta_user_id', user.Account.Uid);
 
         if (error) {
-          console.error('Error fetching bookshelf:', error);
+          console.error('Error fetching user books:', error);
           return [];
         }
 
-        // Transform the data to match the Book type
-        return userBooksData.map(item => item.books) as Book[];
+        if (!userBooksData?.length) {
+          return [];
+        }
+
+        const bookIds = userBooksData.map(ub => ub.book_id);
+        
+        const { data: booksData, error: booksError } = await supabase
+          .from('books')
+          .select('*')
+          .in('id', bookIds);
+
+        if (booksError) {
+          console.error('Error fetching books:', booksError);
+          return [];
+        }
+
+        return booksData || [];
       } catch (error) {
         console.error('Unexpected error fetching books:', error);
         return [];
