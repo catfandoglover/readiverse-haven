@@ -55,7 +55,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
     console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
     
-    // Parse the JSON response
+    // Parse the JSON response - removed sanitization since the response is already valid JSON
     let parsedContent: Record<string, string>;
     try {
       parsedContent = JSON.parse(data.choices[0].message.content);
@@ -75,22 +75,18 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ analysis: Record<string, string>, raw_responses: any[] }> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }> }> {
   try {
     const section1 = await generateAnalysis(answers_json, 1);
     const section2 = await generateAnalysis(answers_json, 2);
     const section3 = await generateAnalysis(answers_json, 3);
     
-    // Merge all sections
-    const combinedContent = {
-      ...section1.content,
-      ...section2.content,
-      ...section3.content
-    };
-    
     return {
-      analysis: combinedContent,
-      raw_responses: [section1.raw_response, section2.raw_response, section3.raw_response]
+      sections: [
+        { analysis: section1.content, raw_response: section1.raw_response },
+        { analysis: section2.content, raw_response: section2.raw_response },
+        { analysis: section3.content, raw_response: section3.raw_response }
+      ]
     };
   } catch (error) {
     console.error('Error in generateCompleteAnalysis:', error);
@@ -127,34 +123,36 @@ serve(async (req) => {
         throw new Error('Assessment not found');
       }
 
-      const { analysis, raw_responses } = await generateCompleteAnalysis(answers_json);
+      const { sections } = await generateCompleteAnalysis(answers_json);
       
-      // Log the database insert data
-      console.log('Database insert data:', {
+      // Combine all sections into a single record
+      const combinedAnalysis = {
         assessment_id,
         name: assessmentData.name,
         profile_image_url,
-        raw_responses,
-        ...analysis
-      });
+        raw_response: sections.map(s => s.raw_response),
+        analysis_text: JSON.stringify(sections.map(s => s.analysis)),
+        analysis_type: 'section_1', // Using a valid enum value from dna_result_type
+        ...sections[0].analysis, // General profile
+        ...sections[1].analysis, // Theology, Epistemology, Ethics, Politics
+        ...sections[2].analysis  // Ontology and Aesthetics
+      };
 
-      const { error: storeError } = await supabase.from('dna_analysis_results').insert({
-        assessment_id: assessment_id,
-        name: assessmentData.name,
-        profile_image_url: profile_image_url,
-        analysis_text: JSON.stringify(analysis),
-        analysis_type: 'section_1',
-        raw_response: raw_responses,
-        ...analysis
-      });
+      // Log the combined data
+      console.log('Combined analysis data:', combinedAnalysis);
+
+      // Store everything in a single record
+      const { error: storeError } = await supabase
+        .from('dna_analysis_results')
+        .insert(combinedAnalysis);
 
       if (storeError) {
-        console.error('Error storing analysis:', storeError);
+        console.error('Error storing combined analysis:', storeError);
         throw storeError;
       }
       
       return new Response(
-        JSON.stringify({ analysis }),
+        JSON.stringify({ success: true, message: 'Analysis stored successfully' }),
         { 
           headers: {
             ...corsHeaders,
