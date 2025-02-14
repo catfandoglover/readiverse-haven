@@ -24,36 +24,57 @@ const Bookshelf = () => {
     queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
       if (!user?.Account?.Uid || !supabase) {
+        console.log('No user or Supabase client available');
         return [];
       }
 
-      // First get the book IDs
-      const { data: userBooks, error: userBooksError } = await supabase
-        .from('user_books')
-        .select('book_id')
-        .eq('outseta_user_id', user.Account.Uid);
+      console.log('Fetching books for user:', user.Account.Uid);
 
-      if (userBooksError) {
-        console.error('Error fetching user books:', userBooksError);
+      try {
+        // First get the book IDs
+        const { data: userBooks, error: userBooksError } = await supabase
+          .from('user_books')
+          .select('book_id')
+          .eq('outseta_user_id', user.Account.Uid);
+
+        if (userBooksError) {
+          console.error('Error fetching user books:', {
+            error: userBooksError,
+            userId: user.Account.Uid
+          });
+          return [];
+        }
+
+        console.log('User books fetched:', userBooks);
+
+        if (!userBooks?.length) {
+          console.log('No books found for user');
+          return [];
+        }
+
+        // Then get the books using those IDs
+        const bookIds = userBooks.map(ub => ub.book_id);
+        console.log('Fetching books with IDs:', bookIds);
+
+        const { data: books, error: booksError } = await supabase
+          .from('books')
+          .select('*')
+          .in('id', bookIds);
+
+        if (booksError) {
+          console.error('Error fetching books:', {
+            error: booksError,
+            bookIds
+          });
+          return [];
+        }
+
+        console.log('Books fetched successfully:', books);
+        return books || [];
+      } catch (error) {
+        console.error('Unexpected error in book fetching:', error);
         return [];
       }
-
-      if (!userBooks?.length) {
-        return [];
-      }
-
-      // Then get the books using those IDs
-      const { data: books, error: booksError } = await supabase
-        .from('books')
-        .select('*')
-        .in('id', userBooks.map(ub => ub.book_id));
-
-      if (booksError) {
-        console.error('Error fetching books:', booksError);
-        return [];
-      }
-
-      return books || [];
     },
     enabled: !!user?.Account?.Uid && !!supabase
   });
