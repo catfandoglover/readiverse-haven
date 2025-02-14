@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
@@ -65,7 +64,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
   
-  // Save a reference to Outseta
   const outsetaRef = useRef(getOutseta());
 
   const updateUser = async () => {
@@ -77,7 +75,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         location: window.location.pathname
       });
 
-      // First check for stored token
       const storedToken = localStorage.getItem('outseta_token');
       if (storedToken) {
         outsetaRef.current.setAccessToken(storedToken);
@@ -85,14 +82,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const currentToken = outsetaRef.current.getAccessToken();
       if (currentToken) {
-        // Store token for persistence
         localStorage.setItem('outseta_token', currentToken);
         
         const outsetaUser = await outsetaRef.current.getUser();
         console.log('Outseta user info:', outsetaUser);
         
         try {
+          console.log('Exchanging token...');
           const supabaseJwt = await exchangeToken(currentToken);
+          console.log('Token exchanged successfully');
           const supabaseClient = createSupabaseClient(supabaseJwt);
           setSupabase(supabaseClient);
         } catch (error) {
@@ -116,7 +114,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    // Set up handling of user related events
     const handleOutsetaUserEvents = (onEvent: () => void) => {
       const outseta = outsetaRef.current;
       outseta.on("subscription.update", onEvent);
@@ -124,7 +121,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       outseta.on("account.update", onEvent);
     };
 
-    // Get the access token from the callback url
     const accessToken = searchParams.get('access_token');
 
     if (accessToken) {
@@ -133,7 +129,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSearchParams({});
     }
 
-    // Set up user event handling
     handleOutsetaUserEvents(updateUser);
 
     if (outsetaRef.current.getAccessToken() || localStorage.getItem('outseta_token')) {
@@ -143,7 +138,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     return () => {
-      // Clean up user related event subscriptions
       handleOutsetaUserEvents(() => {});
     };
   }, [searchParams, setSearchParams]);
@@ -167,30 +161,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('Starting logout process...');
       
-      // Clear all storage
       localStorage.clear();
       sessionStorage.clear();
       
-      // Clear Outseta token and logout
       outsetaRef.current.setAccessToken('');
       await outsetaRef.current.auth.logout();
 
-      // Clear Supabase session if it exists
       if (supabase) {
         await supabase.auth.signOut();
       }
 
-      // Reset state
       setUser(null);
       setSupabase(null);
 
       console.log('Logout completed, reloading page...');
       
-      // Force a hard reload of the page
       window.location.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
-      // Force reload even if there's an error to ensure clean state
       window.location.replace('/');
     }
   };
