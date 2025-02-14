@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -27,39 +26,22 @@ const Bookshelf = () => {
         return [];
       }
 
-      try {
-        // Step 1: Get all book IDs from user_books for this user
-        const { data: userBooks, error: userBooksError } = await supabase
-          .from('user_books')
-          .select('book_id')
-          .eq('outseta_user_id', user.Account.Uid);
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .filter('id', 'in', 
+          supabase
+            .from('user_books')
+            .select('book_id')
+            .eq('outseta_user_id', user.Account.Uid)
+        );
 
-        if (userBooksError) {
-          console.error('Error fetching user books:', userBooksError);
-          return [];
-        }
-
-        if (!userBooks || userBooks.length === 0) {
-          return [];
-        }
-
-        // Step 2: Get the actual books using the book IDs
-        const bookIds = userBooks.map(ub => ub.book_id);
-        const { data: booksData, error: booksError } = await supabase
-          .from('books')
-          .select('*')
-          .in('id', bookIds);
-
-        if (booksError) {
-          console.error('Error fetching books:', booksError);
-          return [];
-        }
-
-        return booksData || [];
-      } catch (error) {
-        console.error('Unexpected error:', error);
+      if (error) {
+        console.error('Error fetching books:', error);
         return [];
       }
+
+      return data || [];
     },
     enabled: !!user?.Account?.Uid && !!supabase
   });
