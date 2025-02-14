@@ -42,7 +42,7 @@ const Bookshelf = () => {
       try {
         const { data: bookData, error } = await supabase
           .from('user_books')
-          .select('*, books!book_id(*)')
+          .select('book_id, books:book_id(*)')
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
