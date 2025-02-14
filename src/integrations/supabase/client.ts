@@ -9,6 +9,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Create the default client
+export const supabase = createClient<Database>(
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      persistSession: false
+    }
+  }
+);
+
+// Factory function for creating clients with custom tokens
 export const createSupabaseClient = (customToken?: string) => {
   return createClient<Database>(
     supabaseUrl,
