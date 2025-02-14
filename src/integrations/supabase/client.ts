@@ -8,14 +8,37 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Create Supabase client with custom auth token
 export const createSupabaseClient = (customToken?: string) => {
+  const apiKey = customToken || SUPABASE_PUBLISHABLE_KEY;
   return createClient<Database>(
     SUPABASE_URL,
-    customToken || SUPABASE_PUBLISHABLE_KEY
+    apiKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      },
+      global: {
+        headers: {
+          'apikey': apiKey
+        }
+      }
+    }
   );
 };
 
-// Default client instance with minimal configuration
+// Default client instance with auth configuration
 export const supabase = createClient<Database>(
   SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    },
+    global: {
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY
+      }
+    }
+  }
 );
