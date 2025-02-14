@@ -30,22 +30,4 @@ export const createSupabaseClient = (customToken?: string) => {
 };
 
 // Default client instance
-export const supabase = createClient<Database>(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    },
-    db: {
-      schema: 'public'
-    },
-    global: {
-      headers: {
-        'apikey': SUPABASE_PUBLISHABLE_KEY
-      }
-    }
-  }
-);
+export const supabase = createSupabaseClient(SUPABASE_PUBLISHABLE_KEY);
