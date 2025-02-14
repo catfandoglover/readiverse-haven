@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -27,11 +28,12 @@ const Bookshelf = () => {
       }
 
       try {
+        // Direct join query instead of separate queries
         const { data: userBooks, error } = await supabase
           .from('user_books')
           .select(`
             book_id,
-            books!user_books_book_id_fkey (*)
+            books:book_id (*)
           `)
           .eq('outseta_user_id', user.Account.Uid);
 
