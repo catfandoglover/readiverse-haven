@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
 import { exchangeToken } from '@/integrations/supabase/token-exchange';
@@ -7,12 +8,11 @@ import type { Database } from '@/integrations/supabase/types';
 
 interface OutsetaUser {
   email: string;
+  Uid: string;  // Added this line
   Account: {
     Uid: string;
     Name: string;
-    // Add other Account properties as needed
   };
-  // Add other user properties as needed
 }
 
 interface AuthContextType {
