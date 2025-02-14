@@ -39,8 +39,6 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const OUTSETA_DOMAIN = 'lightninginspiration.outseta.com';
-
 interface OutsetaWindow extends Window {
   Outseta?: any;
   outsetaSettings?: {
