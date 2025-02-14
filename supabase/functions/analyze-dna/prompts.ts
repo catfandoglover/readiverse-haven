@@ -2,7 +2,7 @@
 export function getPromptForSection(section: number, answers_json: string): string {
   const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
 Answer requirements:
-Temporal Distribution - Select no thinkers after 1980
+Temporal Distribution - When selecting thinkers, only select thinkers whose works were published before 1970.
 Include minimum 20% pre-medieval thinkers
 Represent spread across available periods
 Cultural Distribution - Draw 70% from Western philosophical traditions - Draw 30% from Non-Western philosophical traditions
