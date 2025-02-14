@@ -7,12 +7,11 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Create Supabase client with custom auth token
 export const createSupabaseClient = (customToken?: string) => {
-  const apiKey = customToken || SUPABASE_PUBLISHABLE_KEY;
   console.log('Creating Supabase client with token:', !!customToken);
   
   return createClient<Database>(
     SUPABASE_URL,
-    apiKey,
+    SUPABASE_PUBLISHABLE_KEY,
     {
       auth: {
         persistSession: false,
@@ -20,7 +19,8 @@ export const createSupabaseClient = (customToken?: string) => {
       },
       global: {
         headers: customToken ? {
-          'Authorization': `Bearer ${customToken}`
+          'Authorization': `Bearer ${customToken}`,
+          'apikey': SUPABASE_PUBLISHABLE_KEY
         } : {
           'apikey': SUPABASE_PUBLISHABLE_KEY
         }
