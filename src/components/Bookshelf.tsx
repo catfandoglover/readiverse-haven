@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -44,7 +43,7 @@ const Bookshelf = () => {
           .from('user_books')
           .select(`
             book_id,
-            books (*)
+            books!user_books_book_id_fkey (*)
           `)
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
@@ -75,6 +74,10 @@ const Bookshelf = () => {
   });
 
   const handleBookClick = (slug: string) => {
+    if (!slug) {
+      console.warn('No slug provided for book navigation');
+      return;
+    }
     navigate(`/${slug}`);
   };
 
@@ -86,12 +89,19 @@ const Bookshelf = () => {
   };
 
   const handleNavigation = (path: string) => {
+    if (!path) {
+      console.warn('Invalid navigation path');
+      return;
+    }
+
     if (path === '/bookshelf' && location.pathname !== '/bookshelf') {
       navigate('/bookshelf');
     } else if (path === '/') {
-      navigate(getLastVisited('discover'));
+      const lastVisitedDiscover = getLastVisited('discover');
+      navigate(lastVisitedDiscover || '/');
     } else if (path === '/dna') {
-      navigate(getLastVisited('dna'));
+      const lastVisitedDna = getLastVisited('dna');
+      navigate(lastVisitedDna || '/dna');
     } else {
       navigate(path);
     }
