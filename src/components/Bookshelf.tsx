@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -24,32 +25,32 @@ const Bookshelf = () => {
     queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
       if (!user?.Account?.Uid || !supabase) {
-        console.log('Missing required data:', {
-          hasUser: !!user,
-          hasAccount: !!user?.Account,
-          accountUid: user?.Account?.Uid,
-          hasSupabase: !!supabase
-        });
         return [];
       }
 
       try {
-        const { data: userBooksData, error } = await supabase
+        console.log('Fetching books for user:', user.Account.Uid);
+        
+        // First get all book IDs for this user
+        const { data: userBooks, error: userBooksError } = await supabase
           .from('user_books')
           .select('book_id')
           .eq('outseta_user_id', user.Account.Uid);
 
-        if (error) {
-          console.error('Error fetching user books:', error);
+        if (userBooksError) {
+          console.error('Error fetching user books:', userBooksError);
           return [];
         }
 
-        if (!userBooksData?.length) {
+        if (!userBooks?.length) {
+          console.log('No books found for user');
           return [];
         }
 
-        const bookIds = userBooksData.map(ub => ub.book_id);
-        
+        const bookIds = userBooks.map(ub => ub.book_id);
+        console.log('Found book IDs:', bookIds);
+
+        // Then fetch the actual books
         const { data: booksData, error: booksError } = await supabase
           .from('books')
           .select('*')
@@ -60,16 +61,14 @@ const Bookshelf = () => {
           return [];
         }
 
+        console.log('Fetched books:', booksData);
         return booksData || [];
       } catch (error) {
-        console.error('Unexpected error fetching books:', error);
+        console.error('Unexpected error in books fetch:', error);
         return [];
       }
     },
-    enabled: !!user?.Account?.Uid && !!supabase,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    enabled: !!user?.Account?.Uid && !!supabase
   });
 
   const handleBookClick = (slug: string) => {
@@ -150,7 +149,12 @@ const Bookshelf = () => {
 
         <div className="flex-1 relative">
           <div className={`px-4 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-            {!books?.length ? (
+            {!user ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Please log in to view your bookshelf.</p>
+                <LoginButtons />
+              </div>
+            ) : !books?.length ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p>Your bookshelf is empty.</p>
                 <p>Start reading books to add them to your bookshelf!</p>
