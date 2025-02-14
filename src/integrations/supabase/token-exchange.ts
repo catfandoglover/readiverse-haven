@@ -1,8 +1,11 @@
 
-const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.supabase.co/functions/v1/exchange';
+const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange';
 
 export async function exchangeToken(outsetaToken: string): Promise<string> {
-  console.log('Starting token exchange...');
+  console.log('Starting token exchange...', {
+    url: EXCHANGE_URL,
+    hasToken: !!outsetaToken
+  });
   
   try {
     const response = await fetch(EXCHANGE_URL, {
@@ -15,7 +18,11 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Token exchange failed:', error);
+      console.error('Token exchange failed:', {
+        status: response.status,
+        error,
+        url: EXCHANGE_URL
+      });
       throw new Error('Failed to exchange token');
     }
 
@@ -23,7 +30,10 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
     console.log('Token exchange successful');
     return supabaseJwt;
   } catch (error) {
-    console.error('Error during token exchange:', error);
+    console.error('Error during token exchange:', {
+      error,
+      url: EXCHANGE_URL
+    });
     throw error;
   }
 }
