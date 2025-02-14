@@ -130,13 +130,13 @@ const Bookshelf = () => {
                 {books?.map((book) => (
                   <div
                     key={book.id}
-                    className="aspect-square cursor-pointer hover:opacity-80 transition-opacity"
+                    className="aspect-square cursor-pointer relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 transition-all duration-300"
                     onClick={(e) => handleCoverClick(book.Cover_super, e)}
                   >
                     <img
                       src={book.cover_url || '/placeholder.svg'}
                       alt={book.title}
-                      className="w-full h-full object-cover rounded-md shadow-sm"
+                      className="w-full h-full object-cover rounded-md shadow-sm relative z-10"
                       loading="lazy"
                     />
                   </div>
@@ -147,7 +147,7 @@ const Bookshelf = () => {
                 {books?.map((book) => (
                   <Card 
                     key={book.id} 
-                    className="flex gap-4 p-4 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                    className="flex gap-4 p-4 hover:bg-accent/50 transition-all duration-300 cursor-pointer bg-card text-card-foreground relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-[1px] after:rounded-md after:bg-card after:z-[0] hover:after:bg-accent/50 [&>*]:relative [&>*]:z-[1]"
                     onClick={() => handleBookClick(book.slug)}
                   >
                     <div 
