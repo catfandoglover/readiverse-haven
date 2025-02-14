@@ -7,7 +7,6 @@ import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { LoginButtons } from "@/components/auth/LoginButtons";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -29,40 +28,25 @@ const Bookshelf = () => {
       }
 
       try {
-        console.log('Fetching books for user:', user.Account.Uid);
-        
-        // First get all book IDs for this user
-        const { data: userBooks, error: userBooksError } = await supabase
+        // Direct join query instead of separate queries
+        const { data: userBooks, error } = await supabase
           .from('user_books')
-          .select('book_id')
+          .select(`
+            book_id,
+            books:book_id (*)
+          `)
           .eq('outseta_user_id', user.Account.Uid);
 
-        if (userBooksError) {
-          console.error('Error fetching user books:', userBooksError);
+        if (error) {
+          console.error('Error fetching books:', error);
           return [];
         }
 
-        if (!userBooks?.length) {
-          console.log('No books found for user');
-          return [];
-        }
+        // Extract books from the joined data
+        const books = userBooks?.map(ub => ub.books) || [];
+        console.log('Fetched books:', books);
+        return books;
 
-        const bookIds = userBooks.map(ub => ub.book_id);
-        console.log('Found book IDs:', bookIds);
-
-        // Then fetch the actual books
-        const { data: booksData, error: booksError } = await supabase
-          .from('books')
-          .select('*')
-          .in('id', bookIds);
-
-        if (booksError) {
-          console.error('Error fetching books:', booksError);
-          return [];
-        }
-
-        console.log('Fetched books:', booksData);
-        return booksData || [];
       } catch (error) {
         console.error('Unexpected error in books fetch:', error);
         return [];
@@ -122,7 +106,6 @@ const Bookshelf = () => {
               />
             </button>
             <div className="flex items-center space-x-4">
-              <LoginButtons />
               <div className="flex space-x-4">
                 <button
                   onClick={() => setIsGridView(false)}
@@ -149,12 +132,7 @@ const Bookshelf = () => {
 
         <div className="flex-1 relative">
           <div className={`px-4 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-            {!user ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Please log in to view your bookshelf.</p>
-                <LoginButtons />
-              </div>
-            ) : !books?.length ? (
+            {!books?.length ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p>Your bookshelf is empty.</p>
                 <p>Start reading books to add them to your bookshelf!</p>
