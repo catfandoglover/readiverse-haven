@@ -4,7 +4,7 @@ import { Card } from "./ui/card";
 import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 
@@ -33,15 +33,12 @@ const Bookshelf = () => {
         return [];
       }
 
-      console.log('Fetching books for account:', {
-        accountUid: user.Account.Uid,
-        hasSupabaseClient: !!supabase
-      });
-
       try {
-        const { data: books, error } = await supabase
+        const { data: userBooksData, error } = await supabase
           .from('user_books')
-          .select('*, books(*)')
+          .select(`
+            books!inner (*)
+          `)
           .eq('outseta_user_id', user.Account.Uid)
           .order('created_at', { ascending: false });
 
@@ -50,15 +47,8 @@ const Bookshelf = () => {
           return [];
         }
 
-        console.log('Successfully fetched books:', {
-          count: books?.length,
-          books: books
-        });
-
         // Transform the data to match the Book type
-        return books
-          .filter(item => item.books) // Filter out any null books
-          .map(item => item.books) as Book[];
+        return userBooksData.map(item => item.books) as Book[];
       } catch (error) {
         console.error('Unexpected error fetching books:', error);
         return [];
