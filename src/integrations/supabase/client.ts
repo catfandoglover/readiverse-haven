@@ -13,12 +13,39 @@ export const createSupabaseClient = (customToken?: string) => {
     customToken || SUPABASE_PUBLISHABLE_KEY,
     {
       auth: {
-        persistSession: false
+        persistSession: false,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      db: {
+        schema: 'public'
+      },
+      global: {
+        headers: {
+          'apikey': customToken || SUPABASE_PUBLISHABLE_KEY
+        }
       }
     }
   );
 };
 
 // Default client instance
-export const supabase = createSupabaseClient();
-
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    },
+    db: {
+      schema: 'public'
+    },
+    global: {
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY
+      }
+    }
+  }
+);
