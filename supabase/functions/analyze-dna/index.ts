@@ -55,7 +55,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
     console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
     
-    // Parse the JSON response
+    // Parse the JSON response - removed sanitization since the response is already valid JSON
     let parsedContent: Record<string, string>;
     try {
       parsedContent = JSON.parse(data.choices[0].message.content);
@@ -143,7 +143,6 @@ serve(async (req) => {
         name: assessmentData.name,
         profile_image_url: profile_image_url,
         analysis_text: JSON.stringify(analysis),
-        analysis_type: 'section_1',
         raw_response: raw_responses,
         ...analysis
       });
