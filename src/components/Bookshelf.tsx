@@ -22,19 +22,20 @@ const Bookshelf = () => {
   }, [location.pathname]);
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.Uid],
+    queryKey: ['user-bookshelf', user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.Uid || !supabase) {
+      if (!user?.Account?.Uid || !supabase) {
         console.log('Missing required data:', {
           hasUser: !!user,
-          userId: user?.Uid,
+          hasAccount: !!user?.Account,
+          accountId: user?.Account?.Uid,
           hasSupabase: !!supabase
         });
         return [];
       }
 
-      console.log('Fetching books for user:', {
-        userId: user.Uid,
+      console.log('Fetching books for account:', {
+        accountId: user.Account.Uid,
         hasSupabaseClient: !!supabase
       });
 
@@ -51,7 +52,8 @@ const Bookshelf = () => {
               slug
             )
           `)
-          .eq('outseta_user_id', user.Uid);
+          .eq('outseta_user_id', user.Account.Uid)
+          .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching bookshelf:', error);
@@ -69,7 +71,7 @@ const Bookshelf = () => {
         return [];
       }
     },
-    enabled: !!user?.Uid && !!supabase,
+    enabled: !!user?.Account?.Uid && !!supabase,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
