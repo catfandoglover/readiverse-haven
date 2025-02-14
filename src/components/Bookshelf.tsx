@@ -31,7 +31,8 @@ const Bookshelf = () => {
         const { data: userBooks, error } = await supabase
           .from('user_books')
           .select(`
-            books (
+            book_id,
+            book:books!user_books_book_id_fkey (
               id,
               title,
               author,
@@ -49,7 +50,7 @@ const Bookshelf = () => {
 
         // Extract books from the joined data and filter out any null values
         const books = userBooks
-          ?.map(ub => ub.books)
+          ?.map(ub => ub.book)
           .filter((book): book is Book => book !== null) || [];
         
         console.log('Fetched books:', books);
