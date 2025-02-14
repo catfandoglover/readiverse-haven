@@ -132,7 +132,7 @@ serve(async (req) => {
         profile_image_url,
         raw_response: sections.map(s => s.raw_response),
         analysis_text: JSON.stringify(sections.map(s => s.analysis)),
-        analysis_type: 'complete', // Added the required analysis_type field
+        analysis_type: 'section_1', // Using a valid enum value from dna_result_type
         ...sections[0].analysis, // General profile
         ...sections[1].analysis, // Theology, Epistemology, Ethics, Politics
         ...sections[2].analysis  // Ontology and Aesthetics
