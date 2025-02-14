@@ -28,27 +28,36 @@ const Bookshelf = () => {
       }
 
       try {
-        // Direct join query instead of separate queries
-        const { data: userBooks, error } = await supabase
+        // First get all book_ids for this user from user_books
+        const { data: userBooks, error: userBooksError } = await supabase
           .from('user_books')
-          .select(`
-            book_id,
-            books:book_id (*)
-          `)
+          .select('book_id')
           .eq('outseta_user_id', user.Account.Uid);
 
-        if (error) {
-          console.error('Error fetching books:', error);
+        if (userBooksError) {
+          console.error('Error fetching user books:', userBooksError);
           return [];
         }
 
-        // Extract books from the joined data
-        const books = userBooks?.map(ub => ub.books) || [];
-        console.log('Fetched books:', books);
-        return books;
+        if (!userBooks?.length) {
+          return [];
+        }
 
+        // Then get all the actual books
+        const bookIds = userBooks.map(ub => ub.book_id);
+        const { data: books, error: booksError } = await supabase
+          .from('books')
+          .select('*')
+          .in('id', bookIds);
+
+        if (booksError) {
+          console.error('Error fetching books:', booksError);
+          return [];
+        }
+
+        return books;
       } catch (error) {
-        console.error('Unexpected error in books fetch:', error);
+        console.error('Unexpected error:', error);
         return [];
       }
     },
@@ -56,10 +65,6 @@ const Bookshelf = () => {
   });
 
   const handleBookClick = (slug: string) => {
-    if (!slug) {
-      console.warn('No slug provided for book navigation');
-      return;
-    }
     navigate(`/${slug}`);
   };
 
@@ -71,11 +76,6 @@ const Bookshelf = () => {
   };
 
   const handleNavigation = (path: string) => {
-    if (!path) {
-      console.warn('Invalid navigation path');
-      return;
-    }
-
     if (path === '/bookshelf' && location.pathname !== '/bookshelf') {
       navigate('/bookshelf');
     } else if (path === '/') {
@@ -139,7 +139,7 @@ const Bookshelf = () => {
               </div>
             ) : isGridView ? (
               <div className={`grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 py-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
-                {books?.map((book) => (
+                {books.map((book) => (
                   <div
                     key={book.id}
                     className="aspect-square cursor-pointer relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 transition-all duration-300"
@@ -156,7 +156,7 @@ const Bookshelf = () => {
               </div>
             ) : (
               <div className={`space-y-6 py-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
-                {books?.map((book) => (
+                {books.map((book) => (
                   <Card 
                     key={book.id} 
                     className="flex gap-4 p-4 hover:bg-accent/50 transition-all duration-300 cursor-pointer bg-card text-card-foreground relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-[1px] after:rounded-md after:bg-card after:z-[0] hover:after:bg-accent/50 [&>*]:relative [&>*]:z-[1]"
