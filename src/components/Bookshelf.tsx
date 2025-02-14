@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -30,8 +31,14 @@ const Bookshelf = () => {
         const { data: userBooks, error } = await supabase
           .from('user_books')
           .select(`
-            book_id,
-            books!user_books_book_id_fkey (*)
+            books (
+              id,
+              title,
+              author,
+              cover_url,
+              Cover_super,
+              slug
+            )
           `)
           .eq('outseta_user_id', user.Account.Uid);
 
@@ -40,8 +47,11 @@ const Bookshelf = () => {
           return [];
         }
 
-        // Extract books from the joined data
-        const books = userBooks?.map(ub => ub.books) || [];
+        // Extract books from the joined data and filter out any null values
+        const books = userBooks
+          ?.map(ub => ub.books)
+          .filter((book): book is Book => book !== null) || [];
+        
         console.log('Fetched books:', books);
         return books;
 
@@ -53,77 +63,51 @@ const Bookshelf = () => {
     enabled: !!user?.Account?.Uid && !!supabase
   });
 
-  const handleBookClick = (slug: string) => {
-    if (!slug) {
-      console.warn('No slug provided for book navigation');
-      return;
-    }
-    navigate(`/${slug}`);
-  };
-
-  const handleCoverClick = (coverUrl: string | null, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (coverUrl) {
-      window.open(coverUrl, '_blank');
+  const handleBookClick = (slug?: string) => {
+    if (slug) {
+      navigate(`/${slug}`);
     }
   };
 
-  const handleNavigation = (path: string) => {
-    if (!path) {
-      console.warn('Invalid navigation path');
-      return;
+  const handleCoverClick = (coverSuper: string | null, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (coverSuper) {
+      window.open(coverSuper, '_blank');
     }
-
-    if (path === '/bookshelf' && location.pathname !== '/bookshelf') {
-      navigate('/bookshelf');
-    } else if (path === '/') {
-      const lastVisitedDiscover = getLastVisited('discover');
-      navigate(lastVisitedDiscover || '/');
-    } else if (path === '/dna') {
-      const lastVisitedDna = getLastVisited('dna');
-      navigate(lastVisitedDna || '/dna');
-    } else {
-      navigate(path);
-    }
-  };
-
-  const isCurrentPath = (path: string) => {
-    return location.pathname === path;
   };
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 bookshelf-page">
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 py-3 border-b border-border sticky top-0 z-10 bg-background">
-          <div className="flex justify-between items-center">
-            <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
-              <img 
-                src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
-                alt="Lightning" 
-                className="h-5 w-5"
-              />
-            </button>
-            <div className="flex items-center space-x-4">
-              <div className="flex space-x-4">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-14 items-center">
+            <div className="mr-4 hidden md:flex">
+              <LibraryBig className="h-6 w-6" />
+            </div>
+            <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+              <div className="w-full flex-1 md:w-auto md:flex-none">
+                <button className="inline-flex items-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 relative w-full justify-start text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64">
+                  <span className="hidden lg:inline-flex">Search your library...</span>
+                  <span className="inline-flex lg:hidden">Search...</span>
+                  <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                    <span className="text-xs">⌘</span>K
+                  </kbd>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsGridView(false)}
-                  className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${!isGridView ? 'bg-accent text-accent-foreground' : ''}`}
+                  className={`rounded-md p-2 hover:bg-accent ${!isGridView ? 'bg-accent' : ''}`}
                 >
-                  <List className="h-4 w-4" />
+                  <List className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setIsGridView(true)}
-                  className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isGridView ? 'bg-accent text-accent-foreground' : ''}`}
+                  className={`rounded-md p-2 hover:bg-accent ${isGridView ? 'bg-accent' : ''}`}
                 >
-                  <Grid className="h-4 w-4" />
+                  <Grid className="h-5 w-5" />
                 </button>
               </div>
-              <button
-                onClick={() => handleNavigation('/search')}
-                className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-              >
-                <Search className="h-5 w-5" />
-              </button>
             </div>
           </div>
         </header>
@@ -184,31 +168,31 @@ const Bookshelf = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
-          <div className="flex justify-between items-center max-w-sm mx-auto px-8">
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/dna')}
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <nav className="container flex h-16 items-center justify-around">
+            <button
+              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-accent"
+              onClick={() => navigate('/')}
             >
-              <Dna className="h-6 w-6" />
-              <span className="text-xs font-oxanium">My DNA</span>
+              <Compass className="h-5 w-5" />
+              <span className="text-xs mt-1">Discover</span>
             </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/')}
+            <button
+              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-accent"
+              onClick={() => navigate('/bookshelf')}
             >
-              <Compass className="h-6 w-6" />
-              <span className="text-xs font-oxanium">Discover</span>
+              <LibraryBig className="h-5 w-5" />
+              <span className="text-xs mt-1">Library</span>
             </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/bookshelf')}
+            <button
+              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-accent"
+              onClick={() => navigate('/dna')}
             >
-              <LibraryBig className="h-6 w-6" />
-              <span className="text-xs font-oxanium">Bookshelf</span>
+              <Dna className="h-5 w-5" />
+              <span className="text-xs mt-1">DNA</span>
             </button>
-          </div>
-        </nav>
+          </nav>
+        </div>
       </div>
     </div>
   );
