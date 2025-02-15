@@ -37,7 +37,7 @@ const Home = () => {
   const { data: books, isLoading: booksLoading } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
-      const { data, error } = await authenticatedSupabase
+      const { data, error } = await supabase
         .from('books')
         .select('*')
         .order('randomizer');
