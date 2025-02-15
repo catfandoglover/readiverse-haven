@@ -316,4 +316,4 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
   );
 };
 
-export default Reader;
+export { Reader };

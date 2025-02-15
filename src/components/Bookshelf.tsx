@@ -83,7 +83,14 @@ const Bookshelf = () => {
     if (slug.startsWith('http')) {
       window.location.href = slug;
     } else {
-      navigate(`/read/${slug}`, { state: { bookUrl: epub_file_url } });
+      navigate(`/read/${slug}`, { 
+        state: { 
+          bookUrl: epub_file_url,
+          metadata: {
+            coverUrl: null // Add any other metadata needed
+          }
+        } 
+      });
     }
   };
 
