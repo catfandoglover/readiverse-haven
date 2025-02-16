@@ -13,6 +13,7 @@ import DNAAssessment from "./pages/DNAAssessment";
 import Index from "@/pages/Index";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
+import { useBook } from '@/hooks/useBook';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,13 +26,20 @@ const queryClient = new QueryClient({
 
 function ReaderWrapper() {
   const location = useLocation();
+  const slug = location.pathname.split('/read/')[1];
   const state = location.state as { bookUrl: string; metadata: { coverUrl: string | null } };
+  
+  const { data: book, isLoading } = useBook(slug);
+
+  // If we have state, use it, otherwise use the fetched book data
+  const bookUrl = state?.bookUrl || book?.epub_file_url;
+  const coverUrl = state?.metadata?.coverUrl || book?.cover_url;
 
   return (
     <Reader 
-      metadata={{ coverUrl: state?.metadata?.coverUrl }}
-      preloadedBookUrl={state?.bookUrl}
-      isLoading={false}
+      metadata={{ coverUrl }}
+      preloadedBookUrl={bookUrl}
+      isLoading={isLoading}
     />
   );
 }
