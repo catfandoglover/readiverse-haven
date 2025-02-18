@@ -1,3 +1,4 @@
+
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -275,7 +276,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
           ) : (
             <>
               <ReaderHeader
-                externalLink={metadata?.coverUrl || null}
+                externalLink={metadata?.Cover_super || null}
                 onSearch={handleSearch}
                 onSearchResultClick={handleSearchResultClick}
               />
