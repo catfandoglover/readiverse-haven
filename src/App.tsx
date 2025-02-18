@@ -34,7 +34,7 @@ function ReaderWrapper() {
 
   // If we have state, use it, otherwise use the fetched book data
   const bookUrl = state?.bookUrl || book?.epub_file_url;
-  const coverSuper = state?.metadata?.Cover_super || book?.cover_url;
+  const coverSuper = state?.metadata?.Cover_super || book?.Cover_super; // Changed from cover_url to Cover_super
 
   return (
     <Reader 
