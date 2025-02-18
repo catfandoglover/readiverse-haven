@@ -1,7 +1,9 @@
+
 // src/hooks/useFileHandler.ts
 import { useToast } from "@/hooks/use-toast";
 import ePub from "epubjs";
 import type { Book } from "epubjs";
+
 export const useFileHandler = (
   setBook: (book: Book) => void,
   setCurrentLocation: (location: string | null) => void,
@@ -14,12 +16,20 @@ export const useFileHandler = (
     try {
       console.log('Initializing book with data size:', bookData.byteLength);
       
-      const newBook = ePub(bookData);
+      // Create book instance with explicit options
+      const newBook = ePub(bookData, { openAs: 'epub' });
       console.log('Created ePub instance');
       
+      // Wait for book to be ready and package to be loaded
       await newBook.ready;
       console.log('Book ready');
       
+      // Ensure package is loaded
+      if (!newBook.package) {
+        throw new Error('Book package not loaded properly');
+      }
+      
+      // Generate locations after ensuring package is loaded
       await newBook.locations.generate(1024);
       console.log('Locations generated');
       
@@ -55,15 +65,30 @@ export const useFileHandler = (
   };
 
   const handleFileUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const bookData = e.target?.result as ArrayBuffer;
-      if (!bookData) {
-        throw new Error("Failed to read book data");
-      }
-      await initializeBook(bookData);
-    };
-    reader.readAsArrayBuffer(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const bookData = e.target?.result as ArrayBuffer;
+        if (!bookData) {
+          throw new Error("Failed to read book data");
+        }
+        await initializeBook(bookData);
+      };
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        toast({
+          variant: "destructive",
+          description: "Error reading file. Please try again.",
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Error in handleFileUpload:', error);
+      toast({
+        variant: "destructive",
+        description: "Failed to process file. Please try again.",
+      });
+    }
   };
 
   const loadBookFromUrl = async (url: string) => {
