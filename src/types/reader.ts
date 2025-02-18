@@ -1,6 +1,5 @@
 
 export interface BookMetadata {
-  coverUrl?: string;
   Cover_super?: string;
   title?: string;
   author?: string;
