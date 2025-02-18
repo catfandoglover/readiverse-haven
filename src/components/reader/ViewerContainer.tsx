@@ -16,8 +16,8 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       ref={(el) => setContainer(el)}
       className="epub-view h-[80vh] border border-gray-200/10 rounded-lg overflow-hidden shadow-lg" 
       style={{ 
-        background: '#1A1F2C',
-        color: '#E9E7E2',
+        background: theme.background,
+        color: theme.text,
         WebkitUserSelect: 'text',
         userSelect: 'text',
         WebkitTouchCallout: 'default',

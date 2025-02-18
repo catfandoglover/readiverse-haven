@@ -1,66 +1,58 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Book, Rendition } from "epubjs";
-import { debounce } from "lodash";
-import type { Highlight } from "@/types/highlight";
-import Contents from "epubjs/types/contents";
+import { useCallback } from 'react';
+import type { Book, Contents, Rendition } from 'epubjs';
+import type { Theme } from '@/contexts/ThemeContext';
+import type { Highlight } from '@/types/highlight';
 
 export const useRenditionSetup = (
   book: Book,
   isMobile: boolean,
   textAlign: 'left' | 'justify' | 'center',
   fontFamily: 'lexend' | 'georgia' | 'helvetica' | 'times',
-  theme: { text: string; background: string },
+  theme: Theme,
   currentLocation: string | null,
   onLocationChange: (location: any) => void,
   onTextSelect?: (cfiRange: string, text: string) => void,
-  highlights: Highlight[] = [],
+  highlights?: Highlight[]
 ) => {
-  const [rendition, setRendition] = useState<Rendition | null>(null);
-
-  const getFontFamily = (font: 'lexend' | 'georgia' | 'helvetica' | 'times') => {
-    switch (font) {
-      case 'lexend':
-        return 'Lexend, sans-serif';
-      case 'georgia':
-        return 'Georgia, serif';
-      case 'helvetica':
-        return 'Helvetica, Arial, sans-serif';
-      case 'times':
-        return 'Times New Roman, serif';
-      default:
-        return 'Lexend, sans-serif';
-    }
-  };
-
-  const setupRendition = (container: Element) => {
+  const setupRendition = useCallback((container: Element) => {
     if (!book) return null;
 
-    const newRendition = book.renderTo(container, {
-      width: "100%",
-      height: "100%",
-      flow: "paginated",
-      spread: isMobile ? "none" : "always",
-      minSpreadWidth: 0,
+    const rendition = book.renderTo(container, {
+      width: '100%',
+      height: '100%',
+      spread: isMobile ? 'none' : 'auto',
     });
 
-    newRendition.themes.default({
+    // Apply theme colors and text settings
+    rendition.themes.default({
       body: {
-        "column-count": isMobile ? "1" : "2",
-        "column-gap": "2em",
-        "column-rule": isMobile ? "none" : "1px solid #e5e7eb",
-        padding: "1em",
-        "text-align": textAlign,
-        "font-family": getFontFamily(fontFamily),
-        color: theme.text,
         background: theme.background,
+        color: theme.text,
+        'text-align': textAlign,
+        'font-family': fontFamily === 'lexend' ? 
+          "'Lexend', sans-serif" : 
+          fontFamily === 'georgia' ? 
+          'Georgia, serif' : 
+          fontFamily === 'helvetica' ? 
+          'Helvetica, Arial, sans-serif' : 
+          'Times New Roman, serif',
       },
-      '.highlight-yellow': {
-        'background-color': '#CCFF33',
+      'a, h1, h2, h3, h4, h5, h6': {
+        color: theme.accent,
+      },
+      'p': {
+        'font-family': fontFamily === 'lexend' ? 
+          "'Lexend', sans-serif" : 
+          fontFamily === 'georgia' ? 
+          'Georgia, serif' : 
+          fontFamily === 'helvetica' ? 
+          'Helvetica, Arial, sans-serif' : 
+          'Times New Roman, serif',
       }
     });
 
     // Text selection handler
-    newRendition.on("selected", (cfiRange: string, contents: Contents) => {
+    rendition.on("selected", (cfiRange: string, contents: Contents) => {
       const selection = contents.window.getSelection();
       if (!selection) return;
 
@@ -72,9 +64,9 @@ export const useRenditionSetup = (
     });
 
     // Apply existing highlights
-    highlights.forEach(highlight => {
+    highlights?.forEach(highlight => {
       try {
-        newRendition.annotations.add(
+        rendition.annotations.add(
           "highlight",
           highlight.cfiRange,
           {},
@@ -87,10 +79,10 @@ export const useRenditionSetup = (
     });
 
     // Location change handler
-    newRendition.on("relocated", (location: any) => {
+    rendition.on("relocated", (location: any) => {
       onLocationChange(location);
       
-      const contents = newRendition.getContents();
+      const contents = rendition.getContents();
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const currentView = contents[0].document;
         
@@ -108,12 +100,10 @@ export const useRenditionSetup = (
       }
     });
 
-    return newRendition;
-  };
+    return rendition;
+  }, [book, isMobile, textAlign, fontFamily, theme, currentLocation, onLocationChange, onTextSelect]);
 
   return {
-    rendition,
-    setRendition,
     setupRendition,
   };
 };
