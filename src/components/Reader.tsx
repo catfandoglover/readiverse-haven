@@ -1,3 +1,4 @@
+
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,7 +261,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {isLoading ? (
             <div className="flex items-center justify-center min-h-screen">
