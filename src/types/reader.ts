@@ -1,8 +1,9 @@
-import type { Highlight, HighlightColor } from './highlight';
+
 import type { NavItem } from 'epubjs';
+import type { Highlight, HighlightColor } from './highlight';
 
 export interface BookMetadata {
-  coverUrl?: string;
+  Cover_super?: string;
   title?: string;
   author?: string;
 }

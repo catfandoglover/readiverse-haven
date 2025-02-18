@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -13,19 +14,21 @@ export const useBook = (slug: string | undefined) => {
       console.log('Fetching book with slug:', slug);
       
       try {
+        // First try with exact case
         const { data, error } = await supabase
           .from('books')
           .select('*')
-          .eq('slug', slug.toLowerCase())
+          .eq('slug', slug)
           .single();
 
         if (error) {
           console.log('Initial query error:', error);
           
+          // Try with lowercase
           const { data: retryData, error: retryError } = await supabase
             .from('books')
             .select()
-            .filter('slug', 'eq', slug)
+            .ilike('slug', slug)
             .limit(1);
 
           if (retryError) {

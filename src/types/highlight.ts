@@ -1,3 +1,4 @@
+
 export interface Highlight {
   id: string;
   cfiRange: string;

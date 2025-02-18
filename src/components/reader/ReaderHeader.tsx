@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft } from "lucide-react";
@@ -16,22 +17,26 @@ const ReaderHeader = ({
   onSearchResultClick
 }: ReaderHeaderProps) => {
   return (
-    <div className="mb-4 flex items-center justify-between">
-      {externalLink && (
-        <Button
-          onClick={() => window.open(externalLink, '_blank')}
-          variant="outline"
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Return to Book Cover</span>
-          <ExternalLink className="h-4 w-4 ml-1" />
-        </Button>
-      )}
-      <SearchDialog 
-        onSearch={onSearch}
-        onResultClick={onSearchResultClick}
-      />
+    <div className="mb-4 flex items-center gap-4">
+      <div className="flex-1">
+        {externalLink && (
+          <Button
+            onClick={() => window.open(externalLink, '_blank')}
+            variant="outline"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Library</span>
+            <ExternalLink className="h-4 w-4 ml-1" />
+          </Button>
+        )}
+      </div>
+      <div className="flex-none">
+        <SearchDialog 
+          onSearch={onSearch}
+          onResultClick={onSearchResultClick}
+        />
+      </div>
     </div>
   );
 };

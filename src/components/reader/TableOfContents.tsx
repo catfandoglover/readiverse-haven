@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,15 +30,15 @@ const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
         <Button
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border-0 hover:bg-background/80"
+          className="h-10 w-10 rounded-full shadow-sm bg-background/60 backdrop-blur-sm border border-border hover:bg-background/80"
         >
           <BookOpen className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="bg-background">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle>Table of Contents</DrawerTitle>
+            <DrawerTitle className="text-foreground">Table of Contents</DrawerTitle>
           </DrawerHeader>
           <ScrollArea className="h-[50vh] px-4">
             <div className="space-y-2">
@@ -45,7 +46,7 @@ const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
                 <DrawerClose key={index} asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-left whitespace-normal h-auto"
+                    className="w-full justify-start text-left whitespace-normal h-auto text-foreground hover:bg-accent"
                     onClick={() => handleNavigation(item.href)}
                   >
                     <span className="line-clamp-2">{item.label}</span>
@@ -56,7 +57,7 @@ const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
           </ScrollArea>
           <DrawerFooter>
             <DrawerClose asChild>
-              <Button variant="outline">Close</Button>
+              <Button variant="outline" className="border-border text-foreground">Close</Button>
             </DrawerClose>
           </DrawerFooter>
         </div>
