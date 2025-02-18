@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DesktopControls } from './controls/DesktopControls';
 import { MobileControls } from './controls/MobileControls';
@@ -26,7 +27,7 @@ const ReaderControls = ({
   bookKey
 }: ReaderControlsProps) => {
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-white rounded-lg shadow">
+    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-[#32303b] rounded-lg shadow border border-white/10">
       <DesktopControls 
         fontSize={fontSize}
         onFontSizeChange={onFontSizeChange}
