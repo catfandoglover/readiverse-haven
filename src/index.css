@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -57,6 +58,6 @@
   }
 
   .epub-view {
-    @apply bg-white shadow-lg rounded-lg;
+    @apply bg-[#1A1F2C] text-[#E9E7E2] shadow-lg rounded-lg;
   }
 }
