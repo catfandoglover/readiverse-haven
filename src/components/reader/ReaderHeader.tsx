@@ -16,8 +16,6 @@ const ReaderHeader = ({
   onSearch,
   onSearchResultClick
 }: ReaderHeaderProps) => {
-  console.log('ExternalLink in ReaderHeader:', externalLink);
-  
   return (
     <div className="mb-4 flex items-center gap-4">
       <div className="flex-1">
@@ -28,7 +26,7 @@ const ReaderHeader = ({
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Return to Book Cover</span>
+            <span>Back to Library</span>
             <ExternalLink className="h-4 w-4 ml-1" />
           </Button>
         )}
