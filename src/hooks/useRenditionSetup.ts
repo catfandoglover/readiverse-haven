@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+
+import { useCallback, useState } from 'react';
 import type { Book, Contents, Rendition } from 'epubjs';
 import type { Theme } from '@/contexts/ThemeContext';
 import type { Highlight } from '@/types/highlight';
@@ -14,17 +15,19 @@ export const useRenditionSetup = (
   onTextSelect?: (cfiRange: string, text: string) => void,
   highlights?: Highlight[]
 ) => {
+  const [rendition, setRendition] = useState<Rendition | null>(null);
+
   const setupRendition = useCallback((container: Element) => {
     if (!book) return null;
 
-    const rendition = book.renderTo(container, {
+    const newRendition = book.renderTo(container, {
       width: '100%',
       height: '100%',
       spread: isMobile ? 'none' : 'auto',
     });
 
     // Apply theme colors and text settings
-    rendition.themes.default({
+    newRendition.themes.default({
       body: {
         background: theme.background,
         color: theme.text,
@@ -52,7 +55,7 @@ export const useRenditionSetup = (
     });
 
     // Text selection handler
-    rendition.on("selected", (cfiRange: string, contents: Contents) => {
+    newRendition.on("selected", (cfiRange: string, contents: Contents) => {
       const selection = contents.window.getSelection();
       if (!selection) return;
 
@@ -66,7 +69,7 @@ export const useRenditionSetup = (
     // Apply existing highlights
     highlights?.forEach(highlight => {
       try {
-        rendition.annotations.add(
+        newRendition.annotations.add(
           "highlight",
           highlight.cfiRange,
           {},
@@ -79,10 +82,10 @@ export const useRenditionSetup = (
     });
 
     // Location change handler
-    rendition.on("relocated", (location: any) => {
+    newRendition.on("relocated", (location: any) => {
       onLocationChange(location);
       
-      const contents = rendition.getContents();
+      const contents = newRendition.getContents();
       if (contents && Array.isArray(contents) && contents.length > 0) {
         const currentView = contents[0].document;
         
@@ -100,10 +103,13 @@ export const useRenditionSetup = (
       }
     });
 
-    return rendition;
-  }, [book, isMobile, textAlign, fontFamily, theme, currentLocation, onLocationChange, onTextSelect]);
+    setRendition(newRendition);
+    return newRendition;
+  }, [book, isMobile, textAlign, fontFamily, theme, currentLocation, onLocationChange, onTextSelect, highlights]);
 
   return {
+    rendition,
+    setRendition,
     setupRendition,
   };
 };
