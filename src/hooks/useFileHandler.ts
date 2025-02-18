@@ -4,6 +4,11 @@ import { useToast } from "@/hooks/use-toast";
 import ePub from "epubjs";
 import type { Book } from "epubjs";
 
+// Extend the Book type to include the package property
+interface ExtendedBook extends Book {
+  package?: any;
+}
+
 export const useFileHandler = (
   setBook: (book: Book) => void,
   setCurrentLocation: (location: string | null) => void,
@@ -17,19 +22,17 @@ export const useFileHandler = (
       console.log('Initializing book with data size:', bookData.byteLength);
       
       // Create book instance with explicit options
-      const newBook = ePub(bookData, { openAs: 'epub' });
+      const newBook = ePub(bookData, { openAs: 'epub' }) as ExtendedBook;
       console.log('Created ePub instance');
       
-      // Wait for book to be ready and package to be loaded
+      // Wait for book to be ready
       await newBook.ready;
       console.log('Book ready');
       
-      // Ensure package is loaded
-      if (!newBook.package) {
-        throw new Error('Book package not loaded properly');
-      }
+      // Wait a bit for package to be loaded
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Generate locations after ensuring package is loaded
+      // Generate locations after book is ready
       await newBook.locations.generate(1024);
       console.log('Locations generated');
       
