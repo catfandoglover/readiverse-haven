@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -48,6 +47,28 @@
     --ring: 240 4.9% 83.9%;
   }
 
+  :root.sepia {
+    --background: 39 38% 90%;    /* #F4ECD8 */
+    --foreground: 17 24% 28%;    /* #5B4636 */
+    --card: 39 38% 90%;          /* #F4ECD8 */
+    --card-foreground: 17 24% 28%; /* #5B4636 */
+    --popover: 39 38% 90%;       /* #F4ECD8 */
+    --popover-foreground: 17 24% 28%; /* #5B4636 */
+    --primary: 17 24% 28%;       /* #5B4636 */
+    --primary-foreground: 39 38% 90%; /* #F4ECD8 */
+    --secondary: 39 38% 90%;     /* #F4ECD8 */
+    --secondary-foreground: 17 24% 28%; /* #5B4636 */
+    --muted: 39 38% 90%;         /* #F4ECD8 */
+    --muted-foreground: 17 24% 28%; /* #5B4636 */
+    --accent: 39 38% 90%;        /* #F4ECD8 */
+    --accent-foreground: 17 24% 28%; /* #5B4636 */
+    --destructive: 17 24% 28%;   /* #5B4636 */
+    --destructive-foreground: 39 38% 90%; /* #F4ECD8 */
+    --border: 17 24% 28%;        /* #5B4636 */
+    --input: 39 38% 90%;         /* #F4ECD8 */
+    --ring: 17 24% 28%;          /* #5B4636 */
+  }
+
   * {
     @apply border-border;
   }
@@ -74,6 +95,10 @@
     @apply bg-[#32303b] text-[#E9E7E2];
   }
 
+  :root.sepia ::selection {
+    @apply bg-[#5B4636] text-[#F4ECD8];
+  }
+
   /* Theme-aware link hovers */
   :root.light a:hover {
     @apply text-[#2A282A] opacity-80;
@@ -81,5 +106,9 @@
 
   :root.dark a:hover {
     @apply text-[#E9E7E2] opacity-80;
+  }
+
+  :root.sepia a:hover {
+    @apply text-[#5B4636] opacity-80;
   }
 }
