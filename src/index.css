@@ -19,7 +19,7 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 251 10% 21%;        /* #32303b */
     --accent-foreground: 34 6% 90%; /* #E9E7E2 */
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 251 10% 21%;   /* #32303b - removed red */
     --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
     --border: 0 0% 100%;          /* white with opacity */
     --input: 251 10% 21%;         /* #32303b */
@@ -42,7 +42,7 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 251 10% 21%;        /* #32303b */
     --accent-foreground: 34 6% 90%; /* #E9E7E2 */
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 251 10% 21%;   /* #32303b - removed red */
     --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
     --border: 0 0% 100%;          /* white with opacity */
     --input: 251 10% 21%;         /* #32303b */
@@ -59,5 +59,19 @@
 
   .epub-view {
     @apply bg-[#32303b] text-[#E9E7E2] shadow-lg rounded-lg;
+  }
+
+  /* Override any hover states that might show red */
+  *:hover {
+    @apply transition-colors duration-200;
+  }
+
+  /* Ensure links and text selections use our brand colors */
+  ::selection {
+    @apply bg-[#32303b] text-[#E9E7E2];
+  }
+
+  a:hover {
+    @apply text-[#E9E7E2] opacity-80;
   }
 }

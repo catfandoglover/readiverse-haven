@@ -10,9 +10,9 @@ export interface Theme {
 }
 
 export const themes: Record<ThemeType, Theme> = {
-  light: { background: '#ffffff', text: '#2A282A', accent: '#007AFF' },
-  dark: { background: '#32303b', text: '#E9E7E2', accent: '#9b87f5' },
-  sepia: { background: '#F4ECD8', text: '#5B4636', accent: '#BC4B51' }
+  light: { background: '#ffffff', text: '#2A282A', accent: '#E9E7E2' },
+  dark: { background: '#32303b', text: '#E9E7E2', accent: '#E9E7E2' },
+  sepia: { background: '#F4ECD8', text: '#5B4636', accent: '#5B4636' }
 };
 
 interface ThemeContextType {
