@@ -16,6 +16,8 @@ const ReaderHeader = ({
   onSearch,
   onSearchResultClick
 }: ReaderHeaderProps) => {
+  console.log('ExternalLink in ReaderHeader:', externalLink);
+  
   return (
     <div className="mb-4 flex items-center gap-4">
       <div className="flex-1">
