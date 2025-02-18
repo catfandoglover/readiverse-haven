@@ -4,30 +4,29 @@
 @tailwind utilities;
  
 @layer base {
-  :root {
-    --background: 251 10% 21%;    /* #32303b */
-    --foreground: 34 6% 90%;      /* #E9E7E2 */
-    --card: 251 10% 21%;          /* #32303b */
-    --card-foreground: 34 6% 90%; /* #E9E7E2 */
-    --popover: 251 10% 21%;       /* #32303b */
-    --popover-foreground: 34 6% 90%; /* #E9E7E2 */
-    --primary: 34 6% 90%;         /* #E9E7E2 */
-    --primary-foreground: 251 10% 21%; /* #32303b */
-    --secondary: 251 10% 21%;     /* #32303b */
-    --secondary-foreground: 34 6% 90%; /* #E9E7E2 */
-    --muted: 251 10% 21%;         /* #32303b */
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 251 10% 21%;        /* #32303b */
-    --accent-foreground: 34 6% 90%; /* #E9E7E2 */
-    --destructive: 251 10% 21%;   /* #32303b - removed red */
-    --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
-    --border: 0 0% 100%;          /* white with opacity */
-    --input: 251 10% 21%;         /* #32303b */
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.5rem;
+  :root.light {
+    --background: 0 0% 100%;      /* #ffffff */
+    --foreground: 0 0% 16%;       /* #2A282A */
+    --card: 0 0% 100%;            /* #ffffff */
+    --card-foreground: 0 0% 16%;  /* #2A282A */
+    --popover: 0 0% 100%;         /* #ffffff */
+    --popover-foreground: 0 0% 16%; /* #2A282A */
+    --primary: 0 0% 16%;          /* #2A282A */
+    --primary-foreground: 0 0% 100%; /* #ffffff */
+    --secondary: 0 0% 96%;        /* #F5F5F5 */
+    --secondary-foreground: 0 0% 16%; /* #2A282A */
+    --muted: 0 0% 96%;            /* #F5F5F5 */
+    --muted-foreground: 0 0% 16%; /* #2A282A */
+    --accent: 0 0% 96%;           /* #F5F5F5 */
+    --accent-foreground: 0 0% 16%; /* #2A282A */
+    --destructive: 0 0% 16%;      /* #2A282A */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+    --border: 0 0% 16%;           /* #2A282A */
+    --input: 0 0% 100%;           /* #ffffff */
+    --ring: 0 0% 16%;            /* #2A282A */
   }
 
-  .home-page, .bookshelf-page {
+  :root.dark {
     --background: 251 10% 21%;    /* #32303b */
     --foreground: 34 6% 90%;      /* #E9E7E2 */
     --card: 251 10% 21%;          /* #32303b */
@@ -42,7 +41,7 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 251 10% 21%;        /* #32303b */
     --accent-foreground: 34 6% 90%; /* #E9E7E2 */
-    --destructive: 251 10% 21%;   /* #32303b - removed red */
+    --destructive: 251 10% 21%;   /* #32303b */
     --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
     --border: 0 0% 100%;          /* white with opacity */
     --input: 251 10% 21%;         /* #32303b */
@@ -58,20 +57,29 @@
   }
 
   .epub-view {
-    @apply bg-[#32303b] text-[#E9E7E2] shadow-lg rounded-lg;
+    @apply bg-background text-foreground shadow-lg rounded-lg transition-colors duration-300;
   }
 
-  /* Override any hover states that might show red */
+  /* Theme-aware hover states */
   *:hover {
     @apply transition-colors duration-200;
   }
 
-  /* Ensure links and text selections use our brand colors */
-  ::selection {
+  /* Theme-aware text selection */
+  :root.light ::selection {
+    @apply bg-[#2A282A] text-white;
+  }
+
+  :root.dark ::selection {
     @apply bg-[#32303b] text-[#E9E7E2];
   }
 
-  a:hover {
+  /* Theme-aware link hovers */
+  :root.light a:hover {
+    @apply text-[#2A282A] opacity-80;
+  }
+
+  :root.dark a:hover {
     @apply text-[#E9E7E2] opacity-80;
   }
 }
