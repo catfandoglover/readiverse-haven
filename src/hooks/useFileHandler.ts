@@ -1,14 +1,7 @@
-
 // src/hooks/useFileHandler.ts
 import { useToast } from "@/hooks/use-toast";
 import ePub from "epubjs";
 import type { Book } from "epubjs";
-
-// Extend the Book type to include the package property
-interface ExtendedBook extends Book {
-  package?: any;
-}
-
 export const useFileHandler = (
   setBook: (book: Book) => void,
   setCurrentLocation: (location: string | null) => void,
@@ -21,18 +14,12 @@ export const useFileHandler = (
     try {
       console.log('Initializing book with data size:', bookData.byteLength);
       
-      // Create book instance with explicit options
-      const newBook = ePub(bookData, { openAs: 'epub' }) as ExtendedBook;
+      const newBook = ePub(bookData);
       console.log('Created ePub instance');
       
-      // Wait for book to be ready
       await newBook.ready;
       console.log('Book ready');
       
-      // Wait a bit for package to be loaded
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Generate locations after book is ready
       await newBook.locations.generate(1024);
       console.log('Locations generated');
       
@@ -68,30 +55,15 @@ export const useFileHandler = (
   };
 
   const handleFileUpload = async (file: File) => {
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const bookData = e.target?.result as ArrayBuffer;
-        if (!bookData) {
-          throw new Error("Failed to read book data");
-        }
-        await initializeBook(bookData);
-      };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        toast({
-          variant: "destructive",
-          description: "Error reading file. Please try again.",
-        });
-      };
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      console.error('Error in handleFileUpload:', error);
-      toast({
-        variant: "destructive",
-        description: "Failed to process file. Please try again.",
-      });
-    }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const bookData = e.target?.result as ArrayBuffer;
+      if (!bookData) {
+        throw new Error("Failed to read book data");
+      }
+      await initializeBook(bookData);
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const loadBookFromUrl = async (url: string) => {
