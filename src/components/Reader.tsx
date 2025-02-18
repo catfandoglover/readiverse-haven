@@ -37,6 +37,8 @@ interface SearchResult {
 
 const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }) => {
   const { toast } = useToast();
+  console.log('Reader metadata:', metadata); // Add this debug line
+  
   const {
     book,
     setBook,
