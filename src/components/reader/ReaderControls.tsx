@@ -27,7 +27,7 @@ const ReaderControls = ({
   bookKey
 }: ReaderControlsProps) => {
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-[#32303b] rounded-lg shadow border border-white/10">
+    <div className="flex flex-wrap gap-4 items-center justify-between mb-4 p-4 bg-background rounded-lg shadow border border-border/10 transition-colors duration-300">
       <DesktopControls 
         fontSize={fontSize}
         onFontSizeChange={onFontSizeChange}
