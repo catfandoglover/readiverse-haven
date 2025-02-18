@@ -5,47 +5,47 @@
  
 @layer base {
   :root {
-    --background: 251 10% 21%;    /* #322e38 */
+    --background: 251 10% 21%;    /* #32303b */
     --foreground: 34 6% 90%;      /* #E9E7E2 */
-    --card: 251 10% 21%;          /* #322e38 */
+    --card: 251 10% 21%;          /* #32303b */
     --card-foreground: 34 6% 90%; /* #E9E7E2 */
-    --popover: 251 10% 21%;       /* #322e38 */
+    --popover: 251 10% 21%;       /* #32303b */
     --popover-foreground: 34 6% 90%; /* #E9E7E2 */
     --primary: 34 6% 90%;         /* #E9E7E2 */
-    --primary-foreground: 251 10% 21%; /* #322e38 */
-    --secondary: 251 10% 21%;     /* #322e38 */
+    --primary-foreground: 251 10% 21%; /* #32303b */
+    --secondary: 251 10% 21%;     /* #32303b */
     --secondary-foreground: 34 6% 90%; /* #E9E7E2 */
-    --muted: 251 10% 21%;         /* #322e38 */
+    --muted: 251 10% 21%;         /* #32303b */
     --muted-foreground: 240 5% 64.9%;
-    --accent: 251 10% 21%;        /* #322e38 */
+    --accent: 251 10% 21%;        /* #32303b */
     --accent-foreground: 34 6% 90%; /* #E9E7E2 */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
     --border: 0 0% 100%;          /* white with opacity */
-    --input: 251 10% 21%;         /* #322e38 */
+    --input: 251 10% 21%;         /* #32303b */
     --ring: 240 4.9% 83.9%;
     --radius: 0.5rem;
   }
 
   .home-page, .bookshelf-page {
-    --background: 251 10% 21%;    /* #322e38 */
+    --background: 251 10% 21%;    /* #32303b */
     --foreground: 34 6% 90%;      /* #E9E7E2 */
-    --card: 251 10% 21%;          /* #322e38 */
+    --card: 251 10% 21%;          /* #32303b */
     --card-foreground: 34 6% 90%; /* #E9E7E2 */
-    --popover: 251 10% 21%;       /* #322e38 */
+    --popover: 251 10% 21%;       /* #32303b */
     --popover-foreground: 34 6% 90%; /* #E9E7E2 */
     --primary: 34 6% 90%;         /* #E9E7E2 */
-    --primary-foreground: 251 10% 21%; /* #322e38 */
-    --secondary: 251 10% 21%;     /* #322e38 */
+    --primary-foreground: 251 10% 21%; /* #32303b */
+    --secondary: 251 10% 21%;     /* #32303b */
     --secondary-foreground: 34 6% 90%; /* #E9E7E2 */
-    --muted: 251 10% 21%;         /* #322e38 */
+    --muted: 251 10% 21%;         /* #32303b */
     --muted-foreground: 240 5% 64.9%;
-    --accent: 251 10% 21%;        /* #322e38 */
+    --accent: 251 10% 21%;        /* #32303b */
     --accent-foreground: 34 6% 90%; /* #E9E7E2 */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 34 6% 90%; /* #E9E7E2 */
     --border: 0 0% 100%;          /* white with opacity */
-    --input: 251 10% 21%;         /* #322e38 */
+    --input: 251 10% 21%;         /* #32303b */
     --ring: 240 4.9% 83.9%;
   }
 
@@ -58,6 +58,6 @@
   }
 
   .epub-view {
-    @apply bg-[#1A1F2C] text-[#E9E7E2] shadow-lg rounded-lg;
+    @apply bg-[#32303b] text-[#E9E7E2] shadow-lg rounded-lg;
   }
 }
