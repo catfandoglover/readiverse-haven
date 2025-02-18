@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,8 +36,8 @@ interface SearchResult {
 
 const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }) => {
   const { toast } = useToast();
-  console.log('Reader metadata:', metadata); // Add this debug line
-  
+  console.log('Reader metadata:', metadata);
+
   const {
     book,
     setBook,
@@ -276,7 +275,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
           ) : (
             <>
               <ReaderHeader
-                externalLink={metadata?.Cover_super || null}
+                externalLink={metadata?.coverUrl || null}
                 onSearch={handleSearch}
                 onSearchResultClick={handleSearchResultClick}
               />
