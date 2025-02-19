@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import Home from "@/components/Home";
 import Bookshelf from "@/components/Bookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
 import DNAAssessment from "./pages/DNAAssessment";
+import VoiceDNAAssessment from "@/components/VoiceDNAAssessment";
 import Index from "@/pages/Index";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
@@ -57,6 +59,7 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
+                <Route path="/dna/voice" element={<VoiceDNAAssessment />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/:bookSlug" element={<Index />} />
