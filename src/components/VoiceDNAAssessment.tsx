@@ -152,7 +152,7 @@ const VoiceDNAAssessment = () => {
         role: 'system',
         content: [{
           type: 'text',
-          text: `You are a DNA assessment system. Your task is to ask the question "Would you sacrifice one innocent person to save five strangers?" Then listen for either "A" for Yes or "B" for No. You must speak the question clearly. You must not add any other words or explanations.`
+          text: `You are a supportive AI companion during a DNA assessment. Your role is to engage in thoughtful discussion about each ethical question presented, helping the user explore different perspectives. Read the question displayed and discuss its ethical implications with the user. Keep responses brief but insightful. Do not try to influence their decision - your role is to facilitate reflection.`
         }]
       }
     };
@@ -166,7 +166,7 @@ const VoiceDNAAssessment = () => {
           role: 'user',
           content: [{
             type: 'text',
-            text: 'Please ask the question now.'
+            text: 'The question is: "Would you sacrifice one innocent person to save five strangers?" What are your thoughts on this ethical dilemma?'
           }]
         }
       };
@@ -408,14 +408,13 @@ const VoiceDNAAssessment = () => {
 
         <div className="flex-1 p-4">
           <h1 className="text-2xl font-oxanium text-center text-foreground uppercase mb-8">
-            Voice DNA Assessment
+            AI Discussion Assistant
           </h1>
           
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <p className="text-foreground/80 mb-8 leading-relaxed">
-                Have a natural conversation with our AI to assess your intellectual DNA. 
-                Speak freely about your philosophical views and let our system analyze your perspectives.
+                Discuss the ethical questions with our AI companion. The AI will help you explore different perspectives, but the final choice is yours to make through the assessment interface.
               </p>
               
               {!isConnected ? (
@@ -424,7 +423,7 @@ const VoiceDNAAssessment = () => {
                   className={buttonGradientStyles}
                   disabled={isConnecting}
                 >
-                  <span>{isConnecting ? 'Connecting...' : 'Start Voice Assessment'}</span>
+                  <span>{isConnecting ? 'Connecting...' : 'Start Discussion'}</span>
                 </Button>
               ) : (
                 <Button 
@@ -432,7 +431,7 @@ const VoiceDNAAssessment = () => {
                   variant="destructive"
                   className={buttonGradientStyles}
                 >
-                  <span>End Assessment</span>
+                  <span>End Discussion</span>
                 </Button>
               )}
             </div>
