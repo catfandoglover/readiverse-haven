@@ -2,11 +2,42 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getDNAPrompt } from './prompts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Decision tree paths organized by category
+const decisionTrees = {
+  ETHICS: `
+  Strict Question Order:
+  Q1 - Would you sacrifice one person to save five?
+  |-> Yes (A): Leads to questions about utilitarian ethics
+      |-> AA: Questions about emotional vs rational decision making
+          |-> AAA: Questions about suffering vs happiness
+              |-> AAAA/AAAB: Deeper questions about rights vs welfare
+  |-> No (B): Leads to questions about deontological ethics
+      |-> BB: Questions about action vs inaction
+          |-> BBB: Questions about authenticity vs happiness
+              |-> BBBA/BBBB: Final questions about means vs ends
+  
+  Each response MUST lead to the exact next question in this sequence.
+  No skipping, no combining, no improvising questions.`,
+
+  THEOLOGY: `
+  Strict Question Order:
+  Q1 - If you could prove/disprove God's existence, would you want to know?
+  |-> Yes (A): Leads to questions about reason and faith
+      |-> AA: Questions about divine personhood
+          |-> AAA: Questions about problem of evil
+              |-> AAAA/AAAB: Questions about finite vs infinite
+  |-> No (B): Leads to questions about experience vs tradition
+      |-> BB: Questions about revelation and morality
+          |-> BBB: Questions about divine hiddenness
+              |-> BBBA/BBBB: Questions about love and immortality`,
+
+  // ... include similar structured paths for other categories
 };
 
 serve(async (req) => {
@@ -20,13 +51,12 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Modified query to correctly join with great_questions
+    // Fetch initial question with strict path control
     const { data: initialQuestion, error: questionError } = await supabase
       .from('dna_tree_structure')
       .select(`
@@ -42,45 +72,42 @@ serve(async (req) => {
       .eq('tree_position', 'Q1')
       .maybeSingle();
 
-    if (questionError) {
-      console.error('Database query error:', questionError);
-      throw new Error(`Failed to fetch initial question: ${questionError.message}`);
+    if (questionError || !initialQuestion || !initialQuestion.great_questions) {
+      throw new Error('Failed to fetch initial question structure');
     }
 
-    if (!initialQuestion) {
-      console.error('No initial question found in database');
-      throw new Error('No initial question found');
-    }
+    // Create the strictly controlled system prompt
+    const systemPrompt = `You are a philosophical assessment AI with STRICT adherence to a predefined question path.
 
-    console.log('Initial question data:', initialQuestion);
+CRITICAL RULES:
+1. You MUST follow the exact decision tree structure provided.
+2. Each question MUST lead to the specific next question defined in the tree.
+3. You MUST NOT skip questions or combine questions.
+4. You MUST NOT improvise or create new questions.
+5. You MUST wait for clear A/B responses before proceeding.
 
-    // Safely access the question data with null checks
-    if (!initialQuestion.great_questions) {
-      console.error('No linked question found:', initialQuestion);
-      throw new Error('Question data is missing');
-    }
+CURRENT STRUCTURE:
+${decisionTrees[initialQuestion.category]}
 
-    // Create the tree structure for the prompt with safe accessors
-    const treeStructure = {
-      currentCategory: initialQuestion.category,
-      currentPosition: initialQuestion.tree_position,
-      question: {
-        question: initialQuestion.great_questions.question,
-        answer_a: initialQuestion.great_questions.answer_a,
-        answer_b: initialQuestion.great_questions.answer_b,
-        category: initialQuestion.category,
-        tree_position: initialQuestion.tree_position,
-        next_question_a: initialQuestion.next_question_a_id,
-        next_question_b: initialQuestion.next_question_b_id
-      }
-    };
+CURRENT QUESTION:
+Position: ${initialQuestion.tree_position}
+Question: ${initialQuestion.great_questions.question}
+Option A: ${initialQuestion.great_questions.answer_a}
+Option B: ${initialQuestion.great_questions.answer_b}
 
-    console.log('Tree structure:', treeStructure);
+Next positions:
+A -> ${initialQuestion.next_question_a_id}
+B -> ${initialQuestion.next_question_b_id}
 
-    // Get the system prompt with the initial question
-    const { systemPrompt, modelConfig } = getDNAPrompt(treeStructure);
+You MUST ONLY:
+1. Present the current question exactly as written
+2. Wait for a clear A/B response
+3. Use the recordDNAResponse function to log the response
+4. Wait for the system to provide the next question
 
-    console.log('Starting token request to OpenAI...');
+Do not proceed until you receive a clear A or B response.`;
+
+    console.log('Starting token request to OpenAI with structured prompt...');
 
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
@@ -92,6 +119,7 @@ serve(async (req) => {
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
         instructions: systemPrompt,
+        temperature: 0.1, // Very low temperature to ensure consistent behavior
         tools: [{
           name: "recordDNAResponse",
           type: "function",
@@ -121,14 +149,11 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      throw new Error(`OpenAI API error: ${await response.text()}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI Response:', data);
-
+    
     if (!data.client_secret?.value) {
       throw new Error('No client secret in OpenAI response');
     }
