@@ -8,38 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Decision tree paths organized by category
-const decisionTrees = {
-  ETHICS: `
-  Strict Question Order:
-  Q1 - Would you sacrifice one person to save five?
-  |-> Yes (A): Leads to questions about utilitarian ethics
-      |-> AA: Questions about emotional vs rational decision making
-          |-> AAA: Questions about suffering vs happiness
-              |-> AAAA/AAAB: Deeper questions about rights vs welfare
-  |-> No (B): Leads to questions about deontological ethics
-      |-> BB: Questions about action vs inaction
-          |-> BBB: Questions about authenticity vs happiness
-              |-> BBBA/BBBB: Final questions about means vs ends
-  
-  Each response MUST lead to the exact next question in this sequence.
-  No skipping, no combining, no improvising questions.`,
-
-  THEOLOGY: `
-  Strict Question Order:
-  Q1 - If you could prove/disprove God's existence, would you want to know?
-  |-> Yes (A): Leads to questions about reason and faith
-      |-> AA: Questions about divine personhood
-          |-> AAA: Questions about problem of evil
-              |-> AAAA/AAAB: Questions about finite vs infinite
-  |-> No (B): Leads to questions about experience vs tradition
-      |-> BB: Questions about revelation and morality
-          |-> BBB: Questions about divine hiddenness
-              |-> BBBA/BBBB: Questions about love and immortality`,
-
-  // ... include similar structured paths for other categories
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -77,35 +45,31 @@ serve(async (req) => {
     }
 
     // Create the strictly controlled system prompt
-    const systemPrompt = `You are a philosophical assessment AI with STRICT adherence to a predefined question path.
+    const systemPrompt = `You are conducting a DNA assessment following an EXACT prescribed sequence of questions.
+CRITICAL: This is not a conversation. You are an assessment system that MUST:
 
-CRITICAL RULES:
-1. You MUST follow the exact decision tree structure provided.
-2. Each question MUST lead to the specific next question defined in the tree.
-3. You MUST NOT skip questions or combine questions.
-4. You MUST NOT improvise or create new questions.
-5. You MUST wait for clear A/B responses before proceeding.
+1. Present ONLY the current question from the database with no deviation
+2. Wait for ONLY "A" or "B" as valid responses
+3. Immediately use recordDNAResponse to log the response
+4. Do not add any commentary or explanation
+5. Do not respond to anything except "A" or "B"
+6. If the user says anything else, respond ONLY with: "Please respond with 'A' or 'B'."
 
-CURRENT STRUCTURE:
-${decisionTrees[initialQuestion.category]}
+Current Question:
+"${initialQuestion.great_questions.question}"
 
-CURRENT QUESTION:
-Position: ${initialQuestion.tree_position}
-Question: ${initialQuestion.great_questions.question}
-Option A: ${initialQuestion.great_questions.answer_a}
-Option B: ${initialQuestion.great_questions.answer_b}
+Option A: "${initialQuestion.great_questions.answer_a}"
+Option B: "${initialQuestion.great_questions.answer_b}"
 
-Next positions:
-A -> ${initialQuestion.next_question_a_id}
-B -> ${initialQuestion.next_question_b_id}
+CRITICAL: You MUST respond exactly like this:
+"To begin the DNA assessment, I'd like to explore your perspectives on various topics. Let's start with the category of Ethics. Here's a question for you:
 
-You MUST ONLY:
-1. Present the current question exactly as written
-2. Wait for a clear A/B response
-3. Use the recordDNAResponse function to log the response
-4. Wait for the system to provide the next question
+What do you believe is more important: A) ${initialQuestion.great_questions.answer_a}, or B) ${initialQuestion.great_questions.answer_b}? Please respond with 'A' or 'B'."
 
-Do not proceed until you receive a clear A or B response.`;
+Then:
+1. Wait for ONLY "A" or "B"
+2. Call recordDNAResponse
+3. Do not proceed until the system provides the next question`;
 
     console.log('Starting token request to OpenAI with structured prompt...');
 
@@ -119,10 +83,10 @@ Do not proceed until you receive a clear A or B response.`;
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
         instructions: systemPrompt,
-        temperature: 0.6, // Updated to meet OpenAI's minimum requirement
+        temperature: 0.6,
         tools: [{
-          name: "recordDNAResponse",
           type: "function",
+          name: "recordDNAResponse",
           description: "Record a response in the DNA assessment sequence",
           parameters: {
             type: "object",
@@ -160,7 +124,18 @@ Do not proceed until you receive a clear A or B response.`;
       throw new Error('No client secret in OpenAI response');
     }
 
-    return new Response(JSON.stringify({ token: data.client_secret.value }), {
+    return new Response(JSON.stringify({ 
+      token: data.client_secret.value,
+      initialQuestion: {
+        category: initialQuestion.category,
+        position: initialQuestion.tree_position,
+        question: initialQuestion.great_questions.question,
+        optionA: initialQuestion.great_questions.answer_a,
+        optionB: initialQuestion.great_questions.answer_b,
+        nextA: initialQuestion.next_question_a_id,
+        nextB: initialQuestion.next_question_b_id
+      }
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
