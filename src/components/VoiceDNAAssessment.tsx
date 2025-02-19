@@ -79,7 +79,7 @@ const VoiceDNAAssessment = () => {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement>(null);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -104,13 +104,6 @@ const VoiceDNAAssessment = () => {
     try {
       setIsConnecting(true);
       console.log('Starting assessment...');
-
-      if (!audioElementRef.current) {
-        const audioElement = new Audio();
-        audioElement.autoplay = true;
-        audioElementRef.current = audioElement;
-        document.body.appendChild(audioElement);
-      }
 
       const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
       console.log('Edge function response:', response);
@@ -157,9 +150,6 @@ const VoiceDNAAssessment = () => {
         if (audioElementRef.current && event.streams[0]) {
           console.log('Setting audio source:', event.streams[0]);
           audioElementRef.current.srcObject = event.streams[0];
-          audioElementRef.current.play().catch(error => {
-            console.error('Error playing audio:', error);
-          });
         }
       };
 
@@ -240,8 +230,7 @@ const VoiceDNAAssessment = () => {
       peerConnectionRef.current = null;
     }
     if (audioElementRef.current) {
-      audioElementRef.current.remove();
-      audioElementRef.current = null;
+      audioElementRef.current.srcObject = null;
     }
     setIsConnected(false);
     setIsSpeaking(false);
@@ -341,6 +330,13 @@ const VoiceDNAAssessment = () => {
                 </div>
               </div>
             )}
+
+            <audio 
+              ref={audioElementRef}
+              autoPlay
+              playsInline
+              className="hidden"
+            />
           </div>
         </div>
 
