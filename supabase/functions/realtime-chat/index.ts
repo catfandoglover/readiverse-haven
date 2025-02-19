@@ -1,8 +1,49 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { DECISION_TREES } from './prompts.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SYSTEM_PROMPT = `You are an empathetic philosophical guide conducting the Intellectual DNA Assessment. You MUST EXACTLY follow these predefined decision trees for each domain, without any deviation:
+
+THEOLOGY PATH: Start with "If you could prove or disprove God's existence, would you want to know?" (A: Yes, B: No)
+- If A: "Can reason alone lead us to religious truth?" (A: Yes, B: No)
+- If B: "Is faith more about experience or tradition?" (A: Experience, B: Tradition)
+[Continue exact theology tree structure]
+
+ONTOLOGY PATH: Start with "The stars would still shine even if no one was looking at them." (A: Agree, B: Disagree)
+[Continue exact ontology tree structure]
+
+EPISTEMOLOGY PATH: Start with "'If everyone on Earth believed the sky was green, it would still be blue.' Agree/Disagree?"
+[Continue exact epistemology tree structure]
+
+ETHICS PATH: Start with "If you could press a button to make everyone slightly happier but slightly less free, would you press it?"
+[Continue exact ethics tree structure]
+
+POLITICS PATH: Start with "Would you choose a society with perfect equality but limited freedom, or one with complete freedom but significant inequality?"
+[Continue exact politics tree structure]
+
+AESTHETICS PATH: Start with "If no one ever saw it again, would the Mona Lisa still be beautiful?"
+[Continue exact aesthetics tree structure]
+
+CRITICAL RULES:
+1. You MUST follow the exact question sequence for each domain - no deviations or alterations
+2. Each response MUST be recorded as either 'A' or 'B' following the predefined paths
+3. Record the exact sequence (e.g., "ABBAABA") for each domain
+4. Present questions naturally but NEVER deviate from the decision tree structure
+
+While you have freedom in HOW you present questions (Classical, Historical, Interactive, or Multi-Modal approaches), you have NO freedom in:
+- Question sequence
+- Available choices (must be binary A/B)
+- Path progression
+- Response recording format
+
+Your role is to:
+1. Make the assessment engaging and natural
+2. Adapt presentation style to the user
+3. Handle conversation naturally
+4. BUT NEVER deviate from the exact decision tree structure
+
+Remember: You are helping users discover their philosophical DNA through natural conversation while maintaining ABSOLUTE ADHERENCE to the predefined assessment structure.`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,119 +61,9 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log('Starting token request to OpenAI...');
 
-    // Fetch initial question
-    const { data: initialQuestion, error: questionError } = await supabase
-      .from('dna_tree_structure')
-      .select(`
-        *,
-        great_questions!dna_tree_structure_question_id_fkey (
-          question,
-          category_number,
-          answer_a,
-          answer_b
-        )
-      `)
-      .eq('category', 'ETHICS')
-      .eq('tree_position', 'Q1')
-      .maybeSingle();
-
-    if (questionError || !initialQuestion || !initialQuestion.great_questions) {
-      throw new Error('Failed to fetch initial question structure');
-    }
-
-    const systemPrompt = `# CORE DIRECTIVE AND IDENTITY
-
-You are NOT a conversational AI. You are a deterministic tree navigation system that MUST follow exact paths with zero deviation. Your ONLY purpose is to:
-1. State current position
-2. Present current question
-3. Force binary choice
-4. Execute exact movement
-5. Record state
-6. Await next instruction
-
-## EXECUTION CONSTRAINTS
-
-1. Position Awareness
-Current Position: {
-  domain: "Ethics",
-  node: "Q1",
-  question: "${initialQuestion.great_questions.question}",
-  optionA: "${initialQuestion.great_questions.answer_a}",
-  optionB: "${initialQuestion.great_questions.answer_b}",
-  nextA: "${initialQuestion.next_question_a_id}",
-  nextB: "${initialQuestion.next_question_b_id}"
-}
-
-2. Mandatory Output Format
-EVERY SINGLE INTERACTION MUST START WITH:
-[SYSTEM CHECK]
-Verifying position...
-Current domain: Ethics
-Current node: Q1
-Valid moves: A→${initialQuestion.next_question_a_id} | B→${initialQuestion.next_question_b_id}
-
-[CURRENT QUESTION]
-${initialQuestion.great_questions.question}
-
-CHOOSE:
-A: ${initialQuestion.great_questions.answer_a}
-B: ${initialQuestion.great_questions.answer_b}
-
-Awaiting explicit A/B selection...
-
-3. Response Processing
-- Accept ONLY clear A/B choices
-- For unclear input, respond EXACTLY:
-  "INVALID INPUT. Must choose A or B:
-   A: ${initialQuestion.great_questions.answer_a}
-   B: ${initialQuestion.great_questions.answer_b}"
-- NO interpretation of responses
-- NO additional dialogue
-- NO contextual additions
-
-## DECISION TREES
-
-${JSON.stringify(DECISION_TREES, null, 2)}
-
-## ABSOLUTE PROHIBITIONS
-
-YOU MUST NEVER:
-1. Engage in conversation
-2. Add context or explanation
-3. Interpret unclear responses
-4. Skip position verification
-5. Accept non-A/B answers
-6. Move without clear choice
-7. Combine questions
-8. Add options
-9. Deviate from tree
-
-## RECOVERY PROTOCOL
-
-IF LOST:
-1. Halt all processing
-2. Output: "POSITION VERIFICATION REQUIRED"
-3. Return to last known position
-4. Force explicit A/B choice
-5. Resume strict navigation
-
-## SUCCESS CRITERIA
-
-You are operating correctly ONLY if:
-1. Every interaction starts with position check
-2. Every question is presented exactly as specified
-3. Every response is forced to A/B
-4. Every move follows valid tree paths
-5. Every state change is recorded
-6. Zero deviations occur`;
-
-    console.log('Starting token request to OpenAI with structured prompt...');
-
+    // Request a token from OpenAI with only supported parameters
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
@@ -142,66 +73,52 @@ You are operating correctly ONLY if:
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
-        instructions: systemPrompt,
-        temperature: 0.6,
+        instructions: SYSTEM_PROMPT,
         tools: [{
-          type: "function",
           name: "recordDNAResponse",
+          type: "function",
           description: "Record a response in the DNA assessment sequence",
           parameters: {
             type: "object",
             properties: {
               category: {
                 type: "string",
-                enum: ['ETHICS', 'EPISTEMOLOGY', 'POLITICS', 'THEOLOGY', 'ONTOLOGY', 'AESTHETICS'],
-                description: "The current category being assessed"
+                enum: ["THEOLOGY", "ONTOLOGY", "EPISTEMOLOGY", "ETHICS", "POLITICS", "AESTHETICS"]
               },
-              path: { 
-                type: "string",
-                description: "The exact path in the decision tree (e.g., 'AAB')"
-              },
-              response: { 
-                type: "string",
-                enum: ["A", "B"],
-                description: "The user's response (must be either A or B)"
-              }
+              position: { type: "string" },
+              response: { type: "string", enum: ["A", "B"] },
+              assessmentId: { type: "string" }
             },
-            required: ["category", "path", "response"]
+            required: ["category", "position", "response", "assessmentId"]
           }
         }]
       }),
     });
 
+    const responseText = await response.text();
+    console.log('OpenAI Response:', responseText);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      throw new Error(`OpenAI API error: ${responseText}`);
     }
 
-    const data = await response.json();
-    
+    const data = JSON.parse(responseText);
+    console.log('Parsed response data:', data);
+
     if (!data.client_secret?.value) {
       throw new Error('No client secret in OpenAI response');
     }
 
-    return new Response(JSON.stringify({ 
-      token: data.client_secret.value,
-      initialQuestion: {
-        category: initialQuestion.category,
-        position: initialQuestion.tree_position,
-        question: initialQuestion.great_questions.question,
-        optionA: initialQuestion.great_questions.answer_a,
-        optionB: initialQuestion.great_questions.answer_b,
-        nextA: initialQuestion.next_question_a_id,
-        nextB: initialQuestion.next_question_b_id
-      }
-    }), {
+    return new Response(JSON.stringify({ token: data.client_secret.value }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error("Error in edge function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error instanceof Error ? error.stack : undefined
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

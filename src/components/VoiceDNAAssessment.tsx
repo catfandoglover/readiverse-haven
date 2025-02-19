@@ -1,5 +1,8 @@
+
 import React, { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/OutsetaAuthContext';
 
 interface AudioRecorderConfig {
@@ -66,57 +69,16 @@ class AudioRecorder {
   }
 }
 
-interface VoiceDNAAssessmentProps {
-  questionText: string;
-  isEnabled: boolean;
-}
-
-const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({ 
-  questionText,
-  isEnabled
-}) => {
+const VoiceDNAAssessment = () => {
   const { toast } = useToast();
   const { supabase } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
-  const hasAskedQuestionRef = useRef(false);
-  const sessionCreatedRef = useRef(false);
-  const messageQueueRef = useRef<any[]>([]);
-  const currentQuestionRef = useRef<string>('');
-
-  useEffect(() => {
-    if (isEnabled && !isConnected && !isConnecting) {
-      startAssessment();
-    }
-    if (!isEnabled && isConnected) {
-      stopAssessment();
-    }
-  }, [isEnabled]);
-
-  useEffect(() => {
-    if (questionText !== currentQuestionRef.current && isConnected) {
-      currentQuestionRef.current = questionText;
-      const userMessage = {
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'user',
-          content: [{
-            type: 'text',
-            text: `The question is: "${questionText}" What are your thoughts on this ethical dilemma?`
-          }]
-        }
-      };
-      queueOrSendMessage(userMessage);
-      queueOrSendMessage({ type: 'response.create' });
-    }
-  }, [questionText, isConnected]);
+  const audioElementRef = useRef<HTMLAudioElement>(null);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -137,89 +99,15 @@ const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({
     return btoa(binary);
   };
 
-  const sendQueuedMessages = () => {
-    if (dataChannelRef.current?.readyState === 'open' && sessionCreatedRef.current) {
-      while (messageQueueRef.current.length > 0) {
-        const message = messageQueueRef.current.shift();
-        console.log('Sending queued message:', message);
-        dataChannelRef.current.send(JSON.stringify(message));
-      }
-    }
-  };
-
-  const queueOrSendMessage = (message: any) => {
-    if (dataChannelRef.current?.readyState === 'open' && sessionCreatedRef.current) {
-      console.log('Sending message directly:', message);
-      dataChannelRef.current.send(JSON.stringify(message));
-    } else {
-      console.log('Queueing message:', message);
-      messageQueueRef.current.push(message);
-    }
-  };
-
-  const sendSessionConfig = () => {
-    console.log('Sending session config...');
-    const sessionConfig = {
-      type: 'session.update',
-      session: {
-        modalities: ['text', 'audio'],
-        voice: 'alloy',
-        input_audio_format: 'pcm16',
-        output_audio_format: 'pcm16',
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 1000
-        },
-        temperature: 0.7,
-        max_response_output_tokens: 200
-      }
-    };
-    queueOrSendMessage(sessionConfig);
-
-    const initialSystemMessage = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'system',
-        content: [{
-          type: 'text',
-          text: `You are a supportive AI companion during a DNA assessment. Your role is to engage in thoughtful discussion about each ethical question presented, helping the user explore different perspectives. Read the question displayed and discuss its ethical implications with the user. Keep responses brief but insightful. Do not try to influence their decision - your role is to facilitate reflection.`
-        }]
-      }
-    };
-    queueOrSendMessage(initialSystemMessage);
-    
-    if (currentQuestionRef.current) {
-      const userMessage = {
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'user',
-          content: [{
-            type: 'text',
-            text: `The question is: "${currentQuestionRef.current}" What are your thoughts on this ethical dilemma?`
-          }]
-        }
-      };
-      queueOrSendMessage(userMessage);
-      queueOrSendMessage({ type: 'response.create' });
-    }
-  };
-
   const startAssessment = async () => {
     try {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
-      const audioElement = document.createElement('audio');
-      audioElement.autoplay = true;
-      audioElement.id = 'voice-dna-audio';
-      document.body.appendChild(audioElement);
-      audioElementRef.current = audioElement;
-      
+      // Get ephemeral token from our Edge Function
       const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
+      console.log('Edge function response:', response);
+      
       if (invokeError) {
         console.error('Edge function error:', invokeError);
         throw new Error(`Edge function error: ${invokeError.message}`);
@@ -233,84 +121,51 @@ const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({
       const token = response.token;
       console.log('Got token, creating peer connection...');
 
-      const configuration = { 
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-      };
-      peerConnectionRef.current = new RTCPeerConnection(configuration);
+      // Create peer connection
+      peerConnectionRef.current = new RTCPeerConnection();
+      console.log('Peer connection created');
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 24000,
-          channelCount: 1
-        } 
-      });
-      
-      mediaStream.getTracks().forEach(track => {
-        if (peerConnectionRef.current) {
-          peerConnectionRef.current.addTrack(track, mediaStream);
-        }
-      });
+      // Set up audio track
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
+      console.log('Added audio track to peer connection');
 
+      // Set up data channel
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
       console.log('Created data channel');
-
-      dataChannelRef.current.onopen = () => {
-        console.log('Data channel opened');
-        sendQueuedMessages();
-      };
 
       dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
 
-        if (data.type === 'session.created') {
-          console.log('Session created');
-          sessionCreatedRef.current = true;
-          sendSessionConfig();
-        }
-        
         if (data.type === 'response.audio.delta') {
-          console.log('AI is speaking...');
           setIsSpeaking(true);
         } else if (data.type === 'response.audio.done') {
-          console.log('AI finished speaking');
           setIsSpeaking(false);
-          if (!hasAskedQuestionRef.current) {
-            hasAskedQuestionRef.current = true;
-            setIsWaitingForResponse(false);
-          }
-        } else if (data.type === 'response.audio_transcript.delta') {
-          console.log('Transcript delta:', data.delta);
-          const response = data.delta.trim();
-          if (!isWaitingForResponse && (response === 'A' || response === 'B')) {
-            console.log('Valid response received:', response);
-            setIsWaitingForResponse(true);
-            queueOrSendMessage({ type: 'response.create' });
-          }
+        } else if (data.type === 'response.function_call_arguments.done') {
+          const args = JSON.parse(data.arguments);
+          console.log('Recording DNA response:', args);
         }
       };
 
+      // Handle remote audio
       peerConnectionRef.current.ontrack = (event) => {
-        console.log('Received remote track:', event.track.kind);
-        if (audioElementRef.current && event.streams[0]) {
+        console.log('Received remote track:', event);
+        if (audioElementRef.current) {
           audioElementRef.current.srcObject = event.streams[0];
-          audioElementRef.current.play().catch(error => {
-            console.error('Error playing audio:', error);
-          });
         }
       };
 
-      const offer = await peerConnectionRef.current.createOffer({
-        offerToReceiveAudio: true
-      });
+      // Create and set local description
+      const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
+      console.log('Created and set local description');
 
+      // Connect to OpenAI
       const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2024-12-17";
       
+      console.log('Connecting to OpenAI with SDP:', offer.sdp);
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
         method: "POST",
         headers: {
@@ -322,17 +177,22 @@ const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({
 
       if (!sdpResponse.ok) {
         const errorText = await sdpResponse.text();
-        throw new Error(`Failed to connect to OpenAI: ${errorText}`);
+        console.error('OpenAI SDP error:', errorText);
+        throw new Error('Failed to connect to OpenAI');
       }
 
       const sdpAnswer = await sdpResponse.text();
+      console.log('Received SDP answer');
+
       const answer = {
         type: 'answer' as RTCSdpType,
         sdp: sdpAnswer
       };
 
       await peerConnectionRef.current.setRemoteDescription(answer);
+      console.log('Set remote description, WebRTC connection established');
 
+      // Start recording
       recorderRef.current = new AudioRecorder({
         onAudioData: (audioData) => {
           if (dataChannelRef.current?.readyState === 'open') {
@@ -345,6 +205,8 @@ const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({
       });
 
       await recorderRef.current.start();
+      console.log('Started audio recording');
+      
       setIsConnected(true);
       setIsConnecting(false);
 
@@ -373,31 +235,63 @@ const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
-    if (audioElementRef.current) {
-      audioElementRef.current.pause();
-      audioElementRef.current.srcObject = null;
-      audioElementRef.current.remove();
-      audioElementRef.current = null;
-    }
     setIsConnected(false);
     setIsSpeaking(false);
   };
 
-  if (!isEnabled) return null;
+  useEffect(() => {
+    // Create audio element for remote audio
+    const audioElement = new Audio();
+    audioElement.autoplay = true;
+    audioElementRef.current = audioElement;
+
+    return () => {
+      stopAssessment();
+    };
+  }, []);
 
   return (
-    <div className="fixed bottom-20 right-4 z-50">
-      <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
-        isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
-      }`}>
-        {isSpeaking ? 'Virgil is speaking...' : 'Virgil is listening...'}
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Intellectual DNA Assessment
+        </h1>
+        
+        <div className="text-center mb-8">
+          <p className="text-muted-foreground mb-4">
+            {isConnected 
+              ? "Speak naturally with the AI to complete your assessment"
+              : "Start a conversation with our AI to assess your intellectual DNA"}
+          </p>
+          
+          {!isConnected ? (
+            <Button 
+              onClick={startAssessment}
+              className="bg-primary hover:bg-primary/90"
+              disabled={isConnecting}
+            >
+              {isConnecting ? 'Connecting...' : 'Start Assessment'}
+            </Button>
+          ) : (
+            <Button 
+              onClick={stopAssessment}
+              variant="destructive"
+            >
+              End Assessment
+            </Button>
+          )}
+        </div>
+
+        {isConnected && (
+          <div className="text-center">
+            <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
+              isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
+            }`}>
+              {isSpeaking ? 'AI is speaking...' : 'Listening...'}
+            </div>
+          </div>
+        )}
       </div>
-      <audio 
-        ref={audioElementRef}
-        autoPlay
-        playsInline
-        className="hidden"
-      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ToggleLeft, ToggleRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import VoiceDNAAssessment from "@/components/VoiceDNAAssessment";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -34,16 +33,6 @@ const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 
 const DNAAssessment = () => {
   const { category } = useParams();
-  // Skip rest of initialization if category is invalid
-  if (category?.toUpperCase() && !categoryOrder.includes(category.toUpperCase() as DNACategory)) {
-    const navigate = useNavigate();
-    React.useEffect(() => {
-      toast.error("Invalid category");
-      navigate('/dna');
-    }, []);
-    return null;
-  }
-
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
@@ -53,7 +42,6 @@ const DNAAssessment = () => {
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
-  const [isVirgilEnabled, setIsVirgilEnabled] = useState(true);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -536,35 +524,12 @@ const DNAAssessment = () => {
           className="bg-secondary/10"
         />
       </div>
-
-      <div className="flex justify-center mt-4 mb-2">
-        <button
-          onClick={() => setIsVirgilEnabled(!isVirgilEnabled)}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/50 text-foreground/80 hover:bg-background/80 transition-colors"
-        >
-          {isVirgilEnabled ? (
-            <ToggleRight className="h-5 w-5 text-green-500" />
-          ) : (
-            <ToggleLeft className="h-5 w-5 text-foreground/50" />
-          )}
-          <span className="text-sm font-oxanium">Virgil {isVirgilEnabled ? 'Active' : 'Inactive'}</span>
-        </button>
-      </div>
-
       <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
-        {isVirgilEnabled && currentQuestion && (
-          <VoiceDNAAssessment
-            questionText={currentQuestion.question?.question || ''}
-            isEnabled={isVirgilEnabled}
-          />
-        )}
-
         <div className="flex-1 flex items-center justify-center py-8 mb-20">
           <h1 className="text-3xl font-baskerville text-center max-w-2xl">
-            {currentQuestion?.question?.question}
+            {currentQuestion.question?.question}
           </h1>
         </div>
-
         <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
           <Button
             variant="outline"
