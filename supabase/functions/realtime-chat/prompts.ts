@@ -2,66 +2,40 @@
 export const getDNAPrompt = () => {
   const categoryOrder = ['ETHICS', 'EPISTEMOLOGY', 'POLITICS', 'THEOLOGY', 'ONTOLOGY', 'AESTHETICS'];
   
-  // This is a static mapping of the decision tree that gets updated daily via cron
+  // Example structure from the written assessment - these should match EXACTLY with database questions
   const questionsMap = {
     'ETHICS': {
-      'A': 'Do you believe that moral truths are absolute and universal, or relative and contextual?',
-      'AA': 'Is morality fundamentally about following rules and duties, or about producing good consequences?',
-      'AB': 'Are moral values discovered through reason and logic, or through emotion and intuition?',
-      // Add more questions here when syncing
+      'A': 'In ethics, which view resonates more with you? A) Moral truth is objective and universal - there are absolute rights and wrongs that apply to everyone. B) Moral truth is relative and contextual - what\'s right or wrong depends on circumstances and culture.',
+      'AA': 'Is the foundation of morality primarily: A) Following clear rules, duties, and principles, or B) Producing the best consequences and outcomes?',
+      'AB': 'Do we determine what is moral through: A) Rational thought, logical analysis, and careful reasoning, or B) Intuition, emotion, and lived experience?'
     },
     'EPISTEMOLOGY': {
-      'A': 'Can we trust our senses to give us reliable information about reality?',
-      'AA': 'Is knowledge primarily acquired through reason or through experience?',
-      'AB': 'Do we have access to absolute truth, or is all knowledge relative to perspective?',
-      // Add more questions here when syncing
-    },
-    'POLITICS': {
-      'A': 'Should society prioritize individual liberty or collective wellbeing?',
-      'AA': 'Is human nature fundamentally cooperative or competitive?',
-      'AB': 'Should power be centralized or distributed?',
-      // Add more questions here when syncing
-    },
-    'THEOLOGY': {
-      'A': 'Is there a higher power or divine reality beyond the material world?',
-      'AA': 'Is religious truth discovered through revelation or reason?',
-      'AB': 'Does human life have an ultimate purpose or meaning?',
-      // Add more questions here when syncing
-    },
-    'ONTOLOGY': {
-      'A': 'Is reality fundamentally material or mental/spiritual in nature?',
-      'AA': 'Is the universe deterministic or is there genuine free will?',
-      'AB': 'Are abstract concepts real or just human constructs?',
-      // Add more questions here when syncing
-    },
-    'AESTHETICS': {
-      'A': 'Is beauty objective or subjective?',
-      'AA': 'Should art prioritize form or function?',
-      'AB': 'Does great art require technical skill or just creative vision?',
-      // Add more questions here when syncing
+      'A': 'Regarding knowledge and truth, which perspective do you lean towards? A) We can access objective truth through proper methods and reasoning. B) All knowledge is inherently subjective and shaped by perspective.',
+      'AA': 'How do you believe we primarily gain reliable knowledge? A) Through logical reasoning and rational analysis. B) Through empirical observation and direct experience.',
+      'AB': 'When seeking truth, which approach do you trust more? A) Universal principles and abstract reasoning. B) Personal experience and practical wisdom.'
     }
   };
 
-  let systemPrompt = `You are conducting the DNA Assessment by following a precise decision tree structure in this exact order:\n\n`;
+  let systemPrompt = `You are conducting a precise philosophical assessment following a strict binary decision tree. Your role is to:
 
-  categoryOrder.forEach((category, index) => {
-    systemPrompt += `${index + 1}. ${category} Path (${index === 0 ? 'FIRST' : index === categoryOrder.length - 1 ? 'LAST' : `${index + 1}TH`}):
-First question: "${questionsMap[category]['A']}"
-Follow exact branching according to diagram, maintaining precise path notation.
-A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.\n\n`;
-  });
+1. START WITH ETHICS, then proceed in this exact order: ${categoryOrder.join(' → ')}
+2. For each category:
+   - Start with question A
+   - Based on answer, proceed to AA or AB
+   - Continue this binary branching pattern (AAA/AAB or ABA/ABB)
+   - Complete each category fully before moving to the next
 
-  systemPrompt += `CRITICAL RULES:
-1. You MUST follow this exact order: ${categoryOrder.join(' → ')}
-2. Never skip ahead or change the order of domains
-3. Complete all questions in one domain before moving to the next
-4. Ask ONLY the exact question text from the question map - no modifications
-5. Record the exact path using the notation system (e.g., "${categoryOrder[0]}:AABAAB")
-6. Only accept clear "A" or "B" answers
-7. If answer is unclear, repeat the exact question with the A and B options
-8. Do not provide additional context unless asked
-9. Record each response in the exact sequence
-10. Maintain precise question hierarchy within each domain`;
+CRITICAL INSTRUCTIONS:
+1. Ask ONLY the EXACT questions from the provided question map - do not modify or rephrase them
+2. Present both A and B options clearly in each question
+3. Only accept explicit "A" or "B" answers
+4. If the user's answer is unclear, say "To proceed, I need you to specifically choose A or B for this question:" and repeat the exact question
+5. Before moving to a new category, say "We've completed the [CURRENT] category. Now moving to [NEXT] category."
+6. Record each path using exact notation (e.g., "ETHICS:AAB")
+7. Don't provide commentary or explanations unless explicitly asked
+8. If a question is missing from your map, say "I apologize, but I need to confirm the next question in the sequence. Could you please choose A or B for the previous question again?"
+
+YOUR FIRST QUESTION MUST BE THE ETHICS A QUESTION, EXACTLY AS WRITTEN ABOVE.`;
 
   return {
     systemPrompt,

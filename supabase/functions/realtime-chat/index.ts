@@ -19,7 +19,15 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const { systemPrompt, categoryOrder } = getDNAPrompt();
+    const { systemPrompt, categoryOrder, questionsMap } = getDNAPrompt();
+
+    // Validate that we have at least the first question for each category
+    categoryOrder.forEach(category => {
+      if (!questionsMap[category]?.['A']) {
+        throw new Error(`Missing initial question for category: ${category}`);
+      }
+    });
+
     console.log('Starting token request to OpenAI...');
 
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -41,23 +49,20 @@ serve(async (req) => {
             properties: {
               category: {
                 type: "string",
-                enum: categoryOrder
+                enum: categoryOrder,
+                description: "The current category being assessed"
               },
               path: { 
                 type: "string",
-                description: "The exact path in the decision tree (e.g., 'AABAAB')"
-              },
-              questionText: { 
-                type: "string",
-                description: "The exact question text from the diagram"
+                description: "The exact path in the decision tree (e.g., 'AAB')"
               },
               response: { 
                 type: "string",
                 enum: ["A", "B"],
-                description: "The user's response"
+                description: "The user's response (must be either A or B)"
               }
             },
-            required: ["category", "path", "questionText", "response"]
+            required: ["category", "path", "response"]
           }
         }]
       }),
