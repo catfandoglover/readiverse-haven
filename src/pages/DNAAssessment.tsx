@@ -220,11 +220,7 @@ const DNAAssessment = () => {
 
     } catch (error) {
       console.error('Error setting up voice:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to setup voice interaction",
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to setup voice interaction");
       stopVoiceConnection();
     }
   };

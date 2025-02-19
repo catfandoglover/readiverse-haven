@@ -3,51 +3,49 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SYSTEM_PROMPT = `You are conducting the DNA Assessment by following a precise decision tree structure. You must EXACTLY follow these rules:
+const SYSTEM_PROMPT = `You are conducting the DNA Assessment by following a precise decision tree structure in this exact order:
 
-1. THEOLOGY Path:
-First question: "If you could prove or disprove God's existence, would you want to know?"
-- If Yes → "Can reason alone lead us to religious truth?"
-- If No → "Is faith more about experience or tradition?"
-Follow exact paths:
-Yes → A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
-No → B → BA/BB → BAA/BAB/BBA/BBB → BAAA/BAAB/BABA/BABB/etc.
-
-2. ONTOLOGY Path:
-First question: "The stars would still shine even if no one was looking at them."
-- If Agree → "When you see a sunset, are you discovering its beauty or creating it?"
-- If Disagree → "If everyone suddenly vanished, would their art still be beautiful?"
-Follow exact paths:
-Agree → A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
-Disagree → B → BA/BB → BAA/BAB/BBA/BBB → BAAA/BAAB/BABA/BABB/etc.
-
-3. EPISTEMOLOGY Path:
-First question: "If everyone on Earth believed the sky was green, it would still be blue."
-Follow exact branching according to diagram, maintaining precise path notation.
-
-4. ETHICS Path:
+1. ETHICS Path (FIRST):
 First question: "If you could press a button to make everyone slightly happier but slightly less free, would you press it?"
 Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
 
-5. POLITICS Path:
+2. EPISTEMOLOGY Path (SECOND):
+First question: "If everyone on Earth believed the sky was green, it would still be blue."
+Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
+
+3. POLITICS Path (THIRD):
 First question: "Would you choose a society with perfect equality but limited freedom, or one with complete freedom but significant inequality?"
 Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
 
-6. AESTHETICS Path:
+4. THEOLOGY Path (FOURTH):
+First question: "If you could prove or disprove God's existence, would you want to know?"
+Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
+
+5. ONTOLOGY Path (FIFTH):
+First question: "The stars would still shine even if no one was looking at them."
+Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
+
+6. AESTHETICS Path (LAST):
 First question: "If no one ever saw it again, would the Mona Lisa still be beautiful?"
 Follow exact branching according to diagram, maintaining precise path notation.
+A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
 
 CRITICAL RULES:
-1. Ask ONLY the exact question text from the diagram - no modifications or additions
-2. Record the exact path using the notation system (e.g., "THEOLOGY:AABAAB")
-3. Only accept answers that match the exact options in the diagram
-4. If answer is unclear, repeat the exact question with the specific options available
-5. Do not provide additional context or examples unless specifically asked
-6. Follow the exact branching logic without deviation
-7. Maintain the precise question order and hierarchy
-8. Complete each domain's questions before moving to the next
-9. Do not skip questions or change their order
-10. Record each response and maintain the path sequence`;
+1. You MUST follow this exact order: ETHICS → EPISTEMOLOGY → POLITICS → THEOLOGY → ONTOLOGY → AESTHETICS
+2. Never skip ahead or change the order of domains
+3. Complete all questions in one domain before moving to the next
+4. Ask ONLY the exact question text from the diagram - no modifications
+5. Record the exact path using the notation system (e.g., "ETHICS:AABAAB")
+6. Only accept clear "A" or "B" answers
+7. If answer is unclear, repeat the exact question with the specific options
+8. Do not provide additional context unless asked
+9. Record each response in the exact sequence
+10. Maintain precise question hierarchy within each domain`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -86,7 +84,7 @@ serve(async (req) => {
             properties: {
               category: {
                 type: "string",
-                enum: ["THEOLOGY", "ONTOLOGY", "EPISTEMOLOGY", "ETHICS", "POLITICS", "AESTHETICS"]
+                enum: ["ETHICS", "EPISTEMOLOGY", "POLITICS", "THEOLOGY", "ONTOLOGY", "AESTHETICS"]
               },
               path: { 
                 type: "string",
@@ -98,28 +96,22 @@ serve(async (req) => {
               },
               response: { 
                 type: "string",
+                enum: ["A", "B"],
                 description: "The user's response"
-              },
-              nextQuestion: {
-                type: "string",
-                description: "The exact text of the next question based on the response"
               }
             },
-            required: ["category", "path", "questionText", "response", "nextQuestion"]
+            required: ["category", "path", "questionText", "response"]
           }
         }]
       }),
     });
 
-    const responseText = await response.text();
-    console.log('OpenAI Response:', responseText);
-
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${responseText}`);
+      throw new Error(`OpenAI API error: ${await response.text()}`);
     }
 
-    const data = JSON.parse(responseText);
-    console.log('Parsed response data:', data);
+    const data = await response.json();
+    console.log('OpenAI Response:', data);
 
     if (!data.client_secret?.value) {
       throw new Error('No client secret in OpenAI response');
@@ -131,10 +123,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error in edge function:", error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error instanceof Error ? error.stack : undefined
-    }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
