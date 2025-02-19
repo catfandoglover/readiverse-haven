@@ -106,8 +106,10 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
+      // Create audio element
       const audioElement = document.createElement('audio');
       audioElement.autoplay = true;
+      audioElement.id = 'voice-dna-audio';
       document.body.appendChild(audioElement);
       audioElementRef.current = audioElement;
       console.log('Created and added audio element to DOM');
@@ -134,23 +136,35 @@ const VoiceDNAAssessment = () => {
       peerConnectionRef.current = new RTCPeerConnection(configuration);
       console.log('Peer connection created');
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Set up media stream first
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 24000,
+          channelCount: 1
+        } 
+      });
+      
+      // Add all tracks from the stream
       mediaStream.getTracks().forEach(track => {
         if (peerConnectionRef.current) {
+          console.log('Adding track to peer connection:', track.kind);
           peerConnectionRef.current.addTrack(track, mediaStream);
         }
       });
-      console.log('Added audio track to peer connection');
 
+      // Create data channel
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
       console.log('Created data channel');
 
+      // Handle incoming messages
       dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
 
         if (data.type === 'session.created') {
-          // Send strict session configuration after session is created
           const sessionConfig = {
             type: 'session.update',
             session: {
@@ -162,14 +176,15 @@ const VoiceDNAAssessment = () => {
                 type: 'server_vad',
                 threshold: 0.5,
                 prefix_padding_ms: 300,
-                silence_duration_ms: 1000
+                silence_duration_ms: 1000,
+                create_response: true
               }
             }
           };
           dataChannelRef.current?.send(JSON.stringify(sessionConfig));
           console.log('Sent session config:', sessionConfig);
 
-          // Immediately send the initial system message to establish context
+          // Send initial system message
           const initialSystemMessage = {
             type: 'conversation.item.create',
             item: {
@@ -200,14 +215,21 @@ const VoiceDNAAssessment = () => {
         }
       };
 
+      // Handle incoming audio tracks
       peerConnectionRef.current.ontrack = (event) => {
-        console.log('Received remote track:', event);
+        console.log('Received remote track:', event.track.kind);
         if (audioElementRef.current && event.streams[0]) {
-          console.log('Setting audio source:', event.streams[0]);
+          console.log('Setting audio source:', event.streams[0].id);
           audioElementRef.current.srcObject = event.streams[0];
+          
+          // Ensure audio plays
+          audioElementRef.current.play().catch(error => {
+            console.error('Error playing audio:', error);
+          });
         }
       };
 
+      // Create and set local description
       const offer = await peerConnectionRef.current.createOffer({
         offerToReceiveAudio: true
       });
@@ -244,6 +266,7 @@ const VoiceDNAAssessment = () => {
       await peerConnectionRef.current.setRemoteDescription(answer);
       console.log('Set remote description, WebRTC connection established');
 
+      // Start audio recording
       recorderRef.current = new AudioRecorder({
         onAudioData: (audioData) => {
           if (dataChannelRef.current?.readyState === 'open') {
