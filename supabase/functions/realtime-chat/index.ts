@@ -75,14 +75,19 @@ serve(async (req) => {
         }
 
         const sessionData = await tokenResponse.json();
-        console.log("OpenAI session created successfully");
+        const token = sessionData.token;
+        console.log("OpenAI session token received successfully");
 
         // Connect to OpenAI's Realtime API
         console.log("Connecting to OpenAI WebSocket...");
-        const openAIUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${sessionData.token}`;
+        const openAIUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${token}`;
         console.log("Attempting to connect to OpenAI...");
         
-        openAISocket = new WebSocket(openAIUrl);
+        openAISocket = new WebSocket(openAIUrl, [], {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         
         openAISocket.onopen = () => {
           console.log("OpenAI WebSocket connected");
