@@ -72,16 +72,13 @@ class AudioRecorder {
 const VoiceDNAAssessment = () => {
   const { toast } = useToast();
   const { supabase } = useAuth();
-  const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [openAIReady, setOpenAIReady] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 3;
+  const audioElementRef = useRef<HTMLAudioElement>(null);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -105,112 +102,102 @@ const VoiceDNAAssessment = () => {
   const startAssessment = async () => {
     try {
       setIsConnecting(true);
-      console.log('Connecting to WebSocket...');
+      console.log('Starting assessment...');
 
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        console.log('WebSocket already connected, closing existing connection...');
-        wsRef.current.close();
+      // Get ephemeral token from our Edge Function
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('realtime-chat');
+      
+      if (tokenError || !tokenData.token) {
+        throw new Error('Failed to get token');
       }
 
-      // Connect to our Supabase Edge Function WebSocket
-      const wsUrl = `wss://myeyoafugkrkwcnfedlu.functions.supabase.co/functions/v1/realtime-chat`;
-      console.log('Connecting to:', wsUrl);
-      
-      wsRef.current = new WebSocket(wsUrl);
+      const token = tokenData.token;
+      console.log('Got token, creating peer connection...');
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected successfully');
-        setIsConnected(true);
-        setIsConnecting(false);
-        reconnectAttempts.current = 0;
-      };
+      // Create peer connection
+      peerConnectionRef.current = new RTCPeerConnection();
 
-      wsRef.current.onmessage = (event) => {
+      // Set up audio track
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
+
+      // Set up data channel
+      dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
+      dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('Received message:', data);
+        console.log('Received event:', data);
 
-        if (data.type === 'status' && data.message === 'Connected to OpenAI') {
-          setOpenAIReady(true);
-          // Start recording audio only after OpenAI is ready
-          recorderRef.current = new AudioRecorder({
-            onAudioData: (audioData) => {
-              if (wsRef.current?.readyState === WebSocket.OPEN) {
-                wsRef.current.send(JSON.stringify({
-                  type: 'input_audio_buffer.append',
-                  audio: encodeAudioData(audioData)
-                }));
-              }
-            }
-          });
-          
-          recorderRef.current.start().catch(error => {
-            console.error('Failed to start recording:', error);
-            toast({
-              title: "Error",
-              description: "Failed to access microphone",
-              variant: "destructive"
-            });
-          });
-        } else if (data.type === 'response.audio.delta') {
+        if (data.type === 'response.audio.delta') {
           setIsSpeaking(true);
         } else if (data.type === 'response.audio.done') {
           setIsSpeaking(false);
         } else if (data.type === 'response.function_call_arguments.done') {
           const args = JSON.parse(data.arguments);
           console.log('Recording DNA response:', args);
-        } else if (data.type === 'error') {
-          console.error('Received error from server:', data.message);
-          toast({
-            title: "Connection Error",
-            description: data.message,
-            variant: "destructive"
-          });
-          if (data.message === 'OpenAI connection not ready') {
-            // Don't stop assessment for this specific error, wait for ready state
-            return;
+        }
+      };
+
+      // Handle remote audio
+      peerConnectionRef.current.ontrack = (event) => {
+        if (audioElementRef.current) {
+          audioElementRef.current.srcObject = event.streams[0];
+        }
+      };
+
+      // Create and set local description
+      const offer = await peerConnectionRef.current.createOffer();
+      await peerConnectionRef.current.setLocalDescription(offer);
+
+      // Connect to OpenAI
+      const baseUrl = "https://api.openai.com/v1/realtime";
+      const model = "gpt-4o-realtime-preview-2024-12-17";
+      
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/sdp"
+        },
+        body: offer.sdp
+      });
+
+      if (!sdpResponse.ok) {
+        throw new Error('Failed to connect to OpenAI');
+      }
+
+      const answer = {
+        type: 'answer' as RTCSdpType,
+        sdp: await sdpResponse.text()
+      };
+
+      await peerConnectionRef.current.setRemoteDescription(answer);
+      console.log('WebRTC connection established');
+
+      // Start recording
+      recorderRef.current = new AudioRecorder({
+        onAudioData: (audioData) => {
+          if (dataChannelRef.current?.readyState === 'open') {
+            dataChannelRef.current.send(JSON.stringify({
+              type: 'input_audio_buffer.append',
+              audio: encodeAudioData(audioData)
+            }));
           }
-          stopAssessment();
         }
-      };
+      });
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setIsConnecting(false);
-        setOpenAIReady(false);
-        
-        if (reconnectAttempts.current < maxReconnectAttempts) {
-          console.log(`Attempting to reconnect (${reconnectAttempts.current + 1}/${maxReconnectAttempts})...`);
-          reconnectAttempts.current++;
-          setTimeout(startAssessment, 1000 * reconnectAttempts.current);
-        } else {
-          toast({
-            title: "Connection Error",
-            description: "Failed to connect after multiple attempts. Please try again later.",
-            variant: "destructive"
-          });
-        }
-      };
-
-      wsRef.current.onclose = (event) => {
-        console.log('WebSocket closed with code:', event.code, 'reason:', event.reason);
-        setIsConnected(false);
-        setIsConnecting(false);
-        setOpenAIReady(false);
-        if (recorderRef.current) {
-          recorderRef.current.stop();
-          recorderRef.current = null;
-        }
-      };
+      await recorderRef.current.start();
+      setIsConnected(true);
+      setIsConnecting(false);
 
     } catch (error) {
       console.error('Error starting assessment:', error);
       setIsConnecting(false);
-      setOpenAIReady(false);
       toast({
         title: "Error",
-        description: "Failed to start assessment",
+        description: error instanceof Error ? error.message : "Failed to start assessment",
         variant: "destructive"
       });
+      stopAssessment();
     }
   };
 
@@ -219,16 +206,24 @@ const VoiceDNAAssessment = () => {
       recorderRef.current.stop();
       recorderRef.current = null;
     }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (dataChannelRef.current) {
+      dataChannelRef.current.close();
+      dataChannelRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
     setIsConnected(false);
     setIsSpeaking(false);
-    setOpenAIReady(false);
   };
 
   useEffect(() => {
+    // Create audio element for remote audio
+    const audioElement = new Audio();
+    audioElement.autoplay = true;
+    audioElementRef.current = audioElement;
+
     return () => {
       stopAssessment();
     };
@@ -271,7 +266,7 @@ const VoiceDNAAssessment = () => {
             <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
               isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
             }`}>
-              {isSpeaking ? 'AI is speaking...' : openAIReady ? 'Listening...' : 'Connecting to AI...'}
+              {isSpeaking ? 'AI is speaking...' : 'Listening...'}
             </div>
           </div>
         )}

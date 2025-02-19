@@ -7,241 +7,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-console.log("Edge Function starting...");
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { headers } = req;
-    const upgradeHeader = headers.get("upgrade") || "";
-    console.log("Received request with upgrade header:", upgradeHeader);
-
-    if (upgradeHeader.toLowerCase() !== "websocket") {
-      console.log("Not a WebSocket request, returning 400");
-      return new Response("Expected WebSocket connection", { 
-        status: 400,
-        headers: corsHeaders
-      });
-    }
-
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY not set");
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // First upgrade the connection to WebSocket
-    console.log("Upgrading to WebSocket connection...");
-    const { socket, response } = Deno.upgradeWebSocket(req);
+    // Request an ephemeral token from OpenAI
+    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-realtime-preview-2024-12-17",
+        voice: "alloy",
+        instructions: "You are an AI assistant conducting an Intellectual DNA Assessment."
+      }),
+    });
 
-    // Create a promise that resolves when OpenAI connection is ready
-    let openAISocket: WebSocket | null = null;
-    let openAIReady = false;
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("Failed to get token:", error);
+      throw new Error('Failed to get token');
+    }
 
-    // Send initial connected message to client
-    socket.onopen = async () => {
-      console.log("Client WebSocket connected");
-      socket.send(JSON.stringify({ type: 'status', message: 'Connected to server' }));
-
-      try {
-        console.log("Requesting OpenAI session token...");
-        // Request an ephemeral token from OpenAI
-        const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-realtime-preview-2024-12-17",
-            voice: "alloy",
-            instructions: `You are an AI assistant conducting an Intellectual DNA Assessment.`
-          }),
-        });
-
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
-          console.error("Failed to get OpenAI session token:", errorText);
-          socket.send(JSON.stringify({ 
-            type: 'error', 
-            message: 'Failed to initialize OpenAI session' 
-          }));
-          return;
-        }
-
-        const sessionData = await tokenResponse.json();
-        const token = sessionData.token;
-        console.log("OpenAI session token received successfully");
-
-        // Connect to OpenAI's Realtime API
-        console.log("Connecting to OpenAI WebSocket...");
-        const openAIUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${token}`;
-        console.log("Attempting to connect to OpenAI...");
-        
-        openAISocket = new WebSocket(openAIUrl, [], {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        
-        openAISocket.onopen = () => {
-          console.log("OpenAI WebSocket connected");
-          socket.send(JSON.stringify({ type: 'status', message: 'Connected to OpenAI' }));
-          
-          const sessionConfig = {
-            "event_id": crypto.randomUUID(),
-            "type": "session.update",
-            "session": {
-              "modalities": ["text", "audio"],
-              "input_audio_format": "pcm16",
-              "output_audio_format": "pcm16",
-              "input_audio_transcription": {
-                "model": "whisper-1"
-              },
-              "turn_detection": {
-                "type": "server_vad",
-                "threshold": 0.5,
-                "prefix_padding_ms": 300,
-                "silence_duration_ms": 1000
-              },
-              "tools": [{
-                "type": "function",
-                "name": "record_dna_response",
-                "description": "Record a response in the DNA assessment tree",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "category": {
-                      "type": "string",
-                      "enum": ["ETHICS", "EPISTEMOLOGY", "POLITICS", "THEOLOGY", "ONTOLOGY", "AESTHETICS"]
-                    },
-                    "tree_position": { "type": "string" },
-                    "answer": {
-                      "type": "string",
-                      "enum": ["A", "B"]
-                    }
-                  },
-                  "required": ["category", "tree_position", "answer"]
-                }
-              }],
-              "tool_choice": "auto",
-              "temperature": 0.7
-            }
-          };
-
-          console.log("Sending session configuration...");
-          openAISocket?.send(JSON.stringify(sessionConfig));
-          openAIReady = true;
-        };
-
-        openAISocket.onmessage = (event) => {
-          try {
-            console.log("Received from OpenAI:", event.data);
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.send(event.data);
-            }
-          } catch (error) {
-            console.error("Error handling OpenAI message:", error);
-          }
-        };
-
-        openAISocket.onerror = (e) => {
-          console.error("OpenAI WebSocket error:", e);
-          try {
-            socket.send(JSON.stringify({
-              type: 'error',
-              message: 'OpenAI connection error'
-            }));
-          } catch (err) {
-            console.error('Failed to send OpenAI error to client:', err);
-          }
-        };
-
-        openAISocket.onclose = (event) => {
-          console.log("OpenAI WebSocket closed with code:", event.code, "reason:", event.reason);
-          openAIReady = false;
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ 
-              type: 'error', 
-              message: 'OpenAI connection closed' 
-            }));
-            socket.close();
-          }
-        };
-
-      } catch (error) {
-        console.error("Error setting up OpenAI connection:", error);
-        socket.send(JSON.stringify({ 
-          type: 'error', 
-          message: 'Failed to setup OpenAI connection' 
-        }));
-      }
-    };
-
-    // Handle messages from the client
-    socket.onmessage = (event) => {
-      try {
-        console.log("Received from client:", event.data);
-        if (!openAISocket || !openAIReady) {
-          console.error("OpenAI WebSocket not ready");
-          socket.send(JSON.stringify({ 
-            type: 'error', 
-            message: 'OpenAI connection not ready' 
-          }));
-          return;
-        }
-
-        if (openAISocket.readyState === WebSocket.OPEN) {
-          openAISocket.send(event.data);
-        } else {
-          console.error("OpenAI WebSocket not in OPEN state:", openAISocket.readyState);
-          socket.send(JSON.stringify({ 
-            type: 'error', 
-            message: 'OpenAI connection not in ready state' 
-          }));
-        }
-      } catch (error) {
-        console.error("Error handling client message:", error);
-        socket.send(JSON.stringify({ 
-          type: 'error', 
-          message: 'Error processing message' 
-        }));
-      }
-    };
-
-    // Handle WebSocket errors
-    socket.onerror = (e) => {
-      console.error("Client WebSocket error:", e);
-      try {
-        socket.send(JSON.stringify({
-          type: 'error',
-          message: 'Connection error occurred'
-        }));
-      } catch (err) {
-        console.error('Failed to send error to client:', err);
-      }
-    };
-
-    // Handle WebSocket closure
-    socket.onclose = (event) => {
-      console.log("Client WebSocket closed with code:", event.code, "reason:", event.reason);
-      if (openAISocket) {
-        openAISocket.close();
-      }
-    };
-
-    return response;
+    const data = await response.json();
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error in Edge Function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      stack: error.stack 
-    }), {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
