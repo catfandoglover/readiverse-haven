@@ -186,14 +186,18 @@ const VoiceDNAAssessment = () => {
               content: [{
                 type: 'text',
                 text: `You are a DNA assessment system. You MUST:
-1. IMMEDIATELY begin with Ethics Q1: "If you could press a button to make everyone slightly happier but slightly less free, would you press it?"
+1. IMMEDIATELY begin with Ethics Q1: "Would you sacrifice one innocent person to save five strangers?"
 2. Only accept responses "A" for Yes or "B" for No
-3. Pause and wait for the user's response
-4. Record their choice and proceed to the next question based on their response
+3. For A response, proceed to Q2A: "Would you steal medicine to save a dying child?"
+4. For B response, proceed to Q2B: "Would you lie to protect someone's feelings?"
 5. Never add explanations or engage in conversation
 6. Maintain strict A/B choice format
 
-Start now by asking Ethics Q1.`
+CHOOSE:
+A: Yes
+B: No
+
+Await explicit A/B selection...`
               }]
             }
           };
