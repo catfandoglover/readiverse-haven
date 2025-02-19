@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getPromptForSection } from "./prompts.ts";
 
 const corsHeaders = {
@@ -17,14 +16,15 @@ serve(async (req) => {
 
   try {
     const { answers_json, section, assessment_id } = await req.json();
-    console.log('Analyzing DNA section:', section, 'for assessment:', assessment_id);
-
+    
     if (!answers_json || !section || !assessment_id) {
       throw new Error('Missing required parameters');
     }
 
-    const answers = JSON.parse(answers_json);
     const prompt = getPromptForSection(section);
+    console.log(`Analyzing section ${section} with prompt:`, prompt);
+
+    const { system_prompt, output_format } = prompt;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -33,10 +33,16 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
-          { role: 'system', content: prompt },
-          { role: 'user', content: JSON.stringify(answers) }
+          {
+            role: 'system',
+            content: `${system_prompt}\n\nPlease provide your analysis in the following JSON format:\n${JSON.stringify(output_format, null, 2)}`
+          },
+          {
+            role: 'user',
+            content: answers_json
+          }
         ],
         temperature: 0.7,
       }),
@@ -48,8 +54,9 @@ serve(async (req) => {
       throw new Error(`OpenAI API error: ${error}`);
     }
 
-    const aiResult = await openAIResponse.json();
-    const analysis = JSON.parse(aiResult.choices[0].message.content);
+    const completion = await openAIResponse.json();
+    const analysis = JSON.parse(completion.choices[0].message.content);
+    console.log('Analysis completed:', analysis);
 
     // Update the assessment with the analysis
     const supabaseClient = createClient(
@@ -57,50 +64,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    let updateData = {};
-    switch (section) {
-      case 1:
-        updateData = {
-          theology_analysis: analysis.theology_analysis,
-          ontology_analysis: analysis.ontology_analysis,
-          theology_ontology_frameworks: analysis.dominant_frameworks,
-          theology_ontology_tensions: analysis.key_tensions,
-          theology_ontology_style: analysis.intellectual_style
-        };
-        break;
-      case 2:
-        updateData = {
-          epistemology_analysis: analysis.epistemology_analysis,
-          ethics_analysis: analysis.ethics_analysis,
-          epistemology_ethics_frameworks: analysis.dominant_frameworks,
-          epistemology_ethics_tensions: analysis.key_tensions,
-          epistemology_ethics_style: analysis.intellectual_style
-        };
-        break;
-      case 3:
-        updateData = {
-          politics_analysis: analysis.politics_analysis,
-          aesthetics_analysis: analysis.aesthetics_analysis,
-          politics_aesthetics_frameworks: analysis.dominant_frameworks,
-          politics_aesthetics_tensions: analysis.key_tensions,
-          politics_aesthetics_style: analysis.intellectual_style
-        };
-        break;
-    }
-
     const { error: updateError } = await supabaseClient
-      .from('dna_assessment_results')
-      .update(updateData)
-      .eq('id', assessment_id);
+      .from('dna_analysis_results')
+      .upsert({
+        assessment_id,
+        analysis_type: 'section_' + section,
+        raw_response: analysis,
+        ...analysis // Spread the analysis fields directly
+      });
 
     if (updateError) {
       console.error('Error updating assessment:', updateError);
       throw updateError;
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ success: true, analysis }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
     console.error('Error in analyze-dna function:', error);
     return new Response(
