@@ -23,6 +23,9 @@ interface DNAResponse {
 export const getDNAPrompt = (questionMap: QuestionMap) => {
   const categoryOrder = ['ETHICS', 'EPISTEMOLOGY', 'POLITICS', 'THEOLOGY', 'ONTOLOGY', 'AESTHETICS'];
   
+  // First, stringify the question map outside the template literal
+  const questionMapJson = JSON.stringify(questionMap, null, 2);
+  
   const systemPrompt = `You are conducting a philosophical assessment through natural conversation, but you MUST STRICTLY follow the predefined question order and structure. Your role is to:
 
 1. Follow the exact category order: ${categoryOrder.join(' → ')}
@@ -67,7 +70,7 @@ STRICT NAVIGATION RULES:
 4. When changing categories, say exactly: "We've completed our discussion on [CURRENT]. Now, let's explore your views on [NEXT]."
 
 Question Map Structure for Strict Reference:
-${JSON.stringify(questionMap, null, 2)}
+${questionMapJson}
 
 CRITICAL: Start with ETHICS Q1, presenting only that specific question. Wait for user response before proceeding. Never deviate from the question map structure or add your own questions.`;
 
