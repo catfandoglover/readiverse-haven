@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -105,10 +106,12 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
-      const audioElement = new Audio();
+      // Create audio element and initialize it
+      const audioElement = document.createElement('audio');
       audioElement.autoplay = true;
-      audioElementRef.current = audioElement;
+      audioElement.id = 'voice-dna-audio';
       document.body.appendChild(audioElement);
+      audioElementRef.current = audioElement;
       console.log('Created and added audio element to DOM');
 
       const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
@@ -127,11 +130,26 @@ const VoiceDNAAssessment = () => {
       const token = response.token;
       console.log('Got token, creating peer connection...');
 
-      peerConnectionRef.current = new RTCPeerConnection();
+      // Initialize WebRTC peer connection with audio output
+      const configuration = { 
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      };
+      peerConnectionRef.current = new RTCPeerConnection(configuration);
       console.log('Peer connection created');
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
+      // Get and add local audio stream
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      mediaStream.getTracks().forEach(track => {
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.addTrack(track, mediaStream);
+        }
+      });
       console.log('Added audio track to peer connection');
 
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
@@ -156,13 +174,20 @@ const VoiceDNAAssessment = () => {
         if (audioElementRef.current && event.streams[0]) {
           console.log('Setting audio source:', event.streams[0]);
           audioElementRef.current.srcObject = event.streams[0];
-          audioElementRef.current.play().catch(error => {
-            console.error('Error playing audio:', error);
-          });
+          
+          // Ensure audio is playing
+          const playPromise = audioElementRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error('Error playing audio:', error);
+            });
+          }
         }
       };
 
-      const offer = await peerConnectionRef.current.createOffer();
+      const offer = await peerConnectionRef.current.createOffer({
+        offerToReceiveAudio: true
+      });
       await peerConnectionRef.current.setLocalDescription(offer);
       console.log('Created and set local description');
 
@@ -239,6 +264,8 @@ const VoiceDNAAssessment = () => {
       peerConnectionRef.current = null;
     }
     if (audioElementRef.current) {
+      audioElementRef.current.pause();
+      audioElementRef.current.srcObject = null;
       audioElementRef.current.remove();
       audioElementRef.current = null;
     }
