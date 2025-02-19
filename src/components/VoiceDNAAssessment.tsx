@@ -81,6 +81,7 @@ const VoiceDNAAssessment = () => {
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const hasAskedQuestionRef = useRef(false);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -160,6 +161,7 @@ const VoiceDNAAssessment = () => {
         console.log('Received event:', data);
 
         if (data.type === 'session.created') {
+          console.log('Session created, sending config...');
           const sessionConfig = {
             type: 'session.update',
             session: {
@@ -178,8 +180,8 @@ const VoiceDNAAssessment = () => {
             }
           };
           dataChannelRef.current?.send(JSON.stringify(sessionConfig));
-          console.log('Sent session config:', sessionConfig);
-
+          console.log('Session config sent');
+          
           const initialSystemMessage = {
             type: 'conversation.item.create',
             item: {
@@ -187,9 +189,9 @@ const VoiceDNAAssessment = () => {
               role: 'system',
               content: [{
                 type: 'text',
-                text: `You are a DNA assessment system. When the user starts, ask ONLY this question word for word: "Would you sacrifice one innocent person to save five strangers?" Then wait for the user to respond with either "A" for Yes or "B" for No.
+                text: `You are a DNA assessment system. Your ONLY task is to clearly speak this exact question: "Would you sacrifice one innocent person to save five strangers?" Then remain silent and wait for either "A" for Yes or "B" for No as a response. Do not add any other words or explanations.
 
-After asking the question, do not speak again until you receive either "A" or "B" as a response.
+After asking the question, you must wait silently for either "A" or "B" as a response. Do not say anything else until you receive one of these responses.
 
 Valid responses:
 A: Yes
@@ -198,31 +200,42 @@ B: No`
             }
           };
           dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
+          console.log('System message sent');
           
-          const userMessage = {
-            type: 'conversation.item.create',
-            item: {
-              type: 'message',
-              role: 'user',
-              content: [{
-                type: 'text',
-                text: 'Begin the assessment.'
-              }]
-            }
-          };
-          dataChannelRef.current?.send(JSON.stringify(userMessage));
-          dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
-          setIsWaitingForResponse(true);
+          setTimeout(() => {
+            const userMessage = {
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'user',
+                content: [{
+                  type: 'text',
+                  text: 'Begin the assessment.'
+                }]
+              }
+            };
+            dataChannelRef.current?.send(JSON.stringify(userMessage));
+            dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+            setIsWaitingForResponse(true);
+            console.log('Initial prompt sent');
+          }, 1000);
         }
         
         if (data.type === 'response.audio.delta') {
+          console.log('AI is speaking...');
           setIsSpeaking(true);
         } else if (data.type === 'response.audio.done') {
+          console.log('AI finished speaking');
           setIsSpeaking(false);
-          setIsWaitingForResponse(false);
+          if (!hasAskedQuestionRef.current) {
+            hasAskedQuestionRef.current = true;
+            setIsWaitingForResponse(false);
+          }
         } else if (data.type === 'response.audio_transcript.delta') {
           console.log('Transcript delta:', data.delta);
-          if (!isWaitingForResponse && (data.delta === 'A' || data.delta === 'B')) {
+          const response = data.delta.trim();
+          if (!isWaitingForResponse && (response === 'A' || response === 'B')) {
+            console.log('Valid response received:', response);
             setIsWaitingForResponse(true);
             dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
           }
