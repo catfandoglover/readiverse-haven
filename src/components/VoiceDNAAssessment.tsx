@@ -171,9 +171,10 @@ const VoiceDNAAssessment = () => {
                 type: 'server_vad',
                 threshold: 0.5,
                 prefix_padding_ms: 300,
-                silence_duration_ms: 1000,
-                create_response: true
-              }
+                silence_duration_ms: 1000
+              },
+              temperature: 0.7,
+              max_response_output_tokens: 200
             }
           };
           dataChannelRef.current?.send(JSON.stringify(sessionConfig));
@@ -186,9 +187,11 @@ const VoiceDNAAssessment = () => {
               role: 'system',
               content: [{
                 type: 'text',
-                text: `You are a DNA assessment system. Ask the question: "Would you sacrifice one innocent person to save five strangers?" Then wait for an "A" or "B" response.
+                text: `You are a DNA assessment system. When the user starts, ask ONLY this question word for word: "Would you sacrifice one innocent person to save five strangers?" Then wait for the user to respond with either "A" for Yes or "B" for No.
 
-Only proceed after receiving a clear "A" or "B" response.
+After asking the question, do not speak again until you receive either "A" or "B" as a response.
+
+Valid responses:
 A: Yes
 B: No`
               }]
@@ -218,6 +221,7 @@ B: No`
           setIsSpeaking(false);
           setIsWaitingForResponse(false);
         } else if (data.type === 'response.audio_transcript.delta') {
+          console.log('Transcript delta:', data.delta);
           if (!isWaitingForResponse && (data.delta === 'A' || data.delta === 'B')) {
             setIsWaitingForResponse(true);
             dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
