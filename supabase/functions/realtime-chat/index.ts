@@ -7,27 +7,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+console.log("Edge Function starting...");
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
-  const { headers } = req;
-  const upgradeHeader = headers.get("upgrade") || "";
-
-  if (upgradeHeader.toLowerCase() !== "websocket") {
-    return new Response("Expected WebSocket connection", { status: 400 });
-  }
-
   try {
+    const { headers } = req;
+    const upgradeHeader = headers.get("upgrade") || "";
+    console.log("Received request with upgrade header:", upgradeHeader);
+
+    if (upgradeHeader.toLowerCase() !== "websocket") {
+      console.log("Not a WebSocket request, returning 400");
+      return new Response("Expected WebSocket connection", { 
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not set");
       throw new Error('OPENAI_API_KEY is not set');
     }
 
+    console.log("Requesting OpenAI session token...");
     // Request an ephemeral token from OpenAI
-    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
@@ -36,35 +46,35 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
-        instructions: `You are an AI assistant conducting an Intellectual DNA Assessment. Your goal is to understand the user's philosophical positions across six categories: Ethics, Epistemology, Politics, Theology, Ontology, and Aesthetics.
-
-        For each category, you need to determine where they fall on our decision tree by asking relevant questions. Be conversational and natural, but make sure to get clear answers that map to our tree structure.
-        
-        Keep track of their answers and map them to our decision tree paths. Each answer should be clearly marked as either 'A' or 'B' for our tracking.`
+        instructions: `You are an AI assistant conducting an Intellectual DNA Assessment. Your goal is to understand the user's philosophical positions across six categories: Ethics, Epistemology, Politics, Theology, Ontology, and Aesthetics.`
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to get session token: ${await response.text()}`);
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error("Failed to get OpenAI session token:", errorText);
+      throw new Error(`Failed to get session token: ${errorText}`);
     }
 
-    const sessionData = await response.json();
-    console.log("Session created:", sessionData);
+    const sessionData = await tokenResponse.json();
+    console.log("OpenAI session created successfully");
 
-    const { socket, response: wsResponse } = Deno.upgradeWebSocket(req);
+    // Upgrade the connection to WebSocket
+    console.log("Upgrading to WebSocket connection...");
+    const { socket, response } = Deno.upgradeWebSocket(req);
     
-    // Connect to OpenAI's Realtime API with the ephemeral token
-    console.log("Attempting to connect to OpenAI...");
-    const openAISocket = new WebSocket(
-      `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${sessionData.token}`,
-    );
+    // Connect to OpenAI's Realtime API
+    console.log("Connecting to OpenAI WebSocket...");
+    const openAIUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${sessionData.token}`;
+    console.log("OpenAI WebSocket URL:", openAIUrl);
+    
+    const openAISocket = new WebSocket(openAIUrl);
     
     openAISocket.onopen = () => {
-      console.log("Connected to OpenAI");
+      console.log("OpenAI WebSocket connected");
       
-      // Send initial session configuration
       const sessionConfig = {
-        "event_id": "event_123",
+        "event_id": crypto.randomUUID(),
         "type": "session.update",
         "session": {
           "modalities": ["text", "audio"],
@@ -79,28 +89,26 @@ serve(async (req) => {
             "prefix_padding_ms": 300,
             "silence_duration_ms": 1000
           },
-          "tools": [
-            {
-              "type": "function",
-              "name": "record_dna_response",
-              "description": "Record a response in the DNA assessment tree",
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "category": {
-                    "type": "string",
-                    "enum": ["ETHICS", "EPISTEMOLOGY", "POLITICS", "THEOLOGY", "ONTOLOGY", "AESTHETICS"]
-                  },
-                  "tree_position": { "type": "string" },
-                  "answer": {
-                    "type": "string",
-                    "enum": ["A", "B"]
-                  }
+          "tools": [{
+            "type": "function",
+            "name": "record_dna_response",
+            "description": "Record a response in the DNA assessment tree",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "enum": ["ETHICS", "EPISTEMOLOGY", "POLITICS", "THEOLOGY", "ONTOLOGY", "AESTHETICS"]
                 },
-                "required": ["category", "tree_position", "answer"]
-              }
+                "tree_position": { "type": "string" },
+                "answer": {
+                  "type": "string",
+                  "enum": ["A", "B"]
+                }
+              },
+              "required": ["category", "tree_position", "answer"]
             }
-          ],
+          }],
           "tool_choice": "auto",
           "temperature": 0.7
         }
@@ -111,7 +119,7 @@ serve(async (req) => {
     };
 
     // Handle messages from the client
-    socket.onmessage = async (event) => {
+    socket.onmessage = (event) => {
       console.log("Received from client:", event.data);
       if (openAISocket.readyState === WebSocket.OPEN) {
         openAISocket.send(event.data);
@@ -128,7 +136,7 @@ serve(async (req) => {
 
     // Handle WebSocket errors
     socket.onerror = (e) => {
-      console.error("WebSocket error:", e);
+      console.error("Client WebSocket error:", e);
       try {
         socket.send(JSON.stringify({
           type: 'error',
@@ -152,20 +160,24 @@ serve(async (req) => {
     };
 
     // Handle WebSocket closures
-    socket.onclose = () => {
-      console.log("Client disconnected");
+    socket.onclose = (event) => {
+      console.log("Client WebSocket closed with code:", event.code, "reason:", event.reason);
       openAISocket.close();
     };
     
-    openAISocket.onclose = () => {
-      console.log("OpenAI disconnected");
+    openAISocket.onclose = (event) => {
+      console.log("OpenAI WebSocket closed with code:", event.code, "reason:", event.reason);
       socket.close();
     };
 
-    return wsResponse;
+    console.log("WebSocket setup complete, returning response");
+    return response;
   } catch (error) {
-    console.error('Error in realtime-chat:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error in Edge Function:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      stack: error.stack 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
