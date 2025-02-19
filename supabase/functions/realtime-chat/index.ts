@@ -18,7 +18,9 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Request an ephemeral token from OpenAI
+    console.log('Starting token request to OpenAI...');
+
+    // Request a token from OpenAI
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
@@ -32,19 +34,31 @@ serve(async (req) => {
       }),
     });
 
+    const responseText = await response.text();
+    console.log('OpenAI Response:', responseText);
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error("Failed to get token:", error);
-      throw new Error('Failed to get token');
+      throw new Error(`OpenAI API error: ${responseText}`);
     }
 
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
+    const data = JSON.parse(responseText);
+    console.log('Parsed response data:', data);
+
+    // Check if we have the client_secret in the response
+    if (!data.client_secret?.value) {
+      throw new Error('No client secret in OpenAI response');
+    }
+
+    return new Response(JSON.stringify({ token: data.client_secret.value }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Error in edge function:", error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error instanceof Error ? error.stack : undefined
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

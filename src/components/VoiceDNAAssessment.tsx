@@ -105,24 +105,35 @@ const VoiceDNAAssessment = () => {
       console.log('Starting assessment...');
 
       // Get ephemeral token from our Edge Function
-      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('realtime-chat');
+      const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
+      console.log('Edge function response:', response);
       
-      if (tokenError || !tokenData.token) {
-        throw new Error('Failed to get token');
+      if (invokeError) {
+        console.error('Edge function error:', invokeError);
+        throw new Error(`Edge function error: ${invokeError.message}`);
       }
 
-      const token = tokenData.token;
+      if (!response?.token) {
+        console.error('Invalid response:', response);
+        throw new Error('Failed to get token from edge function');
+      }
+
+      const token = response.token;
       console.log('Got token, creating peer connection...');
 
       // Create peer connection
       peerConnectionRef.current = new RTCPeerConnection();
+      console.log('Peer connection created');
 
       // Set up audio track
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
+      console.log('Added audio track to peer connection');
 
       // Set up data channel
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
+      console.log('Created data channel');
+
       dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
@@ -139,6 +150,7 @@ const VoiceDNAAssessment = () => {
 
       // Handle remote audio
       peerConnectionRef.current.ontrack = (event) => {
+        console.log('Received remote track:', event);
         if (audioElementRef.current) {
           audioElementRef.current.srcObject = event.streams[0];
         }
@@ -147,11 +159,13 @@ const VoiceDNAAssessment = () => {
       // Create and set local description
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
+      console.log('Created and set local description');
 
       // Connect to OpenAI
       const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2024-12-17";
       
+      console.log('Connecting to OpenAI with SDP:', offer.sdp);
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
         method: "POST",
         headers: {
@@ -162,16 +176,21 @@ const VoiceDNAAssessment = () => {
       });
 
       if (!sdpResponse.ok) {
+        const errorText = await sdpResponse.text();
+        console.error('OpenAI SDP error:', errorText);
         throw new Error('Failed to connect to OpenAI');
       }
 
+      const sdpAnswer = await sdpResponse.text();
+      console.log('Received SDP answer');
+
       const answer = {
         type: 'answer' as RTCSdpType,
-        sdp: await sdpResponse.text()
+        sdp: sdpAnswer
       };
 
       await peerConnectionRef.current.setRemoteDescription(answer);
-      console.log('WebRTC connection established');
+      console.log('Set remote description, WebRTC connection established');
 
       // Start recording
       recorderRef.current = new AudioRecorder({
@@ -186,6 +205,8 @@ const VoiceDNAAssessment = () => {
       });
 
       await recorderRef.current.start();
+      console.log('Started audio recording');
+      
       setIsConnected(true);
       setIsConnecting(false);
 
