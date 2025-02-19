@@ -127,6 +127,11 @@ const IntellectualDNA = () => {
     setShowNameDialog(true);
   };
 
+  const handleStartVoiceAssessment = () => {
+    sessionStorage.setItem('dna_assessment_name', 'Voice Assessment');
+    navigate('/dna/voice');
+  };
+
   const handleNameSubmit = () => {
     if (name.trim()) {
       sessionStorage.setItem('dna_assessment_name', name.trim());
@@ -183,13 +188,22 @@ const IntellectualDNA = () => {
             <p className="text-foreground/80 text-center mb-8 leading-relaxed">
               Learning is a practice that can change your life. The history of thought is not simply a catalogue of theories that are either right or wrong, but a great conversation, one that you can join.
             </p>
-            <Button
-              onClick={handleStartAssessment}
-              className={`${buttonGradientStyles} w-full py-6 text-lg`}
-              size="lg"
-            >
-              <span>Start Assessment</span>
-            </Button>
+            <div className="flex flex-col gap-4 w-full">
+              <Button
+                onClick={handleStartAssessment}
+                className={`${buttonGradientStyles} w-full py-6 text-lg`}
+                size="lg"
+              >
+                <span>Start Written Assessment</span>
+              </Button>
+              <Button
+                onClick={handleStartVoiceAssessment}
+                className={`${buttonGradientStyles} w-full py-6 text-lg`}
+                size="lg"
+              >
+                <span>Start Voice Assessment</span>
+              </Button>
+            </div>
           </div>
         </div>
 
