@@ -26,18 +26,37 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const { socket, response } = Deno.upgradeWebSocket(req);
+    // Request an ephemeral token from OpenAI
+    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-realtime-preview-2024-12-17",
+        voice: "alloy",
+        instructions: `You are an AI assistant conducting an Intellectual DNA Assessment. Your goal is to understand the user's philosophical positions across six categories: Ethics, Epistemology, Politics, Theology, Ontology, and Aesthetics.
+
+        For each category, you need to determine where they fall on our decision tree by asking relevant questions. Be conversational and natural, but make sure to get clear answers that map to our tree structure.
+        
+        Keep track of their answers and map them to our decision tree paths. Each answer should be clearly marked as either 'A' or 'B' for our tracking.`
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get session token: ${await response.text()}`);
+    }
+
+    const sessionData = await response.json();
+    console.log("Session created:", sessionData);
+
+    const { socket, response: wsResponse } = Deno.upgradeWebSocket(req);
     
-    // Connect to OpenAI's Realtime API with authentication
+    // Connect to OpenAI's Realtime API with the ephemeral token
     console.log("Attempting to connect to OpenAI...");
     const openAISocket = new WebSocket(
-      "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-      [],  // protocols
-      {
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`
-        }
-      }
+      `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&token=${sessionData.token}`,
     );
     
     openAISocket.onopen = () => {
@@ -49,12 +68,6 @@ serve(async (req) => {
         "type": "session.update",
         "session": {
           "modalities": ["text", "audio"],
-          "instructions": `You are an AI assistant conducting an Intellectual DNA Assessment. Your goal is to understand the user's philosophical positions across six categories: Ethics, Epistemology, Politics, Theology, Ontology, and Aesthetics.
-
-          For each category, you need to determine where they fall on our decision tree by asking relevant questions. Be conversational and natural, but make sure to get clear answers that map to our tree structure.
-          
-          Keep track of their answers and map them to our decision tree paths. Each answer should be clearly marked as either 'A' or 'B' for our tracking.`,
-          "voice": "alloy",
           "input_audio_format": "pcm16",
           "output_audio_format": "pcm16",
           "input_audio_transcription": {
@@ -100,19 +113,22 @@ serve(async (req) => {
     // Handle messages from the client
     socket.onmessage = async (event) => {
       console.log("Received from client:", event.data);
-      openAISocket.send(event.data);
+      if (openAISocket.readyState === WebSocket.OPEN) {
+        openAISocket.send(event.data);
+      }
     };
 
     // Forward OpenAI responses to the client
     openAISocket.onmessage = (event) => {
       console.log("Received from OpenAI:", event.data);
-      socket.send(event.data);
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(event.data);
+      }
     };
 
     // Handle WebSocket errors
     socket.onerror = (e) => {
       console.error("WebSocket error:", e);
-      // Try to send error back to client
       try {
         socket.send(JSON.stringify({
           type: 'error',
@@ -125,7 +141,6 @@ serve(async (req) => {
 
     openAISocket.onerror = (e) => {
       console.error("OpenAI WebSocket error:", e);
-      // Try to send error back to client
       try {
         socket.send(JSON.stringify({
           type: 'error',
@@ -147,7 +162,7 @@ serve(async (req) => {
       socket.close();
     };
 
-    return response;
+    return wsResponse;
   } catch (error) {
     console.error('Error in realtime-chat:', error);
     return new Response(JSON.stringify({ error: error.message }), {
