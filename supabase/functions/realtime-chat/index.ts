@@ -141,11 +141,7 @@ A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.\n\n`;
             },
             required: ["category", "path", "questionText", "response"]
           }
-        }],
-        metadata: {
-          totalQuestions: questions.length,
-          categoriesWithQuestions: Object.keys(categorizedQuestions).join(', ')
-        }
+        }]
       }),
     });
 
