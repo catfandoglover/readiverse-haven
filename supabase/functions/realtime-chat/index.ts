@@ -26,12 +26,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch initial question (Ethics Q1)
+    // Modified query to correctly join with great_questions
     const { data: initialQuestion, error: questionError } = await supabase
       .from('dna_tree_structure')
       .select(`
         *,
-        question:great_questions!dna_tree_structure_question_id_fkey (
+        great_questions!dna_tree_structure_question_id_fkey (
           question,
           category_number,
           answer_a,
@@ -43,23 +43,31 @@ serve(async (req) => {
       .maybeSingle();
 
     if (questionError) {
+      console.error('Database query error:', questionError);
       throw new Error(`Failed to fetch initial question: ${questionError.message}`);
     }
 
     if (!initialQuestion) {
+      console.error('No initial question found in database');
       throw new Error('No initial question found');
     }
 
     console.log('Initial question data:', initialQuestion);
 
-    // Create the tree structure for the prompt
+    // Safely access the question data with null checks
+    if (!initialQuestion.great_questions) {
+      console.error('No linked question found:', initialQuestion);
+      throw new Error('Question data is missing');
+    }
+
+    // Create the tree structure for the prompt with safe accessors
     const treeStructure = {
       currentCategory: initialQuestion.category,
       currentPosition: initialQuestion.tree_position,
       question: {
-        question: initialQuestion.question.question,
-        answer_a: initialQuestion.question.answer_a,
-        answer_b: initialQuestion.question.answer_b,
+        question: initialQuestion.great_questions.question,
+        answer_a: initialQuestion.great_questions.answer_a,
+        answer_b: initialQuestion.great_questions.answer_b,
         category: initialQuestion.category,
         tree_position: initialQuestion.tree_position,
         next_question_a: initialQuestion.next_question_a_id,
