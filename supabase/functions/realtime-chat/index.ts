@@ -119,7 +119,7 @@ Do not proceed until you receive a clear A or B response.`;
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
         instructions: systemPrompt,
-        temperature: 0.1, // Very low temperature to ensure consistent behavior
+        temperature: 0.6, // Updated to meet OpenAI's minimum requirement
         tools: [{
           name: "recordDNAResponse",
           type: "function",
@@ -149,7 +149,9 @@ Do not proceed until you receive a clear A or B response.`;
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
 
     const data = await response.json();
