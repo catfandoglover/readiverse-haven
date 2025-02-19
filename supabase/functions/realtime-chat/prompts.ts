@@ -1,81 +1,101 @@
 
 interface QuestionData {
-  text: string;
-  answerA: string;
-  answerB: string;
-  nextA: string | null;
-  nextB: string | null;
-}
-
-interface QuestionMap {
-  [category: string]: {
-    [position: string]: QuestionData;
-  };
-}
-
-interface DNAResponse {
+  question: string;
+  answer_a: string | null;
+  answer_b: string | null;
   category: string;
-  position: string;
-  choice: 'A' | 'B';
-  explanation: string;
+  tree_position: string;
+  next_question_a: string | null;
+  next_question_b: string | null;
 }
 
-export const getDNAPrompt = (questionMap: QuestionMap) => {
-  const categoryOrder = ['ETHICS', 'EPISTEMOLOGY', 'POLITICS', 'THEOLOGY', 'ONTOLOGY', 'AESTHETICS'];
-  
-  // First, stringify the question map outside the template literal
-  const questionMapJson = JSON.stringify(questionMap, null, 2);
-  
-  const systemPrompt = `You are conducting a philosophical assessment through natural conversation, but you MUST STRICTLY follow the predefined question order and structure. Your role is to:
+interface TreeStructure {
+  currentCategory: string;
+  currentPosition: string;
+  question: QuestionData;
+}
 
-1. Follow the exact category order: ${categoryOrder.join(' → ')}
-2. For each category:
-   - Present ONLY the current question from the question map
-   - Never skip questions or create your own questions
-   - Never combine questions or add additional context
-   - Stay focused on the exact philosophical distinction presented in the current question
+export const getDNAPrompt = (treeStructure: TreeStructure) => {
+  const systemPrompt = `You are a philosophical assessment AI with a STRICT mandate to follow an exact decision tree structure. Your responses are constrained by these rules:
 
-STRICT QUESTION HANDLING:
-1. Start with position "Q1" in ETHICS
-2. For each question:
-   - Present the exact philosophical distinction from the question map
-   - Use the exact 'text' field as your core question
-   - The options in 'answerA' and 'answerB' represent the two positions to distinguish between
-   - DO NOT add your own interpretations or expansions to the questions
-   - DO NOT ask follow-up questions unless the user's response is unclear
+STRUCTURE ENFORCEMENT:
+1. You can ONLY access and present questions that exist in the current tree position
+2. You must NEVER improvise or create questions
+3. You must NEVER combine questions
+4. You must NEVER skip questions
 
-RESPONSE PROCESSING:
-1. After each user response:
-   - Analyze whether it aligns with position A or B
-   - Record the response using this exact function call structure:
-     {
-       "type": "function",
-       "name": "recordDNAResponse",
-       "arguments": {
-         "category": "[current category]",
-         "position": "[current question position]",
-         "choice": "[A or B]",
-         "explanation": "[brief explanation of alignment]"
-       }
+CURRENT STATE:
+Category: ${treeStructure.currentCategory}
+Position: ${treeStructure.currentPosition}
+Current Question: ${treeStructure.question.question}
+Option A: ${treeStructure.question.answer_a}
+Option B: ${treeStructure.question.answer_b}
+
+STRICT OPERATIONAL RULES:
+1. Present only the current question as shown above
+2. Do not add context or explanation unless asked
+3. Do not ask follow-up questions unless user response is unclear
+4. Use exact function call format for responses:
+   {
+     "type": "function",
+     "name": "recordDNAResponse",
+     "arguments": {
+       "category": "${treeStructure.currentCategory}",
+       "position": "${treeStructure.currentPosition}",
+       "choice": "[A or B]",
+       "explanation": "[brief alignment explanation]"
      }
-   - If response is unclear, only then ask: "I want to make sure I understand your position clearly. Are you saying that [rephrase their apparent choice]?"
+   }
 
-STRICT NAVIGATION RULES:
-1. Current question must be completed before moving to next
-2. Navigation is determined by 'nextA' and 'nextB' values:
-   - If user's response aligns with A, use 'nextA' value
-   - If user's response aligns with B, use 'nextB' value
-   - If next value is null, move to position "Q1" of next category
-3. Never skip questions or jump categories
-4. When changing categories, say exactly: "We've completed our discussion on [CURRENT]. Now, let's explore your views on [NEXT]."
+NAVIGATION CONSTRAINTS:
+1. You cannot move to next question until current is answered
+2. You can only move to:
+   - Next position A: ${treeStructure.question.next_question_a}
+   - Next position B: ${treeStructure.question.next_question_b}
+3. If both next positions are null, wait for system to provide next category
 
-Question Map Structure for Strict Reference:
-${questionMapJson}
+EXECUTION SEQUENCE:
+1. Present current question
+2. Wait for user response
+3. Classify response as A or B
+4. Send recordDNAResponse function call
+5. Wait for next question from system
 
-CRITICAL: Start with ETHICS Q1, presenting only that specific question. Wait for user response before proceeding. Never deviate from the question map structure or add your own questions.`;
+You may only respond with:
+1. The current question
+2. Clarification if user response is unclear
+3. The exact recordDNAResponse function call
+4. "Waiting for next question" after recording response
+
+NEVER deviate from these constraints.`;
 
   return {
     systemPrompt,
-    categoryOrder
+    modelConfig: {
+      // OpenAI API constraints to enforce structured behavior
+      temperature: 0.1, // Very low temperature for consistent, predictable responses
+      top_p: 0.1, // Narrow sampling for high-precision responses
+      frequency_penalty: 2.0, // Strongly discourage repetition/deviation
+      presence_penalty: 2.0, // Strongly encourage staying on topic
+      max_tokens: 150, // Limit response length to prevent elaboration
+      stop: ["Let's", "Now,", "Next"], // Prevent common deviation phrases
+    }
   };
+};
+
+export const sessionConfig = {
+  type: "session.update",
+  session: {
+    modalities: ["text", "audio"],
+    voice: "alloy",
+    input_audio_format: "pcm16",
+    output_audio_format: "pcm16",
+    instructions: "You will strictly follow the provided question structure without deviation.",
+    turn_detection: {
+      type: "server_vad",
+      threshold: 0.5,
+      prefix_padding_ms: 300,
+      silence_duration_ms: 1000
+    }
+  }
 };
