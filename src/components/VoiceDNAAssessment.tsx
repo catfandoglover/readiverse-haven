@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -106,7 +105,6 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
-      // Create audio element
       const audioElement = document.createElement('audio');
       audioElement.autoplay = true;
       audioElement.id = 'voice-dna-audio';
@@ -136,7 +134,6 @@ const VoiceDNAAssessment = () => {
       peerConnectionRef.current = new RTCPeerConnection(configuration);
       console.log('Peer connection created');
 
-      // Set up media stream first
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -147,7 +144,6 @@ const VoiceDNAAssessment = () => {
         } 
       });
       
-      // Add all tracks from the stream
       mediaStream.getTracks().forEach(track => {
         if (peerConnectionRef.current) {
           console.log('Adding track to peer connection:', track.kind);
@@ -155,11 +151,9 @@ const VoiceDNAAssessment = () => {
         }
       });
 
-      // Create data channel
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
       console.log('Created data channel');
 
-      // Handle incoming messages
       dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
@@ -184,7 +178,6 @@ const VoiceDNAAssessment = () => {
           dataChannelRef.current?.send(JSON.stringify(sessionConfig));
           console.log('Sent session config:', sessionConfig);
 
-          // Send initial system message
           const initialSystemMessage = {
             type: 'conversation.item.create',
             item: {
@@ -192,16 +185,20 @@ const VoiceDNAAssessment = () => {
               role: 'system',
               content: [{
                 type: 'text',
-                text: `You MUST follow the exact question sequence:
-                1. Start with "Ethics Q1" and follow the tree exactly
-                2. Force A/B choices only
-                3. Record each response
-                4. Move to the next predefined question
-                5. Never deviate from the sequence`
+                text: `You are a DNA assessment system. You MUST:
+1. IMMEDIATELY begin with Ethics Q1: "If you could press a button to make everyone slightly happier but slightly less free, would you press it?"
+2. Only accept responses "A" for Yes or "B" for No
+3. Pause and wait for the user's response
+4. Record their choice and proceed to the next question based on their response
+5. Never add explanations or engage in conversation
+6. Maintain strict A/B choice format
+
+Start now by asking Ethics Q1.`
               }]
             }
           };
           dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
+          
           dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
         }
         
@@ -215,21 +212,18 @@ const VoiceDNAAssessment = () => {
         }
       };
 
-      // Handle incoming audio tracks
       peerConnectionRef.current.ontrack = (event) => {
         console.log('Received remote track:', event.track.kind);
         if (audioElementRef.current && event.streams[0]) {
           console.log('Setting audio source:', event.streams[0].id);
           audioElementRef.current.srcObject = event.streams[0];
           
-          // Ensure audio plays
           audioElementRef.current.play().catch(error => {
             console.error('Error playing audio:', error);
           });
         }
       };
 
-      // Create and set local description
       const offer = await peerConnectionRef.current.createOffer({
         offerToReceiveAudio: true
       });
@@ -266,7 +260,6 @@ const VoiceDNAAssessment = () => {
       await peerConnectionRef.current.setRemoteDescription(answer);
       console.log('Set remote description, WebRTC connection established');
 
-      // Start audio recording
       recorderRef.current = new AudioRecorder({
         onAudioData: (audioData) => {
           if (dataChannelRef.current?.readyState === 'open') {
