@@ -82,6 +82,8 @@ const VoiceDNAAssessment = () => {
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const hasAskedQuestionRef = useRef(false);
+  const sessionCreatedRef = useRef(false);
+  const messageQueueRef = useRef<any[]>([]);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -100,6 +102,26 @@ const VoiceDNAAssessment = () => {
     }
     
     return btoa(binary);
+  };
+
+  const sendQueuedMessages = () => {
+    if (dataChannelRef.current?.readyState === 'open' && sessionCreatedRef.current) {
+      while (messageQueueRef.current.length > 0) {
+        const message = messageQueueRef.current.shift();
+        console.log('Sending queued message:', message);
+        dataChannelRef.current.send(JSON.stringify(message));
+      }
+    }
+  };
+
+  const queueOrSendMessage = (message: any) => {
+    if (dataChannelRef.current?.readyState === 'open' && sessionCreatedRef.current) {
+      console.log('Sending message directly:', message);
+      dataChannelRef.current.send(JSON.stringify(message));
+    } else {
+      console.log('Queueing message:', message);
+      messageQueueRef.current.push(message);
+    }
   };
 
   const sendSessionConfig = () => {
@@ -121,8 +143,7 @@ const VoiceDNAAssessment = () => {
         max_response_output_tokens: 200
       }
     };
-    dataChannelRef.current?.send(JSON.stringify(sessionConfig));
-    console.log('Session config sent');
+    queueOrSendMessage(sessionConfig);
 
     const initialSystemMessage = {
       type: 'conversation.item.create',
@@ -141,8 +162,7 @@ B: No`
         }]
       }
     };
-    dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
-    console.log('System message sent');
+    queueOrSendMessage(initialSystemMessage);
     
     setTimeout(() => {
       const userMessage = {
@@ -156,10 +176,9 @@ B: No`
           }]
         }
       };
-      dataChannelRef.current?.send(JSON.stringify(userMessage));
-      dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+      queueOrSendMessage(userMessage);
+      queueOrSendMessage({ type: 'response.create' });
       setIsWaitingForResponse(true);
-      console.log('Initial prompt sent');
     }, 1000);
   };
 
@@ -214,6 +233,7 @@ B: No`
 
       dataChannelRef.current.onopen = () => {
         console.log('Data channel opened');
+        sendQueuedMessages();
       };
 
       dataChannelRef.current.onmessage = (event) => {
@@ -221,6 +241,8 @@ B: No`
         console.log('Received event:', data);
 
         if (data.type === 'session.created') {
+          console.log('Session created');
+          sessionCreatedRef.current = true;
           sendSessionConfig();
         }
         
@@ -240,7 +262,7 @@ B: No`
           if (!isWaitingForResponse && (response === 'A' || response === 'B')) {
             console.log('Valid response received:', response);
             setIsWaitingForResponse(true);
-            dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+            queueOrSendMessage({ type: 'response.create' });
           }
         }
       };
