@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -60,18 +61,9 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase credentials not configured');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     console.log('Starting token request to OpenAI...');
 
-    // Request a token from OpenAI
+    // Request a token from OpenAI with only supported parameters
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
@@ -82,10 +74,6 @@ serve(async (req) => {
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
         instructions: SYSTEM_PROMPT,
-        metadata: {
-          tool_set: "dna_assessment",
-          conversation_type: "philosophical_assessment"
-        },
         tools: [{
           type: "function",
           function: {
