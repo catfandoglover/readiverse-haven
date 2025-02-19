@@ -189,12 +189,26 @@ const VoiceDNAAssessment = () => {
 
 CHOOSE:
 A: Yes
-B: No`
+B: No
+
+Awaiting explicit A/B selection...`
               }]
             }
           };
           dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
           
+          const userMessage = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'user',
+              content: [{
+                type: 'text',
+                text: 'Start the assessment.'
+              }]
+            }
+          };
+          dataChannelRef.current?.send(JSON.stringify(userMessage));
           dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
         }
         
