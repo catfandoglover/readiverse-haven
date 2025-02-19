@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +76,7 @@ const VoiceDNAAssessment = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [openAIReady, setOpenAIReady] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -121,40 +123,39 @@ const VoiceDNAAssessment = () => {
         setIsConnected(true);
         setIsConnecting(false);
         reconnectAttempts.current = 0;
-        
-        // Start recording audio
-        recorderRef.current = new AudioRecorder({
-          onAudioData: (audioData) => {
-            if (wsRef.current?.readyState === WebSocket.OPEN) {
-              wsRef.current.send(JSON.stringify({
-                type: 'input_audio_buffer.append',
-                audio: encodeAudioData(audioData)
-              }));
-            }
-          }
-        });
-        
-        recorderRef.current.start().catch(error => {
-          console.error('Failed to start recording:', error);
-          toast({
-            title: "Error",
-            description: "Failed to access microphone",
-            variant: "destructive"
-          });
-        });
       };
 
       wsRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received message:', data);
 
-        if (data.type === 'response.audio.delta') {
+        if (data.type === 'status' && data.message === 'Connected to OpenAI') {
+          setOpenAIReady(true);
+          // Start recording audio only after OpenAI is ready
+          recorderRef.current = new AudioRecorder({
+            onAudioData: (audioData) => {
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
+                  type: 'input_audio_buffer.append',
+                  audio: encodeAudioData(audioData)
+                }));
+              }
+            }
+          });
+          
+          recorderRef.current.start().catch(error => {
+            console.error('Failed to start recording:', error);
+            toast({
+              title: "Error",
+              description: "Failed to access microphone",
+              variant: "destructive"
+            });
+          });
+        } else if (data.type === 'response.audio.delta') {
           setIsSpeaking(true);
-          // Handle incoming audio...
         } else if (data.type === 'response.audio.done') {
           setIsSpeaking(false);
         } else if (data.type === 'response.function_call_arguments.done') {
-          // Handle DNA responses...
           const args = JSON.parse(data.arguments);
           console.log('Recording DNA response:', args);
         } else if (data.type === 'error') {
@@ -164,6 +165,10 @@ const VoiceDNAAssessment = () => {
             description: data.message,
             variant: "destructive"
           });
+          if (data.message === 'OpenAI connection not ready') {
+            // Don't stop assessment for this specific error, wait for ready state
+            return;
+          }
           stopAssessment();
         }
       };
@@ -171,8 +176,8 @@ const VoiceDNAAssessment = () => {
       wsRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnecting(false);
+        setOpenAIReady(false);
         
-        // Attempt to reconnect if within limits
         if (reconnectAttempts.current < maxReconnectAttempts) {
           console.log(`Attempting to reconnect (${reconnectAttempts.current + 1}/${maxReconnectAttempts})...`);
           reconnectAttempts.current++;
@@ -190,12 +195,17 @@ const VoiceDNAAssessment = () => {
         console.log('WebSocket closed with code:', event.code, 'reason:', event.reason);
         setIsConnected(false);
         setIsConnecting(false);
-        recorderRef.current?.stop();
+        setOpenAIReady(false);
+        if (recorderRef.current) {
+          recorderRef.current.stop();
+          recorderRef.current = null;
+        }
       };
 
     } catch (error) {
       console.error('Error starting assessment:', error);
       setIsConnecting(false);
+      setOpenAIReady(false);
       toast({
         title: "Error",
         description: "Failed to start assessment",
@@ -205,10 +215,17 @@ const VoiceDNAAssessment = () => {
   };
 
   const stopAssessment = () => {
-    recorderRef.current?.stop();
-    wsRef.current?.close();
+    if (recorderRef.current) {
+      recorderRef.current.stop();
+      recorderRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
     setIsConnected(false);
     setIsSpeaking(false);
+    setOpenAIReady(false);
   };
 
   useEffect(() => {
@@ -254,7 +271,7 @@ const VoiceDNAAssessment = () => {
             <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
               isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
             }`}>
-              {isSpeaking ? 'AI is speaking...' : 'Listening...'}
+              {isSpeaking ? 'AI is speaking...' : openAIReady ? 'Listening...' : 'Connecting to AI...'}
             </div>
           </div>
         )}
