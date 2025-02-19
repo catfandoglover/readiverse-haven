@@ -8,6 +8,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const { headers } = req;
   const upgradeHeader = headers.get("upgrade") || "";
 
@@ -16,16 +21,22 @@ serve(async (req) => {
   }
 
   try {
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not set');
+    }
+
     const { socket, response } = Deno.upgradeWebSocket(req);
     
     // Connect to OpenAI's Realtime API
+    console.log("Attempting to connect to OpenAI...");
     const openAISocket = new WebSocket("wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17");
     
     openAISocket.onopen = () => {
       console.log("Connected to OpenAI");
       
       // Send initial session configuration
-      openAISocket.send(JSON.stringify({
+      const sessionConfig = {
         "event_id": "event_123",
         "type": "session.update",
         "session": {
@@ -72,7 +83,10 @@ serve(async (req) => {
           "tool_choice": "auto",
           "temperature": 0.7
         }
-      }));
+      };
+
+      console.log("Sending session configuration...");
+      openAISocket.send(JSON.stringify(sessionConfig));
     };
 
     // Handle messages from the client
@@ -88,8 +102,31 @@ serve(async (req) => {
     };
 
     // Handle WebSocket errors
-    socket.onerror = (e) => console.error("WebSocket error:", e);
-    openAISocket.onerror = (e) => console.error("OpenAI WebSocket error:", e);
+    socket.onerror = (e) => {
+      console.error("WebSocket error:", e);
+      // Try to send error back to client
+      try {
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'WebSocket error occurred'
+        }));
+      } catch (err) {
+        console.error('Failed to send error to client:', err);
+      }
+    };
+
+    openAISocket.onerror = (e) => {
+      console.error("OpenAI WebSocket error:", e);
+      // Try to send error back to client
+      try {
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'OpenAI connection error'
+        }));
+      } catch (err) {
+        console.error('Failed to send OpenAI error to client:', err);
+      }
+    };
 
     // Handle WebSocket closures
     socket.onclose = () => {

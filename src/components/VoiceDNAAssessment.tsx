@@ -75,6 +75,7 @@ const VoiceDNAAssessment = () => {
   const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -100,6 +101,9 @@ const VoiceDNAAssessment = () => {
 
   const startAssessment = async () => {
     try {
+      setIsConnecting(true);
+      console.log('Connecting to WebSocket...');
+
       // Connect to our Supabase Edge Function WebSocket
       wsRef.current = new WebSocket(
         `wss://myeyoafugkrkwcnfedlu.functions.supabase.co/functions/v1/realtime-chat`
@@ -108,6 +112,7 @@ const VoiceDNAAssessment = () => {
       wsRef.current.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
+        setIsConnecting(false);
         
         // Start recording audio
         recorderRef.current = new AudioRecorder({
@@ -144,11 +149,20 @@ const VoiceDNAAssessment = () => {
           // Handle DNA responses...
           const args = JSON.parse(data.arguments);
           console.log('Recording DNA response:', args);
+        } else if (data.type === 'error') {
+          console.error('Received error from server:', data.message);
+          toast({
+            title: "Connection Error",
+            description: data.message,
+            variant: "destructive"
+          });
+          stopAssessment();
         }
       };
 
       wsRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
+        setIsConnecting(false);
         toast({
           title: "Connection Error",
           description: "Failed to connect to assessment service",
@@ -159,11 +173,13 @@ const VoiceDNAAssessment = () => {
       wsRef.current.onclose = () => {
         console.log('WebSocket closed');
         setIsConnected(false);
+        setIsConnecting(false);
         recorderRef.current?.stop();
       };
 
     } catch (error) {
       console.error('Error starting assessment:', error);
+      setIsConnecting(false);
       toast({
         title: "Error",
         description: "Failed to start assessment",
@@ -203,8 +219,9 @@ const VoiceDNAAssessment = () => {
             <Button 
               onClick={startAssessment}
               className="bg-primary hover:bg-primary/90"
+              disabled={isConnecting}
             >
-              Start Assessment
+              {isConnecting ? 'Connecting...' : 'Start Assessment'}
             </Button>
           ) : (
             <Button 
