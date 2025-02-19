@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -24,7 +23,7 @@ type Concept = {
   created_at: string;
 };
 
-const Index = () => {
+const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -51,6 +50,11 @@ const Index = () => {
         console.error('Error fetching books:', error);
         return [];
       }
+
+      console.log('Successfully fetched books:', {
+        count: data?.length,
+        firstBook: data?.[0]
+      });
 
       return data;
     },
@@ -157,14 +161,11 @@ const Index = () => {
   const buttonGradientStyles = "px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300 home-page">
       <div className="flex flex-col min-h-screen">
         <header className="px-4 py-3 border-b border-border sticky top-0 z-50 bg-background">
           <div className="flex justify-between items-center">
-            <button 
-              onClick={() => handleNavigation('/')}
-              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-            >
+            <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
               <img 
                 src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
                 alt="Lightning" 
@@ -308,22 +309,22 @@ const Index = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
           <div className="flex justify-between items-center max-w-sm mx-auto px-8">
             <button 
-              onClick={() => handleNavigation('/dna')}
               className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/dna')}
             >
               <Dna className="h-6 w-6" />
               <span className="text-xs font-oxanium">My DNA</span>
             </button>
             <button 
-              onClick={() => handleNavigation('/')}
               className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/')}
             >
               <Compass className="h-6 w-6" />
               <span className="text-xs font-oxanium">Discover</span>
             </button>
             <button 
-              onClick={() => handleNavigation('/bookshelf')}
               className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/bookshelf')}
             >
               <LibraryBig className="h-6 w-6" />
               <span className="text-xs font-oxanium">Bookshelf</span>
@@ -335,4 +336,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Home;
