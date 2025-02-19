@@ -2,9 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/OutsetaAuthContext';
 
-interface VoiceDNAAssessmentProps {
-  questionText: string;
-  isEnabled: boolean;
+interface AudioRecorderConfig {
+  onAudioData: (audioData: Float32Array) => void;
 }
 
 class AudioRecorder {
@@ -65,6 +64,11 @@ class AudioRecorder {
       this.audioContext = null;
     }
   }
+}
+
+interface VoiceDNAAssessmentProps {
+  questionText: string;
+  isEnabled: boolean;
 }
 
 const VoiceDNAAssessment: React.FC<VoiceDNAAssessmentProps> = ({ 

@@ -11,7 +11,6 @@ import Home from "@/components/Home";
 import Bookshelf from "@/components/Bookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
 import DNAAssessment from "./pages/DNAAssessment";
-import VoiceDNAAssessment from "@/components/VoiceDNAAssessment";
 import Index from "@/pages/Index";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
@@ -33,14 +32,10 @@ function ReaderWrapper() {
   
   const { data: book, isLoading } = useBook(slug);
 
-  // If we have state, use it, otherwise use the fetched book data
-  const bookUrl = state?.bookUrl || book?.epub_file_url;
-  const coverUrl = state?.metadata?.coverUrl || book?.cover_url;
-
   return (
     <Reader 
-      metadata={{ coverUrl }}
-      preloadedBookUrl={bookUrl}
+      metadata={{ coverUrl: state?.metadata?.coverUrl || book?.cover_url }}
+      preloadedBookUrl={state?.bookUrl || book?.epub_file_url}
       isLoading={isLoading}
     />
   );
@@ -59,7 +54,6 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
-                <Route path="/dna/voice" element={<VoiceDNAAssessment />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/:bookSlug" element={<Index />} />
