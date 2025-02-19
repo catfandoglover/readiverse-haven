@@ -1,4 +1,3 @@
-
 interface QuestionData {
   question: string;
   answer_a: string | null;
@@ -98,4 +97,36 @@ export const sessionConfig = {
       silence_duration_ms: 1000
     }
   }
+};
+
+// Structured decision trees for each domain
+export const DECISION_TREES = {
+  ETHICS: {
+    "Q1": {
+      question: "If you could press a button to make everyone slightly happier but slightly less free, would you press it?",
+      optionA: "Yes",
+      optionB: "No",
+      nextA: "A",
+      nextB: "B"
+    },
+    "A": {
+      question: "Would you sacrifice one innocent person to save five strangers?",
+      optionA: "Yes",
+      optionB: "No",
+      nextA: "AA",
+      nextB: "AB"
+    },
+    // ... continue with all Ethics nodes
+  },
+  EPISTEMOLOGY: {
+    "Q1": {
+      question: "'If everyone on Earth believed the sky was green, it would still be blue.' Agree/Disagree?",
+      optionA: "Agree",
+      optionB: "Disagree",
+      nextA: "A",
+      nextB: "B"
+    },
+    // ... continue with all Epistemology nodes
+  },
+  // ... continue with other domains
 };

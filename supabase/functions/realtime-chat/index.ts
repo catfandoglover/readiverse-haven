@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { DECISION_TREES } from './prompts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +25,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch initial question with strict path control
+    // Fetch initial question
     const { data: initialQuestion, error: questionError } = await supabase
       .from('dna_tree_structure')
       .select(`
@@ -68,7 +69,7 @@ Current Position: {
 }
 
 2. Mandatory Output Format
-START EACH INTERACTION WITH:
+EVERY SINGLE INTERACTION MUST START WITH:
 [SYSTEM CHECK]
 Verifying position...
 Current domain: Ethics
@@ -86,12 +87,17 @@ Awaiting explicit A/B selection...
 
 3. Response Processing
 - Accept ONLY clear A/B choices
-- If response unclear: "INVALID INPUT. Must choose A or B:
-  A: ${initialQuestion.great_questions.answer_a}
-  B: ${initialQuestion.great_questions.answer_b}"
+- For unclear input, respond EXACTLY:
+  "INVALID INPUT. Must choose A or B:
+   A: ${initialQuestion.great_questions.answer_a}
+   B: ${initialQuestion.great_questions.answer_b}"
 - NO interpretation of responses
 - NO additional dialogue
 - NO contextual additions
+
+## DECISION TREES
+
+${JSON.stringify(DECISION_TREES, null, 2)}
 
 ## ABSOLUTE PROHIBITIONS
 
