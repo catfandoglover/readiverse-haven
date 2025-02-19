@@ -76,6 +76,7 @@ const VoiceDNAAssessment = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
@@ -185,13 +186,11 @@ const VoiceDNAAssessment = () => {
               role: 'system',
               content: [{
                 type: 'text',
-                text: `You are a DNA assessment system. Your ONLY task is to ask "Would you sacrifice one innocent person to save five strangers?" and accept ONLY "A" for Yes or "B" for No as responses. Do not add any other words or explanations.
+                text: `You are a DNA assessment system. Ask the question: "Would you sacrifice one innocent person to save five strangers?" Then wait for an "A" or "B" response.
 
-CHOOSE:
+Only proceed after receiving a clear "A" or "B" response.
 A: Yes
-B: No
-
-Awaiting explicit A/B selection...`
+B: No`
               }]
             }
           };
@@ -204,21 +203,25 @@ Awaiting explicit A/B selection...`
               role: 'user',
               content: [{
                 type: 'text',
-                text: 'Start the assessment.'
+                text: 'Begin the assessment.'
               }]
             }
           };
           dataChannelRef.current?.send(JSON.stringify(userMessage));
           dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+          setIsWaitingForResponse(true);
         }
         
         if (data.type === 'response.audio.delta') {
           setIsSpeaking(true);
         } else if (data.type === 'response.audio.done') {
           setIsSpeaking(false);
-        } else if (data.type === 'response.function_call_arguments.done') {
-          const args = JSON.parse(data.arguments);
-          console.log('Recording DNA response:', args);
+          setIsWaitingForResponse(false);
+        } else if (data.type === 'response.audio_transcript.delta') {
+          if (!isWaitingForResponse && (data.delta === 'A' || data.delta === 'B')) {
+            setIsWaitingForResponse(true);
+            dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+          }
         }
       };
 
