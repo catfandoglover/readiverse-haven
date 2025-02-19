@@ -26,8 +26,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch all questions from the tree structure
-    const { data: questions, error } = await supabase
+    // Fetch initial question (Ethics Q1)
+    const { data: initialQuestion, error: questionError } = await supabase
       .from('dna_tree_structure')
       .select(`
         *,
@@ -38,30 +38,39 @@ serve(async (req) => {
           answer_b
         )
       `)
-      .order('category')
-      .order('tree_position');
+      .eq('category', 'ETHICS')
+      .eq('tree_position', 'Q1')
+      .maybeSingle();
 
-    if (error) {
-      throw new Error(`Failed to fetch questions: ${error.message}`);
+    if (questionError) {
+      throw new Error(`Failed to fetch initial question: ${questionError.message}`);
     }
 
-    // Build the question map from database results
-    const questionMap = questions.reduce((acc, q) => {
-      if (!acc[q.category]) {
-        acc[q.category] = {};
-      }
-      acc[q.category][q.tree_position] = {
-        text: q.question.question,
-        answerA: q.question.answer_a,
-        answerB: q.question.answer_b,
-        nextA: q.next_question_a_id,
-        nextB: q.next_question_b_id
-      };
-      return acc;
-    }, {});
+    if (!initialQuestion) {
+      throw new Error('No initial question found');
+    }
 
-    // Get the system prompt with the dynamically built question map
-    const { systemPrompt } = getDNAPrompt(questionMap);
+    console.log('Initial question data:', initialQuestion);
+
+    // Create the tree structure for the prompt
+    const treeStructure = {
+      currentCategory: initialQuestion.category,
+      currentPosition: initialQuestion.tree_position,
+      question: {
+        question: initialQuestion.question.question,
+        answer_a: initialQuestion.question.answer_a,
+        answer_b: initialQuestion.question.answer_b,
+        category: initialQuestion.category,
+        tree_position: initialQuestion.tree_position,
+        next_question_a: initialQuestion.next_question_a_id,
+        next_question_b: initialQuestion.next_question_b_id
+      }
+    };
+
+    console.log('Tree structure:', treeStructure);
+
+    // Get the system prompt with the initial question
+    const { systemPrompt, modelConfig } = getDNAPrompt(treeStructure);
 
     console.log('Starting token request to OpenAI...');
 
