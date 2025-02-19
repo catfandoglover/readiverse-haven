@@ -102,6 +102,67 @@ const VoiceDNAAssessment = () => {
     return btoa(binary);
   };
 
+  const sendSessionConfig = () => {
+    console.log('Sending session config...');
+    const sessionConfig = {
+      type: 'session.update',
+      session: {
+        modalities: ['text', 'audio'],
+        voice: 'alloy',
+        input_audio_format: 'pcm16',
+        output_audio_format: 'pcm16',
+        turn_detection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 1000
+        },
+        temperature: 0.7,
+        max_response_output_tokens: 200
+      }
+    };
+    dataChannelRef.current?.send(JSON.stringify(sessionConfig));
+    console.log('Session config sent');
+
+    const initialSystemMessage = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'system',
+        content: [{
+          type: 'text',
+          text: `You are a DNA assessment system. Your ONLY task is to clearly speak this exact question: "Would you sacrifice one innocent person to save five strangers?" Then remain silent and wait for either "A" for Yes or "B" for No as a response. Do not add any other words or explanations.
+
+After asking the question, you must wait silently for either "A" or "B" as a response. Do not say anything else until you receive one of these responses.
+
+Valid responses:
+A: Yes
+B: No`
+        }]
+      }
+    };
+    dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
+    console.log('System message sent');
+    
+    setTimeout(() => {
+      const userMessage = {
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'user',
+          content: [{
+            type: 'text',
+            text: 'Begin the assessment.'
+          }]
+        }
+      };
+      dataChannelRef.current?.send(JSON.stringify(userMessage));
+      dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
+      setIsWaitingForResponse(true);
+      console.log('Initial prompt sent');
+    }, 1000);
+  };
+
   const startAssessment = async () => {
     try {
       setIsConnecting(true);
@@ -112,11 +173,8 @@ const VoiceDNAAssessment = () => {
       audioElement.id = 'voice-dna-audio';
       document.body.appendChild(audioElement);
       audioElementRef.current = audioElement;
-      console.log('Created and added audio element to DOM');
-
-      const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
-      console.log('Edge function response:', response);
       
+      const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
       if (invokeError) {
         console.error('Edge function error:', invokeError);
         throw new Error(`Edge function error: ${invokeError.message}`);
@@ -134,7 +192,6 @@ const VoiceDNAAssessment = () => {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
       };
       peerConnectionRef.current = new RTCPeerConnection(configuration);
-      console.log('Peer connection created');
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -148,7 +205,6 @@ const VoiceDNAAssessment = () => {
       
       mediaStream.getTracks().forEach(track => {
         if (peerConnectionRef.current) {
-          console.log('Adding track to peer connection:', track.kind);
           peerConnectionRef.current.addTrack(track, mediaStream);
         }
       });
@@ -156,69 +212,16 @@ const VoiceDNAAssessment = () => {
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
       console.log('Created data channel');
 
+      dataChannelRef.current.onopen = () => {
+        console.log('Data channel opened');
+      };
+
       dataChannelRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
 
         if (data.type === 'session.created') {
-          console.log('Session created, sending config...');
-          const sessionConfig = {
-            type: 'session.update',
-            session: {
-              modalities: ['text', 'audio'],
-              voice: 'alloy',
-              input_audio_format: 'pcm16',
-              output_audio_format: 'pcm16',
-              turn_detection: {
-                type: 'server_vad',
-                threshold: 0.5,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 1000
-              },
-              temperature: 0.7,
-              max_response_output_tokens: 200
-            }
-          };
-          dataChannelRef.current?.send(JSON.stringify(sessionConfig));
-          console.log('Session config sent');
-          
-          const initialSystemMessage = {
-            type: 'conversation.item.create',
-            item: {
-              type: 'message',
-              role: 'system',
-              content: [{
-                type: 'text',
-                text: `You are a DNA assessment system. Your ONLY task is to clearly speak this exact question: "Would you sacrifice one innocent person to save five strangers?" Then remain silent and wait for either "A" for Yes or "B" for No as a response. Do not add any other words or explanations.
-
-After asking the question, you must wait silently for either "A" or "B" as a response. Do not say anything else until you receive one of these responses.
-
-Valid responses:
-A: Yes
-B: No`
-              }]
-            }
-          };
-          dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
-          console.log('System message sent');
-          
-          setTimeout(() => {
-            const userMessage = {
-              type: 'conversation.item.create',
-              item: {
-                type: 'message',
-                role: 'user',
-                content: [{
-                  type: 'text',
-                  text: 'Begin the assessment.'
-                }]
-              }
-            };
-            dataChannelRef.current?.send(JSON.stringify(userMessage));
-            dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
-            setIsWaitingForResponse(true);
-            console.log('Initial prompt sent');
-          }, 1000);
+          sendSessionConfig();
         }
         
         if (data.type === 'response.audio.delta') {
@@ -245,9 +248,7 @@ B: No`
       peerConnectionRef.current.ontrack = (event) => {
         console.log('Received remote track:', event.track.kind);
         if (audioElementRef.current && event.streams[0]) {
-          console.log('Setting audio source:', event.streams[0].id);
           audioElementRef.current.srcObject = event.streams[0];
-          
           audioElementRef.current.play().catch(error => {
             console.error('Error playing audio:', error);
           });
@@ -258,12 +259,10 @@ B: No`
         offerToReceiveAudio: true
       });
       await peerConnectionRef.current.setLocalDescription(offer);
-      console.log('Created and set local description');
 
       const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2024-12-17";
       
-      console.log('Connecting to OpenAI with SDP:', offer.sdp);
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
         method: "POST",
         headers: {
@@ -275,20 +274,16 @@ B: No`
 
       if (!sdpResponse.ok) {
         const errorText = await sdpResponse.text();
-        console.error('OpenAI SDP error:', errorText);
-        throw new Error('Failed to connect to OpenAI');
+        throw new Error(`Failed to connect to OpenAI: ${errorText}`);
       }
 
       const sdpAnswer = await sdpResponse.text();
-      console.log('Received SDP answer');
-
       const answer = {
         type: 'answer' as RTCSdpType,
         sdp: sdpAnswer
       };
 
       await peerConnectionRef.current.setRemoteDescription(answer);
-      console.log('Set remote description, WebRTC connection established');
 
       recorderRef.current = new AudioRecorder({
         onAudioData: (audioData) => {
@@ -302,8 +297,6 @@ B: No`
       });
 
       await recorderRef.current.start();
-      console.log('Started audio recording');
-      
       setIsConnected(true);
       setIsConnecting(false);
 
