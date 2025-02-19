@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import { Mic, MicOff } from "lucide-react";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -32,70 +31,6 @@ const categoryOrder: DNACategory[] = [
 
 const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 
-interface AudioRecorderConfig {
-  onAudioData: (audioData: Float32Array) => void;
-}
-
-class AudioRecorder {
-  private stream: MediaStream | null = null;
-  private audioContext: AudioContext | null = null;
-  private processor: ScriptProcessorNode | null = null;
-  private source: MediaStreamAudioSourceNode | null = null;
-
-  constructor(private config: AudioRecorderConfig) {}
-
-  async start() {
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
-      
-      this.audioContext = new AudioContext({
-        sampleRate: 24000,
-      });
-      
-      this.source = this.audioContext.createMediaStreamSource(this.stream);
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      this.processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        this.config.onAudioData(new Float32Array(inputData));
-      };
-      
-      this.source.connect(this.processor);
-      this.processor.connect(this.audioContext.destination);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      throw error;
-    }
-  }
-
-  stop() {
-    if (this.source) {
-      this.source.disconnect();
-      this.source = null;
-    }
-    if (this.processor) {
-      this.processor.disconnect();
-      this.processor = null;
-    }
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
-  }
-}
-
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
@@ -107,140 +42,6 @@ const DNAAssessment = () => {
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
-  const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement>(null);
-
-  const encodeAudioData = (float32Array: Float32Array): string => {
-    const int16Array = new Int16Array(float32Array.length);
-    for (let i = 0; i < float32Array.length; i++) {
-      const s = Math.max(-1, Math.min(1, float32Array[i]));
-      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    
-    const uint8Array = new Uint8Array(int16Array.buffer);
-    let binary = '';
-    const chunkSize = 0x8000;
-    
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    
-    return btoa(binary);
-  };
-
-  const setupVoiceConnection = async () => {
-    try {
-      console.log('Setting up voice connection...');
-
-      const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
-      
-      if (invokeError) {
-        console.error('Edge function error:', invokeError);
-        throw new Error(`Edge function error: ${invokeError.message}`);
-      }
-
-      if (!response?.token) {
-        console.error('Invalid response:', response);
-        throw new Error('Failed to get token from edge function');
-      }
-
-      peerConnectionRef.current = new RTCPeerConnection();
-      
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
-
-      dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
-      
-      dataChannelRef.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log('Received event:', data);
-
-        if (data.type === 'response.audio.delta') {
-          setIsSpeaking(true);
-        } else if (data.type === 'response.audio.done') {
-          setIsSpeaking(false);
-        } else if (data.type === 'response.function_call_arguments.done') {
-          const args = JSON.parse(data.arguments);
-          if (args.response === 'A') {
-            handleAnswer('A');
-          } else if (args.response === 'B') {
-            handleAnswer('B');
-          }
-        }
-      };
-
-      peerConnectionRef.current.ontrack = (event) => {
-        if (audioElementRef.current) {
-          audioElementRef.current.srcObject = event.streams[0];
-        }
-      };
-
-      const offer = await peerConnectionRef.current.createOffer();
-      await peerConnectionRef.current.setLocalDescription(offer);
-
-      const baseUrl = "https://api.openai.com/v1/realtime";
-      const model = "gpt-4o-realtime-preview-2024-12-17";
-      
-      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${response.token}`,
-          "Content-Type": "application/sdp"
-        },
-        body: offer.sdp
-      });
-
-      if (!sdpResponse.ok) {
-        const errorText = await sdpResponse.text();
-        throw new Error('Failed to connect to OpenAI');
-      }
-
-      const sdpAnswer = await sdpResponse.text();
-      const answer = { type: 'answer' as RTCSdpType, sdp: sdpAnswer };
-      await peerConnectionRef.current.setRemoteDescription(answer);
-
-      recorderRef.current = new AudioRecorder({
-        onAudioData: (audioData) => {
-          if (dataChannelRef.current?.readyState === 'open') {
-            dataChannelRef.current.send(JSON.stringify({
-              type: 'input_audio_buffer.append',
-              audio: encodeAudioData(audioData)
-            }));
-          }
-        }
-      });
-
-      await recorderRef.current.start();
-      setIsVoiceEnabled(true);
-
-    } catch (error) {
-      console.error('Error setting up voice:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to setup voice interaction");
-      stopVoiceConnection();
-    }
-  };
-
-  const stopVoiceConnection = () => {
-    if (recorderRef.current) {
-      recorderRef.current.stop();
-      recorderRef.current = null;
-    }
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    setIsVoiceEnabled(false);
-    setIsSpeaking(false);
-  };
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -294,15 +95,19 @@ const DNAAssessment = () => {
     }
   };
 
+  // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
+  // Get the index of the current category and determine the next category
   const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
   const nextCategory = currentCategoryIndex < categoryOrder.length - 1 
     ? categoryOrder[currentCategoryIndex + 1] 
     : null;
 
+  // Calculate progress percentage
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
+  // Initialize or get assessment ID
   React.useEffect(() => {
     const initializeAssessment = async () => {
       if (!assessmentId && currentCategoryIndex === 0) {
@@ -310,6 +115,7 @@ const DNAAssessment = () => {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
           
+          // Create the assessment
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
             .insert([{ 
@@ -340,6 +146,7 @@ const DNAAssessment = () => {
           setAssessmentId(newAssessment.id);
           console.log('Created new assessment with ID:', newAssessment.id);
           
+          // Verify the assessment exists and is properly initialized
           const { data: verifyData, error: verifyError } = await supabase
             .from('dna_assessment_results')
             .select('*')
@@ -367,6 +174,7 @@ const DNAAssessment = () => {
     initializeAssessment();
   }, [assessmentId, currentCategoryIndex]);
 
+  // Query for current question
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
@@ -409,6 +217,7 @@ const DNAAssessment = () => {
     gcTime: 10 * 60 * 1000,
   });
 
+  // Prefetch next possible questions
   React.useEffect(() => {
     const prefetchNextQuestions = async () => {
       if (!currentQuestion) return;
@@ -470,6 +279,7 @@ const DNAAssessment = () => {
     setAnswers(newAnswers);
 
     try {
+      // Store individual question response
       console.log('Storing question response:', {
         assessment_id: assessmentId,
         category: upperCategory,
@@ -500,6 +310,7 @@ const DNAAssessment = () => {
         setIsTransitioning(true);
 
         try {
+          // Get current answers from the assessment
           const { data: currentData, error: fetchError } = await supabase
             .from('dna_assessment_results')
             .select('answers')
@@ -512,12 +323,14 @@ const DNAAssessment = () => {
             return;
           }
 
+          // Prepare the new answers object with type safety
           const currentAnswers = (currentData?.answers as Record<string, string>) || {};
           const updatedAnswers = {
             ...currentAnswers,
             [upperCategory]: newAnswers
           };
 
+          // Create an update object with both the answers JSON and the specific sequence column
           const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
           const updateData = {
             answers: updatedAnswers,
@@ -526,6 +339,7 @@ const DNAAssessment = () => {
 
           console.log('Updating assessment with:', updateData);
 
+          // Update assessment results
           const { error: updateError } = await supabase
             .from('dna_assessment_results')
             .update(updateData)
@@ -537,15 +351,19 @@ const DNAAssessment = () => {
             return;
           }
 
+          // If this is the last category, handle completion
           if (!nextCategory) {
             console.log('Assessment complete, navigating to results...');
             
+            // Immediate navigation first
             navigate('/dna');
             
+            // Show success toast
             toast.success('Assessment completed! View your results below', {
               duration: 3000
             });
 
+            // Then trigger analysis in the background
             await initAnalysis(updatedAnswers, assessmentId);
           } else {
             await queryClient.prefetchQuery({
@@ -694,20 +512,10 @@ const DNAAssessment = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-            <span>{currentQuestionNumber}</span>
-            <span>/</span>
-            <span>{TOTAL_QUESTIONS}</span>
-          </div>
-          <Button
-            onClick={isVoiceEnabled ? stopVoiceConnection : setupVoiceConnection}
-            variant="outline"
-            size="icon"
-            className={buttonGradientStyles}
-          >
-            <span>{isVoiceEnabled ? <Mic className="h-5 w-5 text-green-500" /> : <MicOff className="h-5 w-5" />}</span>
-          </Button>
+        <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+          <span>{currentQuestionNumber}</span>
+          <span>/</span>
+          <span>{TOTAL_QUESTIONS}</span>
         </div>
       </header>
       <div className="px-4">
@@ -739,16 +547,6 @@ const DNAAssessment = () => {
           </Button>
         </div>
       </div>
-
-      {isVoiceEnabled && (
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2">
-          <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
-            isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
-          }`}>
-            {isSpeaking ? 'AI is speaking...' : 'Listening...'}
-          </div>
-        </div>
-      )}
 
       <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
         <AlertDialogContent>
