@@ -75,23 +75,21 @@ serve(async (req) => {
         voice: "alloy",
         instructions: SYSTEM_PROMPT,
         tools: [{
+          name: "recordDNAResponse",
           type: "function",
-          function: {
-            name: "recordDNAResponse",
-            description: "Record a response in the DNA assessment sequence",
-            parameters: {
-              type: "object",
-              properties: {
-                category: {
-                  type: "string",
-                  enum: ["THEOLOGY", "ONTOLOGY", "EPISTEMOLOGY", "ETHICS", "POLITICS", "AESTHETICS"]
-                },
-                position: { type: "string" },
-                response: { type: "string", enum: ["A", "B"] },
-                assessmentId: { type: "string" }
+          description: "Record a response in the DNA assessment sequence",
+          parameters: {
+            type: "object",
+            properties: {
+              category: {
+                type: "string",
+                enum: ["THEOLOGY", "ONTOLOGY", "EPISTEMOLOGY", "ETHICS", "POLITICS", "AESTHETICS"]
               },
-              required: ["category", "position", "response", "assessmentId"]
-            }
+              position: { type: "string" },
+              response: { type: "string", enum: ["A", "B"] },
+              assessmentId: { type: "string" }
+            },
+            required: ["category", "position", "response", "assessmentId"]
           }
         }]
       }),
