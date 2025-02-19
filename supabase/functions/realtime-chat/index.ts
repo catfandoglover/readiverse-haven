@@ -1,53 +1,8 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const SYSTEM_PROMPT = `You are conducting the DNA Assessment by following a precise decision tree structure. You must EXACTLY follow these rules:
-
-1. THEOLOGY Path:
-First question: "If you could prove or disprove God's existence, would you want to know?"
-- If Yes → "Can reason alone lead us to religious truth?"
-- If No → "Is faith more about experience or tradition?"
-Follow exact paths:
-Yes → A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
-No → B → BA/BB → BAA/BAB/BBA/BBB → BAAA/BAAB/BABA/BABB/etc.
-
-2. ONTOLOGY Path:
-First question: "The stars would still shine even if no one was looking at them."
-- If Agree → "When you see a sunset, are you discovering its beauty or creating it?"
-- If Disagree → "If everyone suddenly vanished, would their art still be beautiful?"
-Follow exact paths:
-Agree → A → AA/AB → AAA/AAB/ABA/ABB → AAAA/AAAB/AABA/AABB/etc.
-Disagree → B → BA/BB → BAA/BAB/BBA/BBB → BAAA/BAAB/BABA/BABB/etc.
-
-3. EPISTEMOLOGY Path:
-First question: "If everyone on Earth believed the sky was green, it would still be blue."
-Follow exact branching according to diagram, maintaining precise path notation.
-
-4. ETHICS Path:
-First question: "If you could press a button to make everyone slightly happier but slightly less free, would you press it?"
-Follow exact branching according to diagram, maintaining precise path notation.
-
-5. POLITICS Path:
-First question: "Would you choose a society with perfect equality but limited freedom, or one with complete freedom but significant inequality?"
-Follow exact branching according to diagram, maintaining precise path notation.
-
-6. AESTHETICS Path:
-First question: "If no one ever saw it again, would the Mona Lisa still be beautiful?"
-Follow exact branching according to diagram, maintaining precise path notation.
-
-CRITICAL RULES:
-1. Ask ONLY the exact question text from the diagram - no modifications or additions
-2. Record the exact path using the notation system (e.g., "THEOLOGY:AABAAB")
-3. Only accept answers that match the exact options in the diagram
-4. If answer is unclear, repeat the exact question with the specific options available
-5. Do not provide additional context or examples unless specifically asked
-6. Follow the exact branching logic without deviation
-7. Maintain the precise question order and hierarchy
-8. Complete each domain's questions before moving to the next
-9. Do not skip questions or change their order
-10. Record each response and maintain the path sequence`;
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getDNAPrompt } from './prompts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,6 +20,49 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Fetch all questions from the tree structure
+    const { data: questions, error } = await supabase
+      .from('dna_tree_structure')
+      .select(`
+        *,
+        question:great_questions!dna_tree_structure_question_id_fkey (
+          question,
+          category_number,
+          answer_a,
+          answer_b
+        )
+      `)
+      .order('category')
+      .order('tree_position');
+
+    if (error) {
+      throw new Error(`Failed to fetch questions: ${error.message}`);
+    }
+
+    // Build the question map from database results
+    const questionMap = questions.reduce((acc, q) => {
+      if (!acc[q.category]) {
+        acc[q.category] = {};
+      }
+      acc[q.category][q.tree_position] = {
+        text: q.question.question,
+        answerA: q.question.answer_a,
+        answerB: q.question.answer_b,
+        nextA: q.next_question_a_id,
+        nextB: q.next_question_b_id
+      };
+      return acc;
+    }, {});
+
+    // Get the system prompt with the dynamically built question map
+    const { systemPrompt } = getDNAPrompt(questionMap);
+
     console.log('Starting token request to OpenAI...');
 
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -76,7 +74,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
         voice: "alloy",
-        instructions: SYSTEM_PROMPT,
+        instructions: systemPrompt,
         tools: [{
           name: "recordDNAResponse",
           type: "function",
@@ -86,40 +84,33 @@ serve(async (req) => {
             properties: {
               category: {
                 type: "string",
-                enum: ["THEOLOGY", "ONTOLOGY", "EPISTEMOLOGY", "ETHICS", "POLITICS", "AESTHETICS"]
+                enum: ['ETHICS', 'EPISTEMOLOGY', 'POLITICS', 'THEOLOGY', 'ONTOLOGY', 'AESTHETICS'],
+                description: "The current category being assessed"
               },
               path: { 
                 type: "string",
-                description: "The exact path in the decision tree (e.g., 'AABAAB')"
-              },
-              questionText: { 
-                type: "string",
-                description: "The exact question text from the diagram"
+                description: "The exact path in the decision tree (e.g., 'AAB')"
               },
               response: { 
                 type: "string",
-                description: "The user's response"
-              },
-              nextQuestion: {
-                type: "string",
-                description: "The exact text of the next question based on the response"
+                enum: ["A", "B"],
+                description: "The user's response (must be either A or B)"
               }
             },
-            required: ["category", "path", "questionText", "response", "nextQuestion"]
+            required: ["category", "path", "response"]
           }
         }]
       }),
     });
 
-    const responseText = await response.text();
-    console.log('OpenAI Response:', responseText);
-
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${responseText}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
 
-    const data = JSON.parse(responseText);
-    console.log('Parsed response data:', data);
+    const data = await response.json();
+    console.log('OpenAI Response:', data);
 
     if (!data.client_secret?.value) {
       throw new Error('No client secret in OpenAI response');
@@ -131,10 +122,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error in edge function:", error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error instanceof Error ? error.stack : undefined
-    }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
