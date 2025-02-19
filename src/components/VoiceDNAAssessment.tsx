@@ -150,7 +150,7 @@ const VoiceDNAAssessment = () => {
         console.log('Received event:', data);
 
         if (data.type === 'session.created') {
-          // Send session configuration after session is created
+          // Send strict session configuration after session is created
           const sessionConfig = {
             type: 'session.update',
             session: {
@@ -158,7 +158,6 @@ const VoiceDNAAssessment = () => {
               voice: 'alloy',
               input_audio_format: 'pcm16',
               output_audio_format: 'pcm16',
-              instructions: 'You are conducting a DNA assessment. Ask thoughtful questions to understand the person\'s intellectual perspectives.',
               turn_detection: {
                 type: 'server_vad',
                 threshold: 0.5,
@@ -169,6 +168,26 @@ const VoiceDNAAssessment = () => {
           };
           dataChannelRef.current?.send(JSON.stringify(sessionConfig));
           console.log('Sent session config:', sessionConfig);
+
+          // Immediately send the initial system message to establish context
+          const initialSystemMessage = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'system',
+              content: [{
+                type: 'text',
+                text: `You MUST follow the exact question sequence:
+                1. Start with "Ethics Q1" and follow the tree exactly
+                2. Force A/B choices only
+                3. Record each response
+                4. Move to the next predefined question
+                5. Never deviate from the sequence`
+              }]
+            }
+          };
+          dataChannelRef.current?.send(JSON.stringify(initialSystemMessage));
+          dataChannelRef.current?.send(JSON.stringify({ type: 'response.create' }));
         }
         
         if (data.type === 'response.audio.delta') {
