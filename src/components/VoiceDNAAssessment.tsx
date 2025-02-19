@@ -102,7 +102,7 @@ const VoiceDNAAssessment = () => {
     try {
       // Connect to our Supabase Edge Function WebSocket
       wsRef.current = new WebSocket(
-        `wss://myeyoafugkrkwcnfedlu.functions.supabase.co/realtime-chat`
+        `wss://myeyoafugkrkwcnfedlu.supabase.co/functions/v1/realtime-chat`
       );
 
       wsRef.current.onopen = () => {
