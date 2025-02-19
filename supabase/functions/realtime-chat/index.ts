@@ -22,6 +22,8 @@ serve(async (req) => {
     const openAISocket = new WebSocket("wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17");
     
     openAISocket.onopen = () => {
+      console.log("Connected to OpenAI");
+      
       // Send initial session configuration
       openAISocket.send(JSON.stringify({
         "event_id": "event_123",
@@ -32,14 +34,7 @@ serve(async (req) => {
 
           For each category, you need to determine where they fall on our decision tree by asking relevant questions. Be conversational and natural, but make sure to get clear answers that map to our tree structure.
           
-          Keep track of their answers and map them to our decision tree paths. Each answer should be clearly marked as either 'A' or 'B' for our tracking.
-          
-          Important guidelines:
-          - Start with Ethics, then proceed through the categories in order
-          - Ask follow-up questions to clarify ambiguous responses
-          - Be engaging and conversational while staying focused on the assessment
-          - Explain philosophical concepts in accessible terms
-          - Record definitive A/B choices for each question position`,
+          Keep track of their answers and map them to our decision tree paths. Each answer should be clearly marked as either 'A' or 'B' for our tracking.`,
           "voice": "alloy",
           "input_audio_format": "pcm16",
           "output_audio_format": "pcm16",
@@ -82,16 +77,29 @@ serve(async (req) => {
 
     // Handle messages from the client
     socket.onmessage = async (event) => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'input_audio_buffer.append') {
-        // Forward audio data to OpenAI
-        openAISocket.send(event.data);
-      }
+      console.log("Received from client:", event.data);
+      openAISocket.send(event.data);
     };
 
     // Forward OpenAI responses to the client
     openAISocket.onmessage = (event) => {
+      console.log("Received from OpenAI:", event.data);
       socket.send(event.data);
+    };
+
+    // Handle WebSocket errors
+    socket.onerror = (e) => console.error("WebSocket error:", e);
+    openAISocket.onerror = (e) => console.error("OpenAI WebSocket error:", e);
+
+    // Handle WebSocket closures
+    socket.onclose = () => {
+      console.log("Client disconnected");
+      openAISocket.close();
+    };
+    
+    openAISocket.onclose = () => {
+      console.log("OpenAI disconnected");
+      socket.close();
     };
 
     return response;
