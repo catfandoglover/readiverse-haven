@@ -5,8 +5,11 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYzOTkxMzUsImV4cCI6MjA1MTk3NTEzNX0.9Jk5x5wDao4IbddZKPAUvoh_ZcZqtBSKZgiYlZRMCRQ";
 
-// Create a Supabase client with a custom JWT
-export const createSupabaseClient = (jwt: string) => {
+// Single instance for anonymous access
+const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Function to create an authenticated client with a custom JWT
+const createSupabaseClient = (jwt: string) => {
   return createClient<Database>(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY,
@@ -20,5 +23,4 @@ export const createSupabaseClient = (jwt: string) => {
   );
 };
 
-// Default client for anonymous access
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export { supabase, createSupabaseClient };

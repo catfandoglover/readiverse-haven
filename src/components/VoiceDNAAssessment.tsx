@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -79,6 +78,8 @@ const VoiceDNAAssessment = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 3;
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -104,15 +105,22 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Connecting to WebSocket...');
 
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log('WebSocket already connected, closing existing connection...');
+        wsRef.current.close();
+      }
+
       // Connect to our Supabase Edge Function WebSocket
-      wsRef.current = new WebSocket(
-        `wss://myeyoafugkrkwcnfedlu.functions.supabase.co/functions/v1/realtime-chat`
-      );
+      const wsUrl = `wss://myeyoafugkrkwcnfedlu.functions.supabase.co/functions/v1/realtime-chat`;
+      console.log('Connecting to:', wsUrl);
+      
+      wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         setIsConnected(true);
         setIsConnecting(false);
+        reconnectAttempts.current = 0;
         
         // Start recording audio
         recorderRef.current = new AudioRecorder({
@@ -163,15 +171,23 @@ const VoiceDNAAssessment = () => {
       wsRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnecting(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect to assessment service",
-          variant: "destructive"
-        });
+        
+        // Attempt to reconnect if within limits
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          console.log(`Attempting to reconnect (${reconnectAttempts.current + 1}/${maxReconnectAttempts})...`);
+          reconnectAttempts.current++;
+          setTimeout(startAssessment, 1000 * reconnectAttempts.current);
+        } else {
+          toast({
+            title: "Connection Error",
+            description: "Failed to connect after multiple attempts. Please try again later.",
+            variant: "destructive"
+          });
+        }
       };
 
-      wsRef.current.onclose = () => {
-        console.log('WebSocket closed');
+      wsRef.current.onclose = (event) => {
+        console.log('WebSocket closed with code:', event.code, 'reason:', event.reason);
         setIsConnected(false);
         setIsConnecting(false);
         recorderRef.current?.stop();
