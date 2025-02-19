@@ -1,9 +1,9 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { Compass, LibraryBig, Dna, Search } from "lucide-react";
 
 interface AudioRecorderConfig {
   onAudioData: (audioData: Float32Array) => void;
@@ -71,6 +71,7 @@ class AudioRecorder {
 
 const VoiceDNAAssessment = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { supabase } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -104,7 +105,6 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
-      // Get ephemeral token from our Edge Function
       const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
       console.log('Edge function response:', response);
       
@@ -121,16 +121,13 @@ const VoiceDNAAssessment = () => {
       const token = response.token;
       console.log('Got token, creating peer connection...');
 
-      // Create peer connection
       peerConnectionRef.current = new RTCPeerConnection();
       console.log('Peer connection created');
 
-      // Set up audio track
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       peerConnectionRef.current.addTrack(mediaStream.getTracks()[0], mediaStream);
       console.log('Added audio track to peer connection');
 
-      // Set up data channel
       dataChannelRef.current = peerConnectionRef.current.createDataChannel('oai-events');
       console.log('Created data channel');
 
@@ -148,7 +145,6 @@ const VoiceDNAAssessment = () => {
         }
       };
 
-      // Handle remote audio
       peerConnectionRef.current.ontrack = (event) => {
         console.log('Received remote track:', event);
         if (audioElementRef.current) {
@@ -156,12 +152,10 @@ const VoiceDNAAssessment = () => {
         }
       };
 
-      // Create and set local description
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
       console.log('Created and set local description');
 
-      // Connect to OpenAI
       const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2024-12-17";
       
@@ -192,7 +186,6 @@ const VoiceDNAAssessment = () => {
       await peerConnectionRef.current.setRemoteDescription(answer);
       console.log('Set remote description, WebRTC connection established');
 
-      // Start recording
       recorderRef.current = new AudioRecorder({
         onAudioData: (audioData) => {
           if (dataChannelRef.current?.readyState === 'open') {
@@ -239,8 +232,34 @@ const VoiceDNAAssessment = () => {
     setIsSpeaking(false);
   };
 
+  const handleNavigation = (path: string) => {
+    if (path === '/dna' && location.pathname !== '/dna') {
+      navigate('/dna');
+    } else if (path === '/') {
+      navigate('/');
+    } else if (path === '/bookshelf') {
+      navigate('/bookshelf');
+    } else {
+      navigate(path);
+    }
+  };
+
+  const isCurrentSection = (path: string) => {
+    if (path === '/dna') {
+      return location.pathname.startsWith('/dna');
+    }
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    if (path === '/bookshelf') {
+      return location.pathname.startsWith('/bookshelf');
+    }
+    return false;
+  };
+
+  const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
+
   useEffect(() => {
-    // Create audio element for remote audio
     const audioElement = new Audio();
     audioElement.autoplay = true;
     audioElementRef.current = audioElement;
@@ -251,46 +270,94 @@ const VoiceDNAAssessment = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          Intellectual DNA Assessment
-        </h1>
-        
-        <div className="text-center mb-8">
-          <p className="text-muted-foreground mb-4">
-            {isConnected 
-              ? "Speak naturally with the AI to complete your assessment"
-              : "Start a conversation with our AI to assess your intellectual DNA"}
-          </p>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="flex flex-col min-h-screen">
+        <header className="px-4 py-3 border-b border-border sticky top-0 z-50 bg-background">
+          <div className="flex justify-between items-center">
+            <button className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200">
+              <img 
+                src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
+                alt="Lightning" 
+                className="h-5 w-5"
+              />
+            </button>
+            <button
+              onClick={() => handleNavigation('/search')}
+              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        <div className="flex-1 p-4">
+          <h1 className="text-2xl font-oxanium text-center text-foreground uppercase mb-8">
+            Voice DNA Assessment
+          </h1>
           
-          {!isConnected ? (
-            <Button 
-              onClick={startAssessment}
-              className="bg-primary hover:bg-primary/90"
-              disabled={isConnecting}
-            >
-              {isConnecting ? 'Connecting...' : 'Start Assessment'}
-            </Button>
-          ) : (
-            <Button 
-              onClick={stopAssessment}
-              variant="destructive"
-            >
-              End Assessment
-            </Button>
-          )}
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <p className="text-foreground/80 mb-8 leading-relaxed">
+                Have a natural conversation with our AI to assess your intellectual DNA. 
+                Speak freely about your philosophical views and let our system analyze your perspectives.
+              </p>
+              
+              {!isConnected ? (
+                <Button 
+                  onClick={startAssessment}
+                  className={buttonGradientStyles}
+                  disabled={isConnecting}
+                >
+                  <span>{isConnecting ? 'Connecting...' : 'Start Voice Assessment'}</span>
+                </Button>
+              ) : (
+                <Button 
+                  onClick={stopAssessment}
+                  variant="destructive"
+                  className={buttonGradientStyles}
+                >
+                  <span>End Assessment</span>
+                </Button>
+              )}
+            </div>
+
+            {isConnected && (
+              <div className="text-center">
+                <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
+                  isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
+                }`}>
+                  {isSpeaking ? 'AI is speaking...' : 'Listening...'}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {isConnected && (
-          <div className="text-center">
-            <div className={`inline-block px-4 py-2 rounded-full transition-colors ${
-              isSpeaking ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'
-            }`}>
-              {isSpeaking ? 'AI is speaking...' : 'Listening...'}
-            </div>
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
+          <div className="flex justify-between items-center max-w-sm mx-auto px-8">
+            <button 
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/dna')}
+            >
+              <Dna className="h-6 w-6" />
+              <span className="text-xs font-oxanium">My DNA</span>
+            </button>
+            <button 
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/')}
+            >
+              <Compass className="h-6 w-6" />
+              <span className="text-xs font-oxanium">Discover</span>
+            </button>
+            <button 
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/bookshelf')}
+            >
+              <LibraryBig className="h-6 w-6" />
+              <span className="text-xs font-oxanium">Bookshelf</span>
+            </button>
           </div>
-        )}
+        </nav>
       </div>
     </div>
   );
