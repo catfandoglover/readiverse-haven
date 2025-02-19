@@ -152,13 +152,7 @@ const VoiceDNAAssessment = () => {
         role: 'system',
         content: [{
           type: 'text',
-          text: `You are a DNA assessment system. Your ONLY task is to clearly speak this exact question: "Would you sacrifice one innocent person to save five strangers?" Then remain silent and wait for either "A" for Yes or "B" for No as a response. Do not add any other words or explanations.
-
-After asking the question, you must wait silently for either "A" or "B" as a response. Do not say anything else until you receive one of these responses.
-
-Valid responses:
-A: Yes
-B: No`
+          text: `You are a DNA assessment system. Your task is to ask the question "Would you sacrifice one innocent person to save five strangers?" Then listen for either "A" for Yes or "B" for No. You must speak the question clearly. You must not add any other words or explanations.`
         }]
       }
     };
@@ -172,13 +166,14 @@ B: No`
           role: 'user',
           content: [{
             type: 'text',
-            text: 'Begin the assessment.'
+            text: 'Please ask the question now.'
           }]
         }
       };
       queueOrSendMessage(userMessage);
       queueOrSendMessage({ type: 'response.create' });
       setIsWaitingForResponse(true);
+      console.log('Initial prompt sent');
     }, 1000);
   };
 
