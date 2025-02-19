@@ -106,10 +106,8 @@ const VoiceDNAAssessment = () => {
       setIsConnecting(true);
       console.log('Starting assessment...');
 
-      // Create audio element and initialize it
       const audioElement = document.createElement('audio');
       audioElement.autoplay = true;
-      audioElement.id = 'voice-dna-audio';
       document.body.appendChild(audioElement);
       audioElementRef.current = audioElement;
       console.log('Created and added audio element to DOM');
@@ -130,21 +128,13 @@ const VoiceDNAAssessment = () => {
       const token = response.token;
       console.log('Got token, creating peer connection...');
 
-      // Initialize WebRTC peer connection with audio output
       const configuration = { 
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
       };
       peerConnectionRef.current = new RTCPeerConnection(configuration);
       console.log('Peer connection created');
 
-      // Get and add local audio stream
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStream.getTracks().forEach(track => {
         if (peerConnectionRef.current) {
           peerConnectionRef.current.addTrack(track, mediaStream);
@@ -159,6 +149,28 @@ const VoiceDNAAssessment = () => {
         const data = JSON.parse(event.data);
         console.log('Received event:', data);
 
+        if (data.type === 'session.created') {
+          // Send session configuration after session is created
+          const sessionConfig = {
+            type: 'session.update',
+            session: {
+              modalities: ['text', 'audio'],
+              voice: 'alloy',
+              input_audio_format: 'pcm16',
+              output_audio_format: 'pcm16',
+              instructions: 'You are conducting a DNA assessment. Ask thoughtful questions to understand the person\'s intellectual perspectives.',
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.5,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 1000
+              }
+            }
+          };
+          dataChannelRef.current?.send(JSON.stringify(sessionConfig));
+          console.log('Sent session config:', sessionConfig);
+        }
+        
         if (data.type === 'response.audio.delta') {
           setIsSpeaking(true);
         } else if (data.type === 'response.audio.done') {
@@ -174,14 +186,6 @@ const VoiceDNAAssessment = () => {
         if (audioElementRef.current && event.streams[0]) {
           console.log('Setting audio source:', event.streams[0]);
           audioElementRef.current.srcObject = event.streams[0];
-          
-          // Ensure audio is playing
-          const playPromise = audioElementRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.error('Error playing audio:', error);
-            });
-          }
         }
       };
 
