@@ -79,7 +79,7 @@ const VoiceDNAAssessment = () => {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   const encodeAudioData = (float32Array: Float32Array): string => {
     const int16Array = new Int16Array(float32Array.length);
@@ -104,6 +104,13 @@ const VoiceDNAAssessment = () => {
     try {
       setIsConnecting(true);
       console.log('Starting assessment...');
+
+      if (!audioElementRef.current) {
+        const audioElement = new Audio();
+        audioElement.autoplay = true;
+        audioElementRef.current = audioElement;
+        document.body.appendChild(audioElement);
+      }
 
       const { data: response, error: invokeError } = await supabase.functions.invoke('realtime-chat');
       console.log('Edge function response:', response);
@@ -147,8 +154,12 @@ const VoiceDNAAssessment = () => {
 
       peerConnectionRef.current.ontrack = (event) => {
         console.log('Received remote track:', event);
-        if (audioElementRef.current) {
+        if (audioElementRef.current && event.streams[0]) {
+          console.log('Setting audio source:', event.streams[0]);
           audioElementRef.current.srcObject = event.streams[0];
+          audioElementRef.current.play().catch(error => {
+            console.error('Error playing audio:', error);
+          });
         }
       };
 
@@ -228,6 +239,10 @@ const VoiceDNAAssessment = () => {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
+    if (audioElementRef.current) {
+      audioElementRef.current.remove();
+      audioElementRef.current = null;
+    }
     setIsConnected(false);
     setIsSpeaking(false);
   };
@@ -260,10 +275,6 @@ const VoiceDNAAssessment = () => {
   const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   useEffect(() => {
-    const audioElement = new Audio();
-    audioElement.autoplay = true;
-    audioElementRef.current = audioElement;
-
     return () => {
       stopAssessment();
     };
