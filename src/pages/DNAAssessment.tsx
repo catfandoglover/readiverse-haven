@@ -34,6 +34,16 @@ const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 
 const DNAAssessment = () => {
   const { category } = useParams();
+  // Skip rest of initialization if category is invalid
+  if (category?.toUpperCase() && !categoryOrder.includes(category.toUpperCase() as DNACategory)) {
+    const navigate = useNavigate();
+    React.useEffect(() => {
+      toast.error("Invalid category");
+      navigate('/dna');
+    }, []);
+    return null;
+  }
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
