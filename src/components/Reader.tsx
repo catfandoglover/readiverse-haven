@@ -36,6 +36,8 @@ interface SearchResult {
 
 const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }) => {
   const { toast } = useToast();
+  console.log('Reader metadata:', metadata);
+
   const {
     book,
     setBook,
@@ -260,7 +262,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {isLoading ? (
             <div className="flex items-center justify-center min-h-screen">
@@ -273,7 +275,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
           ) : (
             <>
               <ReaderHeader
-                externalLink={metadata.coverUrl || null}
+                externalLink={metadata?.Cover_super || null}
                 onSearch={handleSearch}
                 onSearchResultClick={handleSearchResultClick}
               />

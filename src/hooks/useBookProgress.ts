@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Book, Contents } from "epubjs";
 import { useLibraryStorage } from "./useLibraryStorage";
@@ -26,13 +27,25 @@ export const useBookProgress = () => {
   const saveProgress = (cfi: string) => {
     if (!book) return;
     const bookKey = book.key();
+    console.log('Saving progress:', { bookKey, cfi });
     saveReadingProgress(bookKey, progress.book);
+    // Also save to localStorage for immediate persistence
+    localStorage.setItem(`reading-progress-${bookKey}`, cfi);
   };
 
   const loadProgress = () => {
     if (!book) return null;
     const bookKey = book.key();
+    console.log('Loading progress for book:', bookKey);
+    // Try to get from localStorage first
+    const savedCfi = localStorage.getItem(`reading-progress-${bookKey}`);
+    if (savedCfi) {
+      console.log('Found saved position:', savedCfi);
+      return savedCfi;
+    }
+    // Fall back to database storage
     const savedProgress = getReadingProgress(bookKey);
+    console.log('Database progress:', savedProgress);
     return savedProgress?.position ? savedProgress.position.toString() : null;
   };
 
@@ -71,6 +84,7 @@ export const useBookProgress = () => {
       return;
     }
 
+    console.log('Location changed:', { cfi, percentage });
     setCurrentLocation(cfi);
     saveProgress(cfi);
 

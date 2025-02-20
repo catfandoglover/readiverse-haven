@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,17 +28,17 @@ const queryClient = new QueryClient({
 function ReaderWrapper() {
   const location = useLocation();
   const slug = location.pathname.split('/read/')[1];
-  const state = location.state as { bookUrl: string; metadata: { coverUrl: string | null } };
+  const state = location.state as { bookUrl: string; metadata: { Cover_super: string | null } };
   
   const { data: book, isLoading } = useBook(slug);
 
   // If we have state, use it, otherwise use the fetched book data
   const bookUrl = state?.bookUrl || book?.epub_file_url;
-  const coverUrl = state?.metadata?.coverUrl || book?.cover_url;
+  const coverSuper = state?.metadata?.Cover_super || book?.Cover_super; // Changed from cover_url to Cover_super
 
   return (
     <Reader 
-      metadata={{ coverUrl }}
+      metadata={{ Cover_super: coverSuper }}
       preloadedBookUrl={bookUrl}
       isLoading={isLoading}
     />
