@@ -730,114 +730,15 @@ Template:
 ```mermaid
 # Mythopoetic Archetype Generation System
 ## Core Components
-### First Word Elements (Nature/State)
-1. **Light Elements**
-- Dawn (emerging understanding)
-- Twilight (balanced insight)
-- Horizon (boundary sight)
-- Star (guiding light)
-- Moon (reflected wisdom)
-2. **Earth Elements**
-- Mountain (height/depth)
-- River (flow/change)
-- Forest (complexity)
-- Cave (inner depth)
-- Garden (cultivation)
-3. **Space Elements**
-- Bridge (connection)
-- Gate (threshold)
-- Path (journey)
-- Tower (perspective)
-- Well (depth)
-4. **Fire Elements**
-- Flame (transformation)
-- Forge (creation)
-- Hearth (nurture)
-- Beacon (guidance)
-- Spark (inspiration)
-### Second Word Elements (Action/Role)
-1. **Knowledge Actions**
-- Weaver (integration)
-- Seeker (exploration)
-- Builder (construction)
-- Keeper (preservation)
-- Navigator (guidance)
-2. **Wisdom Roles**
-- Sage (understanding)
-- Explorer (discovery)
-- Architect (design)
-- Guardian (protection)
-- Alchemist (transformation)
-3. **Bridge Roles**
-- Mediator (connection)
-- Harmonizer (balance)
-- Translator (interpretation)
-- Walker (journey)
-- Dancer (flow)
-## Pattern Analysis Guide
-### Primary Patterns
-1. **For AAAAA pattern:**
-First Word Options:
-- Tower (pure system)
-- Mountain (height)
-- Star (guidance)
-Second Word Options:
-- Architect
-- Builder
-- Sage
-2. **For BBBBB pattern:**
-First Word Options:
-- River (flow)
-- Forest (complexity)
-- Garden (growth)
-Second Word Options:
-- Explorer
-- Weaver
-- Dancer
-3. **For Mixed Patterns:**
-Analyze ratio and sequence
-### For Alternating Patterns (ABABA):
-First Word Options:
-- Bridge
-- Twilight
-- Horizon
-Second Word Options:
-- Harmonizer
-- Mediator
-- Walker
-## Domain-Specific Archetypes
-### Theology
-First Words:
-- Temple
-- Sanctuary
-- Shrine
-- Light
-- Peak
-Second Words:
-- Seeker
-- Mystic
-- Sage
-- Keeper
-- Walker
-### Ontology
-First Words:
-- Foundation
-- Crystal
-- Mountain
-- Root
-- Core
-Second Words:
-- Architect
-- Builder
-- Weaver
-- Shaper
-- Keeper
-[Continue for other domains...]
+### First Word Elements should describe the nature and/or state of the respondent based on their answer sequence
+
+### Second Word Elements (Action/Role) should describe the action orientation of the respondent based on their answer sequence
+
 ## Integration Rules
 1. Pattern Analysis:
 ```
 Analyze:
-- Dominant letters (A/B ratio)
+- Domain specific responses and how their responses across domains reflect their philosophical bent and action orientation
 - Pattern sequence
 - Domain context
 ```
