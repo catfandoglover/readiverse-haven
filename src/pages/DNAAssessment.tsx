@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import AIChatButton from '@/components/survey/AIChatButton';
+import AIChatDialog from '@/components/survey/AIChatDialog';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -42,6 +44,8 @@ const DNAAssessment = () => {
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
+  const [showAIChat, setShowAIChat] = React.useState(false);
+  const [aiEnabled, setAIEnabled] = React.useState(true);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -503,73 +507,86 @@ const DNAAssessment = () => {
   const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-      <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
-        <button 
-          onClick={handleExit}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
-          type="button"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{currentQuestionNumber}</span>
-          <span>/</span>
-          <span>{TOTAL_QUESTIONS}</span>
-        </div>
-      </header>
-      <div className="px-4">
-        <Progress 
-          value={progressPercentage}
-          className="bg-secondary/10"
-        />
-      </div>
-      <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
-        <div className="flex-1 flex items-center justify-center py-8 mb-20">
-          <h1 className="text-3xl font-baskerville text-center max-w-2xl">
-            {currentQuestion.question?.question}
-          </h1>
-        </div>
-        <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
-          <Button
-            variant="outline"
-            className={`${buttonGradientStyles} w-40`}
-            onClick={() => handleAnswer("A")}
+    <>
+      <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
+        <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
+          <button 
+            onClick={handleExit}
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
+            type="button"
           >
-            <span>{buttonTextA}</span>
-          </Button>
-          <Button
-            variant="outline"
-            className={`${buttonGradientStyles} w-40`}
-            onClick={() => handleAnswer("B")}
-          >
-            <span>{buttonTextB}</span>
-          </Button>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+            <span>{currentQuestionNumber}</span>
+            <span>/</span>
+            <span>{TOTAL_QUESTIONS}</span>
+          </div>
+        </header>
+        <div className="px-4">
+          <Progress 
+            value={progressPercentage}
+            className="bg-secondary/10"
+          />
         </div>
+        <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
+          <div className="flex-1 flex items-center justify-center py-8 mb-20">
+            <h1 className="text-3xl font-baskerville text-center max-w-2xl">
+              {currentQuestion.question?.question}
+            </h1>
+          </div>
+          <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
+            <Button
+              variant="outline"
+              className={`${buttonGradientStyles} w-40`}
+              onClick={() => handleAnswer("A")}
+            >
+              <span>{buttonTextA}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className={`${buttonGradientStyles} w-40`}
+              onClick={() => handleAnswer("B")}
+            >
+              <span>{buttonTextB}</span>
+            </Button>
+          </div>
+        </div>
+
+        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
+              <AlertDialogDescription className="font-oxanium">
+                Your progress will not be saved and you will need to retake the assessment from the beginning.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className={`${buttonGradientStyles}`}>
+                <span>Cancel</span>
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmExit}
+                className={`${buttonGradientStyles}`}
+              >
+                <span>Exit Assessment</span>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
-            <AlertDialogDescription className="font-oxanium">
-              Your progress will not be saved and you will need to retake the assessment from the beginning.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className={`${buttonGradientStyles}`}>
-              <span>Cancel</span>
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmExit}
-              className={`${buttonGradientStyles}`}
-            >
-              <span>Exit Assessment</span>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+      <AIChatButton 
+        onClick={() => setShowAIChat(true)}
+        enabled={aiEnabled}
+      />
+      
+      <AIChatDialog
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+        currentQuestion={currentQuestion.question?.question || ''}
+      />
+    </>
   );
 };
 

@@ -112,3 +112,22 @@
     @apply text-[#5B4636] opacity-80;
   }
 }
+
+@layer components {
+  .ai-chat-button {
+    @apply fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg 
+           hover:shadow-xl transition-all duration-200 bg-background;
+  }
+
+  .ai-chat-message {
+    @apply p-3 rounded-lg shadow-sm;
+  }
+
+  .ai-chat-message.user {
+    @apply bg-primary text-primary-foreground ml-8;
+  }
+
+  .ai-chat-message.assistant {
+    @apply bg-muted mr-8;
+  }
+}
