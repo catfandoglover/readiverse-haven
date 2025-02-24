@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -58,6 +57,16 @@ const DNAAssessment = () => {
   // Initialize or get assessment ID
   React.useEffect(() => {
     const initializeAssessment = async () => {
+      // Check for existing assessment ID in session storage first
+      const existingId = sessionStorage.getItem('dna_assessment_id');
+      
+      if (existingId) {
+        console.log('Found existing assessment ID:', existingId);
+        setAssessmentId(existingId);
+        setIsInitializing(false);
+        return;
+      }
+
       if (!assessmentId && currentCategoryIndex === 0) {
         try {
           setIsInitializing(true);
@@ -91,6 +100,8 @@ const DNAAssessment = () => {
             return;
           }
 
+          // Store assessment ID in session storage
+          sessionStorage.setItem('dna_assessment_id', newAssessment.id);
           setAssessmentId(newAssessment.id);
           console.log('Created new assessment with ID:', newAssessment.id);
           
@@ -120,7 +131,7 @@ const DNAAssessment = () => {
     };
 
     initializeAssessment();
-  }, [assessmentId, currentCategoryIndex]);
+  }, [currentCategoryIndex]);
 
   // Query for current question
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
@@ -172,6 +183,8 @@ const DNAAssessment = () => {
     setAnswers(newAnswers);
 
     try {
+      setIsTransitioning(true);
+
       // Store individual question response
       console.log('Storing question response:', {
         assessment_id: assessmentId,
@@ -192,6 +205,7 @@ const DNAAssessment = () => {
       if (responseError) {
         console.error('Error storing question response:', responseError);
         toast.error('Error saving your answer');
+        setIsTransitioning(false);
         return;
       }
 
@@ -200,8 +214,6 @@ const DNAAssessment = () => {
         : currentQuestion.next_question_b_id;
 
       if (!nextQuestionId) {
-        setIsTransitioning(true);
-
         try {
           // Get current answers from the assessment
           const { data: currentData, error: fetchError } = await supabase
@@ -248,6 +260,9 @@ const DNAAssessment = () => {
           if (!nextCategory) {
             console.log('Assessment complete, navigating to results...');
             
+            // Clear assessment ID from session storage
+            sessionStorage.removeItem('dna_assessment_id');
+            
             // Immediate navigation first
             navigate('/dna');
             
@@ -259,10 +274,12 @@ const DNAAssessment = () => {
             // Then trigger analysis in the background
             await initAnalysis(updatedAnswers, assessmentId);
           } else {
-            navigate(`/dna/${nextCategory}`);
+            // Instead of using navigate, update the URL without reload
+            window.history.pushState({}, '', `/dna/${nextCategory}`);
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
             setAnswers("");
+            setIsTransitioning(false);
           }
         } catch (error) {
           console.error('Error updating assessment:', error);
@@ -270,8 +287,6 @@ const DNAAssessment = () => {
           if (!nextCategory) {
             navigate('/dna');
           }
-        } finally {
-          setIsTransitioning(false);
         }
         return;
       }
@@ -285,22 +300,27 @@ const DNAAssessment = () => {
 
         if (nextQuestionError) {
           console.error('Error fetching next question:', nextQuestionError);
+          setIsTransitioning(false);
           return;
         }
 
         if (!nextQuestion) {
           console.error('Next question not found for ID:', nextQuestionId);
+          setIsTransitioning(false);
           return;
         }
 
         setCurrentPosition(nextQuestion.tree_position);
         setCurrentQuestionNumber(prev => prev + 1);
+        setIsTransitioning(false);
       } catch (error) {
         console.error('Error in question transition:', error);
+        setIsTransitioning(false);
       }
     } catch (error) {
       console.error('Error handling answer:', error);
       toast.error('Error processing your answer');
+      setIsTransitioning(false);
     }
   };
 
