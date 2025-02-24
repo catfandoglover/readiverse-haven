@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase, createSupabaseClient } from '@/integrations/supabase/client';
+import { createSupabaseClient } from '@/integrations/supabase/client';
 import { exchangeToken } from '@/integrations/supabase/token-exchange';
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
