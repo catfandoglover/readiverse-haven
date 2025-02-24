@@ -1,7 +1,8 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -34,7 +35,6 @@ const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
   const [showExitAlert, setShowExitAlert] = React.useState(false);
@@ -43,65 +43,13 @@ const DNAAssessment = () => {
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
 
-  const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
-    console.log('Starting DNA analysis...');
-
-    // Analyze section 1: Theology & Ontology
-    try {
-      const { error: section1Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 1,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section1Error) {
-        console.error('Error analyzing DNA results section 1:', section1Error);
-        throw section1Error;
-      }
-
-      // Analyze section 2: Epistemology & Ethics
-      const { error: section2Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 2,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section2Error) {
-        console.error('Error analyzing DNA results section 2:', section2Error);
-        throw section2Error;
-      }
-
-      // Analyze section 3: Politics & Aesthetics
-      const { error: section3Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 3,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section3Error) {
-        console.error('Error analyzing DNA results section 3:', section3Error);
-        throw section3Error;
-      }
-
-    } catch (error) {
-      console.error('Error in DNA analysis:', error);
-      toast.error('Error analyzing results');
-    }
-  };
-
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;
 
   // Get the index of the current category and determine the next category
   const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
   const nextCategory = currentCategoryIndex < categoryOrder.length - 1 
-    ? categoryOrder[currentCategoryIndex + 1] 
+    ? categoryOrder[currentCategoryIndex + 1].toLowerCase()
     : null;
 
   // Calculate progress percentage
@@ -129,7 +77,7 @@ const DNAAssessment = () => {
               aesthetics_sequence: ''
             }])
             .select()
-            .maybeSingle();
+            .single();
 
           if (createError) {
             console.error('Error creating assessment:', createError);
@@ -151,7 +99,7 @@ const DNAAssessment = () => {
             .from('dna_assessment_results')
             .select('*')
             .eq('id', newAssessment.id)
-            .maybeSingle();
+            .single();
 
           if (verifyError || !verifyData) {
             console.error('Error verifying assessment:', verifyError);
@@ -197,7 +145,7 @@ const DNAAssessment = () => {
         `)
         .eq('category', upperCategory)
         .eq('tree_position', currentPosition)
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Error fetching question:', error);
@@ -216,61 +164,6 @@ const DNAAssessment = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
-
-  // Prefetch next possible questions
-  React.useEffect(() => {
-    const prefetchNextQuestions = async () => {
-      if (!currentQuestion) return;
-
-      console.log('Starting to prefetch next possible questions');
-
-      const nextQuestionIds = [
-        currentQuestion.next_question_a_id,
-        currentQuestion.next_question_b_id
-      ].filter(Boolean);
-
-      for (const nextId of nextQuestionIds) {
-        try {
-          const { data: nextQuestion } = await supabase
-            .from('dna_tree_structure')
-            .select('tree_position, category')
-            .eq('id', nextId)
-            .maybeSingle();
-
-          if (nextQuestion) {
-            await queryClient.prefetchQuery({
-              queryKey: ['dna-question', nextQuestion.category, nextQuestion.tree_position],
-              queryFn: async () => {
-                const { data, error } = await supabase
-                  .from('dna_tree_structure')
-                  .select(`
-                    *,
-                    question:great_questions!dna_tree_structure_question_id_fkey (
-                      question,
-                      category_number,
-                      answer_a,
-                      answer_b
-                    )
-                  `)
-                  .eq('category', nextQuestion.category)
-                  .eq('tree_position', nextQuestion.tree_position)
-                  .maybeSingle();
-
-                if (error) throw error;
-                console.log(`Prefetched question: ${nextQuestion.category} - ${nextQuestion.tree_position}`);
-                return data;
-              },
-              staleTime: 5 * 60 * 1000,
-            });
-          }
-        } catch (error) {
-          console.error('Error prefetching next question:', error);
-        }
-      }
-    };
-
-    prefetchNextQuestions();
-  }, [currentQuestion, queryClient]);
 
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion || !assessmentId) return;
@@ -315,7 +208,7 @@ const DNAAssessment = () => {
             .from('dna_assessment_results')
             .select('answers')
             .eq('id', assessmentId)
-            .maybeSingle();
+            .single();
 
           if (fetchError) {
             console.error('Error fetching current answers:', fetchError);
@@ -366,30 +259,7 @@ const DNAAssessment = () => {
             // Then trigger analysis in the background
             await initAnalysis(updatedAnswers, assessmentId);
           } else {
-            await queryClient.prefetchQuery({
-              queryKey: ['dna-question', nextCategory, 'Q1'],
-              queryFn: async () => {
-                const { data, error } = await supabase
-                  .from('dna_tree_structure')
-                  .select(`
-                    *,
-                    question:great_questions!dna_tree_structure_question_id_fkey (
-                      question,
-                      category_number,
-                      answer_a,
-                      answer_b
-                    )
-                  `)
-                  .eq('category', nextCategory)
-                  .eq('tree_position', 'Q1')
-                  .maybeSingle();
-
-                if (error) throw error;
-                return data;
-              },
-            });
-
-            navigate(`/dna/${nextCategory.toLowerCase()}`);
+            navigate(`/dna/${nextCategory}`);
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
             setAnswers("");
@@ -411,7 +281,7 @@ const DNAAssessment = () => {
           .from('dna_tree_structure')
           .select('tree_position')
           .eq('id', nextQuestionId)
-          .maybeSingle();
+          .single();
 
         if (nextQuestionError) {
           console.error('Error fetching next question:', nextQuestionError);
@@ -431,6 +301,58 @@ const DNAAssessment = () => {
     } catch (error) {
       console.error('Error handling answer:', error);
       toast.error('Error processing your answer');
+    }
+  };
+
+  const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
+    console.log('Starting DNA analysis...');
+
+    // Analyze section 1: Theology & Ontology
+    try {
+      const { error: section1Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 1,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section1Error) {
+        console.error('Error analyzing DNA results section 1:', section1Error);
+        throw section1Error;
+      }
+
+      // Analyze section 2: Epistemology & Ethics
+      const { error: section2Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 2,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section2Error) {
+        console.error('Error analyzing DNA results section 2:', section2Error);
+        throw section2Error;
+      }
+
+      // Analyze section 3: Politics & Aesthetics
+      const { error: section3Error } = await supabase.functions.invoke('analyze-dna', {
+        body: {
+          answers_json: JSON.stringify(answers),
+          section: 3,
+          assessment_id: assessmentId
+        }
+      });
+
+      if (section3Error) {
+        console.error('Error analyzing DNA results section 3:', section3Error);
+        throw section3Error;
+      }
+
+    } catch (error) {
+      console.error('Error in DNA analysis:', error);
+      toast.error('Error analyzing results');
     }
   };
 
