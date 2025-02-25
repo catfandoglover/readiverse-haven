@@ -44,56 +44,31 @@ const DNAAssessment = () => {
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
-    console.log('Starting DNA analysis...');
+  console.log('Starting DNA analysis...');
 
-    // Analyze section 1: Theology & Ontology
-    try {
-      const { error: section1Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 1,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section1Error) {
-        console.error('Error analyzing DNA results section 1:', section1Error);
-        throw section1Error;
+  try {
+    // Make a single call to analyze all sections at once
+    const { error } = await supabase.functions.invoke('analyze-dna', {
+      body: {
+        answers_json: JSON.stringify(answers),
+        assessment_id: assessmentId,
+        profile_image_url: null // Optional parameter, set to null if not needed
       }
+    });
 
-      // Analyze section 2: Epistemology & Ethics
-      const { error: section2Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 2,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section2Error) {
-        console.error('Error analyzing DNA results section 2:', section2Error);
-        throw section2Error;
-      }
-
-      // Analyze section 3: Politics & Aesthetics
-      const { error: section3Error } = await supabase.functions.invoke('analyze-dna', {
-        body: {
-          answers_json: JSON.stringify(answers),
-          section: 3,
-          assessment_id: assessmentId
-        }
-      });
-
-      if (section3Error) {
-        console.error('Error analyzing DNA results section 3:', section3Error);
-        throw section3Error;
-      }
-
-    } catch (error) {
-      console.error('Error in DNA analysis:', error);
-      toast.error('Error analyzing results');
+    if (error) {
+      console.error('Error analyzing DNA results:', error);
+      throw error;
     }
-  };
+    
+    console.log('DNA analysis completed successfully');
+    toast.success('Analysis completed!', { duration: 3000 });
+
+  } catch (error) {
+    console.error('Error in DNA analysis:', error);
+    toast.error('Error analyzing results');
+  }
+};
 
   // Convert category to uppercase to match the enum type
   const upperCategory = category?.toUpperCase() as DNACategory;

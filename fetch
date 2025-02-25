@@ -1,0 +1,5 @@
+const response = await fetch('https://cloud.google.com/vertex-ai/docs/generative-ai/multimodal/overview');
+if (!response.ok) {
+  throw new Error(`HTTP error! status: ${response.status}`);
+}
+const content = await response.text(); 

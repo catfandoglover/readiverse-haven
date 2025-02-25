@@ -1,0 +1,2 @@
+id,created_at,name,answers,ethics_sequence,epistemology_sequence,politics_sequence,theology_sequence,ontology_sequence,aesthetics_sequence
+c6e5abbc-094f-447f-90da-01469760556b,2025-02-25 00:24:40.514052+00,test_5,"{""ETHICS"": ""ABABA"", ""ONTOLOGY"": ""ABABA"", ""POLITICS"": ""ABABA"", ""THEOLOGY"": ""BBBAB"", ""AESTHETICS"": ""BABAB"", ""EPISTEMOLOGY"": ""BABAB""}",ABABA,BABAB,ABABA,BBBAB,ABABA,BABAB
