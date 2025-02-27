@@ -1018,6 +1018,8 @@ export function getPromptForSection(section: number, answers_json: string): stri
     "aesthetics_challenging_voice_5": "Fifth aesthetics challenging thinker",
     "aesthetics_challenging_voice_5_classic": "Work title (date)",
     "aesthetics_challenging_voice_5_rationale": "Challenge explanation",
+    "most_kindred_spirit": "The thinker, drawn from the examples given above in this profile, who most closely aligns with the overall philosophical profile",
+    "most_challenging_voice": "The thinker, drawn from the examples given above in this profile, who most directly and forcefully challenges the overall philosophical profile",
     "conclusion": "Overall synthesis",
     "next_steps": "Areas for exploration"
   }`;
