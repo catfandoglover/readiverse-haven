@@ -28,7 +28,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         'X-Title': 'Lovable.dev'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'anthropic/claude-3.7-sonnet',
         messages: [
           {
             role: 'system',
