@@ -44,7 +44,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             onClick={toggleFavorite}
           >
             <Star 
-              className="h-4 w-4" 
+              className="h-6 w-6" 
               fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
             />
           </button>
