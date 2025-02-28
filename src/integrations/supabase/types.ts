@@ -231,6 +231,8 @@ export type Database = {
           key_tension_1: string | null
           key_tension_2: string | null
           key_tension_3: string | null
+          most_challenging_voice: string | null
+          most_kindred_spirit: string | null
           name: string | null
           natural_strength_1: string | null
           natural_strength_2: string | null
@@ -442,6 +444,8 @@ export type Database = {
           key_tension_1?: string | null
           key_tension_2?: string | null
           key_tension_3?: string | null
+          most_challenging_voice?: string | null
+          most_kindred_spirit?: string | null
           name?: string | null
           natural_strength_1?: string | null
           natural_strength_2?: string | null
@@ -653,6 +657,8 @@ export type Database = {
           key_tension_1?: string | null
           key_tension_2?: string | null
           key_tension_3?: string | null
+          most_challenging_voice?: string | null
+          most_kindred_spirit?: string | null
           name?: string | null
           natural_strength_1?: string | null
           natural_strength_2?: string | null
