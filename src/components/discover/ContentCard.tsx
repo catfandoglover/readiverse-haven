@@ -31,7 +31,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           loading="lazy"
         />
         <button
-          className="absolute bottom-4 right-4 h-5 w-5 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
+          className="absolute bottom-4 right-4 h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
           aria-label="More options"
         >
           <MoreHorizontal className="h-3 w-3" />
