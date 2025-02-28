@@ -18,6 +18,7 @@ interface Classic {
   about?: string;
   great_conversation?: string;
   tagline?: string;
+  author_image?: string;
 }
 
 interface ClassicsContentProps {
@@ -123,7 +124,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
     <>
       <div className="h-full">
         <ContentCard
-          image={classicToShow.cover_url || classicToShow.Cover_super || ""}
+          image={classicToShow.author_image || classicToShow.cover_url || classicToShow.Cover_super || ""}
           title={classicToShow.title}
           about={classicToShow.about || "A classic work of literature."}
           onLearnMore={() => handleLearnMore(classicToShow)}
@@ -136,7 +137,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
           type="classic"
           data={{
             ...selectedClassic,
-            image: selectedClassic.cover_url || selectedClassic.Cover_super,
+            image: selectedClassic.author_image || selectedClassic.cover_url || selectedClassic.Cover_super,
             title: selectedClassic.title,
             author: selectedClassic.author || "Unknown Author",
             tagline: selectedClassic.tagline || "What lies beneath the morality you hold sacred?",
