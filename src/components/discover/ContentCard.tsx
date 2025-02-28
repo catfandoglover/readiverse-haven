@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Star } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -43,14 +43,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             onClick={toggleFavorite}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M13 2L11 12H20L8 22L10 10H2L13 2Z" 
-                stroke="#2A282A" 
-                strokeWidth="1.5" 
-                fill={isFavorite ? "#EFFE91" : "transparent"} 
-              />
-            </svg>
+            <Star 
+              className="h-4 w-4" 
+              fill={isFavorite ? "#EFFE91" : "transparent"} 
+            />
           </button>
           <button
             className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
