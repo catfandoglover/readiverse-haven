@@ -14,7 +14,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
     <div className="bg-[#D9D9D9]" style={{ height: "50px" }}>
       <div className="flex justify-between items-center max-w-sm mx-auto px-12 h-full">
         <button
-          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${
+          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] transition-all duration-200 ${
             activeTab === "discover"
               ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
               : ""
@@ -31,7 +31,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
           <span className="text-[10px] uppercase font-oxanium">Discover</span>
         </button>
         <button
-          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${
+          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] transition-all duration-200 ${
             activeTab === "dna"
               ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
               : ""
@@ -47,7 +47,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
           <span className="text-[10px] uppercase font-oxanium">My DNA</span>
         </button>
         <button
-          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${
+          className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-md text-[#282828] transition-all duration-200 ${
             activeTab === "study"
               ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
               : ""
