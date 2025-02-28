@@ -41,9 +41,9 @@ const DiscoverLayout = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
-      {/* Top Navigation */}
-      <header className="relative z-10">
-        <div className="flex justify-between items-center px-4 py-2">
+      {/* Top Navigation - Updated to be semitransparent */}
+      <header className="relative z-10 bg-[#2A282A]/40 backdrop-blur-sm">
+        <div className="flex justify-between items-center px-4 py-3">
           <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
           <button 
             className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-gray-800/50 text-white"
