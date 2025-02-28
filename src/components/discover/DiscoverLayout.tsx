@@ -15,6 +15,7 @@ const DiscoverLayout = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null);
+  const [transitionProgress, setTransitionProgress] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,19 +37,28 @@ const DiscoverLayout = () => {
     setTimeout(() => {
       setIsAnimating(false);
       setSlideDirection(null);
-    }, 300); // Shorter transition for snappier feel
+      setTransitionProgress(0);
+    }, 300); // Transition duration
   };
 
   // Setup swipe handlers for vertical navigation
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => scrollToItem('next'),
     onSwipedDown: () => scrollToItem('prev'),
+    onSwiping: (e) => {
+      if (e.dir === 'Up' || e.dir === 'Down') {
+        // Calculate swipe progress (0-100)
+        const progress = Math.min(100, Math.abs(e.deltaY));
+        setTransitionProgress(progress);
+      }
+    },
     onSwipedLeft: () => {
       // Handle swipe left to open detailed view
       console.log("Swipe left to view details");
     },
     preventScrollOnSwipe: true,
-    trackMouse: false
+    trackMouse: true,
+    trackTouch: true
   });
 
   // Handle tab changes
@@ -101,10 +111,16 @@ const DiscoverLayout = () => {
     }
   };
 
+  // Current and adjacent content items for transition effect
+  const currentContent = getContentComponent(activeTab, currentIndex);
+  const prevContent = currentIndex > 0 ? 
+    getContentComponent(activeTab, currentIndex - 1) : null;
+  const nextContent = getContentComponent(activeTab, currentIndex + 1);
+
   return (
     <div 
       ref={containerRef}
-      className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden"
+      className="flex flex-col h-screen bg-[#E9E7E2] text-[#E9E7E2] overflow-hidden"
       onWheel={handleWheel}
     >
       {/* Main Content Area with Swipe Functionality */}
@@ -172,12 +188,43 @@ const DiscoverLayout = () => {
           </div>
         </header>
         
-        {/* Main content container */}
-        <div className="w-full h-full relative">
+        {/* Content container with TikTok-style transition */}
+        <div className="w-full h-full relative bg-[#E9E7E2]">
           {/* Current content */}
-          <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
-            {getContentComponent(activeTab, currentIndex)}
+          <div 
+            className="w-full h-full absolute inset-0 bg-[#2A282A] transition-transform duration-300 ease-out"
+            style={{
+              transform: slideDirection === 'up' 
+                ? 'translateY(-100%)' 
+                : slideDirection === 'down' 
+                  ? 'translateY(100%)' 
+                  : 'translateY(0)'
+            }}
+          >
+            {currentContent}
           </div>
+
+          {/* Next content (for when swiping up) */}
+          <div 
+            className="w-full h-full absolute inset-0 top-full bg-[#2A282A] transition-transform duration-300 ease-out"
+            style={{
+              transform: slideDirection === 'up' ? 'translateY(-100%)' : 'translateY(0)'
+            }}
+          >
+            {nextContent}
+          </div>
+
+          {/* Previous content (for when swiping down) */}
+          {prevContent && (
+            <div 
+              className="w-full h-full absolute inset-0 bottom-full bg-[#2A282A] transition-transform duration-300 ease-out"
+              style={{
+                transform: slideDirection === 'down' ? 'translateY(100%)' : 'translateY(0)'
+              }}
+            >
+              {prevContent}
+            </div>
+          )}
         </div>
       </main>
 
