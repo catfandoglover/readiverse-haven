@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Star } from "lucide-react";
+import { MoreHorizontal, Star, ArrowRight } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -56,19 +56,21 @@ const ContentCard: React.FC<ContentCardProps> = ({
           </button>
         </div>
       </div>
-      <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1">
+      <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col">
         <h2 className="text-3xl font-serif mb-4">{title}</h2>
         <p className="mb-6 text-gray-800 font-baskerville text-lg">{about}</p>
-        <Button
-          variant="ghost"
-          className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 hover:text-[#282828]/70 pl-0"
-          onClick={onLearnMore}
-        >
-          LEARN MORE
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
-            →
-          </span>
-        </Button>
+        <div className="flex-1 flex items-center justify-center">
+          <Button
+            variant="ghost"
+            className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 hover:text-[#282828]/50 pl-0 font-bold"
+            onClick={onLearnMore}
+          >
+            LEARN MORE
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Button>
+        </div>
       </div>
     </div>
   );
