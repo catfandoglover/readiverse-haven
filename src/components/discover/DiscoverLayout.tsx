@@ -1,6 +1,5 @@
 
 import React, { useState, useRef } from "react";
-import { Search } from "lucide-react";
 import DiscoverTabs from "./DiscoverTabs";
 import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
@@ -55,7 +54,11 @@ const DiscoverLayout = () => {
               className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-gray-800/50 text-white"
               aria-label="Search"
             >
-              <Search className="h-5 w-5" />
+              <img 
+                src="/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png" 
+                alt="Search" 
+                className="w-5 h-5"
+              />
             </button>
           </div>
         </header>

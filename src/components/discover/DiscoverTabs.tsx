@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts";
 
@@ -9,8 +10,10 @@ interface DiscoverTabsProps {
 }
 
 const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex space-x-6 text-[#E9E7E2] uppercase font-lexend text-sm font-medium">
+    <div className="flex space-x-2 md:space-x-6 text-[#E9E7E2] uppercase font-lexend text-xs md:text-sm font-medium">
       <button
         className={`py-2 relative ${
           activeTab === "for-you" 
