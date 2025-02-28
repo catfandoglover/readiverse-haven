@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from "react";
 import { Search } from "lucide-react";
-import DiscoverTabs from "./DiscoverTabs";
 import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
 import IconsContent from "./IconsContent";
@@ -58,7 +57,7 @@ const DiscoverLayout = () => {
         >
           <div className="flex items-center justify-between px-4 py-3 h-full w-full">
             <button
-              className={`py-2 relative whitespace-nowrap ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
                 activeTab === "for-you" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -68,7 +67,7 @@ const DiscoverLayout = () => {
               FOR YOU
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
                 activeTab === "classics" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -78,7 +77,7 @@ const DiscoverLayout = () => {
               CLASSICS
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
                 activeTab === "icons" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -88,7 +87,7 @@ const DiscoverLayout = () => {
               ICONS
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
                 activeTab === "concepts" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
