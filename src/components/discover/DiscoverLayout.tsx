@@ -59,11 +59,10 @@ const DiscoverLayout = () => {
           <div className="flex justify-between items-center px-4 py-3 h-full">
             <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
             <button 
-              className="inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-              style={{ width: "calc(65 / 152 * 100%)", height: "calc(65 / 152 * 100%)", maxHeight: "65px", maxWidth: "65px" }}
+              className="h-8 w-8 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
               aria-label="Search"
             >
-              <Search className="w-1/2 h-1/2" />
+              <Search className="h-4 w-4" />
             </button>
           </div>
         </header>
