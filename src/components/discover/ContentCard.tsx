@@ -58,7 +58,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1">
         <h2 className="text-3xl font-serif mb-4">{title}</h2>
-        <p className="mb-6 text-gray-800">{about}</p>
+        <p className="mb-6 text-gray-800 font-baskerville">{about}</p>
         <Button
           variant="ghost"
           className="uppercase tracking-wider flex items-center gap-2 text-gray-700 hover:text-gray-900 pl-0"
