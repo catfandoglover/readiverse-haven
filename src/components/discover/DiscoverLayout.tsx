@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Search } from "lucide-react";
 import DiscoverTabs from "./DiscoverTabs";
 import ForYouContent from "./ForYouContent";
@@ -28,7 +28,8 @@ const DiscoverLayout = () => {
       // Handle swipe left to open detailed view
       console.log("Swipe left to view details");
     },
-    preventDefaultTouchmoveEvent: true,
+    // Using the correct configuration options for react-swipeable 7.0.1
+    preventScrollOnSwipe: true,
     trackMouse: false
   });
 
