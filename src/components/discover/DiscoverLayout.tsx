@@ -59,7 +59,7 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "for-you" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
                   : "text-gray-400"
               }`}
               onClick={() => handleTabChange("for-you")}
@@ -69,7 +69,7 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "classics" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
                   : "text-gray-400"
               }`}
               onClick={() => handleTabChange("classics")}
@@ -79,7 +79,7 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "icons" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
                   : "text-gray-400"
               }`}
               onClick={() => handleTabChange("icons")}
@@ -89,7 +89,7 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "concepts" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
                   : "text-gray-400"
               }`}
               onClick={() => handleTabChange("concepts")}
