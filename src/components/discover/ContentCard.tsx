@@ -37,14 +37,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
           className="w-full h-full object-cover"
           loading="lazy"
         />
-        <div className="absolute bottom-4 right-4 flex gap-2">
+        <div className="absolute bottom-4 right-4 flex gap-2 items-center">
           <button
-            className="h-6 w-6 flex items-center justify-center text-[#2A282A]"
+            className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             onClick={toggleFavorite}
           >
             <Star 
-              className="h-5 w-5" 
+              className="h-3 w-3" 
               fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
             />
           </button>
