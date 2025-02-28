@@ -42,7 +42,7 @@ const DiscoverLayout = () => {
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Main Content Area with Swipe Functionality */}
       <main 
-        className="flex-1 overflow-hidden relative" 
+        className="flex-1 overflow-hidden relative pb-[50px]" 
         {...swipeHandlers}
         ref={contentRef}
       >
@@ -111,8 +111,10 @@ const DiscoverLayout = () => {
         {activeTab === "concepts" && <ConceptsContent currentIndex={currentIndex} />}
       </main>
 
-      {/* Bottom Navigation */}
-      <BottomNav activeTab="discover" />
+      {/* Bottom Navigation - Fixed at the bottom of the viewport */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <BottomNav activeTab="discover" />
+      </div>
     </div>
   );
 };
