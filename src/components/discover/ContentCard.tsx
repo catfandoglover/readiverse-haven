@@ -57,7 +57,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         </div>
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col">
-        <div className="mb-2">
+        <div className="mb-1">
           <h2 className="text-3xl font-serif mb-4">{title}</h2>
           <p className="text-gray-800 font-baskerville text-lg">{about}</p>
         </div>

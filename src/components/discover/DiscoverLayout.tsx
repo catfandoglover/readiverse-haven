@@ -38,11 +38,26 @@ const DiscoverLayout = () => {
     setCurrentIndex(0); // Reset index when changing tabs
   };
 
+  // Handle wheel events for navigation
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.deltaY > 0) {
+      // Scrolling down
+      setCurrentIndex(prev => prev + 1);
+    } else if (e.deltaY < 0) {
+      // Scrolling up
+      setCurrentIndex(prev => Math.max(0, prev - 1));
+    }
+    e.preventDefault();
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
+    <div 
+      className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden"
+      onWheel={handleWheel}
+    >
       {/* Main Content Area with Swipe Functionality */}
       <main 
-        className="flex-1 overflow-hidden relative pb-[50px]" 
+        className="flex-1 relative pb-[50px]" 
         {...swipeHandlers}
         ref={contentRef}
       >
