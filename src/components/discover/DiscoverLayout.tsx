@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
@@ -13,21 +13,36 @@ type TabType = "for-you" | "classics" | "icons" | "concepts";
 const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Function to scroll to the next/previous item
+  const scrollToItem = (direction: 'next' | 'prev') => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    
+    if (direction === 'next') {
+      setCurrentIndex(prev => prev + 1);
+    } else {
+      setCurrentIndex(prev => Math.max(0, prev - 1));
+    }
+    
+    // Reset animation state after transition completes
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 500); // Match this with the CSS transition duration
+  };
 
   // Setup swipe handlers for vertical navigation
   const swipeHandlers = useSwipeable({
-    onSwipedUp: () => {
-      setCurrentIndex(prev => prev + 1);
-    },
-    onSwipedDown: () => {
-      setCurrentIndex(prev => Math.max(0, prev - 1));
-    },
+    onSwipedUp: () => scrollToItem('next'),
+    onSwipedDown: () => scrollToItem('prev'),
     onSwipedLeft: () => {
       // Handle swipe left to open detailed view
       console.log("Swipe left to view details");
     },
-    // Using the correct configuration options for react-swipeable 7.0.1
     preventScrollOnSwipe: true,
     trackMouse: false
   });
@@ -41,17 +56,36 @@ const DiscoverLayout = () => {
   // Handle wheel events for navigation
   const handleWheel = (e: React.WheelEvent) => {
     if (e.deltaY > 0) {
-      // Scrolling down
-      setCurrentIndex(prev => prev + 1);
+      // Scrolling down - go to next item
+      scrollToItem('next');
     } else if (e.deltaY < 0) {
-      // Scrolling up
-      setCurrentIndex(prev => Math.max(0, prev - 1));
+      // Scrolling up - go to previous item
+      scrollToItem('prev');
     }
     e.preventDefault();
   };
 
+  // Prevent default scrolling behavior
+  useEffect(() => {
+    const preventDefaultScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+    
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', preventDefaultScroll, { passive: false });
+    }
+    
+    return () => {
+      if (container) {
+        container.removeEventListener('wheel', preventDefaultScroll);
+      }
+    };
+  }, []);
+
   return (
     <div 
+      ref={containerRef}
       className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden"
       onWheel={handleWheel}
     >
@@ -120,10 +154,12 @@ const DiscoverLayout = () => {
           </div>
         </header>
         
-        {activeTab === "for-you" && <ForYouContent currentIndex={currentIndex} />}
-        {activeTab === "classics" && <ClassicsContent currentIndex={currentIndex} />}
-        {activeTab === "icons" && <IconsContent currentIndex={currentIndex} />}
-        {activeTab === "concepts" && <ConceptsContent currentIndex={currentIndex} />}
+        <div className="w-full h-full transition-transform duration-500 transform">
+          {activeTab === "for-you" && <ForYouContent currentIndex={currentIndex} />}
+          {activeTab === "classics" && <ClassicsContent currentIndex={currentIndex} />}
+          {activeTab === "icons" && <IconsContent currentIndex={currentIndex} />}
+          {activeTab === "concepts" && <ConceptsContent currentIndex={currentIndex} />}
+        </div>
       </main>
 
       {/* Bottom Navigation - Fixed at the bottom of the viewport */}
