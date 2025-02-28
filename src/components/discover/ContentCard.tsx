@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Bolt } from "lucide-react";
+import { MoreHorizontal, Star } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -43,9 +43,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             onClick={toggleFavorite}
           >
-            <Bolt 
+            <Star 
               className="h-3 w-3 transition-colors" 
-              fill={isFavorite ? "#CCFF23" : "transparent"} 
+              fill={isFavorite ? "#EFFE91" : "transparent"} 
             />
           </button>
           <button
