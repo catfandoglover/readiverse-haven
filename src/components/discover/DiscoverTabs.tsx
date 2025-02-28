@@ -18,8 +18,9 @@ const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
             : "text-gray-400"
         }`}
         style={{ 
-          fontSize: "36px", 
-          letterSpacing: "-3%"
+          fontSize: "calc(36 / 152 * 100vw)",
+          letterSpacing: "-3%",
+          maxFontSize: "36px"
         }}
         onClick={() => onChange("for-you")}
       >
@@ -32,8 +33,9 @@ const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
             : "text-gray-400"
         }`}
         style={{ 
-          fontSize: "36px", 
-          letterSpacing: "-3%"
+          fontSize: "calc(36 / 152 * 100vw)",
+          letterSpacing: "-3%",
+          maxFontSize: "36px"
         }}
         onClick={() => onChange("classics")}
       >
@@ -46,8 +48,9 @@ const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
             : "text-gray-400"
         }`}
         style={{ 
-          fontSize: "36px", 
-          letterSpacing: "-3%"
+          fontSize: "calc(36 / 152 * 100vw)",
+          letterSpacing: "-3%",
+          maxFontSize: "36px"
         }}
         onClick={() => onChange("icons")}
       >
@@ -60,8 +63,9 @@ const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
             : "text-gray-400"
         }`}
         style={{ 
-          fontSize: "36px", 
-          letterSpacing: "-3%"
+          fontSize: "calc(36 / 152 * 100vw)",
+          letterSpacing: "-3%",
+          maxFontSize: "36px"
         }}
         onClick={() => onChange("concepts")}
       >
