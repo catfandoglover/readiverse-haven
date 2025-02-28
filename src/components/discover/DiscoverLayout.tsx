@@ -59,8 +59,8 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "for-you" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-gray-400"
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                  : "text-[#E9E7E2]/60"
               }`}
               onClick={() => handleTabChange("for-you")}
             >
@@ -69,8 +69,8 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "classics" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-gray-400"
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                  : "text-[#E9E7E2]/60"
               }`}
               onClick={() => handleTabChange("classics")}
             >
@@ -79,8 +79,8 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "icons" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-gray-400"
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                  : "text-[#E9E7E2]/60"
               }`}
               onClick={() => handleTabChange("icons")}
             >
@@ -89,8 +89,8 @@ const DiscoverLayout = () => {
             <button
               className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "concepts" 
-                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-gray-400"
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                  : "text-[#E9E7E2]/60"
               }`}
               onClick={() => handleTabChange("concepts")}
             >
