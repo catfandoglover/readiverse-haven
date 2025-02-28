@@ -31,10 +31,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
           loading="lazy"
         />
         <button
-          className="absolute bottom-4 right-4 h-10 w-10 bg-gray-800/60 rounded-full flex items-center justify-center text-white"
+          className="absolute bottom-4 right-4 h-8 w-8 bg-gray-800/60 rounded-full flex items-center justify-center text-white"
           aria-label="More options"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1">
