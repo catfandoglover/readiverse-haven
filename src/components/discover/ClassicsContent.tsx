@@ -46,9 +46,15 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
         return [];
       }
 
+      // Log first book to see what data is available
+      if (data && data.length > 0) {
+        console.log("First book data:", data[0]);
+      }
+
       // Map the fields to match our component structure
       return data.map((book: any) => ({
         ...book,
+        // Don't override existing about field if it exists
         about: book.about || `${book.title} is a significant work in literary and philosophical history.`,
         great_conversation: book.great_conversation || `${book.title} has played an important role in shaping intellectual discourse.`,
       }));
@@ -56,6 +62,9 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
   });
 
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
+
+  // Log the current classic being shown to debug
+  console.log("Current classic to show:", classicToShow);
 
   const handleLearnMore = (classic: Classic) => {
     setSelectedClassic(classic);

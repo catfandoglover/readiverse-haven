@@ -42,9 +42,15 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
         return [];
       }
 
+      // Log first concept to see what data is available
+      if (data && data.length > 0) {
+        console.log("First concept data:", data[0]);
+      }
+
       // Map the fields to match our component structure
       return data.map((concept: any) => ({
         ...concept,
+        // Use description field as about if it exists
         about: concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
@@ -53,6 +59,9 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
   });
 
   const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
+  
+  // Log the current concept being shown to debug
+  console.log("Current concept to show:", conceptToShow);
 
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
@@ -97,7 +106,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
         <ContentCard
           image={conceptToShow.illustration}
           title={conceptToShow.title}
-          about={conceptToShow.about || conceptToShow.description || ""}
+          about={conceptToShow.about || ""}
           onLearnMore={() => handleLearnMore(conceptToShow)}
           onImageClick={() => handleLearnMore(conceptToShow)}
         />

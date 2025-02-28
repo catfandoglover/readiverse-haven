@@ -40,6 +40,11 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
         const icons = iconsResponse.data || [];
         const concepts = conceptsResponse.data || [];
 
+        // Log a sample from each type to check data structure
+        if (books.length > 0) console.log("Sample book:", books[0]);
+        if (icons.length > 0) console.log("Sample icon:", icons[0]);
+        if (concepts.length > 0) console.log("Sample concept:", concepts[0]);
+
         // Transform the data to a common format
         const forYouItems: ForYouContentItem[] = [
           ...books.map((book: any) => ({
@@ -47,7 +52,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
             title: book.title,
             type: "classic" as const,
             image: book.cover_url || book.Cover_super || "",
-            about: `A classic work by ${book.author || 'Unknown Author'}.`,
+            // Use the actual about field from the book if available
+            about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
             author: book.author,
             great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
             Cover_super: book.Cover_super,
@@ -88,6 +94,9 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
   });
 
   const itemToShow = forYouItems[currentIndex % Math.max(1, forYouItems.length)] || null;
+  
+  // Log the current item being shown to debug
+  console.log("Current item to show:", itemToShow);
 
   const handleLearnMore = (item: ForYouContentItem) => {
     setSelectedItem(item);
