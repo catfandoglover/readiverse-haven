@@ -14,6 +14,7 @@ const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -24,14 +25,17 @@ const DiscoverLayout = () => {
     setIsAnimating(true);
     
     if (direction === 'next') {
+      setSlideDirection('up');
       setCurrentIndex(prev => prev + 1);
     } else {
+      setSlideDirection('down');
       setCurrentIndex(prev => Math.max(0, prev - 1));
     }
     
     // Reset animation state after transition completes
     setTimeout(() => {
       setIsAnimating(false);
+      setSlideDirection(null);
     }, 500); // Match this with the CSS transition duration
   };
 
@@ -83,6 +87,27 @@ const DiscoverLayout = () => {
     };
   }, []);
 
+  // Determine content component based on active tab
+  const getContentComponent = (tab: TabType, index: number) => {
+    switch (tab) {
+      case "for-you":
+        return <ForYouContent currentIndex={index} />;
+      case "classics":
+        return <ClassicsContent currentIndex={index} />;
+      case "icons":
+        return <IconsContent currentIndex={index} />;
+      case "concepts":
+        return <ConceptsContent currentIndex={index} />;
+    }
+  };
+
+  // Current and adjacent content items for transition effect
+  const currentContent = getContentComponent(activeTab, currentIndex);
+  const prevContent = isAnimating && slideDirection === 'down' ? 
+    getContentComponent(activeTab, currentIndex - 1) : null;
+  const nextContent = isAnimating && slideDirection === 'up' ? 
+    getContentComponent(activeTab, currentIndex + 1) : null;
+
   return (
     <div 
       ref={containerRef}
@@ -91,7 +116,7 @@ const DiscoverLayout = () => {
     >
       {/* Main Content Area with Swipe Functionality */}
       <main 
-        className="flex-1 relative pb-[50px]" 
+        className="flex-1 relative pb-[50px] overflow-hidden" 
         {...swipeHandlers}
         ref={contentRef}
       >
@@ -154,12 +179,37 @@ const DiscoverLayout = () => {
           </div>
         </header>
         
-        <div className="w-full h-full transition-transform duration-500 transform">
-          {activeTab === "for-you" && <ForYouContent currentIndex={currentIndex} />}
-          {activeTab === "classics" && <ClassicsContent currentIndex={currentIndex} />}
-          {activeTab === "icons" && <IconsContent currentIndex={currentIndex} />}
-          {activeTab === "concepts" && <ConceptsContent currentIndex={currentIndex} />}
+        {/* Content with TikTok-style transition */}
+        <div 
+          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-in-out"
+          style={{
+            transform: slideDirection === 'up' 
+              ? 'translateY(-100%)' 
+              : slideDirection === 'down' 
+                ? 'translateY(100%)' 
+                : 'translateY(0)'
+          }}
+        >
+          {currentContent}
         </div>
+
+        {/* Next content (for sliding up) */}
+        {nextContent && (
+          <div 
+            className="w-full h-full absolute inset-0 top-full"
+          >
+            {nextContent}
+          </div>
+        )}
+
+        {/* Previous content (for sliding down) */}
+        {prevContent && (
+          <div 
+            className="w-full h-full absolute inset-0 bottom-full"
+          >
+            {prevContent}
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation - Fixed at the bottom of the viewport */}
