@@ -36,7 +36,7 @@ const DiscoverLayout = () => {
     setTimeout(() => {
       setIsAnimating(false);
       setSlideDirection(null);
-    }, 500); // Match this with the CSS transition duration
+    }, 300); // Shorter transition for snappier feel
   };
 
   // Setup swipe handlers for vertical navigation
@@ -100,13 +100,6 @@ const DiscoverLayout = () => {
         return <ConceptsContent currentIndex={index} />;
     }
   };
-
-  // Current and adjacent content items for transition effect
-  const currentContent = getContentComponent(activeTab, currentIndex);
-  const prevContent = isAnimating && slideDirection === 'down' ? 
-    getContentComponent(activeTab, currentIndex - 1) : null;
-  const nextContent = isAnimating && slideDirection === 'up' ? 
-    getContentComponent(activeTab, currentIndex + 1) : null;
 
   return (
     <div 
@@ -179,37 +172,13 @@ const DiscoverLayout = () => {
           </div>
         </header>
         
-        {/* Content with TikTok-style transition */}
-        <div 
-          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-in-out"
-          style={{
-            transform: slideDirection === 'up' 
-              ? 'translateY(-100%)' 
-              : slideDirection === 'down' 
-                ? 'translateY(100%)' 
-                : 'translateY(0)'
-          }}
-        >
-          {currentContent}
+        {/* Main content container */}
+        <div className="w-full h-full relative">
+          {/* Current content */}
+          <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
+            {getContentComponent(activeTab, currentIndex)}
+          </div>
         </div>
-
-        {/* Next content (for sliding up) */}
-        {nextContent && (
-          <div 
-            className="w-full h-full absolute inset-0 bottom-full"
-          >
-            {nextContent}
-          </div>
-        )}
-
-        {/* Previous content (for sliding down) */}
-        {prevContent && (
-          <div 
-            className="w-full h-full absolute inset-0 top-full"
-          >
-            {prevContent}
-          </div>
-        )}
       </main>
 
       {/* Bottom Navigation - Fixed at the bottom of the viewport */}
