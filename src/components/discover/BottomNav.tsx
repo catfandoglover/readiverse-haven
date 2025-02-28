@@ -11,7 +11,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="border-t border-gray-300 bg-[#D9D9D9] py-2" style={{ aspectRatio: "1290/152", maxHeight: "152px" }}>
+    <div className="bg-[#D9D9D9] py-2" style={{ aspectRatio: "1290/181", maxHeight: "181px" }}>
       <div className="flex justify-between items-center max-w-sm mx-auto px-8 h-full">
         <button
           className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#282828] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${
