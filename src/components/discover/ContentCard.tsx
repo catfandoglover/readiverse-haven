@@ -62,7 +62,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <p className="text-gray-800 font-baskerville text-lg">{about}</p>
         </div>
         
-        <div className="py-12 flex items-center justify-start">
+        <div className="py-6 flex items-center justify-start">
           <Button
             variant="ghost"
             className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 hover:text-[#282828]/50 pl-0 font-bold"
