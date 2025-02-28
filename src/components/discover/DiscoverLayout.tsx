@@ -39,10 +39,6 @@ const DiscoverLayout = () => {
     setCurrentIndex(0); // Reset index when changing tabs
   };
 
-  // Calculate search icon size as a proportion of navbar height
-  // 65/152 = ~0.428 or 42.8% of navbar height
-  const searchIconSizeRatio = 65 / 152;
-
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Main Content Area with Swipe Functionality */}
@@ -63,16 +59,10 @@ const DiscoverLayout = () => {
           <div className="flex justify-between items-center px-4 py-3 h-full">
             <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
             <button 
-              className="inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-              style={{ 
-                width: `calc(${searchIconSizeRatio * 100}% * var(--header-height, 1))`, 
-                height: `calc(${searchIconSizeRatio * 100}% * var(--header-height, 1))`, 
-                maxWidth: "65px", 
-                maxHeight: "65px" 
-              }}
+              className="h-8 w-8 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
               aria-label="Search"
             >
-              <Search className="w-1/2 h-1/2" />
+              <Search className="h-4 w-4" />
             </button>
           </div>
         </header>
