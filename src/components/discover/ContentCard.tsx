@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Bolt } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -18,6 +18,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
   onLearnMore,
   onImageClick,
 }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div 
@@ -30,12 +37,24 @@ const ContentCard: React.FC<ContentCardProps> = ({
           className="w-full h-full object-cover"
           loading="lazy"
         />
-        <button
-          className="absolute bottom-4 right-4 h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
-          aria-label="More options"
-        >
-          <MoreHorizontal className="h-3 w-3" />
-        </button>
+        <div className="absolute bottom-4 right-4 flex gap-2">
+          <button
+            className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            onClick={toggleFavorite}
+          >
+            <Bolt 
+              className="h-3 w-3 transition-colors" 
+              fill={isFavorite ? "#CCFF23" : "transparent"} 
+            />
+          </button>
+          <button
+            className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
+            aria-label="More options"
+          >
+            <MoreHorizontal className="h-3 w-3" />
+          </button>
+        </div>
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1">
         <h2 className="text-3xl font-serif mb-4">{title}</h2>
