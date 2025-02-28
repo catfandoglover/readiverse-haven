@@ -41,25 +41,25 @@ const DiscoverLayout = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
-      {/* Top Navigation - Updated to be semitransparent */}
-      <header className="relative z-10 bg-[#2A282A]/40 backdrop-blur-sm">
-        <div className="flex justify-between items-center px-4 py-3">
-          <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
-          <button 
-            className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-gray-800/50 text-white"
-            aria-label="Search"
-          >
-            <Search className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
-
       {/* Main Content Area with Swipe Functionality */}
       <main 
-        className="flex-1 overflow-hidden" 
+        className="flex-1 overflow-hidden relative" 
         {...swipeHandlers}
         ref={contentRef}
       >
+        {/* Top Navigation - Positioned as absolute overlay */}
+        <header className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm">
+          <div className="flex justify-between items-center px-4 py-3">
+            <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
+            <button 
+              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-gray-800/50 text-white"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+        
         {activeTab === "for-you" && <ForYouContent currentIndex={currentIndex} />}
         {activeTab === "classics" && <ClassicsContent currentIndex={currentIndex} />}
         {activeTab === "icons" && <IconsContent currentIndex={currentIndex} />}
