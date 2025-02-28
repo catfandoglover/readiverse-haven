@@ -61,11 +61,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <p className="mb-6 text-gray-800 font-baskerville text-lg">{about}</p>
         <Button
           variant="ghost"
-          className="uppercase tracking-wider flex items-center gap-2 text-gray-700 hover:text-gray-900 pl-0"
+          className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 hover:text-[#282828]/70 pl-0"
           onClick={onLearnMore}
         >
           LEARN MORE
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-300">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
             →
           </span>
         </Button>
