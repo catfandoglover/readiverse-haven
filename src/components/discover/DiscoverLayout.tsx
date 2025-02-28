@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from "react";
+import { Search } from "lucide-react";
 import DiscoverTabs from "./DiscoverTabs";
 import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
@@ -46,19 +47,22 @@ const DiscoverLayout = () => {
         {...swipeHandlers}
         ref={contentRef}
       >
-        {/* Top Navigation - Positioned as absolute overlay */}
-        <header className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm">
-          <div className="flex justify-between items-center px-4 py-3">
+        {/* Top Navigation - Positioned as absolute overlay with specific height and drop shadow */}
+        <header 
+          className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+          style={{
+            aspectRatio: "1290/152",
+            boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+            maxHeight: "152px"
+          }}
+        >
+          <div className="flex justify-between items-center px-4 py-3 h-full">
             <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
             <button 
-              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-gray-800/50 text-white"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
               aria-label="Search"
             >
-              <img 
-                src="/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png" 
-                alt="Search" 
-                className="w-5 h-5"
-              />
+              <Search className="h-5 w-5" />
             </button>
           </div>
         </header>
