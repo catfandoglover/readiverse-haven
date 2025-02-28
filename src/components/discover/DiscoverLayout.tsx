@@ -57,7 +57,7 @@ const DiscoverLayout = () => {
         >
           <div className="flex items-center justify-between px-4 py-3 h-full w-full">
             <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "for-you" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -67,7 +67,7 @@ const DiscoverLayout = () => {
               FOR YOU
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "classics" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -77,7 +77,7 @@ const DiscoverLayout = () => {
               CLASSICS
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "icons" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
@@ -87,7 +87,7 @@ const DiscoverLayout = () => {
               ICONS
             </button>
             <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium ${
+              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                 activeTab === "concepts" 
                   ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-gray-400"
