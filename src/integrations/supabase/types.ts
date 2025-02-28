@@ -47,8 +47,10 @@ export type Database = {
       }
       books: {
         Row: {
+          about: string | null
           amazon_link: string | null
           author: string | null
+          author_image: string | null
           categories: string[] | null
           Cover_super: string | null
           cover_url: string | null
@@ -61,8 +63,10 @@ export type Database = {
           title: string
         }
         Insert: {
+          about?: string | null
           amazon_link?: string | null
           author?: string | null
+          author_image?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
@@ -75,8 +79,10 @@ export type Database = {
           title: string
         }
         Update: {
+          about?: string | null
           amazon_link?: string | null
           author?: string | null
+          author_image?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
