@@ -56,12 +56,49 @@ const DiscoverLayout = () => {
             maxHeight: "152px"
           }}
         >
-          <div className="flex items-center px-4 py-3 h-full w-full">
-            <div className="flex-1">
-              <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
-            </div>
+          <div className="flex items-center justify-between px-4 py-3 h-full w-full">
+            <button
+              className={`py-2 relative whitespace-nowrap ${
+                activeTab === "for-you" 
+                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  : "text-gray-400"
+              }`}
+              onClick={() => handleTabChange("for-you")}
+            >
+              FOR YOU
+            </button>
+            <button
+              className={`py-2 relative whitespace-nowrap ${
+                activeTab === "classics" 
+                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  : "text-gray-400"
+              }`}
+              onClick={() => handleTabChange("classics")}
+            >
+              CLASSICS
+            </button>
+            <button
+              className={`py-2 relative whitespace-nowrap ${
+                activeTab === "icons" 
+                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  : "text-gray-400"
+              }`}
+              onClick={() => handleTabChange("icons")}
+            >
+              ICONS
+            </button>
+            <button
+              className={`py-2 relative whitespace-nowrap ${
+                activeTab === "concepts" 
+                  ? "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  : "text-gray-400"
+              }`}
+              onClick={() => handleTabChange("concepts")}
+            >
+              CONCEPTS
+            </button>
             <button 
-              className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A] ml-4"
+              className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
               aria-label="Search"
             >
               <Search className="h-2 w-2" />
