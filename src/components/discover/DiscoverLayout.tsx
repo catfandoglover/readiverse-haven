@@ -196,7 +196,7 @@ const DiscoverLayout = () => {
         {/* Next content (for sliding up) */}
         {nextContent && (
           <div 
-            className="w-full h-full absolute inset-0 top-full"
+            className="w-full h-full absolute inset-0 bottom-full"
           >
             {nextContent}
           </div>
@@ -205,7 +205,7 @@ const DiscoverLayout = () => {
         {/* Previous content (for sliding down) */}
         {prevContent && (
           <div 
-            className="w-full h-full absolute inset-0 bottom-full"
+            className="w-full h-full absolute inset-0 top-full"
           >
             {prevContent}
           </div>
