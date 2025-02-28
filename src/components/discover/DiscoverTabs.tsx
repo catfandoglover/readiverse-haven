@@ -10,7 +10,7 @@ interface DiscoverTabsProps {
 
 const DiscoverTabs: React.FC<DiscoverTabsProps> = ({ activeTab, onChange }) => {
   return (
-    <div className="flex items-center justify-between space-x-4 sm:space-x-6 text-[#E9E7E2] uppercase font-lexend text-xs sm:text-sm font-medium">
+    <div className="flex items-center justify-between space-x-4 sm:space-x-6 text-[#E9E7E2] uppercase font-oxanium font-semibold text-xs sm:text-sm">
       <button
         className={`py-2 relative whitespace-nowrap ${
           activeTab === "for-you" 
