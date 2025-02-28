@@ -63,8 +63,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         </div>
         
         <div className="py-2 flex items-center justify-start">
-          <Button
-            variant="ghost"
+          <button
             className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 pl-0 font-bold"
             onClick={onLearnMore}
           >
@@ -72,7 +71,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
               <ArrowRight className="h-3 w-3" />
             </span>
-          </Button>
+          </button>
         </div>
       </div>
     </div>
