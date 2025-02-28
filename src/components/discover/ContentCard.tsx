@@ -37,7 +37,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </div>
-      <div className="p-6 bg-[#E8E6E1] text-[#2A282A] flex-1">
+      <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1">
         <h2 className="text-3xl font-serif mb-4">{title}</h2>
         <h3 className="text-lg uppercase font-bold mb-2">ABOUT</h3>
         <p className="mb-6 text-gray-800">{about}</p>
