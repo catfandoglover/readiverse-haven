@@ -57,9 +57,12 @@ const ContentCard: React.FC<ContentCardProps> = ({
         </div>
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col">
-        <h2 className="text-3xl font-serif mb-4">{title}</h2>
-        <p className="mb-6 text-gray-800 font-baskerville text-lg">{about}</p>
-        <div className="mt-auto mb-6 flex items-center justify-start">
+        <div className="mb-auto">
+          <h2 className="text-3xl font-serif mb-4">{title}</h2>
+          <p className="text-gray-800 font-baskerville text-lg">{about}</p>
+        </div>
+        
+        <div className="py-12 flex items-center justify-start">
           <Button
             variant="ghost"
             className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 hover:text-[#282828]/50 pl-0 font-bold"
@@ -67,7 +70,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           >
             LEARN MORE
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3 w-3" />
             </span>
           </Button>
         </div>
