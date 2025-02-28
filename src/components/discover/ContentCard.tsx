@@ -39,13 +39,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
         />
         <div className="absolute bottom-4 right-4 flex gap-2">
           <button
-            className="h-5 w-5 flex items-center justify-center text-[#2A282A]"
+            className="h-4 w-4 flex items-center justify-center text-[#2A282A]"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             onClick={toggleFavorite}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path 
-                d="M13 2L11 12H20L8 22L10 10H2L13 2Z" 
+                d="M13 3L14.0094 9.50063H20.5L15.2447 13.4969L16.2541 19.9975L11 16L5.74594 19.9975L6.75531 13.4969L1.5 9.50063H7.99063L9 3L13 3Z" 
                 stroke="#2A282A" 
                 strokeWidth="1.5" 
                 fill={isFavorite ? "#EFFE91" : "transparent"} 
