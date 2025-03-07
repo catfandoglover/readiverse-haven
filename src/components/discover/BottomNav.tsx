@@ -12,7 +12,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
 
   return (
     <div className="bg-[#D9D9D9]" style={{ height: "50px" }}>
-      <div className="flex justify-between items-center max-w-sm mx-auto px-12 h-full">
+      <div className="flex justify-between items-center h-full max-w-sm mx-auto px-8">
         <button
           className={`inline-flex flex-col items-center justify-center gap-0.5 text-[#282828] ${
             activeTab === "discover"
