@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      art: {
+        Row: {
+          about: string | null
+          art_file_url: string
+          author: string | null
+          created_at: string
+          icon_illustration: string | null
+          id: string
+          introduction: string | null
+          Notion_URL: string | null
+          randomizer: number | null
+          slug: string
+          title: string
+        }
+        Insert: {
+          about?: string | null
+          art_file_url: string
+          author?: string | null
+          created_at?: string
+          icon_illustration?: string | null
+          id?: string
+          introduction?: string | null
+          Notion_URL?: string | null
+          randomizer?: number | null
+          slug: string
+          title: string
+        }
+        Update: {
+          about?: string | null
+          art_file_url?: string
+          author?: string | null
+          created_at?: string
+          icon_illustration?: string | null
+          id?: string
+          introduction?: string | null
+          Notion_URL?: string | null
+          randomizer?: number | null
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       book_questions: {
         Row: {
           book_id: string
@@ -50,13 +92,14 @@ export type Database = {
           about: string | null
           amazon_link: string | null
           author: string | null
-          author_image: string | null
           categories: string[] | null
           Cover_super: string | null
           cover_url: string | null
           created_at: string
           epub_file_url: string
+          icon_illustration: string | null
           id: string
+          introduction: string | null
           Notion_URL: string | null
           randomizer: number | null
           slug: string
@@ -66,13 +109,14 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
-          author_image?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
           epub_file_url: string
+          icon_illustration?: string | null
           id?: string
+          introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number | null
           slug: string
@@ -82,13 +126,14 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
-          author_image?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
           epub_file_url?: string
+          icon_illustration?: string | null
           id?: string
+          introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number | null
           slug?: string
@@ -98,31 +143,37 @@ export type Database = {
       }
       concepts: {
         Row: {
-          category: string | null
+          about: string | null
           created_at: string
           description: string | null
           id: string
           illustration: string
+          introduction: string | null
           randomizer: number
           title: string
+          type: string | null
         }
         Insert: {
-          category?: string | null
+          about?: string | null
           created_at?: string
           description?: string | null
           id?: string
           illustration: string
+          introduction?: string | null
           randomizer?: number
           title: string
+          type?: string | null
         }
         Update: {
-          category?: string | null
+          about?: string | null
           created_at?: string
           description?: string | null
           id?: string
           illustration?: string
+          introduction?: string | null
           randomizer?: number
           title?: string
+          type?: string | null
         }
         Relationships: []
       }
@@ -1022,26 +1073,29 @@ export type Database = {
       }
       icons: {
         Row: {
-          category: string
+          about: string | null
           created_at: string
           id: string
           illustration: string
+          introduction: string | null
           name: string
           randomizer: number
         }
         Insert: {
-          category: string
+          about?: string | null
           created_at?: string
           id?: string
           illustration: string
+          introduction?: string | null
           name: string
           randomizer?: number
         }
         Update: {
-          category?: string
+          about?: string | null
           created_at?: string
           id?: string
           illustration?: string
+          introduction?: string | null
           name?: string
           randomizer?: number
         }

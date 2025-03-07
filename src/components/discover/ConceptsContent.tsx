@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +50,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
       return data.map((concept: any) => ({
         ...concept,
         // Use description field as about if it exists
-        about: concept.description || `${concept.title} is a significant philosophical concept.`,
+        about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
       }));
@@ -60,14 +59,10 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
 
   const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
   
-  // Log the current concept being shown to debug
-  console.log("Current concept to show:", conceptToShow);
-
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
     related_questions: [
       { id: '1', title: 'What is virtue?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },

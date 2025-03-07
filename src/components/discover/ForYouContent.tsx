@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,19 +39,13 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
         const icons = iconsResponse.data || [];
         const concepts = conceptsResponse.data || [];
 
-        // Log a sample from each type to check data structure
-        if (books.length > 0) console.log("Sample book:", books[0]);
-        if (icons.length > 0) console.log("Sample icon:", icons[0]);
-        if (concepts.length > 0) console.log("Sample concept:", concepts[0]);
-
         // Transform the data to a common format
         const forYouItems: ForYouContentItem[] = [
           ...books.map((book: any) => ({
             id: book.id,
             title: book.title,
             type: "classic" as const,
-            image: book.cover_url || book.Cover_super || "",
-            // Use the actual about field from the book if available
+            image: book.icon_illustration || book.Cover_super || "",
             about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
             author: book.author,
             great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
@@ -64,7 +57,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
             title: icon.name,
             type: "icon" as const,
             image: icon.illustration,
-            about: `${icon.name} was a significant figure in philosophical history.`,
+            about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
             great_conversation: `${icon.name}'s contributions to philosophical discourse were substantial.`,
             anecdotes: `Various interesting stories surround ${icon.name}'s life and work.`,
           })),
@@ -73,7 +66,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
             title: concept.title,
             type: "concept" as const,
             image: concept.illustration,
-            about: concept.description || `${concept.title} is a significant philosophical concept.`,
+            about: concept.about || `${concept.title} is a significant philosophical concept.`,
             genealogy: `The historical development of ${concept.title} spans multiple philosophical traditions.`,
             great_conversation: `${concept.title} has been debated throughout philosophical history.`,
           })),
@@ -94,9 +87,6 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
   });
 
   const itemToShow = forYouItems[currentIndex % Math.max(1, forYouItems.length)] || null;
-  
-  // Log the current item being shown to debug
-  console.log("Current item to show:", itemToShow);
 
   const handleLearnMore = (item: ForYouContentItem) => {
     setSelectedItem(item);

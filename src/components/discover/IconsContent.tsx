@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +10,7 @@ interface Icon {
   id: string;
   name: string;
   illustration: string;
-  category: string;
+  category?: string;
   about?: string;
   great_conversation?: string;
   anecdotes?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 interface Classic {
   id: string;
   title: string;
+  icon_illustration: string;
   cover_url: string;
   author?: string;
   Cover_super?: string;
@@ -18,7 +18,6 @@ interface Classic {
   about?: string;
   great_conversation?: string;
   tagline?: string;
-  author_image?: string;
 }
 
 interface ClassicsContentProps {
@@ -64,9 +63,6 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
 
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
-  // Log the current classic being shown to debug
-  console.log("Current classic to show:", classicToShow);
-
   const handleLearnMore = (classic: Classic) => {
     setSelectedClassic(classic);
   };
@@ -88,7 +84,6 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
     }
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
     related_questions: [
       { id: '1', title: 'What is morality?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
@@ -124,7 +119,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
     <>
       <div className="h-full">
         <ContentCard
-          image={classicToShow.author_image || classicToShow.cover_url || classicToShow.Cover_super || ""}
+          image={classicToShow.icon_illustration || classicToShow.cover_url || classicToShow.Cover_super || ""}
           title={classicToShow.title}
           about={classicToShow.about || "A classic work of literature."}
           onLearnMore={() => handleLearnMore(classicToShow)}
@@ -137,7 +132,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
           type="classic"
           data={{
             ...selectedClassic,
-            image: selectedClassic.author_image || selectedClassic.cover_url || selectedClassic.Cover_super,
+            image: selectedClassic.icon_illustration || selectedClassic.cover_url || selectedClassic.Cover_super,
             title: selectedClassic.title,
             author: selectedClassic.author || "Unknown Author",
             tagline: selectedClassic.tagline || "What lies beneath the morality you hold sacred?",
