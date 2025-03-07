@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Compass, Hexagon } from "lucide-react";
+import { Compass, Hexagon, Dna } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getLastVisited } from "@/utils/navigationHistory";
 
 interface BottomNavProps {
   activeTab: "discover" | "dna" | "study";
@@ -11,57 +10,57 @@ interface BottomNavProps {
 const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
   const navigate = useNavigate();
 
-  const handleNavigation = (path: string) => {
-    if (path === '/dna' && location.pathname !== '/dna') {
-      navigate(getLastVisited('dna') || '/dna');
-    } else if (path === '/') {
-      navigate(getLastVisited('discover') || '/');
-    } else if (path === '/bookshelf') {
-      navigate(getLastVisited('bookshelf') || '/bookshelf');
-    } else {
-      navigate(path);
-    }
-  };
-
   return (
-    <div className="bg-[#2A282A] border-t border-white/10">
-      <div className="flex items-center justify-center h-full">
-        <div className="grid grid-cols-3 w-full max-w-sm">
-          <button 
-            className={`flex flex-col items-center justify-center py-3 px-2 gap-1 text-[#E9E7E2] hover:bg-white/10 transition-all duration-200`}
-            onClick={() => handleNavigation('/')}
+    <div className="bg-[#D9D9D9]" style={{ height: "50px" }}>
+      <div className="flex justify-center items-center h-full">
+        <div className="flex justify-center items-center w-full max-w-xs">
+          <button
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
+              activeTab === "discover"
+                ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
+                : ""
+            }`}
+            onClick={() => navigate("/")}
           >
-            <div className={`${activeTab === "discover" ? "opacity-100" : "opacity-70"}`}>
-              <Compass className="h-5 w-5 mx-auto" />
-              <span className="text-xs uppercase font-oxanium mt-1 text-center">Discover</span>
+            <div className="relative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" fill="#000000" stroke="#000000" strokeWidth="2" />
+                <circle cx="12" cy="12" r="3" fill="#E9E7E2" stroke="#E9E7E2" strokeWidth="0.5" />
+                <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" fill="#E9E7E2" stroke="#E9E7E2" strokeWidth="0.5" />
+              </svg>
             </div>
+            <span className="text-[10px] uppercase font-oxanium">Discover</span>
           </button>
-          <button 
-            className={`flex flex-col items-center justify-center py-3 px-2 gap-1 text-[#E9E7E2] hover:bg-white/10 transition-all duration-200`}
-            onClick={() => handleNavigation('/dna')}
+          <button
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
+              activeTab === "dna"
+                ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
+                : ""
+            }`}
+            onClick={() => navigate("/dna")}
           >
-            <div className={`${activeTab === "dna" ? "opacity-100" : "opacity-70"}`}>
-              <div className="relative flex justify-center">
-                <Hexagon className="h-5 w-5 mx-auto" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-1.5 w-1.5 bg-[#E9E7E2] rounded-full transform rotate-45" style={{ borderRadius: "50% 50% 50% 0" }}></div>
-                </div>
+            <div className="relative">
+              <Hexagon className="h-5 w-5" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Dna className="h-3 w-3" />
               </div>
-              <span className="text-xs uppercase font-oxanium mt-1 text-center">My DNA</span>
             </div>
+            <span className="text-[10px] uppercase font-oxanium">My DNA</span>
           </button>
-          <button 
-            className={`flex flex-col items-center justify-center py-3 px-2 gap-1 text-[#E9E7E2] hover:bg-white/10 transition-all duration-200`}
-            onClick={() => handleNavigation('/bookshelf')}
+          <button
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
+              activeTab === "study"
+                ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
+                : ""
+            }`}
+            onClick={() => navigate("/bookshelf")}
           >
-            <div className={`${activeTab === "study" ? "opacity-100" : "opacity-70"}`}>
-              <img 
-                src="/lovable-uploads/20a3fd09-da3c-4d79-bc42-fae9cfce832e.png" 
-                alt="Study" 
-                className="h-5 w-5 mx-auto" 
-              />
-              <span className="text-xs uppercase font-oxanium mt-1 text-center">Study</span>
-            </div>
+            <img 
+              src="/lovable-uploads/0487c0f3-c410-49cd-a390-7808bd908abc.png" 
+              alt="Study" 
+              className="h-4 w-4" 
+            />
+            <span className="text-[10px] uppercase font-oxanium">Study</span>
           </button>
         </div>
       </div>

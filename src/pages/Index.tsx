@@ -1,17 +1,15 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Database } from "@/integrations/supabase/types";
-import { Search } from "lucide-react";
+import { Compass, LibraryBig, Search, Dna } from "lucide-react";
 import QuestionsCards from "@/components/QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
-import BottomNav from "@/components/discover/BottomNav";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = {
@@ -190,7 +188,7 @@ const Home = () => {
                 <LoginButtons />
               </div>
               <button
-                onClick={() => navigate('/search')}
+                onClick={() => handleNavigation('/search')}
                 className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
               >
                 <Search className="h-5 w-5" />
@@ -246,7 +244,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/all-books')}
+                  onClick={() => handleNavigation('/all-books')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -278,7 +276,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/all-icons')}
+                  onClick={() => handleNavigation('/all-icons')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -310,7 +308,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/concepts')}
+                  onClick={() => handleNavigation('/concepts')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -319,8 +317,32 @@ const Home = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNav activeTab="discover" />
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
+          <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center w-full max-w-xs">
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/')}
+              >
+                <Compass className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Discover</span>
+              </button>
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/dna')}
+              >
+                <Dna className="h-5 w-5" />
+                <span className="text-xs font-oxanium">My DNA</span>
+              </button>
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/bookshelf')}
+              >
+                <LibraryBig className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Bookshelf</span>
+              </button>
+            </div>
+          </div>
         </nav>
       </div>
     </div>

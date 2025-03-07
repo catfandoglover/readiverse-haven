@@ -2,13 +2,12 @@ import React, { useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Compass, LibraryBig, Search, Dna } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
 import { NotionSyncButton } from "@/components/NotionSyncButton";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
-import BottomNav from "@/components/discover/BottomNav";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -200,7 +199,7 @@ const GreatQuestions = () => {
           <NotionSyncButton />
           <button
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-white/10 transition-all duration-200"
-            onClick={() => navigate('/search')}
+            onClick={() => handleNavigation('/search')}
           >
             <Search className="h-5 w-5" />
           </button>
@@ -221,8 +220,30 @@ const GreatQuestions = () => {
         ))}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50">
-        <BottomNav activeTab="discover" />
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-background py-2 z-50">
+        <div className="flex justify-between items-center max-w-sm mx-auto px-8">
+          <button 
+            className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+            onClick={() => handleNavigation('/dna')}
+          >
+            <Dna className="h-6 w-6" />
+            <span className="text-xs font-oxanium">My DNA</span>
+          </button>
+          <button 
+            className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+            onClick={() => handleNavigation('/')}
+          >
+            <Compass className="h-6 w-6" />
+            <span className="text-xs font-oxanium">Discover</span>
+          </button>
+          <button 
+            className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-foreground hover:bg-white/10 transition-all duration-200 ${isCurrentSection('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+            onClick={() => handleNavigation('/bookshelf')}
+          >
+            <LibraryBig className="h-6 w-6" />
+            <span className="text-xs font-oxanium">Bookshelf</span>
+          </button>
+        </div>
       </nav>
     </div>
   );
