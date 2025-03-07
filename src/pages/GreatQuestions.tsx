@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,11 +128,33 @@ const GreatQuestions = () => {
   }, [location.pathname, isInitialMount, restoreScrollPosition]);
 
   const handleNavigation = (path: string) => {
-    if (path === '/') {
+    const currentPosition = window.scrollY;
+    if (currentPosition > 0) {
+      saveScrollPosition(location.pathname, currentPosition);
+    }
+
+    if (path === '/' && location.pathname !== '/') {
       navigate('/');
+    } else if (path === '/dna') {
+      navigate(getLastVisited('dna'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
     } else {
       navigate(path);
     }
+  };
+
+  const isCurrentSection = (path: string) => {
+    if (path === '/dna') {
+      return location.pathname.startsWith('/dna');
+    }
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname.startsWith('/great-questions');
+    }
+    if (path === '/bookshelf') {
+      return location.pathname.startsWith('/bookshelf');
+    }
+    return false;
   };
 
   const { data: questions, isLoading } = useQuery({
@@ -179,14 +200,14 @@ const GreatQuestions = () => {
           <NotionSyncButton />
           <button
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-white/10 transition-all duration-200"
-            onClick={() => handleNavigation('/search')}
+            onClick={() => navigate('/search')}
           >
             <Search className="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      <div className="p-4 pb-24">
+      <div className="p-4 pb-[60px]">
         <h1 className="text-2xl font-oxanium text-center text-foreground mb-12 uppercase">
           The Great Questions
         </h1>
@@ -200,7 +221,9 @@ const GreatQuestions = () => {
         ))}
       </div>
 
-      <BottomNav activeTab="discover" />
+      <nav className="fixed bottom-0 left-0 right-0 z-50">
+        <BottomNav activeTab="discover" />
+      </nav>
     </div>
   );
 };

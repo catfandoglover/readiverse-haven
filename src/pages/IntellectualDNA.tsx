@@ -55,7 +55,6 @@ const IntellectualDNA = () => {
     };
   }, [location.pathname]);
 
-  // Prefetch questions for all categories
   useEffect(() => {
     const prefetchQuestions = async () => {
       console.log('Starting to prefetch questions for all categories');
@@ -113,8 +112,14 @@ const IntellectualDNA = () => {
   });
 
   const handleNavigation = (path: string) => {
-    if (path === '/search') {
-      navigate('/search');
+    if (path === '/dna' && location.pathname !== '/dna') {
+      navigate('/dna');
+    } else if (path === '/') {
+      navigate(getLastVisited('discover'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
+    } else {
+      navigate(path);
     }
   };
 
@@ -128,6 +133,19 @@ const IntellectualDNA = () => {
       setShowNameDialog(false);
       navigate('/dna/ethics');
     }
+  };
+
+  const isCurrentSection = (path: string) => {
+    if (path === '/dna') {
+      return location.pathname.startsWith('/dna');
+    }
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    if (path === '/bookshelf') {
+      return location.pathname.startsWith('/bookshelf');
+    }
+    return false;
   };
 
   const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
@@ -145,7 +163,7 @@ const IntellectualDNA = () => {
               />
             </button>
             <button
-              onClick={() => handleNavigation('/search')}
+              onClick={() => navigate('/search')}
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             >
               <Search className="h-5 w-5" />
@@ -153,7 +171,7 @@ const IntellectualDNA = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-4 pb-24">
+        <div className="flex-1 p-4">
           <h1 className="text-2xl font-oxanium text-center text-foreground uppercase mb-8">
             Trace Your Intellectual DNA
           </h1>
@@ -205,7 +223,9 @@ const IntellectualDNA = () => {
           </DialogContent>
         </Dialog>
 
-        <BottomNav activeTab="dna" />
+        <nav className="fixed bottom-0 left-0 right-0 z-50">
+          <BottomNav activeTab="dna" />
+        </nav>
       </div>
     </div>
   );

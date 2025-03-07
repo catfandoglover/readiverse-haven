@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -153,11 +154,19 @@ const Home = () => {
   };
 
   const handleNavigation = (path: string) => {
-    if (path === '/search') {
-      navigate('/search');
+    if (path === '/' && location.pathname !== '/') {
+      navigate('/');
+    } else if (path === '/dna') {
+      navigate(getLastVisited('dna'));
+    } else if (path === '/bookshelf') {
+      navigate(getLastVisited('bookshelf'));
     } else {
       navigate(path);
     }
+  };
+
+  const isCurrentPath = (path: string) => {
+    return location.pathname === path;
   };
 
   const isLoading = booksLoading || iconsLoading || conceptsLoading;
@@ -181,7 +190,7 @@ const Home = () => {
                 <LoginButtons />
               </div>
               <button
-                onClick={() => handleNavigation('/search')}
+                onClick={() => navigate('/search')}
                 className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
               >
                 <Search className="h-5 w-5" />
@@ -237,7 +246,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => handleNavigation('/all-books')}
+                  onClick={() => navigate('/all-books')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -269,7 +278,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => handleNavigation('/all-icons')}
+                  onClick={() => navigate('/all-icons')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -301,7 +310,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => handleNavigation('/concepts')}
+                  onClick={() => navigate('/concepts')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -310,7 +319,9 @@ const Home = () => {
           </div>
         </div>
 
-        <BottomNav activeTab="discover" />
+        <nav className="fixed bottom-0 left-0 right-0 z-50">
+          <BottomNav activeTab="discover" />
+        </nav>
       </div>
     </div>
   );
