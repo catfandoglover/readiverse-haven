@@ -13,15 +13,26 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
-type Icon = Database['public']['Tables']['icons']['Row'];
+type Icon = {
+  id: string;
+  name: string;
+  illustration: string;
+  about?: string;
+  introduction?: string;
+  randomizer: number;
+  created_at: string;
+};
 type Concept = {
   id: string;
   title: string;
   description: string | null;
   illustration: string;
-  category: string | null;
+  category?: string | null; // Make category optional
   randomizer: number;
   created_at: string;
+  about?: string;
+  type?: string;
+  introduction?: string;
 };
 
 const Home = () => {

@@ -10,10 +10,13 @@ interface Icon {
   id: string;
   name: string;
   illustration: string;
-  category?: string;
+  category?: string; // Make category optional
   about?: string;
   great_conversation?: string;
   anecdotes?: string;
+  randomizer?: number;
+  created_at?: string;
+  introduction?: string;
 }
 
 interface IconsContentProps {

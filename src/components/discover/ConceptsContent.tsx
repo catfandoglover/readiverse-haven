@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,11 @@ interface Concept {
   about?: string;
   genealogy?: string;
   great_conversation?: string;
-  category?: string;
+  category?: string; // Make category optional since it might not be present in the data
+  type?: string;
+  randomizer?: number;
+  created_at?: string;
+  introduction?: string;
 }
 
 interface ConceptsContentProps {
