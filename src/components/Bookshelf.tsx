@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -5,7 +6,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Search, Grid, List } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import BottomNav from "@/components/discover/BottomNav";
 

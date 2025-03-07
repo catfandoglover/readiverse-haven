@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Database } from "@/integrations/supabase/types";
 import { Search } from "lucide-react";
 import QuestionsCards from "@/components/QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";

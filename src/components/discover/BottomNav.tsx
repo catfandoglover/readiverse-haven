@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Compass, Hexagon, Dna } from "lucide-react";
+import { Compass, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getLastVisited } from "@/utils/navigationHistory";
 
