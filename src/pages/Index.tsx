@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -190,7 +189,7 @@ const Home = () => {
                 <LoginButtons />
               </div>
               <button
-                onClick={() => navigate('/search')}
+                onClick={() => handleNavigation('/search')}
                 className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
               >
                 <Search className="h-5 w-5" />
@@ -246,7 +245,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/all-books')}
+                  onClick={() => handleNavigation('/all-books')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -278,7 +277,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/all-icons')}
+                  onClick={() => handleNavigation('/all-icons')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -310,7 +309,7 @@ const Home = () => {
                 <Button 
                   variant="secondary"
                   className={buttonGradientStyles}
-                  onClick={() => navigate('/concepts')}
+                  onClick={() => handleNavigation('/concepts')}
                 >
                   <span>VIEW ALL</span>
                 </Button>
@@ -319,9 +318,7 @@ const Home = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNav activeTab="discover" />
-        </nav>
+        <BottomNav activeTab="discover" />
       </div>
     </div>
   );

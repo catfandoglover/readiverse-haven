@@ -200,7 +200,7 @@ const GreatQuestions = () => {
           <NotionSyncButton />
           <button
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-white/10 transition-all duration-200"
-            onClick={() => navigate('/search')}
+            onClick={() => handleNavigation('/search')}
           >
             <Search className="h-5 w-5" />
           </button>
@@ -221,9 +221,7 @@ const GreatQuestions = () => {
         ))}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50">
-        <BottomNav activeTab="discover" />
-      </nav>
+      <BottomNav activeTab="discover" />
     </div>
   );
 };

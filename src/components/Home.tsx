@@ -1,17 +1,17 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Database } from "@/integrations/supabase/types";
-import { Compass, BookOpen, Search, Hexagon } from "lucide-react";
+import { Search } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import BottomNav from "@/components/discover/BottomNav";
 
 type Book = Database['public']['Tables']['books']['Row'];
 // Update the Concept type to make category optional
@@ -301,36 +301,7 @@ const Home = () => {
           </div>
         </div>
 
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50" style={{ aspectRatio: "1290/152", maxHeight: "152px" }}>
-          <div className="flex justify-between items-center max-w-sm mx-auto px-8 h-full">
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/')}
-            >
-              <Compass className="h-6 w-6" />
-              <span className="text-xs font-oxanium uppercase">Discover</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/dna')}
-            >
-              <div className="relative">
-                <Hexagon className="h-7 w-7" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-3 w-3 bg-[#E9E7E2] rounded-full transform rotate-45" style={{ borderRadius: "50% 50% 50% 0" }}></div>
-                </div>
-              </div>
-              <span className="text-xs font-oxanium uppercase">My DNA</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/bookshelf')}
-            >
-              <BookOpen className="h-6 w-6" />
-              <span className="text-xs font-oxanium uppercase">Study</span>
-            </button>
-          </div>
-        </nav>
+        <BottomNav activeTab="discover" />
       </div>
     </div>
   );

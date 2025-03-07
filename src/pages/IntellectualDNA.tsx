@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Compass, Search } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import BottomNav from "@/components/discover/BottomNav";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
-import BottomNav from "@/components/discover/BottomNav";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -55,6 +55,7 @@ const IntellectualDNA = () => {
     };
   }, [location.pathname]);
 
+  // Prefetch questions for all categories
   useEffect(() => {
     const prefetchQuestions = async () => {
       console.log('Starting to prefetch questions for all categories');
@@ -163,7 +164,7 @@ const IntellectualDNA = () => {
               />
             </button>
             <button
-              onClick={() => navigate('/search')}
+              onClick={() => handleNavigation('/search')}
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             >
               <Search className="h-5 w-5" />
@@ -223,9 +224,7 @@ const IntellectualDNA = () => {
           </DialogContent>
         </Dialog>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNav activeTab="dna" />
-        </nav>
+        <BottomNav activeTab="dna" />
       </div>
     </div>
   );

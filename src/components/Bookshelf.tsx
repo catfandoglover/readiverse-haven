@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
-import { Search, Grid, List } from "lucide-react";
+import { Grid, List, Search } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
@@ -148,7 +147,7 @@ const Bookshelf = () => {
               </button>
             </div>
             <button
-              onClick={() => navigate('/search')}
+              onClick={() => handleNavigation('/search')}
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
             >
               <Search className="h-5 w-5" />
@@ -214,9 +213,7 @@ const Bookshelf = () => {
         </div>
       </ScrollArea>
 
-      <nav className="shrink-0 z-50">
-        <BottomNav activeTab="study" />
-      </nav>
+      <BottomNav activeTab="study" />
     </div>
   );
 };
