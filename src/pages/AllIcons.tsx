@@ -6,9 +6,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { Database } from "@/integrations/supabase/types";
 
-type Icon = Database['public']['Tables']['icons']['Row'];
+// Define a more flexible Icon type that matches what comes from the database
+interface Icon {
+  id: string;
+  name: string;
+  illustration: string;
+  about?: string;
+  category?: string; // Make category optional
+  randomizer?: number;
+  created_at?: string;
+  introduction?: string;
+}
 
 const AllIcons = () => {
   const navigate = useNavigate();
@@ -29,7 +38,8 @@ const AllIcons = () => {
   const groupedIcons = React.useMemo(() => {
     if (!icons) return {};
     return icons.reduce((acc, icon) => {
-      const category = icon.category;
+      // Use a default category if none exists
+      const category = icon.category || "Uncategorized";
       if (!acc[category]) {
         acc[category] = [];
       }
