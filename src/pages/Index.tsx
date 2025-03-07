@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -319,28 +318,30 @@ const Home = () => {
         </div>
 
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
-          <div className="flex justify-between items-center max-w-sm mx-auto px-8">
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/dna')}
-            >
-              <Dna className="h-5 w-5" />
-              <span className="text-xs font-oxanium">My DNA</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/')}
-            >
-              <Compass className="h-5 w-5" />
-              <span className="text-xs font-oxanium">Discover</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/bookshelf')}
-            >
-              <LibraryBig className="h-5 w-5" />
-              <span className="text-xs font-oxanium">Bookshelf</span>
-            </button>
+          <div className="flex justify-center items-center">
+            <div className="flex justify-between items-center w-full max-w-xs px-4">
+              <button 
+                className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/dna')}
+              >
+                <Dna className="h-5 w-5" />
+                <span className="text-xs font-oxanium">My DNA</span>
+              </button>
+              <button 
+                className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/')}
+              >
+                <Compass className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Discover</span>
+              </button>
+              <button 
+                className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/bookshelf')}
+              >
+                <LibraryBig className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Bookshelf</span>
+              </button>
+            </div>
           </div>
         </nav>
       </div>
