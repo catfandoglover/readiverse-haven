@@ -13,9 +13,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
   return (
     <div className="bg-[#D9D9D9]" style={{ height: "50px" }}>
       <div className="flex justify-center items-center h-full">
-        <div className="flex justify-between items-center w-full max-w-xs">
+        <div className="flex justify-center items-center w-full max-w-xs">
           <button
-            className={`inline-flex flex-col items-center justify-center gap-0.5 text-[#282828] ${
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
               activeTab === "discover"
                 ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
                 : ""
@@ -32,7 +32,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
             <span className="text-[10px] uppercase font-oxanium">Discover</span>
           </button>
           <button
-            className={`inline-flex flex-col items-center justify-center gap-0.5 text-[#282828] ${
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
               activeTab === "dna"
                 ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
                 : ""
@@ -48,7 +48,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
             <span className="text-[10px] uppercase font-oxanium">My DNA</span>
           </button>
           <button
-            className={`inline-flex flex-col items-center justify-center gap-0.5 text-[#282828] ${
+            className={`flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#282828] ${
               activeTab === "study"
                 ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]"
                 : ""
