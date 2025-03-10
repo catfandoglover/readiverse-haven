@@ -26,12 +26,14 @@ interface AIChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentQuestion: string;
+  sessionId?: string;
 }
 
 const AIChatDialog: React.FC<AIChatDialogProps> = ({
   open,
   onOpenChange,
   currentQuestion,
+  sessionId: providedSessionId
 }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -64,24 +66,24 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Check if the question has changed since last time
       const questionChanged = lastQuestion !== currentQuestion;
       
-      // Generate a unique session ID if one doesn't exist or if question changed
+      // Use the provided sessionId or fallback to a default
+      const userId = providedSessionId || sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+      
       if (!sessionId || questionChanged) {
-        // Create new session when question changes
-        const newSessionId = uuidv4();
-        setSessionId(newSessionId);
+        setSessionId(userId);
         setIsFirstOpen(true); // Reset first open flag for new question
         setLastQuestion(currentQuestion);
         setMessages([]); // Clear messages when question changes
         
         // Set the current question in the conversation manager
         // This is used in the system prompt for the LLM as {current_question}
-        conversationManager.setCurrentQuestion(newSessionId, currentQuestion);
+        conversationManager.setCurrentQuestion(userId, currentQuestion);
         
         // Add an initial user message to ensure proper message ordering
-        conversationManager.addMessage(newSessionId, 'user', `I'd like to discuss: ${currentQuestion}`);
+        conversationManager.addMessage(userId, 'user', `I'd like to discuss: ${currentQuestion}`);
       } else {
         // Update the current question in case it changed
-        conversationManager.setCurrentQuestion(sessionId, currentQuestion);
+        conversationManager.setCurrentQuestion(userId, currentQuestion);
       }
       
       // If this is the first time opening the dialog, show a welcome message

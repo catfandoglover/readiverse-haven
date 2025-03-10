@@ -19,6 +19,7 @@ import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
+import conversationManager from '@/services/ConversationManager';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -281,6 +282,23 @@ const DNAAssessment = () => {
 
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
+    
+    // Get the current question text
+    const questionText = currentQuestion.question?.question || '';
+    
+    // Get the answer label based on user selection
+    const answerLabel = answer === "A" 
+      ? (currentQuestion.question?.answer_a || "Yes") 
+      : (currentQuestion.question?.answer_b || "No");
+    
+    // Store the question and answer in the conversation manager
+    // This will be used to provide context to the AI chat
+    conversationManager.addQuestionToPath(
+      sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
+      currentPosition,
+      questionText,
+      answerLabel
+    );
 
     try {
       // Store individual question response

@@ -1,53 +1,34 @@
-# DNA Assessment AI Assistant Implementation
+I need you to store the questions the user has answered and their response to the question and pass that to the LLM AI bot without changing the existing system prompt. 
 
-## Overview
-We've implemented an AI assistant system to help users explore philosophical questions in the DNA assessment. The assistant (named Virgil) provides a conversational interface where users can discuss and reflect on the current question they're considering.
+Below is the current state of the app. FIX THIS.
 
-## Key Features Implemented
+### How Questions and Answers Are Stored
 
-1. **Context-Aware Conversations**: 
-   - The AI assistant is now aware of the current philosophical question being shown to the user
-   - When a user changes to a new question, the system creates a fresh conversation with new context
+1. **Question Storage**:
+   - Questions are defined in decision trees for each philosophical category (Theology, Epistemology, Ethics, Politics, Ontology, Aesthetics)
+   - The complete question trees are stored in `supabase/functions/analyze-dna/prompts.ts`
+   - For the active UI, the current question is retrieved from the appropriate tree (e.g., `THEOLOGY_TREE[currentPosition]?.question`)
 
-2. **Dynamic Conversation Starters**:
-   - Added a system that selects a random philosophical prompt from a curated list when starting a new conversation
-   - Each new question gets a different conversation starter to keep the experience fresh
-   - Prompts are designed to be open-ended and encourage thoughtful reflection
+### Issue with LLM Context
 
-3. **Audio Response System**:
-   - All AI assistant responses are automatically converted to speech using AWS Polly
-   - Implemented auto-play functionality so audio responses begin playing immediately
-   - Users can manually pause/play audio responses as needed
+The current implementation has a critical flaw that prevents the LLM from effectively using previous question/answer context:
 
-4. **WebSocket Integration**:
-   - Connected the frontend to a Node.js server that handles real-time communication with AI services
-   - Server manages conversation sessions and ensures contextual awareness
+1. **Problem**: When adding questions to the path in `DNAAssessment.tsx`, only the question ID and the answer label are stored:
+   ```typescript
+   conversationManager.addQuestionToPath(
+     upperCategory.toLowerCase(), 
+     currentPosition,  // This is just the ID like "Q1" or "AAB"
+     answer === 'yes' ? yesOption : noOption  // This is just "Yes"/"No" or custom labels
+   );
+   ```
 
-5. **User Experience Improvements**:
-   - Clear visual indicators when the AI is processing responses
-   - Support for both text and voice input from users
-   - Mobile-friendly interface with floating AI chat button
+2. **Missing Context**: The actual question text is never stored in the question path, only the ID.
 
-## Technical Details
+3. **System Prompt Issue**: When generating the dynamic system prompt, only meaningless IDs are passed to the LLM:
+   ```typescript
+   for (const { questionId, answer } of questionPath) {
+     dynamicPrompt += `- Question ID: "${questionId}"\n  Answer: ${answer}\n`;
+   }
+   ```
 
-### Client-Side Components:
-- `AIChatButton.tsx`: Floating button component for accessing the AI assistant
-- `AIChatDialog.tsx`: Dialog component that contains the chat interface
-- `ChatMessage.tsx`: Component for rendering individual messages with audio playback
-
-### Server-Side Components:
-- `server.js`: WebSocket server that handles real-time communication with AI services
-- Added AWS Polly integration for high-quality voice synthesis
-
-### Services:
-- `AIService.ts`: Client-side service for managing AI interactions
-- `SpeechService.ts`: Handles speech synthesis and audio processing
-- `ConversationManager.ts`: Maintains conversation context across interactions
-
-## Current Status
-The AI assistant now successfully provides contextual guidance for users exploring philosophical questions in the DNA assessment. It offers thoughtful prompts based on the specific question being considered and automatically plays audio responses to create a more engaging experience.
-
-## Future Improvements
-- Add voice style customization options
-- Implement conversation history saving
-- Add more sophisticated context management to track user's philosophical leanings
+4. **LLM Limitation**: The LLM has no way to know what "Question ID: Q1" actually means or what question was asked.

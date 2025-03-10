@@ -10,6 +10,9 @@ interface AIChatButtonProps {
 
 const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = true }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Get a consistent session ID from sessionStorage
+  const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
 
   if (!enabled) return null;
 
@@ -30,6 +33,7 @@ const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = 
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         currentQuestion={currentQuestion}
+        sessionId={sessionId}
       />
     </>
   );

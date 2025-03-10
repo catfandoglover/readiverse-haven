@@ -7,6 +7,7 @@ export interface Message {
 
 export interface QuestionPath {
   questionId: string;
+  question: string;
   answer: string;
 }
 
@@ -68,14 +69,14 @@ class ConversationManager {
   }
 
   // Add a question to the path
-  addQuestionToPath(sessionId: string, questionId: string, answer: string): void {
+  addQuestionToPath(sessionId: string, questionId: string, question: string, answer: string): void {
     if (!this.questionPaths.has(sessionId)) {
       this.questionPaths.set(sessionId, []);
     }
 
     const path = this.questionPaths.get(sessionId);
     if (path) {
-      path.push({ questionId, answer });
+      path.push({ questionId, question, answer });
     }
   }
 
@@ -106,8 +107,8 @@ class ConversationManager {
     if (questionPath.length > 0) {
       dynamicPrompt += "\n\nThe user has answered previous questions as follows:\n";
       
-      for (const { questionId, answer } of questionPath) {
-        dynamicPrompt += `- Question ID: "${questionId}"\n  Answer: ${answer}\n`;
+      for (const { questionId, question, answer } of questionPath) {
+        dynamicPrompt += `- Question: "${question}"\n  Answer: ${answer}\n`;
       }
     }
     
