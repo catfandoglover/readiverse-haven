@@ -55,13 +55,23 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     "What dimensions of this question intrigue you?"
   ];
 
+  // Track previous question to detect changes
+  const [lastQuestion, setLastQuestion] = useState(currentQuestion);
+
   // Initialize session when dialog opens
   useEffect(() => {
     if (open) {
-      // Generate a unique session ID if one doesn't exist
-      if (!sessionId) {
+      // Check if the question has changed since last time
+      const questionChanged = lastQuestion !== currentQuestion;
+      
+      // Generate a unique session ID if one doesn't exist or if question changed
+      if (!sessionId || questionChanged) {
+        // Create new session when question changes
         const newSessionId = uuidv4();
         setSessionId(newSessionId);
+        setIsFirstOpen(true); // Reset first open flag for new question
+        setLastQuestion(currentQuestion);
+        setMessages([]); // Clear messages when question changes
         
         // Set the current question in the conversation manager
         // This is used in the system prompt for the LLM as {current_question}
@@ -98,7 +108,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         generateAudioForText(greeting);
       }
     }
-  }, [open, sessionId, currentQuestion, isFirstOpen, messages.length]);
+  }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
 
   // Scroll to bottom of messages when new ones are added
   useEffect(() => {
