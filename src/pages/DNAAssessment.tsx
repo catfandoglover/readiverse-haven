@@ -577,15 +577,11 @@ const DNAAssessment = () => {
       </div>
 
       <AIChatButton 
-        onClick={() => setShowAIChat(true)}
+        currentQuestion={currentQuestion.question?.question || ''}
         enabled={aiEnabled}
       />
       
-      <AIChatDialog
-        open={showAIChat}
-        onOpenChange={setShowAIChat}
-        currentQuestion={currentQuestion.question?.question || ''}
-      />
+      {/* This dialog should be removed since it's already included in AIChatButton */}
     </>
   );
 };
