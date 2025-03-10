@@ -41,6 +41,20 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
 
+  // Initial greeting messages to choose from
+  const initialGreetings = [
+    "Tell me more",
+    "What's on your mind?",
+    "What's your perspective on this?",
+    "What comes to mind as you reflect on this question?", 
+    "How do you find yourself approaching this question?", 
+    "What elements of this question resonate most with you?",
+    "What aspects would you like to explore further?",
+    "Which considerations feel most significant to you?",
+    "How does this question connect with your own experience?",
+    "What dimensions of this question intrigue you?"
+  ];
+
   // Initialize session when dialog opens
   useEffect(() => {
     if (open) {
@@ -62,7 +76,10 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       
       // If this is the first time opening the dialog, show a welcome message
       if (isFirstOpen && messages.length === 0) {
-        const greeting = "I'm here to help you think through this question. What aspects would you like to explore?";
+        // Select a random greeting from the list
+        const randomIndex = Math.floor(Math.random() * initialGreetings.length);
+        const greeting = initialGreetings[randomIndex];
+        
         setMessages([
           {
             id: uuidv4(),
