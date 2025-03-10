@@ -12,7 +12,7 @@ interface DetailedViewProps {
 
 const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
   const renderHeader = () => (
-    <div className="flex justify-between items-center p-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
+    <div className="flex justify-between items-center h-14 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
       <button
         onClick={onBack}
         className="h-10 w-10 rounded-md flex items-center justify-center bg-black/50 text-white"
