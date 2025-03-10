@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +12,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, role, audioUrl }) =>
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
-  // Handle play/pause audio
+  // Automatically play audio for assistant messages when they appear
+  useEffect(() => {
+    if (role === 'assistant' && audioUrl && !audio) {
+      const newAudio = new Audio(audioUrl);
+      
+      // Set up event listeners
+      newAudio.onended = () => setIsPlaying(false);
+      newAudio.onpause = () => setIsPlaying(false);
+      newAudio.onplay = () => setIsPlaying(true);
+      
+      // Store the audio element
+      setAudio(newAudio);
+      
+      // Play the audio automatically
+      newAudio.play().catch(error => {
+        console.error('Error auto-playing audio:', error);
+        setIsPlaying(false);
+      });
+      
+      setIsPlaying(true);
+    }
+  }, [audioUrl, role, audio]);
+
+  // Handle manual play/pause audio
   const toggleAudio = () => {
     if (!audioUrl) return;
 
@@ -49,7 +72,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, role, audioUrl }) =>
   };
 
   // Clean up audio on unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (audio) {
         audio.pause();
