@@ -23,6 +23,7 @@ interface CarouselItem {
   illustration?: string;
   cover_url?: string;
   Cover_super?: string;
+  icon_illustration?: string;
 }
 
 interface DetailedViewProps {
@@ -160,9 +161,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                   itemData.image 
           };
         case 'icon':
-          return { 
-            image: enhancedData.illustration || itemData.image 
-          };
         case 'concept':
           return { 
             image: enhancedData.illustration || itemData.image 
@@ -444,16 +442,20 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {items.map((item) => (
               <div
                 key={item.id}
-                className="relative h-36 w-36 flex-none rounded-lg overflow-hidden cursor-pointer"
+                className="relative h-36 w-36 flex-none overflow-hidden cursor-pointer rounded-lg"
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <img
                   src={item[imageKey as keyof CarouselItem] as string || ''}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
-                  className="h-full w-full object-cover rounded-lg"
+                  className="h-full w-full object-cover"
+                  style={{ borderRadius: 'inherit' }}
                   draggable="false"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2 rounded-lg">
+                <div 
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2"
+                  style={{ borderRadius: 'inherit' }}
+                >
                   <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
                     {item[textKey as keyof CarouselItem] as string}
                   </h4>
