@@ -105,7 +105,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     };
   }, []);
 
-  // Check if this item is a favorite for the current user
   useEffect(() => {
     if (user && itemData.id) {
       const checkFavoriteStatus = async () => {
@@ -216,7 +215,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     try {
       if (isFavorite) {
-        // Remove from favorites
         const { error } = await supabase
           .from('user_favorites')
           .delete()
@@ -231,7 +229,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
         });
       } else {
-        // Add to favorites
         const { error } = await supabase
           .from('user_favorites')
           .insert({
@@ -259,10 +256,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const handleShare = async () => {
     try {
-      // Create the share URL based on the current location
       const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
       
-      // Use the Web Share API if available
       if (navigator.share) {
         await navigator.share({
           title: itemData.title || itemData.name,
@@ -270,7 +265,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           url: shareUrl
         });
       } else {
-        // Fallback for browsers that don't support the Web Share API
         await navigator.clipboard.writeText(shareUrl);
         toast({
           description: "Link copied to clipboard!",
@@ -278,7 +272,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      // If it's not an abort error (user cancelled), show an error toast
       if (error instanceof Error && error.name !== "AbortError") {
         toast({
           variant: "destructive",
@@ -404,7 +397,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
 
-            {type !== "classic" && renderIconButtons()}
+            {renderIconButtons()}
 
             {itemData.great_question_connection && (
               <div className="mb-8">
