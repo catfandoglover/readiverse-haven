@@ -1404,6 +1404,8 @@ export type Database = {
         | "classic_music"
         | "icon"
         | "concept"
+        | "virgil"
+        | "courses"
     }
     CompositeTypes: {
       [_ in never]: never

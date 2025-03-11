@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ interface DetailedViewProps {
 
 interface ShareMessage {
   id: string;
-  type: "classic_text" | "classic_art" | "classic_music" | "icon" | "concept";
+  type: "classic_text" | "classic_art" | "classic_music" | "icon" | "concept" | "virgil" | "courses";
   message: string;
 }
 
