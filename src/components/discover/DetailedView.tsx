@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, ShoppingCart } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -55,28 +55,43 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
-  const renderClassicButtons = () => (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
-      <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={() => data.onReadNow && data.onReadNow()}>
-        <span className="mr-2">📖</span> READ NOW
-      </Button>
-      <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
-        <span className="mr-2">+</span> ADD TO STUDY
-      </Button>
-      <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
-        <span className="mr-2">🛒</span> ORDER
-      </Button>
+  // Bottom navigation bar similar to BottomNav but with READ, ADD, ORDER buttons
+  const renderClassicBottomNav = () => (
+    <div className="bg-[#2A282A] border-t border-gray-700 fixed bottom-0 left-0 right-0 z-10" style={{ height: "50px" }}>
+      <div className="flex justify-center items-center h-full">
+        <div className="flex justify-center items-center w-full max-w-xs">
+          <button 
+            className="flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#E9E7E2]"
+            onClick={() => data.onReadNow && data.onReadNow()}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="text-[10px] uppercase font-oxanium">Read</span>
+          </button>
+          <button 
+            className="flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#E9E7E2]"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="text-[10px] uppercase font-oxanium">Add</span>
+          </button>
+          <button 
+            className="flex flex-col items-center justify-center w-1/3 gap-0.5 text-[#E9E7E2]"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span className="text-[10px] uppercase font-oxanium">Order</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 
   return (
     <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
-      {/* Header (fixed position) - only show it once at the top */}
+      {/* Header (fixed position) */}
       {renderHeader()}
       
-      {/* Content area that takes full height minus header height */}
-      <div className="h-full pt-12 pb-0 flex flex-col">
-        <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
+      {/* Content area that takes full height minus header height and bottom nav */}
+      <div className="h-full pt-12 pb-[50px] flex flex-col">
+        <div className="flex-1 overflow-y-auto">
           {/* Cover Image - fixed aspect ratio */}
           <div className="w-full aspect-square relative">
             <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
@@ -127,8 +142,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
       </div>
 
-      {/* Fixed bottom buttons for classics */}
-      {type === "classic" && renderClassicButtons()}
+      {/* Bottom navigation for classics only */}
+      {type === "classic" && renderClassicBottomNav()}
     </div>
   );
 };
