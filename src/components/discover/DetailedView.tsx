@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useFormatText } from "@/hooks/useFormatText";
 
 interface CarouselItem {
   id: string;
@@ -41,6 +41,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
+  const { formatText } = useFormatText();
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -196,92 +197,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setIsOrderDialogOpen(true);
   };
 
-  const formatText = (text: string) => {
-    if (!text) return "";
-    return text.split("\\n").map((line, i) => (
-      <React.Fragment key={i}>
-        {line}
-        {i < text.split("\\n").length - 1 && <br />}
-      </React.Fragment>
-    ));
-  };
-
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      openLogin();
-      return;
-    }
-    
-    try {
-      if (isFavorite) {
-        const { error } = await supabase
-          .from('user_favorites')
-          .delete()
-          .eq('item_id', itemData.id)
-          .eq('outseta_user_id', user.Uid)
-          .eq('item_type', type);
-          
-        if (error) throw error;
-        
-        setIsFavorite(false);
-        toast({
-          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
-        });
-      } else {
-        const { error } = await supabase
-          .from('user_favorites')
-          .insert({
-            item_id: itemData.id,
-            outseta_user_id: user.Uid,
-            item_type: type,
-            added_at: new Date().toISOString()
-          });
-          
-        if (error) throw error;
-        
-        setIsFavorite(true);
-        toast({
-          description: `${type === 'classic' ? 'Book' : type} added to favorites`,
-        });
-      }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast({
-        variant: "destructive",
-        description: "Failed to update favorites. Please try again.",
-      });
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: itemData.title || itemData.name,
-          text: itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`,
-          url: shareUrl
-        });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          description: "Link copied to clipboard!",
-        });
-      }
-    } catch (error) {
-      console.error("Error sharing:", error);
-      if (error instanceof Error && error.name !== "AbortError") {
-        toast({
-          variant: "destructive",
-          description: "Failed to share. Please try again.",
-        });
-      }
-    }
-  };
-
   const renderHeader = () => (
     <header 
       className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
@@ -371,6 +286,108 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       </div>
     </div>
   );
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
+      const shareTitle = itemData.title || itemData.name || "Check this out";
+      const shareText = itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          
+          toast({
+            description: "Successfully shared!",
+          });
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            return;
+          }
+          
+          await fallbackToClipboard(shareUrl);
+        }
+      } else {
+        await fallbackToClipboard(shareUrl);
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      toast({
+        variant: "destructive",
+        description: "Unable to share. Please try again.",
+      });
+    }
+  };
+
+  const fallbackToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        description: "Link copied to clipboard!",
+      });
+    } catch (clipboardError) {
+      console.error("Clipboard error:", clipboardError);
+      toast({
+        variant: "destructive",
+        description: "Couldn't copy to clipboard. Try manually copying the URL.",
+      });
+    }
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+    
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('item_id', itemData.id)
+          .eq('outseta_user_id', user.Uid)
+          .eq('item_type', type);
+          
+        if (error) throw error;
+        
+        setIsFavorite(false);
+        toast({
+          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
+        });
+      } else {
+        const { error } = await supabase
+          .from('user_favorites')
+          .insert({
+            item_id: itemData.id,
+            outseta_user_id: user.Uid,
+            item_type: type,
+            added_at: new Date().toISOString()
+          });
+          
+        if (error) throw error;
+        
+        setIsFavorite(true);
+        toast({
+          description: `${type === 'classic' ? 'Book' : type} added to favorites`,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update favorites. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">

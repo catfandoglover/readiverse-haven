@@ -154,6 +154,7 @@ export type Database = {
           id: string
           illustration: string
           introduction: string | null
+          Notion_URL: string | null
           randomizer: number
           title: string
           type: string | null
@@ -164,6 +165,7 @@ export type Database = {
           id?: string
           illustration: string
           introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title: string
           type?: string | null
@@ -174,6 +176,7 @@ export type Database = {
           id?: string
           illustration?: string
           introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title?: string
           type?: string | null
@@ -1082,6 +1085,7 @@ export type Database = {
           illustration: string
           introduction: string | null
           name: string
+          Notion_URL: string | null
           randomizer: number
         }
         Insert: {
@@ -1091,6 +1095,7 @@ export type Database = {
           illustration: string
           introduction?: string | null
           name: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Update: {
@@ -1100,6 +1105,7 @@ export type Database = {
           illustration?: string
           introduction?: string | null
           name?: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Relationships: []
@@ -1219,6 +1225,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      share_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          type?: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       test_auth: {
         Row: {
@@ -1374,6 +1404,14 @@ export type Database = {
         | "ONTOLOGY"
         | "POLITICS"
         | "THEOLOGY"
+      share_message_type:
+        | "classic_text"
+        | "classic_art"
+        | "classic_music"
+        | "icon"
+        | "concept"
+        | "virgil"
+        | "courses"
     }
     CompositeTypes: {
       [_ in never]: never
