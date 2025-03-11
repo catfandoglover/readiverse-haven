@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -23,7 +22,6 @@ const DiscoverLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Function to scroll to the next/previous item
   const scrollToItem = (direction: 'next' | 'prev') => {
     if (isAnimating || detailedViewVisible) return;
     
@@ -44,7 +42,6 @@ const DiscoverLayout = () => {
     }, 300);
   };
 
-  // Setup swipe handlers for vertical navigation
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => {
       if (!detailedViewVisible) scrollToItem('next');
@@ -60,21 +57,18 @@ const DiscoverLayout = () => {
         setTransitionProgress(progress);
       }
     },
-    onSwipedLeft: () => {
-      if (!detailedViewVisible) console.log("Swipe left to view details");
-    },
-    preventScrollOnSwipe: !detailedViewVisible, // Only prevent scroll when DetailedView is not visible
+    preventScrollOnSwipe: !detailedViewVisible,
     trackMouse: !detailedViewVisible,
-    trackTouch: true
+    trackTouch: true,
+    delta: 10,
+    swipeDuration: 500
   });
 
-  // Handle tab changes
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setCurrentIndex(0);
   };
 
-  // Handle wheel events for navigation
   const handleWheel = (e: React.WheelEvent) => {
     if (detailedViewVisible) return;
     
@@ -86,7 +80,6 @@ const DiscoverLayout = () => {
     e.preventDefault();
   };
 
-  // Prevent default scrolling behavior
   useEffect(() => {
     const preventDefaultScroll = (e: WheelEvent) => {
       if (!detailedViewVisible) {
@@ -106,13 +99,11 @@ const DiscoverLayout = () => {
     };
   }, [detailedViewVisible]);
 
-  // Check if we should show a detailed view from URL
   useEffect(() => {
     const showDetailedView = location.pathname.includes('/view/');
     setDetailedViewVisible(showDetailedView);
   }, [location.pathname]);
 
-  // Determine content component based on active tab
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {
       case "for-you":
@@ -142,7 +133,6 @@ const DiscoverLayout = () => {
     }
   };
 
-  // Current and adjacent content items for transition effect
   const currentContent = getContentComponent(activeTab, currentIndex);
   const prevContent = currentIndex > 0 ? 
     getContentComponent(activeTab, currentIndex - 1) : null;
@@ -154,13 +144,11 @@ const DiscoverLayout = () => {
       className="flex flex-col h-screen bg-[#E9E7E2] text-[#E9E7E2] overflow-hidden"
       onWheel={handleWheel}
     >
-      {/* Main Content Area with Swipe Functionality */}
       <main 
         className="flex-1 relative pb-[50px] overflow-hidden" 
         {...(detailedViewVisible ? {} : swipeHandlers)}
         ref={contentRef}
       >
-        {/* Top Navigation - Only show when detailed view is not visible */}
         {!detailedViewVisible && (
           <header 
             className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
@@ -221,9 +209,7 @@ const DiscoverLayout = () => {
           </header>
         )}
         
-        {/* Content container with TikTok-style transition */}
         <div className="w-full h-full relative bg-[#E9E7E2]">
-          {/* Current content */}
           <div 
             className="w-full h-full absolute inset-0 bg-[#2A282A] transition-transform duration-300 ease-out"
             style={{
@@ -237,7 +223,6 @@ const DiscoverLayout = () => {
             {currentContent}
           </div>
 
-          {/* Next content (for when swiping up) */}
           <div 
             className="w-full h-full absolute inset-0 top-full bg-[#2A282A] transition-transform duration-300 ease-out"
             style={{
@@ -247,7 +232,6 @@ const DiscoverLayout = () => {
             {nextContent}
           </div>
 
-          {/* Previous content (for when swiping down) */}
           {prevContent && (
             <div 
               className="w-full h-full absolute inset-0 bottom-full bg-[#2A282A] transition-transform duration-300 ease-out"
@@ -261,7 +245,6 @@ const DiscoverLayout = () => {
         </div>
       </main>
 
-      {/* Bottom Navigation - Only show when detailed view is not visible */}
       {!detailedViewVisible && (
         <div className="fixed bottom-0 left-0 right-0 z-50">
           <BottomNav activeTab="discover" />

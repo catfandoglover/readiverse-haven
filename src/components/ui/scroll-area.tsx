@@ -40,6 +40,26 @@ const ScrollArea = React.forwardRef<
     viewportRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  // Handle touch events for mobile swiping
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!enableDragging || !viewportRef.current) return;
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - viewportRef.current.offsetLeft);
+    setScrollLeft(viewportRef.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !enableDragging || !viewportRef.current) return;
+    const x = e.touches[0].pageX - viewportRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    viewportRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleTouchEnd = () => {
+    if (!enableDragging) return;
+    setIsDragging(false);
+  };
+
   React.useEffect(() => {
     if (enableDragging && viewportRef.current) {
       viewportRef.current.style.cursor = 'grab';
@@ -62,6 +82,9 @@ const ScrollArea = React.forwardRef<
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

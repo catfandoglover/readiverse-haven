@@ -154,7 +154,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       switch(type) {
         case 'classic':
           return { 
-            image: enhancedData.icon_illustration || enhancedData.cover_url || enhancedData.Cover_super || itemData.image 
+            image: enhancedData.icon_illustration || 
+                  enhancedData.cover_url || 
+                  enhancedData.Cover_super || 
+                  itemData.image 
           };
         case 'icon':
           return { 
@@ -436,7 +439,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
-        <ScrollArea className="w-full pb-4">
+        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
             {items.map((item) => (
               <div
@@ -445,7 +448,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <img
-                  src={item[imageKey as keyof CarouselItem] as string}
+                  src={item[imageKey as keyof CarouselItem] as string || ''}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
                   className="h-full w-full object-cover"
                   draggable="false"
