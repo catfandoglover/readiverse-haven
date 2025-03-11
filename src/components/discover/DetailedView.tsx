@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -39,6 +40,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -99,8 +104,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    
+    // Add scroll event listener to track scrolling
+    const handleScroll = () => {
+      if (contentRef.current) {
+        setScrollPosition(contentRef.current.scrollTop);
+      }
+    };
+    
+    const contentElement = contentRef.current;
+    if (contentElement) {
+      contentElement.addEventListener('scroll', handleScroll);
+    }
+    
     return () => {
       document.body.style.overflow = originalStyle;
+      if (contentElement) {
+        contentElement.removeEventListener('scroll', handleScroll);
+      }
     };
   }, []);
 
@@ -180,22 +201,57 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     ));
   };
 
+  // Calculate if we should fix the title to the top based on scroll position
+  const imageHeight = window.innerWidth; // Since the image is square (1:1 aspect ratio)
+  const headerHeight = 152; // Height of the header as defined in styling
+  
+  // Calculate transition points for the sliding effect
+  const startFixingAt = imageHeight - headerHeight - 100; // Start a bit before header meets image bottom
+  const fullyFixedAt = imageHeight - headerHeight; // Fully fixed when header meets image bottom
+  
+  // Calculate how much to move the content up based on scroll
+  const translateY = Math.min(scrollPosition, startFixingAt);
+  const titleTranslateY = scrollPosition > startFixingAt 
+    ? Math.min(scrollPosition - startFixingAt, 100) 
+    : 0;
+  
+  // Opacity for the title in the fixed header
+  const titleOpacity = scrollPosition > startFixingAt 
+    ? Math.min((scrollPosition - startFixingAt) / 100, 1) 
+    : 0;
+
   const renderHeader = () => (
     <header 
-      className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      ref={headerRef}
+      className="fixed top-0 left-0 right-0 z-20 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
         maxHeight: "152px"
       }}
     >
-      <div className="flex items-center h-full px-4">
+      <div className="flex items-center justify-between h-full px-4">
         <button 
           onClick={handleBack} 
           className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-white"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
+        
+        {/* Fixed title that appears when scrolling */}
+        <div 
+          className="absolute left-0 right-0 bottom-0 px-4 pb-2 flex items-end transition-opacity duration-300"
+          style={{ opacity: titleOpacity }}
+        >
+          <div className="w-full">
+            <h1 className="text-xl font-serif text-white truncate">{itemData.title}</h1>
+            {type === "classic" && 
+              <h2 className="text-sm font-baskerville text-gray-300 truncate">
+                by {itemData.author}
+              </h2>
+            }
+          </div>
+        </div>
       </div>
     </header>
   );
@@ -248,28 +304,54 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
       <div className="h-full w-full flex flex-col">
-        <div className="w-full relative">
+        <div 
+          className="w-full relative"
+          style={{ 
+            aspectRatio: "1/1",
+            maxHeight: "100vh",
+            transform: `translateY(-${translateY}px)`,
+            transition: scrollPosition > startFixingAt ? 'none' : 'transform 0.1s ease-out'
+          }}
+        >
           <img 
             src={itemData.image} 
             alt={itemData.title} 
-            className="w-full object-cover" 
-            style={{ 
-              aspectRatio: "1/1",
-              maxHeight: "100vh" 
-            }} 
+            className="w-full h-full object-cover" 
           />
           
           {renderHeader()}
         </div>
 
-        <div className="flex-1 overflow-y-auto relative" style={{ marginTop: "-5%" }}>
-          <div className="p-6 pb-32 bg-[#2A282A] rounded-t-3xl relative z-10">
-            <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
-            {type === "classic" && 
-              <h2 className="text-xl font-baskerville mb-6 text-gray-400">
-                by {itemData.author}
-              </h2>
-            }
+        <div 
+          ref={contentRef}
+          className="flex-1 overflow-y-auto relative z-10" 
+          style={{ 
+            marginTop: `-5%`,
+            height: `calc(100% + ${translateY}px)`,
+          }}
+        >
+          <div 
+            className="p-6 pb-32 bg-[#2A282A] rounded-t-3xl relative"
+            style={{
+              marginTop: `-${translateY}px`,
+              transition: scrollPosition > startFixingAt ? 'none' : 'margin-top 0.1s ease-out'
+            }}
+          >
+            <div 
+              ref={titleRef}
+              style={{ 
+                transform: `translateY(-${titleTranslateY}px)`,
+                opacity: 1 - titleOpacity,
+                transition: scrollPosition > startFixingAt ? 'none' : 'all 0.1s ease-out'
+              }}
+            >
+              <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
+              {type === "classic" && 
+                <h2 className="text-xl font-baskerville mb-6 text-gray-400">
+                  by {itemData.author}
+                </h2>
+              }
+            </div>
 
             <p className="text-xl font-baskerville mb-8">
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}

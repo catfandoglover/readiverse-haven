@@ -38,8 +38,12 @@ const ContentCard: React.FC<ContentCardProps> = ({
   return (
     <div className="flex flex-col h-full relative">
       <div 
-        className="relative aspect-square w-full" 
+        className="relative w-full" 
         onClick={onImageClick}
+        style={{ 
+          aspectRatio: "1/1",
+          maxHeight: "100vh" 
+        }}
       >
         <img
           src={image}
