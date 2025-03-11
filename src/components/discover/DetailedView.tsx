@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, openLogin } = useAuth();
+  const { user, openLogin, supabase: authSupabase } = useAuth();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
@@ -203,16 +204,30 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (user && itemData.id) {
       const checkFavoriteStatus = async () => {
         try {
-          const { data } = await supabase
+          console.log('Checking favorite status for:', {
+            itemId: itemData.id,
+            userId: user.Uid,
+            itemType: type
+          });
+          
+          const { data, error } = await supabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemData.id)
             .eq('outseta_user_id', user.Uid)
-            .eq('item_type', type)
-            .single();
+            .eq('item_type', type);
           
-          if (data) {
+          if (error) {
+            console.error("Error checking favorite status:", error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            console.log('Found favorite:', data);
             setIsFavorite(true);
+          } else {
+            console.log('No favorite found');
+            setIsFavorite(false);
           }
         } catch (error) {
           console.error("Error checking favorite status:", error);
@@ -221,7 +236,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       checkFavoriteStatus();
     }
-  }, [user, itemData.id, type]);
+  }, [user, itemData.id, type, supabase]);
 
   const handleBack = () => {
     if (onBack) {
@@ -349,22 +364,33 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
     
     try {
+      console.log("Toggle favorite with auth client, current state:", isFavorite);
+      
+      if (!authSupabase) {
+        throw new Error("Authenticated Supabase client not available");
+      }
+      
       if (isFavorite) {
-        const { error } = await supabase
+        console.log("Removing favorite");
+        const { error } = await authSupabase
           .from('user_favorites')
           .delete()
           .eq('item_id', combinedData.id)
           .eq('outseta_user_id', user.Uid)
           .eq('item_type', type);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Delete error:", error);
+          throw error;
+        }
         
         setIsFavorite(false);
         toast({
           description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
         });
       } else {
-        const { error } = await supabase
+        console.log("Adding favorite");
+        const { error } = await authSupabase
           .from('user_favorites')
           .insert({
             item_id: combinedData.id,
@@ -373,7 +399,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             added_at: new Date().toISOString()
           });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         
         setIsFavorite(true);
         toast({

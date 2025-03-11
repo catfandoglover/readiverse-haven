@@ -1,4 +1,5 @@
 
+// This file handles token exchange between Outseta and Supabase
 const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange';
 
 export async function exchangeToken(outsetaToken: string): Promise<string> {
