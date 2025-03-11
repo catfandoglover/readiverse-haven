@@ -47,28 +47,30 @@ const ContentCard: React.FC<ContentCardProps> = ({
           className="w-full h-full object-cover"
           loading="lazy"
         />
-        <div className="absolute bottom-4 right-4 flex gap-2 items-center">
-          <button
-            className="flex items-center justify-center text-[#2A282A]"
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            onClick={toggleFavorite}
-          >
-            <Star 
-              className="h-6 w-6" 
-              fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
-            />
-          </button>
-          <button
-            className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="h-3 w-3" />
-          </button>
-        </div>
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-6 relative z-10">
         <div className="mb-2">
-          <h2 className="text-3xl font-serif mb-4">{title}</h2>
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-3xl font-serif">{title}</h2>
+            <div className="flex gap-2 items-center">
+              <button
+                className="flex items-center justify-center text-[#2A282A]"
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                onClick={toggleFavorite}
+              >
+                <Star 
+                  className="h-6 w-6" 
+                  fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
+                />
+              </button>
+              <button
+                className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
           <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
         </div>
         
