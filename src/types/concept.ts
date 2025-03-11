@@ -2,7 +2,7 @@
 export interface Concept {
   id: string;
   title: string;
-  description?: string; // Making it optional to match database structure
+  description?: string; // Optional to accommodate database structure
   about?: string;       // Add this field to match database
   illustration: string;
   type?: string;

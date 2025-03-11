@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -101,10 +100,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   });
 
   useEffect(() => {
+    const viewportMeta = document.createElement('meta');
+    viewportMeta.name = 'viewport';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+    document.head.appendChild(viewportMeta);
+
     const originalStyle = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalStyle;
+      document.head.removeChild(viewportMeta);
     };
   }, []);
 
@@ -300,7 +305,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm pt-safe"
       style={{
         aspectRatio: "1290/152",
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
@@ -392,7 +397,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto pb-24" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div 
+        className="h-full w-full overflow-y-auto" 
+        style={{ 
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingBottom: type === "classic" ? "calc(80px + env(safe-area-inset-bottom, 20px))" : "0" 
+        }}
+      >
         <div className="w-full">
           <img 
             src={itemData.image} 
@@ -459,8 +470,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name")}
             
-            {/* Add extra padding at bottom to ensure content isn't hidden behind fixed buttons */}
-            <div className="h-24"></div>
+            <div className="h-32"></div>
           </div>
         </div>
       </div>
