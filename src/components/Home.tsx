@@ -4,7 +4,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Database } from "@/integrations/supabase/types";
 import { Compass, BookOpen, Search, Hexagon } from "lucide-react";
 import QuestionsCards from "./QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -12,21 +11,31 @@ import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "./ui/scroll-area";
 
-type Book = Database['public']['Tables']['books']['Row'];
-// Update the Concept type to make category optional
+type Book = {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string | null;
+  Cover_super: string | null;
+  // Add other fields as needed
+};
+
+// Update the Concept type to make category optional and description optional
 type Concept = {
   id: string;
   title: string;
-  description: string | null;
+  description?: string | null;
   illustration: string;
-  category?: string | null; // Make category optional
+  category?: string | null;
   randomizer: number;
   created_at: string;
   about?: string;
   type?: string;
   introduction?: string;
 };
+
 type Icon = {
   id: string;
   name: string;
@@ -189,8 +198,8 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8">
                 Read Classics
               </h1>
-              <div className="overflow-x-auto scrollbar-hide relative">
-                <div className="flex gap-4 pb-4 min-w-min">
+              <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+                <div className="flex gap-4 pb-4 min-w-max px-0.5 py-0.5">
                   {books?.map((book) => (
                     <Card 
                       key={book.id} 
@@ -205,6 +214,7 @@ const Home = () => {
                           alt={book.title}
                           className="w-full h-full object-cover rounded-lg relative z-10"
                           loading="lazy"
+                          draggable="false"
                         />
                       </div>
                       <div className="p-2 flex justify-center">
@@ -223,7 +233,7 @@ const Home = () => {
                     </Card>
                   ))}
                 </div>
-              </div>
+              </ScrollArea>
               <div className="flex justify-center mt-4">
                 <Button 
                   variant="secondary"
@@ -237,8 +247,8 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8 mt-16">
                 Encounter Icons
               </h1>
-              <div className="overflow-x-auto scrollbar-hide relative">
-                <div className="flex gap-4 pb-4 min-w-min">
+              <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+                <div className="flex gap-4 pb-4 min-w-max px-0.5 py-0.5">
                   {icons?.map((icon) => (
                     <Card 
                       key={icon.id} 
@@ -250,12 +260,13 @@ const Home = () => {
                           alt={icon.name}
                           className="w-full h-full object-cover rounded-lg relative z-10"
                           loading="lazy"
+                          draggable="false"
                         />
                       </div>
                     </Card>
                   ))}
                 </div>
-              </div>
+              </ScrollArea>
               <div className="flex justify-center mt-4 mb-4">
                 <Button 
                   variant="secondary"
@@ -269,8 +280,8 @@ const Home = () => {
               <h1 className="text-2xl font-oxanium text-center text-[#E9E7E2] uppercase mb-8 mt-16">
                 Explore Concepts
               </h1>
-              <div className="overflow-x-auto scrollbar-hide relative">
-                <div className="flex gap-4 pb-4 min-w-min">
+              <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+                <div className="flex gap-4 pb-4 min-w-max px-0.5 py-0.5">
                   {concepts?.map((concept) => (
                     <Card 
                       key={concept.id} 
@@ -282,12 +293,13 @@ const Home = () => {
                           alt={concept.title}
                           className="w-full h-full object-cover rounded-lg relative z-10"
                           loading="lazy"
+                          draggable="false"
                         />
                       </div>
                     </Card>
                   ))}
                 </div>
-              </div>
+              </ScrollArea>
               <div className="flex justify-center mt-4 mb-4">
                 <Button 
                   variant="secondary"

@@ -6,6 +6,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
+import { ScrollArea } from "./ui/scroll-area";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -85,8 +86,8 @@ const QuestionsCards = () => {
         The Great Questions
       </h1>
       
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-4 pb-4 min-w-min">
+      <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+        <div className="flex gap-4 pb-4 min-w-max px-0.5 py-0.5">
           {questions?.map((question) => (
             <Card 
               key={question.id}
@@ -114,7 +115,7 @@ const QuestionsCards = () => {
             </Card>
           ))}
         </div>
-      </div>
+      </ScrollArea>
       
       <div className="flex justify-center mt-16">
         <Button 

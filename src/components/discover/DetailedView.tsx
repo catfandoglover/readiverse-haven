@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,13 +88,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     },
   });
 
-  // Modified to fetch users who are reading this book
   const { data: readersData = [], isLoading: isReadersLoading } = useQuery({
     queryKey: ["book-readers", itemData.id, readerFilter],
     queryFn: async () => {
       if (!itemData.id) return [];
       
-      // Query to get users reading this book, joining with profiles table
       const { data, error } = await supabase
         .from("user_books")
         .select(`
@@ -112,10 +109,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         return [];
       }
       
-      // Sort data based on filter type
       if (readerFilter === "TOP RANKED") {
-        // In a real app, this could sort by reading progress, ratings, etc.
-        // For now, we'll sort by last read time
         return data.sort((a, b) => {
           if (!a.last_read_at) return 1;
           if (!b.last_read_at) return -1;
@@ -357,8 +351,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
-        <ScrollArea className="w-full pb-4">
-          <div className="flex space-x-4">
+        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -368,6 +362,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                   src={item[imageKey as keyof CarouselItem] as string}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
                   className="h-full w-full object-cover"
+                  draggable="false"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
                   <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
@@ -421,7 +416,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
-  // New function to render the readers leaderboard
   const renderReadersLeaderboard = () => {
     return (
       <div className="mt-8">
@@ -451,7 +445,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           ) : readersData.length === 0 ? (
             <div className="p-4 text-center">No readers yet. Be the first!</div>
           ) : (
-            <ScrollArea className="h-60">
+            <ScrollArea className="h-60" enableDragging={false}>
               <div className="divide-y divide-gray-200">
                 {readersData.map((reader, index) => (
                   <div 
@@ -530,7 +524,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {renderHorizontalSlider("MAJOR THEMES", concepts)}
 
-            {/* Replace the previous readers section with the new leaderboard */}
             {renderReadersLeaderboard()}
 
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url")}
