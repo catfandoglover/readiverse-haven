@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,14 +89,41 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     },
   });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profiles"],
+  // Modified to fetch users who are reading this book
+  const { data: readersData = [], isLoading: isReadersLoading } = useQuery({
+    queryKey: ["book-readers", itemData.id, readerFilter],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .limit(10);
-      return data || [];
+      if (!itemData.id) return [];
+      
+      // Query to get users reading this book, joining with profiles table
+      const { data, error } = await supabase
+        .from("user_books")
+        .select(`
+          outseta_user_id,
+          status,
+          last_read_at,
+          profiles:outseta_user_id(full_name, email)
+        `)
+        .eq("book_id", itemData.id)
+        .order("outseta_user_id", { ascending: true });
+      
+      if (error) {
+        console.error("Error fetching readers:", error);
+        return [];
+      }
+      
+      // Sort data based on filter type
+      if (readerFilter === "TOP RANKED") {
+        // In a real app, this could sort by reading progress, ratings, etc.
+        // For now, we'll sort by last read time
+        return data.sort((a, b) => {
+          if (!a.last_read_at) return 1;
+          if (!b.last_read_at) return -1;
+          return new Date(b.last_read_at).getTime() - new Date(a.last_read_at).getTime();
+        });
+      }
+      
+      return data;
     },
   });
 
@@ -393,6 +421,67 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
+  // New function to render the readers leaderboard
+  const renderReadersLeaderboard = () => {
+    return (
+      <div className="mt-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+          SEEKERS READING {itemData.title && itemData.title.toUpperCase()}
+        </h3>
+        <Select
+          onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
+          defaultValue="READERS"
+        >
+          <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
+            <SelectValue placeholder="Select filter" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
+            <SelectItem value="READERS">READERS</SelectItem>
+            <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <div className="border border-gray-300 rounded-md overflow-hidden">
+          <div className="bg-[#2A282A] text-[#E9E7E2] py-2 px-4 font-oxanium">
+            READER LEADERBOARD
+          </div>
+          
+          {isReadersLoading ? (
+            <div className="p-4 text-center">Loading readers...</div>
+          ) : readersData.length === 0 ? (
+            <div className="p-4 text-center">No readers yet. Be the first!</div>
+          ) : (
+            <ScrollArea className="h-60">
+              <div className="divide-y divide-gray-200">
+                {readersData.map((reader, index) => (
+                  <div 
+                    key={reader.outseta_user_id} 
+                    className={cn(
+                      "p-4 flex items-center gap-4",
+                      index % 2 === 0 ? "bg-[#F5F5F5]" : "bg-white"
+                    )}
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center bg-[#2A282A] text-[#E9E7E2] rounded-full font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-baskerville font-semibold">
+                        {reader.profiles?.full_name || "Anonymous Reader"}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {reader.status === "completed" ? "Completed" : "Currently reading"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -441,30 +530,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {renderHorizontalSlider("MAJOR THEMES", concepts)}
 
-            <div className="mt-8">
-              <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-                SEEKERS READING {itemData.title && itemData.title.toUpperCase()}
-              </h3>
-              <Select
-                onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
-                defaultValue="READERS"
-              >
-                <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
-                  <SelectValue placeholder="Select filter" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
-                  <SelectItem value="READERS">READERS</SelectItem>
-                  <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="space-y-2">
-                {profiles.map(profile => (
-                  <div key={profile.id} className="p-2 border border-gray-300 rounded-md text-gray-800 font-baskerville text-lg">
-                    {profile.full_name || "Anonymous Reader"}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Replace the previous readers section with the new leaderboard */}
+            {renderReadersLeaderboard()}
 
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url")}
 
