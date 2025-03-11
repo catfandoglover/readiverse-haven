@@ -18,6 +18,7 @@ interface Icon {
   randomizer?: number;
   created_at?: string;
   introduction?: string;
+  slug?: string; // Add slug field
 }
 
 interface IconsContentProps {
@@ -52,6 +53,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       // Enhance the data with placeholder fields if they don't exist
       return data.map((icon: any) => ({
         ...icon,
+        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'), // Use slug if exists or generate from name
         about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
         great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
         anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
@@ -62,8 +64,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/icon/')) {
-      const iconId = location.pathname.split('/view/icon/')[1];
-      const icon = icons.find(i => i.id === iconId);
+      const iconSlug = location.pathname.split('/view/icon/')[1];
+      const icon = icons.find(i => (i.slug === iconSlug || i.id === iconSlug));
       
       if (icon) {
         setSelectedIcon(icon);
@@ -76,7 +78,9 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
-    navigate(`/view/icon/${icon.id}`, { replace: true });
+    // Use slug for the URL if available, otherwise use ID
+    const urlParam = icon.slug || icon.id;
+    navigate(`/view/icon/${urlParam}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
 

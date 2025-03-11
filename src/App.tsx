@@ -58,7 +58,7 @@ const App = () => (
               <Sonner />
               <Routes>
                 <Route path="/" element={<DiscoverLayout />} /> 
-                <Route path="/view/:type/:id" element={<DiscoverLayout />} />
+                <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />

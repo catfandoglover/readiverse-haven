@@ -25,10 +25,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
   };
 
   const renderHeader = () => (
-    <div className="flex items-center h-14 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
+    <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
       <button
         onClick={handleBack}
-        className="h-10 w-10 rounded-md flex items-center justify-center bg-black/50 text-white"
+        className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
