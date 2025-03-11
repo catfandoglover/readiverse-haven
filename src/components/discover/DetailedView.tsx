@@ -286,14 +286,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
         maxHeight: "152px"
       }}
     >
       <div className="flex items-center h-full px-4">
         <button 
           onClick={handleBack} 
-          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#E9E7E2]"
+          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#2A282A]"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -375,7 +374,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div className="h-full w-full overflow-y-auto pt-0" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
