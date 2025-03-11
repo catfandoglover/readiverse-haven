@@ -76,11 +76,13 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         setMessages([]); // Clear messages when question changes
         
         // Set the current question in the conversation manager
-        // This is used in the system prompt for the LLM as {current_question}
         conversationManager.setCurrentQuestion(userId, currentQuestion);
         
-        // Add an initial user message to ensure proper message ordering
-        conversationManager.addMessage(userId, 'user', `I'd like to discuss: ${currentQuestion}`);
+        // Initialize the conversation with an automatic greeting
+        conversationManager.initializeConversation(userId);
+        
+        // Update the local messages state with the greeting
+        setMessages(conversationManager.getHistory(userId));
       } else {
         // Update the current question in case it changed
         conversationManager.setCurrentQuestion(userId, currentQuestion);

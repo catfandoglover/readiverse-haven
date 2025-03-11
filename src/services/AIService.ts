@@ -1,4 +1,4 @@
-import conversationManager from './ConversationManager';
+import { conversationManager } from './ConversationManager';
 
 class AIService {
   private apiKey: string = '';
