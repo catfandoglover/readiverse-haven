@@ -262,8 +262,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           {renderHeader()}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-32">
+        <div className="flex-1 overflow-y-auto relative" style={{ marginTop: "-5%" }}>
+          <div className="p-6 pb-32 bg-[#2A282A] rounded-t-3xl relative z-10">
             <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">

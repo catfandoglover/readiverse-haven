@@ -36,7 +36,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <div 
         className="relative aspect-square w-full" 
         onClick={onImageClick}
@@ -66,7 +66,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
           </button>
         </div>
       </div>
-      <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col">
+      <div 
+        className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl absolute bottom-0 left-0 right-0"
+        style={{ marginTop: "-5%" }}
+      >
         <div className="mb-2">
           <h2 className="text-3xl font-serif mb-4">{title}</h2>
           <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
