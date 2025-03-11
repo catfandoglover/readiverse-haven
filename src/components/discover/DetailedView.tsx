@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -284,10 +283,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
         maxHeight: "152px"
       }}
     >
@@ -376,7 +374,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div className="h-full w-full overflow-y-auto pt-0" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
