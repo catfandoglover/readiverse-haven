@@ -507,7 +507,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             }
 
             <p className="text-gray-800 font-baskerville text-lg mb-8">
-              {formatText(itemData.introduction || itemData.about || "What lies beneath the morality you hold sacred?")}
+              {itemData.introduction ? formatText(itemData.introduction) : ""}
             </p>
 
             {itemData.great_question_connection && (

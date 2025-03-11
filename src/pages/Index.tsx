@@ -130,7 +130,7 @@ const Home = () => {
     refetchOnMount: false
   });
 
-  const { data: concepts, isLoading: conceptsLoading } = useQuery({
+  const { data: conceptsData, isLoading: conceptsLoading } = useQuery({
     queryKey: ['concepts'],
     queryFn: async () => {
       const { data, error } = await authenticatedSupabase
@@ -139,7 +139,11 @@ const Home = () => {
         .order('randomizer');
       
       if (error) throw error;
-      return data as Concept[];
+      const mappedConcepts = conceptsData?.map(concept => ({
+        ...concept,
+        description: concept.about || "" // Add description field to make it compatible with Concept type
+      })) as Concept[];
+      return mappedConcepts;
     },
     staleTime: 30000,
     refetchOnMount: false
@@ -287,7 +291,7 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {concepts?.map((concept) => (
+                  {conceptsData?.map((concept) => (
                     <Card 
                       key={concept.id} 
                       className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
