@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
 
-  // Fetch related data
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
     queryFn: async () => {
@@ -97,14 +95,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     },
   });
 
-  // Prevent body scrolling when DetailedView is mounted
   useEffect(() => {
-    // Save the original overflow style
     const originalStyle = document.body.style.overflow;
-    // Prevent scrolling on the body
     document.body.style.overflow = 'hidden';
-
-    // Restore original style when component unmounts
     return () => {
       document.body.style.overflow = originalStyle;
     };
@@ -114,11 +107,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (onBack) {
       onBack();
     } else {
-      // Use browser history to go back if possible
       if (window.history.length > 1) {
         navigate(-1);
       } else {
-        // Fallback to main discover view
         navigate('/');
       }
     }
@@ -245,9 +236,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
-      {/* Content area with proper positioning */}
       <div className="h-full w-full flex flex-col">
-        {/* Cover Image with fixed aspect ratio - positioned to go under the header */}
         <div className="w-full relative">
           <img 
             src={itemData.image} 
@@ -259,14 +248,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             }} 
           />
           
-          {/* Header overlay on top of image */}
           {renderHeader()}
         </div>
 
-        {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Content */}
-          <div className="px-6 py-8">
+          <div className="p-6">
             <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
@@ -274,12 +260,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </h2>
             }
 
-            {/* Introduction section */}
             <p className="text-xl font-baskerville mb-8">
               {itemData.about || "What lies beneath the morality you hold sacred?"}
             </p>
 
-            {/* Great Conversation */}
             {itemData.great_question_connection && (
               <div className="mb-8">
                 <h3 className="text-xl font-baskerville capitalize mb-4">The Great Conversation</h3>
@@ -287,13 +271,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </div>
             )}
 
-            {/* Great Questions */}
             {renderHorizontalSlider("Great Questions", greatQuestions, "illustration", "question")}
 
-            {/* Major Themes */}
             {renderHorizontalSlider("Major Themes", concepts)}
 
-            {/* Seekers Reading */}
             <div className="mt-8">
               <h3 className="text-xl font-baskerville capitalize mb-4">
                 Seekers Reading {itemData.title}
@@ -319,19 +300,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </div>
             </div>
 
-            {/* Related Classics */}
             {renderHorizontalSlider("Related Classics", relatedClassics, "cover_url")}
 
-            {/* Connected Icons */}
             {renderHorizontalSlider("Connected Icons", connectedIcons, "illustration", "name")}
           </div>
         </div>
       </div>
 
-      {/* Fixed bottom buttons for classics */}
       {type === "classic" && renderClassicButtons()}
 
-      {/* Order Dialog */}
       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
         <DialogContent className="bg-[#2A282A] text-[#E9E7E2] border-gray-700 max-w-sm mx-auto">
           <DialogHeader>
