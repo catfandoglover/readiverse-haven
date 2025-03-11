@@ -16,6 +16,7 @@ interface Classic {
   Cover_super?: string;
   epub_file_url?: string;
   amazon_link?: string;
+  introduction?: string;
   about?: string;
   great_conversation?: string;
   tagline?: string;
@@ -59,7 +60,8 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
       // Map the fields to match our component structure
       return data.map((book: any) => ({
         ...book,
-        // Don't override existing about field if it exists
+        // Only use default values if the fields don't exist
+        introduction: book.introduction || null,
         about: book.about || `${book.title} is a significant work in literary and philosophical history.`,
         great_conversation: book.great_conversation || `${book.title} has played an important role in shaping intellectual discourse.`,
       }));

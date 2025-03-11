@@ -39,14 +39,16 @@ export const useBook = (slug: string | undefined) => {
           const result = retryData?.[0] || null;
           console.log('Retry query result:', {
             found: !!result,
-            hasEpubUrl: result?.epub_file_url ? 'yes' : 'no'
+            hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
+            introduction: result?.introduction ? 'yes' : 'no'
           });
           return result;
         }
 
         console.log('Query result:', {
           found: !!data,
-          hasEpubUrl: data?.epub_file_url ? 'yes' : 'no'
+          hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
+          introduction: data?.introduction ? 'yes' : 'no'
         });
         return data;
       } catch (error) {
