@@ -98,6 +98,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           epub_file_url: string
+          great_question_connection: string | null
           icon_illustration: string | null
           id: string
           introduction: string | null
@@ -116,6 +117,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           epub_file_url: string
+          great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string
           introduction?: string | null
@@ -134,6 +136,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           epub_file_url?: string
+          great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string
           introduction?: string | null
@@ -1108,6 +1111,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          full_name: string | null
           id: string
           outseta_user_id: string
           updated_at: string
@@ -1115,6 +1119,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          full_name?: string | null
           id?: string
           outseta_user_id: string
           updated_at?: string
@@ -1122,6 +1127,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          full_name?: string | null
           id?: string
           outseta_user_id?: string
           updated_at?: string
