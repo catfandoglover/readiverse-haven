@@ -25,7 +25,7 @@ const DiscoverLayout = () => {
 
   // Function to scroll to the next/previous item
   const scrollToItem = (direction: 'next' | 'prev') => {
-    if (isAnimating) return;
+    if (isAnimating || detailedViewVisible) return;
     
     setIsAnimating(true);
     
@@ -46,19 +46,25 @@ const DiscoverLayout = () => {
 
   // Setup swipe handlers for vertical navigation
   const swipeHandlers = useSwipeable({
-    onSwipedUp: () => scrollToItem('next'),
-    onSwipedDown: () => scrollToItem('prev'),
+    onSwipedUp: () => {
+      if (!detailedViewVisible) scrollToItem('next');
+    },
+    onSwipedDown: () => {
+      if (!detailedViewVisible) scrollToItem('prev');
+    },
     onSwiping: (e) => {
+      if (detailedViewVisible) return;
+      
       if (e.dir === 'Up' || e.dir === 'Down') {
         const progress = Math.min(100, Math.abs(e.deltaY));
         setTransitionProgress(progress);
       }
     },
     onSwipedLeft: () => {
-      console.log("Swipe left to view details");
+      if (!detailedViewVisible) console.log("Swipe left to view details");
     },
-    preventScrollOnSwipe: true,
-    trackMouse: true,
+    preventScrollOnSwipe: !detailedViewVisible, // Only prevent scroll when DetailedView is not visible
+    trackMouse: !detailedViewVisible,
     trackTouch: true
   });
 
@@ -70,6 +76,8 @@ const DiscoverLayout = () => {
 
   // Handle wheel events for navigation
   const handleWheel = (e: React.WheelEvent) => {
+    if (detailedViewVisible) return;
+    
     if (e.deltaY > 0) {
       scrollToItem('next');
     } else if (e.deltaY < 0) {
@@ -81,7 +89,9 @@ const DiscoverLayout = () => {
   // Prevent default scrolling behavior
   useEffect(() => {
     const preventDefaultScroll = (e: WheelEvent) => {
-      e.preventDefault();
+      if (!detailedViewVisible) {
+        e.preventDefault();
+      }
     };
     
     const container = containerRef.current;
@@ -94,7 +104,7 @@ const DiscoverLayout = () => {
         container.removeEventListener('wheel', preventDefaultScroll);
       }
     };
-  }, []);
+  }, [detailedViewVisible]);
 
   // Check if we should show a detailed view from URL
   useEffect(() => {
@@ -147,7 +157,7 @@ const DiscoverLayout = () => {
       {/* Main Content Area with Swipe Functionality */}
       <main 
         className="flex-1 relative pb-[50px] overflow-hidden" 
-        {...swipeHandlers}
+        {...(detailedViewVisible ? {} : swipeHandlers)}
         ref={contentRef}
       >
         {/* Top Navigation - Only show when detailed view is not visible */}

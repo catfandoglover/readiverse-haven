@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,19 @@ interface DetailedViewProps {
 const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Prevent body scrolling when DetailedView is mounted
+  useEffect(() => {
+    // Save the original overflow style
+    const originalStyle = document.body.style.overflow;
+    // Prevent scrolling on the body
+    document.body.style.overflow = 'hidden';
+    
+    // Restore original style when component unmounts
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
   
   const handleBack = () => {
     if (onBack) {
@@ -57,16 +70,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-auto">
-      <div className="relative">
-        {/* Cover Image */}
-        <div className="h-[60vh] relative">
+    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
+      {/* Header (fixed position) */}
+      {renderHeader()}
+      
+      {/* Scrollable content container */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Cover Image - fixed aspect ratio */}
+        <div className="w-full aspect-square relative">
           <img
             src={data.image}
             alt={data.title}
             className="w-full h-full object-cover"
           />
-          {renderHeader()}
         </div>
 
         {/* Content */}
@@ -139,6 +155,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
         </div>
       </div>
 
+      {/* Fixed bottom buttons for classics */}
       {type === "classic" && renderClassicButtons()}
     </div>
   );
