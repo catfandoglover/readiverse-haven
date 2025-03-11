@@ -163,7 +163,7 @@ const DiscoverLayout = () => {
         {/* Top Navigation - Only show when detailed view is not visible */}
         {!detailedViewVisible && (
           <header 
-            className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+            className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
             style={{
               aspectRatio: "1290/152",
               boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
