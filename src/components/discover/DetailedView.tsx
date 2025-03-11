@@ -55,7 +55,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
   );
 
   const renderClassicButtons = () => (
-    <div className="flex justify-between bg-[#2A282A] p-4 border-t border-gray-700">
+    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
       <Button
         className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20"
         onClick={() => data.onReadNow && data.onReadNow()}
@@ -80,8 +80,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
       {/* Header (fixed position) */}
       {renderHeader()}
       
-      {/* Scrollable content container */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Scrollable content container - with padding at the bottom to account for fixed buttons */}
+      <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
         {/* Cover Image - fixed aspect ratio */}
         <div className="w-full aspect-square relative">
           <img
