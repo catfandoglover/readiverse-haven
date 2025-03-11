@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 interface CarouselItem {
   id: string;
@@ -169,6 +171,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setIsOrderDialogOpen(true);
   };
 
+  // Function to format text with line breaks
+  const formatText = (text: string) => {
+    if (!text) return "";
+    return text.split("\\n").map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split("\\n").length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   const renderHeader = () => (
     <header 
       className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
@@ -261,13 +274,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             }
 
             <p className="text-xl font-baskerville mb-8">
-              {itemData.about || "What lies beneath the morality you hold sacred?"}
+              {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
 
             {itemData.great_question_connection && (
               <div className="mb-8">
                 <h3 className="text-xl font-baskerville capitalize mb-4">The Great Conversation</h3>
-                <p className="text-gray-300 font-baskerville">{itemData.great_question_connection}</p>
+                <p className="text-gray-300 font-baskerville">{formatText(itemData.great_question_connection)}</p>
               </div>
             )}
 

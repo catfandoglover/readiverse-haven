@@ -24,6 +24,17 @@ const ContentCard: React.FC<ContentCardProps> = ({
     setIsFavorite(!isFavorite);
   };
 
+  // Function to format text with line breaks
+  const formatText = (text: string) => {
+    if (!text) return "";
+    return text.split("\\n").map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split("\\n").length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div 
@@ -58,7 +69,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col">
         <div className="mb-2">
           <h2 className="text-3xl font-serif mb-4">{title}</h2>
-          <p className="text-gray-800 font-baskerville text-lg">{about}</p>
+          <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
         </div>
         
         <div className="py-2 flex items-center justify-start">
