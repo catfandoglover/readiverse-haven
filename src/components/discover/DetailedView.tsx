@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (user && itemData.id) {
       const checkFavoriteStatus = async () => {
         try {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemData.id)
@@ -354,7 +355,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         onClick={toggleFavorite}
         aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       >
-        <Star className="h-5 w-5 text-[#2A282A]" fill={isFavorite ? "#EFFE91" : "#E9E7E2"} />
+        <Star className="h-5 w-5 text-[#2A282A]" fill={isFavorite ? "#EFFE91" : "none"} />
       </Button>
       <Button 
         variant="outline" 
@@ -412,7 +413,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             <div className="mt-8">
               <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-                SEEKERS READING {itemData.title.toUpperCase()}
+                SEEKERS READING {itemData.title && itemData.title.toUpperCase()}
               </h3>
               <Select
                 onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
