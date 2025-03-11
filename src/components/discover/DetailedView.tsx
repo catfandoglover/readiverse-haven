@@ -1,34 +1,34 @@
-
 import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
-
 interface DetailedViewProps {
   type: "icon" | "concept" | "classic";
   data: any;
   onBack?: () => void;
 }
-
-const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
+const DetailedView: React.FC<DetailedViewProps> = ({
+  type,
+  data,
+  onBack
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Prevent body scrolling when DetailedView is mounted
   useEffect(() => {
     // Save the original overflow style
     const originalStyle = document.body.style.overflow;
     // Prevent scrolling on the body
     document.body.style.overflow = 'hidden';
-    
+
     // Restore original style when component unmounts
     return () => {
       document.body.style.overflow = originalStyle;
     };
   }, []);
-  
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -42,41 +42,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
       }
     }
   };
-
-  const renderHeader = () => (
-    <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
-      <button
-        onClick={handleBack}
-        className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white"
-      >
+  const renderHeader = () => <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-1">
+      <button onClick={handleBack} className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white">
         <ArrowLeft className="h-5 w-5" />
       </button>
-    </div>
-  );
-
-  const renderClassicButtons = () => (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
-      <Button
-        className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20"
-        onClick={() => data.onReadNow && data.onReadNow()}
-      >
+    </div>;
+  const renderClassicButtons = () => <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
+      <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={() => data.onReadNow && data.onReadNow()}>
         <span className="mr-2">📖</span> READ NOW
       </Button>
-      <Button
-        className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20"
-      >
+      <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
         <span className="mr-2">+</span> ADD TO STUDY
       </Button>
-      <Button
-        className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20"
-      >
+      <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
         <span className="mr-2">🛒</span> ORDER
       </Button>
-    </div>
-  );
-
-  return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
+    </div>;
+  return <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
       {/* Header (fixed position) */}
       {renderHeader()}
       
@@ -85,88 +67,56 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
         <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
           {/* Cover Image - fixed aspect ratio */}
           <div className="w-full aspect-square relative">
-            <img
-              src={data.image}
-              alt={data.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
           </div>
 
           {/* Content */}
           <div className="px-6 py-8">
             <h1 className="text-4xl font-serif mb-2">{data.title}</h1>
-            {type === "classic" && (
-              <h2 className="text-xl font-serif mb-6 text-gray-400">
+            {type === "classic" && <h2 className="text-xl font-serif mb-6 text-gray-400">
                 by {data.author}
-              </h2>
-            )}
+              </h2>}
 
-            {type === "classic" && (
-              <p className="text-xl font-medium mb-8">
+            {type === "classic" && <p className="text-xl font-medium mb-8">
                 {data.tagline || "What lies beneath the morality you hold sacred?"}
-              </p>
-            )}
+              </p>}
 
             <div className="mb-8">
               <h3 className="text-lg uppercase font-bold mb-3">ABOUT</h3>
               <p className="text-gray-300">{data.about}</p>
             </div>
 
-            {(type === "icon" || type === "classic" || type === "concept") && (
-              <div className="mb-8">
+            {(type === "icon" || type === "classic" || type === "concept") && <div className="mb-8">
                 <h3 className="text-lg uppercase font-bold mb-3">
                   GREAT CONVERSATION
                 </h3>
                 <p className="text-gray-300">{data.great_conversation}</p>
-              </div>
-            )}
+              </div>}
 
-            {type === "concept" && (
-              <div className="mb-8">
+            {type === "concept" && <div className="mb-8">
                 <h3 className="text-lg uppercase font-bold mb-3">GENEALOGY</h3>
                 <p className="text-gray-300">{data.genealogy}</p>
-              </div>
-            )}
+              </div>}
 
-            {type === "icon" && data.anecdotes && (
-              <div className="mb-8">
+            {type === "icon" && data.anecdotes && <div className="mb-8">
                 <h3 className="text-lg uppercase font-bold mb-3">ANECDOTES</h3>
                 <p className="text-gray-300">{data.anecdotes}</p>
-              </div>
-            )}
+              </div>}
 
             {/* Connected Content Carousels */}
-            <ContentCarousel
-              title="RELATED GREAT QUESTIONS"
-              items={data.related_questions || []}
-              type="questions"
-            />
+            <ContentCarousel title="RELATED GREAT QUESTIONS" items={data.related_questions || []} type="questions" />
 
-            <ContentCarousel
-              title="RELATED CLASSICS"
-              items={data.related_classics || []}
-              type="classics"
-            />
+            <ContentCarousel title="RELATED CLASSICS" items={data.related_classics || []} type="classics" />
 
-            <ContentCarousel
-              title="RELATED ICONS"
-              items={data.related_icons || []}
-              type="icons"
-            />
+            <ContentCarousel title="RELATED ICONS" items={data.related_icons || []} type="icons" />
 
-            <ContentCarousel
-              title="RELATED CONCEPTS"
-              items={data.related_concepts || []}
-              type="concepts"
-            />
+            <ContentCarousel title="RELATED CONCEPTS" items={data.related_concepts || []} type="concepts" />
           </div>
         </div>
       </div>
 
       {/* Fixed bottom buttons for classics - now properly positioned */}
       {type === "classic" && renderClassicButtons()}
-    </div>
-  );
+    </div>;
 };
-
 export default DetailedView;
