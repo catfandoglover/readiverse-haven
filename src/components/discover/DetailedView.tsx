@@ -348,23 +348,27 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   );
 
   const renderIconButtons = () => (
-    <div className="flex justify-center space-x-6 mt-6 mb-12">
-      <Button 
-        variant="outline" 
-        className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
-        onClick={toggleFavorite}
-        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      >
-        <Star className="h-5 w-5 text-[#2A282A]" fill={isFavorite ? "#EFFE91" : "none"} />
-      </Button>
-      <Button 
-        variant="outline" 
-        className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
-        onClick={handleShare}
-        aria-label="Share"
-      >
-        <Share className="h-5 w-5 text-[#2A282A]" />
-      </Button>
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-3xl font-serif">{itemData.title || itemData.name}</h2>
+      <div className="flex gap-2 items-center">
+        <button
+          className="flex items-center justify-center text-[#2A282A]"
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          onClick={toggleFavorite}
+        >
+          <Star 
+            className="h-6 w-6" 
+            fill={isFavorite ? "#EFFE91" : "none"} 
+          />
+        </button>
+        <button
+          className="flex items-center justify-center text-[#2A282A]"
+          aria-label="Share"
+          onClick={handleShare}
+        >
+          <Share className="h-6 w-6" />
+        </button>
+      </div>
     </div>
   );
 
@@ -376,7 +380,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className="w-full">
           <img 
             src={itemData.image} 
-            alt={itemData.title} 
+            alt={itemData.title || itemData.name} 
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
@@ -387,7 +391,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
         <div className="relative -mt-6">
           <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
-            <h1 className="text-3xl font-serif mb-4 text-[#2A282A]">{itemData.title}</h1>
+            {renderIconButtons()}
+            
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
                 by {itemData.author}
@@ -397,8 +402,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             <p className="text-gray-800 font-baskerville text-lg mb-8">
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
-
-            {renderIconButtons()}
 
             {itemData.great_question_connection && (
               <div className="mb-8">
