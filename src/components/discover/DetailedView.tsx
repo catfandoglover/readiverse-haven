@@ -58,10 +58,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderClassicButtons = () => (
     <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
       <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={() => data.onReadNow && data.onReadNow()}>
-        <span className="mr-2">📖</span> READ NOW
+        <span className="mr-2">📖</span> READ
       </Button>
       <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
-        <span className="mr-2">+</span> ADD TO STUDY
+        <span className="mr-2">+</span> ADD
       </Button>
       <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
         <span className="mr-2">🛒</span> ORDER
