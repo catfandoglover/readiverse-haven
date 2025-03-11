@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -6,15 +6,24 @@ interface ChatMessageProps {
   content: string;
   role: 'user' | 'assistant';
   audioUrl?: string;
+  dialogOpen: boolean;
+  isNewMessage?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ content, role, audioUrl }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ 
+  content, 
+  role, 
+  audioUrl, 
+  dialogOpen,
+  isNewMessage = false
+}) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasAutoPlayedRef = useRef(false);
 
-  // Automatically play audio for assistant messages when they appear
+  // Create audio element when audioUrl is available
   useEffect(() => {
-    if (role === 'assistant' && audioUrl && !audio) {
+    if (audioUrl && !audioRef.current) {
       const newAudio = new Audio(audioUrl);
       
       // Set up event listeners
@@ -23,63 +32,60 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ content, role, audioUrl }) =>
       newAudio.onplay = () => setIsPlaying(true);
       
       // Store the audio element
-      setAudio(newAudio);
-      
-      // Play the audio automatically
-      newAudio.play().catch(error => {
+      audioRef.current = newAudio;
+    }
+    
+    // Clean up audio on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, [audioUrl]);
+
+  // Handle auto-play only for new assistant messages when dialog is open
+  useEffect(() => {
+    if (
+      role === 'assistant' && 
+      audioUrl && 
+      audioRef.current && 
+      dialogOpen && 
+      isNewMessage && 
+      !hasAutoPlayedRef.current
+    ) {
+      // Play the audio automatically only once
+      audioRef.current.play().catch(error => {
         console.error('Error auto-playing audio:', error);
-        setIsPlaying(false);
       });
       
       setIsPlaying(true);
+      hasAutoPlayedRef.current = true;
     }
-  }, [audioUrl, role, audio]);
+  }, [audioUrl, role, dialogOpen, isNewMessage]);
+
+  // Pause audio when dialog closes
+  useEffect(() => {
+    if (!dialogOpen && audioRef.current && isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [dialogOpen, isPlaying]);
 
   // Handle manual play/pause audio
   const toggleAudio = () => {
-    if (!audioUrl) return;
+    if (!audioUrl || !audioRef.current) return;
 
-    if (!audio) {
-      // Create new audio element
-      const newAudio = new Audio(audioUrl);
-      
-      // Set up event listeners
-      newAudio.onended = () => setIsPlaying(false);
-      newAudio.onpause = () => setIsPlaying(false);
-      newAudio.onplay = () => setIsPlaying(true);
-      
-      // Store the audio element
-      setAudio(newAudio);
-      
-      // Play the audio
-      newAudio.play().catch(error => {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(error => {
         console.error('Error playing audio:', error);
         setIsPlaying(false);
       });
-      
-      setIsPlaying(true);
-    } else {
-      // Toggle existing audio
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        audio.play().catch(error => {
-          console.error('Error playing audio:', error);
-          setIsPlaying(false);
-        });
-      }
     }
   };
-
-  // Clean up audio on unmount
-  useEffect(() => {
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-      }
-    };
-  }, [audio]);
 
   return (
     <div className={`ai-chat-message ${role} flex items-start gap-2`}>

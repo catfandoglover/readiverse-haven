@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
-import conversationManager from '@/services/ConversationManager';
+import conversationManager, { Message as ConversationMessage } from '@/services/ConversationManager';
 import ChatMessage from './ChatMessage';
 
 interface Message {
@@ -20,6 +20,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   audioUrl?: string;
+  isNew?: boolean;
 }
 
 interface AIChatDialogProps {
@@ -82,7 +83,16 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         conversationManager.initializeConversation(userId);
         
         // Update the local messages state with the greeting
-        setMessages(conversationManager.getHistory(userId));
+        const history = conversationManager.getHistory(userId);
+        // Convert ConversationManager messages to our local Message format with IDs
+        const messagesWithIds = history.map(msg => ({
+          id: uuidv4(),
+          content: msg.content,
+          role: msg.role,
+          audioUrl: msg.audioUrl,
+          isNew: true
+        }));
+        setMessages(messagesWithIds);
       } else {
         // Update the current question in case it changed
         conversationManager.setCurrentQuestion(userId, currentQuestion);
@@ -98,7 +108,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           {
             id: uuidv4(),
             content: greeting,
-            role: 'assistant'
+            role: 'assistant',
+            isNew: true
           }
         ]);
         setIsFirstOpen(false);
@@ -210,7 +221,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant' } 
+            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
             : msg
         )
       );
@@ -263,7 +274,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant' } 
+            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
             : msg
         )
       );
@@ -284,6 +295,18 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       setIsProcessing(false);
     }
   };
+
+  // Reset isNew flag when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => ({
+          ...msg,
+          isNew: false
+        }))
+      );
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -307,6 +330,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
                 content={msg.content}
                 role={msg.role}
                 audioUrl={msg.audioUrl}
+                dialogOpen={open}
+                isNewMessage={msg.isNew}
               />
             ))}
             
