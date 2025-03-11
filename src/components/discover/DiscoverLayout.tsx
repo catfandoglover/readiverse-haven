@@ -163,12 +163,14 @@ const DiscoverLayout = () => {
         {/* Top Navigation - Only show when detailed view is not visible */}
         {!detailedViewVisible && (
           <header 
-            className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40"
+            className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
             style={{
-              boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.25)"
+              aspectRatio: "1290/152",
+              boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+              maxHeight: "152px"
             }}
           >
-            <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center justify-between px-4 py-3 h-full w-full">
               <button
                 className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
                   activeTab === "for-you" 
@@ -210,10 +212,10 @@ const DiscoverLayout = () => {
                 CONCEPTS
               </button>
               <button 
-                className="h-5 w-5 inline-flex items-center justify-center rounded-full bg-transparent text-[#E9E7E2]"
+                className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
                 aria-label="Search"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-2 w-2" />
               </button>
             </div>
           </header>
