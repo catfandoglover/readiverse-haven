@@ -206,7 +206,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-xl font-baskerville capitalize mb-4">{title}</h3>
+        <h3 className="text-3xl font-serif mb-4 text-[#2A282A]">{title}</h3>
         <ScrollArea className="w-full pb-4">
           <div className="flex space-x-4">
             {items.map((item) => (
@@ -278,7 +278,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {itemData.great_question_connection && (
               <div className="mb-8">
-                <h3 className="text-xl font-baskerville capitalize mb-4 text-[#2A282A]">The Great Conversation</h3>
+                <h3 className="text-3xl font-serif mb-4 text-[#2A282A]">The Great Conversation</h3>
                 <p className="text-gray-800 font-baskerville text-lg">{formatText(itemData.great_question_connection)}</p>
               </div>
             )}
@@ -288,7 +288,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {renderHorizontalSlider("Major Themes", concepts)}
 
             <div className="mt-8">
-              <h3 className="text-xl font-baskerville capitalize mb-4 text-[#2A282A]">
+              <h3 className="text-3xl font-serif mb-4 text-[#2A282A]">
                 Seekers Reading {itemData.title}
               </h3>
               <Select
