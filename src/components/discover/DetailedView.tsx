@@ -453,11 +453,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
-                {/* Gradient border as background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#9b87f5] to-[#7E69AB]"></div>
+                {/* Background color container matching page background */}
+                <div className="absolute inset-0 bg-[#E9E7E2]"></div>
                 
                 {/* Image container with slight inset */}
-                <div className="absolute inset-[2px] rounded-[0.4rem] overflow-hidden">
+                <div className="absolute inset-[2px] overflow-hidden rounded-[0.4rem]">
                   <img
                     src={item[imageKey] || ''}
                     alt={item[textKey] || ""}
