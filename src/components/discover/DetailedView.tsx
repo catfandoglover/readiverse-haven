@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { saveLastVisited } from "@/utils/navigationHistory";
 
 interface DetailedViewProps {
   type: "icon" | "concept" | "classic";
@@ -32,8 +33,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
     if (onBack) {
       onBack();
     } else {
-      // If coming from a direct URL, go back to the main discover view
-      navigate('/');
+      // Use browser history to go back if possible
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        // Fallback to main discover view
+        navigate('/');
+      }
     }
   };
 

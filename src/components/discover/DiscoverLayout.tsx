@@ -261,10 +261,12 @@ const DiscoverLayout = () => {
         </div>
       </main>
 
-      {/* Bottom Navigation - Fixed at the bottom of the viewport */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <BottomNav activeTab="discover" />
-      </div>
+      {/* Bottom Navigation - Only show when detailed view is not visible */}
+      {!detailedViewVisible && (
+        <div className="fixed bottom-0 left-0 right-0 z-50">
+          <BottomNav activeTab="discover" />
+        </div>
+      )}
     </div>
   );
 };
