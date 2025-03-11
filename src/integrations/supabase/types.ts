@@ -905,6 +905,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_conversations: {
+        Row: {
+          assessment_id: string | null
+          created_at: string | null
+          id: string
+          messages: Json
+          metadata: Json | null
+          question_id: string
+          session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string
+          messages: Json
+          metadata?: Json | null
+          question_id: string
+          session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          metadata?: Json | null
+          question_id?: string
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_conversations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dna_question_responses: {
         Row: {
           answer: string

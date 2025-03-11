@@ -450,10 +450,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 <img
                   src={item[imageKey as keyof CarouselItem] as string || ''}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover rounded-lg"
                   draggable="false"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2 rounded-lg">
                   <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
                     {item[textKey as keyof CarouselItem] as string}
                   </h4>
