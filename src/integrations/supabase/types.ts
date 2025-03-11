@@ -154,6 +154,7 @@ export type Database = {
           id: string
           illustration: string
           introduction: string | null
+          Notion_URL: string | null
           randomizer: number
           title: string
           type: string | null
@@ -164,6 +165,7 @@ export type Database = {
           id?: string
           illustration: string
           introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title: string
           type?: string | null
@@ -174,6 +176,7 @@ export type Database = {
           id?: string
           illustration?: string
           introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title?: string
           type?: string | null
@@ -1082,6 +1085,7 @@ export type Database = {
           illustration: string
           introduction: string | null
           name: string
+          Notion_URL: string | null
           randomizer: number
         }
         Insert: {
@@ -1091,6 +1095,7 @@ export type Database = {
           illustration: string
           introduction?: string | null
           name: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Update: {
@@ -1100,6 +1105,7 @@ export type Database = {
           illustration?: string
           introduction?: string | null
           name?: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Relationships: []
