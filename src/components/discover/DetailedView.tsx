@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
@@ -246,9 +247,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
-      <div className="h-full w-full flex flex-col">
-        <div className="w-full relative">
+    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+      <div className="h-full w-full overflow-y-auto">
+        {renderHeader()}
+        
+        <div className="w-full">
           <img 
             src={itemData.image} 
             alt={itemData.title} 
@@ -258,12 +261,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               maxHeight: "100vh" 
             }} 
           />
-          
-          {renderHeader()}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-32">
+        <div className="relative z-10">
+          <div className="p-6 pb-32 bg-[#2A282A] rounded-t-2xl -mt-6">
             <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
