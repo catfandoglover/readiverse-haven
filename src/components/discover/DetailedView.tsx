@@ -250,7 +250,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto" style={{ paddingTop: "152px", paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div className="h-full w-full overflow-y-auto" style={{ paddingTop: "0", paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
