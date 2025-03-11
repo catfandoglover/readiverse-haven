@@ -1,13 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ArrowRight, Share, Star } from "lucide-react";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ContentCardProps {
-  id: string;
-  type: "classic" | "concept" | "icon"; 
   image: string;
   title: string;
   about: string;
@@ -16,8 +11,6 @@ interface ContentCardProps {
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
-  id,
-  type,
   image,
   title,
   about,
@@ -25,84 +18,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
   onImageClick,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const { user, openLogin } = useAuth();
-  const { toast } = useToast();
 
-  // Check if item is already in favorites when component mounts
-  useEffect(() => {
-    if (user && id) {
-      const checkFavoriteStatus = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('user_favorites')
-            .select('*')
-            .eq('item_id', id)
-            .eq('outseta_user_id', user.Uid)
-            .eq('item_type', type);
-          
-          if (error) throw error;
-          
-          if (data && data.length > 0) {
-            setIsFavorite(true);
-          }
-        } catch (error) {
-          console.error("Error checking favorite status:", error);
-        }
-      };
-      
-      checkFavoriteStatus();
-    }
-  }, [user, id, type]);
-
-  const toggleFavorite = async (e: React.MouseEvent) => {
+  const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    if (!user) {
-      openLogin();
-      return;
-    }
-    
-    try {
-      if (isFavorite) {
-        // Remove from favorites
-        const { error } = await supabase
-          .from('user_favorites')
-          .delete()
-          .eq('item_id', id)
-          .eq('outseta_user_id', user.Uid)
-          .eq('item_type', type);
-          
-        if (error) throw error;
-        
-        setIsFavorite(false);
-        toast({
-          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
-        });
-      } else {
-        // Add to favorites
-        const { error } = await supabase
-          .from('user_favorites')
-          .insert({
-            item_id: id,
-            outseta_user_id: user.Uid,
-            item_type: type,
-            added_at: new Date().toISOString()
-          });
-          
-        if (error) throw error;
-        
-        setIsFavorite(true);
-        toast({
-          description: `${type === 'classic' ? 'Book' : type} added to favorites`,
-        });
-      }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast({
-        variant: "destructive",
-        description: "Failed to update favorites. Please try again.",
-      });
-    }
+    setIsFavorite(!isFavorite);
   };
 
   // Function to format text with line breaks
@@ -141,7 +60,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
               >
                 <Star 
                   className="h-6 w-6" 
-                  fill={isFavorite ? "#EFFE91" : "none"} 
+                  fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                 />
               </button>
               <button
