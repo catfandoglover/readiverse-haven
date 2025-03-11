@@ -111,11 +111,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <div className="flex items-center h-12 absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm" style={{ aspectRatio: "1290/152", maxHeight: "152px" }}>
-      <button onClick={handleBack} className="h-8 w-8 ml-4 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-white">
-        <ArrowLeft className="h-5 w-5" />
-      </button>
-    </div>
+    <header 
+      className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      style={{
+        aspectRatio: "1290/152",
+        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+        maxHeight: "152px"
+      }}
+    >
+      <div className="flex items-center h-full px-4">
+        <button 
+          onClick={handleBack} 
+          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-white"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      </div>
+    </header>
   );
 
   const renderClassicButtons = () => (
@@ -138,7 +150,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       {renderHeader()}
       
       {/* Content area that takes full height minus header height */}
-      <div className="h-full pt-12 pb-0 flex flex-col">
+      <div className="h-full pt-0 pb-0 flex flex-col">
         <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
           {/* Cover Image - fixed aspect ratio */}
           <div className="w-full aspect-square relative">
