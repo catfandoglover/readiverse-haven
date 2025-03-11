@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
@@ -246,11 +246,28 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
+  const renderIconButtons = () => (
+    <div className="flex justify-center space-x-6 mt-6 mb-12">
+      <Button 
+        variant="outline" 
+        className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
+      >
+        <Star className="h-5 w-5 text-[#2A282A]" />
+      </Button>
+      <Button 
+        variant="outline" 
+        className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
+      >
+        <Share className="h-5 w-5 text-[#2A282A]" />
+      </Button>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto" style={{ paddingTop: "0", paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div className="h-full w-full overflow-y-auto" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
@@ -275,6 +292,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             <p className="text-gray-800 font-baskerville text-lg mb-8">
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
+
+            {type !== "classic" && renderIconButtons()}
 
             {itemData.great_question_connection && (
               <div className="mb-8">
