@@ -203,7 +203,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-xl font-baskerville uppercase mb-4">{title}</h3>
+        <h3 className="text-xl font-baskerville capitalize mb-4">{title}</h3>
         <ScrollArea className="w-full pb-4">
           <div className="flex space-x-4">
             {items.map((item) => (
@@ -267,7 +267,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Content */}
           <div className="px-6 py-8">
-            <h1 className="text-4xl font-baskerville mb-2">{itemData.title}</h1>
+            <h1 className="text-xl font-baskerville mb-2">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
                 by {itemData.author}
@@ -282,7 +282,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {/* Great Conversation */}
             {itemData.great_question_connection && (
               <div className="mb-8">
-                <h3 className="text-xl font-baskerville uppercase mb-4">The Great Conversation</h3>
+                <h3 className="text-xl font-baskerville capitalize mb-4">The Great Conversation</h3>
                 <p className="text-gray-300 font-baskerville">{itemData.great_question_connection}</p>
               </div>
             )}
@@ -295,7 +295,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {/* Seekers Reading */}
             <div className="mt-8">
-              <h3 className="text-xl font-baskerville uppercase mb-4">
+              <h3 className="text-xl font-baskerville capitalize mb-4">
                 Seekers Reading {itemData.title}
               </h3>
               <Select
