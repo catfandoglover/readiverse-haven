@@ -183,7 +183,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
@@ -248,7 +248,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
-      <div className="h-full w-full overflow-y-auto">
+      <div className="h-full w-full overflow-y-auto pt-[152px]">
         {renderHeader()}
         
         <div className="w-full">
