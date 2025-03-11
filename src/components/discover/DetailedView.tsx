@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +39,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -104,6 +104,31 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       document.body.style.overflow = originalStyle;
     };
   }, []);
+
+  // Check if this item is a favorite for the current user
+  useEffect(() => {
+    if (user && itemData.id) {
+      const checkFavoriteStatus = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('user_favorites')
+            .select('*')
+            .eq('item_id', itemData.id)
+            .eq('outseta_user_id', user.Uid)
+            .eq('item_type', type)
+            .single();
+          
+          if (data) {
+            setIsFavorite(true);
+          }
+        } catch (error) {
+          console.error("Error checking favorite status:", error);
+        }
+      };
+      
+      checkFavoriteStatus();
+    }
+  }, [user, itemData.id, type]);
 
   const handleBack = () => {
     if (onBack) {
@@ -181,6 +206,88 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     ));
   };
 
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+    
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('item_id', itemData.id)
+          .eq('outseta_user_id', user.Uid)
+          .eq('item_type', type);
+          
+        if (error) throw error;
+        
+        setIsFavorite(false);
+        toast({
+          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
+        });
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('user_favorites')
+          .insert({
+            item_id: itemData.id,
+            outseta_user_id: user.Uid,
+            item_type: type,
+            added_at: new Date().toISOString()
+          });
+          
+        if (error) throw error;
+        
+        setIsFavorite(true);
+        toast({
+          description: `${type === 'classic' ? 'Book' : type} added to favorites`,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update favorites. Please try again.",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      // Create the share URL based on the current location
+      const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
+      
+      // Use the Web Share API if available
+      if (navigator.share) {
+        await navigator.share({
+          title: itemData.title || itemData.name,
+          text: itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`,
+          url: shareUrl
+        });
+      } else {
+        // Fallback for browsers that don't support the Web Share API
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          description: "Link copied to clipboard!",
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      // If it's not an abort error (user cancelled), show an error toast
+      if (error instanceof Error && error.name !== "AbortError") {
+        toast({
+          variant: "destructive",
+          description: "Failed to share. Please try again.",
+        });
+      }
+    }
+  };
+
   const renderHeader = () => (
     <header 
       className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
@@ -251,12 +358,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <Button 
         variant="outline" 
         className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
+        onClick={toggleFavorite}
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       >
-        <Star className="h-5 w-5 text-[#2A282A]" />
+        <Star className="h-5 w-5 text-[#2A282A]" fill={isFavorite ? "#EFFE91" : "#E9E7E2"} />
       </Button>
       <Button 
         variant="outline" 
         className="rounded-full w-12 h-12 flex items-center justify-center p-0 border-[#2A282A]"
+        onClick={handleShare}
+        aria-label="Share"
       >
         <Share className="h-5 w-5 text-[#2A282A]" />
       </Button>
