@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowRight, Share, Star } from "lucide-react";
 
@@ -49,7 +50,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       </div>
       <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-6 relative z-10">
         <div className="mb-2">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-3xl font-serif">{title}</h2>
             <div className="flex gap-2 items-center">
               <button
@@ -63,10 +64,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
                 />
               </button>
               <button
-                className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
-                aria-label="More options"
+                className="flex items-center justify-center text-[#2A282A]"
+                aria-label="Share"
               >
-                <Share className="h-3 w-3" />
+                <Share className="h-6 w-6" />
               </button>
             </div>
           </div>
