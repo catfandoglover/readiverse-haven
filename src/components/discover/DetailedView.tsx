@@ -30,7 +30,7 @@ interface DetailedViewProps {
 
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
-  data,
+  data: itemData,
   onBack
 }) => {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const { data } = await supabase
         .from("books")
         .select("*")
-        .neq('id', data.id)
+        .neq('id', itemData.id)
         .limit(10);
       return data || [];
     },
@@ -125,11 +125,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const handleReadNow = () => {
-    if (data.epub_file_url) {
-      navigate(`/read/${data.id}`, { 
+    if (itemData.epub_file_url) {
+      navigate(`/read/${itemData.id}`, { 
         state: { 
-          bookUrl: data.epub_file_url,
-          metadata: { Cover_super: data.Cover_super || data.cover_url }
+          bookUrl: itemData.epub_file_url,
+          metadata: { Cover_super: itemData.Cover_super || itemData.cover_url }
         } 
       });
     } else {
@@ -151,7 +151,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const { error } = await supabase
         .from('user_books')
         .insert({
-          book_id: data.id,
+          book_id: itemData.id,
           outseta_user_id: user.Uid,
           status: 'reading'
         });
@@ -253,28 +253,28 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className={`flex-1 overflow-y-auto pb-24`}>
           {/* Cover Image with fixed aspect ratio */}
           <div className="w-full aspect-square">
-            <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+            <img src={itemData.image} alt={itemData.title} className="w-full h-full object-cover" />
           </div>
 
           {/* Content */}
           <div className="px-6 py-8">
-            <h1 className="text-4xl font-baskerville mb-2">{data.title}</h1>
+            <h1 className="text-4xl font-baskerville mb-2">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
-                by {data.author}
+                by {itemData.author}
               </h2>
             }
 
             {/* Introduction section */}
             <p className="text-xl font-baskerville mb-8">
-              {data.about || "What lies beneath the morality you hold sacred?"}
+              {itemData.about || "What lies beneath the morality you hold sacred?"}
             </p>
 
             {/* Great Conversation */}
-            {data.great_question_connection && (
+            {itemData.great_question_connection && (
               <div className="mb-8">
                 <h3 className="text-xl font-baskerville uppercase mb-4">The Great Conversation</h3>
-                <p className="text-gray-300 font-baskerville">{data.great_question_connection}</p>
+                <p className="text-gray-300 font-baskerville">{itemData.great_question_connection}</p>
               </div>
             )}
 
@@ -287,7 +287,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {/* Seekers Reading */}
             <div className="mt-8">
               <h3 className="text-xl font-baskerville uppercase mb-4">
-                Seekers Reading {data.title}
+                Seekers Reading {itemData.title}
               </h3>
               <Select
                 onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
@@ -330,19 +330,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           </DialogHeader>
           <div className="flex flex-col space-y-4 mt-4">
             <a 
-              href={data.amazon_link || "#"} 
+              href={itemData.amazon_link || "#"} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!data.amazon_link && 'opacity-50 cursor-not-allowed'}`}
+              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!itemData.amazon_link && 'opacity-50 cursor-not-allowed'}`}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               Buy on Amazon
             </a>
             <a 
-              href={data.bookshop_link || "#"} 
+              href={itemData.bookshop_link || "#"} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!data.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
+              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!itemData.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               Buy from Independent Booksellers
