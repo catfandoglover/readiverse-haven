@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -371,19 +370,39 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       }
       
       if (isFavorite) {
-        console.log("Removing favorite");
-        const { error } = await authSupabase
+        console.log("Removing favorite with user ID:", user.Uid, "and item ID:", combinedData.id);
+        
+        const { data: favoriteRecord, error: fetchError } = await authSupabase
           .from('user_favorites')
-          .delete()
+          .select('id')
           .eq('item_id', combinedData.id)
           .eq('outseta_user_id', user.Uid)
-          .eq('item_type', type);
+          .eq('item_type', type)
+          .maybeSingle();
           
-        if (error) {
-          console.error("Delete error:", error);
-          throw error;
+        if (fetchError) {
+          console.error("Error fetching favorite record:", fetchError);
+          throw fetchError;
         }
         
+        if (!favoriteRecord) {
+          console.error("Favorite record not found");
+          throw new Error("Favorite record not found");
+        }
+        
+        console.log("Found favorite record to delete:", favoriteRecord);
+        
+        const { error: deleteError } = await authSupabase
+          .from('user_favorites')
+          .delete()
+          .eq('id', favoriteRecord.id);
+          
+        if (deleteError) {
+          console.error("Delete error:", deleteError);
+          throw deleteError;
+        }
+        
+        console.log("Favorite successfully removed");
         setIsFavorite(false);
         toast({
           description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
