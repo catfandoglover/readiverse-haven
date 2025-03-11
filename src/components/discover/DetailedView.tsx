@@ -21,6 +21,8 @@ interface CarouselItem {
   question?: string;
   image?: string;
   illustration?: string;
+  cover_url?: string;
+  Cover_super?: string;
 }
 
 interface DetailedViewProps {
@@ -147,12 +149,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const combinedData = React.useMemo(() => {
     if (!enhancedData) return itemData;
+    
+    const imageProperty = (() => {
+      switch(type) {
+        case 'classic':
+          return { 
+            image: enhancedData.icon_illustration || enhancedData.cover_url || enhancedData.Cover_super || itemData.image 
+          };
+        case 'icon':
+          return { 
+            image: enhancedData.illustration || itemData.image 
+          };
+        case 'concept':
+          return { 
+            image: enhancedData.illustration || itemData.image 
+          };
+        default:
+          return { image: itemData.image };
+      }
+    })();
+
     return { 
-      ...itemData, 
+      ...itemData,
       ...enhancedData,
-      image: enhancedData.icon_illustration || enhancedData.cover_url || enhancedData.Cover_super || itemData.image
+      ...imageProperty
     };
-  }, [itemData, enhancedData]);
+  }, [itemData, enhancedData, type]);
 
   useEffect(() => {
     if (enhancedData || isEnhancedDataLoading === false) {
@@ -364,6 +386,30 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
+  const handleCarouselItemClick = (item: CarouselItem, itemType: "classic" | "concept" | "question" | "icon") => {
+    let targetType: "classic" | "concept" | "icon" = "classic";
+    
+    switch(itemType) {
+      case "classic":
+        targetType = "classic";
+        break;
+      case "concept":
+        targetType = "concept";
+        break;
+      case "icon":
+        targetType = "icon";
+        break;
+      case "question":
+        toast({
+          title: "Great Question",
+          description: item.question || "Loading question details..."
+        });
+        return;
+    }
+    
+    navigate(`/view/${targetType}/${item.id}`, { replace: true });
+  };
+
   const renderHeader = () => (
     <header 
       className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm pt-safe"
@@ -384,7 +430,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </header>
   );
 
-  const renderHorizontalSlider = (title: string, items: CarouselItem[], imageKey: string = 'illustration', textKey: string = 'title') => {
+  const renderHorizontalSlider = (title: string, items: CarouselItem[], imageKey: string = 'illustration', textKey: string = 'title', itemType: "classic" | "concept" | "question" | "icon") => {
     if (!items || items.length === 0) return null;
     
     return (
@@ -395,7 +441,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {items.map((item) => (
               <div
                 key={item.id}
-                className="relative h-36 w-36 flex-none rounded-lg overflow-hidden"
+                className="relative h-36 w-36 flex-none rounded-lg overflow-hidden cursor-pointer"
+                onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <img
                   src={item[imageKey as keyof CarouselItem] as string}
@@ -569,15 +616,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </div>
             ) : null}
 
-            {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question")}
+            {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question", "question")}
 
-            {renderHorizontalSlider("MAJOR THEMES", concepts)}
+            {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
 
             {renderReadersLeaderboard()}
 
-            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url")}
+            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
 
-            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name")}
+            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
             
             <div className="h-32"></div>
           </div>
