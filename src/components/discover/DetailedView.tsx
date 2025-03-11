@@ -1,10 +1,15 @@
 
-import React, { useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ArrowLeft, BookOpen, Plus, ShoppingCart } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DetailedViewProps {
   type: "icon" | "concept" | "classic";
@@ -19,6 +24,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, openLogin } = useAuth();
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   // Prevent body scrolling when DetailedView is mounted
   useEffect(() => {
@@ -47,6 +56,60 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
+  const handleReadNow = () => {
+    if (data.epub_file_url) {
+      navigate(`/read/${data.id}`, { 
+        state: { 
+          bookUrl: data.epub_file_url,
+          metadata: { Cover_super: data.Cover_super || data.cover_url }
+        } 
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "This book is not available for reading"
+      });
+    }
+  };
+
+  const handleAddToLibrary = async () => {
+    if (!user) {
+      openLogin();
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_books')
+        .insert({
+          book_id: data.id,
+          outseta_user_id: user.Uid,
+          status: 'reading'
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Book added to your library"
+      });
+    } catch (error) {
+      console.error("Error adding book to library", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add book to your library"
+      });
+    }
+  };
+
+  const handleOrder = () => {
+    setIsOrderDialogOpen(true);
+  };
+
   const renderHeader = () => (
     <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
       <button onClick={handleBack} className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white">
@@ -57,14 +120,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderClassicButtons = () => (
     <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
-      <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={() => data.onReadNow && data.onReadNow()}>
-        <span className="mr-2">📖</span> READ
+      <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={handleReadNow}>
+        <BookOpen className="mr-2 h-4 w-4" /> READ
       </Button>
-      <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
-        <span className="mr-2">+</span> ADD
+      <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={handleAddToLibrary}>
+        <Plus className="mr-2 h-4 w-4" /> ADD
       </Button>
-      <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
-        <span className="mr-2">🛒</span> ORDER
+      <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={handleOrder}>
+        <ShoppingCart className="mr-2 h-4 w-4" /> ORDER
       </Button>
     </div>
   );
@@ -129,6 +192,35 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
       {/* Fixed bottom buttons for classics */}
       {type === "classic" && renderClassicButtons()}
+
+      {/* Order Dialog */}
+      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+        <DialogContent className="bg-[#2A282A] text-[#E9E7E2] border-gray-700 max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif text-white text-center">Purchase Options</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-4 mt-4">
+            <a 
+              href={data.amazon_link || "#"} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!data.amazon_link && 'opacity-50 cursor-not-allowed'}`}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Buy on Amazon
+            </a>
+            <a 
+              href={data.bookshop_link || "#"} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!data.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Buy from Independent Booksellers
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

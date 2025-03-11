@@ -92,6 +92,7 @@ export type Database = {
           about: string | null
           amazon_link: string | null
           author: string | null
+          bookshop_link: string | null
           categories: string[] | null
           Cover_super: string | null
           cover_url: string | null
@@ -109,6 +110,7 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
+          bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
+          bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
