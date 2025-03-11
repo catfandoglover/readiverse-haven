@@ -111,8 +111,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
-      <button onClick={handleBack} className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white">
+    <div className="flex items-center h-12 absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm" style={{ aspectRatio: "1290/152", maxHeight: "152px" }}>
+      <button onClick={handleBack} className="h-8 w-8 ml-4 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-white">
         <ArrowLeft className="h-5 w-5" />
       </button>
     </div>
