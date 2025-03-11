@@ -1,16 +1,17 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Icon {
   id: string;
   name: string;
   illustration: string;
-  category?: string; // Make category optional
+  category?: string;
   about?: string;
   great_conversation?: string;
   anecdotes?: string;
@@ -21,11 +22,15 @@ interface Icon {
 
 interface IconsContentProps {
   currentIndex: number;
+  onDetailedViewShow?: () => void;
+  onDetailedViewHide?: () => void;
 }
 
-const IconsContent: React.FC<IconsContentProps> = ({ currentIndex }) => {
+const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: icons = [], isLoading } = useQuery({
     queryKey: ["icons"],
@@ -54,10 +59,31 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex }) => {
     },
   });
 
-  const iconToShow = icons[currentIndex % Math.max(1, icons.length)] || null;
+  // Check if we should show a detailed view based on URL parameters
+  useEffect(() => {
+    if (location.pathname.includes('/view/icon/')) {
+      const iconId = location.pathname.split('/view/icon/')[1];
+      const icon = icons.find(i => i.id === iconId);
+      
+      if (icon) {
+        setSelectedIcon(icon);
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    }
+  }, [location.pathname, icons, onDetailedViewShow]);
 
+  const iconToShow = icons[currentIndex % Math.max(1, icons.length)] || null;
+  
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
+    navigate(`/view/icon/${icon.id}`, { replace: true });
+    if (onDetailedViewShow) onDetailedViewShow();
+  };
+
+  const handleCloseDetailedView = () => {
+    setSelectedIcon(null);
+    navigate('/', { replace: true });
+    if (onDetailedViewHide) onDetailedViewHide();
   };
 
   // Mock data for detailed view
@@ -114,7 +140,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex }) => {
             image: selectedIcon.illustration,
             ...mockRelatedData
           }}
-          onBack={() => setSelectedIcon(null)}
+          onBack={handleCloseDetailedView}
         />
       )}
     </>

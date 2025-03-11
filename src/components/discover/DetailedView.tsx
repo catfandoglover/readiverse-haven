@@ -39,6 +39,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
     <div className="flex justify-between bg-[#2A282A] p-4 border-t border-gray-700">
       <Button
         className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20"
+        onClick={() => data.onReadNow && data.onReadNow()}
       >
         <span className="mr-2">📖</span> READ NOW
       </Button>
