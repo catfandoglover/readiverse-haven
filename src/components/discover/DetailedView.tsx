@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -338,14 +337,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="sticky top-0 left-0 right-0 z-10 bg-gradient-to-b from-[#2A282A] to-transparent"
-      style={{
-        aspectRatio: "1290/152",
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-        maxHeight: "152px"
-      }}
+      className="sticky top-0 z-10 bg-[#2A282A] w-full"
     >
-      <div className="flex items-center h-full px-4">
+      <div className="flex items-center h-full px-4 py-3">
         <button 
           onClick={handleBack} 
           className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#E9E7E2]"
