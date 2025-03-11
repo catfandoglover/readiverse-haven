@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -156,7 +155,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     let imageProperty: { image: string } = { image: itemData.image || '' };
     
     if (type === 'classic') {
-      // Handle classic type (books)
       const bookData = enhancedData as { 
         icon_illustration?: string; 
         cover_url?: string; 
@@ -171,7 +169,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       };
     } 
     else if (type === 'icon' || type === 'concept') {
-      // Handle icon or concept types
       const conceptData = enhancedData as { illustration?: string };
       imageProperty = { 
         image: conceptData.illustration || itemData.image || ''
@@ -453,22 +450,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
-                {/* Gradient border as background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#9b87f5] to-[#7E69AB]"></div>
-                
-                {/* Image container with slight inset */}
-                <div className="absolute inset-[2px] rounded-[0.4rem] overflow-hidden">
-                  <img
-                    src={item[imageKey] || ''}
-                    alt={item[textKey] || ""}
-                    className="h-full w-full object-cover"
-                    draggable="false"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
-                    <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
-                      {item[textKey]}
-                    </h4>
-                  </div>
+                <img
+                  src={item[imageKey] || ''}
+                  alt={item[textKey] || ""}
+                  className="h-full w-full object-cover"
+                  draggable="false"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                  <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
+                    {item[textKey]}
+                  </h4>
                 </div>
               </div>
             ))}
@@ -680,3 +671,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
