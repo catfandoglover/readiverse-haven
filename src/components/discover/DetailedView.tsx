@@ -267,7 +267,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Content */}
           <div className="px-6 py-8">
-            <h1 className="text-xl font-baskerville mb-2">{itemData.title}</h1>
+            <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
                 by {itemData.author}
