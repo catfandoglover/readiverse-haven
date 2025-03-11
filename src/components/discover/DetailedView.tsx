@@ -81,7 +81,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
       {renderHeader()}
       
       {/* Scrollable content container - with padding at the bottom to account for fixed buttons */}
-      <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
+      <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-24" : ""}`}>
         {/* Cover Image - fixed aspect ratio */}
         <div className="w-full aspect-square relative">
           <img
