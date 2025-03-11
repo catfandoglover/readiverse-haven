@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -338,7 +337,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      className="sticky top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+      className="sticky top-0 left-0 right-0 z-10 bg-gradient-to-b from-[#2A282A] to-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
         boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
@@ -500,19 +499,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
       </div>
 
-      {type === "classic" && (
-        <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#E9E7E2] p-4 border-t border-gray-300 z-10">
-          <Button className="flex-1 mr-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleReadNow}>
-            <BookOpen className="mr-2 h-4 w-4" /> READ
-          </Button>
-          <Button className="flex-1 mx-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleAddToLibrary}>
-            <Plus className="mr-2 h-4 w-4" /> ADD
-          </Button>
-          <Button className="flex-1 ml-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleOrder}>
-            <ShoppingCart className="mr-2 h-4 w-4" /> ORDER
-          </Button>
-        </div>
-      )}
+      {type === "classic" && renderClassicButtons()}
 
       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
         <DialogContent className="bg-[#E9E7E2] text-[#2A282A] border-gray-300 max-w-sm mx-auto">
