@@ -145,15 +145,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
-      {/* Header (fixed position) - only show it once at the top */}
+    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
+      {/* Header (fixed position) */}
       {renderHeader()}
       
-      {/* Content area that takes full height minus header height */}
-      <div className="h-full pt-0 pb-0 flex flex-col">
-        <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
-          {/* Cover Image - fixed aspect ratio */}
-          <div className="w-full aspect-square relative">
+      {/* Content area - now with proper containment */}
+      <div className="h-full w-full flex flex-col">
+        <div className={`flex-1 overflow-y-auto pb-0 ${type === "classic" ? "pb-20" : ""}`}>
+          {/* Cover Image with fixed aspect ratio */}
+          <div className="w-full aspect-square">
             <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
           </div>
 
