@@ -120,6 +120,39 @@ const DNAAssessment = () => {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
           
+          // Get the current user
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.error('Error getting user:', userError);
+          } else if (userData && userData.user) {
+            console.log('Current user:', userData.user);
+            
+            // First try to get the profile ID
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('outseta_user_id', userData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error getting profile:', profileError);
+            } else if (profileData) {
+              console.log('Found profile:', profileData);
+              // Store the profile ID in sessionStorage
+              sessionStorage.setItem('user_id', profileData.id);
+            } else {
+              // If no profile found, use the auth user ID as fallback
+              console.log('No profile found, using auth user ID');
+              sessionStorage.setItem('user_id', userData.user.id);
+            }
+          } else {
+            // If no authenticated user, create a temporary ID
+            console.log('No authenticated user, using temporary ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
+          }
+          
           // Create the assessment
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
@@ -150,6 +183,8 @@ const DNAAssessment = () => {
 
           setAssessmentId(newAssessment.id);
           console.log('Created new assessment with ID:', newAssessment.id);
+          // Store in sessionStorage immediately
+          sessionStorage.setItem('dna_assessment_id', newAssessment.id);
           
           // Verify the assessment exists and is properly initialized
           const { data: verifyData, error: verifyError } = await supabase
@@ -292,13 +327,35 @@ const DNAAssessment = () => {
       : (currentQuestion.question?.answer_b || "No");
     
     // Store the question and answer in the conversation manager
-    // This will be used to provide context to the AI chat
     conversationManager.addQuestionToPath(
       sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
       currentPosition,
       questionText,
       answerLabel
     );
+
+    // Save the conversation for the current question before moving to the next
+    const userId = sessionStorage.getItem('user_id');
+    const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+    
+    console.log('Preparing to save conversation:', {
+      sessionId,
+      assessmentId,
+      userId,
+      currentPosition
+    });
+    
+    // Always use the assessmentId from state
+    try {
+      await conversationManager.saveConversationToSupabase(
+        sessionId,
+        assessmentId, // Using from state
+        userId, // Can be null for anonymous users
+        currentPosition
+      );
+    } catch (error) {
+      console.error('Error in saveConversationToSupabase:', error);
+    }
 
     try {
       // Store individual question response
@@ -464,6 +521,106 @@ const DNAAssessment = () => {
     navigate('/dna');
     setShowExitAlert(false);
   };
+
+  // At the beginning of the component, update the effect to handle anonymous users better
+  React.useEffect(() => {
+    const ensureUserId = async () => {
+      // Check if user_id is already in sessionStorage
+      const existingUserId = sessionStorage.getItem('user_id');
+      if (!existingUserId) {
+        console.log('No user_id found in sessionStorage, attempting to set it');
+        
+        try {
+          // Try to get the authenticated user
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.log('User is not authenticated, using anonymous ID');
+            // For anonymous users, we don't set a user_id in sessionStorage
+            // This will cause the conversation to be saved with the anonymous user ID
+          } else if (userData && userData.user) {
+            console.log('Found authenticated user:', userData.user.id);
+            
+            // Try to get the profile
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('outseta_user_id', userData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error getting profile:', profileError);
+            } else if (profileData) {
+              console.log('Found profile, setting user_id to profile.id:', profileData.id);
+              sessionStorage.setItem('user_id', profileData.id);
+            } else {
+              // If no profile found, use auth user ID
+              console.log('No profile found, setting user_id to auth.user.id:', userData.user.id);
+              sessionStorage.setItem('user_id', userData.user.id);
+            }
+          }
+        } catch (error) {
+          console.error('Error in ensureUserId:', error);
+          // For errors, we don't set a user_id, which will use the anonymous user
+        }
+      } else {
+        console.log('Found existing user_id in sessionStorage:', existingUserId);
+      }
+    };
+    
+    ensureUserId();
+  }, []);
+
+  // Add this at the end of the component
+  React.useEffect(() => {
+    // Expose debug function to window
+    (window as any).debugDNAConversation = () => {
+      console.log('Debug info:');
+      console.log('assessmentId (state):', assessmentId);
+      console.log('assessmentId (sessionStorage):', sessionStorage.getItem('dna_assessment_id'));
+      console.log('userId (sessionStorage):', sessionStorage.getItem('user_id'));
+      console.log('sessionId (dna_assessment_name):', sessionStorage.getItem('dna_assessment_name'));
+      console.log('currentPosition:', currentPosition);
+      
+      // Check conversation data
+      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+      const conversation = conversationManager.getHistory(sessionId);
+      const questionPath = conversationManager.getQuestionPath(sessionId);
+      console.log('Conversation:', conversation);
+      console.log('QuestionPath:', questionPath);
+    };
+    
+    // Expose manual save function
+    (window as any).manualSaveConversation = async () => {
+      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+      const assessmentIdToUse = assessmentId || sessionStorage.getItem('dna_assessment_id');
+      const userIdToUse = sessionStorage.getItem('user_id') || 'temp-' + Math.random().toString(36).substring(2, 15);
+      
+      if (!assessmentIdToUse) {
+        console.error('No assessment ID available for manual save');
+        return;
+      }
+      
+      console.log('Manual save with:', {
+        sessionId,
+        assessmentId: assessmentIdToUse,
+        userId: userIdToUse,
+        questionId: currentPosition
+      });
+      
+      try {
+        await conversationManager.saveConversationToSupabase(
+          sessionId,
+          assessmentIdToUse,
+          userIdToUse,
+          currentPosition
+        );
+        console.log('Manual save completed');
+      } catch (error) {
+        console.error('Error in manual save:', error);
+      }
+    };
+  }, [assessmentId, currentPosition]);
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (

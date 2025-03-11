@@ -79,13 +79,15 @@ class AIService {
       // Extract the response text
       const responseText = responseData.choices[0].message.content;
       
-      // If response is too long, truncate it (no longer using _shortenText)
+      // If response is too long, truncate it
       const finalResponse = responseText.length > 600 
         ? this._truncateText(responseText)
         : responseText;
       
       // Add the assistant response to conversation history
       conversationManager.addMessage(sessionId, 'assistant', finalResponse);
+      
+      // We no longer save the conversation here, as it will be saved when the user answers the question
       
       return { text: finalResponse };
     } catch (error) {

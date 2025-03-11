@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -146,6 +148,118 @@ class ConversationManager {
       "What dimensions of this question intrigue you?"
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
+  }
+
+  // Update the saveConversationToSupabase method to include questionId
+  async saveConversationToSupabase(
+    sessionId: string, 
+    assessmentId: string, 
+    userId: string | null, 
+    questionId: string
+  ): Promise<void> {
+    try {
+      console.log('saveConversationToSupabase called with:', {
+        sessionId,
+        assessmentId,
+        userId,
+        questionId
+      });
+      
+      const conversation = this.conversations.get(sessionId) || [];
+      const questionPath = this.questionPaths.get(sessionId) || [];
+      
+      console.log('Conversation data to save:', {
+        conversationLength: conversation.length,
+        questionPathLength: questionPath.length
+      });
+      
+      // Skip saving if there's no conversation data
+      if (conversation.length === 0 && questionPath.length === 0) {
+        console.log('No conversation data to save, skipping');
+        return;
+      }
+      
+      // Always use the anonymous user ID for non-authenticated users
+      // This ID must match the one we inserted into the profiles table
+      const effectiveUserId = '00000000-0000-0000-0000-000000000000';
+      
+      console.log('Using anonymous user ID:', effectiveUserId);
+      
+      // Store the original user identifier in the metadata
+      const originalIdentifier = userId || sessionId;
+      
+      // Check if a record already exists for this specific question and assessment
+      const { data: existingRecord, error: queryError } = await supabase
+        .from('dna_conversations')
+        .select('id')
+        .eq('assessment_id', assessmentId)
+        .eq('user_id', effectiveUserId)
+        .eq('session_id', sessionId)
+        .eq('question_id', questionId)
+        .maybeSingle();
+        
+      if (queryError) {
+        console.error('Error checking for existing record:', queryError);
+      }
+      
+      const messages = {
+        conversation,
+        questionPath,
+        metadata: {
+          original_identifier: originalIdentifier,
+          is_anonymous: !userId
+        }
+      };
+      
+      if (existingRecord) {
+        console.log('Updating existing conversation record:', existingRecord.id);
+        const { error: updateError } = await supabase
+          .from('dna_conversations')
+          .update({
+            messages,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingRecord.id);
+          
+        if (updateError) {
+          console.error('Error updating conversation record:', updateError);
+        } else {
+          console.log('Successfully updated conversation record');
+        }
+      } else {
+        console.log('Creating new conversation record');
+        const { data: insertData, error: insertError } = await supabase
+          .from('dna_conversations')
+          .insert({
+            assessment_id: assessmentId,
+            user_id: effectiveUserId,
+            session_id: sessionId,
+            question_id: questionId,
+            messages
+          })
+          .select();
+          
+        if (insertError) {
+          console.error('Error inserting conversation record:', insertError);
+        } else {
+          console.log('Successfully created conversation record:', insertData);
+        }
+      }
+      
+      console.log(`Conversation for question ${questionId} saved to Supabase`);
+    } catch (error) {
+      console.error('Error saving conversation to Supabase:', error);
+    }
+  }
+
+  // Add this utility function to the ConversationManager class
+  private _generateAnonymousUUID(): string {
+    // This creates a v4 UUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, 
+            v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }
 

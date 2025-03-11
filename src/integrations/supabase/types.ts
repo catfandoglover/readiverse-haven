@@ -1231,6 +1231,54 @@ export type Database = {
           },
         ]
       }
+      dna_conversations: {
+        Row: {
+          id: string
+          assessment_id: string
+          user_id: string
+          session_id: string
+          question_id: string
+          messages: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          assessment_id: string
+          user_id: string
+          session_id: string
+          question_id: string
+          messages: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          assessment_id?: string
+          user_id?: string
+          session_id?: string
+          question_id?: string
+          messages?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_conversations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       decision_tree_view: {
