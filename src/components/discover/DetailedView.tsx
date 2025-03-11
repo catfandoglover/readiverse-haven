@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -152,24 +151,26 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const combinedData = React.useMemo(() => {
     if (!enhancedData) return itemData;
     
-    const imageProperty = (() => {
-      switch(type) {
-        case 'classic':
-          return { 
-            image: enhancedData.icon_illustration || 
-                  enhancedData.cover_url || 
-                  enhancedData.Cover_super || 
-                  itemData.image 
-          };
-        case 'icon':
-        case 'concept':
-          return { 
-            image: enhancedData.illustration || itemData.image 
-          };
-        default:
-          return { image: itemData.image };
-      }
-    })();
+    let imageProperty = {};
+    
+    switch(type) {
+      case 'classic':
+        imageProperty = { 
+          image: enhancedData.icon_illustration || 
+                enhancedData.cover_url || 
+                enhancedData.Cover_super || 
+                itemData.image 
+        };
+        break;
+      case 'icon':
+      case 'concept':
+        imageProperty = { 
+          image: enhancedData.illustration || itemData.image 
+        };
+        break;
+      default:
+        imageProperty = { image: itemData.image };
+    }
 
     return { 
       ...itemData,
@@ -450,12 +451,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                   src={item[imageKey as keyof CarouselItem] as string || ''}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
                   className="h-full w-full object-cover"
-                  style={{ borderRadius: 'inherit' }}
                   draggable="false"
                 />
                 <div 
                   className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2"
-                  style={{ borderRadius: 'inherit' }}
                 >
                   <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
                     {item[textKey as keyof CarouselItem] as string}
