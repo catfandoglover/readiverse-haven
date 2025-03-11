@@ -145,60 +145,58 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
       {/* Header (fixed position) */}
       {renderHeader()}
       
-      {/* Content area - now with proper containment */}
-      <div className="h-full w-full flex flex-col">
-        <div className={`flex-1 overflow-y-auto pb-0 ${type === "classic" ? "pb-20" : ""}`}>
-          {/* Cover Image with fixed aspect ratio */}
-          <div className="w-full aspect-square">
-            <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+      {/* Main scrollable content */}
+      <div className="flex-1 overflow-y-auto" style={{ paddingTop: "152px", paddingBottom: type === "classic" ? "80px" : "0" }}>
+        {/* Cover Image with fixed aspect ratio */}
+        <div className="w-full aspect-square">
+          <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-8">
+          <h1 className="text-4xl font-serif mb-2">{data.title}</h1>
+          {type === "classic" && <h2 className="text-xl font-serif mb-6 text-gray-400">
+              by {data.author}
+            </h2>}
+
+          {type === "classic" && <p className="text-xl font-medium mb-8">
+              {data.tagline || "What lies beneath the morality you hold sacred?"}
+            </p>}
+
+          <div className="mb-8">
+            <h3 className="text-lg uppercase font-bold mb-3">ABOUT</h3>
+            <p className="text-gray-300">{data.about}</p>
           </div>
 
-          {/* Content */}
-          <div className="px-6 py-8">
-            <h1 className="text-4xl font-serif mb-2">{data.title}</h1>
-            {type === "classic" && <h2 className="text-xl font-serif mb-6 text-gray-400">
-                by {data.author}
-              </h2>}
+          {(type === "icon" || type === "classic" || type === "concept") && <div className="mb-8">
+              <h3 className="text-lg uppercase font-bold mb-3">
+                GREAT CONVERSATION
+              </h3>
+              <p className="text-gray-300">{data.great_conversation}</p>
+            </div>}
 
-            {type === "classic" && <p className="text-xl font-medium mb-8">
-                {data.tagline || "What lies beneath the morality you hold sacred?"}
-              </p>}
+          {type === "concept" && <div className="mb-8">
+              <h3 className="text-lg uppercase font-bold mb-3">GENEALOGY</h3>
+              <p className="text-gray-300">{data.genealogy}</p>
+            </div>}
 
-            <div className="mb-8">
-              <h3 className="text-lg uppercase font-bold mb-3">ABOUT</h3>
-              <p className="text-gray-300">{data.about}</p>
-            </div>
+          {type === "icon" && data.anecdotes && <div className="mb-8">
+              <h3 className="text-lg uppercase font-bold mb-3">ANECDOTES</h3>
+              <p className="text-gray-300">{data.anecdotes}</p>
+            </div>}
 
-            {(type === "icon" || type === "classic" || type === "concept") && <div className="mb-8">
-                <h3 className="text-lg uppercase font-bold mb-3">
-                  GREAT CONVERSATION
-                </h3>
-                <p className="text-gray-300">{data.great_conversation}</p>
-              </div>}
+          {/* Connected Content Carousels */}
+          <ContentCarousel title="RELATED GREAT QUESTIONS" items={data.related_questions || []} type="questions" />
 
-            {type === "concept" && <div className="mb-8">
-                <h3 className="text-lg uppercase font-bold mb-3">GENEALOGY</h3>
-                <p className="text-gray-300">{data.genealogy}</p>
-              </div>}
+          <ContentCarousel title="RELATED CLASSICS" items={data.related_classics || []} type="classics" />
 
-            {type === "icon" && data.anecdotes && <div className="mb-8">
-                <h3 className="text-lg uppercase font-bold mb-3">ANECDOTES</h3>
-                <p className="text-gray-300">{data.anecdotes}</p>
-              </div>}
+          <ContentCarousel title="RELATED ICONS" items={data.related_icons || []} type="icons" />
 
-            {/* Connected Content Carousels */}
-            <ContentCarousel title="RELATED GREAT QUESTIONS" items={data.related_questions || []} type="questions" />
-
-            <ContentCarousel title="RELATED CLASSICS" items={data.related_classics || []} type="classics" />
-
-            <ContentCarousel title="RELATED ICONS" items={data.related_icons || []} type="icons" />
-
-            <ContentCarousel title="RELATED CONCEPTS" items={data.related_concepts || []} type="concepts" />
-          </div>
+          <ContentCarousel title="RELATED CONCEPTS" items={data.related_concepts || []} type="concepts" />
         </div>
       </div>
 
