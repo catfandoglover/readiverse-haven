@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ interface CarouselItem {
   cover_url?: string;
   Cover_super?: string;
   icon_illustration?: string;
-  [key: string]: any; // Add index signature for dynamic property access
+  [key: string]: any;
 }
 
 interface DetailedViewProps {
@@ -156,7 +155,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     let imageProperty: { image: string } = { image: itemData.image || '' };
     
     if (type === 'classic') {
-      // Handle classic type (books)
       const bookData = enhancedData as { 
         icon_illustration?: string; 
         cover_url?: string; 
@@ -171,7 +169,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       };
     } 
     else if (type === 'icon' || type === 'concept') {
-      // Handle icon or concept types
       const conceptData = enhancedData as { illustration?: string };
       imageProperty = { 
         image: conceptData.illustration || itemData.image || ''
@@ -453,10 +450,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
-                {/* Background color container matching page background */}
                 <div className="absolute inset-0 bg-[#E9E7E2]"></div>
-                
-                {/* Image container with slight inset */}
                 <div className="absolute inset-[2px] overflow-hidden rounded-[0.4rem]">
                   <img
                     src={item[imageKey] || ''}
@@ -680,3 +674,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
