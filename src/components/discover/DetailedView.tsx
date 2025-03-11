@@ -203,7 +203,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const shareTitle = itemData.title || itemData.name || "Check this out";
       const shareText = itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`;
       
-      // Check if the Web Share API is supported by the browser
       if (navigator.share) {
         try {
           await navigator.share({
@@ -216,16 +215,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             description: "Successfully shared!",
           });
         } catch (error) {
-          // If user cancels the share dialog, it's not an error we need to show
           if (error instanceof Error && error.name === "AbortError") {
             return;
           }
           
-          // Fallback to clipboard for other errors
           await fallbackToClipboard(shareUrl);
         }
       } else {
-        // Fallback for browsers that don't support the Web Share API
         await fallbackToClipboard(shareUrl);
       }
     } catch (error) {
@@ -419,7 +415,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             }
 
             <p className="text-gray-800 font-baskerville text-lg mb-8">
-              {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
+              {formatText(itemData.introduction || itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
 
             {itemData.great_question_connection && (
