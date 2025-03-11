@@ -193,7 +193,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <div className="flex items-center h-full px-4">
         <button 
           onClick={handleBack} 
-          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-white"
+          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#2A282A]"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -233,21 +233,21 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderClassicButtons = () => (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
-      <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20 font-oxanium" onClick={handleReadNow}>
+    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#E9E7E2] p-4 border-t border-gray-300 z-10">
+      <Button className="flex-1 mr-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleReadNow}>
         <BookOpen className="mr-2 h-4 w-4" /> READ
       </Button>
-      <Button className="flex-1 mx-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20 font-oxanium" onClick={handleAddToLibrary}>
+      <Button className="flex-1 mx-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleAddToLibrary}>
         <Plus className="mr-2 h-4 w-4" /> ADD
       </Button>
-      <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20 font-oxanium" onClick={handleOrder}>
+      <Button className="flex-1 ml-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleOrder}>
         <ShoppingCart className="mr-2 h-4 w-4" /> ORDER
       </Button>
     </div>
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       <div className="h-full w-full overflow-y-auto">
         {renderHeader()}
         
@@ -264,10 +264,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
 
         <div className="relative z-10">
-          <div className="p-6 pb-32 bg-[#2A282A] rounded-t-2xl -mt-6">
-            <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
+          <div className="p-6 pb-32 bg-[#E9E7E2] rounded-t-2xl -mt-6">
+            <h1 className="text-3xl font-serif mb-4 text-[#2A282A]">{itemData.title}</h1>
             {type === "classic" && 
-              <h2 className="text-xl font-baskerville mb-6 text-gray-400">
+              <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
                 by {itemData.author}
               </h2>
             }
@@ -278,7 +278,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {itemData.great_question_connection && (
               <div className="mb-8">
-                <h3 className="text-xl font-baskerville capitalize mb-4">The Great Conversation</h3>
+                <h3 className="text-xl font-baskerville capitalize mb-4 text-[#2A282A]">The Great Conversation</h3>
                 <p className="text-gray-800 font-baskerville text-lg">{formatText(itemData.great_question_connection)}</p>
               </div>
             )}
@@ -288,24 +288,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {renderHorizontalSlider("Major Themes", concepts)}
 
             <div className="mt-8">
-              <h3 className="text-xl font-baskerville capitalize mb-4">
+              <h3 className="text-xl font-baskerville capitalize mb-4 text-[#2A282A]">
                 Seekers Reading {itemData.title}
               </h3>
               <Select
                 onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
                 defaultValue="READERS"
               >
-                <SelectTrigger className="bg-[#2A282A] border-gray-700 text-white w-full mb-4">
+                <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
                   <SelectValue placeholder="Select filter" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#2A282A] border-gray-700 text-white">
+                <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
                   <SelectItem value="READERS">READERS</SelectItem>
                   <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
                 </SelectContent>
               </Select>
               <div className="space-y-2">
                 {profiles.map(profile => (
-                  <div key={profile.id} className="p-2 border border-gray-700 rounded-md text-gray-800 font-baskerville text-lg">
+                  <div key={profile.id} className="p-2 border border-gray-300 rounded-md text-gray-800 font-baskerville text-lg">
                     {profile.full_name || "Anonymous Reader"}
                   </div>
                 ))}
@@ -322,9 +322,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       {type === "classic" && renderClassicButtons()}
 
       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-        <DialogContent className="bg-[#2A282A] text-[#E9E7E2] border-gray-700 max-w-sm mx-auto">
+        <DialogContent className="bg-[#E9E7E2] text-[#2A282A] border-gray-300 max-w-sm mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-baskerville text-white text-center">Purchase Options</DialogTitle>
+            <DialogTitle className="text-xl font-baskerville text-[#2A282A] text-center">Purchase Options</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col space-y-4 mt-4">
             <a 
