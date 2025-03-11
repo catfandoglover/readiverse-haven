@@ -5,8 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Credentials": "true",
 };
 
 Deno.serve(async (req) => {
@@ -47,50 +45,32 @@ Deno.serve(async (req) => {
     
     const JWKS = jose.createRemoteJWKSet(jwksUrl);
 
-    try {
-      const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
-      console.log('JWT verified, payload:', payload);
+    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
+    console.log('JWT verified, payload:', payload);
 
-      // Set to authenticated role for Supabase
-      payload.role = "authenticated";
+    payload.role = "authenticated";
 
-      const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
-      if (!supabaseSecret) {
-        throw new Error("SUPA_JWT_SECRET not configured");
-      }
-
-      const supabaseEncodedJwtSecret = new TextEncoder().encode(supabaseSecret);
-      
-      const supabaseJwt = await new jose.SignJWT(payload)
-        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-        .setIssuer("supabase")
-        .setIssuedAt(payload.iat)
-        .setExpirationTime(payload.exp || "2h")
-        .sign(supabaseEncodedJwtSecret);
-
-      console.log('Supabase JWT created successfully');
-
-      return new Response(JSON.stringify({ supabaseJwt }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    } catch (jwtError) {
-      console.error("JWT verification error:", {
-        message: jwtError.message,
-        stack: jwtError.stack
-      });
-      
-      return new Response(
-        JSON.stringify({ 
-          error: "JWT verification failed",
-          details: jwtError.message
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 401,
-        }
-      );
+    const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
+    if (!supabaseSecret) {
+      throw new Error("SUPA_JWT_SECRET not configured");
     }
+
+    const supabaseEncodedJwtSecret = new TextEncoder().encode(supabaseSecret);
+    
+    const supabaseJwt = await new jose.SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setIssuer("supabase")
+      .setIssuedAt(payload.iat)
+      .setExpirationTime(payload.exp || "2h")
+      .sign(supabaseEncodedJwtSecret);
+
+    console.log('Supabase JWT created successfully');
+
+    return new Response(JSON.stringify({ supabaseJwt }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+    
   } catch (error) {
     console.error("Token exchange error:", {
       message: error.message,
@@ -104,7 +84,7 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 401,
       }
     );
   }

@@ -9,51 +9,15 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(
-  SUPABASE_URL, 
-  SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false
-    }
-  }
-);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // This function allows creating a client with a custom JWT token
 export function createSupabaseClient(jwt: string) {
-  if (!jwt || jwt.trim() === '') {
-    console.error('Attempting to create Supabase client with empty JWT');
-    throw new Error('Invalid JWT token provided');
-  }
-  
-  console.log('Creating authenticated Supabase client', {
-    hasJwt: !!jwt,
-    jwtLength: jwt.length
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    },
   });
-  
-  try {
-    const client = createClient<Database>(
-      SUPABASE_URL, 
-      SUPABASE_PUBLISHABLE_KEY, 
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        },
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: false
-        }
-      }
-    );
-    
-    return client;
-  } catch (error) {
-    console.error('Error creating Supabase client:', error);
-    throw error;
-  }
 }
