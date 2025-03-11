@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -171,7 +170,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setIsOrderDialogOpen(true);
   };
 
-  // Function to format text with line breaks
   const formatText = (text: string) => {
     if (!text) return "";
     return text.split("\\n").map((line, i) => (
@@ -265,7 +263,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+          <div className="p-6 pb-32">
             <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-gray-400">
