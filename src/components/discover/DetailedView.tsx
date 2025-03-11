@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -39,10 +39,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -103,23 +99,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    
-    const handleScroll = () => {
-      if (contentRef.current) {
-        setScrollPosition(contentRef.current.scrollTop);
-      }
-    };
-    
-    const contentElement = contentRef.current;
-    if (contentElement) {
-      contentElement.addEventListener('scroll', handleScroll);
-    }
-    
     return () => {
       document.body.style.overflow = originalStyle;
-      if (contentElement) {
-        contentElement.removeEventListener('scroll', handleScroll);
-      }
     };
   }, []);
 
@@ -201,7 +182,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderHeader = () => (
     <header 
-      ref={headerRef}
       className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
       style={{
         aspectRatio: "1290/152",
@@ -232,14 +212,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               <div
                 key={item.id}
                 className="relative h-36 w-36 flex-none rounded-lg overflow-hidden"
-                style={{ minWidth: '100%', maxWidth: '100%' }}
               >
                 <img
                   src={item[imageKey as keyof CarouselItem] as string}
                   alt={item[textKey as keyof CarouselItem] as string || ""}
-                  className="h-full w-full object-cover rounded-lg"
+                  className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2 rounded-lg">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
                   <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
                     {item[textKey as keyof CarouselItem] as string}
                   </h4>
@@ -266,64 +245,31 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
-  const headerHeight = 152;
-  const imageHeight = window.innerWidth;
-  const maxTranslateY = imageHeight - headerHeight;
-  
-  const translateY = Math.min(Math.max(0, scrollPosition), maxTranslateY);
-  
-  const titleOpacity = Math.min(1, Math.max(0, (scrollPosition - (maxTranslateY * 0.7)) / 100));
-
   return (
     <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
       <div className="h-full w-full flex flex-col">
-        <div className="w-full relative" style={{ height: `${imageHeight}px` }}>
+        <div className="w-full relative">
           <img 
             src={itemData.image} 
             alt={itemData.title} 
-            className="w-full h-full object-cover absolute top-0 left-0" 
+            className="w-full object-cover" 
+            style={{ 
+              aspectRatio: "1/1",
+              maxHeight: "100vh" 
+            }} 
           />
           
           {renderHeader()}
-          
-          <div 
-            className="absolute top-0 left-0 right-0 z-20 pt-[152px] bg-[#2A282A]/90 transition-opacity duration-300"
-            style={{ 
-              opacity: titleOpacity,
-              pointerEvents: titleOpacity > 0.5 ? 'auto' : 'none',
-              transform: `translateY(${titleOpacity > 0.1 ? 0 : -100}px)`,
-            }}
-            ref={titleRef}
-          >
-            <div className="px-6 py-2 border-b border-gray-700">
-              <h2 className="text-xl font-serif truncate">{itemData.title}</h2>
-              {type === "classic" && itemData.author && (
-                <p className="text-sm font-baskerville text-gray-400 truncate">by {itemData.author}</p>
-              )}
-            </div>
-          </div>
         </div>
 
-        <div 
-          ref={contentRef}
-          className="flex-1 overflow-y-auto relative"
-          style={{ 
-            transform: `translateY(-${translateY}px)`,
-            transition: 'transform 0.05s ease-out',
-          }}
-        >
-          <div 
-            className="p-6 pb-32 bg-[#2A282A] rounded-t-3xl relative z-10 min-h-screen"
-            style={{ paddingTop: `${Math.max(24, scrollPosition > maxTranslateY ? 24 + headerHeight : 24)}px` }}
-          >
-            <div style={{ opacity: Math.max(0, 1 - titleOpacity * 2) }}>
-              <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
-              {type === "classic" && 
-                <h2 className="text-xl font-baskerville mb-6 text-gray-400">
-                  by {itemData.author}
-                </h2>
-              }
-            </div>
+        <div className="flex-1 overflow-y-auto relative" style={{ marginTop: "-5%" }}>
+          <div className="p-6 pb-32 bg-[#2A282A] rounded-t-3xl relative z-10">
+            <h1 className="text-3xl font-serif mb-4">{itemData.title}</h1>
+            {type === "classic" && 
+              <h2 className="text-xl font-baskerville mb-6 text-gray-400">
+                by {itemData.author}
+              </h2>
+            }
 
             <p className="text-xl font-baskerville mb-8">
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
