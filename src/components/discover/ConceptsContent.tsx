@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Concept {
   id: string;
@@ -14,7 +15,7 @@ interface Concept {
   about?: string;
   genealogy?: string;
   great_conversation?: string;
-  category?: string; // Make category optional since it might not be present in the data
+  category?: string;
   type?: string;
   randomizer?: number;
   created_at?: string;
@@ -23,11 +24,15 @@ interface Concept {
 
 interface ConceptsContentProps {
   currentIndex: number;
+  onDetailedViewShow?: () => void;
+  onDetailedViewHide?: () => void;
 }
 
-const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
+const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: concepts = [], isLoading } = useQuery({
     queryKey: ["concepts"],
@@ -62,10 +67,31 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
     },
   });
 
+  // Check if we should show a detailed view based on URL parameters
+  useEffect(() => {
+    if (location.pathname.includes('/view/concept/')) {
+      const conceptId = location.pathname.split('/view/concept/')[1];
+      const concept = concepts.find(c => c.id === conceptId);
+      
+      if (concept) {
+        setSelectedConcept(concept);
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    }
+  }, [location.pathname, concepts, onDetailedViewShow]);
+
   const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
   
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
+    navigate(`/view/concept/${concept.id}`, { replace: true });
+    if (onDetailedViewShow) onDetailedViewShow();
+  };
+
+  const handleCloseDetailedView = () => {
+    setSelectedConcept(null);
+    navigate('/', { replace: true });
+    if (onDetailedViewHide) onDetailedViewHide();
   };
 
   const mockRelatedData = {
@@ -120,7 +146,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex }) => {
             image: selectedConcept.illustration,
             ...mockRelatedData
           }}
-          onBack={() => setSelectedConcept(null)}
+          onBack={handleCloseDetailedView}
         />
       )}
     </>

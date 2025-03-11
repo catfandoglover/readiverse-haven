@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -7,6 +6,7 @@ import IconsContent from "./IconsContent";
 import ConceptsContent from "./ConceptsContent";
 import BottomNav from "./BottomNav";
 import { useSwipeable } from "react-swipeable";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts";
 
@@ -16,8 +16,11 @@ const DiscoverLayout = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null);
   const [transitionProgress, setTransitionProgress] = useState(0);
+  const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Function to scroll to the next/previous item
   const scrollToItem = (direction: 'next' | 'prev') => {
@@ -33,12 +36,11 @@ const DiscoverLayout = () => {
       setCurrentIndex(prev => Math.max(0, prev - 1));
     }
     
-    // Reset animation state after transition completes
     setTimeout(() => {
       setIsAnimating(false);
       setSlideDirection(null);
       setTransitionProgress(0);
-    }, 300); // Transition duration
+    }, 300);
   };
 
   // Setup swipe handlers for vertical navigation
@@ -47,13 +49,11 @@ const DiscoverLayout = () => {
     onSwipedDown: () => scrollToItem('prev'),
     onSwiping: (e) => {
       if (e.dir === 'Up' || e.dir === 'Down') {
-        // Calculate swipe progress (0-100)
         const progress = Math.min(100, Math.abs(e.deltaY));
         setTransitionProgress(progress);
       }
     },
     onSwipedLeft: () => {
-      // Handle swipe left to open detailed view
       console.log("Swipe left to view details");
     },
     preventScrollOnSwipe: true,
@@ -64,16 +64,14 @@ const DiscoverLayout = () => {
   // Handle tab changes
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    setCurrentIndex(0); // Reset index when changing tabs
+    setCurrentIndex(0);
   };
 
   // Handle wheel events for navigation
   const handleWheel = (e: React.WheelEvent) => {
     if (e.deltaY > 0) {
-      // Scrolling down - go to next item
       scrollToItem('next');
     } else if (e.deltaY < 0) {
-      // Scrolling up - go to previous item
       scrollToItem('prev');
     }
     e.preventDefault();
@@ -97,17 +95,39 @@ const DiscoverLayout = () => {
     };
   }, []);
 
+  // Check if we should show a detailed view from URL
+  useEffect(() => {
+    const showDetailedView = location.pathname.includes('/view/');
+    setDetailedViewVisible(showDetailedView);
+  }, [location.pathname]);
+
   // Determine content component based on active tab
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {
       case "for-you":
-        return <ForYouContent currentIndex={index} />;
+        return <ForYouContent 
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
       case "classics":
-        return <ClassicsContent currentIndex={index} />;
+        return <ClassicsContent 
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
       case "icons":
-        return <IconsContent currentIndex={index} />;
+        return <IconsContent 
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
       case "concepts":
-        return <ConceptsContent currentIndex={index} />;
+        return <ConceptsContent 
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
     }
   };
 
@@ -129,64 +149,66 @@ const DiscoverLayout = () => {
         {...swipeHandlers}
         ref={contentRef}
       >
-        {/* Top Navigation - Positioned as absolute overlay with specific height and drop shadow */}
-        <header 
-          className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
-          style={{
-            aspectRatio: "1290/152",
-            boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-            maxHeight: "152px"
-          }}
-        >
-          <div className="flex items-center justify-between px-4 py-3 h-full w-full">
-            <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                activeTab === "for-you" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-[#E9E7E2]/60"
-              }`}
-              onClick={() => handleTabChange("for-you")}
-            >
-              FOR YOU
-            </button>
-            <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                activeTab === "classics" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-[#E9E7E2]/60"
-              }`}
-              onClick={() => handleTabChange("classics")}
-            >
-              CLASSICS
-            </button>
-            <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                activeTab === "icons" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-[#E9E7E2]/60"
-              }`}
-              onClick={() => handleTabChange("icons")}
-            >
-              ICONS
-            </button>
-            <button
-              className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                activeTab === "concepts" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                  : "text-[#E9E7E2]/60"
-              }`}
-              onClick={() => handleTabChange("concepts")}
-            >
-              CONCEPTS
-            </button>
-            <button 
-              className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-              aria-label="Search"
-            >
-              <Search className="h-2 w-2" />
-            </button>
-          </div>
-        </header>
+        {/* Top Navigation - Only show when detailed view is not visible */}
+        {!detailedViewVisible && (
+          <header 
+            className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
+            style={{
+              aspectRatio: "1290/152",
+              boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+              maxHeight: "152px"
+            }}
+          >
+            <div className="flex items-center justify-between px-4 py-3 h-full w-full">
+              <button
+                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                  activeTab === "for-you" 
+                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                    : "text-[#E9E7E2]/60"
+                }`}
+                onClick={() => handleTabChange("for-you")}
+              >
+                FOR YOU
+              </button>
+              <button
+                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                  activeTab === "classics" 
+                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                    : "text-[#E9E7E2]/60"
+                }`}
+                onClick={() => handleTabChange("classics")}
+              >
+                CLASSICS
+              </button>
+              <button
+                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                  activeTab === "icons" 
+                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                    : "text-[#E9E7E2]/60"
+                }`}
+                onClick={() => handleTabChange("icons")}
+              >
+                ICONS
+              </button>
+              <button
+                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                  activeTab === "concepts" 
+                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                    : "text-[#E9E7E2]/60"
+                }`}
+                onClick={() => handleTabChange("concepts")}
+              >
+                CONCEPTS
+              </button>
+              <button 
+                className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
+                aria-label="Search"
+              >
+                <Search className="h-2 w-2" />
+              </button>
+            </div>
+          </header>
+        )}
         
         {/* Content container with TikTok-style transition */}
         <div className="w-full h-full relative bg-[#E9E7E2]">

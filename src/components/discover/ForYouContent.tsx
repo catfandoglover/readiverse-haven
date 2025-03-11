@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface ForYouContentItem {
   id: string;
@@ -16,11 +18,15 @@ interface ForYouContentItem {
 
 interface ForYouContentProps {
   currentIndex: number;
+  onDetailedViewShow?: () => void;
+  onDetailedViewHide?: () => void;
 }
 
-const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
+const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // This would ideally be a more sophisticated query that combines data from different sources
   // based on user preferences, history, etc. For now, we'll just mock it with a combination of data.
@@ -86,10 +92,35 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
     },
   });
 
+  // Check if we should show a detailed view based on URL parameters
+  useEffect(() => {
+    if (location.pathname.includes('/view/')) {
+      const parts = location.pathname.split('/');
+      const type = parts[2]; // "classic", "icon", or "concept"
+      const id = parts[3];
+      
+      if (type && id) {
+        const item = forYouItems.find(item => item.id === id && item.type === type);
+        if (item) {
+          setSelectedItem(item);
+          if (onDetailedViewShow) onDetailedViewShow();
+        }
+      }
+    }
+  }, [location.pathname, forYouItems, onDetailedViewShow]);
+
   const itemToShow = forYouItems[currentIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     setSelectedItem(item);
+    navigate(`/view/${item.type}/${item.id}`, { replace: true });
+    if (onDetailedViewShow) onDetailedViewShow();
+  };
+
+  const handleCloseDetailedView = () => {
+    setSelectedItem(null);
+    navigate('/', { replace: true });
+    if (onDetailedViewHide) onDetailedViewHide();
   };
 
   // Mock data for detailed view
@@ -143,7 +174,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex }) => {
             ...selectedItem,
             ...mockRelatedData
           }}
-          onBack={() => setSelectedItem(null)}
+          onBack={handleCloseDetailedView}
         />
       )}
     </>

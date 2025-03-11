@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 interface Classic {
   id: string;
@@ -22,12 +23,16 @@ interface Classic {
 
 interface ClassicsContentProps {
   currentIndex: number;
+  onDetailedViewShow?: () => void;
+  onDetailedViewHide?: () => void;
 }
 
-const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
+const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedClassic, setSelectedClassic] = useState<Classic | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
 
   const { data: classics = [], isLoading } = useQuery({
     queryKey: ["classics"],
@@ -61,10 +66,31 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
     },
   });
 
+  // Check if we should show a detailed view based on URL parameters
+  useEffect(() => {
+    if (location.pathname.includes('/view/classic/')) {
+      const classicId = location.pathname.split('/view/classic/')[1];
+      const classic = classics.find(c => c.id === classicId);
+      
+      if (classic) {
+        setSelectedClassic(classic);
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    }
+  }, [location.pathname, classics, onDetailedViewShow]);
+
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
   const handleLearnMore = (classic: Classic) => {
     setSelectedClassic(classic);
+    navigate(`/view/classic/${classic.id}`, { replace: true });
+    if (onDetailedViewShow) onDetailedViewShow();
+  };
+
+  const handleCloseDetailedView = () => {
+    setSelectedClassic(null);
+    navigate('/', { replace: true });
+    if (onDetailedViewHide) onDetailedViewHide();
   };
 
   const handleReadNow = (classic: Classic) => {
@@ -139,7 +165,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex }) => {
             ...mockRelatedData,
             onReadNow: () => handleReadNow(selectedClassic),
           }}
-          onBack={() => setSelectedClassic(null)}
+          onBack={handleCloseDetailedView}
         />
       )}
     </>

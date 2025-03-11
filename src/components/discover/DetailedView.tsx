@@ -1,19 +1,33 @@
+
 import React from "react";
-import { ArrowLeft, Bookmark, Share2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 interface DetailedViewProps {
   type: "icon" | "concept" | "classic";
   data: any;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 const DetailedView: React.FC<DetailedViewProps> = ({ type, data, onBack }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      // If coming from a direct URL, go back to the main discover view
+      navigate('/');
+    }
+  };
+
   const renderHeader = () => (
     <div className="flex items-center h-14 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
       <button
-        onClick={onBack}
+        onClick={handleBack}
         className="h-10 w-10 rounded-md flex items-center justify-center bg-black/50 text-white"
       >
         <ArrowLeft className="h-5 w-5" />

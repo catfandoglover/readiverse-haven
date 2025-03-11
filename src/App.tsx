@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/OutsetaAuthContext";
-import DiscoverLayout from "@/components/discover/DiscoverLayout"; // Import the new Discover layout
+import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
 import Bookshelf from "@/components/Bookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
@@ -16,6 +16,7 @@ import Index from "@/pages/Index";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
+import DetailedView from "@/components/discover/DetailedView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,8 +57,9 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/" element={<DiscoverLayout />} /> {/* Use the new Discover layout as home */}
-                <Route path="/home-old" element={<Home />} /> {/* Keep old Home accessible */}
+                <Route path="/" element={<DiscoverLayout />} /> 
+                <Route path="/view/:type/:id" element={<DiscoverLayout />} />
+                <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
