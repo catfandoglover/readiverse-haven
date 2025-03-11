@@ -44,7 +44,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <img
           src={image}
           alt={title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-lg"
           loading="lazy"
         />
         <div className="absolute bottom-4 right-4 flex gap-2 items-center">
