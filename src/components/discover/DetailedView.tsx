@@ -436,9 +436,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </Select>
         
         <div className="border border-gray-300 rounded-md overflow-hidden">
-          <div className="bg-[#2A282A] text-[#E9E7E2] py-2 px-4 font-oxanium">
-            READER LEADERBOARD
-          </div>
           
           {isReadersLoading ? (
             <div className="p-4 text-center">Loading readers...</div>
