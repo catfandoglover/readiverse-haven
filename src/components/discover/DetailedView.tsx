@@ -42,6 +42,30 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
+    queryKey: ["item-details", type, itemData.id],
+    queryFn: async () => {
+      if (!itemData.id) return null;
+      
+      const tableName = type === 'classic' ? 'books' : type === 'icon' ? 'icons' : 'concepts';
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', itemData.id)
+        .single();
+      
+      if (error) {
+        console.error(`Error fetching enhanced ${type} data:`, error);
+        return null;
+      }
+      
+      return data;
+    },
+    staleTime: 60000,
+  });
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -121,6 +145,21 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     },
   });
 
+  const combinedData = React.useMemo(() => {
+    if (!enhancedData) return itemData;
+    return { 
+      ...itemData, 
+      ...enhancedData,
+      image: enhancedData.icon_illustration || enhancedData.cover_url || enhancedData.Cover_super || itemData.image
+    };
+  }, [itemData, enhancedData]);
+
+  useEffect(() => {
+    if (enhancedData || isEnhancedDataLoading === false) {
+      setIsDataLoaded(true);
+    }
+  }, [enhancedData, isEnhancedDataLoading]);
+
   useEffect(() => {
     const viewportMeta = document.createElement('meta');
     viewportMeta.name = 'viewport';
@@ -172,11 +211,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const handleReadNow = () => {
-    if (itemData.epub_file_url) {
-      navigate(`/read/${itemData.id}`, { 
+    if (combinedData.epub_file_url) {
+      navigate(`/read/${combinedData.id}`, { 
         state: { 
-          bookUrl: itemData.epub_file_url,
-          metadata: { Cover_super: itemData.Cover_super || itemData.cover_url }
+          bookUrl: combinedData.epub_file_url,
+          metadata: { Cover_super: combinedData.Cover_super || combinedData.cover_url }
         } 
       });
     } else {
@@ -198,7 +237,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const { error } = await supabase
         .from('user_books')
         .insert({
-          book_id: itemData.id,
+          book_id: combinedData.id,
           outseta_user_id: user.Uid,
           status: 'reading'
         });
@@ -227,9 +266,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const handleShare = async () => {
     try {
-      const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
-      const shareTitle = itemData.title || itemData.name || "Check this out";
-      const shareText = itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`;
+      const shareUrl = `${window.location.origin}/view/${type}/${combinedData.id}`;
+      const shareTitle = combinedData.title || combinedData.name || "Check this out";
+      const shareText = combinedData.introduction || `Check out this ${type === 'classic' ? 'book' : type}!`;
       
       if (navigator.share) {
         try {
@@ -289,7 +328,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         const { error } = await supabase
           .from('user_favorites')
           .delete()
-          .eq('item_id', itemData.id)
+          .eq('item_id', combinedData.id)
           .eq('outseta_user_id', user.Uid)
           .eq('item_type', type);
           
@@ -303,7 +342,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         const { error } = await supabase
           .from('user_favorites')
           .insert({
-            item_id: itemData.id,
+            item_id: combinedData.id,
             outseta_user_id: user.Uid,
             item_type: type,
             added_at: new Date().toISOString()
@@ -351,7 +390,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
-        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+        <ScrollArea className="w-full pb-4">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
             {items.map((item) => (
               <div
@@ -393,7 +432,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const renderIconButtons = () => (
     <div className="flex justify-between items-center mb-4">
-      <h2 className="text-3xl font-serif">{itemData.title || itemData.name}</h2>
+      <h2 className="text-3xl font-serif">{combinedData.title || combinedData.name}</h2>
       <div className="flex gap-2 items-center">
         <button
           className="flex items-center justify-center text-[#2A282A]"
@@ -420,7 +459,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-          SEEKERS READING {itemData.title && itemData.title.toUpperCase()}
+          SEEKERS READING {combinedData.title && combinedData.title.toUpperCase()}
         </h3>
         <Select
           onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
@@ -442,11 +481,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           ) : readersData.length === 0 ? (
             <div className="p-4 text-center">No readers yet. Be the first!</div>
           ) : (
-            <ScrollArea className="h-60" enableDragging={false}>
+            <ScrollArea className="h-60">
               <div className="divide-y divide-gray-200">
                 {readersData.map((reader, index) => (
                   <div 
-                    key={reader.outseta_user_id} 
+                    key={`${reader.outseta_user_id}-${index}`} 
                     className={cn(
                       "p-4 flex items-center gap-4",
                       index % 2 === 0 ? "bg-[#F5F5F5]" : "bg-white"
@@ -486,8 +525,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       >
         <div className="w-full">
           <img 
-            src={itemData.image} 
-            alt={itemData.title || itemData.name} 
+            src={combinedData.image} 
+            alt={combinedData.title || combinedData.name} 
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
@@ -502,20 +541,33 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
-                by {itemData.author}
+                by {combinedData.author}
               </h2>
             }
 
-            <p className="text-gray-800 font-baskerville text-lg mb-8">
-              {itemData.introduction ? formatText(itemData.introduction) : ""}
-            </p>
+            {isEnhancedDataLoading ? (
+              <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
+            ) : combinedData.introduction ? (
+              <p className="text-gray-800 font-baskerville text-lg mb-8">
+                {formatText(combinedData.introduction)}
+              </p>
+            ) : (
+              <p className="text-gray-800 font-baskerville text-lg mb-8 italic">
+                Introduction content will appear here when available.
+              </p>
+            )}
 
-            {itemData.great_question_connection && (
+            {isEnhancedDataLoading ? (
               <div className="mb-8">
                 <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
-                <p className="text-gray-800 font-baskerville text-lg">{formatText(itemData.great_question_connection)}</p>
+                <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
               </div>
-            )}
+            ) : combinedData.great_question_connection ? (
+              <div className="mb-8">
+                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                <p className="text-gray-800 font-baskerville text-lg">{formatText(combinedData.great_question_connection)}</p>
+              </div>
+            ) : null}
 
             {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question")}
 
@@ -541,19 +593,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           </DialogHeader>
           <div className="flex flex-col space-y-4 mt-4">
             <a 
-              href={itemData.amazon_link || "#"} 
+              href={combinedData.amazon_link || "#"} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!itemData.amazon_link && 'opacity-50 cursor-not-allowed'}`}
+              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!combinedData.amazon_link && 'opacity-50 cursor-not-allowed'}`}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               Buy on Amazon
             </a>
             <a 
-              href={itemData.bookshop_link || "#"} 
+              href={combinedData.bookshop_link || "#"} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!itemData.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
+              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!combinedData.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               Buy from Independent Booksellers

@@ -19,6 +19,7 @@ interface Classic {
   introduction?: string;
   about?: string;
   great_conversation?: string;
+  great_question_connection?: string;
   tagline?: string;
 }
 
@@ -52,41 +53,89 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         return [];
       }
 
-      // Log first book to see what data is available
-      if (data && data.length > 0) {
-        console.log("First book data:", data[0]);
-      }
-
       // Map the fields to match our component structure
       return data.map((book: any) => ({
         ...book,
-        // Only use default values if the fields don't exist
-        introduction: book.introduction || null,
-        about: book.about || `${book.title} is a significant work in literary and philosophical history.`,
-        great_conversation: book.great_conversation || `${book.title} has played an important role in shaping intellectual discourse.`,
+        // We're not providing default fallbacks for introduction or great_question_connection
+        // to ensure we wait for the actual data to load
       }));
     },
+    staleTime: 300000, // Cache for 5 minutes
   });
+
+  // This function loads the detailed data for a specific classic
+  const fetchClassicDetails = async (classicId: string): Promise<Classic | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("books")
+        .select("*")
+        .eq("id", classicId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching classic details:", error);
+        return null;
+      }
+      
+      return data;
+    } catch (err) {
+      console.error("Error in fetchClassicDetails:", err);
+      return null;
+    }
+  };
 
   // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/classic/')) {
       const classicId = location.pathname.split('/view/classic/')[1];
-      const classic = classics.find(c => c.id === classicId);
       
-      if (classic) {
-        setSelectedClassic(classic);
-        if (onDetailedViewShow) onDetailedViewShow();
+      // First try to find it in our already loaded classics
+      const classicFromList = classics.find(c => c.id === classicId);
+      
+      if (classicFromList) {
+        // We have the basic info, now load full details
+        fetchClassicDetails(classicId).then(detailedClassic => {
+          if (detailedClassic) {
+            setSelectedClassic({
+              ...classicFromList,
+              ...detailedClassic
+            });
+            if (onDetailedViewShow) onDetailedViewShow();
+          } else {
+            // Fallback to basic info if detailed fetch fails
+            setSelectedClassic(classicFromList);
+            if (onDetailedViewShow) onDetailedViewShow();
+          }
+        });
+      } else if (!isLoading) {
+        // Direct navigation to a classic not in our list
+        fetchClassicDetails(classicId).then(detailedClassic => {
+          if (detailedClassic) {
+            setSelectedClassic(detailedClassic);
+            if (onDetailedViewShow) onDetailedViewShow();
+          }
+        });
       }
     }
-  }, [location.pathname, classics, onDetailedViewShow]);
+  }, [location.pathname, classics, isLoading, onDetailedViewShow]);
 
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
   const handleLearnMore = (classic: Classic) => {
-    setSelectedClassic(classic);
-    navigate(`/view/classic/${classic.id}`, { replace: true });
-    if (onDetailedViewShow) onDetailedViewShow();
+    // Fetch full details before showing the detailed view
+    fetchClassicDetails(classic.id).then(detailedClassic => {
+      if (detailedClassic) {
+        setSelectedClassic({
+          ...classic,
+          ...detailedClassic
+        });
+      } else {
+        setSelectedClassic(classic);
+      }
+      
+      navigate(`/view/classic/${classic.id}`, { replace: true });
+      if (onDetailedViewShow) onDetailedViewShow();
+    });
   };
 
   const handleCloseDetailedView = () => {
@@ -110,29 +159,6 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         description: "This book is not available for reading",
       });
     }
-  };
-
-  const mockRelatedData = {
-    related_questions: [
-      { id: '1', title: 'What is morality?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'How do we determine good and evil?', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'What is the origin of moral values?', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_classics: [
-      { id: '1', title: 'Thus Spoke Zarathustra', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '2', title: 'Beyond Good and Evil', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-      { id: '3', title: 'The Antichrist', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-    ],
-    related_icons: [
-      { id: '1', title: 'Friedrich Nietzsche', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'Jean-Marie Guyau', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'Michel Foucault', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_concepts: [
-      { id: '1', title: 'Nihilism', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-      { id: '2', title: 'Will to Power', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '3', title: 'Master-Slave Morality', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-    ],
   };
 
   if (isLoading || !classicToShow) {
@@ -164,7 +190,6 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
             title: selectedClassic.title,
             author: selectedClassic.author || "Unknown Author",
             tagline: selectedClassic.tagline || "What lies beneath the morality you hold sacred?",
-            ...mockRelatedData,
             onReadNow: () => handleReadNow(selectedClassic),
           }}
           onBack={handleCloseDetailedView}
