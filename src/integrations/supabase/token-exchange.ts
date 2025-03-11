@@ -20,7 +20,8 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
       headers: {
         'Authorization': `Bearer ${outsetaToken}`,
         'Content-Type': 'application/json'
-      }
+      },
+      credentials: 'include' // Include cookies for CORS requests
     });
 
     if (!response.ok) {

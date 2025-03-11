@@ -5,6 +5,7 @@ import { createSupabaseClient } from '@/integrations/supabase/client';
 import { exchangeToken } from '@/integrations/supabase/token-exchange';
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface OutsetaUser {
   email: string;
@@ -61,8 +62,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [status, setStatus] = useState<'init' | 'ready'>('init');
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
+  const [loginAttemptInProgress, setLoginAttemptInProgress] = useState(false);
+  const { toast } = useToast();
   
   const outsetaRef = useRef(getOutseta());
+  const authAttemptTimestamp = useRef<number | null>(null);
 
   const updateUser = async () => {
     try {
@@ -70,23 +74,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
         storedToken: localStorage.getItem('outseta_token') ? 'Present (length: ' + localStorage.getItem('outseta_token')?.length + ')' : 'None',
         hasOutsetaClient: !!window.Outseta,
         currentToken: outsetaRef.current?.getAccessToken?.() ? 'Present' : 'None',
-        location: window.location.pathname
+        location: window.location.pathname,
+        loginInProgress: loginAttemptInProgress
       });
 
+      // Prevent multiple concurrent authentication attempts in a short time window
+      const now = Date.now();
+      if (authAttemptTimestamp.current && now - authAttemptTimestamp.current < 5000) {
+        console.log('Skipping auth attempt - too soon after previous attempt');
+        return;
+      }
+      authAttemptTimestamp.current = now;
+      
+      // Check for token in Outseta client first
+      let currentToken = outsetaRef.current.getAccessToken();
+      
+      // If no token in Outseta client, check localStorage and restore if present
       const storedToken = localStorage.getItem('outseta_token');
-      if (storedToken) {
+      if (!currentToken && storedToken) {
         console.log('Using stored token from localStorage');
         outsetaRef.current.setAccessToken(storedToken);
+        currentToken = storedToken;
       }
 
-      const currentToken = outsetaRef.current.getAccessToken();
       if (currentToken) {
+        // Store token to localStorage to persist across sessions
         localStorage.setItem('outseta_token', currentToken);
         
-        const outsetaUser = await outsetaRef.current.getUser();
-        console.log('Outseta user info:', outsetaUser);
-        
         try {
+          const outsetaUser = await outsetaRef.current.getUser();
+          console.log('Outseta user info:', outsetaUser);
+          
+          // Exchange token for Supabase JWT
           console.log('Exchanging token...');
           const supabaseJwt = await exchangeToken(currentToken);
           console.log('Token exchanged successfully, creating Supabase client');
@@ -99,11 +118,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (testError) {
             console.error('Supabase authentication test failed:', testError);
             
-            if (testError.code === 'PGRST301' || testError.message.includes('JWT')) {
+            if (testError.code === 'PGRST301' || 
+                testError.message.includes('JWT') || 
+                testError.message === '') {
               console.error('JWT validation failed, clearing authentication');
               setUser(null);
               setSupabase(null);
               localStorage.removeItem('outseta_token');
+              outsetaRef.current.setAccessToken('');
               throw new Error('Invalid JWT token');
             }
           } else {
@@ -113,15 +135,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } catch (error) {
           console.error('Failed to exchange token or verify authentication:', error);
-          setSupabase(null);
           
-          // Don't clear user if it's just a Supabase error
-          if (error instanceof Error && error.message === 'Invalid JWT token') {
+          // Clear invalid tokens and state
+          if (error instanceof Error && 
+              (error.message === 'Invalid JWT token' || 
+               error.message.includes('Failed to exchange token'))) {
             setUser(null);
+            setSupabase(null);
             localStorage.removeItem('outseta_token');
+            outsetaRef.current.setAccessToken('');
+            toast({
+              title: "Authentication error",
+              description: "Your session has expired. Please log in again.",
+              variant: "destructive"
+            });
           } else {
             // Still set the user if we have Outseta authentication
-            setUser(outsetaUser);
+            // but Supabase is having issues
+            const outsetaUser = await outsetaRef.current.getUser();
+            if (outsetaUser) {
+              setUser(outsetaUser);
+            }
           }
         }
       } else {
@@ -135,8 +169,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSupabase(null);
       localStorage.removeItem('outseta_token');
+    } finally {
+      setLoginAttemptInProgress(false);
+      setStatus('ready');
     }
-    setStatus('ready');
   };
 
   useEffect(() => {
@@ -145,17 +181,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       outseta.on("subscription.update", onEvent);
       outseta.on("profile.update", onEvent);
       outseta.on("account.update", onEvent);
+      outseta.on("authentication.success", () => {
+        console.log("Outseta authentication success event received");
+        setLoginAttemptInProgress(true);
+        onEvent();
+      });
     };
 
     const accessToken = searchParams.get('access_token');
 
     if (accessToken) {
-      console.log('Received Outseta access token:', accessToken);
+      console.log('Received Outseta access token in URL:', accessToken);
       outsetaRef.current.setAccessToken(accessToken);
+      localStorage.setItem('outseta_token', accessToken);
+      setLoginAttemptInProgress(true);
       setSearchParams({});
     }
 
-    handleOutsetaUserEvents(updateUser);
+    const cleanupEventListeners = handleOutsetaUserEvents(updateUser);
 
     if (outsetaRef.current.getAccessToken() || localStorage.getItem('outseta_token')) {
       updateUser();
@@ -164,7 +207,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     return () => {
-      handleOutsetaUserEvents(() => {});
+      if (typeof cleanupEventListeners === 'function') {
+        cleanupEventListeners();
+      }
     };
   }, [searchParams, setSearchParams]);
 
@@ -187,7 +232,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('Starting logout process...');
       
-      localStorage.clear();
+      localStorage.removeItem('outseta_token');
       sessionStorage.clear();
       
       outsetaRef.current.setAccessToken('');
@@ -200,12 +245,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSupabase(null);
 
-      console.log('Logout completed, reloading page...');
+      console.log('Logout completed');
       
-      window.location.replace('/');
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      
+      // Only reload if on a protected page
+      if (window.location.pathname.includes('/bookshelf') || 
+          window.location.pathname.includes('/dna') ||
+          window.location.pathname.includes('/read/')) {
+        window.location.replace('/');
+      }
     } catch (error) {
       console.error('Error during logout:', error);
-      window.location.replace('/');
+      toast({
+        title: "Logout error",
+        description: "There was a problem logging you out. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -236,7 +295,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading: status !== 'ready',
+        isLoading: status !== 'ready' || loginAttemptInProgress,
         logout,
         openLogin,
         openSignup,
