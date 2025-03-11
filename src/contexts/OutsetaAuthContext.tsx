@@ -67,14 +67,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateUser = async () => {
     try {
       console.log('Auth State Check:', {
-        storedToken: localStorage.getItem('outseta_token'),
+        storedToken: localStorage.getItem('outseta_token') ? 'Present (length: ' + localStorage.getItem('outseta_token')?.length + ')' : 'None',
         hasOutsetaClient: !!window.Outseta,
-        currentToken: outsetaRef.current?.getAccessToken?.(),
+        currentToken: outsetaRef.current?.getAccessToken?.() ? 'Present' : 'None',
         location: window.location.pathname
       });
 
       const storedToken = localStorage.getItem('outseta_token');
       if (storedToken) {
+        console.log('Using stored token from localStorage');
         outsetaRef.current.setAccessToken(storedToken);
       }
 
@@ -88,16 +89,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           console.log('Exchanging token...');
           const supabaseJwt = await exchangeToken(currentToken);
-          console.log('Token exchanged successfully');
+          console.log('Token exchanged successfully, creating Supabase client');
           const supabaseClient = createSupabaseClient(supabaseJwt);
-          setSupabase(supabaseClient);
+          
+          // Verify the client has proper authentication
+          const { data: testData, error: testError } = await supabaseClient.from('user_favorites')
+            .select('count(*)', { count: 'exact', head: true });
+          
+          if (testError) {
+            console.error('Supabase authentication test failed:', testError);
+            
+            if (testError.code === 'PGRST301' || testError.message.includes('JWT')) {
+              console.error('JWT validation failed, clearing authentication');
+              setUser(null);
+              setSupabase(null);
+              localStorage.removeItem('outseta_token');
+              throw new Error('Invalid JWT token');
+            }
+          } else {
+            console.log('Supabase authentication test successful:', testData);
+            setSupabase(supabaseClient);
+            setUser(outsetaUser);
+          }
         } catch (error) {
-          console.error('Failed to exchange token:', error);
+          console.error('Failed to exchange token or verify authentication:', error);
           setSupabase(null);
+          
+          // Don't clear user if it's just a Supabase error
+          if (error instanceof Error && error.message === 'Invalid JWT token') {
+            setUser(null);
+            localStorage.removeItem('outseta_token');
+          } else {
+            // Still set the user if we have Outseta authentication
+            setUser(outsetaUser);
+          }
         }
-        
-        setUser(outsetaUser);
       } else {
+        console.log('No current token available');
         setUser(null);
         setSupabase(null);
         localStorage.removeItem('outseta_token');

@@ -13,11 +13,28 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 
 // This function allows creating a client with a custom JWT token
 export function createSupabaseClient(jwt: string) {
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
-    },
+  if (!jwt || jwt.trim() === '') {
+    console.error('Attempting to create Supabase client with empty JWT');
+    throw new Error('Invalid JWT token provided');
+  }
+  
+  console.log('Creating authenticated Supabase client', {
+    hasJwt: !!jwt,
+    jwtLength: jwt.length
   });
+  
+  try {
+    const client = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      },
+    });
+    
+    return client;
+  } catch (error) {
+    console.error('Error creating Supabase client:', error);
+    throw error;
+  }
 }

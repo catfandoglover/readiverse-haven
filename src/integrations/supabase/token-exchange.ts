@@ -5,8 +5,14 @@ const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchang
 export async function exchangeToken(outsetaToken: string): Promise<string> {
   console.log('Starting token exchange...', {
     url: EXCHANGE_URL,
-    hasToken: !!outsetaToken
+    hasToken: !!outsetaToken,
+    tokenLength: outsetaToken ? outsetaToken.length : 0
   });
+  
+  if (!outsetaToken || outsetaToken.trim() === '') {
+    console.error('Empty or invalid token provided to exchange function');
+    throw new Error('Invalid authentication token');
+  }
   
   try {
     const response = await fetch(EXCHANGE_URL, {
@@ -18,21 +24,37 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const errorText = await response.text();
+      let errorData;
+      
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (parseError) {
+        errorData = { message: errorText };
+      }
+      
       console.error('Token exchange failed:', {
         status: response.status,
-        error,
+        statusText: response.statusText,
+        error: errorData,
         url: EXCHANGE_URL
       });
-      throw new Error('Failed to exchange token');
+      throw new Error(`Failed to exchange token: ${response.status} ${response.statusText}`);
     }
 
-    const { supabaseJwt } = await response.json();
+    const data = await response.json();
+    
+    if (!data.supabaseJwt) {
+      console.error('Token exchange response missing JWT:', data);
+      throw new Error('Invalid token exchange response: missing JWT');
+    }
+    
     console.log('Token exchange successful');
-    return supabaseJwt;
+    return data.supabaseJwt;
   } catch (error) {
     console.error('Error during token exchange:', {
       error,
+      message: error instanceof Error ? error.message : 'Unknown error',
       url: EXCHANGE_URL
     });
     throw error;
