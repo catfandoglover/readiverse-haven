@@ -146,12 +146,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] overflow-hidden flex flex-col">
-      {/* Header (fixed position) */}
+      {/* Header */}
       {renderHeader()}
       
-      {/* Content area - now with proper containment */}
-      <div className="h-full w-full flex flex-col">
-        <div className={`flex-1 overflow-y-auto pb-0 ${type === "classic" ? "pb-20" : ""}`}>
+      {/* Main scrollable content area with proper padding */}
+      <div className="w-full h-full flex flex-col">
+        <div 
+          className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-24" : "pb-4"}`}
+          style={{ 
+            marginTop: "152px", // Match header height
+            height: "calc(100% - 152px)" // Viewport height minus header
+          }}
+        >
           {/* Cover Image with fixed aspect ratio */}
           <div className="w-full aspect-square">
             <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
