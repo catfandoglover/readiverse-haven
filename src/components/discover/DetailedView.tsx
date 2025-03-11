@@ -1,14 +1,17 @@
+
 import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import ContentCarousel from "./ContentCarousel";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
+
 interface DetailedViewProps {
   type: "icon" | "concept" | "classic";
   data: any;
   onBack?: () => void;
 }
+
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
   data,
@@ -29,6 +32,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       document.body.style.overflow = originalStyle;
     };
   }, []);
+
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -42,12 +46,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       }
     }
   };
-  const renderHeader = () => <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-1">
+
+  const renderHeader = () => (
+    <div className="flex items-center h-12 px-4 bg-black/50 absolute top-0 left-0 right-0 z-10">
       <button onClick={handleBack} className="h-8 w-8 rounded-md flex items-center justify-center bg-black/50 text-white">
         <ArrowLeft className="h-5 w-5" />
       </button>
-    </div>;
-  const renderClassicButtons = () => <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
+    </div>
+  );
+
+  const renderClassicButtons = () => (
+    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#2A282A] p-4 border-t border-gray-700 z-10">
       <Button className="flex-1 mr-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20" onClick={() => data.onReadNow && data.onReadNow()}>
         <span className="mr-2">📖</span> READ NOW
       </Button>
@@ -57,13 +66,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <Button className="flex-1 ml-2 bg-transparent border border-[#9b87f5] text-white hover:bg-[#9b87f5]/20">
         <span className="mr-2">🛒</span> ORDER
       </Button>
-    </div>;
-  return <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
-      {/* Header (fixed position) */}
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-[#2A282A] text-[#E9E7E2] flex flex-col">
+      {/* Header (fixed position) - only show it once at the top */}
       {renderHeader()}
       
-      {/* The key fix: Ensure content area takes full height minus header, and has proper padding */}
-      <div className="h-full pt-12 flex flex-col">
+      {/* Content area that takes full height minus header height */}
+      <div className="h-full pt-12 pb-0 flex flex-col">
         <div className={`flex-1 overflow-y-auto ${type === "classic" ? "pb-20" : ""}`}>
           {/* Cover Image - fixed aspect ratio */}
           <div className="w-full aspect-square relative">
@@ -115,8 +127,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
       </div>
 
-      {/* Fixed bottom buttons for classics - now properly positioned */}
+      {/* Fixed bottom buttons for classics */}
       {type === "classic" && renderClassicButtons()}
-    </div>;
+    </div>
+  );
 };
+
 export default DetailedView;
