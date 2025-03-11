@@ -248,9 +248,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
-      <div className="h-full w-full overflow-y-auto pt-[152px]">
-        {renderHeader()}
-        
+      {renderHeader()}
+      
+      <div className="h-full w-full overflow-y-auto" style={{ paddingTop: "152px", paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
@@ -263,8 +263,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           />
         </div>
 
-        <div className="relative z-10">
-          <div className="p-6 pb-32 bg-[#E9E7E2] rounded-t-2xl -mt-6">
+        <div className="relative -mt-6">
+          <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
             <h1 className="text-3xl font-serif mb-4 text-[#2A282A]">{itemData.title}</h1>
             {type === "classic" && 
               <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
