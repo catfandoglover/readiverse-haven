@@ -2,7 +2,7 @@
 export interface Concept {
   id: string;
   title: string;
-  description?: string; // Optional to accommodate database structure
+  description?: string; // Made optional
   about?: string;       // From database
   introduction?: string; // From database
   illustration: string;

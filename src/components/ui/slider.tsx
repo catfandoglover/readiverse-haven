@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils"
 
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
+    orientation?: "horizontal" | "vertical";
+  }
+>(({ className, orientation = "horizontal", ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
