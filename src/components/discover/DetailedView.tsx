@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -349,7 +350,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderClassicButtons = () => (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#E9E7E2] p-4 border-t border-gray-300 z-10">
+    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#E9E7E2] p-4 border-t border-gray-300 z-10 pb-safe">
       <Button className="flex-1 mr-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleReadNow}>
         <BookOpen className="mr-2 h-4 w-4" /> READ
       </Button>
@@ -391,7 +392,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
       
-      <div className="h-full w-full overflow-y-auto" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
+      <div className="h-full w-full overflow-y-auto pb-24" style={{ paddingBottom: type === "classic" ? "80px" : "0" }}>
         <div className="w-full">
           <img 
             src={itemData.image} 
@@ -457,6 +458,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url")}
 
             {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name")}
+            
+            {/* Add extra padding at bottom to ensure content isn't hidden behind fixed buttons */}
+            <div className="h-24"></div>
           </div>
         </div>
       </div>

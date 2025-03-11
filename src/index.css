@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -110,5 +111,22 @@
 
   :root.sepia a:hover {
     @apply text-[#5B4636] opacity-80;
+  }
+  
+  /* Safe area insets for mobile devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 1rem);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 1rem);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 1rem);
   }
 }
