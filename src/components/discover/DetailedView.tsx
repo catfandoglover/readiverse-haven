@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,12 @@ interface DetailedViewProps {
   onBack?: () => void;
 }
 
+interface ShareMessage {
+  id: string;
+  type: "classic_text" | "classic_art" | "classic_music" | "icon" | "concept";
+  message: string;
+}
+
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
   data: itemData,
@@ -41,6 +46,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
+
+  const { data: shareMessages = [] } = useQuery({
+    queryKey: ["share-messages"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("share_messages")
+        .select("*");
+      return data || [];
+    },
+  });
 
   const { data: greatQuestions = [] } = useQuery({
     queryKey: ["great-questions"],
@@ -196,7 +211,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     setIsOrderDialogOpen(true);
   };
 
-  // Fixed formatText function to properly handle React fragments
   const formatText = (text: string) => {
     if (!text) return "";
     return text.split("\\n").map((line, i) => (
@@ -256,18 +270,56 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
+  const getShareMessage = () => {
+    let messageType: string;
+    
+    switch (type) {
+      case 'icon':
+        messageType = 'icon';
+        break;
+      case 'concept':
+        messageType = 'concept';
+        break;
+      case 'classic':
+      default:
+        messageType = 'classic_text';
+        break;
+    }
+    
+    const messageTemplate = shareMessages.find(
+      (msg: ShareMessage) => msg.type === messageType
+    )?.message || 'Check out this from Great Books!';
+    
+    let finalMessage = messageTemplate;
+    
+    if (finalMessage.includes('{{title}}')) {
+      finalMessage = finalMessage.replace('{{title}}', itemData.title || '');
+    }
+    
+    if (finalMessage.includes('{{author}}')) {
+      finalMessage = finalMessage.replace('{{author}}', itemData.author || '');
+    }
+    
+    if (finalMessage.includes('{{name}}')) {
+      finalMessage = finalMessage.replace('{{name}}', itemData.name || '');
+    }
+    
+    return finalMessage;
+  };
+
   const handleShare = async () => {
     try {
       const shareUrl = `${window.location.origin}/view/${type}/${itemData.id}`;
+      const shareMessage = getShareMessage();
       
       if (navigator.share) {
         await navigator.share({
           title: itemData.title || itemData.name,
-          text: itemData.about || `Check out this ${type === 'classic' ? 'book' : type}!`,
+          text: shareMessage,
           url: shareUrl
         });
       } else {
-        await navigator.clipboard.writeText(shareUrl);
+        await navigator.clipboard.writeText(`${shareMessage}\n${shareUrl}`);
         toast({
           description: "Link copied to clipboard!",
         });

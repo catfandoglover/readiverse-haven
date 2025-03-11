@@ -1220,6 +1220,30 @@ export type Database = {
           },
         ]
       }
+      share_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          type?: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_auth: {
         Row: {
           content: string | null
@@ -1374,6 +1398,12 @@ export type Database = {
         | "ONTOLOGY"
         | "POLITICS"
         | "THEOLOGY"
+      share_message_type:
+        | "classic_text"
+        | "classic_art"
+        | "classic_music"
+        | "icon"
+        | "concept"
     }
     CompositeTypes: {
       [_ in never]: never
