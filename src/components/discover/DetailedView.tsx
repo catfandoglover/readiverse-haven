@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,21 @@ interface DetailedViewProps {
   data: any;
   onBack?: () => void;
 }
+
+const getItemImageUrl = (type: string, data: any): string => {
+  if (!data) return '';
+  
+  switch(type) {
+    case 'classic':
+      return data.icon_illustration || data.cover_url || data.Cover_super || data.image || '';
+    case 'icon':
+      return data.illustration || data.image || '';
+    case 'concept':
+      return data.illustration || data.image || '';
+    default:
+      return data.image || '';
+  }
+};
 
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
@@ -151,32 +165,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const combinedData = React.useMemo(() => {
     if (!enhancedData) return itemData;
     
-    const imageProperty = (() => {
-      switch(type) {
-        case 'classic':
-          return { 
-            image: enhancedData.icon_illustration || 
-                  enhancedData.cover_url || 
-                  enhancedData.Cover_super || 
-                  itemData.image 
-          };
-        case 'icon':
-          return { 
-            image: enhancedData.illustration || itemData.image 
-          };
-        case 'concept':
-          return { 
-            image: enhancedData.illustration || itemData.image 
-          };
-        default:
-          return { image: itemData.image };
-      }
-    })();
-
     return { 
       ...itemData,
       ...enhancedData,
-      ...imageProperty
+      image: getItemImageUrl(type, enhancedData) || itemData.image
     };
   }, [itemData, enhancedData, type]);
 
@@ -210,7 +202,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             itemType: type
           });
           
-          const { data, error } = await supabase
+          if (!authSupabase) {
+            console.error("Authenticated Supabase client not available");
+            return;
+          }
+          
+          const { data, error } = await authSupabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemData.id)
@@ -236,7 +233,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       checkFavoriteStatus();
     }
-  }, [user, itemData.id, type, supabase]);
+  }, [user, itemData.id, type, authSupabase]);
 
   const handleBack = () => {
     if (onBack) {

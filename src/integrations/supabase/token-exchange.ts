@@ -5,23 +5,34 @@ const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchang
 export async function exchangeToken(outsetaToken: string): Promise<string> {
   console.log('Starting token exchange...', {
     url: EXCHANGE_URL,
-    hasToken: !!outsetaToken
+    hasToken: !!outsetaToken,
+    tokenPrefix: outsetaToken.substring(0, 10) + '...'
   });
   
   try {
-    const response = await fetch(EXCHANGE_URL, {
+    // Add a timestamp to prevent caching issues
+    const url = `${EXCHANGE_URL}?_=${Date.now()}`;
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${outsetaToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store'
       }
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = await response.text();
+      }
+      
       console.error('Token exchange failed:', {
         status: response.status,
-        error,
+        error: errorData,
         url: EXCHANGE_URL
       });
       throw new Error('Failed to exchange token');
