@@ -11,14 +11,11 @@ interface Icon {
   id: string;
   name: string;
   illustration: string;
-  category?: string;
   about?: string;
-  great_conversation?: string;
-  anecdotes?: string;
+  introduction?: string;
+  Notion_URL?: string;
   randomizer?: number;
   created_at?: string;
-  introduction?: string;
-  slug?: string; // Add slug field
 }
 
 interface IconsContentProps {
@@ -50,13 +47,12 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         return [];
       }
 
-      // Enhance the data with placeholder fields if they don't exist
+      // Map the fields to ensure we have standardized structure
       return data.map((icon: any) => ({
         ...icon,
-        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'), // Use slug if exists or generate from name
-        about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-        great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
-        anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
+        // Use name as title for consistent interface
+        title: icon.name,
+        about: icon.about || `${icon.name} was a significant philosophical figure.`,
       }));
     },
   });
@@ -64,8 +60,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/icon/')) {
-      const iconSlug = location.pathname.split('/view/icon/')[1];
-      const icon = icons.find(i => (i.slug === iconSlug || i.id === iconSlug));
+      const iconId = location.pathname.split('/view/icon/')[1];
+      const icon = icons.find(i => i.id === iconId);
       
       if (icon) {
         setSelectedIcon(icon);
@@ -78,9 +74,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
-    // Use slug for the URL if available, otherwise use ID
-    const urlParam = icon.slug || icon.id;
-    navigate(`/view/icon/${urlParam}`, { replace: true });
+    navigate(`/view/icon/${icon.id}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
@@ -90,30 +84,17 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
-    related_questions: [
-      { id: '1', title: 'What is the nature of being?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'How do we determine right from wrong?', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'What is beauty?', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-      { id: '4', title: 'What is the meaning of life?', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-      { id: '5', title: 'How should society be organized?', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '6', title: 'What is knowledge?', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-    ],
     related_classics: [
-      { id: '1', title: 'On the Genealogy of Morality', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'Thus Spoke Zarathustra', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'Beyond Good and Evil', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_icons: [
-      { id: '1', title: 'Friedrich Nietzsche', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '2', title: 'Immanuel Kant', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
+      { id: '1', title: 'The Republic', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
+      { id: '2', title: 'Nicomachean Ethics', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
+      { id: '3', title: 'Meditations', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
     ],
     related_concepts: [
-      { id: '1', title: 'Virtue Ethics', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-      { id: '2', title: 'Existentialism', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-      { id: '3', title: 'Nihilism', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-    ],
+      { id: '1', title: 'Justice', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
+      { id: '2', title: 'Virtue', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
+      { id: '3', title: 'Wisdom', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
+    ]
   };
 
   if (isLoading || !iconToShow) {
@@ -128,6 +109,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     <>
       <div className="h-full">
         <ContentCard
+          id={iconToShow.id}
+          type="icon"
           image={iconToShow.illustration}
           title={iconToShow.name}
           about={iconToShow.about || ""}
@@ -142,6 +125,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           data={{
             ...selectedIcon,
             image: selectedIcon.illustration,
+            title: selectedIcon.name,
             ...mockRelatedData
           }}
           onBack={handleCloseDetailedView}

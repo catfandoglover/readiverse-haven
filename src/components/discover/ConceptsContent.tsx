@@ -130,6 +130,8 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     <>
       <div className="h-full">
         <ContentCard
+          id={conceptToShow.id}
+          type="concept"
           image={conceptToShow.illustration}
           title={conceptToShow.title}
           about={conceptToShow.about || ""}

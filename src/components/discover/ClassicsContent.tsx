@@ -173,6 +173,8 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
     <>
       <div className="h-full">
         <ContentCard
+          id={classicToShow.id}
+          type="classic"
           image={classicToShow.icon_illustration || classicToShow.cover_url || classicToShow.Cover_super || ""}
           title={classicToShow.title}
           about={classicToShow.about || "A classic work of literature."}
