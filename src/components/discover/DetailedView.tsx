@@ -272,14 +272,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </h2>
             }
 
-            <p className="text-xl font-baskerville mb-8">
+            <p className="text-gray-800 font-baskerville text-lg mb-8">
               {formatText(itemData.about || "What lies beneath the morality you hold sacred?")}
             </p>
 
             {itemData.great_question_connection && (
               <div className="mb-8">
                 <h3 className="text-xl font-baskerville capitalize mb-4">The Great Conversation</h3>
-                <p className="text-gray-300 font-baskerville">{formatText(itemData.great_question_connection)}</p>
+                <p className="text-gray-800 font-baskerville text-lg">{formatText(itemData.great_question_connection)}</p>
               </div>
             )}
 
@@ -305,7 +305,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </Select>
               <div className="space-y-2">
                 {profiles.map(profile => (
-                  <div key={profile.id} className="p-2 border border-gray-700 rounded-md font-baskerville">
+                  <div key={profile.id} className="p-2 border border-gray-700 rounded-md text-gray-800 font-baskerville text-lg">
                     {profile.full_name || "Anonymous Reader"}
                   </div>
                 ))}
