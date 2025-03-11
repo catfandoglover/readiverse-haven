@@ -206,7 +206,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-serif mb-4 text-[#2A282A]">{title}</h3>
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
         <ScrollArea className="w-full pb-4">
           <div className="flex space-x-4">
             {items.map((item) => (
@@ -278,18 +278,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {itemData.great_question_connection && (
               <div className="mb-8">
-                <h3 className="text-2xl font-serif mb-4 text-[#2A282A]">The Great Conversation</h3>
+                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
                 <p className="text-gray-800 font-baskerville text-lg">{formatText(itemData.great_question_connection)}</p>
               </div>
             )}
 
-            {renderHorizontalSlider("Great Questions", greatQuestions, "illustration", "question")}
+            {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question")}
 
-            {renderHorizontalSlider("Major Themes", concepts)}
+            {renderHorizontalSlider("MAJOR THEMES", concepts)}
 
             <div className="mt-8">
-              <h3 className="text-2xl font-serif mb-4 text-[#2A282A]">
-                Seekers Reading {itemData.title}
+              <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+                SEEKERS READING {itemData.title.toUpperCase()}
               </h3>
               <Select
                 onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
@@ -312,9 +312,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </div>
             </div>
 
-            {renderHorizontalSlider("Related Classics", relatedClassics, "cover_url")}
+            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url")}
 
-            {renderHorizontalSlider("Connected Icons", connectedIcons, "illustration", "name")}
+            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name")}
           </div>
         </div>
       </div>
