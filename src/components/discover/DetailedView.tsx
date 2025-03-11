@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -442,7 +443,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {items.map((item) => (
               <div
                 key={item.id}
-                className="relative h-36 w-36 flex-none overflow-hidden cursor-pointer rounded-lg"
+                className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <img
