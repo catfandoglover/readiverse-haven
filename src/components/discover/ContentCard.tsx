@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { MoreHorizontal, Star, ArrowRight } from "lucide-react";
+import { ArrowRight, Share, Star } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -67,7 +66,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
                 className="h-4 w-4 bg-[#E9E7E2] rounded-full flex items-center justify-center text-[#2A282A]"
                 aria-label="More options"
               >
-                <MoreHorizontal className="h-3 w-3" />
+                <Share className="h-3 w-3" />
               </button>
             </div>
           </div>
