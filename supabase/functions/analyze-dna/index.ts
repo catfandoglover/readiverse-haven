@@ -32,16 +32,14 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         messages: [
           {
             role: 'system',
-            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always return your response as a valid JSON object with the exact field names specified in the template.'
+            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object - no markdown, no code blocks, no backticks, no formatting. The response should start with { and end with } without any other characters. Include all fields from the template exactly as specified.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        // Add a max_tokens parameter to ensure complete responses
         max_tokens: 4000,
-        // Reduce temperature for more stable, predictable outputs
         temperature: 0.7
       })
     });
@@ -57,43 +55,88 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       throw new Error('Invalid API response structure');
     }
 
-    const rawContent = data.choices[0].message.content;
-    console.log('Raw AI response for section', section, ':', rawContent);
+    let rawContent = data.choices[0].message.content;
+    console.log('Raw AI response for section', section, ':', rawContent.substring(0, 200) + '...');
     
-    // Improved JSON parsing with error handling
+    // Pre-process the content to remove any potential markdown or code blocks
+    let preprocessedContent = rawContent
+      .replace(/```json\s*/g, '')  // Remove opening ```json
+      .replace(/```\s*/g, '')      // Remove closing ```
+      .replace(/`/g, '')           // Remove all backticks
+      .trim();                     // Clean up whitespace
+    
+    // Try multiple approaches to extract and parse the JSON
     let parsedContent: Record<string, string>;
+    
     try {
-      // First attempt: direct parsing
-      parsedContent = JSON.parse(rawContent);
-    } catch (e) {
-      console.error('Error parsing JSON response:', e);
-      console.error('Raw content:', rawContent);
+      // First attempt: Direct parsing of preprocessed content
+      parsedContent = JSON.parse(preprocessedContent);
+      console.log('Successfully parsed JSON after preprocessing');
+    } 
+    catch (e) {
+      console.error('First parsing attempt failed:', e);
       
-      // Second attempt: Try to sanitize common JSON issues
       try {
-        // Remove any trailing commas that might be causing issues
-        const sanitized = rawContent.replace(/,\s*}/g, '}').replace(/,\s*\]/g, ']');
+        // Second attempt: Try more aggressive sanitization
+        const sanitized = preprocessedContent
+          .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
+          .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
+          .replace(/\n/g, ' ')         // Replace newlines with spaces
+          .replace(/\s+/g, ' ')        // Normalize whitespace
+          .trim();
+        
         parsedContent = JSON.parse(sanitized);
-      } catch (e2) {
+        console.log('Successfully parsed JSON after sanitizing');
+      } 
+      catch (e2) {
         console.error('Second parsing attempt failed:', e2);
         
-        // Third attempt: Try to extract JSON using regex
         try {
-          const match = rawContent.match(/\{[\s\S]*\}/);
+          // Third attempt: Try to extract JSON using regex
+          const jsonPattern = /\{[\s\S]*\}/; // Match anything between { and }
+          const match = preprocessedContent.match(jsonPattern);
+          
           if (match) {
-            parsedContent = JSON.parse(match[0]);
+            const extractedJson = match[0];
+            parsedContent = JSON.parse(extractedJson);
+            console.log('Successfully parsed JSON using regex extraction');
           } else {
             throw new Error('No JSON object found in response');
           }
-        } catch (e3) {
-          console.error('All parsing attempts failed');
-          
-          // Create a fallback response with error information
-          parsedContent = {
-            error: 'Could not parse AI response',
-            section: `Section ${section}`,
-            partial_content: rawContent.substring(0, 500) + '...' // Include beginning of response for debugging
-          };
+        } 
+        catch (e3) {
+          console.error('Third parsing attempt failed:', e3);
+
+          try {
+            // Fourth attempt: Manual JSON reconstruction
+            // This is a last resort for badly malformed JSON
+            const fieldPattern = /"([^"]+)":\s*"([^"]*)"/g;
+            let matches;
+            const fields: Record<string, string> = {};
+            
+            while ((matches = fieldPattern.exec(preprocessedContent)) !== null) {
+              const key = matches[1];
+              const value = matches[2];
+              fields[key] = value;
+            }
+            
+            if (Object.keys(fields).length > 0) {
+              parsedContent = fields;
+              console.log('Successfully extracted fields using regex pattern matching');
+            } else {
+              throw new Error('Could not extract fields from response');
+            }
+          }
+          catch (e4) {
+            console.error('All parsing attempts failed');
+            
+            // Create a fallback response with error information
+            parsedContent = {
+              error: 'Could not parse AI response',
+              section: `Section ${section}`,
+              partial_content: preprocessedContent.substring(0, 500) + '...' // Include beginning of response for debugging
+            };
+          }
         }
       }
     }
@@ -119,8 +162,14 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
+    // Process each section individually and collect responses
+    console.log('Starting analysis for section 1...');
     const section1 = await generateAnalysis(answers_json, 1);
+    
+    console.log('Starting analysis for section 2...');
     const section2 = await generateAnalysis(answers_json, 2);
+    
+    console.log('Starting analysis for section 3...');
     const section3 = await generateAnalysis(answers_json, 3);
     
     // Check if any section had errors
@@ -159,6 +208,9 @@ serve(async (req) => {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
 
+      console.log(`Processing assessment ${assessment_id}...`);
+      console.log('Answers JSON first 100 chars:', answers_json.substring(0, 100) + '...');
+
       // Fetch the name from dna_assessment_results
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('dna_assessment_results')
@@ -175,9 +227,11 @@ serve(async (req) => {
         throw new Error('Assessment not found');
       }
 
+      console.log('Generating analysis...');
       const result = await generateCompleteAnalysis(answers_json);
       
       if (result.error) {
+        console.error('Analysis generation error:', result.error);
         return new Response(
           JSON.stringify({ success: false, error: result.error }),
           { 
@@ -213,6 +267,14 @@ serve(async (req) => {
         };
       });
       
+      console.log('Successfully processed all sections');
+      
+      // Count valid fields in each section to log success rate
+      filteredSections.forEach((section, index) => {
+        const fieldCount = Object.keys(section.analysis).length;
+        console.log(`Section ${index + 1} contains ${fieldCount} valid fields`);
+      });
+      
       // Combine all sections into a single record
       const combinedAnalysis = {
         assessment_id,
@@ -226,10 +288,8 @@ serve(async (req) => {
         ...filteredSections[2].analysis  // Ontology and Aesthetics
       };
 
-      // Log the combined data
-      console.log('Combined analysis data:', combinedAnalysis);
-
       // Store everything in a single record
+      console.log('Storing analysis in database...');
       const { error: storeError } = await supabase
         .from('dna_analysis_results')
         .insert(combinedAnalysis);
@@ -238,6 +298,8 @@ serve(async (req) => {
         console.error('Error storing combined analysis:', storeError);
         throw storeError;
       }
+      
+      console.log('Analysis stored successfully');
       
       return new Response(
         JSON.stringify({ success: true, message: 'Analysis stored successfully' }),
