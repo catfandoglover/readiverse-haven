@@ -1,26 +1,8 @@
 class AudioTranscriptionService {
-  private apiKey: string = '';
-  private initialized: boolean = false;
-  private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  private initialized: boolean = true; // Always initialized since we're using a serverless function
 
   constructor() {
-    // Initialize with environment variable if available
-    const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-    if (apiKey) {
-      this.initialize(apiKey);
-    }
-  }
-
-  // Initialize the service with an API key
-  initialize(apiKey: string): void {
-    try {
-      this.apiKey = apiKey;
-      this.initialized = true;
-      console.log('Audio Transcription Service initialized with Gemini successfully');
-    } catch (error) {
-      console.error('Error initializing Audio Transcription Service:', error);
-      this.initialized = false;
-    }
+    console.log('Audio Transcription Service initialized with serverless endpoint');
   }
 
   // Check if the service is initialized
@@ -28,14 +10,10 @@ class AudioTranscriptionService {
     return this.initialized;
   }
 
-  // Transcribe audio using Gemini 2.0 Flash
+  // Transcribe audio using serverless function
   async transcribeAudio(audioBlob: Blob): Promise<string> {
-    if (!this.initialized) {
-      throw new Error('Audio Transcription Service not initialized');
-    }
-
     try {
-      console.log('Transcribing audio with Gemini:', audioBlob.type, audioBlob.size);
+      console.log('Transcribing audio with serverless function:', audioBlob.type, audioBlob.size);
       
       // Convert audio blob to base64
       const base64Data = await this._blobToBase64(audioBlob);
@@ -43,71 +21,32 @@ class AudioTranscriptionService {
       // Get the MIME type from the blob
       const mimeType = audioBlob.type || 'audio/webm';
       
-      // Create request payload for Gemini
-      const requestPayload = {
-        contents: [
-          {
-            parts: [
-              {
-                text: "Please transcribe this audio recording accurately:"
-              },
-              {
-                inline_data: {
-                  mime_type: mimeType,
-                  data: base64Data
-                }
-              }
-            ]
-          }
-        ],
-        generation_config: {
-          temperature: 0.2,
-          top_p: 0.95,
-          top_k: 40,
-          max_output_tokens: 1024,
-        }
-      };
-      
-      // Make API request to Gemini
-      const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+      // Call our serverless function instead of Gemini directly
+      const response = await fetch('/api/transcribe', {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(requestPayload)
+        body: JSON.stringify({
+          audioBase64: base64Data,
+          mimeType: mimeType
+        })
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Gemini API error:", errorData);
-        throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        console.error("Transcription API error:", errorData);
+        throw new Error(`Transcription API returned ${response.status}: ${JSON.stringify(errorData)}`);
       }
       
       const responseData = await response.json();
-      console.log("Gemini transcription response:", responseData);
+      console.log("Transcription response:", responseData);
       
-      // Extract the transcription text
-      if (responseData.candidates && 
-          responseData.candidates[0] && 
-          responseData.candidates[0].content && 
-          responseData.candidates[0].content.parts && 
-          responseData.candidates[0].content.parts[0] && 
-          responseData.candidates[0].content.parts[0].text) {
-        
-        const transcription = responseData.candidates[0].content.parts[0].text;
-        
-        // Clean up the transcription (remove quotes, etc.)
-        let cleanedTranscription = this._cleanTranscription(transcription);
-        
-        // If empty after cleaning, return a default message
-        if (!cleanedTranscription.trim()) {
-          cleanedTranscription = "I couldn't transcribe your message clearly";
-        }
-        
-        console.log('Transcription result:', cleanedTranscription);
-        return cleanedTranscription;
+      if (responseData.transcription) {
+        console.log('Transcription result:', responseData.transcription);
+        return responseData.transcription;
       } else {
-        throw new Error('Failed to extract transcription from Gemini response');
+        throw new Error('Failed to extract transcription from API response');
       }
     } catch (error) {
       console.error('Error transcribing audio:', error);

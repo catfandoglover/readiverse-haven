@@ -1,23 +1,11 @@
-// Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput } from '@aws-sdk/client-polly';
-import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
-
 class SpeechService {
-  private polly: PollyClient;
   private voiceId: string = 'Arthur'; // British English male voice
   private outputFormat: string = 'mp3';
   private sampleRate: string = '16000';
   private textType: string = 'text';
 
   constructor() {
-    // Initialize Polly client with AWS config from environment variables
-    this.polly = new PollyClient({
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-      }
-    });
+    console.log('Speech Service initialized with serverless endpoint');
   }
 
   // Set voice options
@@ -30,23 +18,34 @@ class SpeechService {
   // Synthesize speech from text
   async synthesizeSpeech(text: string): Promise<string> {
     try {
-      // Create the parameters for synthesizeSpeech
-      const speechParams: SynthesizeSpeechCommandInput = {
-        OutputFormat: this.outputFormat,
-        SampleRate: this.sampleRate,
-        Text: text,
-        TextType: this.textType,
-        VoiceId: this.voiceId,
-        Engine: 'neural'
-      };
-
-      // Get presigned URL for the speech
-      const url = await getSynthesizeSpeechUrl({
-        client: this.polly,
-        params: speechParams
+      // Call our serverless function instead of AWS Polly directly
+      const response = await fetch('/api/text-to-speech', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          text,
+          voiceId: this.voiceId,
+          outputFormat: this.outputFormat,
+          sampleRate: this.sampleRate,
+          textType: this.textType
+        })
       });
 
-      return url;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Text-to-speech API error:", errorData);
+        throw new Error(`Text-to-speech API returned ${response.status}: ${JSON.stringify(errorData)}`);
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData.audioUrl) {
+        return responseData.audioUrl;
+      } else {
+        throw new Error('Failed to get audio URL from API response');
+      }
     } catch (error) {
       console.error('Error synthesizing speech:', error);
       throw error;
