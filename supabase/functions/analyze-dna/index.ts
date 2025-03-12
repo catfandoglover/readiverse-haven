@@ -249,40 +249,45 @@ serve(async (req) => {
           }
         );
       }
-      
-      // Store all three sections in the database
-      for (let i = 0; i < result.sections.length; i++) {
-        const section = result.sections[i];
-        const analysisType = `section_${i + 1}`;
-        
-        const analysisRecord = {
-          assessment_id,
-          name: assessmentData.name,
-          profile_image_url,
-          raw_response: [section.raw_response], // Store as array for consistency
-          analysis_text: JSON.stringify([section.analysis]),
-          analysis_type: analysisType,
-          ...section.analysis
-        };
 
-        console.log(`Storing section ${i + 1} analysis in database...`);
-        const { error: storeError } = await supabase
-          .from('dna_analysis_results')
-          .insert(analysisRecord);
+      // Combine all sections into a single analysis record
+      const combinedAnalysis = {};
+      const combinedRawResponses = [];
+      const combinedAnalysisTexts = [];
 
-        if (storeError) {
-          console.error(`Error storing section ${i + 1} analysis:`, storeError);
-          // Continue with the next section even if there's an error
-        } else {
-          console.log(`Section ${i + 1} analysis stored successfully`);
-        }
+      for (const section of result.sections) {
+        Object.assign(combinedAnalysis, section.analysis);
+        combinedRawResponses.push(section.raw_response);
+        combinedAnalysisTexts.push(section.analysis);
       }
+      
+      // Store the combined analysis in a single database record
+      const analysisRecord = {
+        assessment_id,
+        name: assessmentData.name,
+        profile_image_url,
+        raw_response: combinedRawResponses,
+        analysis_text: JSON.stringify(combinedAnalysisTexts),
+        analysis_type: 'complete',
+        ...combinedAnalysis
+      };
+
+      console.log('Storing combined analysis in database...');
+      const { error: storeError } = await supabase
+        .from('dna_analysis_results')
+        .insert(analysisRecord);
+
+      if (storeError) {
+        console.error('Error storing analysis:', storeError);
+        throw storeError;
+      }
+      
+      console.log('Combined analysis stored successfully');
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'All analysis sections stored successfully',
-          sections: result.sections.length
+          message: 'Combined analysis stored successfully'
         }),
         { 
           headers: {
@@ -311,3 +316,4 @@ serve(async (req) => {
     );
   }
 });
+
