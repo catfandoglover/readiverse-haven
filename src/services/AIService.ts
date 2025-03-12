@@ -1,4 +1,5 @@
 import { conversationManager } from './ConversationManager';
+import audioTranscriptionService from './AudioTranscriptionService';
 
 class AIService {
   private apiKey: string = '';
@@ -37,17 +38,56 @@ class AIService {
     sessionId: string,
     userMessage: string,
     audioData?: Blob
-  ): Promise<{ text: string; audioUrl?: string }> {
+  ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
     if (!this.initialized) {
       throw new Error('AI service not initialized');
     }
 
     try {
+      // If we have audio data, transcribe it first
+      let finalUserMessage = userMessage;
+      let transcribedText: string | undefined = undefined;
+      
+      if (audioData) {
+        try {
+          // Check if transcription service is initialized
+          if (!audioTranscriptionService.isInitialized()) {
+            console.warn('Audio transcription service not initialized, using fallback text');
+          } else {
+            // Transcribe the audio
+            console.log('Transcribing audio before sending to OpenRouter');
+            const transcription = await audioTranscriptionService.transcribeAudio(audioData);
+            
+            if (transcription && transcription.trim()) {
+              finalUserMessage = transcription;
+              transcribedText = transcription;
+              console.log('Using transcribed text:', finalUserMessage);
+            } else {
+              console.warn('Empty transcription received, using fallback text');
+            }
+          }
+        } catch (error) {
+          console.error('Error transcribing audio:', error);
+          // Continue with original message if transcription fails
+        }
+      }
+      
       // Get conversation history and format it for OpenRouter
-      const messages = this._formatMessagesForOpenRouter(sessionId, userMessage, audioData);
+      const messages = await this._formatMessagesForOpenRouter(sessionId, finalUserMessage);
       
       // Add the current user message to the conversation history
-      conversationManager.addMessage(sessionId, 'user', userMessage);
+      conversationManager.addMessage(sessionId, 'user', finalUserMessage);
+      
+      // Log the request payload for debugging
+      const requestPayload = {
+        "model": "google/gemini-2.0-flash-001",
+        "messages": messages,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_tokens": 1000
+      };
+      
+      console.log('OpenRouter request payload:', JSON.stringify(requestPayload));
       
       // Make API request to OpenRouter
       const response = await fetch(this.apiUrl, {
@@ -58,13 +98,7 @@ class AIService {
           "X-Title": this.siteName,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          "model": "google/gemini-2.0-flash-001",
-          "messages": messages,
-          "temperature": 0.7,
-          "top_p": 0.95,
-          "max_tokens": 1000
-        })
+        body: JSON.stringify(requestPayload)
       });
       
       if (!response.ok) {
@@ -89,7 +123,10 @@ class AIService {
       
       // We no longer save the conversation here, as it will be saved when the user answers the question
       
-      return { text: finalResponse };
+      return { 
+        text: finalResponse,
+        transcribedText 
+      };
     } catch (error) {
       console.error('Error generating AI response:', error);
       throw error;
@@ -114,7 +151,7 @@ class AIService {
   }
 
   // Format messages for OpenRouter API
-  private _formatMessagesForOpenRouter(sessionId: string, userMessage: string, audioData?: Blob): any[] {
+  private async _formatMessagesForOpenRouter(sessionId: string, userMessage: string): Promise<any[]> {
     const messages = conversationManager.getHistory(sessionId);
     const formattedMessages = [];
     
@@ -150,6 +187,7 @@ class AIService {
         messages[messages.length - 1].role !== 'user' || 
         messages[messages.length - 1].content !== userMessage)) {
       
+      // Regular text message
       formattedMessages.push({
         role: "user",
         content: userMessage
@@ -176,8 +214,6 @@ class AIService {
       reader.readAsDataURL(blob);
     });
   }
-
-  // The _shortenText method has been replaced by _truncateText
 }
 
 // Create a singleton instance

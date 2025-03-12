@@ -21,6 +21,7 @@ interface Message {
   role: 'user' | 'assistant';
   audioUrl?: string;
   isNew?: boolean;
+  transcribedText?: string;
 }
 
 interface AIChatDialogProps {
@@ -250,25 +251,40 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Create temporary audio URL for display
       const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
       
-      // Add user audio message to the UI
+      // Log audio details for debugging
+      console.log(`Processing audio: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+      
+      // Add loading message for transcription
+      const transcriptionLoadingId = uuidv4();
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
+      ]);
+      
+      // Get response from AI service, passing the audio blob for transcription and processing
+      const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
+      
+      // Remove the transcription loading message
+      setMessages(prevMessages => 
+        prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
+      );
+      
+      // Add user audio message to the UI with transcribed text if available
+      const displayContent = response.transcribedText || "Voice message";
       const newUserMessage: Message = {
         id: uuidv4(),
-        content: "Voice message",
+        content: displayContent,
         role: 'user',
         audioUrl: tempAudioUrl
       };
       setMessages(prevMessages => [...prevMessages, newUserMessage]);
       
-      // Add loading message
+      // Add loading message for AI response
       const loadingId = uuidv4();
       setMessages(prevMessages => [
         ...prevMessages, 
-        { id: loadingId, content: 'Thinking...', role: 'assistant' }
+        { id: loadingId, content: 'Processing your message...', role: 'assistant' }
       ]);
-      
-      // Get response from AI service
-      // Note: AIService now handles adding messages to the conversation history
-      const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
       
       // Replace loading message with actual response
       setMessages(prevMessages => 
@@ -285,11 +301,18 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       console.error('Error processing audio:', error);
       // Replace loading message with error
       setMessages(prevMessages => 
-        prevMessages.filter(msg => msg.content !== 'Thinking...')
+        prevMessages.filter(msg => 
+          msg.content !== 'Transcribing your voice message...' && 
+          msg.content !== 'Processing your message...'
+        )
       );
       setMessages(prevMessages => [
         ...prevMessages, 
-        { id: uuidv4(), content: 'Sorry, I encountered an error while processing your voice message.', role: 'assistant' }
+        { 
+          id: uuidv4(), 
+          content: 'I encountered an issue processing your voice message. Please try sending a text message instead.', 
+          role: 'assistant' 
+        }
       ]);
     } finally {
       setIsProcessing(false);
@@ -354,6 +377,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               onClick={toggleRecording}
               disabled={isProcessing}
               className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
               {isRecording ? (
                 <MicOff className="h-4 w-4" />
@@ -365,6 +389,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               type="submit" 
               size="icon"
               disabled={!inputMessage.trim() || isProcessing}
+              aria-label="Send message"
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
