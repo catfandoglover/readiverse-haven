@@ -171,7 +171,7 @@ const IntellectualDNA = () => {
               GET STARTED
             </button>
 
-            <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm">
+            <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
             </p>
           </div>
@@ -228,3 +228,4 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
+
