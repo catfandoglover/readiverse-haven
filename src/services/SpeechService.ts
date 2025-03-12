@@ -3,9 +3,23 @@ class SpeechService {
   private outputFormat: string = 'mp3';
   private sampleRate: string = '16000';
   private textType: string = 'text';
+  private apiEndpoint: string;
 
   constructor() {
-    console.log('Speech Service initialized with serverless endpoint');
+    // Get the base URL for API calls
+    const baseUrl = this._getBaseUrl();
+    this.apiEndpoint = `${baseUrl}/api/text-to-speech`;
+    console.log('Speech Service initialized with endpoint:', this.apiEndpoint);
+  }
+
+  // Get base URL for API calls
+  private _getBaseUrl(): string {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    // Fallback for SSR or non-browser environments
+    return '';
   }
 
   // Set voice options
@@ -18,8 +32,8 @@ class SpeechService {
   // Synthesize speech from text
   async synthesizeSpeech(text: string): Promise<string> {
     try {
-      // Call our serverless function instead of AWS Polly directly
-      const response = await fetch('/api/text-to-speech', {
+      // Call our serverless function
+      const response = await fetch(this.apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -34,9 +48,18 @@ class SpeechService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Text-to-speech API error:", errorData);
-        throw new Error(`Text-to-speech API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        let errorMessage = `Text-to-speech API returned ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error("Text-to-speech API error:", errorData);
+          errorMessage += `: ${JSON.stringify(errorData)}`;
+        } catch (e) {
+          // If we can't parse the error as JSON, try to get it as text
+          const errorText = await response.text();
+          console.error("Text-to-speech API error text:", errorText);
+          errorMessage += `: ${errorText.substring(0, 100)}...`;
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();

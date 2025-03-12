@@ -1,23 +1,23 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Check if the request method is POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
   try {
-    // Get the message data from the request body
-    const { messages, sessionId, userMessage, generation_config } = req.body;
-
-    if (!messages) {
-      return res.status(400).json({ error: 'Missing message data' });
+    // Check if the request method is POST
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Get the API key from environment variables (will be set in Vercel dashboard)
+    // Get the API key from environment variables
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('API key not configured');
       return res.status(500).json({ error: 'API key not configured' });
+    }
+
+    // Get the message data from the request body
+    const { messages, sessionId, userMessage } = req.body;
+    if (!messages) {
+      return res.status(400).json({ error: 'Missing message data' });
     }
 
     // Set up the Gemini API URL
@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Create request payload for Gemini
     const requestPayload = {
       contents: messages,
-      generation_config: generation_config || {
+      generation_config: req.body.generation_config || {
         temperature: 0.7,
         top_p: 0.95,
         top_k: 40,
@@ -44,12 +44,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Gemini API error:", errorData);
-      return res.status(response.status).json({ 
-        error: `Gemini API returned ${response.status}`, 
-        details: errorData 
-      });
+      const errorText = await response.text();
+      console.error(`Gemini API error (${response.status}):`, errorText);
+      
+      try {
+        // Try to parse as JSON
+        const errorData = JSON.parse(errorText);
+        return res.status(response.status).json({ 
+          error: `Gemini API returned ${response.status}`, 
+          details: errorData 
+        });
+      } catch (parseError) {
+        // If it's not valid JSON, return the text
+        return res.status(response.status).json({ 
+          error: `Gemini API returned ${response.status}`, 
+          details: errorText.substring(0, 500) // Limit the length
+        });
+      }
     }
 
     const responseData = await response.json();
@@ -63,13 +74,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         responseData.candidates[0].content.parts[0].text) {
       
       const text = responseData.candidates[0].content.parts[0].text;
-      
       return res.status(200).json({ text });
     } else {
       return res.status(500).json({ error: 'Failed to extract response from Gemini' });
     }
   } catch (error) {
     console.error('Error generating chat response:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message || 'Unknown error' 
+    });
   }
 }

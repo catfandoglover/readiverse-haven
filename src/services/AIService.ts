@@ -3,11 +3,25 @@ import audioTranscriptionService from './AudioTranscriptionService';
 
 class AIService {
   private initialized: boolean = true; // Always initialized since we're using serverless functions
+  private apiEndpoint: string;
   private siteUrl: string = 'readiverse-haven.vercel.app';
   private siteName: string = 'Readiverse Haven';
 
   constructor() {
-    console.log('AI Service initialized with serverless endpoint');
+    // Get the base URL for API calls
+    const baseUrl = this._getBaseUrl();
+    this.apiEndpoint = `${baseUrl}/api/chat`;
+    console.log('AI Service initialized with endpoint:', this.apiEndpoint);
+  }
+
+  // Get base URL for API calls
+  private _getBaseUrl(): string {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    // Fallback for SSR or non-browser environments
+    return '';
   }
 
   // Check if the service is initialized
@@ -66,8 +80,8 @@ class AIService {
       
       console.log('Request payload:', JSON.stringify(requestPayload));
       
-      // Make API request to our serverless function instead of directly to Gemini
-      const response = await fetch('/api/chat', {
+      // Make API request to our serverless function
+      const response = await fetch(this.apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -76,9 +90,18 @@ class AIService {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Chat API error:", errorData);
-        throw new Error(`Chat API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        let errorMessage = `Chat API returned ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error("Chat API error:", errorData);
+          errorMessage += `: ${JSON.stringify(errorData)}`;
+        } catch (e) {
+          // If we can't parse the error as JSON, try to get it as text
+          const errorText = await response.text();
+          console.error("Chat API error text:", errorText);
+          errorMessage += `: ${errorText.substring(0, 100)}...`;
+        }
+        throw new Error(errorMessage);
       }
       
       const responseData = await response.json();

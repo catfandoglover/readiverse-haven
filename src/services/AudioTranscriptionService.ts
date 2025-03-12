@@ -1,8 +1,22 @@
 class AudioTranscriptionService {
-  private initialized: boolean = true; // Always initialized since we're using a serverless function
+  private apiEndpoint: string;
+  private initialized: boolean = true; // Always initialized since we're using serverless functions
 
   constructor() {
-    console.log('Audio Transcription Service initialized with serverless endpoint');
+    // Get the base URL for API calls
+    const baseUrl = this._getBaseUrl();
+    this.apiEndpoint = `${baseUrl}/api/transcribe`;
+    console.log('Audio Transcription Service initialized with endpoint:', this.apiEndpoint);
+  }
+
+  // Get base URL for API calls
+  private _getBaseUrl(): string {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    // Fallback for SSR or non-browser environments
+    return '';
   }
 
   // Check if the service is initialized
@@ -21,8 +35,8 @@ class AudioTranscriptionService {
       // Get the MIME type from the blob
       const mimeType = audioBlob.type || 'audio/webm';
       
-      // Call our serverless function instead of Gemini directly
-      const response = await fetch('/api/transcribe', {
+      // Call our serverless function
+      const response = await fetch(this.apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -34,9 +48,18 @@ class AudioTranscriptionService {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Transcription API error:", errorData);
-        throw new Error(`Transcription API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        let errorMessage = `Transcription API returned ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error("Transcription API error:", errorData);
+          errorMessage += `: ${JSON.stringify(errorData)}`;
+        } catch (e) {
+          // If we can't parse the error as JSON, try to get it as text
+          const errorText = await response.text();
+          console.error("Transcription API error text:", errorText);
+          errorMessage += `: ${errorText.substring(0, 100)}...`;
+        }
+        throw new Error(errorMessage);
       }
       
       const responseData = await response.json();
