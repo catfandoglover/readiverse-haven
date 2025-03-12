@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -28,19 +29,47 @@ function cleanJsonContent(content: string): string {
 }
 
 function repairJson(jsonString: string): string {
-  let result = jsonString
-    .replace(/\n/g, ' ')         // Replace newlines with spaces
-    .replace(/\r/g, ' ')         // Replace carriage returns
-    .replace(/\t/g, ' ')         // Replace tabs
-    .replace(/\\'/g, "'")        // Fix escaped single quotes
-    .replace(/\\\\/g, '\\')      // Fix double backslashes
-    .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
-    .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
-    .replace(/([^\\])"/g, '$1\\"') // Escape unescaped quotes
-    .replace(/\\\\\"/g, '\\"')   // Fix double-escaped quotes
-    .replace(/\s+/g, ' ');       // Normalize whitespace
+  try {
+    // First attempt: Try to parse as-is
+    JSON.parse(jsonString);
+    return jsonString;
+  } catch (e) {
+    console.log("Initial JSON parsing failed, attempting repairs");
     
-  return result;
+    // Apply repairs to make the JSON valid
+    let result = jsonString
+      .replace(/\n/g, ' ')         // Replace newlines with spaces
+      .replace(/\r/g, ' ')         // Replace carriage returns
+      .replace(/\t/g, ' ')         // Replace tabs
+      .replace(/\\'/g, "'")        // Fix escaped single quotes
+      .replace(/\\\\/g, '\\')      // Fix double backslashes
+      .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
+      .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
+      .replace(/\s+/g, ' ');       // Normalize whitespace
+    
+    // Handle unescaped quotes inside JSON string values
+    // This is a common source of JSON parsing errors
+    try {
+      JSON.parse(result);
+      return result;
+    } catch (e) {
+      console.log("First repair attempt failed, trying more aggressive repairs");
+      
+      // More aggressive repairs
+      // Extract just the JSON object
+      const objectMatch = result.match(/(\{.*\})/s);
+      if (objectMatch) {
+        result = objectMatch[0];
+      }
+      
+      // Last resort: attempt to fix unescaped quotes
+      result = result
+        .replace(/([^\\])"/g, '$1\\"')  // Escape unescaped quotes
+        .replace(/\\\\\"/g, '\\"');     // Fix double-escaped quotes
+      
+      return `{"data":${result}}`;  // Wrap in a data object to help parsing
+    }
+  }
 }
 
 async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
@@ -87,41 +116,61 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     }
 
     const rawContent = data.choices[0].message.content;
-    console.log(`Processing content for section ${section}`);
+    console.log(`Processing content for section ${section}: ${rawContent.substring(0, 100)}...`);
     
     // Clean and repair the JSON content
     const cleanedContent = cleanJsonContent(rawContent);
-    const repairedContent = repairJson(cleanedContent);
     
     try {
-      // Attempt to parse the processed content
-      const parsed = JSON.parse(repairedContent);
+      // First attempt: try to parse directly
+      const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
       return {
         content: parsed,
         raw_response: data
       };
     } catch (parseError) {
-      console.error(`JSON parsing failed for section ${section}:`, parseError);
+      console.error(`JSON parsing failed for section ${section}, attempting repairs:`, parseError.message);
       
-      // Fallback to regex extraction
-      const fieldPattern = /"([^"]+)":\s*"([^"]*)"/g;
-      const fields: Record<string, string> = {};
-      let matches;
-      
-      while ((matches = fieldPattern.exec(repairedContent)) !== null) {
-        fields[matches[1]] = matches[2];
-      }
-      
-      if (Object.keys(fields).length > 0) {
-        console.log(`Extracted ${Object.keys(fields).length} fields using regex for section ${section}`);
+      // Second attempt: try to repair and parse
+      try {
+        const repairedJson = repairJson(cleanedContent);
+        let parsedResult;
+        
+        // Check if we wrapped in a data object
+        if (repairedJson.startsWith('{"data":')) {
+          parsedResult = JSON.parse(repairedJson).data;
+        } else {
+          parsedResult = JSON.parse(repairedJson);
+        }
+        
+        console.log(`Successfully parsed JSON after repairs for section ${section}`);
         return {
-          content: fields,
+          content: parsedResult,
           raw_response: data
         };
+      } catch (repairError) {
+        console.error(`JSON repair failed for section ${section}:`, repairError.message);
+        
+        // Third attempt: extract fields using regex as a last resort
+        const fieldPattern = /"([^"]+)":\s*"([^"]*)"/g;
+        const fields: Record<string, string> = {};
+        let matches;
+        
+        while ((matches = fieldPattern.exec(cleanedContent)) !== null) {
+          fields[matches[1]] = matches[2];
+        }
+        
+        if (Object.keys(fields).length > 0) {
+          console.log(`Extracted ${Object.keys(fields).length} fields using regex for section ${section}`);
+          return {
+            content: fields,
+            raw_response: data
+          };
+        }
+        
+        throw new Error(`Failed to extract any valid fields from section ${section}`);
       }
-      
-      throw new Error(`Failed to extract any valid fields from section ${section}`);
     }
   } catch (error) {
     console.error(`Error in section ${section}:`, error);
