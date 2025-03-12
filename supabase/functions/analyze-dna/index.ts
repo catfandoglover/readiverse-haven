@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -16,125 +15,219 @@ const corsHeaders = {
 };
 
 function cleanJsonContent(content: string): string {
-  // Remove any markdown formatting
   let cleaned = content
     .replace(/```json\s*/g, '')
     .replace(/```\s*/g, '')
     .replace(/`/g, '')
     .trim();
   
-  // Extract just the JSON object if there's surrounding text
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   return jsonMatch ? jsonMatch[0] : cleaned;
 }
 
-function sanitizeJsonString(str: string): string {
-  // Escape all unescaped double quotes within JSON string values
-  // This regex looks for string values and properly escapes quotes inside them
-  return str.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, function(match, p1) {
-    // Replace any unescaped quotes inside the string value
-    return '"' + p1.replace(/"/g, '\\"') + '"';
+function handlePoliticsFields(jsonString: string): string {
+  console.log("Applying enhanced politics field handling...");
+  
+  let processed = jsonString.replace(/\\"/g, "___ESCAPED_QUOTE___");
+  
+  const regex = /"(politics_[^"]+)"\s*:\s*"(.*?)(?<!\\)"/gs;
+  
+  processed = processed.replace(regex, (match, fieldName, content) => {
+    const cleanedContent = content
+      .replace(/"/g, '\\"')
+      .replace(/\r/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\t/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/\\\\/g, '\\');
+    
+    return `"${fieldName}": "${cleanedContent}"`;
   });
+  
+  return processed.replace(/___ESCAPED_QUOTE___/g, '\\"');
 }
 
-function handlePoliticsChallenginVoiceFields(jsonString: string): string {
-  // Special handling for politics_challenging_voice fields which often cause issues
-  const politicsFieldPattern = /"politics_challenging_voice_(\d+)(_classic|_rationale)?"\s*:\s*"([^"]*)"/g;
+function handleProblematicFields(jsonString: string): string {
+  console.log("Applying general problematic field handling...");
   
-  // Replace all politics fields with properly escaped versions
-  return jsonString.replace(politicsFieldPattern, (match, num, suffix, content) => {
-    // Clean the content: replace newlines with spaces, escape quotes
+  let processed = handlePoliticsFields(jsonString);
+  
+  const rationaleRegex = /"([^"]+(?:_rationale|_classic))"\s*:\s*"(.*?)(?<!\\)"/gs;
+  
+  processed = processed.replace(rationaleRegex, (match, fieldName, content) => {
+    if (fieldName.startsWith('politics_')) {
+      return match;
+    }
+    
     const cleanedContent = content
-      .replace(/\n/g, ' ')
+      .replace(/"/g, '\\"')
       .replace(/\r/g, ' ')
+      .replace(/\n/g, ' ')
       .replace(/\t/g, ' ')
-      .replace(/\\"/g, '"')  // Fix already escaped quotes
-      .replace(/"/g, '\\"')  // Escape all double quotes
-      .replace(/\\\\/g, '\\'); // Fix double backslashes
-      
-    // Rebuild the field with properly escaped content
-    return `"politics_challenging_voice_${num}${suffix || ''}"` + ': ' + `"${cleanedContent}"`;
+      .replace(/\s+/g, ' ');
+    
+    return `"${fieldName}": "${cleanedContent}"`;
   });
+  
+  return processed;
 }
 
 function repairJson(jsonString: string): string {
   try {
-    // First attempt: Try to parse as-is
     JSON.parse(jsonString);
     return jsonString;
   } catch (e) {
-    console.log("Initial JSON parsing failed, attempting repairs");
+    console.log("Initial JSON parsing failed, attempting repairs:", e.message);
     
     try {
-      // Apply basic repairs to make the JSON valid
       let result = jsonString
-        .replace(/\n/g, ' ')         // Replace newlines with spaces
-        .replace(/\r/g, ' ')         // Replace carriage returns
-        .replace(/\t/g, ' ')         // Replace tabs
-        .replace(/\\'/g, "'")        // Fix escaped single quotes
-        .replace(/\\\\/g, '\\')      // Fix double backslashes
-        .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
-        .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
-        .replace(/\s+/g, ' ');       // Normalize whitespace
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/\\'/g, "'")
+        .replace(/\\\\/g, '\\')
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*\]/g, ']')
+        .replace(/\s+/g, ' ');
       
-      // Apply specialized handling for politics_challenging_voice fields
-      result = handlePoliticsChallenginVoiceFields(result);
+      result = handleProblematicFields(result);
       
-      // Handle unescaped quotes inside all JSON string values
       JSON.parse(result);
       return result;
     } catch (e) {
-      console.log("First repair attempt failed, trying more aggressive repairs");
+      console.log("First repair attempt failed, trying more aggressive repairs:", e.message);
       
-      // More aggressive repairs
       try {
-        // Apply sanitization to the entire JSON string
-        const sanitized = sanitizeJsonString(jsonString);
+        const keyValuePairs: [string, string][] = [];
+        let insideString = false;
+        let currentKey = '';
+        let currentValue = '';
+        let isCollectingKey = true;
+        let escapeNext = false;
         
-        // Apply specialized handling for politics_challenging_voice fields
-        const politicsSanitized = handlePoliticsChallenginVoiceFields(sanitized);
+        for (let i = 0; i < jsonString.length; i++) {
+          const char = jsonString[i];
+          
+          if (escapeNext) {
+            if (isCollectingKey) {
+              currentKey += char;
+            } else {
+              currentValue += char;
+            }
+            escapeNext = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            escapeNext = true;
+            if (isCollectingKey) {
+              currentKey += char;
+            } else {
+              currentValue += char;
+            }
+            continue;
+          }
+          
+          if (char === '"' && !insideString) {
+            insideString = true;
+            continue;
+          }
+          
+          if (char === '"' && insideString) {
+            insideString = false;
+            if (isCollectingKey) {
+              isCollectingKey = false;
+            } else {
+              keyValuePairs.push([currentKey, currentValue]);
+              currentKey = '';
+              currentValue = '';
+              isCollectingKey = true;
+            }
+            continue;
+          }
+          
+          if (insideString) {
+            if (isCollectingKey) {
+              currentKey += char;
+            } else {
+              currentValue += char;
+            }
+          }
+          
+          if (!insideString && !isCollectingKey && char === ':') {
+            continue;
+          }
+        }
         
-        // Extract just the JSON object if needed
-        const objectMatch = politicsSanitized.match(/(\{.*\})/s);
-        const cleanResult = objectMatch ? objectMatch[0] : politicsSanitized;
+        const cleanObj: Record<string, string> = {};
+        for (const [key, value] of keyValuePairs) {
+          let cleanValue = value
+            .replace(/\n/g, ' ')
+            .replace(/\r/g, ' ')
+            .replace(/"/g, '\\"')
+            .replace(/\t/g, ' ')
+            .trim();
+          
+          cleanObj[key] = cleanValue;
+        }
         
-        // Verify parsing works
-        JSON.parse(cleanResult);
-        return cleanResult;
-      } catch (e) {
-        console.error("Advanced repair attempts failed:", e);
+        if (Object.keys(cleanObj).length > 0) {
+          console.log(`Extracted ${Object.keys(cleanObj).length} fields using manual parsing`);
+          
+          const jsonResult = JSON.stringify(cleanObj);
+          
+          return handleProblematicFields(jsonResult);
+        }
         
-        // Try a different approach - structure fixing
+        throw new Error("Failed to extract fields using manual parsing");
+      } catch (manualError) {
+        console.error("Manual parsing failed:", manualError);
+        
         try {
-          // Extract all key-value pairs into a new object
-          const keyValuePattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
           const extractedObject: Record<string, string> = {};
+          
+          const politicsPattern = /"(politics_[^"]+)"\s*:\s*"([^"]*)"/g;
           let match;
           
-          while ((match = keyValuePattern.exec(jsonString)) !== null) {
+          while ((match = politicsPattern.exec(jsonString)) !== null) {
             const [_, key, value] = match;
             
-            // Clean value - replace newlines and escape quotes
             const cleanValue = value
               .replace(/\n/g, ' ')
               .replace(/\r/g, ' ')
-              .replace(/"/g, '\\"');
+              .replace(/"/g, '\\"')
+              .replace(/\t/g, ' ')
+              .trim();
               
             extractedObject[key] = cleanValue;
           }
           
-          // If we successfully extracted fields, convert back to JSON
+          const generalPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
+          
+          while ((match = generalPattern.exec(jsonString)) !== null) {
+            const [_, key, value] = match;
+            
+            if (key.startsWith('politics_')) continue;
+            
+            const cleanValue = value
+              .replace(/\n/g, ' ')
+              .replace(/\r/g, ' ')
+              .replace(/"/g, '\\"')
+              .replace(/\t/g, ' ')
+              .trim();
+              
+            extractedObject[key] = cleanValue;
+          }
+          
           if (Object.keys(extractedObject).length > 0) {
-            console.log(`Extracted ${Object.keys(extractedObject).length} fields`);
+            console.log(`Extracted ${Object.keys(extractedObject).length} fields using regex extraction`);
             return JSON.stringify(extractedObject);
           }
           
-          // If we get here, we couldn't fix the JSON
           throw new Error("Failed to extract fields from JSON");
         } catch (extractError) {
           console.error("Field extraction failed:", extractError);
           
-          // Last resort: create a minimal valid JSON as fallback
           return '{"error":"JSON parsing failed","partial_content":"' + 
             jsonString.substring(0, 100).replace(/"/g, '\\"') + '..."}';
         }
@@ -149,6 +242,13 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
   try {
     console.log(`Sending request to OpenRouter for section ${section}`);
+    
+    let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
+    
+    if (section === 2) {
+      systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting.';
+    }
+    
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -162,7 +262,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         messages: [
           {
             role: 'system',
-            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.'
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -190,11 +290,9 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     const rawContent = data.choices[0].message.content;
     console.log(`Processing content for section ${section}: ${rawContent.substring(0, 100)}...`);
     
-    // Clean and repair the JSON content
     const cleanedContent = cleanJsonContent(rawContent);
     
     try {
-      // First attempt: try to parse directly
       const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
       return {
@@ -204,17 +302,14 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     } catch (parseError) {
       console.error(`JSON parsing failed for section ${section}, attempting repairs:`, parseError.message);
       
-      // Section-specific handling - extra care for section 2 which contains challenging fields
       if (section === 2) {
-        console.log(`Applying extra politics_challenging_voice field handling for section ${section}`);
+        console.log(`Applying specialized handling for section ${section} which contains challenging fields`);
       }
       
-      // Second attempt: try to repair and parse
       try {
         const repairedJson = repairJson(cleanedContent);
         let parsedResult;
         
-        // Check if we wrapped in a data object
         if (repairedJson.startsWith('{"data":')) {
           parsedResult = JSON.parse(repairedJson).data;
         } else {
@@ -229,24 +324,56 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       } catch (repairError) {
         console.error(`JSON repair failed for section ${section}:`, repairError.message);
         
-        // Third attempt: extract fields using regex as a last resort
-        const fieldPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
-        const fields: Record<string, string> = {};
-        let matches;
+        const fallbackResponse: Record<string, string> = {
+          error_message: `Failed to parse section ${section}: ${repairError.message}`,
+          partial_content: cleanedContent.substring(0, 500) + "..."
+        };
         
-        while ((matches = fieldPattern.exec(cleanedContent)) !== null) {
-          fields[matches[1]] = matches[2];
+        if (section === 2) {
+          for (let i = 1; i <= 5; i++) {
+            fallbackResponse[`theology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
+            fallbackResponse[`theology_kindred_spirit_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`theology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`theology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
+            fallbackResponse[`theology_challenging_voice_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`theology_challenging_voice_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`epistemology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
+            fallbackResponse[`epistemology_kindred_spirit_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`epistemology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`epistemology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
+            fallbackResponse[`epistemology_challenging_voice_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`epistemology_challenging_voice_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`ethics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
+            fallbackResponse[`ethics_kindred_spirit_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`ethics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`ethics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
+            fallbackResponse[`ethics_challenging_voice_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`ethics_challenging_voice_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`politics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
+            fallbackResponse[`politics_kindred_spirit_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`politics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
+            
+            fallbackResponse[`politics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
+            fallbackResponse[`politics_challenging_voice_${i}_classic`] = "Error (0000)";
+            fallbackResponse[`politics_challenging_voice_${i}_rationale`] = "Error retrieving data";
+          }
         }
         
-        if (Object.keys(fields).length > 0) {
-          console.log(`Extracted ${Object.keys(fields).length} fields using regex for section ${section}`);
-          return {
-            content: fields,
-            raw_response: data
-          };
-        }
-        
-        throw new Error(`Failed to extract any valid fields from section ${section}`);
+        console.log(`Created fallback response with ${Object.keys(fallbackResponse).length} fields`);
+        return {
+          content: fallbackResponse,
+          raw_response: {
+            error: true,
+            message: repairError.message,
+            original_response: data
+          }
+        };
       }
     }
   } catch (error) {
@@ -257,7 +384,6 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
-    // Process all three sections sequentially to ensure they all complete
     console.log('Starting analysis for all sections...');
     const section1 = await generateAnalysis(answers_json, 1);
     console.log('Successfully completed section 1');
@@ -326,7 +452,6 @@ serve(async (req) => {
 
       console.log(`Processing assessment ${assessment_id}...`);
       
-      // Check if analysis already exists for this assessment
       const analysisExists = await checkExistingAnalysis(assessment_id);
       
       if (analysisExists) {
@@ -345,7 +470,6 @@ serve(async (req) => {
         );
       }
       
-      // Fetch the name from dna_assessment_results
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('dna_assessment_results')
         .select('name')
@@ -362,7 +486,6 @@ serve(async (req) => {
       }
 
       console.log('Generating analysis...');
-      // Make sure to await the complete analysis to finish before returning
       const result = await generateCompleteAnalysis(answers_json);
       
       if (result.error) {
@@ -379,7 +502,6 @@ serve(async (req) => {
         );
       }
 
-      // Combine all sections into a single analysis record
       const combinedAnalysis = {};
       const combinedRawResponses = [];
       const combinedAnalysisTexts = [];
@@ -390,19 +512,17 @@ serve(async (req) => {
         combinedAnalysisTexts.push(section.analysis);
       }
       
-      // Store the combined analysis in a single database record
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
         profile_image_url,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
-        analysis_type: 'section_1', // Using a valid enum value
+        analysis_type: 'section_1',
         ...combinedAnalysis
       };
 
       console.log('Storing combined analysis in database...');
-      // Ensure we wait for the storage operation to complete
       const { error: storeError } = await supabase
         .from('dna_analysis_results')
         .insert(analysisRecord);
