@@ -14,9 +14,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing audio data' });
     }
 
+    console.log('Transcription request received:', { 
+      audioDataLength: audioBase64.length, 
+      mimeType 
+    });
+
     // Get the API key from environment variables (will be set in Vercel dashboard)
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('API key not configured');
       return res.status(500).json({ error: 'API key not configured' });
     }
 
@@ -48,6 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     };
 
+    console.log('Sending transcription request to Gemini API');
+
     // Make API request to Gemini
     const response = await fetch(`${apiUrl}?key=${apiKey}`, {
       method: "POST",
@@ -62,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const errorClone = response.clone();
       try {
         const errorData = await errorClone.json();
-        console.error("Gemini API error:", errorData);
+        console.error("Gemini API error:", JSON.stringify(errorData));
         return res.status(response.status).json({ 
           error: `Gemini API returned ${response.status}`, 
           details: errorData 
@@ -78,8 +86,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Need to clone the response before reading it
-    const responseData = await response.clone().json();
+    // Parse the response
+    const responseData = await response.json();
+    console.log('Received response from Gemini API');
 
     // Extract the transcription text
     if (responseData.candidates && 
@@ -99,13 +108,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         cleanedTranscription = "I couldn't transcribe your message clearly";
       }
       
+      console.log('Successfully transcribed audio:', cleanedTranscription.substring(0, 100) + '...');
       return res.status(200).json({ transcription: cleanedTranscription });
     } else {
+      console.error('Failed to extract transcription from Gemini response:', JSON.stringify(responseData));
       return res.status(500).json({ error: 'Failed to extract transcription from Gemini response' });
     }
   } catch (error) {
-    console.error('Error transcribing audio:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error transcribing audio:', error instanceof Error ? error.message : String(error));
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error instanceof Error ? error.message : String(error) 
+    });
   }
 }
 
@@ -115,10 +129,10 @@ function cleanTranscription(text: string): string {
   let cleaned = text.replace(/^(transcription:|transcript:)/i, '').trim();
   
   // Remove surrounding quotes if present
-  cleaned = cleaned.replace(/^["'](.*)["']$/s, '$1');
+  cleaned = cleaned.replace(/^["']([\s\S]*)["']$/, '$1');
   
   // Remove any markdown formatting
-  cleaned = cleaned.replace(/```.*?```/gs, '').trim();
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '').trim();
   
   return cleaned;
 }
