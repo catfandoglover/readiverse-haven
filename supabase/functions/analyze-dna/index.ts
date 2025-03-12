@@ -250,34 +250,40 @@ serve(async (req) => {
         );
       }
       
-      // Only use the third section for storage
-      const thirdSection = result.sections[2];
-      
-      // Store only the third section analysis
-      const analysisRecord = {
-        assessment_id,
-        name: assessmentData.name,
-        profile_image_url,
-        raw_response: [thirdSection.raw_response], // Store as array for consistency
-        analysis_text: JSON.stringify([thirdSection.analysis]),
-        analysis_type: 'section_3',
-        ...thirdSection.analysis
-      };
+      // Store all three sections in the database
+      for (let i = 0; i < result.sections.length; i++) {
+        const section = result.sections[i];
+        const analysisType = `section_${i + 1}`;
+        
+        const analysisRecord = {
+          assessment_id,
+          name: assessmentData.name,
+          profile_image_url,
+          raw_response: [section.raw_response], // Store as array for consistency
+          analysis_text: JSON.stringify([section.analysis]),
+          analysis_type: analysisType,
+          ...section.analysis
+        };
 
-      console.log('Storing analysis in database...');
-      const { error: storeError } = await supabase
-        .from('dna_analysis_results')
-        .insert(analysisRecord);
+        console.log(`Storing section ${i + 1} analysis in database...`);
+        const { error: storeError } = await supabase
+          .from('dna_analysis_results')
+          .insert(analysisRecord);
 
-      if (storeError) {
-        console.error('Error storing analysis:', storeError);
-        throw storeError;
+        if (storeError) {
+          console.error(`Error storing section ${i + 1} analysis:`, storeError);
+          // Continue with the next section even if there's an error
+        } else {
+          console.log(`Section ${i + 1} analysis stored successfully`);
+        }
       }
       
-      console.log('Analysis stored successfully');
-      
       return new Response(
-        JSON.stringify({ success: true, message: 'Analysis stored successfully' }),
+        JSON.stringify({ 
+          success: true, 
+          message: 'All analysis sections stored successfully',
+          sections: result.sections.length
+        }),
         { 
           headers: {
             ...corsHeaders,
