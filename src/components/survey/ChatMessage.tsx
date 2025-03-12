@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { playAudio, stopAllAudio } from '@/services/AudioContext';
+import useAudioStore from '@/services/AudioContext';
 
 interface ChatMessageProps {
   content: string;
@@ -23,6 +25,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoPlayedRef = useRef(false);
   const isVoiceMessage = role === 'user' && audioUrl && (content === 'Voice message' || content.length > 0);
+  
+  // Get the currently playing audio from the global store
+  const currentlyPlaying = useAudioStore(state => state.currentlyPlaying);
 
   const cleanedContent = content;
 
@@ -58,6 +63,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     };
   }, [audioUrl]);
 
+  // Update isPlaying state based on the global audio context
+  useEffect(() => {
+    if (audioRef.current && currentlyPlaying !== audioRef.current) {
+      // If this component's audio is not the currently playing one, update the state
+      setIsPlaying(false);
+    }
+  }, [currentlyPlaying]);
+
   // Handle auto-play only for new assistant messages when dialog is open
   useEffect(() => {
     if (
@@ -68,8 +81,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       isNewMessage && 
       !hasAutoPlayedRef.current
     ) {
-      // Play the audio automatically only once
-      audioRef.current.play().catch(error => {
+      // Play the audio automatically only once using the global audio context
+      playAudio(audioRef.current).catch(error => {
         console.error('Error auto-playing audio:', error);
       });
       
@@ -92,8 +105,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(error => {
+      // Use the global audio context to play audio
+      playAudio(audioRef.current).catch(error => {
         console.error('Error playing audio:', error);
         setIsPlaying(false);
       });

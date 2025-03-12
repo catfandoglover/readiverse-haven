@@ -12,6 +12,8 @@
     "upload-book": "node phil_supabase/uploadbook.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-polly": "^3.758.0",
+    "@aws-sdk/polly-request-presigner": "^3.758.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -70,7 +72,8 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.5",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

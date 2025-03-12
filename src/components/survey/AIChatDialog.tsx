@@ -14,6 +14,7 @@ import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import conversationManager, { Message as ConversationMessage } from '@/services/ConversationManager';
 import ChatMessage from './ChatMessage';
+import { stopAllAudio } from '@/services/AudioContext';
 
 interface Message {
   id: string;
@@ -138,6 +139,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   // Generate audio for assistant messages
   const generateAudioForText = async (text: string) => {
     try {
+      // Stop any currently playing audio before generating a new one
+      stopAllAudio();
+      
       const audioUrl = await speechService.synthesizeSpeech(text);
       
       // Update the last assistant message with the audio URL
@@ -172,6 +176,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     // Otherwise, process text message as usual
     if (!inputMessage.trim() || isProcessing) return;
     
+    // Stop any playing audio before processing the new message
+    stopAllAudio();
+    
     const userMessage = inputMessage.trim();
     setInputMessage('');
     
@@ -193,6 +200,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Stop recording and process the audio
       await stopAndProcessRecording();
     } else {
+      // Stop any playing audio before starting a new recording
+      stopAllAudio();
+      
       // Start recording
       try {
         await audioRecordingService.startRecording();
@@ -220,6 +230,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const processMessage = async (userMessage: string) => {
     setIsProcessing(true);
     try {
+      // Stop any playing audio before processing
+      stopAllAudio();
+      
       // Add loading message
       const loadingId = uuidv4();
       setMessages(prevMessages => [
@@ -261,6 +274,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const processAudio = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
+      // Stop any playing audio before processing
+      stopAllAudio();
+      
       // Create temporary audio URL for display
       const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
       
@@ -346,6 +362,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           isNew: false
         }))
       );
+      
+      // Stop any playing audio when the dialog closes
+      stopAllAudio();
     }
   }, [open]);
 
