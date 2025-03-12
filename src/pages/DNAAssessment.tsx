@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import AIChatButton from '@/components/survey/AIChatButton';
+import AIChatDialog from '@/components/survey/AIChatDialog';
+import conversationManager from '@/services/ConversationManager';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -42,6 +45,8 @@ const DNAAssessment = () => {
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
+  const [showAIChat, setShowAIChat] = React.useState(false);
+  const [aiEnabled, setAIEnabled] = React.useState(true);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -115,6 +120,39 @@ const DNAAssessment = () => {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
           
+          // Get the current user
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.error('Error getting user:', userError);
+          } else if (userData && userData.user) {
+            console.log('Current user:', userData.user);
+            
+            // First try to get the profile ID
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('outseta_user_id', userData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error getting profile:', profileError);
+            } else if (profileData) {
+              console.log('Found profile:', profileData);
+              // Store the profile ID in sessionStorage
+              sessionStorage.setItem('user_id', profileData.id);
+            } else {
+              // If no profile found, use the auth user ID as fallback
+              console.log('No profile found, using auth user ID');
+              sessionStorage.setItem('user_id', userData.user.id);
+            }
+          } else {
+            // If no authenticated user, create a temporary ID
+            console.log('No authenticated user, using temporary ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
+          }
+          
           // Create the assessment
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
@@ -145,6 +183,8 @@ const DNAAssessment = () => {
 
           setAssessmentId(newAssessment.id);
           console.log('Created new assessment with ID:', newAssessment.id);
+          // Store in sessionStorage immediately
+          sessionStorage.setItem('dna_assessment_id', newAssessment.id);
           
           // Verify the assessment exists and is properly initialized
           const { data: verifyData, error: verifyError } = await supabase
@@ -277,6 +317,45 @@ const DNAAssessment = () => {
 
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
+    
+    // Get the current question text
+    const questionText = currentQuestion.question?.question || '';
+    
+    // Get the answer label based on user selection
+    const answerLabel = answer === "A" 
+      ? (currentQuestion.question?.answer_a || "Yes") 
+      : (currentQuestion.question?.answer_b || "No");
+    
+    // Store the question and answer in the conversation manager
+    conversationManager.addQuestionToPath(
+      sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
+      currentPosition,
+      questionText,
+      answerLabel
+    );
+
+    // Save the conversation for the current question before moving to the next
+    const userId = sessionStorage.getItem('user_id');
+    const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+    
+    console.log('Preparing to save conversation:', {
+      sessionId,
+      assessmentId,
+      userId,
+      currentPosition
+    });
+    
+    // Always use the assessmentId from state
+    try {
+      await conversationManager.saveConversationToSupabase(
+        sessionId,
+        assessmentId, // Using from state
+        userId, // Can be null for anonymous users
+        currentPosition
+      );
+    } catch (error) {
+      console.error('Error in saveConversationToSupabase:', error);
+    }
 
     try {
       // Store individual question response
@@ -443,6 +522,106 @@ const DNAAssessment = () => {
     setShowExitAlert(false);
   };
 
+  // At the beginning of the component, update the effect to handle anonymous users better
+  React.useEffect(() => {
+    const ensureUserId = async () => {
+      // Check if user_id is already in sessionStorage
+      const existingUserId = sessionStorage.getItem('user_id');
+      if (!existingUserId) {
+        console.log('No user_id found in sessionStorage, attempting to set it');
+        
+        try {
+          // Try to get the authenticated user
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.log('User is not authenticated, using anonymous ID');
+            // For anonymous users, we don't set a user_id in sessionStorage
+            // This will cause the conversation to be saved with the anonymous user ID
+          } else if (userData && userData.user) {
+            console.log('Found authenticated user:', userData.user.id);
+            
+            // Try to get the profile
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('outseta_user_id', userData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error getting profile:', profileError);
+            } else if (profileData) {
+              console.log('Found profile, setting user_id to profile.id:', profileData.id);
+              sessionStorage.setItem('user_id', profileData.id);
+            } else {
+              // If no profile found, use auth user ID
+              console.log('No profile found, setting user_id to auth.user.id:', userData.user.id);
+              sessionStorage.setItem('user_id', userData.user.id);
+            }
+          }
+        } catch (error) {
+          console.error('Error in ensureUserId:', error);
+          // For errors, we don't set a user_id, which will use the anonymous user
+        }
+      } else {
+        console.log('Found existing user_id in sessionStorage:', existingUserId);
+      }
+    };
+    
+    ensureUserId();
+  }, []);
+
+  // Add this at the end of the component
+  React.useEffect(() => {
+    // Expose debug function to window
+    (window as any).debugDNAConversation = () => {
+      console.log('Debug info:');
+      console.log('assessmentId (state):', assessmentId);
+      console.log('assessmentId (sessionStorage):', sessionStorage.getItem('dna_assessment_id'));
+      console.log('userId (sessionStorage):', sessionStorage.getItem('user_id'));
+      console.log('sessionId (dna_assessment_name):', sessionStorage.getItem('dna_assessment_name'));
+      console.log('currentPosition:', currentPosition);
+      
+      // Check conversation data
+      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+      const conversation = conversationManager.getHistory(sessionId);
+      const questionPath = conversationManager.getQuestionPath(sessionId);
+      console.log('Conversation:', conversation);
+      console.log('QuestionPath:', questionPath);
+    };
+    
+    // Expose manual save function
+    (window as any).manualSaveConversation = async () => {
+      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+      const assessmentIdToUse = assessmentId || sessionStorage.getItem('dna_assessment_id');
+      const userIdToUse = sessionStorage.getItem('user_id') || 'temp-' + Math.random().toString(36).substring(2, 15);
+      
+      if (!assessmentIdToUse) {
+        console.error('No assessment ID available for manual save');
+        return;
+      }
+      
+      console.log('Manual save with:', {
+        sessionId,
+        assessmentId: assessmentIdToUse,
+        userId: userIdToUse,
+        questionId: currentPosition
+      });
+      
+      try {
+        await conversationManager.saveConversationToSupabase(
+          sessionId,
+          assessmentIdToUse,
+          userIdToUse,
+          currentPosition
+        );
+        console.log('Manual save completed');
+      } catch (error) {
+        console.error('Error in manual save:', error);
+      }
+    };
+  }, [assessmentId, currentPosition]);
+
   if (questionLoading || isTransitioning || isInitializing) {
     return (
       <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
@@ -503,73 +682,82 @@ const DNAAssessment = () => {
   const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-      <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
-        <button 
-          onClick={handleExit}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
-          type="button"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
-          <span>{currentQuestionNumber}</span>
-          <span>/</span>
-          <span>{TOTAL_QUESTIONS}</span>
-        </div>
-      </header>
-      <div className="px-4">
-        <Progress 
-          value={progressPercentage}
-          className="bg-secondary/10"
-        />
-      </div>
-      <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
-        <div className="flex-1 flex items-center justify-center py-8 mb-20">
-          <h1 className="text-3xl font-baskerville text-center max-w-2xl">
-            {currentQuestion.question?.question}
-          </h1>
-        </div>
-        <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
-          <Button
-            variant="outline"
-            className={`${buttonGradientStyles} w-40`}
-            onClick={() => handleAnswer("A")}
+    <>
+      <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
+        <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
+          <button 
+            onClick={handleExit}
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
+            type="button"
           >
-            <span>{buttonTextA}</span>
-          </Button>
-          <Button
-            variant="outline"
-            className={`${buttonGradientStyles} w-40`}
-            onClick={() => handleAnswer("B")}
-          >
-            <span>{buttonTextB}</span>
-          </Button>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+            <span>{currentQuestionNumber}</span>
+            <span>/</span>
+            <span>{TOTAL_QUESTIONS}</span>
+          </div>
+        </header>
+        <div className="px-4">
+          <Progress 
+            value={progressPercentage}
+            className="bg-secondary/10"
+          />
         </div>
+        <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
+          <div className="flex-1 flex items-center justify-center py-8 mb-20">
+            <h1 className="text-3xl font-baskerville text-center max-w-2xl">
+              {currentQuestion.question?.question}
+            </h1>
+          </div>
+          <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
+            <Button
+              variant="outline"
+              className={`${buttonGradientStyles} w-40`}
+              onClick={() => handleAnswer("A")}
+            >
+              <span>{buttonTextA}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className={`${buttonGradientStyles} w-40`}
+              onClick={() => handleAnswer("B")}
+            >
+              <span>{buttonTextB}</span>
+            </Button>
+          </div>
+        </div>
+
+        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
+              <AlertDialogDescription className="font-oxanium">
+                Your progress will not be saved and you will need to retake the assessment from the beginning.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className={`${buttonGradientStyles}`}>
+                <span>Cancel</span>
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmExit}
+                className={`${buttonGradientStyles}`}
+              >
+                <span>Exit Assessment</span>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
-            <AlertDialogDescription className="font-oxanium">
-              Your progress will not be saved and you will need to retake the assessment from the beginning.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className={`${buttonGradientStyles}`}>
-              <span>Cancel</span>
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmExit}
-              className={`${buttonGradientStyles}`}
-            >
-              <span>Exit Assessment</span>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+      <AIChatButton 
+        currentQuestion={currentQuestion.question?.question || ''}
+        enabled={aiEnabled}
+      />
+      
+      {/* This dialog should be removed since it's already included in AIChatButton */}
+    </>
   );
 };
 
