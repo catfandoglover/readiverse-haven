@@ -181,11 +181,16 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
-    // Process all three sections
+    // Process all three sections sequentially to ensure they all complete
     console.log('Starting analysis for all sections...');
     const section1 = await generateAnalysis(answers_json, 1);
+    console.log('Successfully completed section 1');
+    
     const section2 = await generateAnalysis(answers_json, 2);
+    console.log('Successfully completed section 2');
+    
     const section3 = await generateAnalysis(answers_json, 3);
+    console.log('Successfully completed section 3');
     
     return {
       sections: [
@@ -235,6 +240,7 @@ serve(async (req) => {
       }
 
       console.log('Generating analysis...');
+      // Make sure to await the complete analysis to finish before returning
       const result = await generateCompleteAnalysis(answers_json);
       
       if (result.error) {
@@ -269,11 +275,12 @@ serve(async (req) => {
         profile_image_url,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
-        analysis_type: 'section_1', // Changed to 'section_1' which is a valid enum value
+        analysis_type: 'section_1', // Using a valid enum value
         ...combinedAnalysis
       };
 
       console.log('Storing combined analysis in database...');
+      // Ensure we wait for the storage operation to complete
       const { error: storeError } = await supabase
         .from('dna_analysis_results')
         .insert(analysisRecord);
