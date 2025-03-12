@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,6 +76,18 @@
  
   body {
     @apply bg-background text-foreground transition-colors duration-300;
+    /* Ensure proper viewport height on mobile */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    /* Fix for iOS overflow issues */
+    width: 100%;
+    position: fixed;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    height: -webkit-fill-available;
   }
 
   .epub-view {
@@ -110,6 +123,39 @@
 
   :root.sepia a:hover {
     @apply text-[#5B4636] opacity-80;
+  }
+  
+  /* Safe area insets for mobile devices - Enhanced for better iOS support */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 1rem);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 1rem);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 1rem);
+  }
+
+  /* Fix for bottom fixed elements on iOS */
+  .fixed-bottom-safe {
+    bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* Global fixes for iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+  
+  .min-h-screen {
+    min-height: -webkit-fill-available;
   }
 }
 

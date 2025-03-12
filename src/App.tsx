@@ -7,11 +7,11 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/OutsetaAuthContext";
+import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
 import Bookshelf from "@/components/Bookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
 import DNAAssessment from "./pages/DNAAssessment";
-import Index from "@/pages/Index";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
@@ -55,12 +55,13 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<DiscoverLayout />} /> 
+                <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
+                <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
-                <Route path="/:bookSlug" element={<Index />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
               </Routes>
             </ErrorBoundary>

@@ -12,15 +12,26 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 type Book = Database['public']['Tables']['books']['Row'];
-type Icon = Database['public']['Tables']['icons']['Row'];
+type Icon = {
+  id: string;
+  name: string;
+  illustration: string;
+  about?: string;
+  introduction?: string;
+  randomizer: number;
+  created_at: string;
+};
 type Concept = {
   id: string;
   title: string;
   description: string | null;
   illustration: string;
-  category: string | null;
+  category?: string | null; // Make category optional
   randomizer: number;
   created_at: string;
+  about?: string;
+  type?: string;
+  introduction?: string;
 };
 
 const Home = () => {
@@ -119,7 +130,7 @@ const Home = () => {
     refetchOnMount: false
   });
 
-  const { data: concepts, isLoading: conceptsLoading } = useQuery({
+  const { data: conceptsData, isLoading: conceptsLoading } = useQuery({
     queryKey: ['concepts'],
     queryFn: async () => {
       const { data, error } = await authenticatedSupabase
@@ -128,7 +139,11 @@ const Home = () => {
         .order('randomizer');
       
       if (error) throw error;
-      return data as Concept[];
+      const mappedConcepts = conceptsData?.map(concept => ({
+        ...concept,
+        description: concept.about || "" // Add description field to make it compatible with Concept type
+      })) as Concept[];
+      return mappedConcepts;
     },
     staleTime: 30000,
     refetchOnMount: false
@@ -276,7 +291,7 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {concepts?.map((concept) => (
+                  {conceptsData?.map((concept) => (
                     <Card 
                       key={concept.id} 
                       className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
@@ -307,28 +322,30 @@ const Home = () => {
         </div>
 
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50">
-          <div className="flex justify-between items-center max-w-sm mx-auto px-8">
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/dna')}
-            >
-              <Dna className="h-6 w-6" />
-              <span className="text-xs font-oxanium">My DNA</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/')}
-            >
-              <Compass className="h-6 w-6" />
-              <span className="text-xs font-oxanium">Discover</span>
-            </button>
-            <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/bookshelf')}
-            >
-              <LibraryBig className="h-6 w-6" />
-              <span className="text-xs font-oxanium">Bookshelf</span>
-            </button>
+          <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center w-full max-w-xs">
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/')}
+              >
+                <Compass className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Discover</span>
+              </button>
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/dna')}
+              >
+                <Dna className="h-5 w-5" />
+                <span className="text-xs font-oxanium">My DNA</span>
+              </button>
+              <button 
+                className={`flex flex-col items-center justify-center w-1/3 gap-1 text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/bookshelf') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+                onClick={() => handleNavigation('/bookshelf')}
+              >
+                <LibraryBig className="h-5 w-5" />
+                <span className="text-xs font-oxanium">Bookshelf</span>
+              </button>
+            </div>
           </div>
         </nav>
       </div>

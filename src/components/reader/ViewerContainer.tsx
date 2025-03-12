@@ -25,6 +25,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
         overscrollBehavior: 'contain',
+        whiteSpace: 'pre-line', // Preserves line breaks in text
       }}
     />
   );
