@@ -24,6 +24,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const hasAutoPlayedRef = useRef(false);
   const isVoiceMessage = role === 'user' && audioUrl && (content === 'Voice message' || content.length > 0);
 
+  // Clean up any debugging artifacts from the content
+  // ENHANCED: More thorough cleaning to handle all variations of Infinity:NaN
+  let cleanedContent = content;
+  cleanedContent = cleanedContent.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
+  cleanedContent = cleanedContent.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
+  cleanedContent = cleanedContent.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
+  
   // Create audio element when audioUrl is available
   useEffect(() => {
     if (audioUrl && !audioRef.current) {
@@ -117,7 +124,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           : "bg-secondary/80 mr-auto max-w-[80%]",
         isVoiceMessage && "bg-primary/20"
       )}
-      aria-label={`${role === 'user' ? 'Your' : 'Assistant'} message: ${content}`}
+      aria-label={`${role === 'user' ? 'Your' : 'Assistant'} message: ${cleanedContent}`}
     >
       {isVoiceMessage && (
         <Mic className="h-4 w-4 mt-1 text-primary" aria-hidden="true" />
@@ -127,10 +134,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         {isTranscribedVoice ? (
           <>
             <p className="text-xs text-muted-foreground mb-1">Transcribed voice message:</p>
-            <p className="text-sm whitespace-pre-wrap">{content}</p>
+            <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
           </>
         ) : (
-          <p className="text-sm whitespace-pre-wrap">{content}</p>
+          <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
         )}
         
         {audioDuration && isVoiceMessage && (

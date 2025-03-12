@@ -269,8 +269,27 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
       );
       
+      // Clean up any debugging artifacts from the transcribed text
+      let displayContent = response.transcribedText || "Voice message";
+      
+      // ENHANCED: More thorough cleaning of Infinity:NaN
+      // Remove any instances with various spacing and case variations
+      displayContent = displayContent.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
+      displayContent = displayContent.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
+      displayContent = displayContent.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
+      
+      // Remove any lines that only contain variations of "Infinity:NaN"
+      displayContent = displayContent.split('\n')
+        .filter(line => !line.trim().match(/^infinity\s*:\s*nan$/i))
+        .join('\n')
+        .trim();
+      
+      // If after all cleaning we still have an empty string, use the default message
+      if (!displayContent.trim()) {
+        displayContent = "Voice message";
+      }
+      
       // Add user audio message to the UI with transcribed text if available
-      const displayContent = response.transcribedText || "Voice message";
       const newUserMessage: Message = {
         id: uuidv4(),
         content: displayContent,

@@ -4,13 +4,13 @@ import audioTranscriptionService from './AudioTranscriptionService';
 class AIService {
   private apiKey: string = '';
   private initialized: boolean = false;
-  private apiUrl: string = 'https://openrouter.ai/api/v1/chat/completions';
+  private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   private siteUrl: string = 'readiverse-haven.vercel.app';
   private siteName: string = 'Readiverse Haven';
 
   constructor() {
     // Initialize with environment variable if available
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
     if (apiKey) {
       this.initialize(apiKey);
     }
@@ -21,7 +21,7 @@ class AIService {
     try {
       this.apiKey = apiKey;
       this.initialized = true;
-      console.log('AI Service initialized with OpenRouter successfully');
+      console.log('AI Service initialized with Gemini successfully');
     } catch (error) {
       console.error('Error initializing AI service:', error);
       this.initialized = false;
@@ -33,7 +33,7 @@ class AIService {
     return this.initialized;
   }
 
-  // Generate a response from the AI using OpenRouter
+  // Generate a response from the AI using Gemini
   async generateResponse(
     sessionId: string,
     userMessage: string,
@@ -55,12 +55,14 @@ class AIService {
             console.warn('Audio transcription service not initialized, using fallback text');
           } else {
             // Transcribe the audio
-            console.log('Transcribing audio before sending to OpenRouter');
+            console.log('Transcribing audio before sending to Gemini');
             const transcription = await audioTranscriptionService.transcribeAudio(audioData);
             
             if (transcription && transcription.trim()) {
-              finalUserMessage = transcription;
-              transcribedText = transcription;
+              // ENHANCED: Additional cleaning of transcribed text to remove Infinity:NaN
+              const cleanedTranscription = this._cleanTranscribedText(transcription);
+              finalUserMessage = cleanedTranscription;
+              transcribedText = cleanedTranscription;
               console.log('Using transcribed text:', finalUserMessage);
             } else {
               console.warn('Empty transcription received, using fallback text');
@@ -72,30 +74,29 @@ class AIService {
         }
       }
       
-      // Get conversation history and format it for OpenRouter
-      const messages = await this._formatMessagesForOpenRouter(sessionId, finalUserMessage);
+      // Format messages for Gemini
+      const formattedMessages = await this._formatMessagesForGemini(sessionId, finalUserMessage);
       
       // Add the current user message to the conversation history
       conversationManager.addMessage(sessionId, 'user', finalUserMessage);
       
-      // Log the request payload for debugging
+      // Create request payload for Gemini
       const requestPayload = {
-        "model": "google/gemini-2.0-flash-001",
-        "messages": messages,
-        "temperature": 0.7,
-        "top_p": 0.95,
-        "max_tokens": 1000
+        contents: formattedMessages,
+        generation_config: {
+          temperature: 0.7,
+          top_p: 0.95,
+          top_k: 40,
+          max_output_tokens: 1000,
+        }
       };
       
-      console.log('OpenRouter request payload:', JSON.stringify(requestPayload));
+      console.log('Gemini request payload:', JSON.stringify(requestPayload));
       
-      // Make API request to OpenRouter
-      const response = await fetch(this.apiUrl, {
+      // Make API request to Gemini
+      const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.apiKey}`,
-          "HTTP-Referer": this.siteUrl,
-          "X-Title": this.siteName,
           "Content-Type": "application/json"
         },
         body: JSON.stringify(requestPayload)
@@ -103,15 +104,25 @@ class AIService {
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("OpenRouter API error:", errorData);
-        throw new Error(`OpenRouter API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        console.error("Gemini API error:", errorData);
+        throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
       }
       
       const responseData = await response.json();
-      console.log("OpenRouter response:", responseData);
+      console.log("Gemini response:", responseData);
       
       // Extract the response text
-      const responseText = responseData.choices[0].message.content;
+      let responseText = '';
+      if (responseData.candidates && 
+          responseData.candidates[0] && 
+          responseData.candidates[0].content && 
+          responseData.candidates[0].content.parts && 
+          responseData.candidates[0].content.parts[0] && 
+          responseData.candidates[0].content.parts[0].text) {
+        responseText = responseData.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('Failed to extract response from Gemini');
+      }
       
       // If response is too long, truncate it
       const finalResponse = responseText.length > 600 
@@ -133,6 +144,29 @@ class AIService {
     }
   }
   
+  // ADDED: Additional method to clean transcribed text
+  private _cleanTranscribedText(text: string): string {
+    // Remove any instances of Infinity:NaN with any spacing or case variations
+    let cleaned = text.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
+    
+    // Remove any instances at the beginning or end of the text
+    cleaned = cleaned.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
+    cleaned = cleaned.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
+    
+    // Remove any lines that only contain variations of "Infinity:NaN"
+    cleaned = cleaned.split('\n')
+      .filter(line => !line.trim().match(/^infinity\s*:\s*nan$/i))
+      .join('\n')
+      .trim();
+    
+    // Log if we still have the artifact
+    if (cleaned.match(/infinity\s*:\s*nan/gi)) {
+      console.warn('Warning: Infinity:NaN still present in AIService cleaned transcription');
+    }
+    
+    return cleaned;
+  }
+  
   // Truncate text to be under 600 characters
   private _truncateText(text: string): string {
     // Find the last sentence end before 550 characters to leave room for a question
@@ -150,49 +184,46 @@ class AIService {
     }
   }
 
-  // Format messages for OpenRouter API
-  private async _formatMessagesForOpenRouter(sessionId: string, userMessage: string): Promise<any[]> {
+  // Format messages for Gemini API
+  private async _formatMessagesForGemini(sessionId: string, userMessage: string): Promise<any[]> {
     const messages = conversationManager.getHistory(sessionId);
     const formattedMessages = [];
     
-    // Add system message first (will be handled properly by OpenRouter)
-    // This includes the current question in the format the LLM expects
+    // Create a content object for the conversation
+    let conversationText = '';
+    
+    // Add system prompt
     const systemPrompt = conversationManager.generateDynamicSystemPrompt(sessionId);
-    formattedMessages.push({
-      role: "system",
-      content: systemPrompt
-    });
+    conversationText += `System: ${systemPrompt}\n\n`;
     
     // Add conversation history
     if (messages.length > 0) {
       messages.forEach(msg => {
-        formattedMessages.push({
-          role: msg.role,
-          content: msg.content
-        });
+        const role = msg.role === 'user' ? 'User' : 'Assistant';
+        conversationText += `${role}: ${msg.content}\n\n`;
       });
     } else {
       // If there are no existing messages, we need to start with the current question
-      // This ensures the model has context about what the user is discussing
       const currentQuestion = conversationManager.getCurrentQuestion(sessionId);
-      formattedMessages.push({
-        role: "user",
-        content: `I'd like to discuss: ${currentQuestion}`
-      });
+      conversationText += `User: I'd like to discuss: ${currentQuestion}\n\n`;
     }
     
     // Add the current user message if it's not already included in the history
-    // We avoid duplicating the message if it's already in the history array
     if (userMessage && (messages.length === 0 || 
         messages[messages.length - 1].role !== 'user' || 
         messages[messages.length - 1].content !== userMessage)) {
       
-      // Regular text message
-      formattedMessages.push({
-        role: "user",
-        content: userMessage
-      });
+      conversationText += `User: ${userMessage}\n\n`;
     }
+    
+    // Add prompt for assistant response
+    conversationText += 'Assistant:';
+    
+    // Create the content object
+    formattedMessages.push({
+      role: 'user',
+      parts: [{ text: conversationText }]
+    });
     
     return formattedMessages;
   }

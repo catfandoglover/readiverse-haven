@@ -121,6 +121,25 @@ class AudioTranscriptionService {
     // Remove any markdown formatting
     cleaned = cleaned.replace(/```.*?```/gs, '').trim();
     
+    // ENHANCED: More aggressive removal of "Infinity:NaN" artifact
+    // First, remove any instances of Infinity:NaN with any spacing or case variations
+    cleaned = cleaned.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
+    
+    // Remove any lines that only contain variations of "Infinity:NaN"
+    cleaned = cleaned.split('\n')
+      .filter(line => !line.trim().match(/^infinity\s*:\s*nan$/i))
+      .join('\n')
+      .trim();
+    
+    // Remove any remaining instances that might be at the beginning or end of the text
+    cleaned = cleaned.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
+    cleaned = cleaned.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
+    
+    // Check for any remaining instances and log them for debugging
+    if (cleaned.match(/infinity\s*:\s*nan/gi)) {
+      console.warn('Warning: Infinity:NaN still present in cleaned transcription');
+    }
+    
     return cleaned;
   }
 

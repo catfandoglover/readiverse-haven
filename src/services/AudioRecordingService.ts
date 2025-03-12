@@ -90,14 +90,14 @@ class AudioRecordingService {
         
         console.log('Recording stopped, blob size:', audioBlob.size, 'bytes, type:', audioBlob.type);
         
-        // Try to convert to a more compatible format if needed
-        this._ensureCompatibleFormat(audioBlob)
+        // Process the audio blob to remove any metadata issues
+        this._processAudioBlob(audioBlob)
           .then(processedBlob => {
             console.log('Processed audio blob:', processedBlob.size, 'bytes, type:', processedBlob.type);
             resolve(processedBlob);
           })
           .catch(error => {
-            console.error('Error processing audio format:', error);
+            console.error('Error processing audio blob:', error);
             // Fall back to the original blob
             resolve(audioBlob);
           });
@@ -106,6 +106,72 @@ class AudioRecordingService {
       // Stop recording
       this.mediaRecorder.stop();
     });
+  }
+
+  // Process the audio blob to remove any metadata issues
+  private async _processAudioBlob(blob: Blob): Promise<Blob> {
+    try {
+      console.log('Processing audio blob to remove metadata issues');
+      
+      // Get the audio data as an ArrayBuffer
+      const arrayBuffer = await blob.arrayBuffer();
+      
+      // Create a new blob with just the audio data, without any metadata
+      // This should help prevent the "Infinity:NaN" issue
+      const newBlob = new Blob([arrayBuffer], { 
+        type: blob.type 
+      });
+      
+      // For debugging: Check if the blob size changed
+      if (newBlob.size !== blob.size) {
+        console.log(`Blob size changed: ${blob.size} -> ${newBlob.size} bytes`);
+      }
+      
+      // Additional step: Try to create an audio element to validate the blob
+      try {
+        const audioUrl = URL.createObjectURL(newBlob);
+        const audio = new Audio();
+        
+        // Set up a promise to check if the audio can be loaded
+        const canLoadAudio = new Promise<boolean>((resolve) => {
+          audio.onloadedmetadata = () => {
+            // Check if duration is valid (not Infinity or NaN)
+            const hasValidDuration = isFinite(audio.duration) && !isNaN(audio.duration);
+            console.log(`Audio duration: ${audio.duration}${hasValidDuration ? ' (valid)' : ' (invalid)'}`);
+            resolve(hasValidDuration);
+          };
+          
+          audio.onerror = () => {
+            console.error('Error loading audio from processed blob');
+            resolve(false);
+          };
+          
+          // Set a timeout in case the metadata never loads
+          setTimeout(() => resolve(false), 1000);
+        });
+        
+        audio.src = audioUrl;
+        
+        // Wait for the audio to load or timeout
+        const isValid = await canLoadAudio;
+        
+        // Clean up
+        URL.revokeObjectURL(audioUrl);
+        
+        if (!isValid) {
+          console.warn('Processed audio blob has invalid duration, using original blob');
+          return blob;
+        }
+      } catch (error) {
+        console.error('Error validating processed audio blob:', error);
+        // Continue with the new blob anyway
+      }
+      
+      return newBlob;
+    } catch (error) {
+      console.error('Error processing audio blob:', error);
+      return blob;
+    }
   }
 
   // Ensure the audio is in a compatible format
