@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -132,26 +131,11 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
-    // Only process section 3 initially
-    console.log('Starting analysis for section 3...');
-    const section3 = await generateAnalysis(answers_json, 3);
-    
-    // If section 3 has valid content, store only that
-    if (section3.content && !section3.content.error) {
-      console.log('Successfully generated section 3 analysis');
-      return {
-        sections: [
-          { analysis: {}, raw_response: null },
-          { analysis: {}, raw_response: null },
-          { analysis: section3.content, raw_response: section3.raw_response }
-        ]
-      };
-    }
-    
-    // Fallback: process all sections if section 3 failed
-    console.log('Section 3 failed, processing all sections as fallback...');
+    // Process all three sections
+    console.log('Starting analysis for all sections...');
     const section1 = await generateAnalysis(answers_json, 1);
     const section2 = await generateAnalysis(answers_json, 2);
+    const section3 = await generateAnalysis(answers_json, 3);
     
     return {
       sections: [
