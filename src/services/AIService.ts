@@ -59,10 +59,8 @@ class AIService {
             const transcription = await audioTranscriptionService.transcribeAudio(audioData);
             
             if (transcription && transcription.trim()) {
-              // ENHANCED: Additional cleaning of transcribed text to remove Infinity:NaN
-              const cleanedTranscription = this._cleanTranscribedText(transcription);
-              finalUserMessage = cleanedTranscription;
-              transcribedText = cleanedTranscription;
+              finalUserMessage = transcription;
+              transcribedText = finalUserMessage;
               console.log('Using transcribed text:', finalUserMessage);
             } else {
               console.warn('Empty transcription received, using fallback text');
@@ -142,29 +140,6 @@ class AIService {
       console.error('Error generating AI response:', error);
       throw error;
     }
-  }
-  
-  // ADDED: Additional method to clean transcribed text
-  private _cleanTranscribedText(text: string): string {
-    // Remove any instances of Infinity:NaN with any spacing or case variations
-    let cleaned = text.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
-    
-    // Remove any instances at the beginning or end of the text
-    cleaned = cleaned.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
-    cleaned = cleaned.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
-    
-    // Remove any lines that only contain variations of "Infinity:NaN"
-    cleaned = cleaned.split('\n')
-      .filter(line => !line.trim().match(/^infinity\s*:\s*nan$/i))
-      .join('\n')
-      .trim();
-    
-    // Log if we still have the artifact
-    if (cleaned.match(/infinity\s*:\s*nan/gi)) {
-      console.warn('Warning: Infinity:NaN still present in AIService cleaned transcription');
-    }
-    
-    return cleaned;
   }
   
   // Truncate text to be under 600 characters

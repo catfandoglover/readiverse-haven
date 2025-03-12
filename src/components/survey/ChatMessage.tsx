@@ -24,13 +24,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const hasAutoPlayedRef = useRef(false);
   const isVoiceMessage = role === 'user' && audioUrl && (content === 'Voice message' || content.length > 0);
 
-  // Clean up any debugging artifacts from the content
-  // ENHANCED: More thorough cleaning to handle all variations of Infinity:NaN
-  let cleanedContent = content;
-  cleanedContent = cleanedContent.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
-  cleanedContent = cleanedContent.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
-  cleanedContent = cleanedContent.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
-  
+  const cleanedContent = content;
+
   // Create audio element when audioUrl is available
   useEffect(() => {
     if (audioUrl && !audioRef.current) {
@@ -140,11 +135,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
         )}
         
-        {audioDuration && isVoiceMessage && (
-          <span className="text-xs text-muted-foreground mt-1 block">
-            {formatDuration(audioDuration)}
-          </span>
-        )}
       </div>
       
       {audioUrl && (

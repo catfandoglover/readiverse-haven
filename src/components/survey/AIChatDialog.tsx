@@ -162,6 +162,14 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   // Handle text message submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // If recording is in progress, stop and send the audio
+    if (isRecording) {
+      await stopAndProcessRecording();
+      return;
+    }
+    
+    // Otherwise, process text message as usual
     if (!inputMessage.trim() || isProcessing) return;
     
     const userMessage = inputMessage.trim();
@@ -182,16 +190,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   // Handle voice recording
   const toggleRecording = async () => {
     if (isRecording) {
-      // Stop recording
-      setIsRecording(false);
-      try {
-        const audioBlob = await audioRecordingService.stopRecording();
-        
-        // Process the audio with AI
-        await processAudio(audioBlob);
-      } catch (error) {
-        console.error('Error stopping recording:', error);
-      }
+      // Stop recording and process the audio
+      await stopAndProcessRecording();
     } else {
       // Start recording
       try {
@@ -200,6 +200,19 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       } catch (error) {
         console.error('Error starting recording:', error);
       }
+    }
+  };
+  
+  // Helper function to stop recording and process the audio
+  const stopAndProcessRecording = async () => {
+    setIsRecording(false);
+    try {
+      const audioBlob = await audioRecordingService.stopRecording();
+      
+      // Process the audio with AI
+      await processAudio(audioBlob);
+    } catch (error) {
+      console.error('Error stopping recording:', error);
     }
   };
 
@@ -272,22 +285,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Clean up any debugging artifacts from the transcribed text
       let displayContent = response.transcribedText || "Voice message";
       
-      // ENHANCED: More thorough cleaning of Infinity:NaN
-      // Remove any instances with various spacing and case variations
-      displayContent = displayContent.replace(/\s*infinity\s*:\s*nan\s*/gi, '').trim();
-      displayContent = displayContent.replace(/^infinity\s*:\s*nan\s*/gi, '').trim();
-      displayContent = displayContent.replace(/\s*infinity\s*:\s*nan$/gi, '').trim();
-      
-      // Remove any lines that only contain variations of "Infinity:NaN"
-      displayContent = displayContent.split('\n')
-        .filter(line => !line.trim().match(/^infinity\s*:\s*nan$/i))
-        .join('\n')
-        .trim();
-      
-      // If after all cleaning we still have an empty string, use the default message
-      if (!displayContent.trim()) {
-        displayContent = "Voice message";
-      }
+      // Log the final clean result for debugging
+      console.log('Final cleaned transcription:', displayContent);
       
       // Add user audio message to the UI with transcribed text if available
       const newUserMessage: Message = {
@@ -354,7 +353,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]" aria-describedby="chat-description">
         <DialogHeader>
-          <DialogTitle>AI Assistant</DialogTitle>
+          <DialogTitle>Discuss with Virgil</DialogTitle>
           <div id="chat-description" className="sr-only">Chat with an AI assistant about this question.</div>
         </DialogHeader>
         <div className="flex flex-col h-[400px]">
@@ -385,9 +384,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask about this question..."
+              placeholder={isRecording ? "Recording..." : "Ask about this question..."}
               className="flex-1"
-              disabled={isProcessing}
+              disabled={isProcessing || isRecording}
             />
             <Button 
               type="button" 
@@ -407,8 +406,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             <Button 
               type="submit" 
               size="icon"
-              disabled={!inputMessage.trim() || isProcessing}
-              aria-label="Send message"
+              disabled={(!inputMessage.trim() && !isRecording) || isProcessing}
+              aria-label={isRecording ? "Send recording" : "Send message"}
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
