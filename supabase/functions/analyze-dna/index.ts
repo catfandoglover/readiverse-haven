@@ -32,16 +32,14 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         messages: [
           {
             role: 'system',
-            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always return your response as a valid JSON object with the exact field names specified in the template.'
+            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Always return your response as a valid JSON object with the exact field names specified in the template. Do not include markdown formatting, backticks, or code blocks in your response - just plain JSON.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        // Add a max_tokens parameter to ensure complete responses
         max_tokens: 4000,
-        // Reduce temperature for more stable, predictable outputs
         temperature: 0.7
       })
     });
@@ -57,35 +55,57 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       throw new Error('Invalid API response structure');
     }
 
-    const rawContent = data.choices[0].message.content;
+    let rawContent = data.choices[0].message.content;
     console.log('Raw AI response for section', section, ':', rawContent);
     
-    // Improved JSON parsing with error handling
+    // Try multiple approaches to extract and parse the JSON
     let parsedContent: Record<string, string>;
+    
     try {
-      // First attempt: direct parsing
-      parsedContent = JSON.parse(rawContent);
-    } catch (e) {
-      console.error('Error parsing JSON response:', e);
-      console.error('Raw content:', rawContent);
+      // First attempt: Clean markdown formatting before parsing
+      // Remove markdown code blocks, backticks, etc.
+      const cleanedContent = rawContent
+        .replace(/```json\n?/g, '')  // Remove opening ```json
+        .replace(/```\n?/g, '')      // Remove closing ```
+        .replace(/^```\s*\n/gm, '')  // Remove any other markdown code markers
+        .replace(/\n```\s*$/gm, '')  // Remove trailing code markers
+        .trim();                     // Clean up whitespace
       
-      // Second attempt: Try to sanitize common JSON issues
+      parsedContent = JSON.parse(cleanedContent);
+      console.log('Successfully parsed JSON after cleaning markdown formatting');
+    } 
+    catch (e) {
+      console.error('First parsing attempt failed:', e);
+      
       try {
-        // Remove any trailing commas that might be causing issues
-        const sanitized = rawContent.replace(/,\s*}/g, '}').replace(/,\s*\]/g, ']');
+        // Second attempt: Try to sanitize common JSON issues
+        const sanitized = rawContent
+          .replace(/```json\n?/g, '')  // Remove opening ```json
+          .replace(/```\n?/g, '')      // Remove closing ```
+          .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
+          .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
+          .trim();
+        
         parsedContent = JSON.parse(sanitized);
-      } catch (e2) {
+        console.log('Successfully parsed JSON after sanitizing');
+      } 
+      catch (e2) {
         console.error('Second parsing attempt failed:', e2);
         
-        // Third attempt: Try to extract JSON using regex
         try {
-          const match = rawContent.match(/\{[\s\S]*\}/);
+          // Third attempt: Try to extract JSON using regex
+          const jsonPattern = /\{[\s\S]*\}/; // Match anything between { and }
+          const match = rawContent.match(jsonPattern);
+          
           if (match) {
-            parsedContent = JSON.parse(match[0]);
+            const extractedJson = match[0];
+            parsedContent = JSON.parse(extractedJson);
+            console.log('Successfully parsed JSON using regex extraction');
           } else {
             throw new Error('No JSON object found in response');
           }
-        } catch (e3) {
+        } 
+        catch (e3) {
           console.error('All parsing attempts failed');
           
           // Create a fallback response with error information
