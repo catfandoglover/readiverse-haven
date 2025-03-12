@@ -77,6 +77,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   const prompt = getPromptForSection(section, answers_json);
 
   try {
+    console.log(`Sending request to OpenRouter for section ${section}`);
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {

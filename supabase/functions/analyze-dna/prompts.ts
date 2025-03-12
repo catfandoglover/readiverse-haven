@@ -1,3 +1,4 @@
+
 export function getPromptForSection(section: number, answers_json: string): string {
     const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
   Answer requirements:
@@ -936,21 +937,21 @@ export function getPromptForSection(section: number, answers_json: string): stri
     "politics_kindred_spirit_5": "Fifth politics kindred thinker",
     "politics_kindred_spirit_5_classic": "Work title (date)",
     "politics_kindred_spirit_5_rationale": "Resonance explanation",
-    "politics_challenging_voice_1": "First politics challenging thinker",
-    "politics_challenging_voice_1_classic": "Work title (date)",
-    "politics_challenging_voice_1_rationale": "Challenge explanation",
-    "politics_challenging_voice_2": "Second politics challenging thinker",
-    "politics_challenging_voice_2_classic": "Work title (date)",
-    "politics_challenging_voice_2_rationale": "Challenge explanation",
-    "politics_challenging_voice_3": "Third politics challenging thinker",
-    "politics_challenging_voice_3_classic": "Work title (date)",
-    "politics_challenging_voice_3_rationale": "Challenge explanation",
-    "politics_challenging_voice_4": "Fourth politics challenging thinker",
-    "politics_challenging_voice_4_classic": "Work title (date)",
-    "politics_challenging_voice_4_rationale": "Challenge explanation",
-    "politics_challenging_voice_5": "Fifth politics challenging thinker",
-    "politics_challenging_voice_5_classic": "Work title (date)",
-    "politics_challenging_voice_5_rationale": "Challenge explanation"
+    "politics_challenging_voice_1": "First politics challenging thinker - Name only without quotes",
+    "politics_challenging_voice_1_classic": "Work title (date) - Format as: Title (Year) without quotes",
+    "politics_challenging_voice_1_rationale": "Brief explanation of how this thinker challenges your political views",
+    "politics_challenging_voice_2": "Second politics challenging thinker - Name only without quotes",
+    "politics_challenging_voice_2_classic": "Work title (date) - Format as: Title (Year) without quotes",
+    "politics_challenging_voice_2_rationale": "Brief explanation of how this thinker challenges your political views",
+    "politics_challenging_voice_3": "Third politics challenging thinker - Name only without quotes",
+    "politics_challenging_voice_3_classic": "Work title (date) - Format as: Title (Year) without quotes",
+    "politics_challenging_voice_3_rationale": "Brief explanation of how this thinker challenges your political views",
+    "politics_challenging_voice_4": "Fourth politics challenging thinker - Name only without quotes",
+    "politics_challenging_voice_4_classic": "Work title (date) - Format as: Title (Year) without quotes",
+    "politics_challenging_voice_4_rationale": "Brief explanation of how this thinker challenges your political views",
+    "politics_challenging_voice_5": "Fifth politics challenging thinker - Name only without quotes",
+    "politics_challenging_voice_5_classic": "Work title (date) - Format as: Title (Year) without quotes",
+    "politics_challenging_voice_5_rationale": "Brief explanation of how this thinker challenges your political views"
   }`;
   
       case 3:
