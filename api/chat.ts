@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Get the message data from the request body
-    const { messages, sessionId, userMessage } = req.body;
+    const { messages, sessionId, userMessage, generation_config } = req.body;
     if (!messages) {
       return res.status(400).json({ error: 'Missing message data' });
     }
@@ -26,13 +26,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Create request payload for Gemini
     const requestPayload = {
       contents: messages,
-      generation_config: req.body.generation_config || {
+      generation_config: generation_config || {
         temperature: 0.7,
         top_p: 0.95,
         top_k: 40,
         max_output_tokens: 1000,
       }
     };
+
+    console.log('Sending request to Gemini API:', JSON.stringify(requestPayload, null, 2).substring(0, 500) + '...');
 
     // Make API request to Gemini
     const response = await fetch(`${apiUrl}?key=${apiKey}`, {
@@ -50,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         // Try to parse as JSON first
         const errorData = await errorClone.json();
-        console.error(`Gemini API error (${response.status}):`, errorData);
+        console.error(`Gemini API error (${response.status}):`, JSON.stringify(errorData));
         return res.status(response.status).json({ 
           error: `Gemini API returned ${response.status}`, 
           details: errorData 
@@ -66,8 +68,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Need to clone the response before reading it
-    const responseData = await response.clone().json();
+    // Parse the response
+    const responseData = await response.json();
+    console.log('Received response from Gemini API:', JSON.stringify(responseData, null, 2).substring(0, 500) + '...');
 
     // Extract the response text
     if (responseData.candidates && 
@@ -80,13 +83,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const text = responseData.candidates[0].content.parts[0].text;
       return res.status(200).json({ text });
     } else {
-      return res.status(500).json({ error: 'Failed to extract response from Gemini' });
+      console.error('Failed to extract response from Gemini:', JSON.stringify(responseData));
+      return res.status(500).json({ 
+        error: 'Failed to extract response from Gemini',
+        details: responseData
+      });
     }
   } catch (error) {
     console.error('Error generating chat response:', error);
     return res.status(500).json({ 
       error: 'Internal server error', 
-      details: error.message || 'Unknown error' 
+      details: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
 }

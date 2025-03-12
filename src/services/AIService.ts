@@ -78,7 +78,7 @@ class AIService {
         }
       };
       
-      console.log('Request payload:', JSON.stringify(requestPayload));
+      console.log('Request payload:', JSON.stringify(requestPayload, null, 2).substring(0, 500) + '...');
       
       // Make API request to our serverless function
       const response = await fetch(this.apiEndpoint, {
@@ -101,13 +101,13 @@ class AIService {
           // If we can't parse the error as JSON, try to get it as text
           const errorText = await response.text();
           console.error("Chat API error text:", errorText);
-          errorMessage += `: ${errorText.substring(0, 100)}...`;
+          errorMessage += `: ${errorText}`;
         }
         throw new Error(errorMessage);
       }
       
-      // Clone the response before reading the JSON
-      const responseData = await response.clone().json();
+      // Parse the response JSON
+      const responseData = await response.json();
       console.log("Chat response:", responseData);
       
       // Extract the response text
@@ -156,14 +156,13 @@ class AIService {
   // Format messages for Gemini API
   private async _formatMessagesForGemini(sessionId: string, userMessage: string): Promise<any[]> {
     const messages = conversationManager.getHistory(sessionId);
-    const formattedMessages = [];
     
     // Create a content object for the conversation
     let conversationText = '';
     
     // Add system prompt
     const systemPrompt = conversationManager.generateDynamicSystemPrompt(sessionId);
-    conversationText += `System: ${systemPrompt}\n\n`;
+    conversationText += `System: \n${systemPrompt}\n\n`;
     
     // Add conversation history
     if (messages.length > 0) {
@@ -188,13 +187,11 @@ class AIService {
     // Add prompt for assistant response
     conversationText += 'Assistant:';
     
-    // Create the content object
-    formattedMessages.push({
+    // Create the content object - this is the format Gemini expects
+    return [{
       role: 'user',
       parts: [{ text: conversationText }]
-    });
-    
-    return formattedMessages;
+    }];
   }
 
   // Convert a blob to base64
