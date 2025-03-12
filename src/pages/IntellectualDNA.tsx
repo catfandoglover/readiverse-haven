@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
@@ -159,7 +160,7 @@ const IntellectualDNA = () => {
               UNCOVER YOUR WORLDVIEW
             </h2>
             
-            <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight">
+            <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight font-bold">
               Trace your<br />Intellectual DNA
             </h1>
             
