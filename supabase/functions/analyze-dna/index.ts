@@ -37,6 +37,26 @@ function sanitizeJsonString(str: string): string {
   });
 }
 
+function handlePoliticsChallenginVoiceFields(jsonString: string): string {
+  // Special handling for politics_challenging_voice fields which often cause issues
+  const politicsFieldPattern = /"politics_challenging_voice_(\d+)(_classic|_rationale)?"\s*:\s*"([^"]*)"/g;
+  
+  // Replace all politics fields with properly escaped versions
+  return jsonString.replace(politicsFieldPattern, (match, num, suffix, content) => {
+    // Clean the content: replace newlines with spaces, escape quotes
+    const cleanedContent = content
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/\t/g, ' ')
+      .replace(/\\"/g, '"')  // Fix already escaped quotes
+      .replace(/"/g, '\\"')  // Escape all double quotes
+      .replace(/\\\\/g, '\\'); // Fix double backslashes
+      
+    // Rebuild the field with properly escaped content
+    return `"politics_challenging_voice_${num}${suffix || ''}"` + ': ' + `"${cleanedContent}"`;
+  });
+}
+
 function repairJson(jsonString: string): string {
   try {
     // First attempt: Try to parse as-is
@@ -57,14 +77,8 @@ function repairJson(jsonString: string): string {
         .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
         .replace(/\s+/g, ' ');       // Normalize whitespace
       
-      // Fix issues with politics_challenging_voice fields specifically
-      // Look for problematic patterns in these fields
-      const politicsFieldPattern = /"politics_challenging_voice_(\d+)(_classic|_rationale)?"\s*:\s*"([^"]*)"/g;
-      result = result.replace(politicsFieldPattern, (match, num, suffix, content) => {
-        // Escape any unescaped quotes in the content
-        const sanitizedContent = content.replace(/(?<!\\)"/g, '\\"');
-        return `"politics_challenging_voice_${num}${suffix || ''}"` + ': ' + `"${sanitizedContent}"`;
-      });
+      // Apply specialized handling for politics_challenging_voice fields
+      result = handlePoliticsChallenginVoiceFields(result);
       
       // Handle unescaped quotes inside all JSON string values
       JSON.parse(result);
@@ -77,38 +91,53 @@ function repairJson(jsonString: string): string {
         // Apply sanitization to the entire JSON string
         const sanitized = sanitizeJsonString(jsonString);
         
+        // Apply specialized handling for politics_challenging_voice fields
+        const politicsSanitized = handlePoliticsChallenginVoiceFields(sanitized);
+        
         // Extract just the JSON object if needed
-        const objectMatch = sanitized.match(/(\{.*\})/s);
-        const cleanResult = objectMatch ? objectMatch[0] : sanitized;
+        const objectMatch = politicsSanitized.match(/(\{.*\})/s);
+        const cleanResult = objectMatch ? objectMatch[0] : politicsSanitized;
         
-        // For section 2, manually structure the JSON if all else fails
-        if (jsonString.includes('politics_challenging_voice')) {
-          try {
-            // Extract all key-value pairs we can find
-            const fieldPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
-            const fields: Record<string, string> = {};
-            let matches;
-            
-            while ((matches = fieldPattern.exec(cleanResult)) !== null) {
-              fields[matches[1]] = matches[2];
-            }
-            
-            // Convert back to JSON
-            if (Object.keys(fields).length > 0) {
-              return JSON.stringify(fields);
-            }
-          } catch (regexError) {
-            console.error("Regex extraction failed:", regexError);
-          }
-        }
-        
-        // Last resort: wrap in a data object to help parsing
-        return `{"data":${cleanResult}}`;
+        // Verify parsing works
+        JSON.parse(cleanResult);
+        return cleanResult;
       } catch (e) {
-        console.error("All repair attempts failed:", e);
-        // Create a minimal valid JSON as fallback
-        return '{"error":"JSON parsing failed","partial_content":"' + 
-          jsonString.substring(0, 100).replace(/"/g, '\\"') + '..."}';
+        console.error("Advanced repair attempts failed:", e);
+        
+        // Try a different approach - structure fixing
+        try {
+          // Extract all key-value pairs into a new object
+          const keyValuePattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
+          const extractedObject: Record<string, string> = {};
+          let match;
+          
+          while ((match = keyValuePattern.exec(jsonString)) !== null) {
+            const [_, key, value] = match;
+            
+            // Clean value - replace newlines and escape quotes
+            const cleanValue = value
+              .replace(/\n/g, ' ')
+              .replace(/\r/g, ' ')
+              .replace(/"/g, '\\"');
+              
+            extractedObject[key] = cleanValue;
+          }
+          
+          // If we successfully extracted fields, convert back to JSON
+          if (Object.keys(extractedObject).length > 0) {
+            console.log(`Extracted ${Object.keys(extractedObject).length} fields`);
+            return JSON.stringify(extractedObject);
+          }
+          
+          // If we get here, we couldn't fix the JSON
+          throw new Error("Failed to extract fields from JSON");
+        } catch (extractError) {
+          console.error("Field extraction failed:", extractError);
+          
+          // Last resort: create a minimal valid JSON as fallback
+          return '{"error":"JSON parsing failed","partial_content":"' + 
+            jsonString.substring(0, 100).replace(/"/g, '\\"') + '..."}';
+        }
       }
     }
   }
@@ -174,6 +203,11 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       };
     } catch (parseError) {
       console.error(`JSON parsing failed for section ${section}, attempting repairs:`, parseError.message);
+      
+      // Section-specific handling - extra care for section 2 which contains challenging fields
+      if (section === 2) {
+        console.log(`Applying extra politics_challenging_voice field handling for section ${section}`);
+      }
       
       // Second attempt: try to repair and parse
       try {
