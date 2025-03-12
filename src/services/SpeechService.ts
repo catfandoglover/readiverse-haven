@@ -49,8 +49,10 @@ class SpeechService {
 
       if (!response.ok) {
         let errorMessage = `Text-to-speech API returned ${response.status}`;
+        // Clone the response to avoid the "body stream already read" error
+        const errorClone = response.clone();
         try {
-          const errorData = await response.json();
+          const errorData = await errorClone.json();
           console.error("Text-to-speech API error:", errorData);
           errorMessage += `: ${JSON.stringify(errorData)}`;
         } catch (e) {
@@ -62,7 +64,8 @@ class SpeechService {
         throw new Error(errorMessage);
       }
 
-      const responseData = await response.json();
+      // Clone the response before reading the JSON
+      const responseData = await response.clone().json();
       
       if (responseData.audioUrl) {
         return responseData.audioUrl;

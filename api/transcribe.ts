@@ -58,15 +58,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Gemini API error:", errorData);
-      return res.status(response.status).json({ 
-        error: `Gemini API returned ${response.status}`, 
-        details: errorData 
-      });
+      // Clone the response first so we can read it multiple times if needed
+      const errorClone = response.clone();
+      try {
+        const errorData = await errorClone.json();
+        console.error("Gemini API error:", errorData);
+        return res.status(response.status).json({ 
+          error: `Gemini API returned ${response.status}`, 
+          details: errorData 
+        });
+      } catch (parseError) {
+        // If it's not valid JSON, get it as text
+        const errorText = await response.text();
+        console.error(`Gemini API error (${response.status}):`, errorText);
+        return res.status(response.status).json({ 
+          error: `Gemini API returned ${response.status}`, 
+          details: errorText.substring(0, 500) // Limit the length
+        });
+      }
     }
 
-    const responseData = await response.json();
+    // Need to clone the response before reading it
+    const responseData = await response.clone().json();
 
     // Extract the transcription text
     if (responseData.candidates && 

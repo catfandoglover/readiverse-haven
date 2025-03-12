@@ -49,8 +49,10 @@ class AudioTranscriptionService {
       
       if (!response.ok) {
         let errorMessage = `Transcription API returned ${response.status}`;
+        // Clone the response to avoid the "body stream already read" error
+        const errorClone = response.clone();
         try {
-          const errorData = await response.json();
+          const errorData = await errorClone.json();
           console.error("Transcription API error:", errorData);
           errorMessage += `: ${JSON.stringify(errorData)}`;
         } catch (e) {
@@ -62,7 +64,8 @@ class AudioTranscriptionService {
         throw new Error(errorMessage);
       }
       
-      const responseData = await response.json();
+      // Clone the response before reading the JSON
+      const responseData = await response.clone().json();
       console.log("Transcription response:", responseData);
       
       if (responseData.transcription) {

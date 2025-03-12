@@ -91,8 +91,10 @@ class AIService {
       
       if (!response.ok) {
         let errorMessage = `Chat API returned ${response.status}`;
+        // Clone the response to avoid the "body stream already read" error
+        const errorClone = response.clone();
         try {
-          const errorData = await response.json();
+          const errorData = await errorClone.json();
           console.error("Chat API error:", errorData);
           errorMessage += `: ${JSON.stringify(errorData)}`;
         } catch (e) {
@@ -104,7 +106,8 @@ class AIService {
         throw new Error(errorMessage);
       }
       
-      const responseData = await response.json();
+      // Clone the response before reading the JSON
+      const responseData = await response.clone().json();
       console.log("Chat response:", responseData);
       
       // Extract the response text
