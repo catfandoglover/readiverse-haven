@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
@@ -155,7 +156,7 @@ const IntellectualDNA = () => {
       <main className="flex-1 flex flex-col items-center justify-between p-4 max-w-lg mx-auto w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full space-y-6 py-12">
           <div className="space-y-6 text-center">
-            <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-lg">
+            <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               UNCOVER YOUR WORLDVIEW
             </h2>
             
