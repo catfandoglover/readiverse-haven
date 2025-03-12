@@ -165,7 +165,7 @@ const IntellectualDNA = () => {
             
             <button
               onClick={() => setShowNameDialog(true)}
-              className="w-11/12 mx-auto bg-[#373763] text-[#E9E7E2] rounded-lg py-4 px-12 font-oxanium uppercase tracking-wider text-sm font-bold hover:opacity-90 transition-opacity duration-200"
+              className="w-6 mx-auto bg-[#373763] text-[#E9E7E2] rounded-lg py-4 px-12 font-oxanium uppercase tracking-wider text-sm font-bold hover:opacity-90 transition-opacity duration-200"
             >
               GET STARTED
             </button>
