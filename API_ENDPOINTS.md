@@ -1,6 +1,6 @@
 # Vercel Serverless API Endpoints
 
-This project implements two serverless API endpoints to handle secure operations without exposing credentials in the client-side code:
+This project implements three serverless API endpoints to handle secure operations without exposing credentials in the client-side code:
 
 ## 1. Audio Transcription Endpoint
 
@@ -16,7 +16,21 @@ This project implements two serverless API endpoints to handle secure operations
 **Configuration**:
 - Requires `GOOGLE_GEMINI_API_KEY` in the Vercel environment variables (without the `VITE_` prefix)
 
-## 2. Text-to-Speech Endpoint
+## 2. Chat Response Endpoint
+
+**Path**: `/api/chat`
+
+**Purpose**: Securely handles AI chat interactions using Google's Gemini API
+
+**Implementation**:
+- Takes message data from the client
+- Sends it to Gemini with server-side API key
+- Returns AI-generated response text
+
+**Configuration**:
+- Requires `GOOGLE_GEMINI_API_KEY` in the Vercel environment variables (without the `VITE_` prefix)
+
+## 3. Text-to-Speech Endpoint
 
 **Path**: `/api/text-to-speech`
 
@@ -53,4 +67,5 @@ This project implements two serverless API endpoints to handle secure operations
 
 The client code has been updated to use these endpoints instead of directly calling the external APIs. Check the following files:
 - `src/services/AudioTranscriptionService.ts`
+- `src/services/AIService.ts`
 - `src/services/SpeechService.ts`
