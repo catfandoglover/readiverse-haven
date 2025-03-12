@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
@@ -179,7 +178,7 @@ const IntellectualDNA = () => {
 
         {/* Footer */}
         <div className="w-full text-center pb-4">
-          <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm">
+          <p className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
             LIGHTNING
           </p>
         </div>
@@ -228,4 +227,3 @@ const IntellectualDNA = () => {
 };
 
 export default IntellectualDNA;
-
