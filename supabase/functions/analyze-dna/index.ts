@@ -32,7 +32,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         messages: [
           {
             role: 'system',
-            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object - no markdown, no code blocks, no backticks, no formatting whatsoever. The response should start with { and end with } without any other characters before or after. Do not wrap your response in ```json or ``` tags.'
+            content: 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object - no markdown, no code blocks, no backticks, no formatting. The response should start with { and end with } without any other characters. Include all fields from the template exactly as specified.'
           },
           {
             role: 'user',
@@ -59,41 +59,11 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     console.log('Raw AI response for section', section, ':', rawContent.substring(0, 200) + '...');
     
     // Pre-process the content to remove any potential markdown or code blocks
-    // More aggressive cleaning to remove all possible markdown formatting
     let preprocessedContent = rawContent
-      .replace(/```json\s*/g, '')      // Remove opening ```json
-      .replace(/```\s*/g, '')          // Remove closing ```
-      .replace(/`/g, '')               // Remove all backticks
-      .replace(/\\\\/g, '\\')          // Replace double backslashes
-      .replace(/\\"/g, '"')            // Replace escaped quotes
-      .replace(/\n/g, ' ')             // Replace newlines with spaces
-      .trim();                         // Clean up whitespace
-
-    // Check if content starts with { and ends with }
-    if (!preprocessedContent.startsWith('{')) {
-      const firstBrace = preprocessedContent.indexOf('{');
-      if (firstBrace >= 0) {
-        preprocessedContent = preprocessedContent.substring(firstBrace);
-        console.log('Trimmed content to start with {');
-      } else {
-        console.error('No opening brace found in response');
-        throw new Error('Invalid JSON: no opening brace');
-      }
-    }
-    
-    if (!preprocessedContent.endsWith('}')) {
-      const lastBrace = preprocessedContent.lastIndexOf('}');
-      if (lastBrace >= 0) {
-        preprocessedContent = preprocessedContent.substring(0, lastBrace + 1);
-        console.log('Trimmed content to end with }');
-      } else {
-        console.error('No closing brace found in response');
-        throw new Error('Invalid JSON: no closing brace');
-      }
-    }
-    
-    console.log('Preprocessed content first 100 chars:', preprocessedContent.substring(0, 100) + '...');
-    console.log('Preprocessed content last 100 chars:', '...' + preprocessedContent.substring(preprocessedContent.length - 100));
+      .replace(/```json\s*/g, '')  // Remove opening ```json
+      .replace(/```\s*/g, '')      // Remove closing ```
+      .replace(/`/g, '')           // Remove all backticks
+      .trim();                     // Clean up whitespace
     
     // Try multiple approaches to extract and parse the JSON
     let parsedContent: Record<string, string>;
