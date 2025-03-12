@@ -10,6 +10,13 @@ class SpeechService {
   private textType: string = 'text';
 
   constructor() {
+    // Add debugging to check environment variables
+    console.log('AWS Config:', {
+      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+      hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+      hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    });
+    
     // Initialize Polly client with AWS config from environment variables
     this.polly = new PollyClient({
       region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
@@ -40,15 +47,24 @@ class SpeechService {
         Engine: 'neural'
       };
 
+      console.log('Attempting to get Polly URL with params:', speechParams);
+      
       // Get presigned URL for the speech
       const url = await getSynthesizeSpeechUrl({
         client: this.polly,
         params: speechParams
       });
 
+      console.log('Successfully got Polly URL:', url);
       return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       throw error;
     }
   }
