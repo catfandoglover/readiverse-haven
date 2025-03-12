@@ -28,6 +28,15 @@ function cleanJsonContent(content: string): string {
   return jsonMatch ? jsonMatch[0] : cleaned;
 }
 
+function sanitizeJsonString(str: string): string {
+  // Escape all unescaped double quotes within JSON string values
+  // This regex looks for string values and properly escapes quotes inside them
+  return str.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, function(match, p1) {
+    // Replace any unescaped quotes inside the string value
+    return '"' + p1.replace(/"/g, '\\"') + '"';
+  });
+}
+
 function repairJson(jsonString: string): string {
   try {
     // First attempt: Try to parse as-is
@@ -36,38 +45,71 @@ function repairJson(jsonString: string): string {
   } catch (e) {
     console.log("Initial JSON parsing failed, attempting repairs");
     
-    // Apply repairs to make the JSON valid
-    let result = jsonString
-      .replace(/\n/g, ' ')         // Replace newlines with spaces
-      .replace(/\r/g, ' ')         // Replace carriage returns
-      .replace(/\t/g, ' ')         // Replace tabs
-      .replace(/\\'/g, "'")        // Fix escaped single quotes
-      .replace(/\\\\/g, '\\')      // Fix double backslashes
-      .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
-      .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
-      .replace(/\s+/g, ' ');       // Normalize whitespace
-    
-    // Handle unescaped quotes inside JSON string values
-    // This is a common source of JSON parsing errors
     try {
+      // Apply basic repairs to make the JSON valid
+      let result = jsonString
+        .replace(/\n/g, ' ')         // Replace newlines with spaces
+        .replace(/\r/g, ' ')         // Replace carriage returns
+        .replace(/\t/g, ' ')         // Replace tabs
+        .replace(/\\'/g, "'")        // Fix escaped single quotes
+        .replace(/\\\\/g, '\\')      // Fix double backslashes
+        .replace(/,\s*}/g, '}')      // Remove trailing commas in objects
+        .replace(/,\s*\]/g, ']')     // Remove trailing commas in arrays
+        .replace(/\s+/g, ' ');       // Normalize whitespace
+      
+      // Fix issues with politics_challenging_voice fields specifically
+      // Look for problematic patterns in these fields
+      const politicsFieldPattern = /"politics_challenging_voice_(\d+)(_classic|_rationale)?"\s*:\s*"([^"]*)"/g;
+      result = result.replace(politicsFieldPattern, (match, num, suffix, content) => {
+        // Escape any unescaped quotes in the content
+        const sanitizedContent = content.replace(/(?<!\\)"/g, '\\"');
+        return `"politics_challenging_voice_${num}${suffix || ''}"` + ': ' + `"${sanitizedContent}"`;
+      });
+      
+      // Handle unescaped quotes inside all JSON string values
       JSON.parse(result);
       return result;
     } catch (e) {
       console.log("First repair attempt failed, trying more aggressive repairs");
       
       // More aggressive repairs
-      // Extract just the JSON object
-      const objectMatch = result.match(/(\{.*\})/s);
-      if (objectMatch) {
-        result = objectMatch[0];
+      try {
+        // Apply sanitization to the entire JSON string
+        const sanitized = sanitizeJsonString(jsonString);
+        
+        // Extract just the JSON object if needed
+        const objectMatch = sanitized.match(/(\{.*\})/s);
+        const cleanResult = objectMatch ? objectMatch[0] : sanitized;
+        
+        // For section 2, manually structure the JSON if all else fails
+        if (jsonString.includes('politics_challenging_voice')) {
+          try {
+            // Extract all key-value pairs we can find
+            const fieldPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
+            const fields: Record<string, string> = {};
+            let matches;
+            
+            while ((matches = fieldPattern.exec(cleanResult)) !== null) {
+              fields[matches[1]] = matches[2];
+            }
+            
+            // Convert back to JSON
+            if (Object.keys(fields).length > 0) {
+              return JSON.stringify(fields);
+            }
+          } catch (regexError) {
+            console.error("Regex extraction failed:", regexError);
+          }
+        }
+        
+        // Last resort: wrap in a data object to help parsing
+        return `{"data":${cleanResult}}`;
+      } catch (e) {
+        console.error("All repair attempts failed:", e);
+        // Create a minimal valid JSON as fallback
+        return '{"error":"JSON parsing failed","partial_content":"' + 
+          jsonString.substring(0, 100).replace(/"/g, '\\"') + '..."}';
       }
-      
-      // Last resort: attempt to fix unescaped quotes
-      result = result
-        .replace(/([^\\])"/g, '$1\\"')  // Escape unescaped quotes
-        .replace(/\\\\\"/g, '\\"');     // Fix double-escaped quotes
-      
-      return `{"data":${result}}`;  // Wrap in a data object to help parsing
     }
   }
 }
@@ -154,7 +196,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         console.error(`JSON repair failed for section ${section}:`, repairError.message);
         
         // Third attempt: extract fields using regex as a last resort
-        const fieldPattern = /"([^"]+)":\s*"([^"]*)"/g;
+        const fieldPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
         const fields: Record<string, string> = {};
         let matches;
         
