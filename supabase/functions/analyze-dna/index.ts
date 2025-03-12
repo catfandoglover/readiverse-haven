@@ -162,44 +162,28 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
 
 async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
-    // Process only the third section which is the complete one
-    console.log('Starting analysis for section 3 (complete entry)...');
+    // Process each section individually and collect responses
+    console.log('Starting analysis for section 1...');
+    const section1 = await generateAnalysis(answers_json, 1);
+    
+    console.log('Starting analysis for section 2...');
+    const section2 = await generateAnalysis(answers_json, 2);
+    
+    console.log('Starting analysis for section 3...');
     const section3 = await generateAnalysis(answers_json, 3);
     
-    // Check if section 3 was successful
-    const hasErrors = section3.content.error !== undefined;
+    // Check if any section had errors
+    const hasErrors = [section1, section2, section3].some(section => section.content.error);
     
     if (hasErrors) {
-      console.warn('Section 3 had errors, falling back to full processing...');
-      
-      // If section 3 failed, try processing all sections as a fallback
-      console.log('Starting analysis for section 1...');
-      const section1 = await generateAnalysis(answers_json, 1);
-      
-      console.log('Starting analysis for section 2...');
-      const section2 = await generateAnalysis(answers_json, 2);
-      
-      // Try section 3 again if it failed
-      console.log('Retrying analysis for section 3...');
-      const retrySection3 = await generateAnalysis(answers_json, 3);
-      
-      return {
-        sections: [
-          { analysis: section1.content, raw_response: section1.raw_response },
-          { analysis: section2.content, raw_response: section2.raw_response },
-          { analysis: retrySection3.content, raw_response: retrySection3.raw_response }
-        ]
-      };
+      console.warn('Some sections had errors, but proceeding with available data');
     }
     
-    // If section 3 succeeded, return only section 3 (as the third element)
-    // but with placeholder empty objects for sections 1 and 2
-    console.log('Section 3 completed successfully, using only this section');
     return {
       sections: [
-        { analysis: {}, raw_response: {} },  // Empty placeholder for section 1
-        { analysis: {}, raw_response: {} },  // Empty placeholder for section 2
-        { analysis: section3.content, raw_response: section3.raw_response }  // Complete section 3
+        { analysis: section1.content, raw_response: section1.raw_response },
+        { analysis: section2.content, raw_response: section2.raw_response },
+        { analysis: section3.content, raw_response: section3.raw_response }
       ]
     };
   } catch (error) {
@@ -262,18 +246,46 @@ serve(async (req) => {
       
       const { sections } = result;
       
-      // Extract only section 3 (the complete one)
-      const completeSection = sections[2]; // Section 3 is at index 2
+      // Filter out any error fields from the analysis content
+      const filteredSections = sections.map(section => {
+        const filteredAnalysis = { ...section.analysis };
+        if ('error' in filteredAnalysis) {
+          delete filteredAnalysis.error;
+        }
+        if ('status' in filteredAnalysis) {
+          delete filteredAnalysis.status;
+        }
+        if ('section' in filteredAnalysis) {
+          delete filteredAnalysis.section;
+        }
+        if ('partial_content' in filteredAnalysis) {
+          delete filteredAnalysis.partial_content;
+        }
+        return {
+          analysis: filteredAnalysis,
+          raw_response: section.raw_response
+        };
+      });
       
-      // Combine all data into a single record, using only the complete section
+      console.log('Successfully processed all sections');
+      
+      // Count valid fields in each section to log success rate
+      filteredSections.forEach((section, index) => {
+        const fieldCount = Object.keys(section.analysis).length;
+        console.log(`Section ${index + 1} contains ${fieldCount} valid fields`);
+      });
+      
+      // Combine all sections into a single record
       const combinedAnalysis = {
         assessment_id,
         name: assessmentData.name,
         profile_image_url,
-        raw_response: [completeSection.raw_response],  // Include only the raw response from section 3
-        analysis_text: JSON.stringify([completeSection.analysis]), // Include only the analysis from section 3
-        analysis_type: 'section_3', // Changed to indicate we're using only section 3
-        ...completeSection.analysis,  // Include all fields from the complete section
+        raw_response: filteredSections.map(s => s.raw_response),
+        analysis_text: JSON.stringify(filteredSections.map(s => s.analysis)),
+        analysis_type: 'section_1', // Using a valid enum value from dna_result_type
+        ...filteredSections[0].analysis, // General profile
+        ...filteredSections[1].analysis, // Theology, Epistemology, Ethics, Politics
+        ...filteredSections[2].analysis  // Ontology and Aesthetics
       };
 
       // Store everything in a single record
