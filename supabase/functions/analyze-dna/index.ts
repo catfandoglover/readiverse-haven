@@ -160,51 +160,36 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ section3: { analysis: Record<string, string>, raw_response: any }, error?: string }> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
-    // Process only section 3 initially, which contains the complete analysis
-    console.log('Starting analysis for section 3 (complete analysis)...');
+    // Process each section individually and collect responses
+    console.log('Starting analysis for section 1...');
+    const section1 = await generateAnalysis(answers_json, 1);
+    
+    console.log('Starting analysis for section 2...');
+    const section2 = await generateAnalysis(answers_json, 2);
+    
+    console.log('Starting analysis for section 3...');
     const section3 = await generateAnalysis(answers_json, 3);
     
-    // Check if section 3 had errors
-    if (section3.content.error) {
-      console.warn('Section 3 had errors, falling back to processing all sections');
-      
-      // Fallback to processing all sections
-      console.log('Starting analysis for section 1...');
-      const section1 = await generateAnalysis(answers_json, 1);
-      
-      console.log('Starting analysis for section 2...');
-      const section2 = await generateAnalysis(answers_json, 2);
-
-      // Re-attempt section 3
-      console.log('Re-attempting analysis for section 3...');
-      const retrySection3 = await generateAnalysis(answers_json, 3);
-      
-      return {
-        section3: { 
-          analysis: retrySection3.content,
-          raw_response: retrySection3.raw_response 
-        }
-      };
+    // Check if any section had errors
+    const hasErrors = [section1, section2, section3].some(section => section.content.error);
+    
+    if (hasErrors) {
+      console.warn('Some sections had errors, but proceeding with available data');
     }
     
     return {
-      section3: { 
-        analysis: section3.content,
-        raw_response: section3.raw_response 
-      }
+      sections: [
+        { analysis: section1.content, raw_response: section1.raw_response },
+        { analysis: section2.content, raw_response: section2.raw_response },
+        { analysis: section3.content, raw_response: section3.raw_response }
+      ]
     };
   } catch (error) {
     console.error('Error in generateCompleteAnalysis:', error);
     return {
-      section3: {
-        analysis: {
-          error: `Failed to generate section 3 analysis: ${error.message}`,
-          status: 'failed'
-        },
-        raw_response: { error: error.message }
-      },
+      sections: [],
       error: `Failed to generate analysis: ${error.message}`
     };
   }
@@ -259,38 +244,48 @@ serve(async (req) => {
         );
       }
       
-      const { section3 } = result;
+      const { sections } = result;
       
       // Filter out any error fields from the analysis content
-      const filteredAnalysis = { ...section3.analysis };
-      if ('error' in filteredAnalysis) {
-        delete filteredAnalysis.error;
-      }
-      if ('status' in filteredAnalysis) {
-        delete filteredAnalysis.status;
-      }
-      if ('section' in filteredAnalysis) {
-        delete filteredAnalysis.section;
-      }
-      if ('partial_content' in filteredAnalysis) {
-        delete filteredAnalysis.partial_content;
-      }
+      const filteredSections = sections.map(section => {
+        const filteredAnalysis = { ...section.analysis };
+        if ('error' in filteredAnalysis) {
+          delete filteredAnalysis.error;
+        }
+        if ('status' in filteredAnalysis) {
+          delete filteredAnalysis.status;
+        }
+        if ('section' in filteredAnalysis) {
+          delete filteredAnalysis.section;
+        }
+        if ('partial_content' in filteredAnalysis) {
+          delete filteredAnalysis.partial_content;
+        }
+        return {
+          analysis: filteredAnalysis,
+          raw_response: section.raw_response
+        };
+      });
       
-      console.log('Successfully processed section 3');
+      console.log('Successfully processed all sections');
       
-      // Count valid fields to log success rate
-      const fieldCount = Object.keys(filteredAnalysis).length;
-      console.log(`Section 3 contains ${fieldCount} valid fields`);
+      // Count valid fields in each section to log success rate
+      filteredSections.forEach((section, index) => {
+        const fieldCount = Object.keys(section.analysis).length;
+        console.log(`Section ${index + 1} contains ${fieldCount} valid fields`);
+      });
       
-      // Store only section 3 results
+      // Combine all sections into a single record
       const combinedAnalysis = {
         assessment_id,
         name: assessmentData.name,
         profile_image_url,
-        raw_response: [section3.raw_response], // Store only section 3 raw response
-        analysis_text: JSON.stringify([filteredAnalysis]), // Store only section 3 analysis
-        analysis_type: 'section_3', // Explicitly mark as section 3
-        ...filteredAnalysis // Include all fields from section 3
+        raw_response: filteredSections.map(s => s.raw_response),
+        analysis_text: JSON.stringify(filteredSections.map(s => s.analysis)),
+        analysis_type: 'section_1', // Using a valid enum value from dna_result_type
+        ...filteredSections[0].analysis, // General profile
+        ...filteredSections[1].analysis, // Theology, Epistemology, Ethics, Politics
+        ...filteredSections[2].analysis  // Ontology and Aesthetics
       };
 
       // Store everything in a single record
@@ -300,7 +295,7 @@ serve(async (req) => {
         .insert(combinedAnalysis);
 
       if (storeError) {
-        console.error('Error storing analysis:', storeError);
+        console.error('Error storing combined analysis:', storeError);
         throw storeError;
       }
       
