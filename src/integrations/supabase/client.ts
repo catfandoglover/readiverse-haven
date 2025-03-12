@@ -9,3 +9,19 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Function to create a Supabase client with a custom JWT token
+export const createSupabaseClient = (jwt?: string) => {
+  if (jwt) {
+    // Create a new client with the custom JWT
+    return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      },
+    });
+  }
+  // Return the default client if no JWT is provided
+  return supabase;
+};
