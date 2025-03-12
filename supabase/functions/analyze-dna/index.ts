@@ -208,6 +208,33 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ section
   }
 }
 
+async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
+  try {
+    console.log(`Checking if analysis already exists for assessment ${assessment_id}`);
+    
+    const { data, error, count } = await supabase
+      .from('dna_analysis_results')
+      .select('id', { count: 'exact' })
+      .eq('assessment_id', assessment_id);
+      
+    if (error) {
+      console.error('Error checking for existing analysis:', error);
+      return false;
+    }
+    
+    if (count && count > 0) {
+      console.log(`Analysis already exists for assessment ${assessment_id}`);
+      return true;
+    }
+    
+    console.log(`No existing analysis found for assessment ${assessment_id}`);
+    return false;
+  } catch (error) {
+    console.error('Error in checkExistingAnalysis:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -222,6 +249,25 @@ serve(async (req) => {
       }
 
       console.log(`Processing assessment ${assessment_id}...`);
+      
+      // Check if analysis already exists for this assessment
+      const analysisExists = await checkExistingAnalysis(assessment_id);
+      
+      if (analysisExists) {
+        console.log(`Analysis already exists for assessment ${assessment_id}, skipping reprocessing`);
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Analysis already exists for this assessment' 
+          }),
+          { 
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+      }
       
       // Fetch the name from dna_assessment_results
       const { data: assessmentData, error: assessmentError } = await supabase
