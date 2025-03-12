@@ -268,7 +268,7 @@ serve(async (req) => {
         profile_image_url,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
-        analysis_type: 'comprehensive', // Changed from 'complete' to a valid enum value
+        analysis_type: 'section_1', // Changed to 'section_1' which is a valid enum value
         ...combinedAnalysis
       };
 
