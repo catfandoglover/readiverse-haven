@@ -38,7 +38,11 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
             role: 'user',
             content: prompt
           }
-        ]
+        ],
+        // Add a max_tokens parameter to ensure complete responses
+        max_tokens: 4000,
+        // Reduce temperature for more stable, predictable outputs
+        temperature: 0.7
       })
     });
 
@@ -53,16 +57,45 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       throw new Error('Invalid API response structure');
     }
 
-    console.log('Raw AI response for section', section, ':', data.choices[0].message.content);
+    const rawContent = data.choices[0].message.content;
+    console.log('Raw AI response for section', section, ':', rawContent);
     
-    // Parse the JSON response - removed sanitization since the response is already valid JSON
+    // Improved JSON parsing with error handling
     let parsedContent: Record<string, string>;
     try {
-      parsedContent = JSON.parse(data.choices[0].message.content);
+      // First attempt: direct parsing
+      parsedContent = JSON.parse(rawContent);
     } catch (e) {
       console.error('Error parsing JSON response:', e);
-      console.error('Raw content:', data.choices[0].message.content);
-      throw new Error('Invalid JSON response from AI');
+      console.error('Raw content:', rawContent);
+      
+      // Second attempt: Try to sanitize common JSON issues
+      try {
+        // Remove any trailing commas that might be causing issues
+        const sanitized = rawContent.replace(/,\s*}/g, '}').replace(/,\s*\]/g, ']');
+        parsedContent = JSON.parse(sanitized);
+      } catch (e2) {
+        console.error('Second parsing attempt failed:', e2);
+        
+        // Third attempt: Try to extract JSON using regex
+        try {
+          const match = rawContent.match(/\{[\s\S]*\}/);
+          if (match) {
+            parsedContent = JSON.parse(match[0]);
+          } else {
+            throw new Error('No JSON object found in response');
+          }
+        } catch (e3) {
+          console.error('All parsing attempts failed');
+          
+          // Create a fallback response with error information
+          parsedContent = {
+            error: 'Could not parse AI response',
+            section: `Section ${section}`,
+            partial_content: rawContent.substring(0, 500) + '...' // Include beginning of response for debugging
+          };
+        }
+      }
     }
 
     return {
@@ -71,15 +104,31 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     };
   } catch (error) {
     console.error('Error generating analysis:', error);
-    throw error;
+    
+    // Return a structured error response
+    return {
+      content: {
+        error: `Error in section ${section}: ${error.message}`,
+        section: `Section ${section}`,
+        status: 'failed'
+      },
+      raw_response: { error: error.message }
+    };
   }
 }
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }> }> {
+async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
   try {
     const section1 = await generateAnalysis(answers_json, 1);
     const section2 = await generateAnalysis(answers_json, 2);
     const section3 = await generateAnalysis(answers_json, 3);
+    
+    // Check if any section had errors
+    const hasErrors = [section1, section2, section3].some(section => section.content.error);
+    
+    if (hasErrors) {
+      console.warn('Some sections had errors, but proceeding with available data');
+    }
     
     return {
       sections: [
@@ -90,7 +139,10 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ section
     };
   } catch (error) {
     console.error('Error in generateCompleteAnalysis:', error);
-    throw error;
+    return {
+      sections: [],
+      error: `Failed to generate analysis: ${error.message}`
+    };
   }
 }
 
@@ -123,19 +175,55 @@ serve(async (req) => {
         throw new Error('Assessment not found');
       }
 
-      const { sections } = await generateCompleteAnalysis(answers_json);
+      const result = await generateCompleteAnalysis(answers_json);
+      
+      if (result.error) {
+        return new Response(
+          JSON.stringify({ success: false, error: result.error }),
+          { 
+            status: 500,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      }
+      
+      const { sections } = result;
+      
+      // Filter out any error fields from the analysis content
+      const filteredSections = sections.map(section => {
+        const filteredAnalysis = { ...section.analysis };
+        if ('error' in filteredAnalysis) {
+          delete filteredAnalysis.error;
+        }
+        if ('status' in filteredAnalysis) {
+          delete filteredAnalysis.status;
+        }
+        if ('section' in filteredAnalysis) {
+          delete filteredAnalysis.section;
+        }
+        if ('partial_content' in filteredAnalysis) {
+          delete filteredAnalysis.partial_content;
+        }
+        return {
+          analysis: filteredAnalysis,
+          raw_response: section.raw_response
+        };
+      });
       
       // Combine all sections into a single record
       const combinedAnalysis = {
         assessment_id,
         name: assessmentData.name,
         profile_image_url,
-        raw_response: sections.map(s => s.raw_response),
-        analysis_text: JSON.stringify(sections.map(s => s.analysis)),
+        raw_response: filteredSections.map(s => s.raw_response),
+        analysis_text: JSON.stringify(filteredSections.map(s => s.analysis)),
         analysis_type: 'section_1', // Using a valid enum value from dna_result_type
-        ...sections[0].analysis, // General profile
-        ...sections[1].analysis, // Theology, Epistemology, Ethics, Politics
-        ...sections[2].analysis  // Ontology and Aesthetics
+        ...filteredSections[0].analysis, // General profile
+        ...filteredSections[1].analysis, // Theology, Epistemology, Ethics, Politics
+        ...filteredSections[2].analysis  // Ontology and Aesthetics
       };
 
       // Log the combined data

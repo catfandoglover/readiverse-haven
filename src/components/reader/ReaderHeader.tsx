@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ArrowLeft } from "lucide-react";
+import { ExternalLink, ArrowLeft, MessageSquare } from "lucide-react";
 import SearchDialog from "./SearchDialog";
 import type { SearchResult } from '@/types/reader';
 
@@ -31,7 +31,22 @@ const ReaderHeader = ({
           </Button>
         )}
       </div>
-      <div className="flex-none">
+      <div className="flex-none flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9"
+          onClick={() => {
+            // Open AI chat if available
+            const chatButton = document.querySelector('[data-test-id="ai-chat-button"]');
+            if (chatButton) {
+              (chatButton as HTMLButtonElement).click();
+            }
+          }}
+          title="Chat with Virgil"
+        >
+          <MessageSquare className="h-4 w-4" />
+        </Button>
         <SearchDialog 
           onSearch={onSearch}
           onResultClick={onSearchResultClick}

@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      art: {
+        Row: {
+          about: string | null
+          art_file_url: string
+          author: string | null
+          created_at: string
+          icon_illustration: string | null
+          id: string
+          introduction: string | null
+          Notion_URL: string | null
+          randomizer: number | null
+          slug: string
+          title: string
+        }
+        Insert: {
+          about?: string | null
+          art_file_url: string
+          author?: string | null
+          created_at?: string
+          icon_illustration?: string | null
+          id?: string
+          introduction?: string | null
+          Notion_URL?: string | null
+          randomizer?: number | null
+          slug: string
+          title: string
+        }
+        Update: {
+          about?: string | null
+          art_file_url?: string
+          author?: string | null
+          created_at?: string
+          icon_illustration?: string | null
+          id?: string
+          introduction?: string | null
+          Notion_URL?: string | null
+          randomizer?: number | null
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       book_questions: {
         Row: {
           book_id: string
@@ -47,42 +89,57 @@ export type Database = {
       }
       books: {
         Row: {
+          about: string | null
           amazon_link: string | null
           author: string | null
+          bookshop_link: string | null
           categories: string[] | null
           Cover_super: string | null
           cover_url: string | null
           created_at: string
           epub_file_url: string
+          great_question_connection: string | null
+          icon_illustration: string | null
           id: string
+          introduction: string | null
           Notion_URL: string | null
           randomizer: number | null
           slug: string
           title: string
         }
         Insert: {
+          about?: string | null
           amazon_link?: string | null
           author?: string | null
+          bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
           epub_file_url: string
+          great_question_connection?: string | null
+          icon_illustration?: string | null
           id?: string
+          introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number | null
           slug: string
           title: string
         }
         Update: {
+          about?: string | null
           amazon_link?: string | null
           author?: string | null
+          bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
           epub_file_url?: string
+          great_question_connection?: string | null
+          icon_illustration?: string | null
           id?: string
+          introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number | null
           slug?: string
@@ -92,31 +149,37 @@ export type Database = {
       }
       concepts: {
         Row: {
-          category: string | null
+          about: string | null
           created_at: string
-          description: string | null
           id: string
           illustration: string
+          introduction: string | null
+          Notion_URL: string | null
           randomizer: number
           title: string
+          type: string | null
         }
         Insert: {
-          category?: string | null
+          about?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           illustration: string
+          introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title: string
+          type?: string | null
         }
         Update: {
-          category?: string | null
+          about?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           illustration?: string
+          introduction?: string | null
+          Notion_URL?: string | null
           randomizer?: number
           title?: string
+          type?: string | null
         }
         Relationships: []
       }
@@ -842,6 +905,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_conversations: {
+        Row: {
+          assessment_id: string | null
+          created_at: string | null
+          id: string
+          messages: Json
+          metadata: Json | null
+          question_id: string
+          session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string
+          messages: Json
+          metadata?: Json | null
+          question_id: string
+          session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          metadata?: Json | null
+          question_id?: string
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_conversations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dna_question_responses: {
         Row: {
           answer: string
@@ -1016,27 +1130,33 @@ export type Database = {
       }
       icons: {
         Row: {
-          category: string
+          about: string | null
           created_at: string
           id: string
           illustration: string
+          introduction: string | null
           name: string
+          Notion_URL: string | null
           randomizer: number
         }
         Insert: {
-          category: string
+          about?: string | null
           created_at?: string
           id?: string
           illustration: string
+          introduction?: string | null
           name: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Update: {
-          category?: string
+          about?: string | null
           created_at?: string
           id?: string
           illustration?: string
+          introduction?: string | null
           name?: string
+          Notion_URL?: string | null
           randomizer?: number
         }
         Relationships: []
@@ -1045,6 +1165,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          full_name: string | null
           id: string
           outseta_user_id: string
           updated_at: string
@@ -1052,6 +1173,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          full_name?: string | null
           id?: string
           outseta_user_id: string
           updated_at?: string
@@ -1059,6 +1181,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          full_name?: string | null
           id?: string
           outseta_user_id?: string
           updated_at?: string
@@ -1154,6 +1277,30 @@ export type Database = {
           },
         ]
       }
+      share_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          type: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          type?: Database["public"]["Enums"]["share_message_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_auth: {
         Row: {
           content: string | null
@@ -1240,53 +1387,29 @@ export type Database = {
           },
         ]
       }
-      dna_conversations: {
+      user_favorites: {
         Row: {
+          added_at: string
           id: string
-          assessment_id: string
-          user_id: string
-          session_id: string
-          question_id: string
-          messages: Json
-          created_at: string
-          updated_at: string
+          item_id: string
+          item_type: string
+          outseta_user_id: string
         }
         Insert: {
+          added_at?: string
           id?: string
-          assessment_id: string
-          user_id: string
-          session_id: string
-          question_id: string
-          messages: Json
-          created_at?: string
-          updated_at?: string
+          item_id: string
+          item_type: string
+          outseta_user_id: string
         }
         Update: {
+          added_at?: string
           id?: string
-          assessment_id?: string
-          user_id?: string
-          session_id?: string
-          question_id?: string
-          messages?: Json
-          created_at?: string
-          updated_at?: string
+          item_id?: string
+          item_type?: string
+          outseta_user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "dna_conversations_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "dna_assessment_results"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "dna_conversations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -1332,6 +1455,14 @@ export type Database = {
         | "ONTOLOGY"
         | "POLITICS"
         | "THEOLOGY"
+      share_message_type:
+        | "classic_text"
+        | "classic_art"
+        | "classic_music"
+        | "icon"
+        | "concept"
+        | "virgil"
+        | "courses"
     }
     CompositeTypes: {
       [_ in never]: never
