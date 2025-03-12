@@ -11,11 +11,11 @@ class SpeechService {
 
   constructor() {
     // Add debugging to check environment variables
-    console.log('AWS Config:', {
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-      hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-      hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
-    });
+    // console.log('AWS Config:', {
+    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    // });
     
     // Initialize Polly client with AWS config from environment variables
     this.polly = new PollyClient({
