@@ -1,13 +1,14 @@
+
 // Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput } from '@aws-sdk/client-polly';
+import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
 import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
 
 class SpeechService {
   private polly: PollyClient;
-  private voiceId: string = 'Arthur'; // British English male voice
-  private outputFormat: string = 'mp3';
+  private voiceId: VoiceId = 'Arthur'; // British English male voice
+  private outputFormat: OutputFormat = 'mp3';
   private sampleRate: string = '16000';
-  private textType: string = 'text';
+  private textType: TextType = 'text';
 
   constructor() {
     // Add debugging to check environment variables
@@ -28,7 +29,7 @@ class SpeechService {
   }
 
   // Set voice options
-  setVoiceOptions(voiceId: string, outputFormat: string = 'mp3', sampleRate: string = '16000'): void {
+  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
     this.voiceId = voiceId;
     this.outputFormat = outputFormat;
     this.sampleRate = sampleRate;

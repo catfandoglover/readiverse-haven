@@ -344,7 +344,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     )}>
       <div className="relative w-full max-w-md mx-auto">
         <div className="chat-dialog-container flex flex-col font-oxanium h-[50vh]">
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#D0CBBD40]">
             {messages.map((msg) => (
               <ChatMessage 
                 key={msg.id}
