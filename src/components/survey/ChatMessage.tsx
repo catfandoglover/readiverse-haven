@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic } from 'lucide-react';
+import { Mic, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playAudio, stopAllAudio } from '@/services/AudioContext';
 import useAudioStore from '@/services/AudioContext';
@@ -11,6 +11,7 @@ interface ChatMessageProps {
   audioUrl?: string;
   dialogOpen: boolean;
   isNewMessage?: boolean;
+  isPreviousMessageSameRole?: boolean;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ 
@@ -18,7 +19,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role, 
   audioUrl, 
   dialogOpen,
-  isNewMessage = false
+  isNewMessage = false,
+  isPreviousMessageSameRole = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -82,6 +84,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isTranscribedVoice = isVoiceMessage && content !== 'Voice message';
 
+  // Show the Virgil icon only for assistant messages that are not preceded by another assistant message
+  const showVirgilIcon = role === 'assistant' && !isPreviousMessageSameRole;
+
   return (
     <div 
       className={cn(
@@ -94,6 +99,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     >
       {isVoiceMessage && (
         <Mic className="h-4 w-4 mt-1 text-primary" aria-hidden="true" />
+      )}
+      
+      {showVirgilIcon && (
+        <Bot className="h-5 w-5 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
       )}
       
       <div className="flex-1">

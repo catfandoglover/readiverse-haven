@@ -345,16 +345,22 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       <div className="relative w-full max-w-md mx-auto">
         <div className="chat-dialog-container flex flex-col font-oxanium h-[50vh]">
           <div className="chat-content-container flex-1 p-4 space-y-2">
-            {messages.map((msg) => (
-              <ChatMessage 
-                key={msg.id}
-                content={msg.content}
-                role={msg.role}
-                audioUrl={msg.audioUrl}
-                dialogOpen={open}
-                isNewMessage={msg.isNew}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              const previousMessage = index > 0 ? messages[index - 1] : null;
+              const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
+              
+              return (
+                <ChatMessage 
+                  key={msg.id}
+                  content={msg.content}
+                  role={msg.role}
+                  audioUrl={msg.audioUrl}
+                  dialogOpen={open}
+                  isNewMessage={msg.isNew}
+                  isPreviousMessageSameRole={isPreviousMessageSameRole}
+                />
+              );
+            })}
             
             <div ref={messagesEndRef} />
           </div>
