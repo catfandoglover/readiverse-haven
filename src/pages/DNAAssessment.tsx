@@ -642,7 +642,9 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className={`w-full px-6 mb-48 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-75%]' : ''}`}>
+          {/* Modified button container: added position-relative, z-index, and increased translate value */}
+          <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
+            showAIChat ? 'translate-y-[-250%]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
