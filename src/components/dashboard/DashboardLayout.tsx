@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 const DashboardLayout: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<"become" | "domains">("domains");
+  const [activeSection, setActiveSection] = useState<"become" | "domains">("become");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -50,20 +50,29 @@ const DashboardLayout: React.FC = () => {
           </div>
           
           {activeSection === "become" ? (
-            <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-              <h2 className="text-xl font-serif mb-3">Become Who You Are</h2>
-              <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
-                Journey to self-discovery through intellectual exploration. Engage with great ideas and deepen your understanding of yourself and the world.
-              </p>
-              <Button 
-                className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] text-white font-oxanium uppercase"
-                onClick={() => navigate("/become-who-you-are")}
-              >
-                Explore Path
-              </Button>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner mb-6">
+                <h2 className="text-xl font-serif mb-3">Become Who You Are</h2>
+                <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
+                  Journey to self-discovery through intellectual exploration. Engage with great ideas and deepen your understanding of yourself and the world.
+                </p>
+                <Button 
+                  className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] text-white font-oxanium uppercase"
+                  onClick={() => navigate("/become-who-you-are")}
+                >
+                  Explore Path
+                </Button>
+              </div>
+              
+              <DomainsList />
             </div>
           ) : (
-            <DomainsList />
+            <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+              <h2 className="text-xl font-serif mb-3">Intellectual Domains</h2>
+              <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
+                Explore specialized areas of knowledge and thought. Each domain represents a distinct perspective on fundamental questions of human existence.
+              </p>
+            </div>
           )}
         </div>
       </main>
