@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
@@ -153,7 +152,7 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      <main className="flex-1 flex flex-col items-center justify-between px-4 py-4 w-full">
+      <main className="flex-1 flex flex-col items-center justify-between px-2 py-4 w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
           <div className="space-y-6 text-center w-full">
             <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
@@ -168,7 +167,7 @@ const IntellectualDNA = () => {
               <Button 
                 variant="secondary"
                 className="w-full py-4 rounded-xl font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
-                onClick={() => handleNavigation('/dna')}
+                onClick={handleStartAssessment}
               >
                 <span>GET STARTED</span>
               </Button>
@@ -203,21 +202,13 @@ const IntellectualDNA = () => {
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && name.trim()) {
-                  sessionStorage.setItem('dna_assessment_name', name.trim());
-                  setShowNameDialog(false);
-                  navigate('/dna/ethics');
+                  handleNameSubmit();
                 }
               }}
               className="bg-white/50 border-[#373763]/20"
             />
             <Button 
-              onClick={() => {
-                if (name.trim()) {
-                  sessionStorage.setItem('dna_assessment_name', name.trim());
-                  setShowNameDialog(false);
-                  navigate('/dna/ethics');
-                }
-              }}
+              onClick={handleNameSubmit}
               disabled={!name.trim()}
               className="w-full bg-[#373763] text-[#E9E7E2] font-oxanium uppercase tracking-wider hover:opacity-90 transition-opacity duration-200"
             >
