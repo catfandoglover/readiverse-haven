@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Hexagon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "../ui/button";
 
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
@@ -94,9 +95,9 @@ const ProfileHeader: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
         {/* Share button - aligned with hamburger menu height */}
-        <button className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
-          <Share className="h-5 w-5" />
-        </button>
+        <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1">
+          <Share className="h-7.5 w-7.5" />
+        </Button>
       </div>
       
       {/* Profile content */}
