@@ -155,79 +155,34 @@ const IntellectualDNA = () => {
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
       <main className="flex-1 flex flex-col items-center justify-between p-4 max-w-lg mx-auto w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full space-y-6 py-12">
-          <div className="space-y-6 text-center">
-            <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
-              UNCOVER YOUR WORLDVIEW
-            </h2>
+          {/* Your header content */}
+          <div className="text-center">
+            <p className="text-[#9b9b9b] uppercase">UNCOVER YOUR WORLDVIEW</p>
             
-            <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight">
-              Trace your<br />Intellectual DNA
+            <h1 className="text-3xl font-serif text-[#373763] mt-4">
+              Trace your<br />
+              Intellectual DNA
             </h1>
-            
-            <div className="w-full px--4 flex justify-center">
-  <Button 
-    variant="secondary"
-    className="w-full py-4 rounded-lg font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
-    onClick={() => handleNavigation('/dna')}
-  >
-    <span>GET STARTED</span>
-  </Button>
-</div>
-
-            <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
-              ESTIMATED TIME: 10 MINUTES
-            </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="w-full text-center pb-4">
-          <p className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
-            LIGHTNING
-          </p>
-        </div>
-      </main>
-
-      <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-        <DialogContent className="bg-[#E9E7E2]">
-          <DialogHeader>
-            <DialogTitle className="font-baskerville text-[#373763]">Enter Your Name</DialogTitle>
-            <DialogDescription className="font-oxanium text-[#332E38]/70">
-              Please enter your name to begin the DNA assessment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) {
-                  sessionStorage.setItem('dna_assessment_name', name.trim());
-                  setShowNameDialog(false);
-                  navigate('/dna/ethics');
-                }
-              }}
-              className="bg-white/50 border-[#373763]/20"
-            />
+            
+            <div className="w-full -mx-4 px-2">
             <Button 
-              onClick={() => {
-                if (name.trim()) {
-                  sessionStorage.setItem('dna_assessment_name', name.trim());
-                  setShowNameDialog(false);
-                  navigate('/dna/ethics');
-                }
-              }}
-              disabled={!name.trim()}
-              className="w-full bg-[#373763] text-[#E9E7E2] font-oxanium uppercase tracking-wider hover:opacity-90 transition-opacity duration-200"
+              variant="secondary"
+              className="w-full py-4 rounded-full font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+              onClick={() => handleNavigation('/dna')}
             >
-              Begin Assessment
+              <span>GET STARTED</span>
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+          
+          <p className="text-[#9b9b9b] text-sm uppercase">ESTIMATED TIME: 10 MINUTES</p>
+        </div>
+        
+        <div className="w-full text-center py-4">
+          <p className="text-[#9b9b9b] uppercase text-sm">LIGHTNING</p>
+        </div>
+      </main>
     </div>
-  );
-};
+);
 
 export default IntellectualDNA;
