@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ui/card";
@@ -114,24 +113,7 @@ const Bookshelf = () => {
       <BookshelfHeader activeTab={activeTab} onTabChange={handleTabChange} />
       
       <div className="flex-1 pt-[152px] relative">
-        <div className="absolute top-[152px] left-0 right-0 px-4 py-3 bg-background z-10 flex justify-between items-center">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setIsGridView(false)}
-              className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${!isGridView ? 'bg-accent text-accent-foreground' : ''}`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setIsGridView(true)}
-              className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isGridView ? 'bg-accent text-accent-foreground' : ''}`}
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        
-        <ScrollArea className="h-full pt-14">
+        <ScrollArea className="h-full">
           <div className="px-4 py-4">
             {!books?.length ? (
               <div className="text-center py-8 text-muted-foreground">
