@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "../ui/form";
+import { Form, FormField, FormItem, FormControl, FormMessage } from "../ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,9 +13,9 @@ import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Domain name must be at least 2 characters long",
+    message: "Shelf name must be at least 2 characters long",
   }).max(50, {
-    message: "Domain name must be less than 50 characters",
+    message: "Shelf name must be less than 50 characters",
   }),
 });
 
@@ -44,7 +44,7 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
 
   const onSubmit = async (values: NewDomainFormValues) => {
     if (!user) {
-      toast.error("You must be logged in to create a domain");
+      toast.error("You must be logged in to create a shelf");
       return;
     }
 
@@ -61,14 +61,14 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
         .limit(1);
 
       if (searchError) {
-        console.error("Error searching for domains:", searchError);
-        toast.error("Failed to check existing domains");
+        console.error("Error searching for shelves:", searchError);
+        toast.error("Failed to check existing shelves");
         setIsLoading(false);
         return;
       }
 
       if (existingDomains && existingDomains.length > 0) {
-        toast.error("A domain with this name already exists");
+        toast.error("A shelf with this name already exists");
         setIsLoading(false);
         return;
       }
@@ -86,17 +86,17 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
         .single();
 
       if (error) {
-        console.error("Error creating domain:", error);
-        toast.error("Failed to create domain");
+        console.error("Error creating shelf:", error);
+        toast.error("Failed to create shelf");
         return;
       }
 
-      toast.success(`Domain "${values.name}" created successfully`);
+      toast.success(`Shelf "${values.name}" created successfully`);
       onDomainCreated(data);
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error("Error creating domain:", error);
+      console.error("Error creating shelf:", error);
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -107,7 +107,7 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Domain</DialogTitle>
+          <DialogTitle className="font-oxanium uppercase">CREATE NEW SHELF</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -116,20 +116,23 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Domain Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter a name for your new domain..." {...field} />
+                    <Input 
+                      placeholder="Enter a name for your new shelf..." 
+                      className="font-oxanium"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="font-oxanium uppercase">
+                CANCEL
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Domain"}
+              <Button type="submit" disabled={isLoading} className="font-oxanium uppercase">
+                {isLoading ? "CREATING..." : "CREATE SHELF"}
               </Button>
             </DialogFooter>
           </form>

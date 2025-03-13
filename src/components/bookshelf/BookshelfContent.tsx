@@ -182,7 +182,7 @@ const BookshelfContent: React.FC = () => {
           onClick={handleNewDomainClick}
         >
           <Plus className="h-4 w-4" />
-          NEW
+          NEW SHELF
         </button>
       </div>
 
