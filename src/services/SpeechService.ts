@@ -1,4 +1,3 @@
-
 // Import AWS SDK for browser
 import { PollyClient, SynthesizeSpeechCommandInput } from '@aws-sdk/client-polly';
 import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
@@ -11,6 +10,13 @@ class SpeechService {
   private textType: string = 'text';
 
   constructor() {
+    // Add debugging to check environment variables
+    // console.log('AWS Config:', {
+    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    // });
+    
     // Initialize Polly client with AWS config from environment variables
     this.polly = new PollyClient({
       region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
@@ -50,30 +56,7 @@ class SpeechService {
       });
 
       console.log('Successfully got Polly URL:', url);
-      
-      // Test audio loading before returning
-      const audioTest = new Audio();
-      audioTest.src = url;
-      
-      return new Promise((resolve, reject) => {
-        audioTest.oncanplaythrough = () => {
-          console.log('Audio can be played, URL is valid');
-          resolve(url);
-        };
-        
-        audioTest.onerror = (e) => {
-          console.error('Audio test failed:', e);
-          // Still resolve with the URL since we want to try to play it anyway
-          // This could be a CORS issue rather than an invalid URL
-          resolve(url);
-        };
-        
-        // Set a timeout to resolve anyway after 2 seconds
-        setTimeout(() => {
-          console.log('Audio test timed out, proceeding anyway');
-          resolve(url);
-        }, 2000);
-      });
+      return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
       // Log more details about the error

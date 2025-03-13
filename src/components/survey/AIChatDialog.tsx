@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
-import conversationManager from '@/services/ConversationManager';
+import conversationManager, { Message as ConversationMessage } from '@/services/ConversationManager';
 import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -44,7 +44,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isFirstOpen, setIsFirstOpen] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
-  const dialogRef = useRef<HTMLDivElement>(null);
 
   const initialGreetings = [
     "Tell me more",
@@ -62,14 +61,10 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [lastQuestion, setLastQuestion] = useState(currentQuestion);
 
   useEffect(() => {
-    console.log('AIChatDialog open state:', open);
-    console.log('Current question:', currentQuestion);
-    
     if (open) {
       const questionChanged = lastQuestion !== currentQuestion;
       
       const userId = providedSessionId || sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-      console.log('Using session ID:', userId);
       
       if (!sessionId || questionChanged) {
         setSessionId(userId);
@@ -81,8 +76,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         conversationManager.initializeConversation(userId);
         
         const history = conversationManager.getHistory(userId);
-        console.log('Conversation history:', history);
-        
         const messagesWithIds = history.map(msg => ({
           id: uuidv4(),
           content: msg.content,
@@ -98,7 +91,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       if (isFirstOpen && messages.length === 0) {
         const randomIndex = Math.floor(Math.random() * initialGreetings.length);
         const greeting = initialGreetings[randomIndex];
-        console.log('Adding initial greeting:', greeting);
         
         setMessages([
           {
@@ -120,7 +112,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Focus the input field with a small delay to ensure the dialog is fully rendered
       setTimeout(() => {
         if (inputRef.current) {
-          console.log('Focusing input field');
           inputRef.current.focus();
         }
       }, 100);
@@ -133,7 +124,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       // Use a very short timeout to ensure the dialog is visible before focusing
       const timer = setTimeout(() => {
         if (inputRef.current) {
-          console.log('Attempting to focus input field on mobile');
           inputRef.current.focus();
           // Additional attempt to force focus and show keyboard on mobile
           inputRef.current.click();
@@ -155,10 +145,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const generateAudioForText = async (text: string) => {
     try {
       stopAllAudio();
-      console.log('Generating audio for text:', text);
       
       const audioUrl = await speechService.synthesizeSpeech(text);
-      console.log('Generated audio URL:', audioUrl);
       
       setMessages(prevMessages => {
         const lastAssistantIndex = [...prevMessages].reverse().findIndex(m => m.role === 'assistant');
@@ -187,7 +175,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted');
     
     if (isRecording) {
       await stopAndProcessRecording();
@@ -218,7 +205,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       stopAllAudio();
       
       try {
-        console.log('Starting audio recording');
         await audioRecordingService.startRecording();
         setIsRecording(true);
       } catch (error) {
@@ -230,7 +216,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const stopAndProcessRecording = async () => {
     setIsRecording(false);
     try {
-      console.log('Stopping audio recording');
       const audioBlob = await audioRecordingService.stopRecording();
       
       await processAudio(audioBlob);
@@ -243,7 +228,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     setIsProcessing(true);
     try {
       stopAllAudio();
-      console.log('Processing message:', userMessage);
       
       const loadingId = uuidv4();
       setMessages(prevMessages => [
@@ -252,7 +236,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       ]);
       
       const response = await aiService.generateResponse(sessionId, userMessage);
-      console.log('AI response:', response);
       
       setMessages(prevMessages => 
         prevMessages.map(msg => 
@@ -360,13 +343,10 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   }, [open]);
 
   return (
-    <div 
-      ref={dialogRef}
-      className={cn(
-        "fixed inset-x-0 bottom-0 w-full transform z-50 transition-all duration-300 overscroll-none",
-        open ? "translate-y-0" : "translate-y-full"
-      )}
-    >
+    <div className={cn(
+      "fixed inset-x-0 bottom-0 w-full transition-transform duration-300 transform z-50",
+      open ? "translate-y-0" : "translate-y-full"
+    )}>
       <div className="relative w-full max-w-md mx-auto">
         {/* Chat container with fixed positioning instead of vh-based height */}
         <div className="bg-white rounded-t-2xl shadow-lg flex flex-col font-oxanium absolute bottom-0 w-full" 

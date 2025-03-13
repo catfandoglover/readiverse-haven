@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -661,7 +662,6 @@ const DNAAssessment = () => {
               <button 
                 className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
                 onClick={() => setShowAIChat(true)}
-                type="button"
               >
                 I HAVE MORE TO SAY
               </button>
@@ -701,8 +701,8 @@ const DNAAssessment = () => {
       <AIChatDialog 
         open={showAIChat}
         onOpenChange={setShowAIChat}
-        currentQuestion={currentQuestion.question?.question || ''}
         sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+        currentQuestion={currentQuestion.question?.question || ''}
       />
     </>
   );

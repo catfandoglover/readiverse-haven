@@ -4,6 +4,7 @@ import { Play, Pause, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { playAudio, stopAllAudio } from '@/services/AudioContext';
+import useAudioStore from '@/services/AudioContext';
 
 interface ChatMessageProps {
   content: string;
@@ -26,32 +27,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const hasAutoPlayedRef = useRef(false);
   const isVoiceMessage = role === 'user' && audioUrl && (content === 'Voice message' || content.length > 0);
   
-  // Clean any special characters that might be causing issues
+  const currentlyPlaying = useAudioStore(state => state.currentlyPlaying);
+
   const cleanedContent = content;
 
   useEffect(() => {
     if (audioUrl && !audioRef.current) {
-      console.log('Creating new audio element with URL:', audioUrl);
       const newAudio = new Audio(audioUrl);
       
-      newAudio.onended = () => {
-        console.log('Audio playback ended');
-        setIsPlaying(false);
-      };
-      newAudio.onpause = () => {
-        console.log('Audio playback paused');
-        setIsPlaying(false);
-      };
-      newAudio.onplay = () => {
-        console.log('Audio playback started');
-        setIsPlaying(true);
-      };
+      newAudio.onended = () => setIsPlaying(false);
+      newAudio.onpause = () => setIsPlaying(false);
+      newAudio.onplay = () => setIsPlaying(true);
       newAudio.onloadedmetadata = () => {
-        console.log('Audio metadata loaded, duration:', newAudio.duration);
         setAudioDuration(newAudio.duration);
-      };
-      newAudio.onerror = (e) => {
-        console.error('Audio load error:', e);
       };
       
       audioRef.current = newAudio;
@@ -71,6 +59,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   }, [audioUrl]);
 
   useEffect(() => {
+    if (audioRef.current && currentlyPlaying !== audioRef.current) {
+      setIsPlaying(false);
+    }
+  }, [currentlyPlaying]);
+
+  useEffect(() => {
     if (
       role === 'assistant' && 
       audioUrl && 
@@ -79,22 +73,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       isNewMessage && 
       !hasAutoPlayedRef.current
     ) {
-      console.log('Auto-playing audio for new message');
-      
-      // Try regular play first
-      audioRef.current.play().catch(error => {
-        console.error('Error auto-playing audio using standard method:', error);
-        
-        // If standard play fails, try the playAudio helper
-        try {
-          if (audioRef.current) {
-            playAudio(audioRef.current).catch(fallbackError => {
-              console.error('Error auto-playing audio with fallback method:', fallbackError);
-            });
-          }
-        } catch (helperError) {
-          console.error('Error with audio helper:', helperError);
-        }
+      playAudio(audioRef.current).catch(error => {
+        console.error('Error auto-playing audio:', error);
       });
       
       setIsPlaying(true);
@@ -104,44 +84,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   useEffect(() => {
     if (!dialogOpen && audioRef.current && isPlaying) {
-      console.log('Dialog closed, stopping audio playback');
       audioRef.current.pause();
       setIsPlaying(false);
     }
   }, [dialogOpen, isPlaying]);
 
   const toggleAudio = () => {
-    if (!audioUrl || !audioRef.current) {
-      console.log('No audio available to toggle');
-      return;
-    }
+    if (!audioUrl || !audioRef.current) return;
 
     if (isPlaying) {
-      console.log('Pausing audio playback');
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      console.log('Starting audio playback');
-      
-      // Try regular play first
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio using standard method:', error);
-        
-        // If standard play fails, try the playAudio helper
-        try {
-          if (audioRef.current) {
-            playAudio(audioRef.current).catch(fallbackError => {
-              console.error('Error playing audio with fallback method:', fallbackError);
-              setIsPlaying(false);
-            });
-          }
-        } catch (helperError) {
-          console.error('Error with audio helper:', helperError);
-          setIsPlaying(false);
-        }
+      playAudio(audioRef.current).catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
       });
-      
-      setIsPlaying(true);
     }
   };
 

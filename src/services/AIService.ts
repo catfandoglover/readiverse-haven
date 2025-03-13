@@ -6,6 +6,8 @@ class AIService {
   private apiKey: string = '';
   private initialized: boolean = false;
   private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  private siteUrl: string = 'readiverse-haven.vercel.app';
+  private siteName: string = 'Readiverse Haven';
 
   constructor() {
     // Initialize with environment variable if available
@@ -39,11 +41,7 @@ class AIService {
     audioData?: Blob
   ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
     if (!this.initialized) {
-      console.warn('AI service not initialized, using fallback response');
-      return {
-        text: "I'm sorry, but I'm having trouble connecting to my brain right now. Please try again in a moment.",
-        transcribedText: audioData ? "Voice message (transcription unavailable)" : undefined
-      };
+      throw new Error('AI service not initialized');
     }
 
     try {
@@ -133,18 +131,15 @@ class AIService {
       // Add the assistant response to conversation history
       conversationManager.addMessage(sessionId, 'assistant', finalResponse);
       
+      // We no longer save the conversation here, as it will be saved when the user answers the question
+      
       return { 
         text: finalResponse,
         transcribedText 
       };
     } catch (error) {
       console.error('Error generating AI response:', error);
-      
-      // Return a fallback response
-      return {
-        text: "I'm sorry, but I encountered an issue processing your message. Could you try again or phrase it differently?",
-        transcribedText: audioData ? "Voice message (processing failed)" : undefined
-      };
+      throw error;
     }
   }
   
