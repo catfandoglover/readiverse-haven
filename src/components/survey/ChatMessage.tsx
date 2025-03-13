@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Bot } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playAudio, stopAllAudio } from '@/services/AudioContext';
 import useAudioStore from '@/services/AudioContext';
@@ -102,7 +102,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       )}
       
       {showVirgilIcon && (
-        <Bot className="h-5 w-5 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+        <div className="h-5 w-5 mt-1 rounded-full bg-[#373763] flex-shrink-0" aria-hidden="true" />
       )}
       
       <div className="flex-1">
