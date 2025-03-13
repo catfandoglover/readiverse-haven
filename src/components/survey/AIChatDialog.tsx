@@ -329,13 +329,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     )}>
       <div className="relative w-full max-w-md mx-auto">
         <div className="bg-white border-t-2 border-x-2 border-[#D0CBBD]/25 rounded-t-2xl shadow-lg h-[50vh] flex flex-col">
-          <div className="p-4 border-b">
-            <h3 className="text-lg font-medium">Discuss with Virgil</h3>
-            <div className="text-sm text-muted-foreground">
-              Current question: {currentQuestion}
-            </div>
-          </div>
-          
           <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
             {messages.map((msg) => (
               <ChatMessage 
