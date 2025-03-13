@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
-import { Book, Users, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClassicsList from "./favorites/ClassicsList";
 import IconsList from "./favorites/IconsList";
@@ -24,7 +23,6 @@ const FavoritesContent: React.FC = () => {
           )}
           onClick={() => setActiveTab("classics")}
         >
-          <Book className="h-3 w-3" />
           CLASSICS
         </button>
         <button
@@ -36,7 +34,6 @@ const FavoritesContent: React.FC = () => {
           )}
           onClick={() => setActiveTab("icons")}
         >
-          <Users className="h-3 w-3" />
           ICONS
         </button>
         <button
@@ -48,7 +45,6 @@ const FavoritesContent: React.FC = () => {
           )}
           onClick={() => setActiveTab("concepts")}
         >
-          <Brain className="h-3 w-3" />
           CONCEPTS
         </button>
       </div>
