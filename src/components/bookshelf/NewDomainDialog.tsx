@@ -50,13 +50,22 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
 
     setIsLoading(true);
     try {
+      const userId = user.Uid; // Use Uid from Outseta user
+
       // First, try to find if a custom domain with this name already exists
-      const { data: existingDomains } = await supabase
+      const { data: existingDomains, error: searchError } = await supabase
         .from("custom_domains")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("name", values.name)
         .limit(1);
+
+      if (searchError) {
+        console.error("Error searching for domains:", searchError);
+        toast.error("Failed to check existing domains");
+        setIsLoading(false);
+        return;
+      }
 
       if (existingDomains && existingDomains.length > 0) {
         toast.error("A domain with this name already exists");
@@ -70,7 +79,7 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
         .insert([
           {
             name: values.name,
-            user_id: user.id,
+            user_id: userId,
           },
         ])
         .select()

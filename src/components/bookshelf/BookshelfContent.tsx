@@ -31,24 +31,34 @@ const BookshelfContent: React.FC = () => {
 
   // Fetch custom domains from Supabase
   const { data: fetchedCustomDomains, refetch: refetchCustomDomains } = useQuery({
-    queryKey: ["custom-domains", user?.id],
+    queryKey: ["custom-domains", user?.Uid],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user?.Uid) return [];
 
-      const { data } = await supabase
-        .from("custom_domains")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from("custom_domains")
+          .select("id, name")
+          .eq("user_id", user.Uid)
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching custom domains:", error);
+          return [];
+        }
+        
+        return data || [];
+      } catch (error) {
+        console.error("Exception fetching custom domains:", error);
+        return [];
+      }
     },
-    enabled: !!user,
+    enabled: !!user?.Uid,
   });
 
   useEffect(() => {
     if (fetchedCustomDomains) {
-      setCustomDomains(fetchedCustomDomains);
+      setCustomDomains(fetchedCustomDomains as CustomDomain[]);
     }
   }, [fetchedCustomDomains]);
 

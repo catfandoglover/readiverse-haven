@@ -18,6 +18,13 @@ interface CustomDomainContentProps {
   domainName: string;
 }
 
+interface BookData {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string;
+}
+
 const formSchema = z.object({
   title: z.string().min(2, {
     message: "Title must be at least 2 characters long",
@@ -50,16 +57,26 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
   const { data: books, refetch } = useQuery({
     queryKey: ["custom-domain-books", domainId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user?.Uid) return [];
 
-      const { data } = await supabase
-        .from("custom_domain_books")
-        .select("id, title, author, cover_url")
-        .eq("domain_id", domainId);
-      
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from("custom_domain_books")
+          .select("id, title, author, cover_url")
+          .eq("domain_id", domainId);
+        
+        if (error) {
+          console.error("Error fetching domain books:", error);
+          return [];
+        }
+        
+        return data as BookData[] || [];
+      } catch (error) {
+        console.error("Exception fetching domain books:", error);
+        return [];
+      }
     },
-    enabled: !!user && !!domainId,
+    enabled: !!user?.Uid && !!domainId,
   });
 
   const onSubmit = async (values: BookFormValues) => {
@@ -72,15 +89,13 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
     try {
       const { error } = await supabase
         .from("custom_domain_books")
-        .insert([
-          {
-            domain_id: domainId,
-            title: values.title,
-            author: values.author,
-            cover_url: values.coverUrl,
-            user_id: user.id,
-          },
-        ]);
+        .insert({
+          domain_id: domainId,
+          title: values.title,
+          author: values.author,
+          cover_url: values.coverUrl,
+          user_id: user.Uid,
+        });
 
       if (error) {
         console.error("Error adding book:", error);
