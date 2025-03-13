@@ -643,7 +643,7 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className="w-full px-6 mb-48">
+          <div className="w-full px-6 mb-8">
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
@@ -658,15 +658,15 @@ const DNAAssessment = () => {
                 {buttonTextB}
               </Button>
             </div>
-          </div>
-          
-          <div className="absolute bottom-16 left-0 right-0 text-center">
-            <button 
-              className="text-[#7A798A] font-oxanium text-base uppercase"
-              onClick={() => setShowAIChat(true)}
-            >
-              I HAVE MORE TO SAY
-            </button>
+            
+            <div className="mt-8 text-center">
+              <button 
+                className="text-[#7A798A] font-oxanium text-base uppercase"
+                onClick={() => setShowAIChat(true)}
+              >
+                I HAVE MORE TO SAY
+              </button>
+            </div>
           </div>
           
           <div className="absolute bottom-6 left-0 right-0 text-center">
