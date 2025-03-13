@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,23 +108,19 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         generateAudioForText(greeting);
       }
       
-      // Focus the input field with a small delay to ensure the dialog is fully rendered
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 100); // Reduced delay for quicker keyboard opening
+      }, 100);
     }
   }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
 
-  // Add a separate effect specifically for mobile keyboard focus
   useEffect(() => {
     if (open && isMobile) {
-      // Use a very short timeout to ensure the dialog is visible before focusing
       const timer = setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          // Additional attempt to force focus and show keyboard on mobile
           inputRef.current.click();
         }
       }, 50);
@@ -348,7 +343,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       open ? "translate-y-0" : "translate-y-full"
     )}>
       <div className="relative w-full max-w-md mx-auto">
-        <div className="bg-white rounded-t-2xl shadow-lg h-[50vh] flex flex-col font-oxanium">
+        <div className="chat-dialog-container flex flex-col font-oxanium h-[50vh]">
           <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
             {messages.map((msg) => (
               <ChatMessage 

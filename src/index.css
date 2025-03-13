@@ -176,4 +176,11 @@
   .ai-chat-message.assistant {
     @apply bg-muted mr-8;
   }
+  
+  /* Chat dialog container with exact styling */
+  .chat-dialog-container {
+    border-radius: 40px 40px 0px 0px;
+    background: rgba(208, 203, 189, 0.25);
+    box-shadow: 0px -4px 4px 4px rgba(40, 40, 40, 0.08);
+  }
 }
