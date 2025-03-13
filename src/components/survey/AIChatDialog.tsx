@@ -11,6 +11,7 @@ import audioRecordingService from '@/services/AudioRecordingService';
 import conversationManager, { Message as ConversationMessage } from '@/services/ConversationManager';
 import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Message {
   id: string;
@@ -42,6 +43,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const initialGreetings = [
     "Tell me more",
@@ -107,13 +109,30 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         generateAudioForText(greeting);
       }
       
+      // Focus the input field with a small delay to ensure the dialog is fully rendered
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 300);
+      }, 100); // Reduced delay for quicker keyboard opening
     }
   }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
+
+  // Add a separate effect specifically for mobile keyboard focus
+  useEffect(() => {
+    if (open && isMobile) {
+      // Use a very short timeout to ensure the dialog is visible before focusing
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Additional attempt to force focus and show keyboard on mobile
+          inputRef.current.click();
+        }
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open, isMobile]);
 
   useEffect(() => {
     scrollToBottom();
@@ -354,6 +373,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               placeholder={isRecording ? "Recording..." : "Message Virgil..."}
               className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
               disabled={isProcessing || isRecording}
+              autoComplete="off"
             />
             <Button 
               type="button" 
