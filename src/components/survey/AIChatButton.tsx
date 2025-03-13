@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { MessageSquareText } from "lucide-react";
 import AIChatDialog from './AIChatDialog';
 
 interface AIChatButtonProps {
@@ -24,15 +25,9 @@ const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = 
         className="fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg hover:shadow-xl 
           transition-all duration-200 bg-background border-2 border-primary z-50"
         onClick={() => setIsDialogOpen(true)}
-        aria-label="Talk to Virgil AI Assistant"
+        aria-label="Talk to AI Assistant"
       >
-        <div className="virgil-icon-container">
-          <img 
-            src="/lovable-uploads/c45050c7-56af-4b5c-9305-d0e18c64a826.png" 
-            alt="Virgil" 
-            className="virgil-icon"
-          />
-        </div>
+        <MessageSquareText className="h-6 w-6 text-primary" />
       </Button>
       
       <AIChatDialog

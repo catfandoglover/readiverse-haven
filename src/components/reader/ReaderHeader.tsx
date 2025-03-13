@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ArrowLeft } from "lucide-react";
+import { ExternalLink, ArrowLeft, MessageSquare } from "lucide-react";
 import SearchDialog from "./SearchDialog";
 import type { SearchResult } from '@/types/reader';
 
@@ -45,13 +45,7 @@ const ReaderHeader = ({
           }}
           title="Chat with Virgil"
         >
-          <div className="virgil-icon-container-small">
-            <img 
-              src="/lovable-uploads/c45050c7-56af-4b5c-9305-d0e18c64a826.png" 
-              alt="Virgil" 
-              className="virgil-icon-small"
-            />
-          </div>
+          <MessageSquare className="h-4 w-4" />
         </Button>
         <SearchDialog 
           onSearch={onSearch}
