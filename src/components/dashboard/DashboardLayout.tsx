@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import BottomNav from "../discover/BottomNav";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import MainMenu from "../navigation/MainMenu";
 
 const DashboardLayout: React.FC = () => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
@@ -18,7 +18,11 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      <main className="flex-1 relative pb-[50px] overflow-y-auto">
+      <main className="flex-1 relative overflow-y-auto">
+        <div className="absolute top-4 left-4 z-10">
+          <MainMenu />
+        </div>
+        
         <ProfileHeader />
         
         <div className="px-6 mt-4 mb-6">
@@ -67,10 +71,6 @@ const DashboardLayout: React.FC = () => {
           )}
         </div>
       </main>
-      
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <BottomNav activeTab="dashboard" />
-      </div>
     </div>
   );
 };
