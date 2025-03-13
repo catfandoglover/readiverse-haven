@@ -37,7 +37,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
           <h3 className="text-lg font-oxanium font-bold uppercase">{title}</h3>
         </div>
         
-        <p className="text-sm text-[#E9E7E2]/70 mb-3 font-baskerville">
+        <p className="text-sm text-[#E9E7E2]/70 mb-3 font-oxanium">
           {description}
         </p>
         
