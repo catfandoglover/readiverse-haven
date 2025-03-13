@@ -54,11 +54,6 @@ const ClassicsList: React.FC = () => {
               alt={classic.title}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
-              <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
-                {classic.title}
-              </h4>
-            </div>
             <button 
               className="absolute top-2 right-2 bg-white/10 backdrop-blur-sm p-1 rounded-full"
               aria-label="Remove from favorites"
