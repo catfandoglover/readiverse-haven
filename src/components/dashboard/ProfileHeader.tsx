@@ -78,25 +78,19 @@ const ProfileHeader: React.FC = () => {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Background with gradient overlay */}
-      <div 
-        className="w-full h-64 bg-[#2A282A] relative"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(42, 40, 42, 0.8), #2A282A), url('${backgroundImageUrl}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center"
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
-        
-        {/* Lightning bolt overlay */}
-        <div className="absolute top-0 right-0 w-full h-full opacity-10">
-          <img 
-            src="/https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png" 
-            alt="" 
-            className="w-full h-full object-contain"
-          />
-        </div>
+  {/* Background with 50% opacity image */}
+  <div 
+    className="w-full h-64 bg-[#2A282A] relative"
+    style={{
+      backgroundImage: `url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png')`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      opacity: "0.5"
+    }}
+  >
+    <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
+  </div>
+</div>
         
         {/* Settings button */}
         <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center backdrop-blur-sm">
