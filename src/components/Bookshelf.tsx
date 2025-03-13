@@ -26,18 +26,18 @@ const Bookshelf = () => {
       <BookshelfHeader activeTab={activeTab} onTabChange={handleTabChange} />
       
       <div className="flex-1 relative overflow-hidden">
-        {/* Header Image - removed aspect-[16/9] to prevent cropping */}
-        <div className="relative w-full max-h-[40vh]">
-          <img 
-            src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png" 
-            alt="Bookshelf Header" 
-            className="w-full object-contain"
-          />
-        </div>
-        
-        {/* Content Container that overlaps the image - positioned like the Discover feed */}
-        <div className="absolute inset-0 pt-[40vh] z-10">
-          <div className="p-6 bg-[#E9E7E2] text-[#2A282A] rounded-t-2xl h-full">
+        <div className="flex flex-col h-full">
+          {/* Header Image - removed aspect-[16/9] to prevent cropping */}
+          <div className="relative w-full">
+            <img 
+              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png" 
+              alt="Bookshelf Header" 
+              className="w-full object-contain"
+            />
+          </div>
+          
+          {/* Content Container that overlaps the image - using the same approach as ContentCard */}
+          <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-6 relative z-10">
             {/* Empty container for now */}
           </div>
         </div>
