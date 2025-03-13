@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { ScrollArea } from "./ui/scroll-area";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import BookshelfHeader from "./bookshelf/BookshelfHeader";
+import BookshelfContent from "./bookshelf/BookshelfContent";
+import FavoritesContent from "./bookshelf/FavoritesContent";
 
 type TabType = "bookshelf" | "favorites";
 
@@ -38,7 +39,7 @@ const Bookshelf = () => {
           
           {/* Content Container that overlaps the image - using the same approach as ContentCard */}
           <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-6 relative z-10">
-            {/* Empty container for now */}
+            {activeTab === "bookshelf" ? <BookshelfContent /> : <FavoritesContent />}
           </div>
         </div>
       </div>
