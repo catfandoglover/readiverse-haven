@@ -1,14 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Send, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
+import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
@@ -45,6 +41,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initial greeting messages to choose from
   const initialGreetings = [
@@ -124,6 +121,13 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         // Generate audio for the greeting
         generateAudioForText(greeting);
       }
+      
+      // Focus the input when opened
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 300);
     }
   }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
 
@@ -160,6 +164,14 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       });
     } catch (error) {
       console.error('Error generating audio:', error);
+    }
+  };
+
+  // Handle key press events for the input field
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
@@ -369,21 +381,22 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" aria-describedby="chat-description">
-        <DialogHeader>
-          <DialogTitle>Discuss with Virgil</DialogTitle>
-          <div id="chat-description" className="sr-only">Chat with an AI assistant about this question.</div>
-        </DialogHeader>
-        <div className="flex flex-col h-[400px]">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/50 rounded-md">
-            <div className="bg-background p-3 rounded-lg shadow">
-              <p className="text-sm text-muted-foreground">
-                Current question: {currentQuestion}
-              </p>
+    <div className={cn(
+      "fixed inset-x-0 bottom-0 w-full transition-transform duration-300 transform z-50",
+      open ? "translate-y-0" : "translate-y-full"
+    )}>
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Slide up panel with rounded top corners and border */}
+        <div className="bg-white border-t-2 border-x-2 border-[#D0CBBD]/25 rounded-t-2xl shadow-lg h-[50vh] flex flex-col">
+          <div className="p-4 border-b">
+            <h3 className="text-lg font-medium">Discuss with Virgil</h3>
+            <div className="text-sm text-muted-foreground">
+              Current question: {currentQuestion}
             </div>
-            
-            {/* Chat messages */}
+          </div>
+          
+          {/* Chat messages with overflow scrolling */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((msg) => (
               <ChatMessage 
                 key={msg.id}
@@ -399,21 +412,24 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             <div ref={messagesEndRef} />
           </div>
           
-          <form onSubmit={handleSubmit} className="flex gap-2 mt-4">
+          {/* Input area with no border on the input field */}
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E9E7E2] border-t border-[#D0CBBD]/25">
             <Input
+              ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={isRecording ? "Recording..." : "Ask about this question..."}
-              className="flex-1"
+              onKeyDown={handleKeyDown}
+              placeholder={isRecording ? "Recording..." : "Message Virgil..."}
+              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
               disabled={isProcessing || isRecording}
             />
             <Button 
               type="button" 
-              variant={isRecording ? "default" : "outline"} 
+              variant={isRecording ? "default" : "ghost"} 
               size="icon"
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+              className={isRecording ? "bg-red-500 hover:bg-red-600 h-10 w-10 rounded-full" : "h-10 w-10 rounded-full"}
               aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
               {isRecording ? (
@@ -422,22 +438,15 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
                 <Mic className="h-4 w-4" />
               )}
             </Button>
-            <Button 
-              type="submit" 
-              size="icon"
-              disabled={(!inputMessage.trim() && !isRecording) || isProcessing}
-              aria-label={isRecording ? "Send recording" : "Send message"}
-            >
-              {isProcessing ? (
+            {isProcessing && (
+              <div className="flex items-center justify-center h-10 w-10">
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+              </div>
+            )}
           </form>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, Mic } from 'lucide-react';
+import { Play, Pause, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { playAudio, stopAllAudio } from '@/services/AudioContext';
@@ -115,20 +116,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  // Format duration as MM:SS
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   // Determine if this is a transcribed voice message
   const isTranscribedVoice = isVoiceMessage && content !== 'Voice message';
 
   return (
     <div 
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg",
+        "flex items-start gap-2 p-3 rounded-lg mb-2",
         role === 'user' 
           ? "bg-primary/10 ml-auto max-w-[80%]" 
           : "bg-secondary/80 mr-auto max-w-[80%]",
@@ -149,7 +143,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         ) : (
           <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
         )}
-        
       </div>
       
       {audioUrl && (
