@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
+import { Grid, List, Search } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import BookshelfHeader from "./bookshelf/BookshelfHeader";
-import BookCard from "./bookshelf/BookCard";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type TabType = "bookshelf" | "favorites";
@@ -15,6 +15,7 @@ type TabType = "bookshelf" | "favorites";
 const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isGridView, setIsGridView] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("bookshelf");
   const { user, supabase } = useAuth();
 
@@ -119,17 +120,50 @@ const Bookshelf = () => {
                 <p>Your bookshelf is empty.</p>
                 <p>Start reading books to add them to your bookshelf!</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            ) : isGridView ? (
+              <div className={`grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
                 {books.map((book) => (
-                  <BookCard
+                  <div
                     key={book.id}
-                    coverUrl={book.cover_url}
-                    title={book.title}
-                    author={book.author}
+                    className="aspect-square cursor-pointer relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 transition-all duration-300"
                     onClick={() => handleBookClick(book.slug, book.epub_file_url)}
-                    onImageClick={(e) => handleCoverClick(book.Cover_super, e)}
-                  />
+                  >
+                    <img
+                      src={book.cover_url || '/placeholder.svg'}
+                      alt={book.title}
+                      className="w-full h-full object-cover rounded-md shadow-sm relative z-10"
+                      loading="lazy"
+                      onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`space-y-6 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
+                {books.map((book) => (
+                  <Card 
+                    key={book.id} 
+                    className="flex gap-4 p-4 hover:bg-accent/50 transition-all duration-300 cursor-pointer bg-card text-card-foreground relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-[1px] after:rounded-md after:bg-card after:z-[0] hover:after:bg-accent/50 [&>*]:relative [&>*]:z-[1]"
+                    onClick={() => handleBookClick(book.slug, book.epub_file_url)}
+                  >
+                    <div 
+                      className="w-24 h-24 flex-shrink-0 cursor-pointer"
+                      onClick={(e) => handleCoverClick(book.Cover_super, e)}
+                    >
+                      <img
+                        src={book.cover_url || '/placeholder.svg'}
+                        alt={book.title}
+                        className="w-full h-full object-cover rounded-md shadow-sm"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
+                      {book.author && (
+                        <p className="text-muted-foreground text-sm">{book.author}</p>
+                      )}
+                    </div>
+                  </Card>
                 ))}
               </div>
             )}
