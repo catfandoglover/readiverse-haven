@@ -51,18 +51,9 @@ const DashboardLayout: React.FC = () => {
           
           {activeSection === "become" ? (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner mb-6">
-                <h2 className="text-xl font-serif mb-3">Become Who You Are</h2>
-                <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
-                  Journey to self-discovery through intellectual exploration. Engage with great ideas and deepen your understanding of yourself and the world.
-                </p>
-                <Button 
-                  className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] text-white font-oxanium uppercase"
-                  onClick={() => navigate("/become-who-you-are")}
-                >
-                  Explore Path
-                </Button>
-              </div>
+              <p className="text-lg font-baskerville text-[#E9E7E2] italic mb-6">
+                Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace
+              </p>
               
               <DomainsList />
             </div>
