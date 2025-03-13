@@ -24,7 +24,7 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ activeTab, onTabChang
         <div className="flex-none">
           <MainMenu />
         </div>
-        <div className="flex-1 flex items-center justify-between pl-2">
+        <div className="flex-1 flex items-center space-x-6 pl-1">
           <button
             className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
               activeTab === "bookshelf" 
@@ -45,12 +45,14 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ activeTab, onTabChang
           >
             FAVORITES
           </button>
-          <button 
-            className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-            aria-label="Search"
-          >
-            <Search className="h-2 w-2" />
-          </button>
+          <div className="flex-1 flex justify-end">
+            <button 
+              className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
+              aria-label="Search"
+            >
+              <Search className="h-2 w-2" />
+            </button>
+          </div>
         </div>
       </div>
     </header>
