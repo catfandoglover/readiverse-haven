@@ -159,6 +159,38 @@
   }
 }
 
+/* Mobile keyboard handling */
+@supports (padding: max(0px)) {
+  .keyboard-aware {
+    /* Use safe area insets plus a buffer for the keyboard */
+    padding-bottom: max(env(safe-area-inset-bottom, 16px), 400px);
+  }
+  
+  /* Header that stays fixed even when keyboard opens */
+  .fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background-color: hsl(var(--background));
+  }
+  
+  /* Content that adjusts when keyboard appears */
+  .keyboard-adjustable-content {
+    position: relative;
+    height: auto;
+    min-height: calc(100vh - 120px);
+    overflow-y: auto;
+    transition: min-height 0.3s ease;
+  }
+  
+  /* When keyboard is visible */
+  .keyboard-visible .keyboard-adjustable-content {
+    min-height: calc(100vh - 320px);
+  }
+}
+
 @layer components {
   .ai-chat-button {
     @apply fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg 
@@ -175,5 +207,38 @@
 
   .ai-chat-message.assistant {
     @apply bg-muted mr-8;
+  }
+}
+
+/* Mobile visibility control utility classes */
+.visible-above-keyboard {
+  position: fixed;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+@media screen and (max-height: 600px) {
+  /* When keyboard is likely visible on most mobile devices */
+  .question-container {
+    padding-top: 60px; /* Give space for fixed header */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .answer-buttons-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: hsl(var(--background));
+    padding: 16px;
+    z-index: 20;
+    transition: transform 0.3s ease;
+    transform: translateY(-50px); /* Move up when keyboard appears */
   }
 }

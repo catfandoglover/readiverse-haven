@@ -1,7 +1,5 @@
-
-import React from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,6 +19,7 @@ import { toast } from "sonner";
 import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -48,6 +47,43 @@ const DNAAssessment = () => {
   const [isInitializing, setIsInitializing] = React.useState(true);
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const detectKeyboard = () => {
+      const isVisible = window.innerHeight < window.outerHeight * 0.75;
+      setIsKeyboardVisible(isVisible);
+      
+      if (isVisible) {
+        document.body.classList.add('keyboard-visible');
+      } else {
+        document.body.classList.remove('keyboard-visible');
+      }
+    };
+
+    window.addEventListener('resize', detectKeyboard);
+    window.addEventListener('focusin', () => setIsKeyboardVisible(true));
+    window.addEventListener('focusout', () => setIsKeyboardVisible(false));
+
+    return () => {
+      window.removeEventListener('resize', detectKeyboard);
+      window.removeEventListener('focusin', () => setIsKeyboardVisible(true));
+      window.removeEventListener('focusout', () => setIsKeyboardVisible(false));
+      document.body.classList.remove('keyboard-visible');
+    };
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isKeyboardVisible && mainContentRef.current) {
+      setTimeout(() => {
+        mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, [isKeyboardVisible]);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -559,7 +595,7 @@ const DNAAssessment = () => {
   if (questionLoading || isTransitioning || isInitializing) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
-        <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
+        <header className="fixed-header px-6 py-4 flex items-center justify-between bg-[#E9E7E2]">
           <div className="h-10 w-10" />
           <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
             <span>{currentQuestionNumber}</span>
@@ -567,7 +603,7 @@ const DNAAssessment = () => {
             <span>{TOTAL_QUESTIONS}</span>
           </div>
         </header>
-        <div className="px-6">
+        <div className="px-6 pt-16">
           <Progress 
             value={progressPercentage}
             className="h-2 bg-[#373763]/30"
@@ -585,7 +621,7 @@ const DNAAssessment = () => {
   if (!currentQuestion) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
-        <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
+        <header className="fixed-header px-6 py-4 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
             className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
@@ -594,7 +630,7 @@ const DNAAssessment = () => {
             BACK
           </button>
         </header>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-4rem)] px-4">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-4rem)] px-4 pt-16">
           <h1 className="text-2xl font-oxanium text-center mb-8">
             Question not found
           </h1>
@@ -615,8 +651,8 @@ const DNAAssessment = () => {
 
   return (
     <>
-      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
-        <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
+      <div className={`min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col keyboard-aware ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
+        <header className="fixed-header px-6 py-4 flex items-center justify-between bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
             className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
@@ -630,19 +666,22 @@ const DNAAssessment = () => {
             <span>{TOTAL_QUESTIONS}</span>
           </div>
         </header>
-        <div className="px-6">
+        
+        <div className="px-6 pt-16">
           <Progress 
             value={progressPercentage}
             className="h-2 bg-[#373763]/30"
           />
         </div>
-        <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
+        
+        <div ref={mainContentRef} className={`flex-1 flex flex-col relative keyboard-adjustable-content ${isKeyboardVisible ? 'question-container' : ''}`}>
           <div className="flex-1 flex items-center justify-center py-8">
             <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className="w-full px-6 mb-48">
+          
+          <div className={`w-full px-6 mb-20 ${isKeyboardVisible ? 'answer-buttons-container' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
@@ -658,7 +697,7 @@ const DNAAssessment = () => {
               </Button>
             </div>
             
-            <div className="mt-8 text-center">
+            <div className={`mt-8 text-center ${isKeyboardVisible ? 'visible-above-keyboard' : ''}`}>
               <button 
                 className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
                 onClick={() => setShowAIChat(true)}
@@ -668,7 +707,7 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="absolute bottom-6 left-0 right-0 text-center">
+          <div className={`${isKeyboardVisible ? 'hidden' : 'absolute bottom-6 left-0 right-0 text-center'}`}>
             <div className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
               LIGHTNING
             </div>
