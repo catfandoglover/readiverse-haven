@@ -26,12 +26,12 @@ const Bookshelf = () => {
       <BookshelfHeader activeTab={activeTab} onTabChange={handleTabChange} />
       
       <div className="flex-1 relative overflow-hidden">
-        {/* Header Image */}
-        <div className="relative w-full aspect-[16/9] max-h-[40vh]">
+        {/* Header Image - removed aspect-[16/9] to prevent cropping */}
+        <div className="relative w-full max-h-[40vh]">
           <img 
             src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png" 
             alt="Bookshelf Header" 
-            className="w-full h-full object-cover"
+            className="w-full object-contain"
           />
         </div>
         
