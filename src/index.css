@@ -157,6 +157,15 @@
   .min-h-screen {
     min-height: -webkit-fill-available;
   }
+  
+  /* Fixed positioned elements with keyboard awareness */
+  .ios-keyboard-aware {
+    position: fixed;
+    bottom: 0;
+    height: auto;
+    max-height: 70%;
+    transition: height 0.3s ease;
+  }
 }
 
 @layer components {
@@ -175,5 +184,13 @@
 
   .ai-chat-message.assistant {
     @apply bg-muted mr-8;
+  }
+  
+  /* Keyboard-aware chat container */
+  .chat-container {
+    @apply fixed bottom-0 w-full max-w-md mx-auto rounded-t-2xl shadow-lg;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    max-height: 70%;
   }
 }
