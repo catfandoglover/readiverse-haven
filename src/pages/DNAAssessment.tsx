@@ -644,7 +644,7 @@ const DNAAssessment = () => {
             </h1>
           </div>
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
-            showAIChat ? (isMobile ? 'translate-y-[-25vh]' : 'translate-y-[-40vh]') : ''}`}>
+            showAIChat ? 'translate-y-[calc(-100vh+15rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
@@ -711,3 +711,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
