@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -645,16 +644,16 @@ const DNAAssessment = () => {
             </h1>
           </div>
           <div className="w-full px-6 mb-24">
-            <div className="flex flex-col gap-4 max-w-md mx-auto w-full">
+            <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
-                className="w-full py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
+                className="flex-1 py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
               >
                 {buttonTextA}
               </Button>
               <Button
                 onClick={() => handleAnswer("B")}
-                className="w-full py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
+                className="flex-1 py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
               >
                 {buttonTextB}
               </Button>
