@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ArrowRight, Hexagon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "../ui/progress";
 
@@ -8,7 +8,6 @@ export interface DomainCardProps {
   id: string;
   title: string;
   description: string;
-  icon: React.ReactNode;
   progress: number;
   color: string;
 }
@@ -17,7 +16,6 @@ const DomainCard: React.FC<DomainCardProps> = ({
   id,
   title,
   description,
-  icon,
   progress,
   color,
 }) => {
@@ -29,11 +27,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
       onClick={() => navigate(`/dashboard/domain/${id}`)}
     >
       <div className="p-4">
-        <div className="flex items-center mb-2">
-          <div className="relative h-10 w-10 flex items-center justify-center mr-3">
-            <Hexagon className="absolute h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
-            <div className="relative z-10 text-[#E9E7E2]">{icon}</div>
-          </div>
+        <div className="mb-2">
           <h3 className="text-lg font-oxanium font-bold uppercase">{title}</h3>
         </div>
         
