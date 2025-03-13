@@ -1,14 +1,12 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Mic, MicOff } from 'lucide-react';
-import ChatMessage from './ChatMessage';
-import aiService from '../services/AIService';
-import conversationManager from '../services/ConversationManager';
-import { Message } from '../services/ConversationManager';
+import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import { Spinner } from './ui/spinner';
+import aiService from '../services/AIService';
+import conversationManager, { Message } from '../services/ConversationManager';
 
 interface AIChatDialogProps {
   open: boolean;
@@ -77,7 +75,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       }]);
       
       // Send message to AI service
-      const response = await aiService.sendMessage(sessionId, trimmedInput);
+      const response = await aiService.generateResponse(sessionId, trimmedInput);
       
       // Update messages with AI response
       setMessages(conversationManager.getHistory(sessionId));
@@ -111,40 +109,21 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       recorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         
-        // Convert audio to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result as string;
+        try {
+          setIsLoading(true);
           
-          try {
-            setIsLoading(true);
-            
-            // Send audio to transcription service
-            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-              body: { audio: base64Audio }
-            });
-            
-            if (error) {
-              console.error('Transcription error:', error);
-              return;
-            }
-            
-            if (data.text) {
-              setInput(data.text);
-              // Auto-send the transcribed message
-              setTimeout(() => {
-                setInput(data.text);
-                handleSendMessage();
-              }, 100);
-            }
-          } catch (error) {
-            console.error('Error processing audio:', error);
-          } finally {
-            setIsLoading(false);
-            setAudioChunks([]);
-          }
-        };
+          // Process audio with AI service
+          const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
+          
+          // Update messages with AI response
+          setMessages(conversationManager.getHistory(sessionId));
+          
+        } catch (error) {
+          console.error('Error processing audio:', error);
+        } finally {
+          setIsLoading(false);
+          setAudioChunks([]);
+        }
       };
       
       recorder.start();
@@ -173,15 +152,20 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message, index) => (
-            <ChatMessage 
-              key={index} 
-              message={message} 
-              autoPlay={index === messages.length - 1 && message.role === 'assistant'}
-            />
+            <div 
+              key={index}
+              className={`p-3 rounded-lg ${
+                message.role === 'user' 
+                  ? 'bg-primary text-primary-foreground ml-8' 
+                  : 'bg-muted mr-8'
+              }`}
+            >
+              {message.content}
+            </div>
           ))}
           {isLoading && (
             <div className="flex justify-center">
-              <Spinner />
+              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -217,4 +201,4 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   );
 };
 
-export default AIChatDialog; 
+export default AIChatDialog;
