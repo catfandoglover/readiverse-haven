@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -128,35 +129,37 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg",
+        "flex items-start gap-2 p-3 rounded-xl max-w-[85%]",
         role === 'user' 
-          ? "bg-primary/10 ml-auto max-w-[80%]" 
-          : "bg-secondary/80 mr-auto max-w-[80%]",
-        isVoiceMessage && "bg-primary/20"
+          ? "bg-[#373763] text-white ml-auto" 
+          : "bg-[#E9E7E2] border border-[#373763]/20 text-[#373763] mr-auto",
+        isVoiceMessage && "bg-[#373763]/90"
       )}
       aria-label={`${role === 'user' ? 'Your' : 'Assistant'} message: ${cleanedContent}`}
     >
       {isVoiceMessage && (
-        <Mic className="h-4 w-4 mt-1 text-primary" aria-hidden="true" />
+        <Mic className="h-4 w-4 mt-1 text-white" aria-hidden="true" />
       )}
       
       <div className="flex-1">
         {isTranscribedVoice ? (
           <>
-            <p className="text-xs text-muted-foreground mb-1">Transcribed voice message:</p>
+            <p className="text-xs text-white/70 mb-1">Transcribed voice message:</p>
             <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
           </>
         ) : (
           <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
         )}
-        
       </div>
       
       {audioUrl && (
         <Button
           variant="ghost"
           size="sm"
-          className="flex-shrink-0 h-8 w-8 p-0"
+          className={cn(
+            "flex-shrink-0 h-8 w-8 p-0 rounded-full",
+            role === 'assistant' ? "text-[#373763] hover:bg-[#373763]/10" : "text-white hover:bg-white/10"
+          )}
           onClick={toggleAudio}
           title={isPlaying ? "Pause" : "Play"}
           aria-label={isPlaying ? "Pause audio" : "Play audio"}
@@ -172,4 +175,4 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   );
 };
 
-export default ChatMessage; 
+export default ChatMessage;
