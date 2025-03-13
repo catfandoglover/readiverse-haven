@@ -114,7 +114,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      }, 100);
+      }, 100); // Reduced delay for quicker keyboard opening
     }
   }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
 
@@ -348,10 +348,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       open ? "translate-y-0" : "translate-y-full"
     )}>
       <div className="relative w-full max-w-md mx-auto">
-        {/* Chat container with fixed positioning instead of vh-based height */}
-        <div className="bg-white rounded-t-2xl shadow-lg flex flex-col font-oxanium absolute bottom-0 w-full" 
-             style={{ maxHeight: "70%", height: "420px" }}>
-          {/* Messages container with flexible height to accommodate keyboard */}
+        <div className="bg-white rounded-t-2xl shadow-lg h-[50vh] flex flex-col font-oxanium">
           <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
             {messages.map((msg) => (
               <ChatMessage 
@@ -367,7 +364,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input container with fixed height at bottom */}
           <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E9E7E2] border-t border-[#D0CBBD]/25">
             <Input
               ref={inputRef}

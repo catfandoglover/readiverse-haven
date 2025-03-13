@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MessageSquareText } from "lucide-react";
@@ -23,7 +22,7 @@ const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = 
         variant="outline"
         size="icon"
         className="fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg hover:shadow-xl 
-          transition-all duration-200 bg-background border-2 border-primary z-40"
+          transition-all duration-200 bg-background border-2 border-primary z-50"
         onClick={() => setIsDialogOpen(true)}
         aria-label="Talk to AI Assistant"
       >
