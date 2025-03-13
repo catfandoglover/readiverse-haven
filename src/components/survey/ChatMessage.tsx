@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Mic } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playAudio, stopAllAudio } from '@/services/AudioContext';
 import useAudioStore from '@/services/AudioContext';
@@ -22,7 +21,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isNewMessage = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioDuration, setAudioDuration] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoPlayedRef = useRef(false);
   const isVoiceMessage = role === 'user' && audioUrl && (content === 'Voice message' || content.length > 0);
@@ -38,15 +36,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       newAudio.onended = () => setIsPlaying(false);
       newAudio.onpause = () => setIsPlaying(false);
       newAudio.onplay = () => setIsPlaying(true);
-      newAudio.onloadedmetadata = () => {
-        setAudioDuration(newAudio.duration);
-      };
       
       audioRef.current = newAudio;
-      
-      if (newAudio.duration) {
-        setAudioDuration(newAudio.duration);
-      }
     }
     
     return () => {
@@ -89,20 +80,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [dialogOpen, isPlaying]);
 
-  const toggleAudio = () => {
-    if (!audioUrl || !audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      playAudio(audioRef.current).catch(error => {
-        console.error('Error playing audio:', error);
-        setIsPlaying(false);
-      });
-    }
-  };
-
   const isTranscribedVoice = isVoiceMessage && content !== 'Voice message';
 
   return (
@@ -129,23 +106,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <p className="text-sm whitespace-pre-wrap text-[#282828] font-oxanium">{cleanedContent}</p>
         )}
       </div>
-      
-      {audioUrl && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-shrink-0 h-8 w-8 p-0"
-          onClick={toggleAudio}
-          title={isPlaying ? "Pause" : "Play"}
-          aria-label={isPlaying ? "Pause audio" : "Play audio"}
-        >
-          {isPlaying ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-        </Button>
-      )}
     </div>
   );
 };

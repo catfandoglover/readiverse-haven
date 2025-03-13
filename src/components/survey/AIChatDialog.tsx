@@ -377,11 +377,16 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               size="icon"
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={isRecording ? "bg-red-500 hover:bg-red-600 h-10 w-10 rounded-full" : "h-10 w-10 rounded-full"}
+              className={cn(
+                "h-10 w-10 rounded-full",
+                isRecording 
+                  ? "bg-[#CCFF23] hover:bg-[#CCFF23]/90" 
+                  : "text-[#282828]"
+              )}
               aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
               {isRecording ? (
-                <MicOff className="h-4 w-4" />
+                <MicOff className="h-4 w-4 text-[#282828]" />
               ) : (
                 <Mic className="h-4 w-4" />
               )}
