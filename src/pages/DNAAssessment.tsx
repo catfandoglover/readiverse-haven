@@ -570,7 +570,6 @@ const DNAAssessment = () => {
           <Progress 
             value={progressPercentage}
             className="h-2 bg-[#373763]/30"
-            indicatorClassName="bg-[#9b87f5]"
           />
         </div>
         <div className="flex-1 flex items-center justify-center">
@@ -634,7 +633,6 @@ const DNAAssessment = () => {
           <Progress 
             value={progressPercentage}
             className="h-2 bg-[#373763]/30"
-            indicatorClassName="bg-[#9b87f5]"
           />
         </div>
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
@@ -643,7 +641,7 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className="w-full px-6 mb-8">
+          <div className="w-full px-6 mb-48">
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
@@ -704,7 +702,6 @@ const DNAAssessment = () => {
         onOpenChange={setShowAIChat}
         sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
         currentQuestion={currentQuestion.question?.question || ''}
-        enabled={aiEnabled}
       />
     </>
   );
