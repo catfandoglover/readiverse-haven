@@ -183,4 +183,21 @@
     background: rgba(208, 203, 189, 0.25);
     box-shadow: 0px -2px 2px 2px rgba(40, 40, 40, 0.08);
   }
+  
+  /* Virgil icon styles */
+  .virgil-icon-container {
+    @apply w-10 h-10 rounded-full overflow-hidden border-2 border-primary bg-white flex items-center justify-center;
+  }
+  
+  .virgil-icon {
+    @apply w-full h-full object-cover;
+  }
+  
+  .virgil-icon-container-small {
+    @apply w-7 h-7 rounded-full overflow-hidden border border-primary bg-white flex items-center justify-center;
+  }
+  
+  .virgil-icon-small {
+    @apply w-full h-full object-cover;
+  }
 }
