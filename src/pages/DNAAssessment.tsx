@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -557,23 +558,24 @@ const DNAAssessment = () => {
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (
-      <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-        <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
+        <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <div className="h-10 w-10" />
-          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+          <div className="flex items-center gap-1 text-base font-oxanium text-[#7A798A]">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
             <span>{TOTAL_QUESTIONS}</span>
           </div>
         </header>
-        <div className="px-4">
+        <div className="px-6">
           <Progress 
             value={progressPercentage}
-            className="bg-secondary/10"
+            className="h-2 bg-[#373763]/30"
+            indicatorClassName="bg-[#9b87f5]"
           />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="font-oxanium text-lg">
+          <div className="font-oxanium text-lg text-[#373763]">
             {isInitializing ? 'Initializing assessment...' : 'Loading next question...'}
           </div>
         </div>
@@ -583,14 +585,14 @@ const DNAAssessment = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-[100dvh] bg-background text-foreground">
-        <header className="sticky top-0 px-4 py-3 relative z-50 bg-background">
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
+        <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
+            className="text-[#7A798A] font-oxanium text-base uppercase font-medium"
             type="button"
           >
-            <ArrowLeft className="h-5 w-5" />
+            BACK
           </button>
         </header>
         <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-4rem)] px-4">
@@ -600,69 +602,83 @@ const DNAAssessment = () => {
           <Button
             variant="outline"
             onClick={handleExit}
-            className="px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]"
+            className="px-8 py-2 text-white bg-[#373763] hover:bg-[#373763]/90 transition-all duration-300 font-oxanium rounded-md"
           >
-            <span>GO BACK</span>
+            GO BACK
           </Button>
         </div>
       </div>
     );
   }
 
-  const buttonTextA = currentQuestion.question?.answer_a || "Yes";
-  const buttonTextB = currentQuestion.question?.answer_b || "No";
-
-  const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
+  const buttonTextA = currentQuestion.question?.answer_a || "YES";
+  const buttonTextB = currentQuestion.question?.answer_b || "NO";
 
   return (
     <>
-      <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-        <header className="sticky top-0 px-4 py-3 flex items-center justify-between relative z-50 bg-background">
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
+        <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>*]:relative [&>*]:z-[1]"
+            className="text-[#7A798A] font-oxanium text-base uppercase font-medium"
             type="button"
           >
-            <ArrowLeft className="h-5 w-5" />
+            BACK
           </button>
-          <div className="flex items-center gap-1 text-sm font-oxanium text-foreground mr-3">
+          <div className="flex items-center gap-1 text-base font-oxanium text-[#7A798A]">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
             <span>{TOTAL_QUESTIONS}</span>
           </div>
         </header>
-        <div className="px-4">
+        <div className="px-6">
           <Progress 
             value={progressPercentage}
-            className="bg-secondary/10"
+            className="h-2 bg-[#373763]/30"
+            indicatorClassName="bg-[#9b87f5]"
           />
         </div>
-        <div className="flex-1 flex flex-col px-4 relative h-[calc(100dvh-5rem)]">
-          <div className="flex-1 flex items-center justify-center py-8 mb-20">
-            <h1 className="text-3xl font-baskerville text-center max-w-2xl">
+        <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
+          <div className="flex-1 flex items-center justify-center py-8">
+            <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className="absolute left-1/2 bottom-24 -translate-x-1/2 flex justify-center gap-4 w-full max-w-lg px-4">
-            <Button
-              variant="outline"
-              className={`${buttonGradientStyles} w-40`}
-              onClick={() => handleAnswer("A")}
+          <div className="w-full px-6 mb-24">
+            <div className="flex flex-col gap-4 max-w-md mx-auto w-full">
+              <Button
+                onClick={() => handleAnswer("A")}
+                className="w-full py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
+              >
+                {buttonTextA}
+              </Button>
+              <Button
+                onClick={() => handleAnswer("B")}
+                className="w-full py-6 rounded-md bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-lg uppercase"
+              >
+                {buttonTextB}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="absolute bottom-16 left-0 right-0 text-center">
+            <button 
+              className="text-[#7A798A] font-oxanium text-base uppercase"
+              onClick={() => setShowAIChat(true)}
             >
-              <span>{buttonTextA}</span>
-            </Button>
-            <Button
-              variant="outline"
-              className={`${buttonGradientStyles} w-40`}
-              onClick={() => handleAnswer("B")}
-            >
-              <span>{buttonTextB}</span>
-            </Button>
+              I HAVE MORE TO SAY
+            </button>
+          </div>
+          
+          <div className="absolute bottom-6 left-0 right-0 text-center">
+            <div className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
+              LIGHTNING
+            </div>
           </div>
         </div>
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-[#E9E7E2]">
             <AlertDialogHeader>
               <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
@@ -670,21 +686,24 @@ const DNAAssessment = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className={`${buttonGradientStyles}`}>
-                <span>Cancel</span>
+              <AlertDialogCancel className="bg-[#E9E7E2] border border-[#373763] text-[#373763] font-oxanium">
+                Cancel
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={confirmExit}
-                className={`${buttonGradientStyles}`}
+                className="bg-[#373763] text-white font-oxanium"
               >
-                <span>Exit Assessment</span>
+                Exit Assessment
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
 
-      <AIChatButton 
+      <AIChatDialog 
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
         currentQuestion={currentQuestion.question?.question || ''}
         enabled={aiEnabled}
       />
