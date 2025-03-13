@@ -46,8 +46,9 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({
           >
             FAVORITES
           </button>
-          <div className="flex items-center space-x-4">
-            <div className="flex space-x-4">
+          <div className="flex items-center">
+            {/* Layout adjustment icons - commented out for now but preserved for future use
+            <div className="flex space-x-4 mr-4">
               <button
                 onClick={() => setIsGridView(false)}
                 className={`h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${!isGridView ? 'bg-accent text-accent-foreground' : ''}`}
@@ -61,6 +62,7 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({
                 <Grid className="h-4 w-4" />
               </button>
             </div>
+            */}
             <button
               onClick={() => navigate('/search')}
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200"
