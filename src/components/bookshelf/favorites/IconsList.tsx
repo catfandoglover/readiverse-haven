@@ -35,7 +35,7 @@ const IconsList: React.FC = () => {
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {mockIcons.map((icon) => (
         <div key={icon.id} className="w-full cursor-pointer group">
-          <div className="relative h-44 w-full rounded-2xl overflow-hidden mb-2">
+          <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
             <img
               src={icon.image}
               alt={icon.name}
@@ -53,7 +53,6 @@ const IconsList: React.FC = () => {
               <Star className="h-5 w-5 text-yellow-400" fill="#EFFE91" />
             </button>
           </div>
-          <p className="text-xs text-gray-600">{icon.role}</p>
         </div>
       ))}
     </div>
