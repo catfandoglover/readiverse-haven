@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -102,7 +101,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       )}
       
       {showVirgilIcon && (
-        <div className="h-5 w-5 mt-1 rounded-full bg-[#373763] flex-shrink-0" aria-hidden="true" />
+        <img 
+          src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
+          className="h-5 w-5 mt-1 flex-shrink-0" 
+          aria-hidden="true" 
+          alt="Virgil" 
+        />
       )}
       
       <div className="flex-1">
