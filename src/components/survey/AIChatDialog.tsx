@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isFirstOpen, setIsFirstOpen] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initial greeting messages to choose from
   const initialGreetings = [
     "Tell me more",
     "What's on your mind?",
@@ -57,33 +55,24 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     "What dimensions of this question intrigue you?"
   ];
 
-  // Track previous question to detect changes
   const [lastQuestion, setLastQuestion] = useState(currentQuestion);
 
-  // Initialize session when dialog opens
   useEffect(() => {
     if (open) {
-      // Check if the question has changed since last time
       const questionChanged = lastQuestion !== currentQuestion;
       
-      // Use the provided sessionId or fallback to a default
       const userId = providedSessionId || sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
       
       if (!sessionId || questionChanged) {
         setSessionId(userId);
-        setIsFirstOpen(true); // Reset first open flag for new question
+        setIsFirstOpen(true);
         setLastQuestion(currentQuestion);
-        setMessages([]); // Clear messages when question changes
+        setMessages([]);
         
-        // Set the current question in the conversation manager
         conversationManager.setCurrentQuestion(userId, currentQuestion);
-        
-        // Initialize the conversation with an automatic greeting
         conversationManager.initializeConversation(userId);
         
-        // Update the local messages state with the greeting
         const history = conversationManager.getHistory(userId);
-        // Convert ConversationManager messages to our local Message format with IDs
         const messagesWithIds = history.map(msg => ({
           id: uuidv4(),
           content: msg.content,
@@ -93,13 +82,10 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         }));
         setMessages(messagesWithIds);
       } else {
-        // Update the current question in case it changed
         conversationManager.setCurrentQuestion(userId, currentQuestion);
       }
       
-      // If this is the first time opening the dialog, show a welcome message
       if (isFirstOpen && messages.length === 0) {
-        // Select a random greeting from the list
         const randomIndex = Math.floor(Math.random() * initialGreetings.length);
         const greeting = initialGreetings[randomIndex];
         
@@ -113,16 +99,13 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         ]);
         setIsFirstOpen(false);
         
-        // Add the greeting to the conversation manager as well
         if (sessionId) {
           conversationManager.addMessage(sessionId, 'assistant', greeting);
         }
         
-        // Generate audio for the greeting
         generateAudioForText(greeting);
       }
       
-      // Focus the input when opened
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
@@ -131,7 +114,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
 
-  // Scroll to bottom of messages when new ones are added
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -140,15 +122,12 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Generate audio for assistant messages
   const generateAudioForText = async (text: string) => {
     try {
-      // Stop any currently playing audio before generating a new one
       stopAllAudio();
       
       const audioUrl = await speechService.synthesizeSpeech(text);
       
-      // Update the last assistant message with the audio URL
       setMessages(prevMessages => {
         const lastAssistantIndex = [...prevMessages].reverse().findIndex(m => m.role === 'assistant');
         if (lastAssistantIndex !== -1) {
@@ -167,7 +146,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  // Handle key press events for the input field
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -175,26 +153,21 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  // Handle text message submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // If recording is in progress, stop and send the audio
     if (isRecording) {
       await stopAndProcessRecording();
       return;
     }
     
-    // Otherwise, process text message as usual
     if (!inputMessage.trim() || isProcessing) return;
     
-    // Stop any playing audio before processing the new message
     stopAllAudio();
     
     const userMessage = inputMessage.trim();
     setInputMessage('');
     
-    // Add user message to the UI
     const newUserMessage: Message = {
       id: uuidv4(),
       content: userMessage,
@@ -202,20 +175,15 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     };
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
     
-    // Process with AI
     await processMessage(userMessage);
   };
 
-  // Handle voice recording
   const toggleRecording = async () => {
     if (isRecording) {
-      // Stop recording and process the audio
       await stopAndProcessRecording();
     } else {
-      // Stop any playing audio before starting a new recording
       stopAllAudio();
       
-      // Start recording
       try {
         await audioRecordingService.startRecording();
         setIsRecording(true);
@@ -224,39 +192,31 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       }
     }
   };
-  
-  // Helper function to stop recording and process the audio
+
   const stopAndProcessRecording = async () => {
     setIsRecording(false);
     try {
       const audioBlob = await audioRecordingService.stopRecording();
       
-      // Process the audio with AI
       await processAudio(audioBlob);
     } catch (error) {
       console.error('Error stopping recording:', error);
     }
   };
 
-  // Process user message with AI
   const processMessage = async (userMessage: string) => {
     setIsProcessing(true);
     try {
-      // Stop any playing audio before processing
       stopAllAudio();
       
-      // Add loading message
       const loadingId = uuidv4();
       setMessages(prevMessages => [
         ...prevMessages, 
         { id: loadingId, content: 'Thinking...', role: 'assistant' }
       ]);
       
-      // Get response from AI service
-      // Note: AIService now handles adding messages to the conversation history
       const response = await aiService.generateResponse(sessionId, userMessage);
       
-      // Replace loading message with actual response
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
@@ -265,11 +225,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         )
       );
       
-      // Generate audio for the response
       generateAudioForText(response.text);
     } catch (error) {
       console.error('Error processing message:', error);
-      // Replace loading message with error
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.content !== 'Thinking...')
       );
@@ -282,41 +240,31 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  // Process audio with AI
   const processAudio = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
-      // Stop any playing audio before processing
       stopAllAudio();
       
-      // Create temporary audio URL for display
       const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
       
-      // Log audio details for debugging
       console.log(`Processing audio: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
       
-      // Add loading message for transcription
       const transcriptionLoadingId = uuidv4();
       setMessages(prevMessages => [
         ...prevMessages, 
         { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
       ]);
       
-      // Get response from AI service, passing the audio blob for transcription and processing
       const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
       
-      // Remove the transcription loading message
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
       );
       
-      // Clean up any debugging artifacts from the transcribed text
       let displayContent = response.transcribedText || "Voice message";
       
-      // Log the final clean result for debugging
       console.log('Final cleaned transcription:', displayContent);
       
-      // Add user audio message to the UI with transcribed text if available
       const newUserMessage: Message = {
         id: uuidv4(),
         content: displayContent,
@@ -325,14 +273,12 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       };
       setMessages(prevMessages => [...prevMessages, newUserMessage]);
       
-      // Add loading message for AI response
       const loadingId = uuidv4();
       setMessages(prevMessages => [
         ...prevMessages, 
         { id: loadingId, content: 'Processing your message...', role: 'assistant' }
       ]);
       
-      // Replace loading message with actual response
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
@@ -341,11 +287,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         )
       );
       
-      // Generate audio for the response
       generateAudioForText(response.text);
     } catch (error) {
       console.error('Error processing audio:', error);
-      // Replace loading message with error
       setMessages(prevMessages => 
         prevMessages.filter(msg => 
           msg.content !== 'Transcribing your voice message...' && 
@@ -365,7 +309,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  // Reset isNew flag when dialog closes
   useEffect(() => {
     if (!open) {
       setMessages(prevMessages => 
@@ -375,7 +318,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         }))
       );
       
-      // Stop any playing audio when the dialog closes
       stopAllAudio();
     }
   }, [open]);
@@ -386,7 +328,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       open ? "translate-y-0" : "translate-y-full"
     )}>
       <div className="relative w-full max-w-md mx-auto">
-        {/* Slide up panel with rounded top corners and border */}
         <div className="bg-white border-t-2 border-x-2 border-[#D0CBBD]/25 rounded-t-2xl shadow-lg h-[50vh] flex flex-col">
           <div className="p-4 border-b">
             <h3 className="text-lg font-medium">Discuss with Virgil</h3>
@@ -395,8 +336,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             </div>
           </div>
           
-          {/* Chat messages with overflow scrolling */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
             {messages.map((msg) => (
               <ChatMessage 
                 key={msg.id}
@@ -408,11 +348,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               />
             ))}
             
-            {/* Auto-scroll reference element */}
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input area with no border on the input field */}
           <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E9E7E2] border-t border-[#D0CBBD]/25">
             <Input
               ref={inputRef}
@@ -420,7 +358,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? "Recording..." : "Message Virgil..."}
-              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
+              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828]"
               disabled={isProcessing || isRecording}
             />
             <Button 

@@ -124,9 +124,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       className={cn(
         "flex items-start gap-2 p-3 rounded-lg mb-2",
         role === 'user' 
-          ? "bg-primary/10 ml-auto max-w-[80%]" 
-          : "bg-secondary/80 mr-auto max-w-[80%]",
-        isVoiceMessage && "bg-primary/20"
+          ? "bg-[#E9E7E2] ml-auto max-w-[80%] text-[#282828]" 
+          : "bg-[#E9E7E2] mr-auto max-w-[80%] text-[#282828]",
+        isVoiceMessage && "bg-[#E9E7E2]"
       )}
       aria-label={`${role === 'user' ? 'Your' : 'Assistant'} message: ${cleanedContent}`}
     >
@@ -138,10 +138,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         {isTranscribedVoice ? (
           <>
             <p className="text-xs text-muted-foreground mb-1">Transcribed voice message:</p>
-            <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
+            <p className="text-sm whitespace-pre-wrap text-[#282828]">{cleanedContent}</p>
           </>
         ) : (
-          <p className="text-sm whitespace-pre-wrap">{cleanedContent}</p>
+          <p className="text-sm whitespace-pre-wrap text-[#282828]">{cleanedContent}</p>
         )}
       </div>
       
@@ -165,4 +165,4 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   );
 };
 
-export default ChatMessage; 
+export default ChatMessage;
