@@ -164,12 +164,13 @@ const IntellectualDNA = () => {
               Trace your<br />Intellectual DNA
             </h1>
             
-            <button
-              onClick={() => setShowNameDialog(true)}
-              className="w-full max-w-xl mx-auto bg-[#373763] text-[#E9E7E2] rounded-md py-4 px-12 font-oxanium uppercase tracking-wider text-sm font-bold hover:opacity-90 transition-opacity duration-200"
+            <Button 
+            variant="secondary"
+            className="w-full max-w-md mx-auto py-4 font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+            onClick={() => handleNavigation('/dna')}
             >
-              GET STARTED
-            </button>
+              <span>GET STARTED</span>
+            </Button>
 
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
