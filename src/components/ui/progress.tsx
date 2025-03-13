@@ -16,7 +16,7 @@ const Progress = React.forwardRef<
       className
     )}
     style={{
-      background: "linear-gradient(to right, #e3ff6b, rgba(227, 255, 107, 0.9))"
+      background: "#373763"
     }}
     {...props}
   >
