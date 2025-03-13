@@ -24,7 +24,7 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ activeTab, onTabChang
         <div className="flex-none">
           <MainMenu />
         </div>
-        <div className="flex-1 flex items-center space-x-6 pl-1">
+        <div className="flex-1 flex items-center space-x-8 pl-1">
           <button
             className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
               activeTab === "bookshelf" 
