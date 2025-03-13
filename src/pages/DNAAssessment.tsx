@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -637,7 +636,7 @@ const DNAAssessment = () => {
           />
         </div>
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
-          <div className="flex-1 flex items-center justify-center py-8">
+          <div className={`flex-1 flex items-center justify-center py-8 ${showAIChat ? 'mb-40' : ''} transition-all duration-300`}>
             <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion.question?.question}
             </h1>
