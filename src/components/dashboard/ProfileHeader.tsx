@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -78,19 +77,18 @@ const ProfileHeader: React.FC = () => {
 
   return (
     <div className="relative overflow-hidden">
-  {/* Background with 50% opacity image */}
-  <div 
-    className="w-full h-64 bg-[#2A282A] relative"
-    style={{
-      backgroundImage: `url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png')`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      opacity: "0.5"
-    }}
-  >
-    <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
-  </div>
-</div>
+      {/* Background with 50% opacity image */}
+      <div className="w-full h-64 bg-[#2A282A] relative">
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: "0.5"
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
         {/* Settings button */}
         <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center backdrop-blur-sm">
