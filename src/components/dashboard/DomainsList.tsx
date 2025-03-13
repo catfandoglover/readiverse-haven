@@ -1,14 +1,14 @@
 
 import React from "react";
 import DomainCard from "./DomainCard";
-import { Book, Heart, Globe, Sparkles, Diamond, Palette } from "lucide-react";
+import { Heart, Diamond, Globe, Sparkles, Palette } from "lucide-react";
 
 const DomainsList: React.FC = () => {
   const domains = [
     {
       id: "ethics",
       title: "Ethics",
-      description: "Explore frameworks for understanding right and wrong, good and evil, virtue and vice.",
+      description: "YOUR VIEW ON THE GOOD",
       icon: <Heart className="h-5 w-5" />,
       progress: 21,
       color: "#FD8F8F"
@@ -16,7 +16,7 @@ const DomainsList: React.FC = () => {
     {
       id: "epistemology",
       title: "Epistemology",
-      description: "Examine the nature of knowledge, belief, and the foundations of understanding.",
+      description: "YOUR VIEW ON KNOWLEDGE",
       icon: <Diamond className="h-5 w-5" />,
       progress: 15,
       color: "#7E69AB"
@@ -24,7 +24,7 @@ const DomainsList: React.FC = () => {
     {
       id: "politics",
       title: "Politics",
-      description: "Understand the systems and theories that govern societies and shape our collective decisions.",
+      description: "YOUR VIEW ON POWER",
       icon: <Globe className="h-5 w-5" />,
       progress: 18,
       color: "#b29eff"
@@ -32,7 +32,7 @@ const DomainsList: React.FC = () => {
     {
       id: "theology",
       title: "Theology",
-      description: "Examine the nature of the divine and religious belief systems throughout history.",
+      description: "YOUR VIEW ON THE DIVINE",
       icon: <Sparkles className="h-5 w-5" />,
       progress: 35,
       color: "#EFFE91"
@@ -40,7 +40,7 @@ const DomainsList: React.FC = () => {
     {
       id: "ontology",
       title: "Ontology",
-      description: "Investigate the nature of being, reality, and existence itself.",
+      description: "YOUR VIEW ON REALITY",
       icon: <Diamond className="h-5 w-5" />,
       progress: 12,
       color: "#8DD7CF"
@@ -48,7 +48,7 @@ const DomainsList: React.FC = () => {
     {
       id: "aesthetics",
       title: "Aesthetics",
-      description: "Study beauty, art, taste, and the nature of creative expression.",
+      description: "YOUR VIEW ON BEAUTY",
       icon: <Palette className="h-5 w-5" />,
       progress: 28,
       color: "#D3E4FD"
