@@ -153,9 +153,9 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      <main className="flex-1 flex flex-col items-center justify-between px-2 py-4 w-full">
-        <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
-          <div className="space-y-6 text-center w-full">
+      <main className="flex-1 flex flex-col items-center justify-between p-4 max-w-lg mx-auto w-full">
+        <div className="flex-1 flex flex-col items-center justify-center w-full space-y-6 py-12">
+          <div className="space-y-6 text-center">
             <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               UNCOVER YOUR WORLDVIEW
             </h2>
@@ -164,15 +164,12 @@ const IntellectualDNA = () => {
               Trace your<br />Intellectual DNA
             </h1>
             
-            <div className="w-full px-2 flex justify-center">
-              <Button 
-                variant="secondary"
-                className="w-full py-4 rounded-lg font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
-                onClick={() => handleNavigation('/dna')}
-              >
-                <span>GET STARTED</span>
-              </Button>
-            </div>
+            <button
+              onClick={() => setShowNameDialog(true)}
+              className="w-full max-w-xs mx-auto bg-[#373763] text-[#E9E7E2] rounded-2xl py-4 px-24 font-oxanium uppercase tracking-wider text-sm font-bold hover:opacity-90 transition-opacity duration-200"
+            >
+              GET STARTED
+            </button>
 
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
