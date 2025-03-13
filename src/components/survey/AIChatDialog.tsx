@@ -1,14 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Send, Loader2 } from "lucide-react";
+import { Mic, MicOff, Send, Loader2, X } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
+import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
@@ -45,6 +42,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Initial greeting messages to choose from
   const initialGreetings = [
@@ -66,6 +65,10 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   // Initialize session when dialog opens
   useEffect(() => {
     if (open) {
+      // Handle animation when opening
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 300);
+      
       // Check if the question has changed since last time
       const questionChanged = lastQuestion !== currentQuestion;
       
@@ -353,6 +356,35 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
+  // Handle asking in another way
+  const handleAskAnotherWay = () => {
+    // Clear the input field and current conversation
+    setInputMessage('');
+    setMessages([]);
+    
+    // Reinitialize conversation with a new greeting
+    if (sessionId) {
+      conversationManager.initializeConversation(sessionId);
+      
+      // Get a random greeting
+      const randomIndex = Math.floor(Math.random() * initialGreetings.length);
+      const greeting = initialGreetings[randomIndex];
+      
+      // Add the new greeting
+      setMessages([
+        {
+          id: uuidv4(),
+          content: greeting,
+          role: 'assistant',
+          isNew: true
+        }
+      ]);
+      
+      // Generate audio for the greeting
+      generateAudioForText(greeting);
+    }
+  };
+
   // Reset isNew flag when dialog closes
   useEffect(() => {
     if (!open) {
@@ -368,43 +400,73 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   }, [open]);
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" aria-describedby="chat-description">
-        <DialogHeader>
-          <DialogTitle>Discuss with Virgil</DialogTitle>
-          <div id="chat-description" className="sr-only">Chat with an AI assistant about this question.</div>
-        </DialogHeader>
-        <div className="flex flex-col h-[400px]">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/50 rounded-md">
-            <div className="bg-background p-3 rounded-lg shadow">
-              <p className="text-sm text-muted-foreground">
-                Current question: {currentQuestion}
-              </p>
-            </div>
-            
-            {/* Chat messages */}
-            {messages.map((msg) => (
-              <ChatMessage 
-                key={msg.id}
-                content={msg.content}
-                role={msg.role}
-                audioUrl={msg.audioUrl}
-                dialogOpen={open}
-                isNewMessage={msg.isNew}
-              />
-            ))}
-            
-            {/* Auto-scroll reference element */}
-            <div ref={messagesEndRef} />
+    <div 
+      className={cn(
+        "fixed inset-x-0 bottom-0 bg-[#E9E7E2] z-50 transition-all duration-300 border-t border-[#373763]/20 shadow-lg",
+        isAnimating ? "translate-y-full" : "translate-y-0"
+      )}
+      style={{ height: "calc(100dvh - 12rem)" }}
+      ref={chatContainerRef}
+    >
+      <div className="flex flex-col h-full relative">
+        {/* Close button */}
+        <div className="absolute right-4 top-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="rounded-full h-8 w-8 text-[#373763]"
+            aria-label="Close chat"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Chat messages area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="bg-[#E9E7E2] p-3 rounded-lg border border-[#373763]/10 mb-4">
+            <p className="text-sm text-[#373763]/80 font-oxanium">
+              {currentQuestion}
+            </p>
           </div>
           
-          <form onSubmit={handleSubmit} className="flex gap-2 mt-4">
+          {/* Chat messages */}
+          {messages.map((msg) => (
+            <ChatMessage 
+              key={msg.id}
+              content={msg.content}
+              role={msg.role}
+              audioUrl={msg.audioUrl}
+              dialogOpen={open}
+              isNewMessage={msg.isNew}
+            />
+          ))}
+          
+          {/* Auto-scroll reference element */}
+          <div ref={messagesEndRef} />
+        </div>
+        
+        {/* Input area - fixed at the bottom with iOS style */}
+        <div className="bg-[#E9E7E2] p-4 border-t border-[#373763]/10">
+          <div className="mb-4">
+            <Button
+              onClick={handleAskAnotherWay}
+              variant="outline"
+              className="w-full py-2 bg-[#E9E7E2] text-[#373763] border border-[#373763]/20 font-oxanium text-sm uppercase tracking-wider"
+            >
+              ASK ME ANOTHER WAY
+            </Button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder={isRecording ? "Recording..." : "Ask about this question..."}
-              className="flex-1"
+              className="flex-1 bg-white border-[#373763]/20 rounded-full px-4 h-10 text-[#373763]"
               disabled={isProcessing || isRecording}
             />
             <Button 
@@ -413,7 +475,12 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               size="icon"
               onClick={toggleRecording}
               disabled={isProcessing}
-              className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+              className={cn(
+                "rounded-full h-10 w-10", 
+                isRecording 
+                  ? "bg-red-500 hover:bg-red-600 text-white" 
+                  : "bg-[#E9E7E2] border border-[#373763]/20 text-[#373763]"
+              )}
               aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
               {isRecording ? (
@@ -426,6 +493,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               type="submit" 
               size="icon"
               disabled={(!inputMessage.trim() && !isRecording) || isProcessing}
+              className="rounded-full h-10 w-10 bg-[#373763] text-white"
               aria-label={isRecording ? "Send recording" : "Send message"}
             >
               {isProcessing ? (
@@ -436,8 +504,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             </Button>
           </form>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
