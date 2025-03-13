@@ -92,7 +92,7 @@ const ProfileHeader: React.FC = () => {
         {/* Lightning bolt overlay */}
         <div className="absolute top-0 right-0 w-full h-full opacity-10">
           <img 
-            src="/lovable-uploads/d9d3233c-fe72-450f-8173-b32959a3e396.png" 
+            src="/https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png" 
             alt="" 
             className="w-full h-full object-contain"
           />
@@ -108,7 +108,7 @@ const ProfileHeader: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <Avatar className="h-20 w-20 border-2 border-[#9b87f5] shadow-lg">
-            <AvatarImage src={profileImage || ""} />
+            <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
             <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
               {initials}
             </AvatarFallback>
