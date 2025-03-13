@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -7,7 +8,6 @@ import ConceptsContent from "./ConceptsContent";
 import { useSwipeable } from "react-swipeable";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
-import DiscoverTabs from "./DiscoverTabs";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts";
 
@@ -163,13 +163,52 @@ const DiscoverLayout = () => {
               <div className="flex-none">
                 <MainMenu />
               </div>
-              <div className="flex-1 flex items-center justify-between pl-6">
-                <DiscoverTabs activeTab={activeTab} onChange={handleTabChange} />
+              <div className="flex-1 flex items-center justify-between pl-2">
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "for-you" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("for-you")}
+                >
+                  FOR YOU
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "classics" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("classics")}
+                >
+                  CLASSICS
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "icons" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("icons")}
+                >
+                  ICONS
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "concepts" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("concepts")}
+                >
+                  CONCEPTS
+                </button>
                 <button 
-                  className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
+                  className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
                   aria-label="Search"
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className="h-2 w-2" />
                 </button>
               </div>
             </div>

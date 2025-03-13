@@ -40,32 +40,15 @@ Deno.serve(async (req) => {
       throw new Error("OUTSETA_DOMAIN not configured");
     }
 
-    // First, decode the token to check the structure (debug)
-    const decoded = jose.decodeJwt(outsetaJwtAccessToken);
-    console.log('Decoded JWT payload:', decoded);
-
-    // The problem might be with token validation - let's add more flexible validation
-    let payload;
+    const jwksUrl = new URL(`https://${outsetaDomain}/.well-known/jwks`);
+    console.log('Fetching JWKS from:', jwksUrl.toString());
     
-    try {
-      // Try to validate with JWKS first
-      const jwksUrl = new URL(`https://${outsetaDomain}/.well-known/jwks`);
-      console.log('Fetching JWKS from:', jwksUrl.toString());
-      
-      const JWKS = jose.createRemoteJWKSet(jwksUrl);
-      const { payload: validatedPayload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
-      payload = validatedPayload;
-      console.log('JWT verified with JWKS');
-    } catch (jwksError) {
-      console.log('JWKS verification failed, falling back to decode:', jwksError.message);
-      // If JWKS fails, just use the decoded payload
-      // This is less secure but allows us to proceed if the JWKS endpoint is misconfigured
-      payload = decoded;
-    }
+    const JWKS = jose.createRemoteJWKSet(jwksUrl);
 
-    // Add required fields for Supabase
+    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
+    console.log('JWT verified, payload:', payload);
+
     payload.role = "authenticated";
-    payload.aud = "authenticated";
 
     const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
     if (!supabaseSecret) {
@@ -77,8 +60,7 @@ Deno.serve(async (req) => {
     const supabaseJwt = await new jose.SignJWT(payload)
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setIssuer("supabase")
-      .setAudience("authenticated")
-      .setIssuedAt(payload.iat || Math.floor(Date.now() / 1000))
+      .setIssuedAt(payload.iat)
       .setExpirationTime(payload.exp || "2h")
       .sign(supabaseEncodedJwtSecret);
 
