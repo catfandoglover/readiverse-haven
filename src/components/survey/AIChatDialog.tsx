@@ -342,9 +342,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       "fixed inset-x-0 bottom-0 w-full transition-transform duration-300 transform z-50",
       open ? "translate-y-0" : "translate-y-full"
     )}>
-      <div className="relative w-full max-w-md mx-auto">
-        <div className="chat-dialog-container flex flex-col font-oxanium h-[50vh]">
-          <div className="chat-content-container flex-1 p-4 space-y-2">
+      <div className="relative w-full max-w-md mx-auto h-[360px]">
+        <div className="absolute bottom-0 left-0 right-0 chat-dialog-container flex flex-col font-oxanium h-full">
+          <div className="chat-content-container flex-1 p-4 space-y-2 overflow-y-auto">
             {messages.map((msg, index) => {
               const previousMessage = index > 0 ? messages[index - 1] : null;
               const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
