@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   
   const firstName = user?.Account?.Name?.split(' ')[0] || "Explorer";
   const lastName = user?.Account?.Name?.split(' ').slice(1).join(' ') || "";
@@ -18,7 +19,7 @@ const ProfileHeader: React.FC = () => {
     const fetchProfileData = async () => {
       if (user?.Uid) {
         try {
-          // Check if profiles table has the correct columns
+          // Check if profiles table has the correct columns and structure
           const { data: columns, error: columnsError } = await supabase
             .from('profiles')
             .select('*')
@@ -32,20 +33,33 @@ const ProfileHeader: React.FC = () => {
           // Log the column names to help debug
           console.log("Available columns in profiles table:", columns && columns[0] ? Object.keys(columns[0]) : []);
           
-          // Fetch the user's profile from Supabase
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('outseta_uid', user.Uid)
-            .single();
+          // Determine the correct ID column - try id, user_id, or outseta_uid
+          let query = supabase.from('profiles').select('*');
+          
+          // If we don't see outseta_uid in the schema, we'll try different ID fields
+          if (columns && columns[0] && !Object.keys(columns[0]).includes('outseta_uid')) {
+            if (Object.keys(columns[0]).includes('user_id')) {
+              query = query.eq('user_id', user.Uid);
+            } else {
+              query = query.eq('id', user.Uid);
+            }
+          } else {
+            query = query.eq('outseta_uid', user.Uid);
+          }
+          
+          const { data, error } = await query.single();
             
           if (data && !error) {
             console.log("Profile data:", data);
+            
             // Check if landscape_image field exists in the data
-            if ('landscape_image' in data) {
+            if (data.landscape_image) {
               setLandscapeImage(data.landscape_image);
-            } else {
-              console.error("landscape_image field not found in profile data");
+            }
+            
+            // Check if profile_image field exists in the data
+            if (data.profile_image) {
+              setProfileImage(data.profile_image);
             }
           } else {
             console.error("Error fetching profile data:", error);
@@ -94,7 +108,7 @@ const ProfileHeader: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <Avatar className="h-20 w-20 border-2 border-[#9b87f5] shadow-lg">
-            <AvatarImage src="" />
+            <AvatarImage src={profileImage || ""} />
             <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
               {initials}
             </AvatarFallback>
