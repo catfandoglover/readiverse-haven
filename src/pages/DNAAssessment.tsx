@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -21,6 +20,7 @@ import { toast } from "sonner";
 import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -48,6 +48,7 @@ const DNAAssessment = () => {
   const [isInitializing, setIsInitializing] = React.useState(true);
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
+  const isMobile = useIsMobile();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -642,9 +643,8 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          {/* Modified button container: added position-relative, z-index, and increased translate value */}
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
-            showAIChat ? 'translate-y-[-250%]' : ''}`}>
+            showAIChat ? (isMobile ? 'translate-y-[-25vh]' : 'translate-y-[-40vh]') : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
