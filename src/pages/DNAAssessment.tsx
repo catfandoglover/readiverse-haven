@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,15 +39,15 @@ const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [currentPosition, setCurrentPosition] = useState("Q1");
-  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
-  const [showExitAlert, setShowExitAlert] = useState(false);
-  const [answers, setAnswers] = useState<string>("");
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [assessmentId, setAssessmentId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [aiEnabled, setAIEnabled] = useState(true);
+  const [currentPosition, setCurrentPosition] = React.useState("Q1");
+  const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
+  const [showExitAlert, setShowExitAlert] = React.useState(false);
+  const [answers, setAnswers] = React.useState<string>("");
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
+  const [assessmentId, setAssessmentId] = React.useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = React.useState(true);
+  const [showAIChat, setShowAIChat] = React.useState(false);
+  const [aiEnabled, setAIEnabled] = React.useState(true);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -641,7 +642,7 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className="w-full px-6 mb-72">
+          <div className="w-full px-6 mb-48">
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
