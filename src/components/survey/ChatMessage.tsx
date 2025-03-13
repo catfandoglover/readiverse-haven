@@ -122,11 +122,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-start gap-2 p-3 rounded-lg mb-2",
+        "flex items-start gap-2 p-3 mb-2",
         role === 'user' 
-          ? "bg-[#E9E7E2] ml-auto max-w-[80%] text-[#282828]" 
-          : "bg-[#E9E7E2] mr-auto max-w-[80%] text-[#282828]",
-        isVoiceMessage && "bg-[#E9E7E2]"
+          ? "bg-[#332E38]/25 ml-auto max-w-[80%] rounded-lg text-[#282828]" 
+          : "mr-auto max-w-[80%] text-[#282828]"
       )}
       aria-label={`${role === 'user' ? 'Your' : 'Assistant'} message: ${cleanedContent}`}
     >
