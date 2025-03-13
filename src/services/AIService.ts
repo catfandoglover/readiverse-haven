@@ -1,5 +1,5 @@
 
-import conversationManager from './ConversationManager';
+import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
 
 class AIService {
