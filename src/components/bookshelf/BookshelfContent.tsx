@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -6,6 +5,7 @@ import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import AllBooksContent from "./domains/AllBooksContent";
 import EthicsContent from "./domains/EthicsContent";
 import EpistemologyContent from "./domains/EpistemologyContent";
 import PoliticsContent from "./domains/PoliticsContent";
@@ -15,7 +15,7 @@ import AestheticsContent from "./domains/AestheticsContent";
 import CustomDomainContent from "./domains/CustomDomainContent";
 import NewDomainDialog from "./NewDomainDialog";
 
-type StandardDomainTabType = "ethics" | "epistemology" | "politics" | "theology" | "ontology" | "aesthetics";
+type StandardDomainTabType = "all" | "ethics" | "epistemology" | "politics" | "theology" | "ontology" | "aesthetics";
 type DomainTabType = StandardDomainTabType | string;
 
 interface CustomDomain {
@@ -24,7 +24,7 @@ interface CustomDomain {
 }
 
 const BookshelfContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<DomainTabType>("ethics");
+  const [activeTab, setActiveTab] = useState<DomainTabType>("all");
   const [customDomains, setCustomDomains] = useState<CustomDomain[]>([]);
   const [isNewDomainDialogOpen, setIsNewDomainDialogOpen] = useState(false);
   const { user } = useAuth();
@@ -73,7 +73,7 @@ const BookshelfContent: React.FC = () => {
 
   // Function to determine if the active tab is a custom domain
   const isCustomDomain = () => {
-    return !["ethics", "epistemology", "politics", "theology", "ontology", "aesthetics"].includes(activeTab);
+    return !["all", "ethics", "epistemology", "politics", "theology", "ontology", "aesthetics"].includes(activeTab);
   };
 
   // Find the current custom domain if active tab is a custom domain
@@ -82,6 +82,17 @@ const BookshelfContent: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 mb-4 border-b border-[#2A282A]/10 pb-2 overflow-x-auto">
+        <button
+          className={cn(
+            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+            activeTab === "all"
+              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+              : "text-[#2A282A]/60"
+          )}
+          onClick={() => setActiveTab("all")}
+        >
+          ALL
+        </button>
         <button
           className={cn(
             "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
@@ -176,6 +187,7 @@ const BookshelfContent: React.FC = () => {
       </div>
 
       <ScrollArea className="flex-1">
+        {activeTab === "all" && <AllBooksContent />}
         {activeTab === "ethics" && <EthicsContent />}
         {activeTab === "epistemology" && <EpistemologyContent />}
         {activeTab === "politics" && <PoliticsContent />}

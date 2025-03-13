@@ -31,3 +31,13 @@ create table custom_domain_books (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Create user books table for the user's library
+create table user_books (
+  id uuid default uuid_generate_v4() primary key,
+  user_id text not null,
+  book_id uuid not null references books(id) on delete cascade,
+  is_favorite boolean default false,
+  reading_progress float default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, book_id)
+);
