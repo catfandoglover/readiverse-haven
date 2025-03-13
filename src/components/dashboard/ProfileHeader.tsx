@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share2, Hexagon } from "lucide-react";
+import { Share, Hexagon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProfileHeader: React.FC = () => {
@@ -91,9 +91,9 @@ const ProfileHeader: React.FC = () => {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
-        {/* Share button - replaced Settings with Share2 */}
+        {/* Share button - aligned with hamburger menu height */}
         <button className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
-          <Share2 className="h-5 w-5" />
+          <Share className="h-5 w-5" />
         </button>
       </div>
       
