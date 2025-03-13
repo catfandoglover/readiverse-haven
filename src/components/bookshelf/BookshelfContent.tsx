@@ -1,18 +1,73 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import EthicsContent from "./domains/EthicsContent";
 import EpistemologyContent from "./domains/EpistemologyContent";
 import PoliticsContent from "./domains/PoliticsContent";
 import TheologyContent from "./domains/TheologyContent";
 import OntologyContent from "./domains/OntologyContent";
 import AestheticsContent from "./domains/AestheticsContent";
+import CustomDomainContent from "./domains/CustomDomainContent";
+import NewDomainDialog from "./NewDomainDialog";
 
-type DomainTabType = "ethics" | "epistemology" | "politics" | "theology" | "ontology" | "aesthetics";
+type StandardDomainTabType = "ethics" | "epistemology" | "politics" | "theology" | "ontology" | "aesthetics";
+type DomainTabType = StandardDomainTabType | string;
+
+interface CustomDomain {
+  id: string;
+  name: string;
+}
 
 const BookshelfContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DomainTabType>("ethics");
+  const [customDomains, setCustomDomains] = useState<CustomDomain[]>([]);
+  const [isNewDomainDialogOpen, setIsNewDomainDialogOpen] = useState(false);
+  const { user } = useAuth();
+
+  // Fetch custom domains from Supabase
+  const { data: fetchedCustomDomains, refetch: refetchCustomDomains } = useQuery({
+    queryKey: ["custom-domains", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data } = await supabase
+        .from("custom_domains")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (fetchedCustomDomains) {
+      setCustomDomains(fetchedCustomDomains);
+    }
+  }, [fetchedCustomDomains]);
+
+  const handleNewDomainCreated = (domain: CustomDomain) => {
+    refetchCustomDomains();
+    setActiveTab(domain.id);
+  };
+
+  const handleNewDomainClick = () => {
+    setIsNewDomainDialogOpen(true);
+  };
+
+  // Function to determine if the active tab is a custom domain
+  const isCustomDomain = () => {
+    return !["ethics", "epistemology", "politics", "theology", "ontology", "aesthetics"].includes(activeTab);
+  };
+
+  // Find the current custom domain if active tab is a custom domain
+  const currentCustomDomain = customDomains.find(domain => domain.id === activeTab);
 
   return (
     <div className="flex flex-col h-full">
@@ -83,6 +138,31 @@ const BookshelfContent: React.FC = () => {
         >
           AESTHETICS
         </button>
+        
+        {/* Custom domain tabs */}
+        {customDomains.map((domain) => (
+          <button
+            key={domain.id}
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === domain.id
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab(domain.id)}
+          >
+            {domain.name.toUpperCase()}
+          </button>
+        ))}
+        
+        {/* New Domain Button */}
+        <button
+          className="flex items-center gap-1 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs text-[#2A282A]/60 hover:text-[#2A282A]"
+          onClick={handleNewDomainClick}
+        >
+          <Plus className="h-4 w-4" />
+          NEW
+        </button>
       </div>
 
       <ScrollArea className="flex-1">
@@ -92,7 +172,21 @@ const BookshelfContent: React.FC = () => {
         {activeTab === "theology" && <TheologyContent />}
         {activeTab === "ontology" && <OntologyContent />}
         {activeTab === "aesthetics" && <AestheticsContent />}
+        
+        {/* Render custom domain content */}
+        {isCustomDomain() && currentCustomDomain && (
+          <CustomDomainContent 
+            domainId={currentCustomDomain.id} 
+            domainName={currentCustomDomain.name} 
+          />
+        )}
       </ScrollArea>
+
+      <NewDomainDialog 
+        open={isNewDomainDialogOpen} 
+        onOpenChange={setIsNewDomainDialogOpen} 
+        onDomainCreated={handleNewDomainCreated}
+      />
     </div>
   );
 };
