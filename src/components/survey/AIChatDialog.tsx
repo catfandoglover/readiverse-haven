@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -328,7 +329,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       open ? "translate-y-0" : "translate-y-full"
     )}>
       <div className="relative w-full max-w-md mx-auto">
-        <div className="bg-white border-t-2 border-x-2 border-[#D0CBBD]/25 rounded-t-2xl shadow-lg h-[50vh] flex flex-col">
+        <div className="bg-white rounded-t-2xl shadow-lg h-[50vh] flex flex-col font-oxanium">
           <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#E9E7E2]">
             {messages.map((msg) => (
               <ChatMessage 
@@ -351,7 +352,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? "Recording..." : "Message Virgil..."}
-              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828]"
+              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
               disabled={isProcessing || isRecording}
             />
             <Button 
