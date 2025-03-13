@@ -167,7 +167,7 @@ const IntellectualDNA = () => {
             <div className="w-full px-2 flex justify-center">
               <Button 
                 variant="secondary"
-                className="w-full py-4 rounded-xl font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+                className="w-full py-4 rounded-l font-oxanium text-base uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
                 onClick={() => handleNavigation('/dna')}
               >
                 <span>GET STARTED</span>
