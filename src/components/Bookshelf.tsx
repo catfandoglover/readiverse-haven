@@ -25,7 +25,7 @@ const Bookshelf = () => {
     <div className="h-screen flex flex-col bg-[#2A282A] transition-colors duration-300 bookshelf-page">
       <BookshelfHeader activeTab={activeTab} onTabChange={handleTabChange} />
       
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden pt-16">
         {/* Header Image */}
         <div className="relative w-full aspect-[16/9] max-h-[40vh]">
           <img 
