@@ -102,7 +102,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       )}
       
       {showVirgilIcon && (
-        <Bot className="h-5 w-5 mt-1 text-primary flex-shrink-0" aria-hidden="true" />
+        <Bot className="h-5 w-5 mt-1 text-primary flex-shrink-0" stroke="currentColor" strokeWidth={2} />
       )}
       
       <div className="flex-1">

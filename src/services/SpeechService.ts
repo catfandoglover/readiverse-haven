@@ -1,85 +1,79 @@
 
-// Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
-import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
+import AWS from 'aws-sdk';
+import { createPresignedUrl } from "@aws-sdk/polly-request-presigner";
+import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 
 class SpeechService {
-  private polly: PollyClient;
-  private voiceId: VoiceId = 'Arthur'; // British English male voice
-  private outputFormat: OutputFormat = 'mp3';
-  private sampleRate: string = '16000';
-  private textType: TextType = 'text';
+  private pollyClient: PollyClient;
+  private cacheSynthesisResults: Map<string, string>;
 
   constructor() {
-    // Add debugging to check environment variables
-    // console.log('AWS Config:', {
-    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
-    // });
+    const region = 'us-east-1';
     
-    // Initialize Polly client with AWS config from environment variables
-    this.polly = new PollyClient({
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    this.pollyClient = new PollyClient({
+      region,
       credentials: {
-        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
+        accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.VITE_AWS_SECRET_ACCESS_KEY || ''
       }
     });
+    
+    this.cacheSynthesisResults = new Map();
   }
 
-  // Set voice options
-  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
-    this.voiceId = voiceId;
-    this.outputFormat = outputFormat;
-    this.sampleRate = sampleRate;
+  hashText(text: string): string {
+    // Simple hash function for text
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash.toString();
   }
 
-  // Synthesize speech from text
   async synthesizeSpeech(text: string): Promise<string> {
     try {
-      // Create the parameters for synthesizeSpeech
-      const speechParams: SynthesizeSpeechCommandInput = {
-        OutputFormat: this.outputFormat,
-        SampleRate: this.sampleRate,
+      // For empty text, don't try to synthesize
+      if (!text.trim()) {
+        return '';
+      }
+      
+      // Check cache first
+      const textHash = this.hashText(text);
+      const cachedUrl = this.cacheSynthesisResults.get(textHash);
+      if (cachedUrl) {
+        console.log('Using cached synthesis result');
+        return cachedUrl;
+      }
+
+      console.log('Synthesizing speech for text:', text);
+      
+      // Use AWS Polly to generate speech
+      const params = {
+        OutputFormat: "mp3",
         Text: text,
-        TextType: this.textType,
-        VoiceId: this.voiceId,
-        Engine: 'neural'
+        TextType: "text",
+        VoiceId: "Matthew",
+        Engine: "neural",
+        LanguageCode: "en-US"
       };
 
-      console.log('Attempting to get Polly URL with params:', speechParams);
+      // Create the presigned URL for the synthesis task
+      const command = new SynthesizeSpeechCommand(params);
+      const url = await createPresignedUrl(this.pollyClient, command, { expiresIn: 3600 });
       
-      // Get presigned URL for the speech - Fixed 'String' to 'string' error
-      const url = await getSynthesizeSpeechUrl({
-        client: this.polly,
-        params: speechParams
-      });
-
-      console.log('Successfully got Polly URL:', url);
+      // Cache the result
+      this.cacheSynthesisResults.set(textHash, url);
+      
       return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
-      // Log more details about the error
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      throw error;
+      return '';
     }
-  }
-
-  // Create a temporary audio element and play the audio
-  playAudio(audioUrl: string): HTMLAudioElement {
-    const audio = new Audio(audioUrl);
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-    });
-    return audio;
   }
 }
 
-// Create a singleton instance
-export const speechService = new SpeechService();
+const speechService = new SpeechService();
+
 export default speechService;
