@@ -7,17 +7,13 @@ import AIChatDialog from './AIChatDialog';
 interface AIChatButtonProps {
   currentQuestion: string;
   enabled?: boolean;
-  sessionId: string;
-  currentQuestionId: string;
 }
 
-const AIChatButton: React.FC<AIChatButtonProps> = ({ 
-  currentQuestion, 
-  enabled = true,
-  sessionId,
-  currentQuestionId
-}) => {
+const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = true }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Get a consistent session ID from sessionStorage
+  const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
 
   if (!enabled) return null;
 
@@ -39,7 +35,6 @@ const AIChatButton: React.FC<AIChatButtonProps> = ({
         onOpenChange={setIsDialogOpen}
         currentQuestion={currentQuestion}
         sessionId={sessionId}
-        currentQuestionId={currentQuestionId}
       />
     </>
   );
