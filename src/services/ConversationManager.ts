@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Message {
@@ -270,9 +271,10 @@ Response Format:
         console.error('Error checking for existing record:', queryError);
       }
       
-      const messages = {
-        conversation,
-        questionPath,
+      // Serialize the complex objects to JSON compatible format
+      const messagesJson = {
+        conversation: JSON.parse(JSON.stringify(conversation)),
+        questionPath: JSON.parse(JSON.stringify(questionPath)),
         metadata: {
           original_identifier: originalIdentifier,
           is_anonymous: !userId
@@ -284,7 +286,7 @@ Response Format:
         const { error: updateError } = await supabase
           .from('dna_conversations')
           .update({
-            messages,
+            messages: messagesJson,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingRecord.id);
@@ -303,7 +305,7 @@ Response Format:
             user_id: effectiveUserId,
             session_id: sessionId,
             question_id: questionId,
-            messages
+            messages: messagesJson
           })
           .select();
           
