@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -360,14 +359,14 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             <div ref={messagesEndRef} />
           </div>
           
-          <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E9E7E2] border-t border-[#D0CBBD]/25">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-[inset_0px_1px_10px_rgba(255,255,255,0.3)]">
             <Input
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? "Recording..." : "Message Virgil..."}
-              className="flex-1 bg-[#E9E7E2] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
+              className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
               disabled={isProcessing || isRecording}
               autoComplete="off"
             />
