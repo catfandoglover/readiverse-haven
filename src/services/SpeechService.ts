@@ -1,81 +1,85 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { PollyClient, SynthesizeSpeechCommand } from '@aws-sdk/client-polly';
-import { getSignedUrl } from '@aws-sdk/polly-request-presigner';
+// Import AWS SDK for browser
+import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
+import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
 
 class SpeechService {
-  private client: PollyClient | null = null;
-  private voiceId: string = 'Matthew';
-  private engine: string = 'neural';
-  private audioCache: Map<string, string> = new Map();
-  
+  private polly: PollyClient;
+  private voiceId: VoiceId = 'Arthur'; // British English male voice
+  private outputFormat: OutputFormat = 'mp3';
+  private sampleRate: string = '16000';
+  private textType: TextType = 'text';
+
   constructor() {
-    this.initializeClient();
-  }
-  
-  private async initializeClient() {
-    try {
-      const { data, error } = await supabase.functions.invoke('get-aws-credentials');
-      
-      if (error) {
-        console.error('Error getting AWS credentials:', error);
-        return;
+    // Add debugging to check environment variables
+    // console.log('AWS Config:', {
+    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    // });
+    
+    // Initialize Polly client with AWS config from environment variables
+    this.polly = new PollyClient({
+      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
       }
-      
-      if (data && data.accessKeyId && data.secretAccessKey) {
-        this.client = new PollyClient({
-          region: 'us-west-2',
-          credentials: {
-            accessKeyId: data.accessKeyId,
-            secretAccessKey: data.secretAccessKey,
-            sessionToken: data.sessionToken,
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error initializing Polly client:', error);
-    }
+    });
   }
-  
+
+  // Set voice options
+  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
+    this.voiceId = voiceId;
+    this.outputFormat = outputFormat;
+    this.sampleRate = sampleRate;
+  }
+
+  // Synthesize speech from text
   async synthesizeSpeech(text: string): Promise<string> {
-    if (this.audioCache.has(text)) {
-      return this.audioCache.get(text) as string;
-    }
-    
-    if (!this.client) {
-      await this.initializeClient();
-      
-      if (!this.client) {
-        console.error('Failed to initialize Polly client');
-        return '';
-      }
-    }
-    
     try {
-      const command = new SynthesizeSpeechCommand({
+      // Create the parameters for synthesizeSpeech
+      const speechParams: SynthesizeSpeechCommandInput = {
+        OutputFormat: this.outputFormat,
+        SampleRate: this.sampleRate,
         Text: text,
-        OutputFormat: 'mp3',
+        TextType: this.textType,
         VoiceId: this.voiceId,
-        Engine: this.engine,
+        Engine: 'neural'
+      };
+
+      console.log('Attempting to get Polly URL with params:', speechParams);
+      
+      // Get presigned URL for the speech - Fixed 'String' to 'string' error
+      const url = await getSynthesizeSpeechUrl({
+        client: this.polly,
+        params: speechParams
       });
-      
-      const signedUrl = await getSignedUrl(this.client, command, { expiresIn: 3600 });
-      
-      this.audioCache.set(text, signedUrl);
-      return signedUrl;
+
+      console.log('Successfully got Polly URL:', url);
+      return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
-      return '';
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      throw error;
     }
   }
-  
-  setVoice(voiceId: string) {
-    this.voiceId = voiceId;
-  }
-  
-  setEngine(engine: string) {
-    this.engine = engine;
+
+  // Create a temporary audio element and play the audio
+  playAudio(audioUrl: string): HTMLAudioElement {
+    const audio = new Audio(audioUrl);
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+    });
+    return audio;
   }
 }
 
-export default new SpeechService();
+// Create a singleton instance
+export const speechService = new SpeechService();
+export default speechService;
