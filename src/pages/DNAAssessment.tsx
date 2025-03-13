@@ -613,6 +613,7 @@ const DNAAssessment = () => {
 
   const buttonTextA = currentQuestion.question?.answer_a || "YES";
   const buttonTextB = currentQuestion.question?.answer_b || "NO";
+  const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
 
   return (
     <>
@@ -638,13 +639,18 @@ const DNAAssessment = () => {
           />
         </div>
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
-          <div className={`flex-1 flex items-center justify-center py-8 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
+          <div className="flex-1 flex items-center justify-center py-8">
             <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
-            showAIChat ? 'translate-y-[calc(-50vh+10rem)]' : ''}`}>
+          <div className={`w-full px-6 relative z-40 ${
+            showAIChat 
+              ? isMobile 
+                ? 'transform translate-y-[calc(-30vh+6rem)]' 
+                : 'transform translate-y-[calc(-35vh+8rem)]'
+              : 'mb-48'
+            } transition-transform duration-300`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
@@ -703,8 +709,9 @@ const DNAAssessment = () => {
       <AIChatDialog 
         open={showAIChat}
         onOpenChange={setShowAIChat}
-        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+        sessionId={sessionId}
         currentQuestion={currentQuestion.question?.question || ''}
+        currentQuestionId={currentPosition}
       />
     </>
   );
