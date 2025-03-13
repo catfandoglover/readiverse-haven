@@ -21,7 +21,6 @@ import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useIsNarrowScreen } from "@/hooks/useNarrowScreen";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -50,7 +49,6 @@ const DNAAssessment = () => {
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
   const isMobile = useIsMobile();
-  const isNarrowScreen = useIsNarrowScreen();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -646,12 +644,7 @@ const DNAAssessment = () => {
             </h1>
           </div>
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
-            showAIChat ? isNarrowScreen 
-              ? 'translate-y-[calc(-100vh+20rem)]' 
-              : isMobile 
-                ? 'translate-y-[calc(-90vh+15rem)]' 
-                : 'translate-y-[calc(-85vh+15rem)]' 
-            : ''}`}>
+            showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}
