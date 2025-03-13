@@ -35,9 +35,9 @@ const Bookshelf = () => {
           />
         </div>
         
-        {/* Content Container that overlaps the image - removed mx-4 to make it full width */}
-        <div className="relative z-10 -mt-6">
-          <div className="p-6 bg-[#E9E7E2] text-[#2A282A] rounded-t-2xl h-full min-h-[calc(60vh+1.5rem)]">
+        {/* Content Container that overlaps the image - positioned like the Discover feed */}
+        <div className="absolute inset-0 pt-[40vh] z-10">
+          <div className="p-6 bg-[#E9E7E2] text-[#2A282A] rounded-t-2xl h-full">
             {/* Empty container for now */}
           </div>
         </div>
