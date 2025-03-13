@@ -164,16 +164,17 @@ const IntellectualDNA = () => {
               Trace your<br />Intellectual DNA
             </h1>
             
-            {/* Button Container - This ensures the button can take up more space */}
-            <div className="w-full px-4 flex justify-center">
-            <Button 
-              variant="secondary"
-              className="w-64 md:w-80 py-3 rounded-lg font-oxanium text-sm uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
-              onClick={() => handleNavigation('/dna')}
-              >
+            {/* Button Container with full width to eliminate constraints */}
+          <div className="w-full flex justify-center px-4">
+          <Button 
+            variant="secondary"
+            className="w-full max-w-4xl h-16 rounded-lg font-oxanium text-sm uppercase bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+            onClick={() => handleNavigation('/dna')}
+            style={{ maxWidth: '1079px', height: '161px' }}
+          >
             <span>GET STARTED</span>
-            </Button>
-            </div>
+          </Button>
+        </div>
 
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
