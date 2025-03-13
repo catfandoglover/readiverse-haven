@@ -1,16 +1,46 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Settings } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ProfileData {
+  landscape_image?: string;
+}
 
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
+  const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   
-  const firstName = user?.Profile?.FirstName || "Explorer";
-  const lastName = user?.Profile?.LastName || "";
-  const email = user?.Email || "user@example.com";
+  const firstName = user?.Account?.Name?.split(' ')[0] || "Explorer";
+  const lastName = user?.Account?.Name?.split(' ').slice(1).join(' ') || "";
+  const email = user?.email || "user@example.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (user?.Uid) {
+        // Fetch the user's profile from Supabase
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('landscape_image')
+          .eq('outseta_uid', user.Uid)
+          .single();
+          
+        if (data && !error) {
+          setLandscapeImage(data.landscape_image);
+        } else {
+          console.error("Error fetching profile data:", error);
+        }
+      }
+    };
+    
+    fetchProfileData();
+  }, [user]);
+
+  // Default background image as fallback
+  const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
 
   return (
     <div className="relative overflow-hidden">
@@ -18,7 +48,7 @@ const ProfileHeader: React.FC = () => {
       <div 
         className="w-full h-64 bg-[#2A282A] relative"
         style={{
-          backgroundImage: "linear-gradient(to bottom, rgba(42, 40, 42, 0.8), #2A282A), url('/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png')",
+          backgroundImage: `linear-gradient(to bottom, rgba(42, 40, 42, 0.8), #2A282A), url('${backgroundImageUrl}')`,
           backgroundSize: "cover",
           backgroundPosition: "center"
         }}
@@ -44,7 +74,7 @@ const ProfileHeader: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <Avatar className="h-20 w-20 border-2 border-[#9b87f5] shadow-lg">
-            <AvatarImage src={user?.Profile?.PhotoUrl || ""} />
+            <AvatarImage src="" />
             <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
               {initials}
             </AvatarFallback>
