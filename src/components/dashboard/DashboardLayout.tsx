@@ -21,14 +21,14 @@ const DashboardLayout: React.FC = () => {
       <main className="flex-1 relative pb-[50px] overflow-y-auto">
         <ProfileHeader />
         
-        <div className="px-6 mt-4 mb-6"> {/* Increased side margin from px-4 to px-6 */}
+        <div className="px-6 mt-4 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0", /* Added justify-start and pl-0 for left alignment */
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
                 activeSection === "profile" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-[#E9E7E2]/60"
               )}
               onClick={() => handleSectionChange("profile")}
@@ -38,9 +38,9 @@ const DashboardLayout: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start", /* Added justify-start for left alignment */
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start",
                 activeSection === "become" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
+                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-[#E9E7E2]/60"
               )}
               onClick={() => handleSectionChange("become")}
