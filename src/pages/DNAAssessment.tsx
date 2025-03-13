@@ -659,7 +659,7 @@ const DNAAssessment = () => {
             
             <div className="mt-8 text-center">
               <button 
-                className="text-[#7A798A] font-oxanium text-base uppercase"
+                className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold"
                 onClick={() => setShowAIChat(true)}
               >
                 I HAVE MORE TO SAY
@@ -708,3 +708,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
