@@ -62,15 +62,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       audioUrl && 
       audioRef.current && 
       dialogOpen && 
-      isNewMessage && 
-      !hasAutoPlayedRef.current
+      isNewMessage
     ) {
-      playAudio(audioRef.current).catch(error => {
-        console.error('Error auto-playing audio:', error);
-      });
-      
-      setIsPlaying(true);
-      hasAutoPlayedRef.current = true;
+      setTimeout(() => {
+        if (audioRef.current) {
+          playAudio(audioRef.current).catch(error => {
+            console.error('Error auto-playing audio:', error);
+          });
+          
+          setIsPlaying(true);
+        }
+      }, 100);
     }
   }, [audioUrl, role, dialogOpen, isNewMessage]);
 

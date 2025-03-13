@@ -83,11 +83,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           isNew: true
         }));
         setMessages(messagesWithIds);
-      } else {
-        conversationManager.setCurrentQuestion(userId, currentQuestion);
-      }
-      
-      if (isFirstOpen && messages.length === 0) {
+        
         const randomIndex = Math.floor(Math.random() * initialGreetings.length);
         const greeting = initialGreetings[randomIndex];
         
@@ -99,13 +95,18 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
             isNew: true
           }
         ]);
-        setIsFirstOpen(false);
         
-        if (sessionId) {
-          conversationManager.addMessage(sessionId, 'assistant', greeting);
+        if (userId) {
+          conversationManager.addMessage(userId, 'assistant', greeting);
         }
         
-        generateAudioForText(greeting);
+        setTimeout(() => {
+          generateAudioForText(greeting);
+        }, 100);
+        
+        setIsFirstOpen(false);
+      } else {
+        conversationManager.setCurrentQuestion(userId, currentQuestion);
       }
       
       setTimeout(() => {
@@ -114,7 +115,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         }
       }, 100);
     }
-  }, [open, sessionId, currentQuestion, isFirstOpen, messages.length, lastQuestion]);
+  }, [open, sessionId, currentQuestion, lastQuestion, initialGreetings]);
 
   useEffect(() => {
     if (open && isMobile) {
@@ -326,14 +327,14 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
 
   useEffect(() => {
     if (!open) {
+      stopAllAudio();
+      
       setMessages(prevMessages => 
         prevMessages.map(msg => ({
           ...msg,
           isNew: false
         }))
       );
-      
-      stopAllAudio();
     }
   }, [open]);
 
