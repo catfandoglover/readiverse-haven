@@ -1,5 +1,6 @@
+
 import React from "react";
-import { Star, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -163,12 +164,6 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
                   alt={book.title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <button 
-                  className="absolute top-2 right-2 bg-white/10 backdrop-blur-sm p-1 rounded-full"
-                  aria-label="Add to favorites"
-                >
-                  <Star className="h-5 w-5 text-white" />
-                </button>
               </div>
             </div>
           ))}
