@@ -276,6 +276,11 @@ const DNAAssessment = () => {
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion || !assessmentId) return;
 
+    // Close the AI chat dialog if it's open
+    if (showAIChat) {
+      setShowAIChat(false);
+    }
+
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
     
