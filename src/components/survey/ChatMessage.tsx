@@ -11,6 +11,7 @@ interface ChatMessageProps {
   audioUrl?: string;
   dialogOpen: boolean;
   isNewMessage?: boolean;
+  isPreviousMessageSameRole?: boolean;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ 
@@ -18,7 +19,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role, 
   audioUrl, 
   dialogOpen,
-  isNewMessage = false
+  isNewMessage = false,
+  isPreviousMessageSameRole = true
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -81,6 +83,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   }, [dialogOpen, isPlaying]);
 
   const isTranscribedVoice = isVoiceMessage && content !== 'Voice message';
+  
+  // Only show the Virgil icon if this is an assistant message AND the previous message was from a different role
+  const showVirgilIcon = role === 'assistant' && !isPreviousMessageSameRole;
 
   return (
     <div 
@@ -94,6 +99,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     >
       {isVoiceMessage && (
         <Mic className="h-4 w-4 mt-1 text-primary" aria-hidden="true" />
+      )}
+      
+      {showVirgilIcon && (
+        <img 
+          src="/lovable-uploads/0c6b78a6-7091-4e6b-b8cc-02e3cfe47fc1.png" 
+          alt="Virgil" 
+          className="h-6 w-6 rounded-full mt-1 object-cover" 
+        />
       )}
       
       <div className="flex-1">
