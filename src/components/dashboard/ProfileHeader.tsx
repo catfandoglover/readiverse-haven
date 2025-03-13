@@ -5,10 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ProfileData {
-  landscape_image?: string;
-}
-
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
@@ -21,17 +17,41 @@ const ProfileHeader: React.FC = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       if (user?.Uid) {
-        // Fetch the user's profile from Supabase
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('landscape_image')
-          .eq('outseta_uid', user.Uid)
-          .single();
+        try {
+          // Check if profiles table has the correct columns
+          const { data: columns, error: columnsError } = await supabase
+            .from('profiles')
+            .select('*')
+            .limit(1);
+            
+          if (columnsError) {
+            console.error("Error fetching profile schema:", columnsError);
+            return;
+          }
           
-        if (data && !error) {
-          setLandscapeImage(data.landscape_image);
-        } else {
-          console.error("Error fetching profile data:", error);
+          // Log the column names to help debug
+          console.log("Available columns in profiles table:", columns && columns[0] ? Object.keys(columns[0]) : []);
+          
+          // Fetch the user's profile from Supabase
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('outseta_uid', user.Uid)
+            .single();
+            
+          if (data && !error) {
+            console.log("Profile data:", data);
+            // Check if landscape_image field exists in the data
+            if ('landscape_image' in data) {
+              setLandscapeImage(data.landscape_image);
+            } else {
+              console.error("landscape_image field not found in profile data");
+            }
+          } else {
+            console.error("Error fetching profile data:", error);
+          }
+        } catch (e) {
+          console.error("Exception fetching profile:", e);
         }
       }
     };
