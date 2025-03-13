@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Star, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -57,7 +56,15 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
   const { data: books, refetch } = useQuery({
     queryKey: ["custom-domain-books", domainId],
     queryFn: async () => {
-      if (!user?.Uid) return [];
+      if (!user) return [];
+
+      // Get the current authenticated user's UUID from Supabase
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      if (!supabaseUser) {
+        console.error("Error: No authenticated user found");
+        return [];
+      }
 
       try {
         const { data, error } = await supabase
@@ -76,7 +83,7 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
         return [];
       }
     },
-    enabled: !!user?.Uid && !!domainId,
+    enabled: !!user && !!domainId,
   });
 
   const onSubmit = async (values: BookFormValues) => {
@@ -87,6 +94,17 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
 
     setIsSubmitting(true);
     try {
+      // Get the current authenticated user's UUID from Supabase
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      if (!supabaseUser) {
+        toast.error("Could not verify your authentication status");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const userId = supabaseUser.id; // Use UUID from Supabase
+
       const { error } = await supabase
         .from("custom_domain_books")
         .insert({
@@ -94,7 +112,7 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
           title: values.title,
           author: values.author,
           cover_url: values.coverUrl,
-          user_id: user.Uid,
+          user_id: userId,
         });
 
       if (error) {

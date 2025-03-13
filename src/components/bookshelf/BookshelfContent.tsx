@@ -33,13 +33,22 @@ const BookshelfContent: React.FC = () => {
   const { data: fetchedCustomDomains, refetch: refetchCustomDomains } = useQuery({
     queryKey: ["custom-domains", user?.Uid],
     queryFn: async () => {
-      if (!user?.Uid) return [];
+      if (!user) return [];
 
       try {
+        const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+        
+        if (!supabaseUser) {
+          console.error("Error: No authenticated user found");
+          return [];
+        }
+        
+        const userId = supabaseUser.id;
+        
         const { data, error } = await supabase
           .from("custom_domains")
           .select("id, name")
-          .eq("user_id", user.Uid)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
         
         if (error) {
@@ -53,7 +62,7 @@ const BookshelfContent: React.FC = () => {
         return [];
       }
     },
-    enabled: !!user?.Uid,
+    enabled: !!user,
   });
 
   useEffect(() => {
