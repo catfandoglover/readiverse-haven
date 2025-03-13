@@ -1,12 +1,13 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
 import IconsContent from "./IconsContent";
 import ConceptsContent from "./ConceptsContent";
-import BottomNav from "./BottomNav";
 import { useSwipeable } from "react-swipeable";
 import { useLocation, useNavigate } from "react-router-dom";
+import MainMenu from "../navigation/MainMenu";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts";
 
@@ -145,7 +146,7 @@ const DiscoverLayout = () => {
       onWheel={handleWheel}
     >
       <main 
-        className="flex-1 relative pb-[50px] overflow-hidden" 
+        className="flex-1 relative overflow-hidden" 
         {...(detailedViewVisible ? {} : swipeHandlers)}
         ref={contentRef}
       >
@@ -158,53 +159,58 @@ const DiscoverLayout = () => {
               maxHeight: "152px"
             }}
           >
-            <div className="flex items-center justify-between px-4 py-3 h-full w-full">
-              <button
-                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                  activeTab === "for-you" 
-                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                    : "text-[#E9E7E2]/60"
-                }`}
-                onClick={() => handleTabChange("for-you")}
-              >
-                FOR YOU
-              </button>
-              <button
-                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                  activeTab === "classics" 
-                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                    : "text-[#E9E7E2]/60"
-                }`}
-                onClick={() => handleTabChange("classics")}
-              >
-                CLASSICS
-              </button>
-              <button
-                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                  activeTab === "icons" 
-                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                    : "text-[#E9E7E2]/60"
-                }`}
-                onClick={() => handleTabChange("icons")}
-              >
-                ICONS
-              </button>
-              <button
-                className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                  activeTab === "concepts" 
-                    ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                    : "text-[#E9E7E2]/60"
-                }`}
-                onClick={() => handleTabChange("concepts")}
-              >
-                CONCEPTS
-              </button>
-              <button 
-                className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-                aria-label="Search"
-              >
-                <Search className="h-2 w-2" />
-              </button>
+            <div className="flex items-center px-4 py-3 h-full w-full">
+              <div className="flex-none">
+                <MainMenu />
+              </div>
+              <div className="flex-1 flex items-center justify-between pl-2">
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "for-you" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("for-you")}
+                >
+                  FOR YOU
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "classics" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("classics")}
+                >
+                  CLASSICS
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "icons" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("icons")}
+                >
+                  ICONS
+                </button>
+                <button
+                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
+                    activeTab === "concepts" 
+                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
+                      : "text-[#E9E7E2]/60"
+                  }`}
+                  onClick={() => handleTabChange("concepts")}
+                >
+                  CONCEPTS
+                </button>
+                <button 
+                  className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
+                  aria-label="Search"
+                >
+                  <Search className="h-2 w-2" />
+                </button>
+              </div>
             </div>
           </header>
         )}
@@ -244,12 +250,6 @@ const DiscoverLayout = () => {
           )}
         </div>
       </main>
-
-      {!detailedViewVisible && (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNav activeTab="discover" />
-        </div>
-      )}
     </div>
   );
 };
