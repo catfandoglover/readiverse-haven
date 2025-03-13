@@ -49,7 +49,7 @@ class AudioTranscriptionService {
           {
             parts: [
               {
-                text: "Please transcribe this audio recording accurately:"
+                text: "Please transcribe this audio recording accurately. DO NOT ADD any additional text or commentary:"
               },
               {
                 inline_data: {
