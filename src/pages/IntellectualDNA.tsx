@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
@@ -205,7 +206,7 @@ const IntellectualDNA = () => {
                   handleNameSubmit();
                 }
               }}
-              className="bg-white/50 border-[#373763]/20"
+              className="bg-white/50 border-[#373763]/20 text-[#282828]"
             />
             <Button 
               onClick={handleNameSubmit}
