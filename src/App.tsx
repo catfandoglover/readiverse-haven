@@ -15,6 +15,9 @@ import DNAAssessment from "./pages/DNAAssessment";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
+import Dashboard from "./pages/Dashboard";
+import DomainDetail from "./pages/DomainDetail";
+import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +66,9 @@ const App = () => (
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
+                <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>
