@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -560,7 +561,7 @@ const DNAAssessment = () => {
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <div className="h-10 w-10" />
-          <div className="flex items-center gap-1 text-sm font-oxanium text-[#7A798A] uppercase tracking-wider font-bold">
+          <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
             <span>{TOTAL_QUESTIONS}</span>
@@ -587,7 +588,7 @@ const DNAAssessment = () => {
         <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
-            className="text-[#282828] font-oxanium text-sm uppercase tracking-wider font-bold"
+            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
             type="button"
           >
             BACK
@@ -618,12 +619,12 @@ const DNAAssessment = () => {
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
-            className="text-[#282828] font-oxanium text-sm uppercase tracking-wider font-bold"
+            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
             type="button"
           >
             BACK
           </button>
-          <div className="flex items-center gap-1 text-sm font-oxanium text-[#282828] uppercase tracking-wider font-bold">
+          <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
             <span>{TOTAL_QUESTIONS}</span>
@@ -659,7 +660,7 @@ const DNAAssessment = () => {
             
             <div className="mt-8 text-center">
               <button 
-                className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold"
+                className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
                 onClick={() => setShowAIChat(true)}
               >
                 I HAVE MORE TO SAY
