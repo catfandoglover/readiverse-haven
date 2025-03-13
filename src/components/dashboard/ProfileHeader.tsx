@@ -37,14 +37,16 @@ const ProfileHeader: React.FC = () => {
           let query = supabase.from('profiles').select('*');
           
           // If we don't see outseta_uid in the schema, we'll try different ID fields
-          if (columns && columns[0] && !Object.keys(columns[0]).includes('outseta_uid')) {
-            if (Object.keys(columns[0]).includes('user_id')) {
+          if (columns && columns[0]) {
+            if (Object.keys(columns[0]).includes('outseta_uid')) {
+              query = query.eq('outseta_uid', user.Uid);
+            } else if (Object.keys(columns[0]).includes('user_id')) {
               query = query.eq('user_id', user.Uid);
+            } else if (Object.keys(columns[0]).includes('outseta_user_id')) {
+              query = query.eq('outseta_user_id', user.Uid);
             } else {
               query = query.eq('id', user.Uid);
             }
-          } else {
-            query = query.eq('outseta_uid', user.Uid);
           }
           
           const { data, error } = await query.single();
@@ -52,12 +54,12 @@ const ProfileHeader: React.FC = () => {
           if (data && !error) {
             console.log("Profile data:", data);
             
-            // Check if landscape_image field exists in the data
+            // Check for landscape_image field
             if (data.landscape_image) {
               setLandscapeImage(data.landscape_image);
             }
             
-            // Check if profile_image field exists in the data
+            // Check for profile_image field
             if (data.profile_image) {
               setProfileImage(data.profile_image);
             }
