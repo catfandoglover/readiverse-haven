@@ -641,7 +641,7 @@ const DNAAssessment = () => {
               {currentQuestion.question?.question}
             </h1>
           </div>
-          <div className={`w-full px-6 mb-48 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-40%]' : ''}`}>
+          <div className="w-full px-6 mb-48">
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
               <Button
                 onClick={() => handleAnswer("A")}

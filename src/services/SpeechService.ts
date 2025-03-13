@@ -1,136 +1,85 @@
-import { supabase } from '@/integrations/supabase/client';
+
+// Import AWS SDK for browser
+import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
+import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
 
 class SpeechService {
-  private static instance: SpeechService;
-  private recognition: SpeechRecognition | null = null;
-  private isListening: boolean = false;
-  private onResultCallback: ((text: string) => void) | null = null;
-  private onEndCallback: (() => void) | null = null;
-  private onErrorCallback: ((error: string) => void) | null = null;
-  private interimResults: string[] = [];
-  private finalResult: string = '';
-  private maxDuration: number = 30000; // 30 seconds
-  private timeoutId: NodeJS.Timeout | null = null;
+  private polly: PollyClient;
+  private voiceId: VoiceId = 'Arthur'; // British English male voice
+  private outputFormat: OutputFormat = 'mp3';
+  private sampleRate: string = '16000';
+  private textType: TextType = 'text';
 
-  private constructor() {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      this.recognition = new SpeechRecognition();
-      this.setupRecognition();
-    }
+  constructor() {
+    // Add debugging to check environment variables
+    // console.log('AWS Config:', {
+    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    // });
+    
+    // Initialize Polly client with AWS config from environment variables
+    this.polly = new PollyClient({
+      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
+      }
+    });
   }
 
-  public static getInstance(): SpeechService {
-    if (!SpeechService.instance) {
-      SpeechService.instance = new SpeechService();
-    }
-    return SpeechService.instance;
+  // Set voice options
+  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
+    this.voiceId = voiceId;
+    this.outputFormat = outputFormat;
+    this.sampleRate = sampleRate;
   }
 
-  private setupRecognition() {
-    if (!this.recognition) return;
-
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true;
-    this.recognition.lang = 'en-US';
-
-    this.recognition.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-          this.finalResult = transcript;
-          if (this.onResultCallback) {
-            this.onResultCallback(transcript);
-          }
-        } else {
-          interimTranscript += transcript;
-          this.interimResults = [interimTranscript];
-        }
-      }
-    };
-
-    this.recognition.onend = () => {
-      this.isListening = false;
-      if (this.onEndCallback) {
-        this.onEndCallback();
-      }
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
-      }
-    };
-
-    this.recognition.onerror = (event) => {
-      if (this.onErrorCallback) {
-        this.onErrorCallback(event.error);
-      }
-      this.isListening = false;
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
-      }
-    };
-  }
-
-  public startListening(
-    onResult: (text: string) => void,
-    onEnd: () => void,
-    onError: (error: string) => void
-  ) {
-    if (!this.recognition) {
-      onError('Speech recognition is not supported in this browser');
-      return;
-    }
-
-    if (this.isListening) {
-      this.stopListening();
-    }
-
-    this.onResultCallback = onResult;
-    this.onEndCallback = onEnd;
-    this.onErrorCallback = onError;
-    this.interimResults = [];
-    this.finalResult = '';
-
+  // Synthesize speech from text
+  async synthesizeSpeech(text: string): Promise<string> {
     try {
-      this.recognition.start();
-      this.isListening = true;
+      // Create the parameters for synthesizeSpeech
+      const speechParams: SynthesizeSpeechCommandInput = {
+        OutputFormat: this.outputFormat,
+        SampleRate: this.sampleRate,
+        Text: text,
+        TextType: this.textType,
+        VoiceId: this.voiceId,
+        Engine: 'neural'
+      };
 
-      // Set timeout to automatically stop after maxDuration
-      this.timeoutId = setTimeout(() => {
-        this.stopListening();
-      }, this.maxDuration);
+      console.log('Attempting to get Polly URL with params:', speechParams);
+      
+      // Get presigned URL for the speech - Fixed 'String' to 'string' error
+      const url = await getSynthesizeSpeechUrl({
+        client: this.polly,
+        params: speechParams
+      });
+
+      console.log('Successfully got Polly URL:', url);
+      return url;
     } catch (error) {
-      onError('Error starting speech recognition');
-    }
-  }
-
-  public stopListening() {
-    if (this.recognition && this.isListening) {
-      this.recognition.stop();
-      this.isListening = false;
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
+      console.error('Error synthesizing speech:', error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
       }
+      throw error;
     }
   }
 
-  public isSupported(): boolean {
-    return !!this.recognition;
-  }
-
-  public getInterimResults(): string[] {
-    return this.interimResults;
-  }
-
-  public getFinalResult(): string {
-    return this.finalResult;
+  // Create a temporary audio element and play the audio
+  playAudio(audioUrl: string): HTMLAudioElement {
+    const audio = new Audio(audioUrl);
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+    });
+    return audio;
   }
 }
 
-export default SpeechService;
+// Create a singleton instance
+export const speechService = new SpeechService();
+export default speechService;
