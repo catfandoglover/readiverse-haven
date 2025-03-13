@@ -29,7 +29,6 @@ const BookshelfContent: React.FC = () => {
   const [isNewDomainDialogOpen, setIsNewDomainDialogOpen] = useState(false);
   const { user } = useAuth();
 
-  // Fetch custom domains from Supabase
   const { data: fetchedCustomDomains, refetch: refetchCustomDomains } = useQuery({
     queryKey: ["custom-domains", user?.Uid],
     queryFn: async () => {
@@ -80,12 +79,10 @@ const BookshelfContent: React.FC = () => {
     setIsNewDomainDialogOpen(true);
   };
 
-  // Function to determine if the active tab is a custom domain
   const isCustomDomain = () => {
     return !["all", "ethics", "epistemology", "politics", "theology", "ontology", "aesthetics"].includes(activeTab);
   };
 
-  // Find the current custom domain if active tab is a custom domain
   const currentCustomDomain = customDomains.find(domain => domain.id === activeTab);
 
   return (
@@ -169,7 +166,6 @@ const BookshelfContent: React.FC = () => {
           AESTHETICS
         </button>
         
-        {/* Custom domain tabs */}
         {customDomains.map((domain) => (
           <button
             key={domain.id}
@@ -185,13 +181,12 @@ const BookshelfContent: React.FC = () => {
           </button>
         ))}
         
-        {/* New Domain Button */}
         <button
           className="flex items-center gap-1 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs text-[#2A282A]/60 hover:text-[#2A282A]"
           onClick={handleNewDomainClick}
         >
-          <Plus className="h-4 w-4" />
-          NEW SHELF
+          <Plus className="h-4 w-4 flex-shrink-0" />
+          <span className="inline-flex items-center">NEW SHELF</span>
         </button>
       </div>
 
@@ -204,7 +199,6 @@ const BookshelfContent: React.FC = () => {
         {activeTab === "ontology" && <OntologyContent />}
         {activeTab === "aesthetics" && <AestheticsContent />}
         
-        {/* Render custom domain content */}
         {isCustomDomain() && currentCustomDomain && (
           <CustomDomainContent 
             domainId={currentCustomDomain.id} 
