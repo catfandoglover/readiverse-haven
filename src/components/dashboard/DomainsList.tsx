@@ -1,24 +1,24 @@
 
 import React from "react";
 import DomainCard from "./DomainCard";
-import { Book, Heart, Globe, FileText, Landmark, Sparkles } from "lucide-react";
+import { Book, Heart, Globe, Sparkles, Diamond, Palette } from "lucide-react";
 
 const DomainsList: React.FC = () => {
   const domains = [
     {
-      id: "philosophy",
-      title: "Philosophy",
-      description: "Explore the fundamental questions of existence, knowledge, values, reason, mind, and language.",
-      icon: <Landmark className="h-5 w-5" />,
-      progress: 42,
-      color: "#9b87f5"
+      id: "ethics",
+      title: "Ethics",
+      description: "Explore frameworks for understanding right and wrong, good and evil, virtue and vice.",
+      icon: <Heart className="h-5 w-5" />,
+      progress: 21,
+      color: "#FD8F8F"
     },
     {
-      id: "literature",
-      title: "Literature",
-      description: "Discover the great works that have shaped human thought and culture through storytelling.",
-      icon: <Book className="h-5 w-5" />,
-      progress: 28,
+      id: "epistemology",
+      title: "Epistemology",
+      description: "Examine the nature of knowledge, belief, and the foundations of understanding.",
+      icon: <Diamond className="h-5 w-5" />,
+      progress: 15,
       color: "#7E69AB"
     },
     {
@@ -26,7 +26,7 @@ const DomainsList: React.FC = () => {
       title: "Politics",
       description: "Understand the systems and theories that govern societies and shape our collective decisions.",
       icon: <Globe className="h-5 w-5" />,
-      progress: 15,
+      progress: 18,
       color: "#b29eff"
     },
     {
@@ -38,20 +38,20 @@ const DomainsList: React.FC = () => {
       color: "#EFFE91"
     },
     {
-      id: "ethics",
-      title: "Ethics",
-      description: "Explore frameworks for understanding right and wrong, good and evil, virtue and vice.",
-      icon: <Heart className="h-5 w-5" />,
-      progress: 21,
-      color: "#FD8F8F"
+      id: "ontology",
+      title: "Ontology",
+      description: "Investigate the nature of being, reality, and existence itself.",
+      icon: <Diamond className="h-5 w-5" />,
+      progress: 12,
+      color: "#8DD7CF"
     },
     {
-      id: "history",
-      title: "History",
-      description: "Trace the development of human civilization and the forces that have shaped our world.",
-      icon: <FileText className="h-5 w-5" />,
-      progress: 48,
-      color: "#8DD7CF"
+      id: "aesthetics",
+      title: "Aesthetics",
+      description: "Study beauty, art, taste, and the nature of creative expression.",
+      icon: <Palette className="h-5 w-5" />,
+      progress: 28,
+      color: "#D3E4FD"
     }
   ];
 

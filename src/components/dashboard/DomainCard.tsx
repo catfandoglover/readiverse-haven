@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "../ui/progress";
 
@@ -30,11 +30,9 @@ const DomainCard: React.FC<DomainCardProps> = ({
     >
       <div className="p-4">
         <div className="flex items-center mb-2">
-          <div 
-            className="h-10 w-10 rounded-full flex items-center justify-center mr-3" 
-            style={{ backgroundColor: `${color}25` }}
-          >
-            <div className="text-[#E9E7E2]">{icon}</div>
+          <div className="relative h-10 w-10 flex items-center justify-center mr-3">
+            <Hexagon className="absolute h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
+            <div className="relative z-10 text-[#E9E7E2]">{icon}</div>
           </div>
           <h3 className="text-lg font-serif">{title}</h3>
         </div>
