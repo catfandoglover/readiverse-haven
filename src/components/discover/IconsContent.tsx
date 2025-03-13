@@ -14,11 +14,11 @@ interface Icon {
   category?: string;
   about?: string;
   great_conversation?: string;
-  anecdotes?: string;
+  anecdotes?: string[] | string; // Updated to handle both string and string array
   randomizer?: number;
   created_at?: string;
   introduction?: string;
-  slug?: string; // Add slug field
+  slug?: string;
 }
 
 interface IconsContentProps {
@@ -53,10 +53,15 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       // Enhance the data with placeholder fields if they don't exist
       return data.map((icon: any) => ({
         ...icon,
-        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'), // Use slug if exists or generate from name
+        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'),
         about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
         great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
-        anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
+        // Handle anecdotes field - ensure it's an array
+        anecdotes: Array.isArray(icon.anecdotes) 
+          ? icon.anecdotes 
+          : (icon.anecdotes 
+              ? [icon.anecdotes] 
+              : [`Various interesting stories surround ${icon.name}'s life and work.`]),
       }));
     },
   });
