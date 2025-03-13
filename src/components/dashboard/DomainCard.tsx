@@ -34,7 +34,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
             <Hexagon className="absolute h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
             <div className="relative z-10 text-[#E9E7E2]">{icon}</div>
           </div>
-          <h3 className="text-lg font-oxanium font-bold">{title}</h3>
+          <h3 className="text-lg font-oxanium font-bold uppercase">{title}</h3>
         </div>
         
         <p className="text-sm text-[#E9E7E2]/70 mb-3 font-baskerville">
