@@ -45,7 +45,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
           <div className="flex-1 mr-4">
             <Progress value={progress} className="h-1.5" />
             <span className="text-xs text-[#E9E7E2]/60 mt-1 block font-oxanium">
-              SCRIBE
+              PROFICIENCY
             </span>
           </div>
           

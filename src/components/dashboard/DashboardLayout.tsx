@@ -8,11 +8,11 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 const DashboardLayout: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<"become" | "domains">("become");
+  const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSectionChange = (section: "become" | "domains") => {
+  const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
 
@@ -27,13 +27,13 @@ const DashboardLayout: React.FC = () => {
               variant="ghost"
               className={cn(
                 "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0", /* Added justify-start and pl-0 for left alignment */
-                activeSection === "domains" 
+                activeSection === "profile" 
                   ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" 
                   : "text-[#E9E7E2]/60"
               )}
-              onClick={() => handleSectionChange("domains")}
+              onClick={() => handleSectionChange("profile")}
             >
-              DOMAINS
+              PROFILE
             </Button>
             <Button
               variant="ghost"
@@ -59,9 +59,9 @@ const DashboardLayout: React.FC = () => {
             </div>
           ) : (
             <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-              <h2 className="text-xl font-serif mb-3">Intellectual Domains</h2>
+              <h2 className="text-xl font-serif mb-3">Your Profile</h2>
               <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
-                Explore specialized areas of knowledge and thought. Each domain represents a distinct perspective on fundamental questions of human existence.
+                Explore your intellectual profile and personalized areas of knowledge. Your profile represents your unique perspective on fundamental questions of human existence.
               </p>
             </div>
           )}

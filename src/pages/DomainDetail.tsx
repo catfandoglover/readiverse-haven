@@ -9,8 +9,8 @@ const DomainDetail: React.FC = () => {
   const navigate = useNavigate();
   
   // This would be fetched from an API in a real implementation
-  const getDomainTitle = (id: string) => {
-    const domains: Record<string, string> = {
+  const getProfileAreaTitle = (id: string) => {
+    const profileAreas: Record<string, string> = {
       "philosophy": "Philosophy",
       "literature": "Literature",
       "politics": "Politics",
@@ -19,7 +19,7 @@ const DomainDetail: React.FC = () => {
       "history": "History"
     };
     
-    return domains[id] || "Domain";
+    return profileAreas[id] || "Profile Area";
   };
   
   return (
@@ -33,14 +33,14 @@ const DomainDetail: React.FC = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-serif">{getDomainTitle(domainId || "")}</h1>
+        <h1 className="text-xl font-serif">{getProfileAreaTitle(domainId || "")}</h1>
       </header>
       
       <main className="p-4">
         <div className="rounded-xl bg-[#383741] p-4 mb-4">
-          <h2 className="text-lg font-serif mb-2">About this Domain</h2>
+          <h2 className="text-lg font-serif mb-2">About this Profile Area</h2>
           <p className="text-[#E9E7E2]/80 font-baskerville">
-            This is the {getDomainTitle(domainId || "")} domain page. Here you will find resources, 
+            This is the {getProfileAreaTitle(domainId || "")} profile area. Here you will find resources, 
             assessments, and guidance related to this intellectual domain.
           </p>
         </div>
@@ -49,14 +49,14 @@ const DomainDetail: React.FC = () => {
           <div className="rounded-xl bg-[#383741] p-4">
             <h3 className="text-md font-serif mb-2">Recommended Resources</h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              Content for this domain is coming soon.
+              Content for this profile area is coming soon.
             </p>
           </div>
           
           <div className="rounded-xl bg-[#383741] p-4">
             <h3 className="text-md font-serif mb-2">Your Progress</h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              Your domain progress details will appear here.
+              Your profile area progress details will appear here.
             </p>
           </div>
         </div>
