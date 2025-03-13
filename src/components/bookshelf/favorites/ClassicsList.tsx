@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Star } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Mock data for now - would be replaced with real favorites from user data
 const mockClassics = [
@@ -27,10 +26,10 @@ const mockClassics = [
 
 const ClassicsList: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {mockClassics.map((classic) => (
         <div key={classic.id} className="w-full cursor-pointer group">
-          <div className="relative h-44 w-full rounded-md overflow-hidden mb-2">
+          <div className="relative h-44 w-full rounded-2xl overflow-hidden mb-2">
             <img
               src={classic.cover}
               alt={classic.title}
