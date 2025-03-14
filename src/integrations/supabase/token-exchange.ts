@@ -1,4 +1,3 @@
-
 const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange';
 
 export async function exchangeToken(outsetaToken: string): Promise<string> {
@@ -14,6 +13,16 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
   }
   
   try {
+    // Log token format for debugging
+    const tokenParts = outsetaToken.split('.');
+    if (tokenParts.length !== 3) {
+      console.warn('Token does not appear to be in standard JWT format (expected 3 parts):', {
+        partsCount: tokenParts.length
+      });
+    } else {
+      console.log('Token format appears valid (has 3 parts)');
+    }
+    
     console.log('Sending token exchange request');
     
     const response = await fetch(EXCHANGE_URL, {

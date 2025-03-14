@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  console.log("Token extracted successfully");
+  console.log("Token extracted successfully, length:", outsetaJwtAccessToken.length);
   
   try {
     const outsetaDomain = Deno.env.get("OUTSETA_DOMAIN");
@@ -55,68 +55,99 @@ Deno.serve(async (req) => {
 
     console.log("Using OUTSETA_DOMAIN:", outsetaDomain);
     
-    const jwksUrl = new URL(`https://${outsetaDomain}/.well-known/jwks`);
-    console.log('Fetching JWKS from:', jwksUrl.toString());
-    
-    const JWKS = jose.createRemoteJWKSet(jwksUrl);
-    console.log("JWKS created, attempting to verify token");
-
+    // Inspect token structure before verification
     try {
-      // Add before the jose.jwtVerify call
+      const decodedTokenParts = outsetaJwtAccessToken.split('.');
+      if (decodedTokenParts.length !== 3) {
+        console.log('Token does not appear to be a valid JWT format');
+        throw new Error('Invalid token format');
+      }
+      
+      // Decode header and payload for inspection
+      const header = JSON.parse(atob(decodedTokenParts[0]));
+      console.log('Token header:', JSON.stringify(header));
+      
       try {
-        const decodedTokenParts = outsetaJwtAccessToken.split('.');
-        if (decodedTokenParts.length !== 3) {
-          console.log('Token does not appear to be a valid JWT format');
-          throw new Error('Invalid token format');
-        }
-        
-        // Decode header and payload for inspection
-        const header = JSON.parse(atob(decodedTokenParts[0]));
-        console.log('Token header:', header);
-        
-        // This helps confirm if the JWKS key ID matches what's in your token
-        console.log('Token kid:', header.kid);
-        console.log('Expected JWKS URL:', `https://${outsetaDomain}/.well-known/jwks`);
-        
-        // Continue with verification...
-      } catch (decodeError) {
-        console.error("Token decode inspection failed:", decodeError.message);
-        // Continue with verification attempt anyway
+        // Try to decode the payload for debugging
+        const payload = JSON.parse(atob(decodedTokenParts[1]));
+        console.log('Token payload preview:', JSON.stringify({
+          iss: payload.iss,
+          sub: payload.sub,
+          aud: payload.aud,
+          exp: payload.exp,
+          iat: payload.iat
+        }));
+      } catch (payloadError) {
+        console.error("Failed to decode payload:", payloadError.message);
       }
       
-      const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
-      console.log('JWT verified, payload:', payload);
-
-      payload.role = "authenticated";
-
-      const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
-      if (!supabaseSecret) {
-        console.log("SUPA_JWT_SECRET env var missing");
-        throw new Error("SUPA_JWT_SECRET not configured");
-      }
-
-      console.log("SUPA_JWT_SECRET exists with length:", supabaseSecret.length);
-      
-      const supabaseEncodedJwtSecret = new TextEncoder().encode(supabaseSecret);
-      
-      const supabaseJwt = await new jose.SignJWT(payload)
-        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-        .setIssuer("supabase")
-        .setIssuedAt(payload.iat)
-        .setExpirationTime(payload.exp || "2h")
-        .sign(supabaseEncodedJwtSecret);
-
-      console.log('Supabase JWT created successfully');
-
-      return new Response(JSON.stringify({ supabaseJwt }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    } catch (verifyError) {
-      console.error("JWT verification failed:", verifyError.message);
-      throw verifyError;
+      // This helps confirm if the JWKS key ID matches what's in your token
+      console.log('Token kid:', header.kid);
+      console.log('Expected JWKS URL:', `https://${outsetaDomain}/.well-known/jwks`);
+    } catch (decodeError) {
+      console.error("Token decode inspection failed:", decodeError.message);
+      // Continue with verification attempt anyway
     }
     
+    // Fetch JWKS from Outseta
+    try {
+      const jwksUrl = new URL(`https://${outsetaDomain}/.well-known/jwks`);
+      console.log('Fetching JWKS from:', jwksUrl.toString());
+      
+      // Try to fetch the JWKS directly to verify it's accessible
+      const jwksResponse = await fetch(jwksUrl);
+      if (!jwksResponse.ok) {
+        console.error("Failed to fetch JWKS:", jwksResponse.status, jwksResponse.statusText);
+        throw new Error(`Failed to fetch JWKS: ${jwksResponse.status} ${jwksResponse.statusText}`);
+      }
+      
+      const jwksData = await jwksResponse.json();
+      console.log("JWKS fetch successful, keys count:", jwksData.keys?.length || 0);
+      
+      const JWKS = jose.createRemoteJWKSet(jwksUrl);
+      console.log("JWKS created, attempting to verify token");
+      
+      try {
+        const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS, {
+          // Add any additional verification options if needed
+          issuer: `https://${outsetaDomain}`,
+        });
+        console.log('JWT verified, payload:', JSON.stringify(payload));
+
+        // Add the authenticated role to the payload
+        payload.role = "authenticated";
+
+        const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
+        if (!supabaseSecret) {
+          console.log("SUPA_JWT_SECRET env var missing");
+          throw new Error("SUPA_JWT_SECRET not configured");
+        }
+
+        console.log("SUPA_JWT_SECRET exists with length:", supabaseSecret.length);
+        
+        const supabaseEncodedJwtSecret = new TextEncoder().encode(supabaseSecret);
+        
+        const supabaseJwt = await new jose.SignJWT(payload)
+          .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+          .setIssuer("supabase")
+          .setIssuedAt(payload.iat)
+          .setExpirationTime(payload.exp || "2h")
+          .sign(supabaseEncodedJwtSecret);
+
+        console.log('Supabase JWT created successfully');
+
+        return new Response(JSON.stringify({ supabaseJwt }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      } catch (verifyError) {
+        console.error("JWT verification failed:", verifyError.message, verifyError.stack);
+        throw verifyError;
+      }
+    } catch (jwksError) {
+      console.error("JWKS error:", jwksError.message, jwksError.stack);
+      throw jwksError;
+    }
   } catch (error) {
     console.error("Token exchange error:", {
       message: error.message,

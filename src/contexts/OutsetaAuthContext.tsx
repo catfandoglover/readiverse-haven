@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
@@ -67,37 +66,70 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateUser = async () => {
     try {
       console.log('Auth State Check:', {
-        storedToken: localStorage.getItem('outseta_token'),
+        storedToken: localStorage.getItem('outseta_token')?.substring(0, 15) + '...',
         hasOutsetaClient: !!window.Outseta,
-        currentToken: outsetaRef.current?.getAccessToken?.(),
+        currentToken: outsetaRef.current?.getAccessToken?.()?.substring(0, 15) + '...',
         location: window.location.pathname
       });
 
       const storedToken = localStorage.getItem('outseta_token');
       if (storedToken) {
+        console.log('Using stored token from localStorage');
         outsetaRef.current.setAccessToken(storedToken);
       }
 
       const currentToken = outsetaRef.current.getAccessToken();
       if (currentToken) {
+        console.log('Token available, length:', currentToken.length);
         localStorage.setItem('outseta_token', currentToken);
         
-        const outsetaUser = await outsetaRef.current.getUser();
-        console.log('Outseta user info:', outsetaUser);
-        
         try {
-          console.log('Exchanging token...');
-          const supabaseJwt = await exchangeToken(currentToken);
-          console.log('Token exchanged successfully');
-          const supabaseClient = createSupabaseClient(supabaseJwt);
-          setSupabase(supabaseClient);
-        } catch (error) {
-          console.error('Failed to exchange token:', error);
+          const outsetaUser = await outsetaRef.current.getUser();
+          console.log('Outseta user info:', outsetaUser);
+          
+          if (!outsetaUser) {
+            console.error('Outseta returned null user despite having a token');
+            throw new Error('Invalid user data from Outseta');
+          }
+          
+          try {
+            console.log('Exchanging token...');
+            const supabaseJwt = await exchangeToken(currentToken);
+            console.log('Token exchanged successfully');
+            const supabaseClient = createSupabaseClient(supabaseJwt);
+            setSupabase(supabaseClient);
+          } catch (error) {
+            console.error('Failed to exchange token:', error);
+            
+            // Try to refresh the token if exchange fails
+            try {
+              console.log('Attempting to refresh Outseta token...');
+              // Clear the token and try to get a fresh one
+              localStorage.removeItem('outseta_token');
+              outsetaRef.current.setAccessToken('');
+              
+              // Force a login if needed
+              if (window.location.pathname !== '/') {
+                console.log('Redirecting to login...');
+                openLogin({ authenticationCallbackUrl: window.location.href });
+                return;
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh token:', refreshError);
+            }
+            
+            setSupabase(null);
+          }
+          
+          setUser(outsetaUser);
+        } catch (userError) {
+          console.error('Failed to fetch Outseta user:', userError);
+          setUser(null);
           setSupabase(null);
+          localStorage.removeItem('outseta_token');
         }
-        
-        setUser(outsetaUser);
       } else {
+        console.log('No token available');
         setUser(null);
         setSupabase(null);
         localStorage.removeItem('outseta_token');
