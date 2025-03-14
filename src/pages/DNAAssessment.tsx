@@ -725,6 +725,43 @@ const DNAAssessment = () => {
     // Removing this effect to prevent conflicts
   }, []);
 
+  // Add a function to check the token exchange process
+  const checkTokenExchange = async () => {
+    try {
+      console.log('Manually checking token exchange...');
+      
+      // Check if we have an Outseta token
+      const outsetaToken = localStorage.getItem('outseta_token');
+      if (!outsetaToken) {
+        console.log('No Outseta token found in localStorage');
+        return;
+      }
+      
+      // Try to call the exchange function directly
+      console.log('Calling exchange function with token:', outsetaToken.substring(0, 10) + '...');
+      
+      const response = await fetch('https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: outsetaToken }),
+      });
+      
+      if (!response.ok) {
+        console.error('Token exchange failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('Token exchange result:', result);
+    } catch (error) {
+      console.error('Error in manual token exchange check:', error);
+    }
+  };
+
   if (questionLoading || isTransitioning || isInitializing) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
@@ -846,6 +883,70 @@ const DNAAssessment = () => {
               }}
             >
               TEST AUTH DIALOG
+            </button>
+          </div>
+          
+          {/* Debug button to show auth state */}
+          <div className="mt-4 text-center">
+            <button 
+              className="font-oxanium text-blue-500 uppercase tracking-wider text-sm font-bold"
+              onClick={() => {
+                console.log('Debug auth state:', {
+                  user,
+                  assessmentId,
+                  currentPosition,
+                  pendingAssessmentSubmission,
+                  showAuthDialog
+                });
+                
+                // Try to get more info about the Outseta auth context
+                try {
+                  const outseta = (window as any).Outseta;
+                  if (outseta) {
+                    console.log('Outseta object found:', typeof outseta);
+                  } else {
+                    console.log('Outseta object not found on window');
+                  }
+                } catch (e) {
+                  console.log('Error accessing Outseta:', e);
+                }
+                
+                // Check localStorage for any Outseta tokens
+                const outsetaToken = localStorage.getItem('outseta_token');
+                console.log('Outseta token in localStorage:', outsetaToken);
+                
+                // Check for any Supabase tokens
+                const supabaseToken = localStorage.getItem('supabase.auth.token');
+                console.log('Supabase token in localStorage:', supabaseToken);
+                
+                // Check token exchange
+                checkTokenExchange();
+              }}
+            >
+              DEBUG AUTH
+            </button>
+          </div>
+          
+          {/* Debug button to test continue as guest */}
+          <div className="mt-4 text-center">
+            <button 
+              className="font-oxanium text-green-500 uppercase tracking-wider text-sm font-bold"
+              onClick={() => {
+                console.log('Testing continue as guest...');
+                
+                // Create a mock submission if none exists
+                if (!pendingAssessmentSubmission) {
+                  console.log('Creating mock submission for testing');
+                  setPendingAssessmentSubmission({
+                    [upperCategory]: answers || 'AABB'
+                  });
+                }
+                
+                // Call the continue as guest handler
+                handleContinueAsGuest();
+              }}
+            >
+              TEST GUEST
             </button>
           </div>
         </div>
