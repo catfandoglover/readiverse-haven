@@ -1,5 +1,5 @@
 
-const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange';
+const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/token-exchange';
 
 export async function exchangeToken(outsetaToken: string): Promise<string> {
   console.log('Starting token exchange...', {
