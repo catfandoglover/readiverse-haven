@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,6 +34,7 @@ const IntellectualDNA = () => {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
+  const { user, openLogin, openSignup, openProfile } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -177,6 +179,26 @@ const IntellectualDNA = () => {
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
             </p>
+
+            <div className="flex flex-col space-y-2 pt-4">
+              <Button
+                variant="outline"
+                className="py-2 rounded-xl border-[#373763] text-[#373763] hover:bg-[#373763] hover:text-white transition-colors duration-200 font-oxanium"
+                onClick={() => user ? openProfile() : openLogin()}
+              >
+                {user ? 'View Profile' : 'Login with Outseta'}
+              </Button>
+              
+              {!user && (
+                <Button
+                  variant="ghost"
+                  className="py-2 text-[#373763]/70 hover:bg-[#373763]/10 hover:text-[#373763] transition-colors duration-200 font-oxanium"
+                  onClick={openSignup}
+                >
+                  Create Account
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
