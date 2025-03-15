@@ -25,7 +25,7 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
       },
       // Ensure CORS is respected
       mode: 'cors',
-      credentials: 'same-origin'
+      credentials: 'omit'
     });
 
     console.log('Response received:', {

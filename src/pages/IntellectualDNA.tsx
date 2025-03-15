@@ -34,7 +34,7 @@ const IntellectualDNA = () => {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
-  const { user, openLogin, openSignup, openProfile } = useAuth();
+  const { user, openLogin, openSignup, openProfile, logout } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -181,22 +181,40 @@ const IntellectualDNA = () => {
             </p>
 
             <div className="flex flex-col space-y-2 pt-4">
-              <Button
-                variant="outline"
-                className="py-2 rounded-xl border-[#373763] text-[#373763] hover:bg-[#373763] hover:text-white transition-colors duration-200 font-oxanium"
-                onClick={() => user ? openProfile() : openLogin()}
-              >
-                {user ? 'View Profile' : 'Login with Outseta'}
-              </Button>
-              
-              {!user && (
-                <Button
-                  variant="ghost"
-                  className="py-2 text-[#373763]/70 hover:bg-[#373763]/10 hover:text-[#373763] transition-colors duration-200 font-oxanium"
-                  onClick={openSignup}
-                >
-                  Create Account
-                </Button>
+              {user ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="py-2 rounded-xl border-[#373763] text-[#373763] hover:bg-[#373763] hover:text-white transition-colors duration-200 font-oxanium"
+                    onClick={openProfile}
+                  >
+                    View Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="py-2 text-[#373763]/70 hover:bg-[#373763]/10 hover:text-[#373763] transition-colors duration-200 font-oxanium"
+                    onClick={logout}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="py-2 rounded-xl border-[#373763] text-[#373763] hover:bg-[#373763] hover:text-white transition-colors duration-200 font-oxanium"
+                    onClick={openLogin}
+                  >
+                    Login with Outseta
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="py-2 text-[#373763]/70 hover:bg-[#373763]/10 hover:text-[#373763] transition-colors duration-200 font-oxanium"
+                    onClick={openSignup}
+                  >
+                    Create Account
+                  </Button>
+                </>
               )}
             </div>
           </div>
