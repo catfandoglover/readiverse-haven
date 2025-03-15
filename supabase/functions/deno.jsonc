@@ -1,0 +1,36 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --watch exchange/index.ts",
+    "deploy": "deployctl deploy --project=exchange exchange/index.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window", "dom"],
+    "strict": true
+  },
+  "importMap": {
+    "imports": {
+      "jose": "npm:jose@4.14.4",
+      "http/server": "https://deno.land/std@0.177.0/http/server.ts"
+    }
+  },
+  "lint": {
+    "files": {
+      "include": ["**/*.ts"]
+    },
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["**/*.ts"]
+    },
+    "options": {
+      "useTabs": false,
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "singleQuote": false
+    }
+  }
+} 
