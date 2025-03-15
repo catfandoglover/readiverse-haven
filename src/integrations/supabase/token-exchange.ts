@@ -1,6 +1,12 @@
 
+// URL for the token exchange function
 const EXCHANGE_URL = 'https://myeyoafugkrkwcnfedlu.functions.supabase.co/exchange';
 
+/**
+ * Exchanges an Outseta token for a Supabase JWT
+ * This function sends the Outseta token to a Supabase Edge Function,
+ * which verifies it and returns a new Supabase-compatible JWT.
+ */
 export async function exchangeToken(outsetaToken: string): Promise<string> {
   console.log('Starting token exchange...', {
     url: EXCHANGE_URL,
@@ -14,19 +20,35 @@ export async function exchangeToken(outsetaToken: string): Promise<string> {
   }
   
   try {
-    // Log token format for debugging
-    console.log('Sending token exchange request');
+    // Try two different methods to pass the token:
+    // 1. First attempt: Send as Bearer token in Authorization header
+    console.log('Sending token exchange request with Authorization header');
     
-    const response = await fetch(EXCHANGE_URL, {
+    let response = await fetch(EXCHANGE_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${outsetaToken}`,
         'Content-Type': 'application/json'
       },
-      // Ensure CORS is respected
       mode: 'cors',
       credentials: 'omit'
     });
+
+    // If first attempt fails, try the second method
+    if (!response.ok && response.status === 401) {
+      console.log('Authorization header approach failed, trying with request body');
+      
+      // 2. Second attempt: Send token in request body
+      response = await fetch(EXCHANGE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token: outsetaToken }),
+        mode: 'cors',
+        credentials: 'omit'
+      });
+    }
 
     console.log('Response received:', {
       status: response.status,
