@@ -885,6 +885,15 @@ const DNAAssessment = () => {
               TEST AUTH DIALOG
             </button>
           </div>
+          {/* Outseta Login Button */}
+          <div className="mt-8 text-center">
+            <Button 
+              className="bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium"
+              onClick={() => user ? openProfile() : openLogin()}
+            >
+              {user ? 'View Profile' : 'Login with Outseta'}
+            </Button>
+          </div>
           
           {/* Debug button to show auth state */}
           <div className="mt-4 text-center">
