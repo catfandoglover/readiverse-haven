@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
@@ -131,19 +132,41 @@ const DomainDetail: React.FC = () => {
         </div>
         
         <div className="mb-8">
-          <div className="flex border-b border-white/20">
-            <button 
-              className={`pb-3 mr-10 uppercase tracking-wider font-medium ${activeTab === "kindred" ? "border-b-2 border-white" : "opacity-70"}`}
+          <div className="flex items-center space-x-4 mb-6">
+            <Button
+              variant="ghost"
+              className={cn(
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                activeTab === "kindred" 
+                  ? "text-[#E9E7E2]" 
+                  : "text-[#E9E7E2]/60"
+              )}
               onClick={() => setActiveTab("kindred")}
             >
-              KINDRED SPIRITS
-            </button>
-            <button 
-              className={`pb-3 uppercase tracking-wider font-medium ${activeTab === "challenging" ? "border-b-2 border-white" : "opacity-70"}`}
+              <span className={cn(
+                "relative",
+                activeTab === "kindred" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
+              )}>
+                KINDRED SPIRITS
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                activeTab === "challenging" 
+                  ? "text-[#E9E7E2]" 
+                  : "text-[#E9E7E2]/60"
+              )}
               onClick={() => setActiveTab("challenging")}
             >
-              CHALLENGING VOICES
-            </button>
+              <span className={cn(
+                "relative",
+                activeTab === "challenging" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
+              )}>
+                CHALLENGING VOICES
+              </span>
+            </Button>
           </div>
         </div>
         
