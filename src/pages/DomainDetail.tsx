@@ -111,7 +111,7 @@ const DomainDetail: React.FC = () => {
           onClick={() => navigate("/dashboard")}
           className="p-0 h-auto w-auto hover:bg-transparent"
         >
-          <X className="h-5 w-5 text-white" />
+          <X className="h-8 w-8 text-white" />
         </Button>
         <Button 
           variant="ghost" 
