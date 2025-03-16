@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
@@ -12,6 +12,13 @@ const DashboardLayout: React.FC = () => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Check for state from navigation and set active section accordingly
+  useEffect(() => {
+    if (location.state?.activeSection === "become" || location.state?.activeSection === "profile") {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location.state]);
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);

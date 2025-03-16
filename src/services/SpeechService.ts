@@ -1,85 +1,72 @@
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
-import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
-
-class SpeechService {
-  private polly: PollyClient;
-  private voiceId: VoiceId = 'Arthur'; // British English male voice
-  private outputFormat: OutputFormat = 'mp3';
-  private sampleRate: string = '16000';
-  private textType: TextType = 'text';
-
-  constructor() {
-    // Add debugging to check environment variables
-    // console.log('AWS Config:', {
-    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
-    // });
+const DomainDetail: React.FC = () => {
+  const { domainId } = useParams<{ domainId: string }>();
+  const navigate = useNavigate();
+  
+  const handleBackClick = () => {
+    // Navigate back to dashboard with the "become" section active
+    navigate("/dashboard", { state: { activeSection: "become" } });
+  };
+  
+  // This would be fetched from an API in a real implementation
+  const getProfileAreaTitle = (id: string) => {
+    const profileAreas: Record<string, string> = {
+      "philosophy": "Philosophy",
+      "literature": "Literature",
+      "politics": "Politics",
+      "theology": "Theology",
+      "ethics": "Ethics",
+      "history": "History"
+    };
     
-    // Initialize Polly client with AWS config from environment variables
-    this.polly = new PollyClient({
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-      }
-    });
-  }
-
-  // Set voice options
-  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
-    this.voiceId = voiceId;
-    this.outputFormat = outputFormat;
-    this.sampleRate = sampleRate;
-  }
-
-  // Synthesize speech from text
-  async synthesizeSpeech(text: string): Promise<string> {
-    try {
-      // Create the parameters for synthesizeSpeech
-      const speechParams: SynthesizeSpeechCommandInput = {
-        OutputFormat: this.outputFormat,
-        SampleRate: this.sampleRate,
-        Text: text,
-        TextType: this.textType,
-        VoiceId: this.voiceId,
-        Engine: 'neural'
-      };
-
-      console.log('Attempting to get Polly URL with params:', speechParams);
+    return profileAreas[id] || "Profile Area";
+  };
+  
+  return (
+    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2]">
+      <header className="px-4 py-3 flex items-center">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleBackClick}
+          className="mr-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-serif">{getProfileAreaTitle(domainId || "")}</h1>
+      </header>
       
-      // Get presigned URL for the speech - Fixed 'String' to 'string' error
-      const url = await getSynthesizeSpeechUrl({
-        client: this.polly,
-        params: speechParams
-      });
+      <main className="p-4">
+        <div className="rounded-xl bg-[#383741] p-4 mb-4">
+          <h2 className="text-lg font-serif mb-2">About this Profile Area</h2>
+          <p className="text-[#E9E7E2]/80 font-baskerville">
+            This is the {getProfileAreaTitle(domainId || "")} profile area. Here you will find resources, 
+            assessments, and guidance related to this intellectual domain.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="rounded-xl bg-[#383741] p-4">
+            <h3 className="text-md font-serif mb-2">Recommended Resources</h3>
+            <p className="text-sm text-[#E9E7E2]/70">
+              Content for this profile area is coming soon.
+            </p>
+          </div>
+          
+          <div className="rounded-xl bg-[#383741] p-4">
+            <h3 className="text-md font-serif mb-2">Your Progress</h3>
+            <p className="text-sm text-[#E9E7E2]/70">
+              Your profile area progress details will appear here.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
 
-      console.log('Successfully got Polly URL:', url);
-      return url;
-    } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      // Log more details about the error
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      throw error;
-    }
-  }
-
-  // Create a temporary audio element and play the audio
-  playAudio(audioUrl: string): HTMLAudioElement {
-    const audio = new Audio(audioUrl);
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-    });
-    return audio;
-  }
-}
-
-// Create a singleton instance
-export const speechService = new SpeechService();
-export default speechService;
+export default DomainDetail;
