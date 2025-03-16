@@ -72,11 +72,40 @@ const DashboardLayout: React.FC = () => {
               <DomainsList />
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-              <h2 className="text-xl font-serif mb-3">Your Profile</h2>
+            <div className="space-y-4">
               <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
                 Explore your intellectual profile and personalized areas of knowledge. Your profile represents your unique perspective on fundamental questions of human existence.
               </p>
+              
+              {/* Key Tensions Section */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Key Tensions</h2>
+                <ul className="list-disc pl-5 space-y-2 font-baskerville text-[#E9E7E2]/80">
+                  <li>Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other</li>
+                  <li>Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing</li>
+                  <li>Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding</li>
+                </ul>
+              </div>
+              
+              {/* Natural Strengths Section */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Natural Strengths</h2>
+                <ul className="list-disc pl-5 space-y-2 font-baskerville text-[#E9E7E2]/80">
+                  <li>Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions</li>
+                  <li>Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension</li>
+                  <li>Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism</li>
+                </ul>
+              </div>
+              
+              {/* Growth Edges Section */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Growth Edges</h2>
+                <ul className="list-disc pl-5 space-y-2 font-baskerville text-[#E9E7E2]/80">
+                  <li>Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution</li>
+                  <li>Develop more comfort with productive tension as a source of creativity rather than a problem to be solved</li>
+                  <li>Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
