@@ -1,7 +1,8 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DomainDetail: React.FC = () => {
@@ -174,11 +175,17 @@ const DomainDetail: React.FC = () => {
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
-                    <img 
-                      src={resource.image} 
-                      alt={resource.title}
-                      className="h-14 w-14 rounded-full object-cover"
-                    />
+                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img 
+                        src={resource.image} 
+                        alt={resource.title}
+                        className="h-10 w-10 object-cover"
+                        style={{ 
+                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                        }}
+                      />
+                    </div>
                   </div>
                   <div>
                     <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
