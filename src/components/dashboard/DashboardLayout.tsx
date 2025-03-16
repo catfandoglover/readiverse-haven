@@ -65,7 +65,7 @@ const DashboardLayout: React.FC = () => {
           
           {activeSection === "become" ? (
             <div className="space-y-4">
-              <p className="text-lg font-oxanium text-[#E9E7E2]-50 mb-6">
+              <p className="text-lg font-oxanium text-[#E9E7E2]/80 mb-4">
                 Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace.
               </p>
               
