@@ -26,7 +26,7 @@ const ProfileHeader: React.FC = () => {
   
   const firstName = user?.Account?.Name?.split(' ')[0] || "Explorer";
   const lastName = user?.Account?.Name?.split(' ').slice(1).join(' ') || "";
-  const email = user?.email || "user@example.com";
+  const email = user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
 
   useEffect(() => {
