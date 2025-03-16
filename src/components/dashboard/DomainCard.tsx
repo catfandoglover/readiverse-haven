@@ -49,9 +49,11 @@ const DomainCard: React.FC<DomainCardProps> = ({
             </span>
           </div>
           
-          <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-            <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-          </button>
+          <div className="flex items-center justify-center">
+            <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+              <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
