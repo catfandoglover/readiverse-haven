@@ -95,7 +95,7 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-oxanium uppercase font-bold">Thomas Babington Macaulay, Lord Macaulay</h3>
+                    <h3 className="text-lg font-oxanium uppercase font-bold">FRIEDRICH NIETZSCHE</h3>
                     <p className="text-sm text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                   </div>
                 </div>
@@ -121,7 +121,7 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-oxanium uppercase font-bold">BozR</h3>
+                    <h3 className="text-lg font-oxanium uppercase font-bold">MARTIN HEIDEGGER</h3>
                     <p className="text-sm text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                   </div>
                 </div>
