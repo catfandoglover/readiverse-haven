@@ -123,9 +123,9 @@ const DomainDetail: React.FC = () => {
       
       <main className="px-6 pb-6">
         <div className="mb-10">
-          <h1 className="text-4xl font-serif text-white mb-1">{domainData.title}</h1>
-          <p className="text-2xl font-serif text-[#9F9EA1] mb-6">{domainData.subtitle}</p>
-          <p className="text-lg text-[#9F9EA1]">
+          <h1 className="text-xl font-baskerville uppercase text-[#E9E7E2] mb-1">{domainData.title}</h1>
+          <p className="font-baskerville text-[#E9E7E2] mb-6">{domainData.subtitle}</p>
+          <p className="text-xs text-[#E9E7E2]">
             {domainData.description}
           </p>
         </div>
