@@ -32,34 +32,11 @@ const ProfileHeader: React.FC = () => {
     const fetchProfileData = async () => {
       if (user?.Uid) {
         try {
-          const { data: columns, error: columnsError } = await supabase
+          let { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .limit(1);
-            
-          if (columnsError) {
-            console.error("Error fetching profile schema:", columnsError);
-            return;
-          }
-          
-          console.log("Available columns in profiles table:", columns && columns[0] ? Object.keys(columns[0]) : []);
-          
-          let query = supabase.from('profiles').select('*');
-          
-          if (columns && columns[0]) {
-            const columnNames = Object.keys(columns[0]);
-            if (columnNames.includes('outseta_uid')) {
-              query = query.eq('outseta_uid', user.Uid);
-            } else if (columnNames.includes('user_id')) {
-              query = query.eq('user_id', user.Uid);
-            } else if (columnNames.includes('outseta_user_id')) {
-              query = query.eq('outseta_user_id', user.Uid);
-            } else {
-              query = query.eq('id', user.Uid);
-            }
-          }
-          
-          const { data, error } = await query.single();
+            .eq('outseta_user_id', user.Uid)
+            .maybeSingle();
             
           if (data && !error) {
             console.log("Profile data:", data);
@@ -94,14 +71,12 @@ const ProfileHeader: React.FC = () => {
   const handleShareClick = async () => {
     try {
       if (navigator.share) {
-        // Use native share functionality if available (mostly on mobile)
         await navigator.share({
           title: `${firstName}'s Profile`,
           text: `Check out ${firstName}'s reading profile!`,
           url: window.location.href,
         });
       } else {
-        // Fallback for desktop: copy to clipboard
         await navigator.clipboard.writeText(window.location.href);
         toast({
           title: "Link copied!",
@@ -110,7 +85,6 @@ const ProfileHeader: React.FC = () => {
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      // Try clipboard copy as a fallback if sharing fails
       try {
         await navigator.clipboard.writeText(window.location.href);
         toast({
@@ -196,7 +170,6 @@ const ProfileHeader: React.FC = () => {
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">Twilight Navigator</p>
             <p className="text-xs mt-1 text-[#E9E7E2]/60">
               <span className="text-[#E9E7E2] ml-2">{user?.email || ''}</span>
-              <span className="text-[#E9E7E2] ml-2">{user?.id || ''}</span>
             </p>
           </div>
         </div>
