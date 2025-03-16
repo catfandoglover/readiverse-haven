@@ -103,19 +103,93 @@ serve(async (req: Request) => {
     const decoded = jose.decodeJwt(outsetaJwtAccessToken);
     console.log('[exchange] Decoded token payload:', decoded);
     
-    // Verify with the JWKS, allowing both non-www and www issuers
-    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS, {
-      issuer: [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`]
-    });
+    // After decoding the token - manually decode header since decodeProtectedHeader isn't available
+    const tokenParts = outsetaJwtAccessToken.split('.');
+    if (tokenParts.length === 3) {
+      const headerBase64 = tokenParts[0];
+      const headerJson = atob(headerBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const tokenHeader = JSON.parse(headerJson);
+      console.log('[exchange] Token header:', tokenHeader);
+    }
+    console.log('[exchange] Token payload:', decoded);
     
-    console.log('[exchange] JWT verified, payload:', payload);
+    let payload;
+    
+    try {
+      // Before JWKS verification
+      console.log('[exchange] Expected issuers:', [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`]);
+      
+      // First try: Verify with the JWKS, allowing both non-www and www issuers
+      console.log('[exchange] Attempting verification with JWKS');
+      const result = await jose.jwtVerify(outsetaJwtAccessToken, JWKS, {
+        issuer: [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`],
+        algorithms: ['RS256'] // Explicitly allow RS256
+      });
+      payload = result.payload;
+      console.log('[exchange] JWT verified with JWKS, payload:', payload);
+    } catch (error) {
+      const jwksError = error as Error;
+      console.error('[exchange] JWKS verification failed:', jwksError);
+      // If JWKS verification fails
+      console.error('[exchange] JWKS verification error details:', jwksError.message, jwksError.stack);
+      console.log('[exchange] Falling back to direct key verification');
+      
+      // Fallback: Fetch JWKS manually and extract the key
+      const jwksResponse = await fetch(`https://${outsetaDomain}/.well-known/jwks`);
+      const jwks = await jwksResponse.json();
+      
+      // Log the JWKS response in fallback
+      console.log('[exchange] Fetched JWKS:', jwks);
+      
+      // Extract the kid from the token header manually
+      const tokenParts = outsetaJwtAccessToken.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid JWT format');
+      }
+      
+      // Decode the header part (first part of the JWT)
+      const headerBase64 = tokenParts[0];
+      const headerJson = atob(headerBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const tokenHeader = JSON.parse(headerJson);
+      
+      // Find the key with the specific kid from the token header
+      const key = jwks.keys.find((k: any) => k.kid === tokenHeader.kid);
+      
+      if (!key) {
+        throw new Error(`Key with kid ${tokenHeader.kid} not found in JWKS`);
+      }
+      
+      console.log(`[exchange] Found matching key with kid: ${key.kid}`);
+      
+      // Create a crypto key from the JWK components
+      const publicKeyData = {
+        kty: key.kty,
+        n: key.n,
+        e: key.e,
+        kid: key.kid,
+        alg: 'RS256'
+      };
+      
+      // Verify the token using the public key data
+      const result = await jose.jwtVerify(
+        outsetaJwtAccessToken,
+        async () => publicKeyData,
+        {
+          issuer: `https://${outsetaDomain}`,
+          algorithms: ['RS256']
+        }
+      );
+      
+      payload = result.payload;
+      console.log('[exchange] JWT verified with fallback method, payload:', payload);
+    }
 
     // Add Supabase role to the payload
     const payloadWithRole = { 
       ...payload, 
       role: "authenticated",
       // Add a user identifier that Supabase policies can use
-      sub: payload.sub || payload.email || payload.user_id,
+      sub: String(payload.sub || payload.email || payload.user_id || ''),
       email: payload.email,
       // Explicitly set aud to match what Supabase expects
       aud: "authenticated"
