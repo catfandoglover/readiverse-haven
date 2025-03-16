@@ -1,178 +1,69 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { X, ArrowRight } from "lucide-react";
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
   
-  // Mock data for the domain details
-  const getDomainData = (id: string) => {
-    const domains: Record<string, {
-      title: string,
-      subtitle: string,
-      description: string,
-      resources: Array<{
-        id: string,
-        image: string,
-        title: string,
-        subtitle: string,
-        description: string
-      }>
-    }> = {
-      "philosophy": {
-        title: "PHILOSOPHY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "literature": {
-        title: "LITERATURE",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "politics": {
-        title: "POLITICS",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "theology": {
-        title: "THEOLOGY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "ethics": {
-        title: "THEOLOGY", // Using THEOLOGY as shown in the image
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "history": {
-        title: "HISTORY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      }
-    };
-    
-    return domains[id] || domains["theology"]; // Default to theology if not found
+  const handleBackClick = () => {
+    // Navigate back to dashboard with the "become" section active
+    navigate("/dashboard", { state: { activeSection: "become" } });
   };
   
-  const domainData = getDomainData(domainId || "");
+  // This would be fetched from an API in a real implementation
+  const getProfileAreaTitle = (id: string) => {
+    const profileAreas: Record<string, string> = {
+      "philosophy": "Philosophy",
+      "literature": "Literature",
+      "politics": "Politics",
+      "theology": "Theology",
+      "ethics": "Ethics",
+      "history": "History"
+    };
+    
+    return profileAreas[id] || "Profile Area";
+  };
   
   return (
-    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
-      <header className="px-6 py-6 flex justify-between items-center">
+    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2]">
+      <header className="px-4 py-3 flex items-center">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate("/dashboard")}
-          className="p-0 h-auto w-auto hover:bg-transparent"
+          onClick={handleBackClick}
+          className="mr-2"
         >
-          <X className="h-7 w-7 text-white" />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        <Button 
-          variant="ghost" 
-          className="text-white uppercase tracking-wider font-medium text-sm hover:bg-transparent"
-        >
-          TAKE COURSE
-        </Button>
+        <h1 className="text-xl font-serif">{getProfileAreaTitle(domainId || "")}</h1>
       </header>
       
-      <main className="px-6 pb-6">
-        <div className="mb-10">
-          <h1 className="text-4xl font-serif text-white mb-1">{domainData.title}</h1>
-          <p className="text-2xl font-serif text-[#9F9EA1] mb-6">{domainData.subtitle}</p>
-          <p className="text-lg text-[#9F9EA1]">
-            {domainData.description}
+      <main className="p-4">
+        <div className="rounded-xl bg-[#383741] p-4 mb-4">
+          <h2 className="text-lg font-serif mb-2">About this Profile Area</h2>
+          <p className="text-[#E9E7E2]/80 font-baskerville">
+            This is the {getProfileAreaTitle(domainId || "")} profile area. Here you will find resources, 
+            assessments, and guidance related to this intellectual domain.
           </p>
         </div>
         
-        <div className="mb-8">
-          <div className="flex border-b border-white/20">
-            <button 
-              className={`pb-3 mr-10 uppercase tracking-wider font-medium ${activeTab === "kindred" ? "border-b-2 border-white" : "opacity-70"}`}
-              onClick={() => setActiveTab("kindred")}
-            >
-              KINDRED SPIRITS
-            </button>
-            <button 
-              className={`pb-3 uppercase tracking-wider font-medium ${activeTab === "challenging" ? "border-b-2 border-white" : "opacity-70"}`}
-              onClick={() => setActiveTab("challenging")}
-            >
-              CHALLENGING VOICES
-            </button>
+        <div className="space-y-4">
+          <div className="rounded-xl bg-[#383741] p-4">
+            <h3 className="text-md font-serif mb-2">Recommended Resources</h3>
+            <p className="text-sm text-[#E9E7E2]/70">
+              Content for this profile area is coming soon.
+            </p>
           </div>
-        </div>
-        
-        <div className="space-y-6">
-          {domainData.resources.map((resource, idx) => (
-            <div key={idx}>
-              <div className="flex items-center justify-between bg-[#383741] rounded-full p-2 pr-4">
-                <div className="flex items-center">
-                  <img 
-                    src={resource.image} 
-                    alt={resource.title}
-                    className="w-12 h-12 rounded-full mr-4"
-                  />
-                  <div>
-                    <h3 className="text-white font-medium">{resource.title}</h3>
-                    <p className="text-[#9F9EA1] text-sm">{resource.subtitle}</p>
-                  </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="bg-white/20 rounded-full h-10 w-10 hover:bg-white/30"
-                >
-                  <ArrowRight className="h-5 w-5 text-white" />
-                </Button>
-              </div>
-              <p className="text-[#9F9EA1] mt-2 mb-6 ml-2">{resource.description}</p>
-            </div>
-          ))}
+          
+          <div className="rounded-xl bg-[#383741] p-4">
+            <h3 className="text-md font-serif mb-2">Your Progress</h3>
+            <p className="text-sm text-[#E9E7E2]/70">
+              Your profile area progress details will appear here.
+            </p>
+          </div>
         </div>
       </main>
     </div>
