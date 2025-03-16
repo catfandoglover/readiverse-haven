@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -6,17 +7,54 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
+  const [profileIntroduction, setProfileIntroduction] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fixed assessment ID for testing/development
+  const FIXED_ASSESSMENT_ID = "7f1944af-a5a9-47ab-abe4-b97b82eb6bd1";
   
   useEffect(() => {
     if (location.state && location.state.activeSection) {
       setActiveSection(location.state.activeSection);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const fetchProfileIntroduction = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('introduction')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching profile introduction:", error);
+          setError("Failed to load profile data");
+          return;
+        }
+        
+        if (data && data.introduction) {
+          setProfileIntroduction(data.introduction);
+        }
+      } catch (err) {
+        console.error("Exception fetching profile introduction:", err);
+        setError("An unexpected error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfileIntroduction();
+  }, [FIXED_ASSESSMENT_ID]);
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
@@ -79,9 +117,17 @@ const DashboardLayout: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.
-              </p>
+              {loading ? (
+                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">Loading profile information...</p>
+              ) : error ? (
+                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
+                  Unable to load profile information. Please try again later.
+                </p>
+              ) : (
+                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
+                  {profileIntroduction}
+                </p>
+              )}
               
               {/* Kindred Spirit Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
