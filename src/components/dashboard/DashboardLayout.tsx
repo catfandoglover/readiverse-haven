@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
@@ -9,9 +8,15 @@ import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon } from "lucide-react";
 
 const DashboardLayout: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
+  
+  useEffect(() => {
+    if (location.state && location.state.activeSection) {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location.state]);
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
