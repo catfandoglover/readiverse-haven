@@ -8,11 +8,6 @@ const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
   
-  const handleBackClick = () => {
-    // Navigate back to dashboard with the "become" section active
-    navigate("/dashboard", { state: { activeSection: "become" } });
-  };
-  
   // This would be fetched from an API in a real implementation
   const getProfileAreaTitle = (id: string) => {
     const profileAreas: Record<string, string> = {
@@ -33,7 +28,7 @@ const DomainDetail: React.FC = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={handleBackClick}
+          onClick={() => navigate("/dashboard")}
           className="mr-2"
         >
           <ArrowLeft className="h-5 w-5" />
