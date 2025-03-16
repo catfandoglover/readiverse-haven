@@ -109,7 +109,7 @@ const DomainDetail: React.FC = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate("/dashboard/BECOME WHO YOU ARE")}
+          onClick={() => navigate("/dashboard")}
           className="p-0 h-auto w-auto hover:bg-transparent"
         >
           <X className="h-8 w-8 text-white" />
