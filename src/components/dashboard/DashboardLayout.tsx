@@ -73,8 +73,8 @@ const DashboardLayout: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
-                You are a philosophical bridge-builder who approaches life's questions with both intellectual rigor and compassionate understanding. Your approach blends practical wisdom with theoretical insight, creating harmonious connections between seemingly contradictory viewpoints. You appreciate nuance and complexity, recognizing that truth often resides in the tension between opposing perspectives rather than in rigid absolutism.
+              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
+                You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.
               </p>
               
               {/* Key Tensions Section */}
