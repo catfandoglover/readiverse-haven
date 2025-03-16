@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share, Camera } from "lucide-react";
+import { Share, Pen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 
@@ -18,7 +17,7 @@ interface ProfileData {
 }
 
 const ProfileHeader: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openProfile } = useAuth();
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
@@ -31,7 +30,6 @@ const ProfileHeader: React.FC = () => {
     const fetchProfileData = async () => {
       if (user?.Uid) {
         try {
-          // Check if profiles table has the correct columns and structure
           const { data: columns, error: columnsError } = await supabase
             .from('profiles')
             .select('*')
@@ -42,13 +40,10 @@ const ProfileHeader: React.FC = () => {
             return;
           }
           
-          // Log the column names to help debug
           console.log("Available columns in profiles table:", columns && columns[0] ? Object.keys(columns[0]) : []);
           
-          // Determine the correct ID column - try id, user_id, or outseta_uid
           let query = supabase.from('profiles').select('*');
           
-          // If we don't see outseta_uid in the schema, we'll try different ID fields
           if (columns && columns[0]) {
             const columnNames = Object.keys(columns[0]);
             if (columnNames.includes('outseta_uid')) {
@@ -67,15 +62,12 @@ const ProfileHeader: React.FC = () => {
           if (data && !error) {
             console.log("Profile data:", data);
             
-            // Safely access properties with type assertion
             const profileData = data as ProfileData;
             
-            // Check for landscape_image field
             if (profileData.landscape_image) {
               setLandscapeImage(profileData.landscape_image);
             }
             
-            // Check for profile_image field
             if (profileData.profile_image) {
               setProfileImage(profileData.profile_image);
             }
@@ -91,17 +83,14 @@ const ProfileHeader: React.FC = () => {
     fetchProfileData();
   }, [user]);
 
-  // Default background image as fallback
   const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
 
   const handleProfileEditClick = () => {
-    console.log("Edit profile image clicked");
-    // Future implementation for profile image editing
+    openProfile({ tab: 'profile' });
   };
 
   return (
     <div className="relative overflow-hidden">
-      {/* Background with 50% opacity image */}
       <div className="w-full h-64 bg-[#2A282A] relative">
         <div 
           className="absolute inset-0"
@@ -114,17 +103,14 @@ const ProfileHeader: React.FC = () => {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
-        {/* Share button - aligned with hamburger menu height */}
         <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1">
           <Share className="h-7.5 w-7.5" />
         </Button>
       </div>
       
-      {/* Profile content */}
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <div className="relative h-20 w-20">
-            {/* SVG Hexagon Border */}
             <svg 
               viewBox="0 0 100 100" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -137,7 +123,6 @@ const ProfileHeader: React.FC = () => {
               />
             </svg>
             
-            {/* Image Container with clipping */}
             <div 
               className="absolute inset-0 flex items-center justify-center"
               style={{ 
@@ -152,13 +137,12 @@ const ProfileHeader: React.FC = () => {
               </Avatar>
             </div>
             
-            {/* Edit Profile Button - Circular Camera Icon */}
             <button 
               onClick={handleProfileEditClick}
               className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
               aria-label="Edit profile picture"
             >
-              <Camera size={16} className="text-gray-700" />
+              <Pen size={16} className="text-gray-700" />
             </button>
           </div>
           
