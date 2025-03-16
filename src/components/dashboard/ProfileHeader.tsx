@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -65,7 +64,7 @@ const ProfileHeader: React.FC = () => {
           if (data && !error) {
             console.log("Profile data:", data);
             
-            const profileData = data as ProfileData;
+            const profileData = data as any;
             
             if (profileData.landscape_image) {
               setLandscapeImage(profileData.landscape_image);
@@ -95,14 +94,12 @@ const ProfileHeader: React.FC = () => {
   const handleShareClick = async () => {
     try {
       if (navigator.share) {
-        // Use native share functionality if available (mostly on mobile)
         await navigator.share({
           title: `${firstName}'s Profile`,
           text: `Check out ${firstName}'s reading profile!`,
           url: window.location.href,
         });
       } else {
-        // Fallback for desktop: copy to clipboard
         await navigator.clipboard.writeText(window.location.href);
         toast({
           title: "Link copied!",
@@ -111,7 +108,6 @@ const ProfileHeader: React.FC = () => {
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      // Try clipboard copy as a fallback if sharing fails
       try {
         await navigator.clipboard.writeText(window.location.href);
         toast({

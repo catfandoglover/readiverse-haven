@@ -72,11 +72,67 @@ const DashboardLayout: React.FC = () => {
               <DomainsList />
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-              <h2 className="text-xl font-serif mb-3">Your Profile</h2>
+            <div className="space-y-6">
               <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
                 Explore your intellectual profile and personalized areas of knowledge. Your profile represents your unique perspective on fundamental questions of human existence.
               </p>
+
+              {/* Key Tensions Container */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Key Tensions</h2>
+                <ul className="space-y-3 font-baskerville text-[#E9E7E2]/80">
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Natural Strengths Container */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Natural Strengths</h2>
+                <ul className="space-y-3 font-baskerville text-[#E9E7E2]/80">
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Growth Edges Container */}
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-xl font-serif mb-3">Growth Edges</h2>
+                <ul className="space-y-3 font-baskerville text-[#E9E7E2]/80">
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Develop more comfort with productive tension as a source of creativity rather than a problem to be solved</span>
+                  </li>
+                  <li className="flex gap-2 items-start">
+                    <span className="text-[#CCFF23] mt-1">•</span>
+                    <span>Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
