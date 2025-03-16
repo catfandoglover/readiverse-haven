@@ -119,12 +119,13 @@ const DomainDetail: React.FC = () => {
             <img 
               src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
               alt="Lightning Logo"
-              className="h-6 w-6 object-cover"
+              className="h-10 w-10 object-cover"
               style={{ 
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
             />
           </div>
+          <p className="text-center mt-1 font-oxanium text-xs uppercase">SCRIBE</p>
         </div>
       </header>
       
