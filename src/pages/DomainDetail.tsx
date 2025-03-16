@@ -1,164 +1,179 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { X, ArrowRight } from "lucide-react";
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
-  const [domainData, setDomainData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
   
-  // Fixed assessment ID for testing/development
-  const FIXED_ASSESSMENT_ID = "7f1944af-a5a9-47ab-abe4-b97b82eb6bd1";
-  
-  // This would be fetched from an API in a real implementation
-  const getProfileAreaTitle = (id: string) => {
-    const profileAreas: Record<string, string> = {
-      "philosophy": "Philosophy",
-      "literature": "Literature",
-      "politics": "Politics",
-      "theology": "Theology",
-      "ethics": "Ethics",
-      "history": "History"
-    };
-    
-    return profileAreas[id] || "Profile Area";
-  };
-  
-  useEffect(() => {
-    const fetchDomainData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching domain data:", error);
-          return;
-        }
-        
-        console.log("Fetched domain data:", data);
-        setDomainData(data);
-      } catch (err) {
-        console.error("Exception fetching domain data:", err);
-      } finally {
-        setLoading(false);
+  // Mock data for the domain details
+  const getDomainData = (id: string) => {
+    const domains: Record<string, {
+      title: string,
+      subtitle: string,
+      description: string,
+      resources: Array<{
+        id: string,
+        image: string,
+        title: string,
+        subtitle: string,
+        description: string
+      }>
+    }> = {
+      "philosophy": {
+        title: "PHILOSOPHY",
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "literature": {
+        title: "LITERATURE",
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "politics": {
+        title: "POLITICS",
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "theology": {
+        title: "THEOLOGY",
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "ethics": {
+        title: "THEOLOGY", // Using THEOLOGY as shown in the image
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "history": {
+        title: "HISTORY",
+        subtitle: "Your view on the Divine.",
+        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
       }
     };
     
-    fetchDomainData();
-  }, [FIXED_ASSESSMENT_ID]);
+    return domains[id] || domains["theology"]; // Default to theology if not found
+  };
+  
+  const domainData = getDomainData(domainId || "");
   
   return (
-    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2]">
-      <header className="px-4 py-3 flex items-center">
+    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
+      <header className="px-6 py-6 flex justify-between items-center">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate("/dashboard", { state: { activeSection: "become" } })}
-          className="mr-2"
+          onClick={() => navigate("/dashboard")}
+          className="p-0 h-auto w-auto hover:bg-transparent"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <X className="h-7 w-7 text-white" />
         </Button>
-        <h1 className="text-xl font-serif">{getProfileAreaTitle(domainId || "")}</h1>
+        <Button 
+          variant="ghost" 
+          className="text-white uppercase tracking-wider font-medium text-sm hover:bg-transparent"
+        >
+          TAKE COURSE
+        </Button>
       </header>
       
-      <main className="p-4">
-        {loading ? (
-          <div className="p-6 text-center">Loading...</div>
-        ) : (
-          <>
-            <div className="rounded-xl bg-[#383741] p-4 mb-4">
-              <h2 className="text-lg font-serif mb-2">About this Profile Area</h2>
-              <p className="text-[#E9E7E2]/80 font-oxanium">
-                {domainData?.introduction || "Content not available"}
-              </p>
+      <main className="px-6 pb-6">
+        <div className="mb-10">
+          <h1 className="text-4xl font-serif text-white mb-1">{domainData.title}</h1>
+          <p className="text-2xl font-serif text-[#9F9EA1] mb-6">{domainData.subtitle}</p>
+          <p className="text-lg text-[#9F9EA1]">
+            {domainData.description}
+          </p>
+        </div>
+        
+        <div className="mb-8">
+          <div className="flex border-b border-white/20">
+            <button 
+              className={`pb-3 mr-10 uppercase tracking-wider font-medium ${activeTab === "kindred" ? "border-b-2 border-white" : "opacity-70"}`}
+              onClick={() => setActiveTab("kindred")}
+            >
+              KINDRED SPIRITS
+            </button>
+            <button 
+              className={`pb-3 uppercase tracking-wider font-medium ${activeTab === "challenging" ? "border-b-2 border-white" : "opacity-70"}`}
+              onClick={() => setActiveTab("challenging")}
+            >
+              CHALLENGING VOICES
+            </button>
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          {domainData.resources.map((resource, idx) => (
+            <div key={idx}>
+              <div className="flex items-center justify-between bg-[#383741] rounded-full p-2 pr-4">
+                <div className="flex items-center">
+                  <img 
+                    src={resource.image} 
+                    alt={resource.title}
+                    className="w-12 h-12 rounded-full mr-4"
+                  />
+                  <div>
+                    <h3 className="text-white font-medium">{resource.title}</h3>
+                    <p className="text-[#9F9EA1] text-sm">{resource.subtitle}</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="bg-white/20 rounded-full h-10 w-10 hover:bg-white/30"
+                >
+                  <ArrowRight className="h-5 w-5 text-white" />
+                </Button>
+              </div>
+              <p className="text-[#9F9EA1] mt-2 mb-6 ml-2">{resource.description}</p>
             </div>
-            
-            <Tabs defaultValue="resources" className="w-full">
-              <TabsList className="w-full bg-[#2A282A] mb-4">
-                <TabsTrigger value="resources" className="flex-1 font-oxanium uppercase text-xs">Resources</TabsTrigger>
-                <TabsTrigger value="assessment" className="flex-1 font-oxanium uppercase text-xs">Assessment</TabsTrigger>
-                <TabsTrigger value="thinkers" className="flex-1 font-oxanium uppercase text-xs">Thinkers</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="resources" className="space-y-4">
-                <div className="p-4 rounded-xl bg-[#383741]/80 shadow-inner">
-                  <h3 className="text-md font-serif mb-3">Primary Works</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col aspect-[3/4] bg-[#1e1e24] rounded-lg overflow-hidden">
-                      <div className="flex-1 relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1e1e24]/90"></div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-sm font-semibold">The Republic</h4>
-                        <p className="text-xs text-[#E9E7E2]/70">Plato</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col aspect-[3/4] bg-[#1e1e24] rounded-lg overflow-hidden">
-                      <div className="flex-1 relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1e1e24]/90"></div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-sm font-semibold">Meditations</h4>
-                        <p className="text-xs text-[#E9E7E2]/70">Marcus Aurelius</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 rounded-xl bg-[#383741]/80 shadow-inner">
-                  <h3 className="text-md font-serif mb-3">Recommended Texts</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col aspect-[3/4] bg-[#1e1e24] rounded-lg overflow-hidden">
-                      <div className="flex-1 relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1e1e24]/90"></div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-sm font-semibold">Thus Spoke Zarathustra</h4>
-                        <p className="text-xs text-[#E9E7E2]/70">Friedrich Nietzsche</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col aspect-[3/4] bg-[#1e1e24] rounded-lg overflow-hidden">
-                      <div className="flex-1 relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1e1e24]/90"></div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-sm font-semibold">Being and Time</h4>
-                        <p className="text-xs text-[#E9E7E2]/70">Martin Heidegger</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="assessment">
-                <div className="p-4 rounded-xl bg-[#383741]/80 shadow-inner">
-                  <h3 className="text-md font-serif mb-2">Your Profile</h3>
-                  <p className="text-sm text-[#E9E7E2]/80 mb-4">
-                    Assessment details for this profile area will appear here.
-                  </p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="thinkers">
-                <div className="p-4 rounded-xl bg-[#383741]/80 shadow-inner">
-                  <h3 className="text-md font-serif mb-2">Key Thinkers</h3>
-                  <p className="text-sm text-[#E9E7E2]/80 mb-4">
-                    Key thinkers in this domain will appear here.
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </>
-        )}
+          ))}
+        </div>
       </main>
     </div>
   );
