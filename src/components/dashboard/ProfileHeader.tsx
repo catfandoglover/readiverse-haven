@@ -120,11 +120,11 @@ const ProfileHeader: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <div className="relative h-20 w-20">
-            <Hexagon className="absolute h-20 w-20 text-[#CCFF23]" strokeWidth={1.5} />
-            <div className="absolute inset-0 flex items-center justify-center p-1">
-              <Avatar className="h-full w-full overflow-hidden">
+            <Hexagon className="absolute h-20 w-20 text-[#CCFF23]" strokeWidth={10} />
+            <div className="absolute inset-0 flex items-center justify-center p-2.5">
+              <Avatar className="h-full w-full overflow-hidden rounded-none">
                 <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
+                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                   {initials}
                 </AvatarFallback>
               </Avatar>
