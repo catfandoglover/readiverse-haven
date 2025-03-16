@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Pen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileData {
   id: string;
@@ -20,6 +22,7 @@ const ProfileHeader: React.FC = () => {
   const { user, openProfile } = useAuth();
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { toast } = useToast();
   
   const firstName = user?.Account?.Name?.split(' ')[0] || "Explorer";
   const lastName = user?.Account?.Name?.split(' ').slice(1).join(' ') || "";
@@ -88,6 +91,27 @@ const ProfileHeader: React.FC = () => {
   const handleProfileEditClick = () => {
     openProfile({ tab: 'profile' });
   };
+  
+  const handleShareClick = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${firstName}'s Profile`,
+          text: `Check out ${firstName}'s reading profile!`,
+          url: window.location.href,
+        });
+      } else {
+        // Fallback for browsers that don't support the Web Share API
+        navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied!",
+          description: "Profile link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden">
@@ -103,7 +127,13 @@ const ProfileHeader: React.FC = () => {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
-        <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1"
+          onClick={handleShareClick}
+          aria-label="Share profile"
+        >
           <Share className="h-7.5 w-7.5" />
         </Button>
       </div>
@@ -139,7 +169,7 @@ const ProfileHeader: React.FC = () => {
             
             <button 
               onClick={handleProfileEditClick}
-              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-#E9E7E2 transition-colors"
+              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
               aria-label="Edit profile picture"
             >
               <Pen size={12} className="text-gray-700" />
