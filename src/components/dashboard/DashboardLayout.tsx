@@ -95,8 +95,8 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-[#E9E7E2] font-oxanium uppercase font-bold">FRIEDRICH NIETZSCHE</h3>
-                    <p className="text-sm text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">FRIEDRICH NIETZSCHE</h3>
+                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                   </div>
                 </div>
                 <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
@@ -121,8 +121,8 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-[#E9E7E2] font-oxanium uppercase font-bold">MARTIN HEIDEGGER</h3>
-                    <p className="text-sm text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">MARTIN HEIDEGGER</h3>
+                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                   </div>
                 </div>
                 <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
