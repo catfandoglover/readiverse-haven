@@ -1,4 +1,3 @@
-
 // Import AWS SDK for browser
 import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
 import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
@@ -51,7 +50,7 @@ class SpeechService {
       console.log('Attempting to get Polly URL with params:', speechParams);
       
       // Get presigned URL for the speech - Fixed 'String' to 'string' error
-      const url = await getSynthesizeSpeechUrl({
+      const url: string = await getSynthesizeSpeechUrl({
         client: this.polly,
         params: speechParams
       });

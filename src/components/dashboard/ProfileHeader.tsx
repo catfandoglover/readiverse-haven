@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -195,7 +194,10 @@ const ProfileHeader: React.FC = () => {
           <div>
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">Twilight Navigator</p>
-            <p className="text-xs mt-1 text-[#E9E7E2]/60">{email}</p>
+            <p className="text-xs mt-1 text-[#E9E7E2]/60">
+              <span className="text-[#E9E7E2] ml-2">{user?.email || ''}</span>
+              <span className="text-[#E9E7E2] ml-2">{user?.id || ''}</span>
+            </p>
           </div>
         </div>
       </div>
