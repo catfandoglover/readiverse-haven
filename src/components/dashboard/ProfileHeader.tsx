@@ -165,7 +165,7 @@ const ProfileHeader: React.FC = () => {
                 points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
                 fill="none" 
                 stroke="currentColor" 
-                strokeWidth="1.5"
+                strokeWidth="3"
               />
             </svg>
             
