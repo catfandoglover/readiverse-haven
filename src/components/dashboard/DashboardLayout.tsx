@@ -100,7 +100,7 @@ const DashboardLayout: React.FC = () => {
                   </div>
                 </div>
                 <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-5 w-5 text-[#E9E7E2]" />
+                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                 </button>
               </div>
               
@@ -126,7 +126,7 @@ const DashboardLayout: React.FC = () => {
                   </div>
                 </div>
                 <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-5 w-5 text-[#E9E7E2]" />
+                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                 </button>
               </div>
               
