@@ -85,7 +85,7 @@ const DashboardLayout: React.FC = () => {
                     <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={1.5} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/philosophers/nietzsche.png" 
+                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Friedrich%20Nietzsche.png" 
                         alt="Friedrich Nietzsche" 
                         className="h-10 w-10 object-cover"
                         style={{ 
@@ -111,7 +111,7 @@ const DashboardLayout: React.FC = () => {
                     <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={1.5} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/philosophers/heidegger.png" 
+                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Martin%20Heidegger.png" 
                         alt="Martin Heidegger" 
                         className="h-10 w-10 object-cover"
                         style={{ 
