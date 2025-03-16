@@ -6,6 +6,18 @@ import { Share, Hexagon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 
+interface ProfileData {
+  id: string;
+  outseta_user_id: string;
+  email: string;
+  full_name: string;
+  created_at: string;
+  updated_at: string;
+  landscape_image?: string;
+  profile_image?: string;
+  // Add other fields as needed
+}
+
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
@@ -39,11 +51,12 @@ const ProfileHeader: React.FC = () => {
           
           // If we don't see outseta_uid in the schema, we'll try different ID fields
           if (columns && columns[0]) {
-            if (Object.keys(columns[0]).includes('outseta_uid')) {
+            const columnNames = Object.keys(columns[0]);
+            if (columnNames.includes('outseta_uid')) {
               query = query.eq('outseta_uid', user.Uid);
-            } else if (Object.keys(columns[0]).includes('user_id')) {
+            } else if (columnNames.includes('user_id')) {
               query = query.eq('user_id', user.Uid);
-            } else if (Object.keys(columns[0]).includes('outseta_user_id')) {
+            } else if (columnNames.includes('outseta_user_id')) {
               query = query.eq('outseta_user_id', user.Uid);
             } else {
               query = query.eq('id', user.Uid);
@@ -55,14 +68,17 @@ const ProfileHeader: React.FC = () => {
           if (data && !error) {
             console.log("Profile data:", data);
             
+            // Safely access properties with type assertion
+            const profileData = data as ProfileData;
+            
             // Check for landscape_image field
-            if (data.landscape_image) {
-              setLandscapeImage(data.landscape_image);
+            if (profileData.landscape_image) {
+              setLandscapeImage(profileData.landscape_image);
             }
             
             // Check for profile_image field
-            if (data.profile_image) {
-              setProfileImage(data.profile_image);
+            if (profileData.profile_image) {
+              setProfileImage(profileData.profile_image);
             }
           } else {
             console.error("Error fetching profile data:", error);

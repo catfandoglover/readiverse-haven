@@ -32,7 +32,7 @@ const DashboardLayout: React.FC = () => {
               className={cn(
                 "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
                 activeSection === "profile" 
-                  ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-[calc(100%)]" 
+                  ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
               )}
               onClick={() => handleSectionChange("profile")}
