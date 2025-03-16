@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ const DomainDetail: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
   
-  // Mock data for the domain details
   const getDomainData = (id: string) => {
     const domains: Record<string, {
       title: string,
@@ -73,7 +71,7 @@ const DomainDetail: React.FC = () => {
         })
       },
       "ethics": {
-        title: "THEOLOGY", // Using THEOLOGY as shown in the image
+        title: "THEOLOGY",
         subtitle: "Your view on the Divine.",
         description: "Seeks experiential knowledge while maintaining rational frameworks.",
         resources: Array(5).fill({
@@ -98,7 +96,7 @@ const DomainDetail: React.FC = () => {
       }
     };
     
-    return domains[id] || domains["theology"]; // Default to theology if not found
+    return domains[id] || domains["theology"];
   };
   
   const domainData = getDomainData(domainId || "");
@@ -173,27 +171,25 @@ const DomainDetail: React.FC = () => {
         <div className="space-y-6">
           {domainData.resources.map((resource, idx) => (
             <div key={idx}>
-              <div className="flex items-center justify-between bg-[#383741] rounded-full p-2 pr-4">
+              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
-                  <img 
-                    src={resource.image} 
-                    alt={resource.title}
-                    className="w-12 h-12 rounded-full mr-4"
-                  />
+                  <div className="relative mr-4">
+                    <img 
+                      src={resource.image} 
+                      alt={resource.title}
+                      className="h-14 w-14 rounded-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <h3 className="text-white font-medium">{resource.title}</h3>
-                    <p className="text-[#9F9EA1] text-sm">{resource.subtitle}</p>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
+                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="bg-white/20 rounded-full h-10 w-10 hover:bg-white/30"
-                >
-                  <ArrowRight className="h-5 w-5 text-white" />
-                </Button>
+                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                </button>
               </div>
-              <p className="text-[#9F9EA1] mt-2 mb-6 ml-2">{resource.description}</p>
+              <p className="text-xs text-[#9F9EA1] mt-2 mb-6 ml-2 font-oxanium">{resource.description}</p>
             </div>
           ))}
         </div>
