@@ -139,7 +139,7 @@ const ProfileHeader: React.FC = () => {
             
             <button 
               onClick={handleProfileEditClick}
-              className="absolute -bottom-2 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-#E9E7E2 transition-colors"
+              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-#E9E7E2 transition-colors"
               aria-label="Edit profile picture"
             >
               <Pen size={12} className="text-gray-700" />
