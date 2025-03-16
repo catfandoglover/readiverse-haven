@@ -1,7 +1,6 @@
 
 import React from "react";
 import DomainCard from "./DomainCard";
-import { Heart, Diamond, Globe, Sparkles, Palette } from "lucide-react";
 
 const DomainsList: React.FC = () => {
   const domains = [
@@ -9,7 +8,6 @@ const DomainsList: React.FC = () => {
       id: "ethics",
       title: "Ethics",
       description: "YOUR VIEW ON THE GOOD",
-      icon: <Heart className="h-5 w-5" />,
       progress: 21,
       color: "#FD8F8F"
     },
@@ -17,7 +15,6 @@ const DomainsList: React.FC = () => {
       id: "epistemology",
       title: "Epistemology",
       description: "YOUR VIEW ON KNOWLEDGE",
-      icon: <Diamond className="h-5 w-5" />,
       progress: 15,
       color: "#7E69AB"
     },
@@ -25,7 +22,6 @@ const DomainsList: React.FC = () => {
       id: "politics",
       title: "Politics",
       description: "YOUR VIEW ON POWER",
-      icon: <Globe className="h-5 w-5" />,
       progress: 18,
       color: "#b29eff"
     },
@@ -33,7 +29,6 @@ const DomainsList: React.FC = () => {
       id: "theology",
       title: "Theology",
       description: "YOUR VIEW ON THE DIVINE",
-      icon: <Sparkles className="h-5 w-5" />,
       progress: 35,
       color: "#EFFE91"
     },
@@ -41,7 +36,6 @@ const DomainsList: React.FC = () => {
       id: "ontology",
       title: "Ontology",
       description: "YOUR VIEW ON REALITY",
-      icon: <Diamond className="h-5 w-5" />,
       progress: 12,
       color: "#8DD7CF"
     },
@@ -49,7 +43,6 @@ const DomainsList: React.FC = () => {
       id: "aesthetics",
       title: "Aesthetics",
       description: "YOUR VIEW ON BEAUTY",
-      icon: <Palette className="h-5 w-5" />,
       progress: 28,
       color: "#D3E4FD"
     }
@@ -63,7 +56,6 @@ const DomainsList: React.FC = () => {
           id={domain.id}
           title={domain.title}
           description={domain.description}
-          icon={domain.icon}
           progress={domain.progress}
           color={domain.color}
         />
