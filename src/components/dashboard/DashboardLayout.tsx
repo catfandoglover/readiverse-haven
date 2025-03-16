@@ -74,7 +74,7 @@ const DashboardLayout: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <p className="font-baskerville text-[#E9E7E2]/80 mb-4">
-                Explore your intellectual profile and personalized areas of knowledge. Your profile represents your unique perspective on fundamental questions of human existence.
+                You are a philosophical bridge-builder who approaches life's questions with both intellectual rigor and compassionate understanding. Your approach blends practical wisdom with theoretical insight, creating harmonious connections between seemingly contradictory viewpoints. You appreciate nuance and complexity, recognizing that truth often resides in the tension between opposing perspectives rather than in rigid absolutism.
               </p>
               
               {/* Key Tensions Section */}
