@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share } from "lucide-react";
+import { Share, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 
@@ -15,7 +15,6 @@ interface ProfileData {
   updated_at: string;
   landscape_image?: string;
   profile_image?: string;
-  // Add other fields as needed
 }
 
 const ProfileHeader: React.FC = () => {
@@ -95,6 +94,11 @@ const ProfileHeader: React.FC = () => {
   // Default background image as fallback
   const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
 
+  const handleProfileEditClick = () => {
+    console.log("Edit profile image clicked");
+    // Future implementation for profile image editing
+  };
+
   return (
     <div className="relative overflow-hidden">
       {/* Background with 50% opacity image */}
@@ -120,7 +124,7 @@ const ProfileHeader: React.FC = () => {
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
         <div className="flex items-end space-x-4">
           <div className="relative h-20 w-20">
-            {/* SVG Hexagon Border replacing the Hexagon component */}
+            {/* SVG Hexagon Border */}
             <svg 
               viewBox="0 0 100 100" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -147,6 +151,15 @@ const ProfileHeader: React.FC = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
+            
+            {/* Edit Profile Button - Circular Camera Icon */}
+            <button 
+              onClick={handleProfileEditClick}
+              className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+              aria-label="Edit profile picture"
+            >
+              <Camera size={16} className="text-gray-700" />
+            </button>
           </div>
           
           <div>
