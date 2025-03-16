@@ -115,7 +115,7 @@ const DomainDetail: React.FC = () => {
         </Button>
         <Button 
           variant="ghost" 
-          className="text-white uppercase tracking-wider font-medium text-sm hover:bg-transparent"
+          className="text-[#E9E7E2] uppercase tracking-wider font-oxanium uppercase text-xs hover:bg-transparent"
         >
           TAKE COURSE
         </Button>
