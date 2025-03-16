@@ -99,7 +99,7 @@ const DashboardLayout: React.FC = () => {
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                   </div>
                 </div>
-                <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
                   <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                 </button>
               </div>
@@ -125,7 +125,7 @@ const DashboardLayout: React.FC = () => {
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                   </div>
                 </div>
-                <button className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
                   <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                 </button>
               </div>
