@@ -66,7 +66,7 @@ const DashboardLayout: React.FC = () => {
           {activeSection === "become" ? (
             <div className="space-y-4">
               <p className="text-lg font-baskerville text-[#E9E7E2] mb-6">
-                Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace
+                Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace.
               </p>
               
               <DomainsList />
