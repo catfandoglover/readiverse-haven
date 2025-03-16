@@ -25,10 +25,10 @@ const DomainCard: React.FC<DomainCardProps> = ({
 
   return (
     <div 
-      className="rounded-xl overflow-hidden bg-[#383741] mb-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+      className="rounded-xl overflow-hidden bg-[#383741] mb-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer flex flex-col"
       onClick={() => navigate(`/dashboard/domain/${id}`)}
     >
-      <div className="p-4">
+      <div className="p-4 flex flex-col h-full">
         <div className="flex items-center mb-2">
           <div className="relative h-10 w-10 flex items-center justify-center mr-3">
             <Hexagon className="absolute h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
@@ -41,15 +41,15 @@ const DomainCard: React.FC<DomainCardProps> = ({
           {description}
         </p>
         
-        <div className="flex items-center justify-between">
-          <div className="flex-1 mr-4">
+        <div className="flex-1 flex flex-col justify-between">
+          <div className="w-full">
             <Progress value={progress} className="h-1.5" />
             <span className="text-xs text-[#E9E7E2]/60 mt-1 block font-oxanium">
               SCRIBE
             </span>
           </div>
           
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center mt-4">
             <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
               <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
             </button>
