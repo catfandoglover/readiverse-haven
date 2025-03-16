@@ -32,6 +32,18 @@ declare module "npm:jose@4.14.4" {
     protectedHeader: { [key: string]: any };
   }
 
+  export interface JWTVerifyOptions {
+    issuer?: string | string[];
+    audience?: string | string[];
+    algorithms?: string[];
+    clockTolerance?: string | number;
+    maxTokenAge?: string | number;
+    currentDate?: Date;
+    requiredClaims?: string[];
+    typ?: string;
+    crit?: string[];
+  }
+
   export class SignJWT {
     constructor(payload: JWTPayload);
     setProtectedHeader(header: { [key: string]: any }): this;
@@ -42,5 +54,6 @@ declare module "npm:jose@4.14.4" {
   }
 
   export function createRemoteJWKSet(url: URL): (protectedHeader: { [key: string]: any }) => Promise<any>;
-  export function jwtVerify(jwt: string, key: any): Promise<JWTVerifyResult>;
+  export function jwtVerify(jwt: string, key: any, options?: JWTVerifyOptions): Promise<JWTVerifyResult>;
+  export function decodeJwt(jwt: string): JWTPayload;
 } 

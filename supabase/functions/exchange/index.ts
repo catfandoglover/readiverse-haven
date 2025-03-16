@@ -74,23 +74,40 @@ serve(async (req: Request) => {
     console.log("[exchange] Processing token");
     
     // Get Outseta domain from environment variables
-    const outsetaDomain = Deno.env.get("OUTSETA_DOMAIN");
+
+    const outsetaDomain = "lightninginspiration.outseta.com";
+    const jwksUrlString = `https://${outsetaDomain}/.well-known/jwks`;
+
+    // const outsetaDomain = Deno.env.get("OUTSETA_DOMAIN");
     if (!outsetaDomain) {
       console.error("[exchange] Missing OUTSETA_DOMAIN environment variable");
       throw new Error("OUTSETA_DOMAIN not configured");
     }
-    console.log("[exchange] Using Outseta domain:", outsetaDomain);
-
-    // Create URL for Outseta JWKS
-    const jwksUrl = new URL(`https://${outsetaDomain}/.well-known/jwks`);
-    console.log('[exchange] Fetching JWKS from:', jwksUrl.toString());
+    
+    // Validate domain format - remove any https:// prefix if accidentally included in env var
+    const cleanDomain = outsetaDomain.replace(/^https?:\/\//, '');
+    console.log("[exchange] Using Outseta domain:", cleanDomain);
+    
+    // Form the JWKS URL using the clean domain
+    // const jwksUrlString = `https://${cleanDomain}/.well-known/jwks`;
+    console.log('[exchange] Fetching JWKS from:', jwksUrlString);
     
     // Create remote JWKS (JSON Web Key Set) for token verification
-    const JWKS = jose.createRemoteJWKSet(jwksUrl);
+    console.log('[exchange] Creating remote JWKS with URL:', jwksUrlString);
+    const JWKS = jose.createRemoteJWKSet(new URL(jwksUrlString));
 
     // Verify the Outseta JWT
     console.log('[exchange] Verifying token...');
-    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
+    
+    // Decode the token first to see what we're working with
+    const decoded = jose.decodeJwt(outsetaJwtAccessToken);
+    console.log('[exchange] Decoded token payload:', decoded);
+    
+    // Verify with the JWKS, allowing both non-www and www issuers
+    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS, {
+      issuer: [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`]
+    });
+    
     console.log('[exchange] JWT verified, payload:', payload);
 
     // Add Supabase role to the payload
@@ -106,7 +123,8 @@ serve(async (req: Request) => {
     console.log('[exchange] Enhanced payload:', payloadWithRole);
 
     // Get Supabase JWT secret from environment variables
-    const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
+    // const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
+    const supabaseSecret = "vWuwcintxMuwsNQuwhbDlxBYGdWW46un9S6QxbHrB06e9AAurTIRh6hRejlVzVqk1VjXwrmz31BluDHo9OpOBw==";
     if (!supabaseSecret) {
       console.error("[exchange] Missing SUPA_JWT_SECRET environment variable");
       throw new Error("SUPA_JWT_SECRET not configured");
