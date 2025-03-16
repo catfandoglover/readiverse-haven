@@ -95,14 +95,15 @@ const ProfileHeader: React.FC = () => {
   const handleShareClick = async () => {
     try {
       if (navigator.share) {
+        // Use native share functionality if available (mostly on mobile)
         await navigator.share({
           title: `${firstName}'s Profile`,
           text: `Check out ${firstName}'s reading profile!`,
           url: window.location.href,
         });
       } else {
-        // Fallback for browsers that don't support the Web Share API
-        navigator.clipboard.writeText(window.location.href);
+        // Fallback for desktop: copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
         toast({
           title: "Link copied!",
           description: "Profile link copied to clipboard",
@@ -110,6 +111,21 @@ const ProfileHeader: React.FC = () => {
       }
     } catch (error) {
       console.error('Error sharing:', error);
+      // Try clipboard copy as a fallback if sharing fails
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied!",
+          description: "Profile link copied to clipboard",
+        });
+      } catch (clipboardError) {
+        console.error('Error copying to clipboard:', clipboardError);
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy link",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -130,7 +146,7 @@ const ProfileHeader: React.FC = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1"
+          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1 hover:bg-white/10"
           onClick={handleShareClick}
           aria-label="Share profile"
         >
