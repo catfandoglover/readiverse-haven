@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -6,8 +5,10 @@ import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, Hexagon } from "lucide-react";
+import { ArrowRight, Hexagon, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 const DashboardLayout: React.FC = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const DashboardLayout: React.FC = () => {
   const [profileIntroduction, setProfileIntroduction] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Fixed assessment ID for testing/development
   const FIXED_ASSESSMENT_ID = "7f1944af-a5a9-47ab-abe4-b97b82eb6bd1";
@@ -26,38 +28,84 @@ const DashboardLayout: React.FC = () => {
     }
   }, [location.state]);
 
-  useEffect(() => {
-    const fetchProfileIntroduction = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('introduction')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching profile introduction:", error);
-          setError("Failed to load profile data");
-          return;
-        }
+  const fetchProfileIntroduction = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('dna_analysis_results')
+        .select('introduction')
+        .eq('assessment_id', FIXED_ASSESSMENT_ID)
+        .single();
         
-        if (data && data.introduction) {
-          setProfileIntroduction(data.introduction);
-        }
-      } catch (err) {
-        console.error("Exception fetching profile introduction:", err);
-        setError("An unexpected error occurred");
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error("Error fetching profile introduction:", error);
+        setError("Failed to load profile data. Please ensure you're connected to Supabase.");
+        return;
       }
-    };
-    
+      
+      if (data && data.introduction) {
+        setProfileIntroduction(data.introduction);
+        toast({
+          title: "Profile loaded",
+          description: "Your profile information has been successfully loaded.",
+          duration: 3000,
+        });
+      } else {
+        setError("No profile data found for this assessment ID.");
+      }
+    } catch (err) {
+      console.error("Exception fetching profile introduction:", err);
+      setError("An unexpected error occurred while loading profile data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProfileIntroduction();
   }, [FIXED_ASSESSMENT_ID]);
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
+  };
+
+  const renderProfileContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <Loader2 className="h-8 w-8 text-[#9b87f5] animate-spin" />
+          <p className="font-oxanium text-[#E9E7E2]/80">Loading profile information...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <Alert variant="destructive" className="bg-[#383741]/80 border-red-500/50 mb-6">
+          <AlertCircle className="h-4 w-4 text-red-400" />
+          <AlertTitle className="text-red-300">Error</AlertTitle>
+          <AlertDescription className="text-[#E9E7E2]/80">
+            {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={fetchProfileIntroduction}
+              className="mt-2 bg-[#3a3842] border-[#9b87f5]/30 text-[#E9E7E2] hover:bg-[#4a4852]"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    return (
+      <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
+        {profileIntroduction || "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints."}
+      </p>
+    );
   };
 
   return (
@@ -117,17 +165,7 @@ const DashboardLayout: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {loading ? (
-                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">Loading profile information...</p>
-              ) : error ? (
-                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                  Unable to load profile information. Please try again later.
-                </p>
-              ) : (
-                <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                  {profileIntroduction}
-                </p>
-              )}
+              {renderProfileContent()}
               
               {/* Kindred Spirit Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
