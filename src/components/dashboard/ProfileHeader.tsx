@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -32,7 +33,7 @@ const ProfileHeader: React.FC = () => {
     const fetchProfileData = async () => {
       if (user?.Uid) {
         try {
-          let { data, error } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('outseta_user_id', user.Uid)

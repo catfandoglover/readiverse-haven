@@ -116,7 +116,7 @@ const DomainDetail: React.FC = () => {
         <div className="flex flex-col items-center">
           <div className="relative">
             <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={.75} />
-            <div className="absolute inset-0">
+            <div className="absolute inset-0 flex items-center justify-center">
               <img 
                 src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
                 alt="Lightning Logo"
