@@ -113,21 +113,18 @@ const DomainDetail: React.FC = () => {
         >
           <X className="h-8 w-8 text-white" />
         </Button>
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={.75} />
-            <div className="absolute inset-0">
-              <img 
-                src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
-                alt="Lightning Logo"
-                className="h-full w-full object-cover"
-                style={{ 
-                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                }}
-              />
-            </div>
+        <div className="relative">
+          <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={.75} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img 
+              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
+              alt="Lightning Logo"
+              className="h-6 w-6 object-cover"
+              style={{ 
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+              }}
+            />
           </div>
-          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">SCRIBE</span>
         </div>
       </header>
       
