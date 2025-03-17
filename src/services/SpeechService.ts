@@ -57,7 +57,7 @@ class SpeechService {
       });
 
       console.log('Successfully got Polly URL:', url);
-      return url;
+      return url as string; // Explicitly cast to string to avoid String vs string type issues
     } catch (error) {
       console.error('Error synthesizing speech:', error);
       // Log more details about the error
