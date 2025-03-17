@@ -1,7 +1,8 @@
-
 // Import AWS SDK for browser
 import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
 import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
+import { AudioManager } from './AudioManager';
+import { createClient } from '@supabase/supabase-js';
 
 class SpeechService {
   private polly: PollyClient;
@@ -9,6 +10,10 @@ class SpeechService {
   private outputFormat: OutputFormat = 'mp3';
   private sampleRate: string = '16000';
   private textType: TextType = 'text';
+  private audioContext: AudioContext | null = null;
+  private audioManager: AudioManager | null = null;
+  private pollyApiKey: string | null = null;
+  private supabaseClient: any;
 
   constructor() {
     // Add debugging to check environment variables
@@ -77,6 +82,44 @@ class SpeechService {
       console.error('Error playing audio:', error);
     });
     return audio;
+  }
+
+  async initializeAudioContext() {
+    this.audioContext = new AudioContext();
+  }
+
+  async fetchAudioFromPolly(text: string, voiceId: string = "Joanna"): Promise<string> {
+    // Create the parameters for synthesizeSpeech
+    const speechParams: SynthesizeSpeechCommandInput = {
+      OutputFormat: this.outputFormat,
+      SampleRate: this.sampleRate,
+      Text: text,
+      TextType: this.textType,
+      VoiceId: voiceId,
+      Engine: 'neural'
+    };
+
+    console.log('Attempting to get Polly URL with params:', speechParams);
+    
+    // Get presigned URL for the speech
+    const url = await getSynthesizeSpeechUrl({
+      client: this.polly,
+      params: speechParams
+    });
+
+    console.log('Successfully got Polly URL:', url);
+    return url;
+  }
+
+  async playText(text: string): Promise<void> {
+    const audioUrl = await this.fetchAudioFromPolly(text);
+    const audio = this.playAudio(audioUrl);
+  }
+
+  async stopPlaying(): Promise<void> {
+    if (this.audioContext) {
+      this.audioContext.close();
+    }
   }
 }
 
