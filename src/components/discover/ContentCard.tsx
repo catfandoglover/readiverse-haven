@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowUp, ArrowDown, Share, Star } from "lucide-react";
+import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -90,7 +90,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <span className="flex items-center">
               LEARN MORE
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2] ml-3">
-                <ArrowUp className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
               </span>
             </span>
           </button>
