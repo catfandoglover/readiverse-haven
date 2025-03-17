@@ -76,7 +76,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         
         <div className="py-1 flex items-center justify-start mt-auto">
           <button
-            className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-xs"
+            className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-base"
             onClick={onLearnMore}
           >
             LEARN MORE
