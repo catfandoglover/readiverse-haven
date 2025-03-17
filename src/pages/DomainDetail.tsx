@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
@@ -388,6 +390,7 @@ const DomainDetail: React.FC = () => {
     
     const resources: ResourceData[] = [];
     
+    // These are the progress values for each resource - they determine the level
     const dummyProgressValues = [85, 65, 45, 25, 15];
     
     for (let i = 1; i <= 5; i++) {
@@ -422,7 +425,14 @@ const DomainDetail: React.FC = () => {
     return resources;
   };
   
-  const levels = [1, 2, 3, 4, 5, 6];
+  const getProgressLevel = (progress: number): number => {
+    if (progress <= 16.67) return 1;
+    if (progress <= 33.33) return 2;
+    if (progress <= 50) return 3;
+    if (progress <= 66.67) return 4;
+    if (progress <= 83.33) return 5;
+    return 6;
+  };
   
   const getStageName = (level: number): string => {
     const stageNames = {
@@ -436,16 +446,23 @@ const DomainDetail: React.FC = () => {
     return stageNames[level as keyof typeof stageNames] || "SCRIBE";
   };
   
-  const getProgressLevel = (progress: number): number => {
-    if (progress <= 16.67) return 1;
-    if (progress <= 33.33) return 2;
-    if (progress <= 50) return 3;
-    if (progress <= 66.67) return 4;
-    if (progress <= 83.33) return 5;
-    return 6;
+  // New function to find the highest progress level among all resources
+  const getHighestProgressLevel = (): number => {
+    const resources = getResources();
+    if (!resources || resources.length === 0) return 1; // Default to level 1 if no resources
+    
+    // Find highest progress value
+    const highestProgress = Math.max(...resources.map(resource => resource.progress));
+    
+    // Convert to level
+    return getProgressLevel(highestProgress);
   };
 
   const resources = getResources();
+  const highestLevel = getHighestProgressLevel();
+  const highestStageName = getStageName(highestLevel);
+  
+  const levels = [1, 2, 3, 4, 5, 6];
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
@@ -472,7 +489,9 @@ const DomainDetail: React.FC = () => {
               />
             </div>
           </div>
-          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">SCRIBE</span>
+          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">
+            {highestStageName}
+          </span>
         </div>
       </header>
       
@@ -557,25 +576,7 @@ const DomainDetail: React.FC = () => {
                   </div>
                   
                   <div className="ml-2 mb-3">
-                    <div className="flex space-x-1">
-                      {levels.map(level => (
-                        <div key={level} className="relative w-7 h-8 pb-2">
-                          <Hexagon 
-                            className={`w-7 h-8 ${level <= resourceLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
-                            strokeWidth={1}
-                          />
-                          <span 
-                            className={`absolute inset-0 flex items-center justify-center text-xs font-bold
-                              ${level <= resourceLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
-                          >
-                            {level}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
-                      {getStageName(resourceLevel)}
-                    </span>
+                    <ProgressDisplay progress={resource.progress} />
                   </div>
                 </div>
                 
