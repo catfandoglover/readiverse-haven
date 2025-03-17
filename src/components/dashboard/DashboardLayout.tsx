@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -15,6 +16,9 @@ interface DNAAnalysisResult {
   introduction: string | null;
   most_kindred_spirit: string | null;
   most_challenging_voice: string | null;
+  key_tension_1: string | null;
+  key_tension_2: string | null;
+  key_tension_3: string | null;
   created_at: string;
 }
 
@@ -37,7 +41,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -188,9 +192,30 @@ const DashboardLayout: React.FC = () => {
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other</li>
-                  <li>Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing</li>
-                  <li>Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_1 || 
+                      "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_2 || 
+                      "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_3 || 
+                      "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
+                    )}
+                  </li>
                 </ul>
               </div>
               
