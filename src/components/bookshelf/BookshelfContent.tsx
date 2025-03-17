@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -90,7 +89,7 @@ const BookshelfContent: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* Enhanced tab menu with smooth scroll behavior */}
       <ScrollArea 
-        className="w-full mb-4 border-b border-[#2A282A]/10 pb-2"
+        className="w-full mb-4 pb-2"
         orientation="horizontal"
         enableDragging={true}
       >
