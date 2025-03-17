@@ -62,9 +62,9 @@ const DomainDetail: React.FC = () => {
         description: string
       }>
     }> = {
-      "philosophy": {
-        title: "PHILOSOPHY",
-        subtitle: "Your view on the Divine.",
+      "theology": {
+        title: "THEOLOGY",
+        subtitle: "Your view on the Divine",
         description: "Seeks experiential knowledge while maintaining rational frameworks.",
         resources: Array(5).fill({
           id: "origin",
@@ -74,10 +74,34 @@ const DomainDetail: React.FC = () => {
           description: "Divine truth requires both rational inquiry and mystical insight."
         })
       },
-      "literature": {
-        title: "LITERATURE",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+      "ontology": {
+        title: "ONTOLOGY",
+        subtitle: "Your view on Reality",
+        description: "Explores the nature of being and existence.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "epistemology": {
+        title: "EPISTEMOLOGY",
+        subtitle: "Your view on Knowledge",
+        description: "Examines the nature and grounds of knowledge.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight."
+        })
+      },
+      "ethics": {
+        title: "ETHICS",
+        subtitle: "Your view on Morality",
+        description: "Addresses questions about how one should act.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
@@ -88,8 +112,8 @@ const DomainDetail: React.FC = () => {
       },
       "politics": {
         title: "POLITICS",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        subtitle: "Your view on Society",
+        description: "Examines the organization and governance of communities.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
@@ -98,34 +122,10 @@ const DomainDetail: React.FC = () => {
           description: "Divine truth requires both rational inquiry and mystical insight."
         })
       },
-      "theology": {
-        title: "THEOLOGY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "ethics": {
-        title: "THEOLOGY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "history": {
-        title: "HISTORY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+      "aesthetics": {
+        title: "AESTHETICS",
+        subtitle: "Your view on Beauty",
+        description: "Explores the nature of beauty, art, and taste.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
