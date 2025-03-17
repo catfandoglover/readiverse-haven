@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,95 +14,13 @@ interface DNAAnalysisResult {
   ethics_introduction: string | null;
   politics_introduction: string | null;
   aesthetics_introduction: string | null;
-  
-  // Kindred spirits fields for all domains
-  theology_kindred_spirit_1: string | null;
-  theology_kindred_spirit_2: string | null;
-  theology_kindred_spirit_3: string | null;
-  theology_kindred_spirit_4: string | null;
-  theology_kindred_spirit_5: string | null;
-  
-  ontology_kindred_spirit_1: string | null;
-  ontology_kindred_spirit_2: string | null;
-  ontology_kindred_spirit_3: string | null;
-  ontology_kindred_spirit_4: string | null;
-  ontology_kindred_spirit_5: string | null;
-  
-  epistemology_kindred_spirit_1: string | null;
-  epistemology_kindred_spirit_2: string | null;
-  epistemology_kindred_spirit_3: string | null;
-  epistemology_kindred_spirit_4: string | null;
-  epistemology_kindred_spirit_5: string | null;
-  
-  ethics_kindred_spirit_1: string | null;
-  ethics_kindred_spirit_2: string | null;
-  ethics_kindred_spirit_3: string | null;
-  ethics_kindred_spirit_4: string | null;
-  ethics_kindred_spirit_5: string | null;
-  
-  politics_kindred_spirit_1: string | null;
-  politics_kindred_spirit_2: string | null;
-  politics_kindred_spirit_3: string | null;
-  politics_kindred_spirit_4: string | null;
-  politics_kindred_spirit_5: string | null;
-  
-  aesthetics_kindred_spirit_1: string | null;
-  aesthetics_kindred_spirit_2: string | null;
-  aesthetics_kindred_spirit_3: string | null;
-  aesthetics_kindred_spirit_4: string | null;
-  aesthetics_kindred_spirit_5: string | null;
-  
-  // Challenging voices fields for all domains
-  theology_challenging_voice_1: string | null;
-  theology_challenging_voice_2: string | null;
-  theology_challenging_voice_3: string | null;
-  theology_challenging_voice_4: string | null;
-  theology_challenging_voice_5: string | null;
-  
-  ontology_challenging_voice_1: string | null;
-  ontology_challenging_voice_2: string | null;
-  ontology_challenging_voice_3: string | null;
-  ontology_challenging_voice_4: string | null;
-  ontology_challenging_voice_5: string | null;
-  
-  epistemology_challenging_voice_1: string | null;
-  epistemology_challenging_voice_2: string | null;
-  epistemology_challenging_voice_3: string | null;
-  epistemology_challenging_voice_4: string | null;
-  epistemology_challenging_voice_5: string | null;
-  
-  ethics_challenging_voice_1: string | null;
-  ethics_challenging_voice_2: string | null;
-  ethics_challenging_voice_3: string | null;
-  ethics_challenging_voice_4: string | null;
-  ethics_challenging_voice_5: string | null;
-  
-  politics_challenging_voice_1: string | null;
-  politics_challenging_voice_2: string | null;
-  politics_challenging_voice_3: string | null;
-  politics_challenging_voice_4: string | null;
-  politics_challenging_voice_5: string | null;
-  
-  aesthetics_challenging_voice_1: string | null;
-  aesthetics_challenging_voice_2: string | null;
-  aesthetics_challenging_voice_3: string | null;
-  aesthetics_challenging_voice_4: string | null;
-  aesthetics_challenging_voice_5: string | null;
-}
-
-interface ResourceData {
-  id: string;
-  image: string;
-  title: string;
-  subtitle: string;
-  description: string;
 }
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
-  const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
+  const [domainIntroductions, setDomainIntroductions] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -112,18 +29,18 @@ const DomainDetail: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('*') // Select all fields
+          .select('theology_introduction, ontology_introduction, epistemology_introduction, ethics_introduction, politics_introduction, aesthetics_introduction')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
         if (data && !error) {
-          console.log("Domain analysis:", data);
-          setDomainAnalysis(data as DNAAnalysisResult);
+          console.log("Domain introductions:", data);
+          setDomainIntroductions(data as DNAAnalysisResult);
         } else {
-          console.error("Error fetching domain analysis:", error);
+          console.error("Error fetching domain introductions:", error);
         }
       } catch (e) {
-        console.error("Exception fetching domain analysis:", e);
+        console.error("Exception fetching domain introductions:", e);
       } finally {
         setIsLoading(false);
       }
@@ -137,7 +54,13 @@ const DomainDetail: React.FC = () => {
       title: string,
       subtitle: string,
       description: string,
-      resources: Array<ResourceData>
+      resources: Array<{
+        id: string,
+        image: string,
+        title: string,
+        subtitle: string,
+        description: string
+      }>
     }> = {
       "theology": {
         title: "THEOLOGY",
@@ -223,60 +146,26 @@ const DomainDetail: React.FC = () => {
       return "Loading domain introduction...";
     }
     
-    if (!domainAnalysis) {
+    if (!domainIntroductions) {
       return domainData.description;
     }
     
     switch (domainId) {
       case "theology":
-        return domainAnalysis.theology_introduction || domainData.description;
+        return domainIntroductions.theology_introduction || domainData.description;
       case "ontology":
-        return domainAnalysis.ontology_introduction || domainData.description;
+        return domainIntroductions.ontology_introduction || domainData.description;
       case "epistemology":
-        return domainAnalysis.epistemology_introduction || domainData.description;
+        return domainIntroductions.epistemology_introduction || domainData.description;
       case "ethics":
-        return domainAnalysis.ethics_introduction || domainData.description;
+        return domainIntroductions.ethics_introduction || domainData.description;
       case "politics":
-        return domainAnalysis.politics_introduction || domainData.description;
+        return domainIntroductions.politics_introduction || domainData.description;
       case "aesthetics":
-        return domainAnalysis.aesthetics_introduction || domainData.description;
+        return domainIntroductions.aesthetics_introduction || domainData.description;
       default:
         return domainData.description;
     }
-  };
-  
-  // Function to get resource data for a specific domain based on database results
-  const getResources = () => {
-    if (isLoading || !domainAnalysis) {
-      return domainData.resources;
-    }
-    
-    const resources: ResourceData[] = [];
-    
-    // For each of the 5 slots, create resource data
-    for (let i = 1; i <= 5; i++) {
-      // Determine which column to use based on activeTab and domainId
-      let resourceKey = '';
-      if (activeTab === "kindred") {
-        resourceKey = `${domainId}_kindred_spirit_${i}`;
-      } else {
-        resourceKey = `${domainId}_challenging_voice_${i}`;
-      }
-      
-      // Get the title from the database (or use default if not found)
-      const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
-      
-      // Create the resource object
-      resources.push({
-        id: `resource-${i}`,
-        image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-        title: String(title).toUpperCase(),
-        subtitle: "THINKER DETAILS",
-        description: `This thinker ${activeTab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`
-      });
-    }
-    
-    return resources;
   };
   
   const levels = [1, 2, 3, 4, 5, 6];
@@ -292,8 +181,6 @@ const DomainDetail: React.FC = () => {
     };
     return stageNames[level as keyof typeof stageNames] || "SCRIBE";
   };
-
-  const resources = getResources();
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
@@ -373,7 +260,7 @@ const DomainDetail: React.FC = () => {
         </div>
         
         <div className="space-y-6">
-          {resources.map((resource, idx) => (
+          {domainData.resources.map((resource, idx) => (
             <div key={idx}>
               <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
                 <div className="flex items-center mb-3">
@@ -429,7 +316,7 @@ const DomainDetail: React.FC = () => {
                 </div>
               </div>
               
-              <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
+              <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
             </div>
           ))}
         </div>
