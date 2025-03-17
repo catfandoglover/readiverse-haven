@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
@@ -7,15 +7,68 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DNAAnalysisResult {
+  id: string;
+  assessment_id: string;
+  archetype: string | null;
+  introduction: string | null;
+  most_kindred_spirit: string | null;
+  most_challenging_voice: string | null;
+  key_tension_1: string | null;
+  key_tension_2: string | null;
+  key_tension_3: string | null;
+  natural_strength_1: string | null;
+  natural_strength_2: string | null;
+  natural_strength_3: string | null;
+  growth_edges_1: string | null;
+  growth_edges_2: string | null;
+  growth_edges_3: string | null;
+  become_who_you_are: string | null;
+  conclusion: string | null;
+  next_steps: string | null;
+  created_at: string;
+}
+
+const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const DashboardLayout: React.FC = () => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
+  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
+  const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
+
+  useEffect(() => {
+    const fetchDNAAnalysisResult = async () => {
+      try {
+        setIsLoadingIntroduction(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .maybeSingle();
+          
+        if (data && !error) {
+          console.log("DNA analysis result:", data);
+          setAnalysisResult(data as DNAAnalysisResult);
+        } else {
+          console.error("Error fetching DNA analysis result:", error);
+        }
+      } catch (e) {
+        console.error("Exception fetching DNA analysis result:", e);
+      } finally {
+        setIsLoadingIntroduction(false);
+      }
+    };
+    
+    fetchDNAAnalysisResult();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
@@ -67,7 +120,12 @@ const DashboardLayout: React.FC = () => {
           {activeSection === "become" ? (
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace.
+                {isLoadingIntroduction ? (
+                  <span className="inline-block animate-pulse">Loading wisdom guidance...</span>
+                ) : (
+                  analysisResult?.become_who_you_are || 
+                  "Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace."
+                )}
               </p>
               
               <DomainsList />
@@ -75,10 +133,14 @@ const DashboardLayout: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.
+                {isLoadingIntroduction ? (
+                  <span className="inline-block animate-pulse">Loading your intellectual profile...</span>
+                ) : (
+                  analysisResult?.introduction || 
+                  "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension."
+                )}
               </p>
               
-              {/* Kindred Spirit Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
@@ -95,7 +157,13 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">FRIEDRICH NIETZSCHE</h3>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
+                      {isLoadingIntroduction ? (
+                        <span className="inline-block animate-pulse">Loading...</span>
+                      ) : (
+                        analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
+                      )}
+                    </h3>
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                   </div>
                 </div>
@@ -104,7 +172,6 @@ const DashboardLayout: React.FC = () => {
                 </button>
               </div>
               
-              {/* Challenging Voice Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
@@ -121,7 +188,13 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">MARTIN HEIDEGGER</h3>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
+                      {isLoadingIntroduction ? (
+                        <span className="inline-block animate-pulse">Loading...</span>
+                      ) : (
+                        analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
+                      )}
+                    </h3>
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                   </div>
                 </div>
@@ -130,34 +203,118 @@ const DashboardLayout: React.FC = () => {
                 </button>
               </div>
               
-              {/* Key Tensions Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-xl font-oxanium uppercase mb-3">Key Tensions</h2>
+                <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other</li>
-                  <li>Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing</li>
-                  <li>Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_1 || 
+                      "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_2 || 
+                      "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.key_tension_3 || 
+                      "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
+                    )}
+                  </li>
                 </ul>
               </div>
               
-              {/* Natural Strengths Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-xl font-oxanium uppercase mb-3">Natural Strengths</h2>
+                <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions</li>
-                  <li>Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension</li>
-                  <li>Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_1 || 
+                      "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_2 || 
+                      "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_3 || 
+                      "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
+                    )}
+                  </li>
                 </ul>
               </div>
               
-              {/* Growth Edges Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-xl font-oxanium uppercase mb-3">Growth Edges</h2>
+                <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution</li>
-                  <li>Develop more comfort with productive tension as a source of creativity rather than a problem to be solved</li>
-                  <li>Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_1 || 
+                      "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_2 || 
+                      "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_3 || 
+                      "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
+                    )}
+                  </li>
                 </ul>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
+                <p className="font-oxanium text-[#E9E7E2]/80">
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block animate-pulse">Loading...</span>
+                  ) : (
+                    analysisResult?.conclusion || 
+                    "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
+                  )}
+                </p>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
+                <p className="font-oxanium text-[#E9E7E2]/80">
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block animate-pulse">Loading...</span>
+                  ) : (
+                    analysisResult?.next_steps || 
+                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
+                  )}
+                </p>
               </div>
             </div>
           )}

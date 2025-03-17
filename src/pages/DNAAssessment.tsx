@@ -1,6 +1,5 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OutsetaAuth } from "@/components/OutsetaAuth";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -48,6 +48,8 @@ const DNAAssessment = () => {
   const [isInitializing, setIsInitializing] = React.useState(true);
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
+  const [profileId, setProfileId] = React.useState<string | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const isMobile = useIsMobile();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
@@ -58,7 +60,7 @@ const DNAAssessment = () => {
         body: {
           answers_json: JSON.stringify(answers),
           assessment_id: assessmentId,
-          profile_image_url: null
+          profile_id: profileId
         }
       });
 
@@ -90,11 +92,31 @@ const DNAAssessment = () => {
         try {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+          let userProfileId = null;
+          
+          const storedAssessmentId = sessionStorage.getItem('dna_assessment_id');
+          if (storedAssessmentId) {
+            console.log('Found stored assessment ID:', storedAssessmentId);
+            setAssessmentId(storedAssessmentId);
+            setIsInitializing(false);
+            return;
+          }
           
           const { data: userData, error: userError } = await supabase.auth.getUser();
           
           if (userError) {
             console.error('Error getting user:', userError);
+            
+            const allowAnonymous = true;
+            if (allowAnonymous) {
+              console.log('Continuing in anonymous mode');
+              const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+              sessionStorage.setItem('user_id', tempId);
+            } else {
+              setShowLoginPrompt(true);
+              setIsInitializing(false);
+              return;
+            }
           } else if (userData && userData.user) {
             console.log('Current user:', userData.user);
             
@@ -106,11 +128,14 @@ const DNAAssessment = () => {
               
             if (profileError) {
               console.error('Error getting profile:', profileError);
+              sessionStorage.setItem('user_id', userData.user.id);
             } else if (profileData) {
               console.log('Found profile:', profileData);
-              sessionStorage.setItem('user_id', profileData.id);
+              userProfileId = profileData.id;
+              setProfileId(userProfileId);
+              sessionStorage.setItem('user_id', userProfileId);
             } else {
-              console.log('No profile found, using auth user ID');
+              console.log('No profile found, using auth user ID as fallback');
               sessionStorage.setItem('user_id', userData.user.id);
             }
           } else {
@@ -119,18 +144,25 @@ const DNAAssessment = () => {
             sessionStorage.setItem('user_id', tempId);
           }
           
+          const assessmentData = { 
+            name,
+            answers: {},
+            profile_id: userProfileId,
+            ethics_sequence: '',
+            epistemology_sequence: '',
+            politics_sequence: '',
+            theology_sequence: '',
+            ontology_sequence: '',
+            aesthetics_sequence: ''
+          };
+          
+          if (!userProfileId) {
+            delete assessmentData.profile_id;
+          }
+          
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
-            .insert([{ 
-              name,
-              answers: {},
-              ethics_sequence: '',
-              epistemology_sequence: '',
-              politics_sequence: '',
-              theology_sequence: '',
-              ontology_sequence: '',
-              aesthetics_sequence: ''
-            }])
+            .insert([assessmentData])
             .select()
             .maybeSingle();
 
@@ -276,7 +308,6 @@ const DNAAssessment = () => {
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion || !assessmentId) return;
 
-    // Close the AI chat dialog if it's open
     if (showAIChat) {
       setShowAIChat(false);
     }
@@ -485,6 +516,8 @@ const DNAAssessment = () => {
           
           if (userError) {
             console.log('User is not authenticated, using anonymous ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
           } else if (userData && userData.user) {
             console.log('Found authenticated user:', userData.user.id);
             
@@ -496,24 +529,35 @@ const DNAAssessment = () => {
               
             if (profileError) {
               console.error('Error getting profile:', profileError);
+              sessionStorage.setItem('user_id', userData.user.id);
             } else if (profileData) {
               console.log('Found profile, setting user_id to profile.id:', profileData.id);
+              setProfileId(profileData.id);
               sessionStorage.setItem('user_id', profileData.id);
             } else {
               console.log('No profile found, setting user_id to auth.user.id:', userData.user.id);
               sessionStorage.setItem('user_id', userData.user.id);
             }
+          } else {
+            console.log('No authenticated user, using temporary ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
           }
         } catch (error) {
           console.error('Error in ensureUserId:', error);
+          const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+          sessionStorage.setItem('user_id', tempId);
         }
       } else {
         console.log('Found existing user_id in sessionStorage:', existingUserId);
+        if (!profileId && !existingUserId.startsWith('temp-')) {
+          setProfileId(existingUserId);
+        }
       }
     };
     
     ensureUserId();
-  }, []);
+  }, [profileId]);
 
   React.useEffect(() => {
     (window as any).debugDNAConversation = () => {
@@ -561,6 +605,24 @@ const DNAAssessment = () => {
       }
     };
   }, [assessmentId, currentPosition]);
+
+  if (showLoginPrompt) {
+    return (
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+          <h1 className="text-2xl font-oxanium text-center mb-6">
+            Login Required
+          </h1>
+          <p className="text-center mb-8">
+            Please login or create an account to take the DNA assessment.
+          </p>
+          <div className="flex justify-center">
+            <OutsetaAuth />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (

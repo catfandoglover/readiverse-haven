@@ -1,97 +1,351 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { MasteryScore } from "@/components/reader/MasteryScore";
+
+const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+
+interface DNAAnalysisResult {
+  theology_introduction: string | null;
+  ontology_introduction: string | null;
+  epistemology_introduction: string | null;
+  ethics_introduction: string | null;
+  politics_introduction: string | null;
+  aesthetics_introduction: string | null;
+  
+  theology_kindred_spirit_1: string | null;
+  theology_kindred_spirit_1_classic: string | null;
+  theology_kindred_spirit_2: string | null;
+  theology_kindred_spirit_2_classic: string | null;
+  theology_kindred_spirit_3: string | null;
+  theology_kindred_spirit_3_classic: string | null;
+  theology_kindred_spirit_4: string | null;
+  theology_kindred_spirit_4_classic: string | null;
+  theology_kindred_spirit_5: string | null;
+  theology_kindred_spirit_5_classic: string | null;
+  
+  ontology_kindred_spirit_1: string | null;
+  ontology_kindred_spirit_1_classic: string | null;
+  ontology_kindred_spirit_2: string | null;
+  ontology_kindred_spirit_2_classic: string | null;
+  ontology_kindred_spirit_3: string | null;
+  ontology_kindred_spirit_3_classic: string | null;
+  ontology_kindred_spirit_4: string | null;
+  ontology_kindred_spirit_4_classic: string | null;
+  ontology_kindred_spirit_5: string | null;
+  ontology_kindred_spirit_5_classic: string | null;
+  
+  epistemology_kindred_spirit_1: string | null;
+  epistemology_kindred_spirit_1_classic: string | null;
+  epistemology_kindred_spirit_2: string | null;
+  epistemology_kindred_spirit_2_classic: string | null;
+  epistemology_kindred_spirit_3: string | null;
+  epistemology_kindred_spirit_3_classic: string | null;
+  epistemology_kindred_spirit_4: string | null;
+  epistemology_kindred_spirit_4_classic: string | null;
+  epistemology_kindred_spirit_5: string | null;
+  epistemology_kindred_spirit_5_classic: string | null;
+  
+  ethics_kindred_spirit_1: string | null;
+  ethics_kindred_spirit_1_classic: string | null;
+  ethics_kindred_spirit_2: string | null;
+  ethics_kindred_spirit_2_classic: string | null;
+  ethics_kindred_spirit_3: string | null;
+  ethics_kindred_spirit_3_classic: string | null;
+  ethics_kindred_spirit_4: string | null;
+  ethics_kindred_spirit_4_classic: string | null;
+  ethics_kindred_spirit_5: string | null;
+  ethics_kindred_spirit_5_classic: string | null;
+  
+  politics_kindred_spirit_1: string | null;
+  politics_kindred_spirit_1_classic: string | null;
+  politics_kindred_spirit_2: string | null;
+  politics_kindred_spirit_2_classic: string | null;
+  politics_kindred_spirit_3: string | null;
+  politics_kindred_spirit_3_classic: string | null;
+  politics_kindred_spirit_4: string | null;
+  politics_kindred_spirit_4_classic: string | null;
+  politics_kindred_spirit_5: string | null;
+  politics_kindred_spirit_5_classic: string | null;
+  
+  aesthetics_kindred_spirit_1: string | null;
+  aesthetics_kindred_spirit_1_classic: string | null;
+  aesthetics_kindred_spirit_2: string | null;
+  aesthetics_kindred_spirit_2_classic: string | null;
+  aesthetics_kindred_spirit_3: string | null;
+  aesthetics_kindred_spirit_3_classic: string | null;
+  aesthetics_kindred_spirit_4: string | null;
+  aesthetics_kindred_spirit_4_classic: string | null;
+  aesthetics_kindred_spirit_5: string | null;
+  aesthetics_kindred_spirit_5_classic: string | null;
+  
+  theology_challenging_voice_1: string | null;
+  theology_challenging_voice_1_classic: string | null;
+  theology_challenging_voice_2: string | null;
+  theology_challenging_voice_2_classic: string | null;
+  theology_challenging_voice_3: string | null;
+  theology_challenging_voice_3_classic: string | null;
+  theology_challenging_voice_4: string | null;
+  theology_challenging_voice_4_classic: string | null;
+  theology_challenging_voice_5: string | null;
+  theology_challenging_voice_5_classic: string | null;
+  
+  ontology_challenging_voice_1: string | null;
+  ontology_challenging_voice_1_classic: string | null;
+  ontology_challenging_voice_2: string | null;
+  ontology_challenging_voice_2_classic: string | null;
+  ontology_challenging_voice_3: string | null;
+  ontology_challenging_voice_3_classic: string | null;
+  ontology_challenging_voice_4: string | null;
+  ontology_challenging_voice_4_classic: string | null;
+  ontology_challenging_voice_5: string | null;
+  ontology_challenging_voice_5_classic: string | null;
+  
+  epistemology_challenging_voice_1: string | null;
+  epistemology_challenging_voice_1_classic: string | null;
+  epistemology_challenging_voice_2: string | null;
+  epistemology_challenging_voice_2_classic: string | null;
+  epistemology_challenging_voice_3: string | null;
+  epistemology_challenging_voice_3_classic: string | null;
+  epistemology_challenging_voice_4: string | null;
+  epistemology_challenging_voice_4_classic: string | null;
+  epistemology_challenging_voice_5: string | null;
+  epistemology_challenging_voice_5_classic: string | null;
+  
+  ethics_challenging_voice_1: string | null;
+  ethics_challenging_voice_1_classic: string | null;
+  ethics_challenging_voice_2: string | null;
+  ethics_challenging_voice_2_classic: string | null;
+  ethics_challenging_voice_3: string | null;
+  ethics_challenging_voice_3_classic: string | null;
+  ethics_challenging_voice_4: string | null;
+  ethics_challenging_voice_4_classic: string | null;
+  ethics_challenging_voice_5: string | null;
+  ethics_challenging_voice_5_classic: string | null;
+  
+  politics_challenging_voice_1: string | null;
+  politics_challenging_voice_1_classic: string | null;
+  politics_challenging_voice_2: string | null;
+  politics_challenging_voice_2_classic: string | null;
+  politics_challenging_voice_3: string | null;
+  politics_challenging_voice_3_classic: string | null;
+  politics_challenging_voice_4: string | null;
+  politics_challenging_voice_4_classic: string | null;
+  politics_challenging_voice_5: string | null;
+  politics_challenging_voice_5_classic: string | null;
+  
+  aesthetics_challenging_voice_1: string | null;
+  aesthetics_challenging_voice_1_classic: string | null;
+  aesthetics_challenging_voice_2: string | null;
+  aesthetics_challenging_voice_2_classic: string | null;
+  aesthetics_challenging_voice_3: string | null;
+  aesthetics_challenging_voice_3_classic: string | null;
+  aesthetics_challenging_voice_4: string | null;
+  aesthetics_challenging_voice_4_classic: string | null;
+  aesthetics_challenging_voice_5: string | null;
+  aesthetics_challenging_voice_5_classic: string | null;
+  
+  theology_kindred_spirit_1_rationale: string | null;
+  theology_kindred_spirit_2_rationale: string | null;
+  theology_kindred_spirit_3_rationale: string | null;
+  theology_kindred_spirit_4_rationale: string | null;
+  theology_kindred_spirit_5_rationale: string | null;
+  
+  ontology_kindred_spirit_1_rationale: string | null;
+  ontology_kindred_spirit_2_rationale: string | null;
+  ontology_kindred_spirit_3_rationale: string | null;
+  ontology_kindred_spirit_4_rationale: string | null;
+  ontology_kindred_spirit_5_rationale: string | null;
+  
+  epistemology_kindred_spirit_1_rationale: string | null;
+  epistemology_kindred_spirit_2_rationale: string | null;
+  epistemology_kindred_spirit_3_rationale: string | null;
+  epistemology_kindred_spirit_4_rationale: string | null;
+  epistemology_kindred_spirit_5_rationale: string | null;
+  
+  ethics_kindred_spirit_1_rationale: string | null;
+  ethics_kindred_spirit_2_rationale: string | null;
+  ethics_kindred_spirit_3_rationale: string | null;
+  ethics_kindred_spirit_4_rationale: string | null;
+  ethics_kindred_spirit_5_rationale: string | null;
+  
+  politics_kindred_spirit_1_rationale: string | null;
+  politics_kindred_spirit_2_rationale: string | null;
+  politics_kindred_spirit_3_rationale: string | null;
+  politics_kindred_spirit_4_rationale: string | null;
+  politics_kindred_spirit_5_rationale: string | null;
+  
+  aesthetics_kindred_spirit_1_rationale: string | null;
+  aesthetics_kindred_spirit_2_rationale: string | null;
+  aesthetics_kindred_spirit_3_rationale: string | null;
+  aesthetics_kindred_spirit_4_rationale: string | null;
+  aesthetics_kindred_spirit_5_rationale: string | null;
+  
+  theology_challenging_voice_1_rationale: string | null;
+  theology_challenging_voice_2_rationale: string | null;
+  theology_challenging_voice_3_rationale: string | null;
+  theology_challenging_voice_4_rationale: string | null;
+  theology_challenging_voice_5_rationale: string | null;
+  
+  ontology_challenging_voice_1_rationale: string | null;
+  ontology_challenging_voice_2_rationale: string | null;
+  ontology_challenging_voice_3_rationale: string | null;
+  ontology_challenging_voice_4_rationale: string | null;
+  ontology_challenging_voice_5_rationale: string | null;
+  
+  epistemology_challenging_voice_1_rationale: string | null;
+  epistemology_challenging_voice_2_rationale: string | null;
+  epistemology_challenging_voice_3_rationale: string | null;
+  epistemology_challenging_voice_4_rationale: string | null;
+  epistemology_challenging_voice_5_rationale: string | null;
+  
+  ethics_challenging_voice_1_rationale: string | null;
+  ethics_challenging_voice_2_rationale: string | null;
+  ethics_challenging_voice_3_rationale: string | null;
+  ethics_challenging_voice_4_rationale: string | null;
+  ethics_challenging_voice_5_rationale: string | null;
+  
+  politics_challenging_voice_1_rationale: string | null;
+  politics_challenging_voice_2_rationale: string | null;
+  politics_challenging_voice_3_rationale: string | null;
+  politics_challenging_voice_4_rationale: string | null;
+  politics_challenging_voice_5_rationale: string | null;
+  
+  aesthetics_challenging_voice_1_rationale: string | null;
+  aesthetics_challenging_voice_2_rationale: string | null;
+  aesthetics_challenging_voice_3_rationale: string | null;
+  aesthetics_challenging_voice_4_rationale: string | null;
+  aesthetics_challenging_voice_5_rationale: string | null;
+}
+
+interface ResourceData {
+  id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  progress: number;
+}
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
+  const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchDomainData = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .maybeSingle();
+          
+        if (data && !error) {
+          console.log("Domain analysis:", data);
+          setDomainAnalysis(data as DNAAnalysisResult);
+        } else {
+          console.error("Error fetching domain analysis:", error);
+        }
+      } catch (e) {
+        console.error("Exception fetching domain analysis:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDomainData();
+  }, []);
   
   const getDomainData = (id: string) => {
     const domains: Record<string, {
       title: string,
       subtitle: string,
       description: string,
-      resources: Array<{
-        id: string,
-        image: string,
-        title: string,
-        subtitle: string,
-        description: string
-      }>
+      resources: Array<ResourceData>
     }> = {
-      "philosophy": {
-        title: "PHILOSOPHY",
-        subtitle: "Your view on the Divine.",
+      "theology": {
+        title: "THEOLOGY",
+        subtitle: "Your view on the Divine",
         description: "Seeks experiential knowledge while maintaining rational frameworks.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
-      "literature": {
-        title: "LITERATURE",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+      "ontology": {
+        title: "ONTOLOGY",
+        subtitle: "Your view on Reality",
+        description: "Explores the nature of being and existence.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
+        })
+      },
+      "epistemology": {
+        title: "EPISTEMOLOGY",
+        subtitle: "Your view on Knowledge",
+        description: "Examines the nature and grounds of knowledge.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
+        })
+      },
+      "ethics": {
+        title: "ETHICS",
+        subtitle: "Your view on Morality",
+        description: "Addresses questions about how one should act.",
+        resources: Array(5).fill({
+          id: "origin",
+          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+          title: "ORIGIN",
+          subtitle: "DE PRINCIPIIS (230)",
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "politics": {
         title: "POLITICS",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+        subtitle: "Your view on Society",
+        description: "Examines the organization and governance of communities.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
-      "theology": {
-        title: "THEOLOGY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
+      "aesthetics": {
+        title: "AESTHETICS",
+        subtitle: "Your view on Beauty",
+        description: "Explores the nature of beauty, art, and taste.",
         resources: Array(5).fill({
           id: "origin",
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "ethics": {
-        title: "THEOLOGY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
-        })
-      },
-      "history": {
-        title: "HISTORY",
-        subtitle: "Your view on the Divine.",
-        description: "Seeks experiential knowledge while maintaining rational frameworks.",
-        resources: Array(5).fill({
-          id: "origin",
-          image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-          title: "ORIGIN",
-          subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       }
     };
@@ -100,6 +354,121 @@ const DomainDetail: React.FC = () => {
   };
   
   const domainData = getDomainData(domainId || "");
+
+  const getDomainIntroduction = () => {
+    if (isLoading) {
+      return "Loading domain introduction...";
+    }
+    
+    if (!domainAnalysis) {
+      return domainData.description;
+    }
+    
+    switch (domainId) {
+      case "theology":
+        return domainAnalysis.theology_introduction || domainData.description;
+      case "ontology":
+        return domainAnalysis.ontology_introduction || domainData.description;
+      case "epistemology":
+        return domainAnalysis.epistemology_introduction || domainData.description;
+      case "ethics":
+        return domainAnalysis.ethics_introduction || domainData.description;
+      case "politics":
+        return domainAnalysis.politics_introduction || domainData.description;
+      case "aesthetics":
+        return domainAnalysis.aesthetics_introduction || domainData.description;
+      default:
+        return domainData.description;
+    }
+  };
+  
+  const getResourcesForTab = (tab: "kindred" | "challenging"): ResourceData[] => {
+    if (isLoading || !domainAnalysis) {
+      return domainData.resources;
+    }
+    
+    const resources: ResourceData[] = [];
+    
+    const dummyProgressValues = [85, 65, 45, 25, 15];
+    
+    for (let i = 1; i <= 5; i++) {
+      let resourceKey = '';
+      let classicKey = '';
+      let rationaleKey = '';
+      
+      if (tab === "kindred") {
+        resourceKey = `${domainId}_kindred_spirit_${i}`;
+        classicKey = `${domainId}_kindred_spirit_${i}_classic`;
+        rationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
+      } else {
+        resourceKey = `${domainId}_challenging_voice_${i}`;
+        classicKey = `${domainId}_challenging_voice_${i}_classic`;
+        rationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
+      }
+      
+      const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
+      const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
+      const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
+      
+      resources.push({
+        id: `resource-${i}`,
+        image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+        title: String(title).toUpperCase(),
+        subtitle: String(subtitle),
+        description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
+        progress: dummyProgressValues[i-1]
+      });
+    }
+    
+    return resources;
+  };
+  
+  const getResources = () => {
+    return getResourcesForTab(activeTab);
+  };
+  
+  const getProgressLevel = (progress: number): number => {
+    if (progress <= 16.67) return 1;
+    if (progress <= 33.33) return 2;
+    if (progress <= 50) return 3;
+    if (progress <= 66.67) return 4;
+    if (progress <= 83.33) return 5;
+    return 6;
+  };
+  
+  const getStageName = (level: number): string => {
+    const stageNames = {
+      1: "SCRIBE",
+      2: "MESSENGER",
+      3: "ALCHEMIST",
+      4: "CARTOGRAPHER", 
+      5: "JUDGE",
+      6: "CREATOR"
+    };
+    return stageNames[level as keyof typeof stageNames] || "SCRIBE";
+  };
+  
+  const getHighestProgressLevel = (): number => {
+    const kindredResources = getResourcesForTab("kindred");
+    const challengingResources = getResourcesForTab("challenging");
+    
+    const allProgressValues = [
+      ...kindredResources.map(resource => resource.progress),
+      ...challengingResources.map(resource => resource.progress)
+    ];
+    
+    if (allProgressValues.length === 0) return 1; // Default to level 1 if no resources
+    
+    const highestProgress = Math.max(...allProgressValues);
+    
+    return getProgressLevel(highestProgress);
+  };
+
+  const resources = getResources();
+  const highestLevel = getHighestProgressLevel();
+  const highestStageName = getStageName(highestLevel);
+  
+  const levels = [1, 2, 3, 4, 5, 6];
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
@@ -126,7 +495,9 @@ const DomainDetail: React.FC = () => {
               />
             </div>
           </div>
-          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">SCRIBE</span>
+          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">
+            {highestStageName}
+          </span>
         </div>
       </header>
       
@@ -135,7 +506,7 @@ const DomainDetail: React.FC = () => {
           <h1 className="font-baskerville uppercase text-[#E9E7E2] mb-1">{domainData.title}</h1>
           <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domainData.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5]">
-            {domainData.description}
+            {getDomainIntroduction()}
           </p>
         </div>
         
@@ -179,35 +550,46 @@ const DomainDetail: React.FC = () => {
         </div>
         
         <div className="space-y-6">
-          {domainData.resources.map((resource, idx) => (
-            <div key={idx}>
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src={resource.image} 
-                        alt={resource.title}
-                        className="h-9 w-9 object-cover rounded-none"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
+          {resources.map((resource, idx) => {
+            const resourceLevel = getProgressLevel(resource.progress);
+            return (
+              <div key={idx}>
+                <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
+                  <div className="flex items-center mb-3">
+                    <div className="flex items-center flex-1">
+                      <div className="relative mr-4">
+                        <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <img 
+                            src={resource.image} 
+                            alt={resource.title}
+                            className="h-9 w-9 object-cover rounded-none"
+                            style={{ 
+                              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
+                        <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+                      </div>
                     </div>
+                    
+                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
+                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+                  
+                  <div className="ml-2 mb-3">
+                    <MasteryScore progress={resource.progress} />
                   </div>
                 </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
+                
+                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
               </div>
-              <p className="text-xs text-[#9F9EA1] mt-2 mb-6 ml-2 font-oxanium">{resource.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
     </div>
