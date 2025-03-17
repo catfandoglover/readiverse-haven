@@ -142,7 +142,7 @@ const DashboardLayout: React.FC = () => {
               
               {/* Natural Strengths Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="font-oxanium uppercase mb-3">Natural Strengths</h2>
+                <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
                   <li>Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions</li>
                   <li>Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension</li>
@@ -152,7 +152,7 @@ const DashboardLayout: React.FC = () => {
               
               {/* Growth Edges Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-sm font-oxanium uppercase mb-3">Growth Edges</h2>
+                <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
                   <li>Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution</li>
                   <li>Develop more comfort with productive tension as a source of creativity rather than a problem to be solved</li>
