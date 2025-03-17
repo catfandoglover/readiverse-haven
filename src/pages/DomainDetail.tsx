@@ -264,7 +264,7 @@ const DomainDetail: React.FC = () => {
         <div className="space-y-6">
           {domainData.resources.map((resource, idx) => (
             <div key={idx}>
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner">
+              <div className="rounded-xl p-4 pb-2 bg-[#383741]/80 shadow-inner">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <div className="relative mr-4">
