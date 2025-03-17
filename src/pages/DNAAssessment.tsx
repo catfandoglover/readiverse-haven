@@ -1,6 +1,5 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -123,19 +122,25 @@ const DNAAssessment = () => {
             sessionStorage.setItem('user_id', tempId);
           }
           
+          const assessmentData = { 
+            name,
+            answers: {},
+            profile_id: userProfileId,
+            ethics_sequence: '',
+            epistemology_sequence: '',
+            politics_sequence: '',
+            theology_sequence: '',
+            ontology_sequence: '',
+            aesthetics_sequence: ''
+          };
+          
+          if (!userProfileId) {
+            delete assessmentData.profile_id;
+          }
+          
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
-            .insert([{ 
-              name,
-              answers: {},
-              profile_id: userProfileId,
-              ethics_sequence: '',
-              epistemology_sequence: '',
-              politics_sequence: '',
-              theology_sequence: '',
-              ontology_sequence: '',
-              aesthetics_sequence: ''
-            }])
+            .insert([assessmentData])
             .select()
             .maybeSingle();
 
