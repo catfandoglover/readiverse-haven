@@ -128,6 +128,7 @@ const DNAAssessment = () => {
             .insert([{ 
               name,
               answers: {},
+              profile_id: userProfileId,
               ethics_sequence: '',
               epistemology_sequence: '',
               politics_sequence: '',
