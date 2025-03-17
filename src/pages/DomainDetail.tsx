@@ -431,7 +431,7 @@ const DomainDetail: React.FC = () => {
               />
             </div>
           </div>
-          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">SCRIBE</span>
+          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-3">SCRIBE</span>
         </div>
       </header>
       
