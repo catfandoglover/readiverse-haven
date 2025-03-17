@@ -1,132 +1,85 @@
-import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// Constants
-const NEURAL_ENGINE = 'neural';
-const STANDARD_ENGINE = 'standard';
-const MP3_FORMAT = 'mp3';
-const PCM_FORMAT = 'pcm';
-const TEXT_TYPE = 'text';
-const SSML_TYPE = 'ssml';
+// Import AWS SDK for browser
+import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
+import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
 
-export class SpeechService {
-  private readonly pollyClient: PollyClient;
-  private readonly region: string;
-  private readonly voice: string;
-  private audioContext: AudioContext | null = null;
-  private currentSource: AudioBufferSourceNode | null = null;
-  private isPlaying: boolean = false;
-  private audioCache: Map<string, ArrayBuffer> = new Map();
+class SpeechService {
+  private polly: PollyClient;
+  private voiceId: VoiceId = 'Arthur'; // British English male voice
+  private outputFormat: OutputFormat = 'mp3';
+  private sampleRate: string = '16000';
+  private textType: TextType = 'text';
 
-  constructor(region: string = 'us-east-1', voice: string = 'Joanna') {
-    this.region = region;
-    this.voice = voice;
-    this.pollyClient = new PollyClient({
-      region: this.region,
+  constructor() {
+    // Add debugging to check environment variables
+    // console.log('AWS Config:', {
+    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    // });
+    
+    // Initialize Polly client with AWS config from environment variables
+    this.polly = new PollyClient({
+      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
       credentials: {
-        accessKeyId: 'AKIA3F6HGPVIFNPEZIA7',
-        secretAccessKey: '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'
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
       }
     });
   }
 
-  public synthesizeSpeech = async (text: string, format: string = 'mp3'): Promise<ArrayBuffer> => {
-    const cacheKey = `${text}-${format}`;
-    if (this.audioCache.has(cacheKey)) {
-      return this.audioCache.get(cacheKey)!;
-    }
+  // Set voice options
+  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
+    this.voiceId = voiceId;
+    this.outputFormat = outputFormat;
+    this.sampleRate = sampleRate;
+  }
 
+  // Synthesize speech from text
+  async synthesizeSpeech(text: string): Promise<string> {
     try {
-      const params = {
-        OutputFormat: format,
+      // Create the parameters for synthesizeSpeech
+      const speechParams: SynthesizeSpeechCommandInput = {
+        OutputFormat: this.outputFormat,
+        SampleRate: this.sampleRate,
         Text: text,
-        VoiceId: this.voice,
+        TextType: this.textType,
+        VoiceId: this.voiceId,
         Engine: 'neural'
       };
 
-      const command = new SynthesizeSpeechCommand(params);
-      const response = await this.pollyClient.send(command);
+      console.log('Attempting to get Polly URL with params:', speechParams);
+      
+      // Get presigned URL for the speech
+      const url = await getSynthesizeSpeechUrl({
+        client: this.polly,
+        params: speechParams
+      });
 
-      if (response.AudioStream) {
-        const audioArrayBuffer = await new Response(response.AudioStream).arrayBuffer();
-        this.audioCache.set(cacheKey, audioArrayBuffer);
-        return audioArrayBuffer;
-      } else {
-        throw new Error('No audio stream received from Polly.');
-      }
+      console.log('Successfully got Polly URL:', url);
+      return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
-      throw error;
-    }
-  };
-
-  public playAudio = async (text: string, format: string = 'mp3'): Promise<void> => {
-    try {
-      if (this.isPlaying) {
-        this.stopAudio();
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
       }
-
-      const audioBuffer = await this.synthesizeSpeech(text, format);
-
-      this.audioContext = this.audioContext || new AudioContext();
-      const audioBufferDecoded = await this.audioContext.decodeAudioData(audioBuffer);
-
-      this.currentSource = this.audioContext.createBufferSource();
-      this.currentSource.buffer = audioBufferDecoded;
-      this.currentSource.connect(this.audioContext.destination);
-      this.currentSource.onended = () => {
-        this.stopAudio();
-      };
-
-      this.currentSource.start(0);
-      this.isPlaying = true;
-    } catch (error) {
-      console.error('Error playing audio:', error);
       throw error;
     }
-  };
-
-  public stopAudio = (): void => {
-    if (this.isPlaying && this.currentSource && this.audioContext) {
-      this.currentSource.stop();
-      this.currentSource.disconnect();
-      this.currentSource = null;
-      this.isPlaying = false;
-    }
-  };
-
-  public getAudioPlayer = async (text: string, format: string = 'mp3'): Promise<HTMLAudioElement> => {
-    try {
-      const audioBuffer = await this.synthesizeSpeech(text, format);
-      const blob = new Blob([audioBuffer], { type: `audio/${format}` });
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      return audio;
-    } catch (error) {
-      console.error('Error creating audio player:', error);
-      throw error;
-    }
-  };
-
-  private async createPresignedUrl(text: string, format: string): Promise<string> {
-    const params = {
-      OutputFormat: format,
-      Text: text,
-      VoiceId: this.voice,
-      Engine: 'neural'
-    };
-
-    const command = new SynthesizeSpeechCommand(params);
-    const url = await getSignedUrl(this.pollyClient, command, { expiresIn: 3600 });
-    return url;
   }
 
-  public async getAudioUrl(text: string, format: string = 'mp3'): Promise<string> {
-    try {
-      return await this.createPresignedUrl(text, format);
-    } catch (error) {
-      console.error('Error getting audio URL:', error);
-      throw error;
-    }
+  // Create a temporary audio element and play the audio
+  playAudio(audioUrl: string): HTMLAudioElement {
+    const audio = new Audio(audioUrl);
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+    });
+    return audio;
   }
 }
+
+// Create a singleton instance
+export const speechService = new SpeechService();
+export default speechService;
