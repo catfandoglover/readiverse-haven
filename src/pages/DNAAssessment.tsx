@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -56,22 +55,10 @@ const DNAAssessment = () => {
     console.log('Starting DNA analysis...');
 
     try {
-      let profileImageUrl = null;
-      if (profileId) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('profile_image_url')
-          .eq('id', profileId)
-          .maybeSingle();
-          
-        profileImageUrl = profileData?.profile_image_url || null;
-      }
-      
       const { error } = await supabase.functions.invoke('analyze-dna', {
         body: {
           answers_json: JSON.stringify(answers),
           assessment_id: assessmentId,
-          profile_image_url: profileImageUrl,
           profile_id: profileId
         }
       });
