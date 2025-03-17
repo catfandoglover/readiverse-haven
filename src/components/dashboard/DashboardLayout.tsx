@@ -13,6 +13,7 @@ interface DNAAnalysisResult {
   assessment_id: string;
   archetype: string | null;
   introduction: string | null;
+  most_kindred_spirit: string | null;
   created_at: string;
 }
 
@@ -35,7 +36,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -138,7 +139,13 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">FRIEDRICH NIETZSCHE</h3>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
+                      {isLoadingIntroduction ? (
+                        <span className="inline-block animate-pulse">Loading...</span>
+                      ) : (
+                        analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
+                      )}
+                    </h3>
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                   </div>
                 </div>
