@@ -48,7 +48,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           loading="lazy"
         />
       </div>
-      <div className="p-5 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl mt--18 relative z-10">
+      <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-24 relative z-10">
         <div className="mb-1">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-serif">{title}</h2>
@@ -71,7 +71,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
               </button>
             </div>
           </div>
-          <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
+          <p className="text-gray-800 font-baskerville text-base line-clamp-3">{formatText(about)}</p>
         </div>
         
         <div className="py-1 flex items-center justify-start mt-auto">
