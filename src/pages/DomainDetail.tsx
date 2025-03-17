@@ -15,7 +15,6 @@ interface DNAAnalysisResult {
   politics_introduction: string | null;
   aesthetics_introduction: string | null;
   
-  // Kindred spirits fields for all domains with classic subtitles
   theology_kindred_spirit_1: string | null;
   theology_kindred_spirit_1_classic: string | null;
   theology_kindred_spirit_2: string | null;
@@ -82,7 +81,6 @@ interface DNAAnalysisResult {
   aesthetics_kindred_spirit_5: string | null;
   aesthetics_kindred_spirit_5_classic: string | null;
   
-  // Challenging voices fields for all domains with classic subtitles
   theology_challenging_voice_1: string | null;
   theology_challenging_voice_1_classic: string | null;
   theology_challenging_voice_2: string | null;
@@ -149,7 +147,6 @@ interface DNAAnalysisResult {
   aesthetics_challenging_voice_5: string | null;
   aesthetics_challenging_voice_5_classic: string | null;
   
-  // Rationale fields for kindred spirits
   theology_kindred_spirit_1_rationale: string | null;
   theology_kindred_spirit_2_rationale: string | null;
   theology_kindred_spirit_3_rationale: string | null;
@@ -186,7 +183,6 @@ interface DNAAnalysisResult {
   aesthetics_kindred_spirit_4_rationale: string | null;
   aesthetics_kindred_spirit_5_rationale: string | null;
   
-  // Rationale fields for challenging voices
   theology_challenging_voice_1_rationale: string | null;
   theology_challenging_voice_2_rationale: string | null;
   theology_challenging_voice_3_rationale: string | null;
@@ -230,6 +226,7 @@ interface ResourceData {
   title: string;
   subtitle: string;
   description: string;
+  progress: number;
 }
 
 const DomainDetail: React.FC = () => {
@@ -245,7 +242,7 @@ const DomainDetail: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('*') // Select all fields
+          .select('*')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -281,7 +278,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "ontology": {
@@ -293,7 +291,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "epistemology": {
@@ -305,7 +304,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "ethics": {
@@ -317,7 +317,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "politics": {
@@ -329,7 +330,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       },
       "aesthetics": {
@@ -341,7 +343,8 @@ const DomainDetail: React.FC = () => {
           image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
           title: "ORIGIN",
           subtitle: "DE PRINCIPIIS (230)",
-          description: "Divine truth requires both rational inquiry and mystical insight."
+          description: "Divine truth requires both rational inquiry and mystical insight.",
+          progress: 50
         })
       }
     };
@@ -385,6 +388,8 @@ const DomainDetail: React.FC = () => {
     
     const resources: ResourceData[] = [];
     
+    const dummyProgressValues = [85, 65, 45, 25, 15];
+    
     for (let i = 1; i <= 5; i++) {
       let resourceKey = '';
       let classicKey = '';
@@ -409,7 +414,8 @@ const DomainDetail: React.FC = () => {
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
-        description: rationale ? String(rationale) : `This thinker ${activeTab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`
+        description: rationale ? String(rationale) : `This thinker ${activeTab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
+        progress: dummyProgressValues[i-1]
       });
     }
     
@@ -428,6 +434,15 @@ const DomainDetail: React.FC = () => {
       6: "CREATOR"
     };
     return stageNames[level as keyof typeof stageNames] || "SCRIBE";
+  };
+  
+  const getProgressLevel = (progress: number): number => {
+    if (progress <= 16.67) return 1;
+    if (progress <= 33.33) return 2;
+    if (progress <= 50) return 3;
+    if (progress <= 66.67) return 4;
+    if (progress <= 83.33) return 5;
+    return 6;
   };
 
   const resources = getResources();
@@ -510,65 +525,64 @@ const DomainDetail: React.FC = () => {
         </div>
         
         <div className="space-y-6">
-          {resources.map((resource, idx) => (
-            <div key={idx}>
-              <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
-                <div className="flex items-center mb-3">
-                  <div className="flex items-center flex-1">
-                    <div className="relative mr-4">
-                      <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <img 
-                          src={resource.image} 
-                          alt={resource.title}
-                          className="h-9 w-9 object-cover rounded-none"
-                          style={{ 
-                            clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                          }}
-                        />
+          {resources.map((resource, idx) => {
+            const resourceLevel = getProgressLevel(resource.progress);
+            return (
+              <div key={idx}>
+                <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
+                  <div className="flex items-center mb-3">
+                    <div className="flex items-center flex-1">
+                      <div className="relative mr-4">
+                        <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <img 
+                            src={resource.image} 
+                            alt={resource.title}
+                            className="h-9 w-9 object-cover rounded-none"
+                            style={{ 
+                              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
+                        <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
-                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
-                    </div>
+                    
+                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
+                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                    </button>
                   </div>
                   
-                  <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
-                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                  </button>
-                </div>
-                
-                <div className="ml-2 mb-3">
-                  <div className="flex space-x-1">
-                    {levels.map(level => {
-                      const currentLevel = 3;
-                      
-                      return (
+                  <div className="ml-2 mb-3">
+                    <div className="flex space-x-1">
+                      {levels.map(level => (
                         <div key={level} className="relative w-7 h-8 pb-2">
                           <Hexagon 
-                            className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
+                            className={`w-7 h-8 ${level <= resourceLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
                             strokeWidth={1}
                           />
                           <span 
                             className={`absolute inset-0 flex items-center justify-center text-xs font-bold
-                              ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
+                              ${level <= resourceLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
                           >
                             {level}
                           </span>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                    <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
+                      {getStageName(resourceLevel)} ({resource.progress}%)
+                    </span>
                   </div>
-                  <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
-                    {getStageName(3)}
-                  </span>
                 </div>
+                
+                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
               </div>
-              
-              <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
     </div>
