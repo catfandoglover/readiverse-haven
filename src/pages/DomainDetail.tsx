@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -383,7 +382,7 @@ const DomainDetail: React.FC = () => {
     }
   };
   
-  const getResources = () => {
+  const getResourcesForTab = (tab: "kindred" | "challenging"): ResourceData[] => {
     if (isLoading || !domainAnalysis) {
       return domainData.resources;
     }
@@ -398,7 +397,7 @@ const DomainDetail: React.FC = () => {
       let classicKey = '';
       let rationaleKey = '';
       
-      if (activeTab === "kindred") {
+      if (tab === "kindred") {
         resourceKey = `${domainId}_kindred_spirit_${i}`;
         classicKey = `${domainId}_kindred_spirit_${i}_classic`;
         rationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
@@ -417,12 +416,16 @@ const DomainDetail: React.FC = () => {
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
-        description: rationale ? String(rationale) : `This thinker ${activeTab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
+        description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
         progress: dummyProgressValues[i-1]
       });
     }
     
     return resources;
+  };
+  
+  const getResources = () => {
+    return getResourcesForTab(activeTab);
   };
   
   const getProgressLevel = (progress: number): number => {
@@ -446,15 +449,19 @@ const DomainDetail: React.FC = () => {
     return stageNames[level as keyof typeof stageNames] || "SCRIBE";
   };
   
-  // New function to find the highest progress level among all resources
   const getHighestProgressLevel = (): number => {
-    const resources = getResources();
-    if (!resources || resources.length === 0) return 1; // Default to level 1 if no resources
+    const kindredResources = getResourcesForTab("kindred");
+    const challengingResources = getResourcesForTab("challenging");
     
-    // Find highest progress value
-    const highestProgress = Math.max(...resources.map(resource => resource.progress));
+    const allProgressValues = [
+      ...kindredResources.map(resource => resource.progress),
+      ...challengingResources.map(resource => resource.progress)
+    ];
     
-    // Convert to level
+    if (allProgressValues.length === 0) return 1; // Default to level 1 if no resources
+    
+    const highestProgress = Math.max(...allProgressValues);
+    
     return getProgressLevel(highestProgress);
   };
 
