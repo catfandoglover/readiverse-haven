@@ -20,13 +20,16 @@ interface ProfileData {
 
 const ProfileHeader: React.FC = () => {
   const { user, openProfile } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const firstName = user?.Account?.Name?.split(' ')[0] || "Explorer";
-  const lastName = user?.Account?.Name?.split(' ').slice(1).join(' ') || "";
-  const email = user?.email || "alex@midwestlfg.com";
+  // Get name from profile data first, fallback to Outseta user, then to default
+  const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
+  const firstName = fullName.split(' ')[0] || "Explorer";
+  const lastName = fullName.split(' ').slice(1).join(' ') || "";
+  const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
 
   useEffect(() => {
@@ -43,6 +46,7 @@ const ProfileHeader: React.FC = () => {
             console.log("Profile data:", data);
             
             const profileData = data as ProfileData;
+            setProfileData(profileData);
             
             if (profileData.landscape_image) {
               setLandscapeImage(profileData.landscape_image);
@@ -170,7 +174,7 @@ const ProfileHeader: React.FC = () => {
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">Twilight Navigator</p>
             <p className="text-xs mt-1 text-[#E9E7E2]/60">
-              <span className="text-[#E9E7E2] ml-2">{user?.email || ''}</span>
+              <span className="text-[#E9E7E2] ml-2">{email}</span>
             </p>
           </div>
         </div>
