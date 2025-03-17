@@ -21,6 +21,9 @@ interface DNAAnalysisResult {
   natural_strength_1: string | null;
   natural_strength_2: string | null;
   natural_strength_3: string | null;
+  growth_edges_1: string | null;
+  growth_edges_2: string | null;
+  growth_edges_3: string | null;
   created_at: string;
 }
 
@@ -43,7 +46,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -254,9 +257,30 @@ const DashboardLayout: React.FC = () => {
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution</li>
-                  <li>Develop more comfort with productive tension as a source of creativity rather than a problem to be solved</li>
-                  <li>Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_1 || 
+                      "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_2 || 
+                      "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.growth_edges_3 || 
+                      "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
+                    )}
+                  </li>
                 </ul>
               </div>
             </div>
