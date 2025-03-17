@@ -18,11 +18,22 @@ interface ProfileData {
   profile_image?: string;
 }
 
+interface DNAAnalysisResult {
+  id: string;
+  assessment_id: string;
+  archetype: string | null;
+  created_at: string;
+}
+
+const FIXED_ASSESSMENT_ID = '68465515-1486-4896-8a5e-4dcb95ad0b92';
+
 const ProfileHeader: React.FC = () => {
   const { user, openProfile } = useAuth();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
   
   // Get name from profile data first, fallback to Outseta user, then to default
@@ -31,6 +42,9 @@ const ProfileHeader: React.FC = () => {
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
+  
+  // Archetype from DNA analysis results
+  const archetype = analysisResult?.archetype || "Twilight Navigator";
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -64,7 +78,30 @@ const ProfileHeader: React.FC = () => {
       }
     };
     
+    const fetchDNAAnalysisResult = async () => {
+      try {
+        setIsLoadingAnalysis(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('id, assessment_id, archetype, created_at')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .maybeSingle();
+          
+        if (data && !error) {
+          console.log("DNA analysis result:", data);
+          setAnalysisResult(data as DNAAnalysisResult);
+        } else {
+          console.error("Error fetching DNA analysis result:", error);
+        }
+      } catch (e) {
+        console.error("Exception fetching DNA analysis result:", e);
+      } finally {
+        setIsLoadingAnalysis(false);
+      }
+    };
+    
     fetchProfileData();
+    fetchDNAAnalysisResult();
   }, [user]);
 
   const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
@@ -172,7 +209,9 @@ const ProfileHeader: React.FC = () => {
           
           <div>
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
-            <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">Twilight Navigator</p>
+            <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
+              {isLoadingAnalysis ? 'Loading...' : archetype}
+            </p>
             <p className="text-xs mt-1 text-[#E9E7E2]/60">
               <span className="text-[#E9E7E2] ml-2">{email}</span>
             </p>
