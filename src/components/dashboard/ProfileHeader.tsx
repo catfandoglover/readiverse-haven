@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -21,6 +22,7 @@ interface DNAAnalysisResult {
   id: string;
   assessment_id: string;
   archetype: string | null;
+  introduction: string | null;
   created_at: string;
 }
 
@@ -42,6 +44,7 @@ const ProfileHeader: React.FC = () => {
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   const archetype = analysisResult?.archetype || "Twilight Navigator";
+  const introduction = analysisResult?.introduction || "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints.";
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -80,7 +83,7 @@ const ProfileHeader: React.FC = () => {
         setIsLoadingAnalysis(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, created_at')
+          .select('id, assessment_id, archetype, introduction, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
