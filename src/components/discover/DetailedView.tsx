@@ -625,25 +625,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               </div>
             ) : null}
 
-            {isEnhancedDataLoading ? (
-              <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
-                <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
-              </div>
-            ) : combinedData.anecdotes && (Array.isArray(combinedData.anecdotes) ? combinedData.anecdotes.length > 0 : combinedData.anecdotes) ? (
-              <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
-                <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
-                  {Array.isArray(combinedData.anecdotes) 
-                    ? combinedData.anecdotes.map((anecdote, index) => (
-                        <li key={index}>{formatText(anecdote)}</li>
-                      ))
-                    : <li>{formatText(combinedData.anecdotes as string)}</li>
-                  }
-                </ul>
-              </div>
-            ) : null}
-
             {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question", "question")}
 
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
@@ -693,3 +674,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
