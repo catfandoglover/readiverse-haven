@@ -74,7 +74,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
         </div>
         
-        <div className="py-1 flex items-center justify-start mt-auto">
+        <div className="py-1 flex items-center justify-start">
           <button
             className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-base"
             onClick={onLearnMore}
