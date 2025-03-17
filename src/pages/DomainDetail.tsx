@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -115,7 +114,7 @@ const DomainDetail: React.FC = () => {
         </Button>
         <div className="flex flex-col items-center">
           <div className="relative">
-            <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
+            <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
                 src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
@@ -185,7 +184,7 @@ const DomainDetail: React.FC = () => {
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={1.5} />
+                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={3} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
                         src={resource.image} 

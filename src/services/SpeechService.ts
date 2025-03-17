@@ -50,8 +50,8 @@ class SpeechService {
 
       console.log('Attempting to get Polly URL with params:', speechParams);
       
-      // Get presigned URL for the speech - Fixed 'String' to 'string' error
-      const url: string = await getSynthesizeSpeechUrl({
+      // Get presigned URL for the speech
+      const url = await getSynthesizeSpeechUrl({
         client: this.polly,
         params: speechParams
       });
