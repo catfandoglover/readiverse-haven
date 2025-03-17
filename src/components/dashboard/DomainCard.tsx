@@ -38,7 +38,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
 
   return (
     <div 
-      className="rounded-xl overflow-hidden bg-[#CCFF23] mb-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+      className="rounded-xl overflow-hidden bg-[#383741] mb-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
       onClick={() => navigate(`/dashboard/domain/${id}`)}
     >
       <div className="p-4 flex items-center">
