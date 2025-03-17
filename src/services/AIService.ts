@@ -1,3 +1,4 @@
+
 import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
 import { toast } from 'sonner';
@@ -23,15 +24,14 @@ class AIService {
     } else {
       console.warn('VITE_GOOGLE_GEMINI_API_KEY not found or empty in environment variables');
       
-      // In development, we can use a placeholder for testing UI
+      // In development, we use a placeholder
       if (import.meta.env.DEV) {
+        this.apiKey = 'AIzaSyC_eHbaco22arhTPHJ2ZAYyud2tG5QWCNk'; // The provided API key
         this.initialized = true;
-        console.log('Running in development mode with placeholder AI service');
+        console.log('Running in development mode with provided Gemini API key');
       } else {
         console.error('Missing Gemini API key in production environment');
         toast.error('AI service initialization failed. Please check your API key configuration.');
-        
-        // We'll still set initialized to true but handle the error in the generateResponse method
         this.initialized = false;
       }
     }
