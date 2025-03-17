@@ -263,58 +263,60 @@ const DomainDetail: React.FC = () => {
         <div className="space-y-6">
           {domainData.resources.map((resource, idx) => (
             <div key={idx}>
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src={resource.image} 
-                        alt={resource.title}
-                        className="h-9 w-9 object-cover rounded-none"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
+              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className="relative mr-4">
+                      <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <img 
+                          src={resource.image} 
+                          alt={resource.title}
+                          className="h-9 w-9 object-cover rounded-none"
+                          style={{ 
+                            clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
+                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+                  <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                  </button>
+                </div>
+                
+                <div className="ml-2 mb-3">
+                  <div className="flex space-x-1">
+                    {levels.map(level => {
+                      const currentLevel = 3;
+                      
+                      return (
+                        <div key={level} className="relative w-7 h-8 pb-2">
+                          <Hexagon 
+                            className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
+                            strokeWidth={1}
+                          />
+                          <span 
+                            className={`absolute inset-0 flex items-center justify-center text-xs font-bold
+                              ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
+                          >
+                            {level}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
+                  <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
+                    {getStageName(3)}
+                  </span>
                 </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
+                
+                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium">{resource.description}</p>
               </div>
-              
-              <div className="ml-2 mt-2 mb-1">
-                <div className="flex space-x-1">
-                  {levels.map(level => {
-                    const currentLevel = 3;
-                    
-                    return (
-                      <div key={level} className="relative w-7 h-8 pb-2">
-                        <Hexagon 
-                          className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
-                          strokeWidth={1}
-                        />
-                        <span 
-                          className={`absolute inset-0 flex items-center justify-center text-xs font-bold
-                            ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
-                        >
-                          {level}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
-                  {getStageName(3)}
-                </span>
-              </div>
-              
-              <p className="text-xs text-[#9F9EA1] mb-6 ml-2 font-oxanium">{resource.description}</p>
             </div>
           ))}
         </div>
