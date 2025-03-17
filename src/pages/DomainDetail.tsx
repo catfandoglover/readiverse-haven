@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -263,7 +264,7 @@ const DomainDetail: React.FC = () => {
         <div className="space-y-6">
           {domainData.resources.map((resource, idx) => (
             <div key={idx}>
-              <div className="rounded-xl p-4 pb-2 bg-[#383741]/80 shadow-inner">
+              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <div className="relative mr-4">
@@ -289,7 +290,7 @@ const DomainDetail: React.FC = () => {
                   </button>
                 </div>
                 
-                <div className="ml-2">
+                <div className="ml-2 mb-3">
                   <div className="flex space-x-1">
                     {levels.map(level => {
                       const currentLevel = 3;
@@ -310,12 +311,13 @@ const DomainDetail: React.FC = () => {
                       );
                     })}
                   </div>
-                  <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-0.5">
+                  <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
                     {getStageName(3)}
                   </span>
                 </div>
               </div>
               
+              {/* Description now placed outside the resource container */}
               <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
             </div>
           ))}
