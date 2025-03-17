@@ -8,7 +8,8 @@ import {
   TextType
 } from "@aws-sdk/client-polly";
 import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
-import useAudioStore from './AudioContext';
+import useAudioStore, { createAudioContext } from './AudioContext';
+import { toast } from 'sonner';
 
 class SpeechService {
   private pollyClient: PollyClient | null = null;
@@ -64,7 +65,7 @@ class SpeechService {
         SampleRate: "16000",
         Text: text,
         TextType: TextType.TEXT,
-        VoiceId: VoiceId.ARTHUR,
+        VoiceId: VoiceId.Arthur,  // Fixed case to match the enum
         Engine: Engine.NEURAL
       };
       
@@ -92,7 +93,8 @@ class SpeechService {
         return;
       }
       
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      // Use the AudioContext helper from AudioContext.ts
+      const audioContext = createAudioContext();
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
       

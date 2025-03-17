@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 class AudioTranscriptionService {
@@ -13,11 +12,12 @@ class AudioTranscriptionService {
   private initializeFromEnvironment(): void {
     // Initialize with environment variable if available
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-    if (apiKey) {
+    
+    if (apiKey && apiKey.trim() !== '') {
       this.initialize(apiKey);
       console.log('Audio Transcription Service initialized with API key from environment variables');
     } else {
-      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found in environment variables');
+      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found or empty in environment variables');
       
       // In development, we can use a placeholder for testing UI
       if (import.meta.env.DEV) {
@@ -26,6 +26,9 @@ class AudioTranscriptionService {
       } else {
         console.error('Missing Gemini API key in production environment');
         toast.error('Transcription service initialization failed. Please check your API key configuration.');
+        
+        // We'll still handle the error in the transcribeAudio method
+        this.initialized = false;
       }
     }
   }
@@ -33,6 +36,10 @@ class AudioTranscriptionService {
   // Initialize the service with an API key
   initialize(apiKey: string): void {
     try {
+      if (!apiKey || apiKey.trim() === '') {
+        throw new Error('Invalid API key provided');
+      }
+      
       this.apiKey = apiKey;
       this.initialized = true;
       console.log('Audio Transcription Service initialized with Gemini successfully');
@@ -44,13 +51,13 @@ class AudioTranscriptionService {
 
   // Check if the service is initialized
   isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized && this.apiKey.trim() !== '';
   }
 
   // Transcribe audio using Gemini 2.0 Flash
   async transcribeAudio(audioBlob: Blob): Promise<string> {
-    if (!this.initialized) {
-      throw new Error('Audio Transcription Service not initialized');
+    if (!this.isInitialized()) {
+      throw new Error('Audio Transcription Service not initialized or API key is missing');
     }
 
     try {

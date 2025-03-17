@@ -30,9 +30,18 @@ const useAudioStore = create<AudioState>((set) => ({
   }
 }));
 
-// Helper function to create an AudioContext
+// Helper function to create an AudioContext with fallback
 export const createAudioContext = (): AudioContext => {
-  return new (window.AudioContext || window.webkitAudioContext)();
+  // Use a type assertion with proper fallback for older browsers
+  const AudioContextClass = window.AudioContext || 
+    (window as any).webkitAudioContext || 
+    null;
+
+  if (!AudioContextClass) {
+    throw new Error('AudioContext not supported in this browser');
+  }
+  
+  return new AudioContextClass();
 };
 
 // Helper function to play audio with global management

@@ -1,4 +1,3 @@
-
 import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
 import { toast } from 'sonner';
@@ -17,11 +16,12 @@ class AIService {
   private initializeFromEnvironment(): void {
     // Initialize with environment variable if available
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-    if (apiKey) {
+    
+    if (apiKey && apiKey.trim() !== '') {
       this.initialize(apiKey);
       console.log('AI Service initialized with API key from environment variables');
     } else {
-      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found in environment variables');
+      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found or empty in environment variables');
       
       // In development, we can use a placeholder for testing UI
       if (import.meta.env.DEV) {
@@ -30,6 +30,9 @@ class AIService {
       } else {
         console.error('Missing Gemini API key in production environment');
         toast.error('AI service initialization failed. Please check your API key configuration.');
+        
+        // We'll still set initialized to true but handle the error in the generateResponse method
+        this.initialized = false;
       }
     }
   }
@@ -37,6 +40,10 @@ class AIService {
   // Initialize the AI service with an API key
   initialize(apiKey: string): void {
     try {
+      if (!apiKey || apiKey.trim() === '') {
+        throw new Error('Invalid API key provided');
+      }
+      
       this.apiKey = apiKey;
       this.initialized = true;
       console.log('AI Service initialized with Gemini successfully');
@@ -48,7 +55,7 @@ class AIService {
 
   // Check if the service is initialized
   isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized && this.apiKey.trim() !== '';
   }
 
   // Generate a response from the AI using Gemini
@@ -57,12 +64,13 @@ class AIService {
     userMessage: string,
     audioData?: Blob
   ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
-    if (!this.initialized) {
-      console.error('AI service not initialized. API key might be missing.');
+    // Check initialization state with better message
+    if (!this.isInitialized()) {
+      console.error('AI service not initialized or API key is missing.');
       
       // Return a user-friendly error message
       return { 
-        text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please check that you have set up the Google Gemini API key in your environment variables.", 
+        text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please check that you have set up the Google Gemini API key correctly in your environment variables (VITE_GOOGLE_GEMINI_API_KEY).", 
       };
     }
 
@@ -164,7 +172,7 @@ class AIService {
       
       // Provide a fallback response rather than throwing an error
       return {
-        text: "I'm sorry, I encountered an error while processing your request. Please try again or rephrase your question.",
+        text: "I'm sorry, I encountered an error while processing your request. Please check that your Gemini API key is valid and properly configured in the environment variables.",
       };
     }
   }
