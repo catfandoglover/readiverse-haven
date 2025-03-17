@@ -102,23 +102,23 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}
-          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+          className={`flex items-center justify-center w-10 h-10 rounded-full ${
             hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
           } text-[#E9E7E2] transition-colors`}
           aria-label="Previous"
         >
-          <ArrowUp className="h-4 w-4" />
+          <ArrowUp className="h-5 w-5" />
         </button>
         
         <button
           onClick={onNext}
           disabled={!hasNext}
-          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+          className={`flex items-center justify-center w-10 h-10 rounded-full ${
             hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
           } text-[#E9E7E2] transition-colors`}
           aria-label="Next"
         >
-          <ArrowDown className="h-4 w-4" />
+          <ArrowDown className="h-5 w-5" />
         </button>
       </div>
     </div>
