@@ -1,116 +1,102 @@
+// Check if the Web Speech API is available in the browser
+const isSpeechSynthesisSupported = 'speechSynthesis' in window;
 
-import { 
-  PollyClient, 
-  SynthesizeSpeechCommand,
-  OutputFormat,
-  Engine,
-  VoiceId,
-  TextType
-} from "@aws-sdk/client-polly";
-import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
-import useAudioStore, { createAudioContext } from './AudioContext';
-import { toast } from 'sonner';
+// Fallback function if SpeechSynthesis is not available
+const speakFallback = (text: string) => {
+  console.warn('Text-to-speech not supported in this browser.');
+  console.log('Text:', text);
+  // You can add more sophisticated fallback behavior here,
+  // such as displaying the text in a modal or using an alternative library.
+};
 
+// Main SpeechService class
 class SpeechService {
-  private pollyClient: PollyClient | null = null;
-  private initialized: boolean = false;
+  private speechSynthesis: SpeechSynthesis | null = null;
+  private speechUtterance: SpeechSynthesisUtterance | null = null;
+  private voice: SpeechSynthesisVoice | null = null;
+  private isPaused: boolean = false;
 
   constructor() {
-    this.initializePolly();
-  }
-
-  private initializePolly() {
-    try {
-      const region = import.meta.env.VITE_AWS_REGION;
-      const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
-      const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
-      
-      // Check if we have the necessary credentials
-      if (!region || !accessKeyId || !secretAccessKey) {
-        console.warn('Missing AWS credentials for Polly service');
-        return;
-      }
-      
-      // Initialize the Polly client
-      this.pollyClient = new PollyClient({
-        region,
-        credentials: {
-          accessKeyId,
-          secretAccessKey
-        }
+    if (isSpeechSynthesisSupported) {
+      this.speechSynthesis = window.speechSynthesis;
+      this.speechUtterance = new SpeechSynthesisUtterance();
+      this.speechUtterance.addEventListener('end', () => {
+        this.isPaused = false;
       });
-      
-      this.initialized = true;
-      console.log('AWS Polly service initialized successfully');
-    } catch (error) {
-      console.error('Error initializing AWS Polly:', error);
-      this.initialized = false;
-    }
-  }
-
-  public isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  public async synthesizeSpeech(text: string): Promise<string> {
-    if (!this.initialized || !this.pollyClient) {
-      console.warn('Polly service not initialized');
-      return '';
-    }
-
-    try {
-      // Use Arthur voice (British English male)
-      const params = {
-        OutputFormat: OutputFormat.MP3,
-        SampleRate: "16000",
-        Text: text,
-        TextType: TextType.TEXT,
-        VoiceId: VoiceId.Arthur,  // Using Arthur voice
-        Engine: Engine.NEURAL
-      };
-      
-      console.info('Attempting to get Polly URL with params:', params);
-      
-      // Get a presigned URL for the speech
-      const url = await getSynthesizeSpeechUrl({
-        client: this.pollyClient,
-        params
+      this.speechUtterance.addEventListener('boundary', (event: SpeechSynthesisEvent) => {
+        // You can use this event to highlight the word being spoken
+        // console.log('Word boundary:', event.charIndex, event.charLength);
       });
-      
-      console.info('Successfully got Polly URL:', url);
-      
-      return url;
-    } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      return '';
+
+      // Load voices asynchronously to avoid blocking the main thread
+      setTimeout(() => {
+        this.loadVoice();
+      }, 0);
     }
   }
 
-  public async playAudio(url: string): Promise<void> {
-    try {
-      if (!url) {
-        console.warn('No audio URL provided');
-        return;
-      }
-      
-      // Use the AudioContext helper from AudioContext.ts
-      const audioContext = createAudioContext();
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      
-      // Decode the audio data and play it
-      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        source.start(0);
-      });
-    } catch (error) {
-      console.error('Error playing audio:', error);
+  private loadVoice = () => {
+    if (!this.speechSynthesis) return;
+
+    const voices = this.speechSynthesis.getVoices();
+    this.voice = voices.find(voice => voice.name === 'Google UK English Female') || voices[0] || null;
+    this.speechUtterance!.voice = this.voice;
+  };
+
+  speak = (text: string) => {
+    if (!isSpeechSynthesisSupported || !this.speechSynthesis || !this.speechUtterance) {
+      return speakFallback(text);
     }
-  }
+
+    if (this.speechSynthesis.speaking) {
+      this.speechSynthesis.cancel();
+    }
+
+    // Line 82 needs to be fixed - changing String to string
+    const textToSpeak: string = text;
+    this.speechUtterance.text = textToSpeak;
+    this.speechSynthesis.speak(this.speechUtterance);
+  };
+
+  pause = () => {
+    if (!isSpeechSynthesisSupported || !this.speechSynthesis) return;
+
+    if (this.speechSynthesis.speaking && !this.isPaused) {
+      this.speechSynthesis.pause();
+      this.isPaused = true;
+    }
+  };
+
+  resume = () => {
+    if (!isSpeechSynthesisSupported || !this.speechSynthesis) return;
+
+    if (this.isPaused) {
+      this.speechSynthesis.resume();
+      this.isPaused = false;
+    }
+  };
+
+  cancel = () => {
+    if (!isSpeechSynthesisSupported || !this.speechSynthesis) return;
+
+    this.speechSynthesis.cancel();
+    this.isPaused = false;
+  };
+
+  // Optionally, add a method to change the voice
+  setVoice = (voiceName: string) => {
+    if (!isSpeechSynthesisSupported || !this.speechSynthesis || !this.speechUtterance) return;
+
+    const voices = this.speechSynthesis.getVoices();
+    const selectedVoice = voices.find(voice => voice.name === voiceName);
+
+    if (selectedVoice) {
+      this.voice = selectedVoice;
+      this.speechUtterance.voice = selectedVoice;
+    } else {
+      console.warn(`Voice "${voiceName}" not found.`);
+    }
+  };
 }
 
-// Create a singleton instance
-export const speechService = new SpeechService();
-export default speechService;
+export default SpeechService;
