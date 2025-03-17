@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -143,7 +142,6 @@ const DomainDetail: React.FC = () => {
   
   const domainData = getDomainData(domainId || "");
 
-  // Get domain-specific introduction based on the current domainId
   const getDomainIntroduction = () => {
     if (isLoading) {
       return "Loading domain introduction...";
@@ -169,6 +167,20 @@ const DomainDetail: React.FC = () => {
       default:
         return domainData.description;
     }
+  };
+  
+  const levels = [1, 2, 3, 4, 5, 6];
+  
+  const getStageName = (level: number): string => {
+    const stageNames = {
+      1: "SCRIBE",
+      2: "MESSENGER",
+      3: "ALCHEMIST",
+      4: "CARTOGRAPHER", 
+      5: "JUDGE",
+      6: "CREATOR"
+    };
+    return stageNames[level as keyof typeof stageNames] || "SCRIBE";
   };
   
   return (
@@ -275,7 +287,34 @@ const DomainDetail: React.FC = () => {
                   <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                 </button>
               </div>
-              <p className="text-xs text-[#9F9EA1] mt-2 mb-6 ml-2 font-oxanium">{resource.description}</p>
+              
+              <div className="ml-2 mt-2 mb-1">
+                <div className="flex space-x-1">
+                  {levels.map(level => {
+                    const currentLevel = 3;
+                    
+                    return (
+                      <div key={level} className="relative w-7 h-8 pb-2">
+                        <Hexagon 
+                          className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
+                          strokeWidth={1}
+                        />
+                        <span 
+                          className={`absolute inset-0 flex items-center justify-center text-xs font-bold
+                            ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
+                        >
+                          {level}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
+                  {getStageName(3)}
+                </span>
+              </div>
+              
+              <p className="text-xs text-[#9F9EA1] mb-6 ml-2 font-oxanium">{resource.description}</p>
             </div>
           ))}
         </div>
