@@ -1,3 +1,4 @@
+
 class AudioTranscriptionService {
   private apiKey: string = '';
   private initialized: boolean = false;
