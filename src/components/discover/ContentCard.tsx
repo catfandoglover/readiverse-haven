@@ -71,7 +71,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
               </button>
             </div>
           </div>
-          <p className="text-gray-800 font-baskerville text-base line-clamp-3">{formatText(about)}</p>
+          <p className="text-gray-800 font-baskerville text-base">{formatText(about)}</p>
         </div>
         
         <div className="py-1 flex items-center justify-start mt-auto">
