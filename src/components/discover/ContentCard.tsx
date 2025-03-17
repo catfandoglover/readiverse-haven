@@ -97,7 +97,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         </div>
       </div>
 
-      {/* Fixed navigation buttons at bottom of screen */}
+      {/* Navigation buttons at bottom of screen */}
       <div className="fixed bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-20">
         <button
           onClick={onPrevious}

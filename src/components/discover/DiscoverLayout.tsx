@@ -19,50 +19,10 @@ const DiscoverLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const scrollToItem = (direction: 'next' | 'prev') => {
-    if (detailedViewVisible) return;
-    
-    if (direction === 'next') {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setCurrentIndex(prev => Math.max(0, prev - 1));
-    }
-  };
-
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setCurrentIndex(0);
   };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (detailedViewVisible) return;
-    
-    if (e.deltaY > 0) {
-      scrollToItem('next');
-    } else if (e.deltaY < 0) {
-      scrollToItem('prev');
-    }
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    const preventDefaultScroll = (e: WheelEvent) => {
-      if (!detailedViewVisible) {
-        e.preventDefault();
-      }
-    };
-    
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('wheel', preventDefaultScroll, { passive: false });
-    }
-    
-    return () => {
-      if (container) {
-        container.removeEventListener('wheel', preventDefaultScroll);
-      }
-    };
-  }, [detailedViewVisible]);
 
   useEffect(() => {
     const showDetailedView = location.pathname.includes('/view/');
@@ -104,7 +64,6 @@ const DiscoverLayout = () => {
     <div 
       ref={containerRef}
       className="flex flex-col h-screen bg-[#E9E7E2] text-[#E9E7E2] overflow-hidden"
-      onWheel={handleWheel}
     >
       <main 
         className="flex-1 relative overflow-hidden" 
