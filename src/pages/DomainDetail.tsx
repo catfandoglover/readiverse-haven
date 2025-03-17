@@ -574,7 +574,7 @@ const DomainDetail: React.FC = () => {
                       ))}
                     </div>
                     <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
-                      {getStageName(resourceLevel)} ({resource.progress}%)
+                      {getStageName(resourceLevel)} ({resource.progress})
                     </span>
                   </div>
                 </div>

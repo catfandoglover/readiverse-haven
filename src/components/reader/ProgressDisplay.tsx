@@ -38,7 +38,7 @@ const ProgressDisplay = ({ progress, compact = false, showText = true }: Progres
       </div>
       {showText && (
         <span className="text-xs text-[#E9E7E2]/60 block font-oxanium mt-1">
-          {stageName} ({progress}%)
+          {stageName}
         </span>
       )}
     </div>
