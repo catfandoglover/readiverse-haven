@@ -1,8 +1,7 @@
 
 import React from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Progress } from "../ui/progress";
 
 export interface DomainCardProps {
   id: string;
@@ -20,6 +19,22 @@ const DomainCard: React.FC<DomainCardProps> = ({
   color,
 }) => {
   const navigate = useNavigate();
+  
+  // Convert progress percentage to level (1-6)
+  const currentLevel = Math.ceil(progress / 16.67);
+  
+  // Map level number to stage name
+  const stageName = {
+    1: "SCRIBE",
+    2: "MESSENGER",
+    3: "ALCHEMIST",
+    4: "CARTOGRAPHER", 
+    5: "JUDGE",
+    6: "CREATOR"
+  }[currentLevel] || "SCRIBE";
+
+  // Generate array of 6 levels
+  const levels = [1, 2, 3, 4, 5, 6];
 
   return (
     <div 
@@ -34,12 +49,26 @@ const DomainCard: React.FC<DomainCardProps> = ({
             {description}
           </p>
           
-          <div>
-            <Progress value={progress} className="h-1.5" />
-            <span className="text-xs text-[#E9E7E2]/60 mt-1 block font-oxanium">
-              SCRIBE
-            </span>
+          <div className="flex space-x-1 mb-1">
+            {levels.map(level => (
+              <div key={level} className="relative w-7 h-8">
+                <Hexagon 
+                  className={`w-7 h-8 ${level <= currentLevel ? 'text-[#9b87f5]' : 'text-[#9b87f5]/20'}`}
+                  strokeWidth={1}
+                />
+                <span 
+                  className={`absolute inset-0 flex items-center justify-center text-xs font-bold
+                    ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
+                >
+                  {level}
+                </span>
+              </div>
+            ))}
           </div>
+          
+          <span className="text-xs text-[#E9E7E2]/60 block font-oxanium">
+            {stageName}
+          </span>
         </div>
         
         <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
