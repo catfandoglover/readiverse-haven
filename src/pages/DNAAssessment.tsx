@@ -20,6 +20,7 @@ import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OutsetaAuth } from "@/components/OutsetaAuth";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -48,6 +49,7 @@ const DNAAssessment = () => {
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
   const [profileId, setProfileId] = React.useState<string | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const isMobile = useIsMobile();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
@@ -96,6 +98,9 @@ const DNAAssessment = () => {
           
           if (userError) {
             console.error('Error getting user:', userError);
+            setShowLoginPrompt(true);
+            setIsInitializing(false);
+            return;
           } else if (userData && userData.user) {
             console.log('Current user:', userData.user);
             
@@ -107,19 +112,25 @@ const DNAAssessment = () => {
               
             if (profileError) {
               console.error('Error getting profile:', profileError);
+              setShowLoginPrompt(true);
+              setIsInitializing(false);
+              return;
             } else if (profileData) {
               console.log('Found profile:', profileData);
               userProfileId = profileData.id;
               setProfileId(userProfileId);
               sessionStorage.setItem('user_id', userProfileId);
             } else {
-              console.log('No profile found, using auth user ID');
-              sessionStorage.setItem('user_id', userData.user.id);
+              console.log('No profile found, prompting login');
+              setShowLoginPrompt(true);
+              setIsInitializing(false);
+              return;
             }
           } else {
-            console.log('No authenticated user, using temporary ID');
-            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
-            sessionStorage.setItem('user_id', tempId);
+            console.log('No authenticated user, prompting login');
+            setShowLoginPrompt(true);
+            setIsInitializing(false);
+            return;
           }
           
           const assessmentData = { 
@@ -133,10 +144,6 @@ const DNAAssessment = () => {
             ontology_sequence: '',
             aesthetics_sequence: ''
           };
-          
-          if (!userProfileId) {
-            delete assessmentData.profile_id;
-          }
           
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
@@ -574,6 +581,24 @@ const DNAAssessment = () => {
       }
     };
   }, [assessmentId, currentPosition]);
+
+  if (showLoginPrompt) {
+    return (
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+          <h1 className="text-2xl font-oxanium text-center mb-6">
+            Login Required
+          </h1>
+          <p className="text-center mb-8">
+            Please login or create an account to take the DNA assessment.
+          </p>
+          <div className="flex justify-center">
+            <OutsetaAuth />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (
