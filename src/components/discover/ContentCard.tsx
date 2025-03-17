@@ -81,7 +81,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           >
             LEARN MORE
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
-              <ArrowRight className="h-6 w-6" />
+              <ArrowRight className="h-4 w-4" />
             </span>
           </button>
         </div>
