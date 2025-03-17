@@ -48,17 +48,30 @@ const DNAAssessment = () => {
   const [isInitializing, setIsInitializing] = React.useState(true);
   const [showAIChat, setShowAIChat] = React.useState(false);
   const [aiEnabled, setAIEnabled] = React.useState(true);
+  const [profileId, setProfileId] = React.useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
 
     try {
+      let profileImageUrl = null;
+      if (profileId) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('profile_image')
+          .eq('id', profileId)
+          .maybeSingle();
+          
+        profileImageUrl = profileData?.profile_image || null;
+      }
+      
       const { error } = await supabase.functions.invoke('analyze-dna', {
         body: {
           answers_json: JSON.stringify(answers),
           assessment_id: assessmentId,
-          profile_image_url: null
+          profile_image_url: profileImageUrl,
+          profile_id: profileId
         }
       });
 
@@ -90,6 +103,7 @@ const DNAAssessment = () => {
         try {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+          let userProfileId = null;
           
           const { data: userData, error: userError } = await supabase.auth.getUser();
           
@@ -108,7 +122,9 @@ const DNAAssessment = () => {
               console.error('Error getting profile:', profileError);
             } else if (profileData) {
               console.log('Found profile:', profileData);
-              sessionStorage.setItem('user_id', profileData.id);
+              userProfileId = profileData.id;
+              setProfileId(userProfileId);
+              sessionStorage.setItem('user_id', userProfileId);
             } else {
               console.log('No profile found, using auth user ID');
               sessionStorage.setItem('user_id', userData.user.id);
@@ -124,6 +140,7 @@ const DNAAssessment = () => {
             .insert([{ 
               name,
               answers: {},
+              profile_id: userProfileId,
               ethics_sequence: '',
               epistemology_sequence: '',
               politics_sequence: '',
@@ -276,7 +293,6 @@ const DNAAssessment = () => {
   const handleAnswer = async (answer: "A" | "B") => {
     if (!currentQuestion || !assessmentId) return;
 
-    // Close the AI chat dialog if it's open
     if (showAIChat) {
       setShowAIChat(false);
     }
@@ -498,6 +514,7 @@ const DNAAssessment = () => {
               console.error('Error getting profile:', profileError);
             } else if (profileData) {
               console.log('Found profile, setting user_id to profile.id:', profileData.id);
+              setProfileId(profileData.id);
               sessionStorage.setItem('user_id', profileData.id);
             } else {
               console.log('No profile found, setting user_id to auth.user.id:', userData.user.id);
@@ -509,11 +526,14 @@ const DNAAssessment = () => {
         }
       } else {
         console.log('Found existing user_id in sessionStorage:', existingUserId);
+        if (!profileId && !existingUserId.startsWith('temp-')) {
+          setProfileId(existingUserId);
+        }
       }
     };
     
     ensureUserId();
-  }, []);
+  }, [profileId]);
 
   React.useEffect(() => {
     (window as any).debugDNAConversation = () => {
