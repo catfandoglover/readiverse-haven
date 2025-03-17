@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share, Pen } from "lucide-react";
+import { Share, Pen, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,7 @@ const ProfileHeader: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Get name from profile data first, fallback to Outseta user, then to default
@@ -44,7 +45,7 @@ const ProfileHeader: React.FC = () => {
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   // Archetype from DNA analysis results
-  const archetype = analysisResult?.archetype || "Twilight Navigator";
+  const archetype = analysisResult?.archetype || null;
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -81,20 +82,30 @@ const ProfileHeader: React.FC = () => {
     const fetchDNAAnalysisResult = async () => {
       try {
         setIsLoadingAnalysis(true);
+        setAnalysisError(null);
+        
+        // Log the query parameters to help diagnose issues
+        console.log("Fetching DNA analysis with assessment ID:", FIXED_ASSESSMENT_ID);
+        
         const { data, error } = await supabase
           .from('dna_analysis_results')
           .select('id, assessment_id, archetype, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
-        if (data && !error) {
+        if (error) {
+          console.error("Error fetching DNA analysis result:", error);
+          setAnalysisError("Failed to load your DNA analysis");
+        } else if (data) {
           console.log("DNA analysis result:", data);
           setAnalysisResult(data as DNAAnalysisResult);
         } else {
-          console.error("Error fetching DNA analysis result:", error);
+          console.log("No DNA analysis result found for this assessment ID");
+          setAnalysisError("No analysis found for this assessment");
         }
       } catch (e) {
         console.error("Exception fetching DNA analysis result:", e);
+        setAnalysisError("An unexpected error occurred");
       } finally {
         setIsLoadingAnalysis(false);
       }
@@ -142,6 +153,28 @@ const ProfileHeader: React.FC = () => {
         });
       }
     }
+  };
+
+  // Render function for the archetype display
+  const renderArchetypeStatus = () => {
+    if (isLoadingAnalysis) {
+      return <span className="animate-pulse">Analyzing your intellectual patterns...</span>;
+    }
+    
+    if (analysisError) {
+      return (
+        <span className="flex items-center gap-1 text-amber-300">
+          <AlertCircle size={12} />
+          <span>Analysis pending</span>
+        </span>
+      );
+    }
+    
+    if (archetype) {
+      return archetype;
+    }
+    
+    return "Twilight Navigator";
   };
 
   return (
@@ -210,7 +243,7 @@ const ProfileHeader: React.FC = () => {
           <div>
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
-              {isLoadingAnalysis ? 'Loading...' : archetype}
+              {renderArchetypeStatus()}
             </p>
             <p className="text-xs mt-1 text-[#E9E7E2]/60">
               <span className="text-[#E9E7E2] ml-2">{email}</span>

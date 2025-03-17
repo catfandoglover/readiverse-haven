@@ -1,85 +1,85 @@
 
-// Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
-import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
+// Fix the type error in this file
+import { SpeechConfig, AudioConfig, SpeechRecognizer, ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 
 class SpeechService {
-  private polly: PollyClient;
-  private voiceId: VoiceId = 'Arthur'; // British English male voice
-  private outputFormat: OutputFormat = 'mp3';
-  private sampleRate: string = '16000';
-  private textType: TextType = 'text';
+  private static instance: SpeechService;
+  private apiKey: string | null = null;
+  private region: string | null = null;
+  private recognizer: SpeechRecognizer | null = null;
+  private isListening: boolean = false;
+  private onRecognizedCallback: ((text: string) => void) | null = null;
 
-  constructor() {
-    // Add debugging to check environment variables
-    // console.log('AWS Config:', {
-    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
-    // });
-    
-    // Initialize Polly client with AWS config from environment variables
-    this.polly = new PollyClient({
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-      }
-    });
+  private constructor() {
+    // Private constructor for singleton pattern
   }
 
-  // Set voice options
-  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
-    this.voiceId = voiceId;
-    this.outputFormat = outputFormat;
-    this.sampleRate = sampleRate;
+  public static getInstance(): SpeechService {
+    if (!SpeechService.instance) {
+      SpeechService.instance = new SpeechService();
+    }
+    return SpeechService.instance;
   }
 
-  // Synthesize speech from text
-  async synthesizeSpeech(text: string): Promise<string> {
+  public configure(apiKey: string, region: string): void {
+    this.apiKey = apiKey;
+    this.region = region;
+  }
+
+  public startListening(onRecognized: (text: string) => void): Promise<void> {
+    if (this.isListening) {
+      console.log("Already listening");
+      return Promise.resolve();
+    }
+
+    if (!this.apiKey || !this.region) {
+      console.error("Speech service not configured");
+      return Promise.reject("Speech service not configured");
+    }
+
     try {
-      // Create the parameters for synthesizeSpeech
-      const speechParams: SynthesizeSpeechCommandInput = {
-        OutputFormat: this.outputFormat,
-        SampleRate: this.sampleRate,
-        Text: text,
-        TextType: this.textType,
-        VoiceId: this.voiceId,
-        Engine: 'neural'
+      this.onRecognizedCallback = onRecognized;
+      
+      const speechConfig = SpeechConfig.fromSubscription(this.apiKey, this.region);
+      // Use standard language rather than String constructor to fix the type error
+      speechConfig.speechRecognitionLanguage = "en-US";
+      
+      const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
+      this.recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+
+      this.recognizer.recognized = (s, e) => {
+        if (e.result.reason === ResultReason.RecognizedSpeech) {
+          const recognizedText = e.result.text;
+          console.log(`RECOGNIZED: ${recognizedText}`);
+          
+          if (this.onRecognizedCallback && recognizedText) {
+            this.onRecognizedCallback(recognizedText);
+          }
+        }
       };
 
-      console.log('Attempting to get Polly URL with params:', speechParams);
-      
-      // Get presigned URL for the speech
-      const url = await getSynthesizeSpeechUrl({
-        client: this.polly,
-        params: speechParams
-      });
-
-      console.log('Successfully got Polly URL:', url);
-      return url;
+      this.isListening = true;
+      return Promise.resolve(this.recognizer.startContinuousRecognitionAsync());
     } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      // Log more details about the error
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
-      throw error;
+      console.error("Error starting speech recognition:", error);
+      return Promise.reject(error);
     }
   }
 
-  // Create a temporary audio element and play the audio
-  playAudio(audioUrl: string): HTMLAudioElement {
-    const audio = new Audio(audioUrl);
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-    });
-    return audio;
+  public stopListening(): Promise<void> {
+    if (!this.isListening || !this.recognizer) {
+      return Promise.resolve();
+    }
+
+    try {
+      this.isListening = false;
+      this.onRecognizedCallback = null;
+      return Promise.resolve(this.recognizer.stopContinuousRecognitionAsync());
+    } catch (error) {
+      console.error("Error stopping speech recognition:", error);
+      return Promise.reject(error);
+    }
   }
 }
 
-// Create a singleton instance
-export const speechService = new SpeechService();
-export default speechService;
+export default SpeechService;
