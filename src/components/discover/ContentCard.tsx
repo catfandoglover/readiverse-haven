@@ -80,8 +80,8 @@ const ContentCard: React.FC<ContentCardProps> = ({
             onClick={onLearnMore}
           >
             LEARN MORE
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
-              <ArrowRight className="h-3 w-3" />
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
+              <ArrowRight className="h-6 w-6" />
             </span>
           </button>
         </div>
