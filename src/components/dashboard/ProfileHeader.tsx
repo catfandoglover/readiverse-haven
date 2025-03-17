@@ -209,8 +209,8 @@ const ProfileHeader: React.FC = () => {
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
               {isLoadingAnalysis ? 'Loading...' : archetype}
             </p>
-            <p className="text-xs mt-1 text-[#E9E7E2]/60">
-              <span className="text-[#E9E7E2] ml-2">{email}</span>
+            <p className="text-xs text-[#E9E7E2]/60">
+              {email}
             </p>
           </div>
         </div>
