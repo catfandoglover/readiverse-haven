@@ -107,7 +107,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           } text-[#E9E7E2] transition-colors`}
           aria-label="Previous"
         >
-          <ArrowDown className="h-5 w-5" />
+          <ArrowUp className="h-5 w-5" />
         </button>
         
         <button
@@ -118,7 +118,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           } text-[#E9E7E2] transition-colors`}
           aria-label="Next"
         >
-          <ArrowUp className="h-5 w-5" />
+          <ArrowDown className="h-5 w-5" />
         </button>
       </div>
     </div>
