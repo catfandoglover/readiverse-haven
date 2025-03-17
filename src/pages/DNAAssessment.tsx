@@ -94,13 +94,29 @@ const DNAAssessment = () => {
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
           let userProfileId = null;
           
+          const storedAssessmentId = sessionStorage.getItem('dna_assessment_id');
+          if (storedAssessmentId) {
+            console.log('Found stored assessment ID:', storedAssessmentId);
+            setAssessmentId(storedAssessmentId);
+            setIsInitializing(false);
+            return;
+          }
+          
           const { data: userData, error: userError } = await supabase.auth.getUser();
           
           if (userError) {
             console.error('Error getting user:', userError);
-            setShowLoginPrompt(true);
-            setIsInitializing(false);
-            return;
+            
+            const allowAnonymous = true;
+            if (allowAnonymous) {
+              console.log('Continuing in anonymous mode');
+              const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+              sessionStorage.setItem('user_id', tempId);
+            } else {
+              setShowLoginPrompt(true);
+              setIsInitializing(false);
+              return;
+            }
           } else if (userData && userData.user) {
             console.log('Current user:', userData.user);
             
@@ -112,25 +128,20 @@ const DNAAssessment = () => {
               
             if (profileError) {
               console.error('Error getting profile:', profileError);
-              setShowLoginPrompt(true);
-              setIsInitializing(false);
-              return;
+              sessionStorage.setItem('user_id', userData.user.id);
             } else if (profileData) {
               console.log('Found profile:', profileData);
               userProfileId = profileData.id;
               setProfileId(userProfileId);
               sessionStorage.setItem('user_id', userProfileId);
             } else {
-              console.log('No profile found, prompting login');
-              setShowLoginPrompt(true);
-              setIsInitializing(false);
-              return;
+              console.log('No profile found, using auth user ID as fallback');
+              sessionStorage.setItem('user_id', userData.user.id);
             }
           } else {
-            console.log('No authenticated user, prompting login');
-            setShowLoginPrompt(true);
-            setIsInitializing(false);
-            return;
+            console.log('No authenticated user, using temporary ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
           }
           
           const assessmentData = { 
@@ -144,6 +155,10 @@ const DNAAssessment = () => {
             ontology_sequence: '',
             aesthetics_sequence: ''
           };
+          
+          if (!userProfileId) {
+            delete assessmentData.profile_id;
+          }
           
           const { data: newAssessment, error: createError } = await supabase
             .from('dna_assessment_results')
@@ -501,6 +516,8 @@ const DNAAssessment = () => {
           
           if (userError) {
             console.log('User is not authenticated, using anonymous ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
           } else if (userData && userData.user) {
             console.log('Found authenticated user:', userData.user.id);
             
@@ -512,6 +529,7 @@ const DNAAssessment = () => {
               
             if (profileError) {
               console.error('Error getting profile:', profileError);
+              sessionStorage.setItem('user_id', userData.user.id);
             } else if (profileData) {
               console.log('Found profile, setting user_id to profile.id:', profileData.id);
               setProfileId(profileData.id);
@@ -520,9 +538,15 @@ const DNAAssessment = () => {
               console.log('No profile found, setting user_id to auth.user.id:', userData.user.id);
               sessionStorage.setItem('user_id', userData.user.id);
             }
+          } else {
+            console.log('No authenticated user, using temporary ID');
+            const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem('user_id', tempId);
           }
         } catch (error) {
           console.error('Error in ensureUserId:', error);
+          const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
+          sessionStorage.setItem('user_id', tempId);
         }
       } else {
         console.log('Found existing user_id in sessionStorage:', existingUserId);
