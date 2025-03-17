@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -25,7 +24,7 @@ interface DNAAnalysisResult {
   created_at: string;
 }
 
-const FIXED_ASSESSMENT_ID = '68465515-1486-4896-8a5e-4dcb95ad0b92';
+const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const ProfileHeader: React.FC = () => {
   const { user, openProfile } = useAuth();
@@ -36,14 +35,12 @@ const ProfileHeader: React.FC = () => {
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
   
-  // Get name from profile data first, fallback to Outseta user, then to default
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
-  // Archetype from DNA analysis results
   const archetype = analysisResult?.archetype || "Twilight Navigator";
 
   useEffect(() => {

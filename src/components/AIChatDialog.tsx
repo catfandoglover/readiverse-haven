@@ -7,6 +7,7 @@ import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import aiService from '../services/AIService';
 import conversationManager, { Message } from '../services/ConversationManager';
+import speechService from '../services/SpeechService';
 
 interface AIChatDialogProps {
   open: boolean;
