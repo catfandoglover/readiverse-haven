@@ -263,8 +263,8 @@ const DomainDetail: React.FC = () => {
           {domainData.resources.map((resource, idx) => (
             <div key={idx}>
               <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
+                <div className="flex items-center mb-3">
+                  <div className="flex items-center flex-1">
                     <div className="relative mr-4">
                       <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
                       <div className="absolute inset-0 flex items-center justify-center">
