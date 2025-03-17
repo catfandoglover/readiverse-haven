@@ -51,7 +51,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
           
           <div className="flex space-x-1 mb-1">
             {levels.map(level => (
-              <div key={level} className="relative w-7 h-8 pb-1">
+              <div key={level} className="relative w-7 h-8 pb-2">
                 <Hexagon 
                   className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
                   strokeWidth={1}
