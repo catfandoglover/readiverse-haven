@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -24,6 +25,7 @@ interface DNAAnalysisResult {
   growth_edges_1: string | null;
   growth_edges_2: string | null;
   growth_edges_3: string | null;
+  become_who_you_are: string | null;
   created_at: string;
 }
 
@@ -46,7 +48,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -116,7 +118,12 @@ const DashboardLayout: React.FC = () => {
           {activeSection === "become" ? (
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace.
+                {isLoadingIntroduction ? (
+                  <span className="inline-block animate-pulse">Loading wisdom guidance...</span>
+                ) : (
+                  analysisResult?.become_who_you_are || 
+                  "Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace."
+                )}
               </p>
               
               <DomainsList />
