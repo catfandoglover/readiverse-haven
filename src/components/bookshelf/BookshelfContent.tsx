@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -87,108 +88,115 @@ const BookshelfContent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 mb-4 border-b border-[#2A282A]/10 pb-2 overflow-x-auto">
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "all"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("all")}
-        >
-          ALL
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "ethics"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("ethics")}
-        >
-          ETHICS
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "epistemology"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("epistemology")}
-        >
-          EPISTEMOLOGY
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "politics"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("politics")}
-        >
-          POLITICS
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "theology"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("theology")}
-        >
-          THEOLOGY
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "ontology"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("ontology")}
-        >
-          ONTOLOGY
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-            activeTab === "aesthetics"
-              ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
-              : "text-[#2A282A]/60"
-          )}
-          onClick={() => setActiveTab("aesthetics")}
-        >
-          AESTHETICS
-        </button>
-        
-        {customDomains.map((domain) => (
+      {/* Enhanced tab menu with smooth scroll behavior */}
+      <ScrollArea 
+        className="w-full mb-4 border-b border-[#2A282A]/10 pb-2"
+        orientation="horizontal"
+        enableDragging={true}
+      >
+        <div className="flex items-center gap-4 min-w-max pb-1 px-1">
           <button
-            key={domain.id}
             className={cn(
               "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
-              activeTab === domain.id
+              activeTab === "all"
                 ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
                 : "text-[#2A282A]/60"
             )}
-            onClick={() => setActiveTab(domain.id)}
+            onClick={() => setActiveTab("all")}
           >
-            {domain.name.toUpperCase()}
+            ALL
           </button>
-        ))}
-        
-        <button
-          className="flex items-center gap-1 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs text-[#2A282A]/60 hover:text-[#2A282A]"
-          onClick={handleNewDomainClick}
-        >
-          <Plus className="h-4 w-4 flex-shrink-0" />
-          <span className="inline-flex items-center">NEW SHELF</span>
-        </button>
-      </div>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "ethics"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("ethics")}
+          >
+            ETHICS
+          </button>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "epistemology"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("epistemology")}
+          >
+            EPISTEMOLOGY
+          </button>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "politics"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("politics")}
+          >
+            POLITICS
+          </button>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "theology"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("theology")}
+          >
+            THEOLOGY
+          </button>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "ontology"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("ontology")}
+          >
+            ONTOLOGY
+          </button>
+          <button
+            className={cn(
+              "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+              activeTab === "aesthetics"
+                ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                : "text-[#2A282A]/60"
+            )}
+            onClick={() => setActiveTab("aesthetics")}
+          >
+            AESTHETICS
+          </button>
+          
+          {customDomains.map((domain) => (
+            <button
+              key={domain.id}
+              className={cn(
+                "flex items-center gap-2 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs",
+                activeTab === domain.id
+                  ? "text-[#2A282A] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9b87f5]"
+                  : "text-[#2A282A]/60"
+              )}
+              onClick={() => setActiveTab(domain.id)}
+            >
+              {domain.name.toUpperCase()}
+            </button>
+          ))}
+          
+          <button
+            className="flex items-center gap-1 py-2 relative whitespace-nowrap uppercase font-oxanium text-xs text-[#2A282A]/60 hover:text-[#2A282A]"
+            onClick={handleNewDomainClick}
+          >
+            <Plus className="h-4 w-4 flex-shrink-0" />
+            <span className="inline-flex items-center">NEW SHELF</span>
+          </button>
+        </div>
+      </ScrollArea>
 
       <ScrollArea className="flex-1">
         {activeTab === "all" && <AllBooksContent />}
