@@ -65,7 +65,7 @@ class SpeechService {
         SampleRate: "16000",
         Text: text,
         TextType: TextType.TEXT,
-        VoiceId: VoiceId.ARTHUR,  // Fixed to use uppercase enum value
+        VoiceId: VoiceId.Arthur,  // Using Arthur voice
         Engine: Engine.NEURAL
       };
       
