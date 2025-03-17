@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
@@ -7,15 +6,54 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DNAAnalysisResult {
+  id: string;
+  assessment_id: string;
+  archetype: string | null;
+  introduction: string | null;
+  created_at: string;
+}
+
+const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const DashboardLayout: React.FC = () => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
+  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
+  const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
+
+  useEffect(() => {
+    const fetchDNAAnalysisResult = async () => {
+      try {
+        setIsLoadingIntroduction(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('id, assessment_id, archetype, introduction, created_at')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .maybeSingle();
+          
+        if (data && !error) {
+          console.log("DNA analysis result:", data);
+          setAnalysisResult(data as DNAAnalysisResult);
+        } else {
+          console.error("Error fetching DNA analysis result:", error);
+        }
+      } catch (e) {
+        console.error("Exception fetching DNA analysis result:", e);
+      } finally {
+        setIsLoadingIntroduction(false);
+      }
+    };
+    
+    fetchDNAAnalysisResult();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
@@ -75,7 +113,12 @@ const DashboardLayout: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.
+                {isLoadingIntroduction ? (
+                  <span className="inline-block animate-pulse">Loading your intellectual profile...</span>
+                ) : (
+                  analysisResult?.introduction || 
+                  "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension."
+                )}
               </p>
               
               {/* Kindred Spirit Section */}
