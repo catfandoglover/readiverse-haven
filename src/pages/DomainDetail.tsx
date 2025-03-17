@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -284,11 +283,10 @@ const DomainDetail: React.FC = () => {
                       <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center">
-                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                    </button>
-                  </div>
+                  
+                  <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
+                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                  </button>
                 </div>
                 
                 <div className="ml-2 mb-3">
