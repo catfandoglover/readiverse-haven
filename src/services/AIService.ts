@@ -1,6 +1,8 @@
 
 import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
+import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
 
 class AIService {
   private apiKey: string = '';
@@ -8,18 +10,91 @@ class AIService {
   private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   private siteUrl: string = 'readiverse-haven.vercel.app';
   private siteName: string = 'Readiverse Haven';
+  private isLoadingKey: boolean = false;
 
   constructor() {
-    // Initialize with environment variable if available
+    this.initializeFromEnvironment();
+  }
+
+  private async fetchSecretFromEdgeFunction() {
+    try {
+      this.isLoadingKey = true;
+      
+      // Create Supabase client
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('Missing Supabase credentials');
+        return null;
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Call edge function to get the secret
+      const { data, error } = await supabase.functions.invoke('get-gemini-key', {
+        method: 'GET'
+      });
+      
+      if (error) {
+        console.error('Error fetching API key from edge function:', error);
+        return null;
+      }
+      
+      if (data && data.apiKey) {
+        return data.apiKey;
+      } else {
+        console.error('No API key returned from edge function');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error in fetchSecretFromEdgeFunction:', error);
+      return null;
+    } finally {
+      this.isLoadingKey = false;
+    }
+  }
+
+  private async initializeFromEnvironment(): Promise<void> {
+    // First try environment variable
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-    if (apiKey) {
+    
+    if (apiKey && apiKey.trim() !== '') {
       this.initialize(apiKey);
+      console.log('AI Service initialized with API key from environment variables');
+      return;
+    }
+    
+    console.warn('VITE_GOOGLE_GEMINI_API_KEY not found or empty in environment variables, trying edge function');
+    
+    // Try to get the key from the edge function
+    const secretKey = await this.fetchSecretFromEdgeFunction();
+    if (secretKey) {
+      this.initialize(secretKey);
+      console.log('AI Service initialized with API key from edge function');
+      return;
+    }
+    
+    // Fallback for development
+    if (import.meta.env.DEV) {
+      // Use the previously hardcoded key for development only
+      const devKey = 'AIzaSyC_eHbaco22arhTPHJ2ZAYyud2tG5QWCNk';
+      this.initialize(devKey);
+      console.log('Running in development mode with provided Gemini API key');
+    } else {
+      console.error('Could not get Gemini API key from any source');
+      toast.error('AI service initialization failed. Please check your API key configuration.');
+      this.initialized = false;
     }
   }
 
   // Initialize the AI service with an API key
   initialize(apiKey: string): void {
     try {
+      if (!apiKey || apiKey.trim() === '') {
+        throw new Error('Invalid API key provided');
+      }
+      
       this.apiKey = apiKey;
       this.initialized = true;
       console.log('AI Service initialized with Gemini successfully');
@@ -31,7 +106,7 @@ class AIService {
 
   // Check if the service is initialized
   isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized && this.apiKey.trim() !== '';
   }
 
   // Generate a response from the AI using Gemini
@@ -40,8 +115,25 @@ class AIService {
     userMessage: string,
     audioData?: Blob
   ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
-    if (!this.initialized) {
-      throw new Error('AI service not initialized');
+    // Check initialization state with better message
+    if (!this.isInitialized()) {
+      console.error('AI service not initialized or API key is missing.');
+      
+      // Try to initialize one more time
+      if (!this.isLoadingKey) {
+        await this.initializeFromEnvironment();
+        
+        // If still not initialized, return error message
+        if (!this.isInitialized()) {
+          return { 
+            text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please check that you have set up the Google Gemini API key correctly in your environment variables or edge function.", 
+          };
+        }
+      } else {
+        return { 
+          text: "I'm currently loading my API key. Please try again in a moment.", 
+        };
+      }
     }
 
     try {
@@ -139,7 +231,11 @@ class AIService {
       };
     } catch (error) {
       console.error('Error generating AI response:', error);
-      throw error;
+      
+      // Provide a fallback response rather than throwing an error
+      return {
+        text: "I'm sorry, I encountered an error while processing your request. Please check that your Gemini API key is valid and properly configured in the environment variables.",
+      };
     }
   }
   

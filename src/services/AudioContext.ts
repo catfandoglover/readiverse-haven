@@ -1,3 +1,4 @@
+
 // AudioContext.ts - A service to manage global audio playback state
 import { create } from 'zustand';
 
@@ -29,6 +30,20 @@ const useAudioStore = create<AudioState>((set) => ({
   }
 }));
 
+// Helper function to create an AudioContext with fallback
+export const createAudioContext = (): AudioContext => {
+  // Use a type assertion with proper fallback for older browsers
+  const AudioContextClass = window.AudioContext || 
+    (window as any).webkitAudioContext || 
+    null;
+
+  if (!AudioContextClass) {
+    throw new Error('AudioContext not supported in this browser');
+  }
+  
+  return new AudioContextClass();
+};
+
 // Helper function to play audio with global management
 export const playAudio = (audio: HTMLAudioElement): Promise<void> => {
   const { currentlyPlaying, setCurrentlyPlaying } = useAudioStore.getState();
@@ -50,4 +65,4 @@ export const stopAllAudio = (): void => {
   useAudioStore.getState().stopCurrentlyPlaying();
 };
 
-export default useAudioStore; 
+export default useAudioStore;

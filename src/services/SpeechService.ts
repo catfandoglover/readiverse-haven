@@ -1,82 +1,113 @@
 
-// Import AWS SDK for browser
-import { PollyClient, SynthesizeSpeechCommandInput, OutputFormat, TextType, VoiceId } from '@aws-sdk/client-polly';
-import { getSynthesizeSpeechUrl } from '@aws-sdk/polly-request-presigner';
+import { 
+  PollyClient, 
+  SynthesizeSpeechCommand,
+  OutputFormat,
+  Engine,
+  VoiceId,
+  TextType
+} from "@aws-sdk/client-polly";
+import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
+import useAudioStore, { createAudioContext } from './AudioContext';
+import { toast } from 'sonner';
 
 class SpeechService {
-  private polly: PollyClient;
-  private voiceId: VoiceId = 'Arthur'; // British English male voice
-  private outputFormat: OutputFormat = 'mp3';
-  private sampleRate: string = '16000';
-  private textType: TextType = 'text';
+  private pollyClient: PollyClient | null = null;
+  private initialized: boolean = false;
 
   constructor() {
-    // Add debugging to check environment variables
-    // console.log('AWS Config:', {
-    //   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-    //   hasAccessKey: !!import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    //   hasSecretKey: !!import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
-    // });
-    
-    // Initialize Polly client with AWS config from environment variables
-    this.polly = new PollyClient({
-      region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-      }
-    });
+    this.initializePolly();
   }
 
-  // Set voice options
-  setVoiceOptions(voiceId: VoiceId, outputFormat: OutputFormat = 'mp3', sampleRate: string = '16000'): void {
-    this.voiceId = voiceId;
-    this.outputFormat = outputFormat;
-    this.sampleRate = sampleRate;
-  }
-
-  // Synthesize speech from text
-  async synthesizeSpeech(text: string): Promise<string> {
+  private initializePolly() {
     try {
-      // Create the parameters for synthesizeSpeech
-      const speechParams: SynthesizeSpeechCommandInput = {
-        OutputFormat: this.outputFormat,
-        SampleRate: this.sampleRate,
-        Text: text,
-        TextType: this.textType,
-        VoiceId: this.voiceId,
-        Engine: 'neural'
-      };
-
-      console.log('Attempting to get Polly URL with params:', speechParams);
+      const region = import.meta.env.VITE_AWS_REGION;
+      const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+      const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
       
-      // Get presigned URL for the speech
-      const url = await getSynthesizeSpeechUrl({
-        client: this.polly,
-        params: speechParams
-      });
-
-      console.log('Successfully got Polly URL:', url);
-      return url;
-    } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      // Log more details about the error
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
+      // Check if we have the necessary credentials
+      if (!region || !accessKeyId || !secretAccessKey) {
+        console.warn('Missing AWS credentials for Polly service');
+        return;
       }
-      throw error;
+      
+      // Initialize the Polly client
+      this.pollyClient = new PollyClient({
+        region,
+        credentials: {
+          accessKeyId,
+          secretAccessKey
+        }
+      });
+      
+      this.initialized = true;
+      console.log('AWS Polly service initialized successfully');
+    } catch (error) {
+      console.error('Error initializing AWS Polly:', error);
+      this.initialized = false;
     }
   }
 
-  // Create a temporary audio element and play the audio
-  playAudio(audioUrl: string): HTMLAudioElement {
-    const audio = new Audio(audioUrl);
-    audio.play().catch(error => {
+  public isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  public async synthesizeSpeech(text: string): Promise<string> {
+    if (!this.initialized || !this.pollyClient) {
+      console.warn('Polly service not initialized');
+      return '';
+    }
+
+    try {
+      // Use Arthur voice (British English male)
+      const params = {
+        OutputFormat: OutputFormat.MP3,
+        SampleRate: "16000",
+        Text: text,
+        TextType: TextType.TEXT,
+        VoiceId: VoiceId.Arthur,  // Using Arthur voice
+        Engine: Engine.NEURAL
+      };
+      
+      console.info('Attempting to get Polly URL with params:', params);
+      
+      // Get a presigned URL for the speech
+      const url = await getSynthesizeSpeechUrl({
+        client: this.pollyClient,
+        params
+      });
+      
+      console.info('Successfully got Polly URL:', url);
+      
+      return url;
+    } catch (error) {
+      console.error('Error synthesizing speech:', error);
+      return '';
+    }
+  }
+
+  public async playAudio(url: string): Promise<void> {
+    try {
+      if (!url) {
+        console.warn('No audio URL provided');
+        return;
+      }
+      
+      // Use the AudioContext helper from AudioContext.ts
+      const audioContext = createAudioContext();
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Decode the audio data and play it
+      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+      });
+    } catch (error) {
       console.error('Error playing audio:', error);
-    });
-    return audio;
+    }
   }
 }
 

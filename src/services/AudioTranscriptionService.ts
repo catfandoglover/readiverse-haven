@@ -1,20 +1,96 @@
 
+import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
+
 class AudioTranscriptionService {
   private apiKey: string = '';
   private initialized: boolean = false;
   private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  private isLoadingKey: boolean = false;
 
   constructor() {
-    // Initialize with environment variable if available
+    this.initializeFromEnvironment();
+  }
+
+  private async fetchSecretFromEdgeFunction() {
+    try {
+      this.isLoadingKey = true;
+      
+      // Create Supabase client
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('Missing Supabase credentials');
+        return null;
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Call edge function to get the secret
+      const { data, error } = await supabase.functions.invoke('get-gemini-key', {
+        method: 'GET'
+      });
+      
+      if (error) {
+        console.error('Error fetching API key from edge function:', error);
+        return null;
+      }
+      
+      if (data && data.apiKey) {
+        return data.apiKey;
+      } else {
+        console.error('No API key returned from edge function');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error in fetchSecretFromEdgeFunction:', error);
+      return null;
+    } finally {
+      this.isLoadingKey = false;
+    }
+  }
+
+  private async initializeFromEnvironment(): Promise<void> {
+    // First try environment variable
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-    if (apiKey) {
+    
+    if (apiKey && apiKey.trim() !== '') {
       this.initialize(apiKey);
+      console.log('Audio Transcription Service initialized with API key from environment variables');
+      return;
+    }
+    
+    console.warn('VITE_GOOGLE_GEMINI_API_KEY not found or empty in environment variables, trying edge function');
+    
+    // Try to get the key from the edge function
+    const secretKey = await this.fetchSecretFromEdgeFunction();
+    if (secretKey) {
+      this.initialize(secretKey);
+      console.log('Audio Transcription Service initialized with API key from edge function');
+      return;
+    }
+    
+    // Fallback for development
+    if (import.meta.env.DEV) {
+      // Use the previously hardcoded key for development only
+      const devKey = 'AIzaSyC_eHbaco22arhTPHJ2ZAYyud2tG5QWCNk';
+      this.initialize(devKey);
+      console.log('Running in development mode with provided Gemini API key for transcription');
+    } else {
+      console.error('Could not get Gemini API key from any source');
+      toast.error('Transcription service initialization failed. Please check your API key configuration.');
+      this.initialized = false;
     }
   }
 
   // Initialize the service with an API key
   initialize(apiKey: string): void {
     try {
+      if (!apiKey || apiKey.trim() === '') {
+        throw new Error('Invalid API key provided');
+      }
+      
       this.apiKey = apiKey;
       this.initialized = true;
       console.log('Audio Transcription Service initialized with Gemini successfully');
@@ -26,13 +102,23 @@ class AudioTranscriptionService {
 
   // Check if the service is initialized
   isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized && this.apiKey.trim() !== '';
   }
 
   // Transcribe audio using Gemini 2.0 Flash
   async transcribeAudio(audioBlob: Blob): Promise<string> {
-    if (!this.initialized) {
-      throw new Error('Audio Transcription Service not initialized');
+    if (!this.isInitialized()) {
+      // Try to initialize one more time
+      if (!this.isLoadingKey) {
+        await this.initializeFromEnvironment();
+        
+        // If still not initialized, throw error
+        if (!this.isInitialized()) {
+          throw new Error('Audio Transcription Service not initialized or API key is missing');
+        }
+      } else {
+        throw new Error('Audio Transcription Service is currently loading the API key');
+      }
     }
 
     try {
@@ -151,4 +237,4 @@ class AudioTranscriptionService {
 
 // Create a singleton instance
 export const audioTranscriptionService = new AudioTranscriptionService();
-export default audioTranscriptionService; 
+export default audioTranscriptionService;
