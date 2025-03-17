@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -19,6 +18,9 @@ interface DNAAnalysisResult {
   key_tension_1: string | null;
   key_tension_2: string | null;
   key_tension_3: string | null;
+  natural_strength_1: string | null;
+  natural_strength_2: string | null;
+  natural_strength_3: string | null;
   created_at: string;
 }
 
@@ -41,7 +43,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -222,9 +224,30 @@ const DashboardLayout: React.FC = () => {
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions</li>
-                  <li>Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension</li>
-                  <li>Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism</li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_1 || 
+                      "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_2 || 
+                      "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
+                    )}
+                  </li>
+                  <li>
+                    {isLoadingIntroduction ? (
+                      <span className="inline-block animate-pulse">Loading...</span>
+                    ) : (
+                      analysisResult?.natural_strength_3 || 
+                      "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
+                    )}
+                  </li>
                 </ul>
               </div>
               
