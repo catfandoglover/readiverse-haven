@@ -59,11 +59,11 @@ const DNAAssessment = () => {
       if (profileId) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('*')
+          .select('profile_image')
           .eq('id', profileId)
           .maybeSingle();
           
-        profileImageUrl = profileData?.profile_image_url || null;
+        profileImageUrl = profileData?.profile_image || null;
       }
       
       const { error } = await supabase.functions.invoke('analyze-dna', {
