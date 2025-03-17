@@ -315,7 +315,7 @@ const DomainDetail: React.FC = () => {
                   </span>
                 </div>
                 
-                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium">{resource.description}</p>
+                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
               </div>
             </div>
           ))}
