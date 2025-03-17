@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowRight, Share, Star } from "lucide-react";
+import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -8,6 +8,10 @@ interface ContentCardProps {
   about: string;
   onLearnMore: () => void;
   onImageClick: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
@@ -16,6 +20,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
   about,
   onLearnMore,
   onImageClick,
+  onPrevious,
+  onNext,
+  hasPrevious = true,
+  hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -36,7 +44,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <div 
         className="relative aspect-square w-full" 
         onClick={onImageClick}
@@ -49,7 +57,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         />
       </div>
       <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-serif">{title}</h2>
             <div className="flex gap-1 items-center">
@@ -87,6 +95,31 @@ const ContentCard: React.FC<ContentCardProps> = ({
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Navigation buttons at bottom of screen */}
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-20">
+        <button
+          onClick={onPrevious}
+          disabled={!hasPrevious}
+          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+            hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Previous"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </button>
+        
+        <button
+          onClick={onNext}
+          disabled={!hasNext}
+          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+            hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Next"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
