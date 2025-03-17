@@ -29,9 +29,15 @@ interface IconsContentProps {
 
 const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
+  const [displayIndex, setDisplayIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Update displayIndex when currentIndex changes from parent
+  useEffect(() => {
+    setDisplayIndex(currentIndex);
+  }, [currentIndex]);
 
   const { data: icons = [], isLoading } = useQuery({
     queryKey: ["icons"],
@@ -74,7 +80,19 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   }, [location.pathname, icons, onDetailedViewShow]);
 
-  const iconToShow = icons[currentIndex % Math.max(1, icons.length)] || null;
+  const handlePrevious = () => {
+    if (displayIndex > 0) {
+      setDisplayIndex(displayIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (icons.length > 0 && displayIndex < icons.length - 1) {
+      setDisplayIndex(displayIndex + 1);
+    }
+  };
+
+  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
   
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
@@ -133,6 +151,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           about={iconToShow.about || ""}
           onLearnMore={() => handleLearnMore(iconToShow)}
           onImageClick={() => handleLearnMore(iconToShow)}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          hasPrevious={displayIndex > 0}
+          hasNext={displayIndex < icons.length - 1}
         />
       </div>
 

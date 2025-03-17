@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowRight, Share, Star } from "lucide-react";
+import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -8,6 +8,10 @@ interface ContentCardProps {
   about: string;
   onLearnMore: () => void;
   onImageClick: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
@@ -16,6 +20,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
   about,
   onLearnMore,
   onImageClick,
+  onPrevious,
+  onNext,
+  hasPrevious = true,
+  hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -36,7 +44,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <div 
         className="relative aspect-square w-full" 
         onClick={onImageClick}
@@ -48,11 +56,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
           loading="lazy"
         />
       </div>
-      <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-2xl -mt-6 relative z-10">
-        <div className="mb-2">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-3xl font-serif">{title}</h2>
-            <div className="flex gap-2 items-center">
+      <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-2xl font-serif">{title}</h2>
+            <div className="flex gap-1 items-center">
               <button
                 className="flex items-center justify-center text-[#2A282A]"
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -67,24 +75,51 @@ const ContentCard: React.FC<ContentCardProps> = ({
                 className="flex items-center justify-center text-[#2A282A]"
                 aria-label="Share"
               >
-                <Share className="h-6 w-6" />
+                <Share className="h-5 w-5" />
               </button>
             </div>
           </div>
           <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
         </div>
         
-        <div className="py-2 flex items-center justify-start">
+        <div className="py-1 flex items-center justify-start">
           <button
-            className="uppercase tracking-wider flex items-center gap-2 font-oxanium text-[#282828]/50 pl-0 font-bold text-sm"
+            className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-base"
             onClick={onLearnMore}
           >
-            LEARN MORE
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2]">
-              <ArrowRight className="h-3 w-3" />
+            <span className="flex items-center">
+              LEARN MORE
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2] ml-3">
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Navigation buttons at bottom right corner of content container, stacked vertically */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
+        <button
+          onClick={onPrevious}
+          disabled={!hasPrevious}
+          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+            hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Previous"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </button>
+        
+        <button
+          onClick={onNext}
+          disabled={!hasNext}
+          className={`flex items-center justify-center w-6 h-6 rounded-full ${
+            hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Next"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
