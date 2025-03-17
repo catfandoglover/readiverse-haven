@@ -26,6 +26,8 @@ interface DNAAnalysisResult {
   growth_edges_2: string | null;
   growth_edges_3: string | null;
   become_who_you_are: string | null;
+  conclusion: string | null;
+  next_steps: string | null;
   created_at: string;
 }
 
@@ -48,7 +50,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -289,6 +291,30 @@ const DashboardLayout: React.FC = () => {
                     )}
                   </li>
                 </ul>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
+                <p className="font-oxanium text-[#E9E7E2]/80">
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block animate-pulse">Loading...</span>
+                  ) : (
+                    analysisResult?.conclusion || 
+                    "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
+                  )}
+                </p>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
+                <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
+                <p className="font-oxanium text-[#E9E7E2]/80">
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block animate-pulse">Loading...</span>
+                  ) : (
+                    analysisResult?.next_steps || 
+                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
+                  )}
+                </p>
               </div>
             </div>
           )}
