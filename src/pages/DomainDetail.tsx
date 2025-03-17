@@ -115,12 +115,12 @@ const DomainDetail: React.FC = () => {
         </Button>
         <div className="flex flex-col items-center">
           <div className="relative">
-            <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={.75} />
+            <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={1.5} />
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
                 src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQyMTYxNzIxLCJleHAiOjEwMzgyMTYxNzIxfQ.zq1j6pMCdisb2y8_NNbbKtCa1kSTVf3RnQzzVke6W_g"
                 alt="Lightning Logo"
-                className="h-full w-full object-cover"
+                className="h-9 w-9 object-cover rounded-none"
                 style={{ 
                   clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
                 }}
@@ -185,7 +185,7 @@ const DomainDetail: React.FC = () => {
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
+                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={1.5} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
                         src={resource.image} 
