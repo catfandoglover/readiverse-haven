@@ -14,6 +14,7 @@ interface DNAAnalysisResult {
   archetype: string | null;
   introduction: string | null;
   most_kindred_spirit: string | null;
+  most_challenging_voice: string | null;
   created_at: string;
 }
 
@@ -36,7 +37,7 @@ const DashboardLayout: React.FC = () => {
         setIsLoadingIntroduction(true);
         const { data, error } = await supabase
           .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, created_at')
+          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, created_at')
           .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
@@ -122,7 +123,6 @@ const DashboardLayout: React.FC = () => {
                 )}
               </p>
               
-              {/* Kindred Spirit Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
@@ -154,7 +154,6 @@ const DashboardLayout: React.FC = () => {
                 </button>
               </div>
               
-              {/* Challenging Voice Section */}
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
@@ -171,7 +170,13 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">MARTIN HEIDEGGER</h3>
+                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
+                      {isLoadingIntroduction ? (
+                        <span className="inline-block animate-pulse">Loading...</span>
+                      ) : (
+                        analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
+                      )}
+                    </h3>
                     <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                   </div>
                 </div>
@@ -180,7 +185,6 @@ const DashboardLayout: React.FC = () => {
                 </button>
               </div>
               
-              {/* Key Tensions Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
@@ -190,7 +194,6 @@ const DashboardLayout: React.FC = () => {
                 </ul>
               </div>
               
-              {/* Natural Strengths Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
@@ -200,7 +203,6 @@ const DashboardLayout: React.FC = () => {
                 </ul>
               </div>
               
-              {/* Growth Edges Section */}
               <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
                 <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
