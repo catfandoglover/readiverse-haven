@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -314,9 +315,10 @@ const DomainDetail: React.FC = () => {
                     {getStageName(3)}
                   </span>
                 </div>
-                
-                <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
               </div>
+              
+              {/* Description now placed outside the resource container */}
+              <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
             </div>
           ))}
         </div>
