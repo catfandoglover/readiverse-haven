@@ -5,7 +5,6 @@ import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
 import IconsContent from "./IconsContent";
 import ConceptsContent from "./ConceptsContent";
-import { useSwipeable } from "react-swipeable";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 
@@ -14,9 +13,6 @@ type TabType = "for-you" | "classics" | "icons" | "concepts";
 const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null);
-  const [transitionProgress, setTransitionProgress] = useState(0);
   const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -24,46 +20,14 @@ const DiscoverLayout = () => {
   const location = useLocation();
 
   const scrollToItem = (direction: 'next' | 'prev') => {
-    if (isAnimating || detailedViewVisible) return;
-    
-    setIsAnimating(true);
+    if (detailedViewVisible) return;
     
     if (direction === 'next') {
-      setSlideDirection('up');
       setCurrentIndex(prev => prev + 1);
     } else {
-      setSlideDirection('down');
       setCurrentIndex(prev => Math.max(0, prev - 1));
     }
-    
-    setTimeout(() => {
-      setIsAnimating(false);
-      setSlideDirection(null);
-      setTransitionProgress(0);
-    }, 300);
   };
-
-  const swipeHandlers = useSwipeable({
-    onSwipedUp: () => {
-      if (!detailedViewVisible) scrollToItem('next');
-    },
-    onSwipedDown: () => {
-      if (!detailedViewVisible) scrollToItem('prev');
-    },
-    onSwiping: (e) => {
-      if (detailedViewVisible) return;
-      
-      if (e.dir === 'Up' || e.dir === 'Down') {
-        const progress = Math.min(100, Math.abs(e.deltaY));
-        setTransitionProgress(progress);
-      }
-    },
-    preventScrollOnSwipe: !detailedViewVisible,
-    trackMouse: !detailedViewVisible,
-    trackTouch: true,
-    delta: 10,
-    swipeDuration: 500
-  });
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -135,9 +99,6 @@ const DiscoverLayout = () => {
   };
 
   const currentContent = getContentComponent(activeTab, currentIndex);
-  const prevContent = currentIndex > 0 ? 
-    getContentComponent(activeTab, currentIndex - 1) : null;
-  const nextContent = getContentComponent(activeTab, currentIndex + 1);
 
   return (
     <div 
@@ -147,7 +108,6 @@ const DiscoverLayout = () => {
     >
       <main 
         className="flex-1 relative overflow-hidden" 
-        {...(detailedViewVisible ? {} : swipeHandlers)}
         ref={contentRef}
       >
         {!detailedViewVisible && (
@@ -216,38 +176,9 @@ const DiscoverLayout = () => {
         )}
         
         <div className="w-full h-full relative bg-[#E9E7E2]">
-          <div 
-            className="w-full h-full absolute inset-0 bg-[#2A282A] transition-transform duration-300 ease-out"
-            style={{
-              transform: slideDirection === 'up' 
-                ? 'translateY(-100%)' 
-                : slideDirection === 'down' 
-                  ? 'translateY(100%)' 
-                  : 'translateY(0)'
-            }}
-          >
+          <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
             {currentContent}
           </div>
-
-          <div 
-            className="w-full h-full absolute inset-0 top-full bg-[#2A282A] transition-transform duration-300 ease-out"
-            style={{
-              transform: slideDirection === 'up' ? 'translateY(-100%)' : 'translateY(0)'
-            }}
-          >
-            {nextContent}
-          </div>
-
-          {prevContent && (
-            <div 
-              className="w-full h-full absolute inset-0 bottom-full bg-[#2A282A] transition-transform duration-300 ease-out"
-              style={{
-                transform: slideDirection === 'down' ? 'translateY(100%)' : 'translateY(0)'
-              }}
-            >
-              {prevContent}
-            </div>
-          )}
         </div>
       </main>
     </div>

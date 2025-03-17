@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowRight, ArrowLeft, Share, Star } from "lucide-react";
+import { ArrowUp, ArrowDown, Share, Star } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -44,7 +44,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <div 
         className="relative aspect-square w-full" 
         onClick={onImageClick}
@@ -90,36 +90,36 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <span className="flex items-center">
               LEARN MORE
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#282828]/50 text-[#E9E7E2] ml-3">
-                <ArrowRight className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4" />
               </span>
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Fixed navigation buttons at bottom of screen */}
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-20">
+        <button
+          onClick={onPrevious}
+          disabled={!hasPrevious}
+          className={`flex items-center justify-center w-10 h-10 rounded-full ${
+            hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Previous"
+        >
+          <ArrowDown className="h-5 w-5" />
+        </button>
         
-        {/* Navigation buttons */}
-        <div className="flex justify-center items-center gap-6 mt-4 mb-2">
-          <button
-            onClick={onPrevious}
-            disabled={!hasPrevious}
-            className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
-            } text-[#E9E7E2] transition-colors`}
-            aria-label="Previous"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          
-          <button
-            onClick={onNext}
-            disabled={!hasNext}
-            className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
-            } text-[#E9E7E2] transition-colors`}
-            aria-label="Next"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          onClick={onNext}
+          disabled={!hasNext}
+          className={`flex items-center justify-center w-10 h-10 rounded-full ${
+            hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+          } text-[#E9E7E2] transition-colors`}
+          aria-label="Next"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
