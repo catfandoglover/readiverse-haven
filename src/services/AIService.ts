@@ -14,6 +14,14 @@ class AIService {
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
     if (apiKey) {
       this.initialize(apiKey);
+    } else {
+      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found in environment variables');
+      
+      // Fallback to a default test API key (for development only)
+      // In production, this should be removed and proper error handling added
+      const fallbackApiKey = 'FALLBACK_API_KEY_FOR_TESTING';
+      this.initialize(fallbackApiKey);
+      console.warn('Using fallback API key for testing purposes only');
     }
   }
 
@@ -41,7 +49,10 @@ class AIService {
     audioData?: Blob
   ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
     if (!this.initialized) {
-      throw new Error('AI service not initialized');
+      console.error('AI service not initialized. API key might be missing.');
+      return { 
+        text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please try again later or contact support if this continues.", 
+      };
     }
 
     try {
@@ -139,7 +150,11 @@ class AIService {
       };
     } catch (error) {
       console.error('Error generating AI response:', error);
-      throw error;
+      
+      // Provide a fallback response rather than throwing an error
+      return {
+        text: "I'm sorry, I encountered an error while processing your request. Please try again or rephrase your question.",
+      };
     }
   }
   
