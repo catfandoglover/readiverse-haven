@@ -1,3 +1,4 @@
+
 // AudioContext.ts - A service to manage global audio playback state
 import { create } from 'zustand';
 
@@ -29,6 +30,11 @@ const useAudioStore = create<AudioState>((set) => ({
   }
 }));
 
+// Helper function to create an AudioContext
+export const createAudioContext = (): AudioContext => {
+  return new (window.AudioContext || window.webkitAudioContext)();
+};
+
 // Helper function to play audio with global management
 export const playAudio = (audio: HTMLAudioElement): Promise<void> => {
   const { currentlyPlaying, setCurrentlyPlaying } = useAudioStore.getState();
@@ -50,4 +56,4 @@ export const stopAllAudio = (): void => {
   useAudioStore.getState().stopCurrentlyPlaying();
 };
 
-export default useAudioStore; 
+export default useAudioStore;

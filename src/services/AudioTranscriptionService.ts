@@ -1,14 +1,32 @@
 
+import { toast } from 'sonner';
+
 class AudioTranscriptionService {
   private apiKey: string = '';
   private initialized: boolean = false;
   private apiUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
   constructor() {
+    this.initializeFromEnvironment();
+  }
+
+  private initializeFromEnvironment(): void {
     // Initialize with environment variable if available
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
     if (apiKey) {
       this.initialize(apiKey);
+      console.log('Audio Transcription Service initialized with API key from environment variables');
+    } else {
+      console.warn('VITE_GOOGLE_GEMINI_API_KEY not found in environment variables');
+      
+      // In development, we can use a placeholder for testing UI
+      if (import.meta.env.DEV) {
+        this.initialized = true;
+        console.log('Running in development mode with placeholder Transcription service');
+      } else {
+        console.error('Missing Gemini API key in production environment');
+        toast.error('Transcription service initialization failed. Please check your API key configuration.');
+      }
     }
   }
 
@@ -151,4 +169,4 @@ class AudioTranscriptionService {
 
 // Create a singleton instance
 export const audioTranscriptionService = new AudioTranscriptionService();
-export default audioTranscriptionService; 
+export default audioTranscriptionService;

@@ -4,10 +4,11 @@ import {
   SynthesizeSpeechCommand,
   OutputFormat,
   Engine,
-  VoiceId
+  VoiceId,
+  TextType
 } from "@aws-sdk/client-polly";
 import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
-import { createAudioContext } from './AudioContext';
+import useAudioStore from './AudioContext';
 
 class SpeechService {
   private pollyClient: PollyClient | null = null;
@@ -59,12 +60,12 @@ class SpeechService {
     try {
       // Use Arthur voice (British English male)
       const params = {
-        OutputFormat: "mp3" as OutputFormat,
+        OutputFormat: OutputFormat.MP3,
         SampleRate: "16000",
         Text: text,
-        TextType: "text",
-        VoiceId: "Arthur" as VoiceId,
-        Engine: "neural" as Engine
+        TextType: TextType.TEXT,
+        VoiceId: VoiceId.ARTHUR,
+        Engine: Engine.NEURAL
       };
       
       console.info('Attempting to get Polly URL with params:', params);
@@ -91,7 +92,7 @@ class SpeechService {
         return;
       }
       
-      const audioContext = createAudioContext();
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
       

@@ -1,6 +1,7 @@
 
 import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
+import { toast } from 'sonner';
 
 class AIService {
   private apiKey: string = '';
@@ -10,18 +11,26 @@ class AIService {
   private siteName: string = 'Readiverse Haven';
 
   constructor() {
+    this.initializeFromEnvironment();
+  }
+
+  private initializeFromEnvironment(): void {
     // Initialize with environment variable if available
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
     if (apiKey) {
       this.initialize(apiKey);
+      console.log('AI Service initialized with API key from environment variables');
     } else {
       console.warn('VITE_GOOGLE_GEMINI_API_KEY not found in environment variables');
       
-      // Fallback to a default test API key (for development only)
-      // In production, this should be removed and proper error handling added
-      const fallbackApiKey = 'FALLBACK_API_KEY_FOR_TESTING';
-      this.initialize(fallbackApiKey);
-      console.warn('Using fallback API key for testing purposes only');
+      // In development, we can use a placeholder for testing UI
+      if (import.meta.env.DEV) {
+        this.initialized = true;
+        console.log('Running in development mode with placeholder AI service');
+      } else {
+        console.error('Missing Gemini API key in production environment');
+        toast.error('AI service initialization failed. Please check your API key configuration.');
+      }
     }
   }
 
@@ -50,8 +59,10 @@ class AIService {
   ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
     if (!this.initialized) {
       console.error('AI service not initialized. API key might be missing.');
+      
+      // Return a user-friendly error message
       return { 
-        text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please try again later or contact support if this continues.", 
+        text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please check that you have set up the Google Gemini API key in your environment variables.", 
       };
     }
 
