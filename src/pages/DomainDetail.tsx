@@ -184,7 +184,7 @@ const DomainDetail: React.FC = () => {
               <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={3} />
+                    <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
                         src={resource.image} 
