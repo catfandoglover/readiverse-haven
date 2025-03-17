@@ -1,13 +1,55 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+
+// Fixed assessment ID for fetching data
+const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+
+interface DNAAnalysisResult {
+  theology_introduction: string | null;
+  ontology_introduction: string | null;
+  epistemology_introduction: string | null;
+  ethics_introduction: string | null;
+  politics_introduction: string | null;
+  aesthetics_introduction: string | null;
+}
 
 const DomainDetail: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
+  const [domainIntroductions, setDomainIntroductions] = useState<DNAAnalysisResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchDomainData = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('dna_analysis_results')
+          .select('theology_introduction, ontology_introduction, epistemology_introduction, ethics_introduction, politics_introduction, aesthetics_introduction')
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .maybeSingle();
+          
+        if (data && !error) {
+          console.log("Domain introductions:", data);
+          setDomainIntroductions(data as DNAAnalysisResult);
+        } else {
+          console.error("Error fetching domain introductions:", error);
+        }
+      } catch (e) {
+        console.error("Exception fetching domain introductions:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDomainData();
+  }, []);
   
   const getDomainData = (id: string) => {
     const domains: Record<string, {
@@ -100,6 +142,34 @@ const DomainDetail: React.FC = () => {
   };
   
   const domainData = getDomainData(domainId || "");
+
+  // Get domain-specific introduction based on the current domainId
+  const getDomainIntroduction = () => {
+    if (isLoading) {
+      return "Loading domain introduction...";
+    }
+    
+    if (!domainIntroductions) {
+      return domainData.description;
+    }
+    
+    switch (domainId) {
+      case "theology":
+        return domainIntroductions.theology_introduction || domainData.description;
+      case "ontology":
+        return domainIntroductions.ontology_introduction || domainData.description;
+      case "epistemology":
+        return domainIntroductions.epistemology_introduction || domainData.description;
+      case "ethics":
+        return domainIntroductions.ethics_introduction || domainData.description;
+      case "politics":
+        return domainIntroductions.politics_introduction || domainData.description;
+      case "aesthetics":
+        return domainIntroductions.aesthetics_introduction || domainData.description;
+      default:
+        return domainData.description;
+    }
+  };
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
@@ -135,7 +205,7 @@ const DomainDetail: React.FC = () => {
           <h1 className="font-baskerville uppercase text-[#E9E7E2] mb-1">{domainData.title}</h1>
           <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domainData.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5]">
-            {domainData.description}
+            {getDomainIntroduction()}
           </p>
         </div>
         
