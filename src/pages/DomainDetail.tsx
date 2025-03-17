@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fixed assessment ID for fetching data
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface DNAAnalysisResult {
@@ -285,7 +283,7 @@ const DomainDetail: React.FC = () => {
                       <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
                     </div>
                   </div>
-                  <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                  <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center self-center">
                     <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                   </button>
                 </div>
@@ -317,7 +315,6 @@ const DomainDetail: React.FC = () => {
                 </div>
               </div>
               
-              {/* Description now placed outside the resource container */}
               <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-2 mb-4">{resource.description}</p>
             </div>
           ))}
