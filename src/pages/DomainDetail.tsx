@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
+import { MasteryScore } from "@/components/reader/MasteryScore";
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
@@ -389,7 +389,6 @@ const DomainDetail: React.FC = () => {
     
     const resources: ResourceData[] = [];
     
-    // These are the progress values for each resource - they determine the level
     const dummyProgressValues = [85, 65, 45, 25, 15];
     
     for (let i = 1; i <= 5; i++) {
@@ -583,7 +582,7 @@ const DomainDetail: React.FC = () => {
                   </div>
                   
                   <div className="ml-2 mb-3">
-                    <ProgressDisplay progress={resource.progress} />
+                    <MasteryScore progress={resource.progress} />
                   </div>
                 </div>
                 

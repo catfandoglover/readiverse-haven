@@ -16,10 +16,11 @@ const ProgressTracker = ({ bookProgress, pageInfo }: ProgressTrackerProps) => {
   return (
     <>
       <div className="space-y-2 mb-4">
-        <div className="flex justify-between text-sm text-gray-500">
-          <span>Book Progress</span>
-        </div>
-        <ProgressDisplay progress={bookProgress} />
+        <ProgressDisplay 
+          progress={bookProgress} 
+          label="Book Progress" 
+          showLabel={true}
+        />
       </div>
       <div className="mt-4 text-sm text-gray-500">
         <span>Chapter Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}</span>

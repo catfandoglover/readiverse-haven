@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ProgressDisplay, getProgressLevel, getStageName } from "@/components/reader/ProgressDisplay";
+import { MasteryScore, getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
 
 // Fixed assessment ID - same as used in DomainDetail.tsx
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
@@ -111,26 +110,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
             {description}
           </p>
           
-          <div className="flex space-x-1 mb-1">
-            {levels.map(level => (
-              <div key={level} className="relative w-7 h-8 pb-2">
-                <Hexagon 
-                  className={`w-7 h-8 ${level <= currentLevel ? 'text-[#CCFF23]' : 'text-[#CCFF23]/20'}`}
-                  strokeWidth={1}
-                />
-                <span 
-                  className={`absolute inset-0 flex items-center justify-center text-xs font-bold
-                    ${level <= currentLevel ? 'text-[#E9E7E2]' : 'text-[#E9E7E2]/40'}`}
-                >
-                  {level}
-                </span>
-              </div>
-            ))}
-          </div>
-          
-          <span className="text-xs text-[#E9E7E2]/60 block font-oxanium">
-            {stageName}
-          </span>
+          <MasteryScore progress={progress} />
         </div>
         
         <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
