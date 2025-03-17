@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,79 +15,139 @@ interface DNAAnalysisResult {
   politics_introduction: string | null;
   aesthetics_introduction: string | null;
   
-  // Kindred spirits fields for all domains
+  // Kindred spirits fields for all domains with classic subtitles
   theology_kindred_spirit_1: string | null;
+  theology_kindred_spirit_1_classic: string | null;
   theology_kindred_spirit_2: string | null;
+  theology_kindred_spirit_2_classic: string | null;
   theology_kindred_spirit_3: string | null;
+  theology_kindred_spirit_3_classic: string | null;
   theology_kindred_spirit_4: string | null;
+  theology_kindred_spirit_4_classic: string | null;
   theology_kindred_spirit_5: string | null;
+  theology_kindred_spirit_5_classic: string | null;
   
   ontology_kindred_spirit_1: string | null;
+  ontology_kindred_spirit_1_classic: string | null;
   ontology_kindred_spirit_2: string | null;
+  ontology_kindred_spirit_2_classic: string | null;
   ontology_kindred_spirit_3: string | null;
+  ontology_kindred_spirit_3_classic: string | null;
   ontology_kindred_spirit_4: string | null;
+  ontology_kindred_spirit_4_classic: string | null;
   ontology_kindred_spirit_5: string | null;
+  ontology_kindred_spirit_5_classic: string | null;
   
   epistemology_kindred_spirit_1: string | null;
+  epistemology_kindred_spirit_1_classic: string | null;
   epistemology_kindred_spirit_2: string | null;
+  epistemology_kindred_spirit_2_classic: string | null;
   epistemology_kindred_spirit_3: string | null;
+  epistemology_kindred_spirit_3_classic: string | null;
   epistemology_kindred_spirit_4: string | null;
+  epistemology_kindred_spirit_4_classic: string | null;
   epistemology_kindred_spirit_5: string | null;
+  epistemology_kindred_spirit_5_classic: string | null;
   
   ethics_kindred_spirit_1: string | null;
+  ethics_kindred_spirit_1_classic: string | null;
   ethics_kindred_spirit_2: string | null;
+  ethics_kindred_spirit_2_classic: string | null;
   ethics_kindred_spirit_3: string | null;
+  ethics_kindred_spirit_3_classic: string | null;
   ethics_kindred_spirit_4: string | null;
+  ethics_kindred_spirit_4_classic: string | null;
   ethics_kindred_spirit_5: string | null;
+  ethics_kindred_spirit_5_classic: string | null;
   
   politics_kindred_spirit_1: string | null;
+  politics_kindred_spirit_1_classic: string | null;
   politics_kindred_spirit_2: string | null;
+  politics_kindred_spirit_2_classic: string | null;
   politics_kindred_spirit_3: string | null;
+  politics_kindred_spirit_3_classic: string | null;
   politics_kindred_spirit_4: string | null;
+  politics_kindred_spirit_4_classic: string | null;
   politics_kindred_spirit_5: string | null;
+  politics_kindred_spirit_5_classic: string | null;
   
   aesthetics_kindred_spirit_1: string | null;
+  aesthetics_kindred_spirit_1_classic: string | null;
   aesthetics_kindred_spirit_2: string | null;
+  aesthetics_kindred_spirit_2_classic: string | null;
   aesthetics_kindred_spirit_3: string | null;
+  aesthetics_kindred_spirit_3_classic: string | null;
   aesthetics_kindred_spirit_4: string | null;
+  aesthetics_kindred_spirit_4_classic: string | null;
   aesthetics_kindred_spirit_5: string | null;
+  aesthetics_kindred_spirit_5_classic: string | null;
   
-  // Challenging voices fields for all domains
+  // Challenging voices fields for all domains with classic subtitles
   theology_challenging_voice_1: string | null;
+  theology_challenging_voice_1_classic: string | null;
   theology_challenging_voice_2: string | null;
+  theology_challenging_voice_2_classic: string | null;
   theology_challenging_voice_3: string | null;
+  theology_challenging_voice_3_classic: string | null;
   theology_challenging_voice_4: string | null;
+  theology_challenging_voice_4_classic: string | null;
   theology_challenging_voice_5: string | null;
+  theology_challenging_voice_5_classic: string | null;
   
   ontology_challenging_voice_1: string | null;
+  ontology_challenging_voice_1_classic: string | null;
   ontology_challenging_voice_2: string | null;
+  ontology_challenging_voice_2_classic: string | null;
   ontology_challenging_voice_3: string | null;
+  ontology_challenging_voice_3_classic: string | null;
   ontology_challenging_voice_4: string | null;
+  ontology_challenging_voice_4_classic: string | null;
   ontology_challenging_voice_5: string | null;
+  ontology_challenging_voice_5_classic: string | null;
   
   epistemology_challenging_voice_1: string | null;
+  epistemology_challenging_voice_1_classic: string | null;
   epistemology_challenging_voice_2: string | null;
+  epistemology_challenging_voice_2_classic: string | null;
   epistemology_challenging_voice_3: string | null;
+  epistemology_challenging_voice_3_classic: string | null;
   epistemology_challenging_voice_4: string | null;
+  epistemology_challenging_voice_4_classic: string | null;
   epistemology_challenging_voice_5: string | null;
+  epistemology_challenging_voice_5_classic: string | null;
   
   ethics_challenging_voice_1: string | null;
+  ethics_challenging_voice_1_classic: string | null;
   ethics_challenging_voice_2: string | null;
+  ethics_challenging_voice_2_classic: string | null;
   ethics_challenging_voice_3: string | null;
+  ethics_challenging_voice_3_classic: string | null;
   ethics_challenging_voice_4: string | null;
+  ethics_challenging_voice_4_classic: string | null;
   ethics_challenging_voice_5: string | null;
+  ethics_challenging_voice_5_classic: string | null;
   
   politics_challenging_voice_1: string | null;
+  politics_challenging_voice_1_classic: string | null;
   politics_challenging_voice_2: string | null;
+  politics_challenging_voice_2_classic: string | null;
   politics_challenging_voice_3: string | null;
+  politics_challenging_voice_3_classic: string | null;
   politics_challenging_voice_4: string | null;
+  politics_challenging_voice_4_classic: string | null;
   politics_challenging_voice_5: string | null;
+  politics_challenging_voice_5_classic: string | null;
   
   aesthetics_challenging_voice_1: string | null;
+  aesthetics_challenging_voice_1_classic: string | null;
   aesthetics_challenging_voice_2: string | null;
+  aesthetics_challenging_voice_2_classic: string | null;
   aesthetics_challenging_voice_3: string | null;
+  aesthetics_challenging_voice_3_classic: string | null;
   aesthetics_challenging_voice_4: string | null;
+  aesthetics_challenging_voice_4_classic: string | null;
   aesthetics_challenging_voice_5: string | null;
+  aesthetics_challenging_voice_5_classic: string | null;
 }
 
 interface ResourceData {
@@ -245,7 +304,6 @@ const DomainDetail: React.FC = () => {
     }
   };
   
-  // Function to get resource data for a specific domain based on database results
   const getResources = () => {
     if (isLoading || !domainAnalysis) {
       return domainData.resources;
@@ -253,25 +311,26 @@ const DomainDetail: React.FC = () => {
     
     const resources: ResourceData[] = [];
     
-    // For each of the 5 slots, create resource data
     for (let i = 1; i <= 5; i++) {
-      // Determine which column to use based on activeTab and domainId
       let resourceKey = '';
+      let classicKey = '';
+      
       if (activeTab === "kindred") {
         resourceKey = `${domainId}_kindred_spirit_${i}`;
+        classicKey = `${domainId}_kindred_spirit_${i}_classic`;
       } else {
         resourceKey = `${domainId}_challenging_voice_${i}`;
+        classicKey = `${domainId}_challenging_voice_${i}_classic`;
       }
       
-      // Get the title from the database (or use default if not found)
       const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
+      const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       
-      // Create the resource object
       resources.push({
         id: `resource-${i}`,
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: String(title).toUpperCase(),
-        subtitle: "THINKER DETAILS",
+        subtitle: String(subtitle),
         description: `This thinker ${activeTab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`
       });
     }
