@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,17 +23,19 @@ interface ForYouContentProps {
 
 const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
+  const [displayIndex, setDisplayIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // This would ideally be a more sophisticated query that combines data from different sources
-  // based on user preferences, history, etc. For now, we'll just mock it with a combination of data.
+  useEffect(() => {
+    setDisplayIndex(currentIndex);
+  }, [currentIndex]);
+
   const { data: forYouItems = [], isLoading } = useQuery({
     queryKey: ["for-you-content"],
     queryFn: async () => {
       try {
-        // Fetch a mix of books, icons, and concepts
         const [booksResponse, iconsResponse, conceptsResponse] = await Promise.all([
           supabase.from("books").select("*").order("randomizer").limit(5),
           supabase.from("icons").select("*").order("randomizer").limit(5),
@@ -45,7 +46,6 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
         const icons = iconsResponse.data || [];
         const concepts = conceptsResponse.data || [];
 
-        // Transform the data to a common format
         const forYouItems: ForYouContentItem[] = [
           ...books.map((book: any) => ({
             id: book.id,
@@ -78,7 +78,6 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           })),
         ];
 
-        // Shuffle the array to create a "For You" feed
         return forYouItems.sort(() => Math.random() - 0.5);
       } catch (error) {
         console.error("Error fetching For You content:", error);
@@ -92,11 +91,10 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     },
   });
 
-  // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/')) {
       const parts = location.pathname.split('/');
-      const type = parts[2]; // "classic", "icon", or "concept"
+      const type = parts[2];
       const id = parts[3];
       
       if (type && id) {
@@ -109,7 +107,19 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     }
   }, [location.pathname, forYouItems, onDetailedViewShow]);
 
-  const itemToShow = forYouItems[currentIndex % Math.max(1, forYouItems.length)] || null;
+  const handlePrevious = () => {
+    if (displayIndex > 0) {
+      setDisplayIndex(displayIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (forYouItems.length > 0 && displayIndex < forYouItems.length - 1) {
+      setDisplayIndex(displayIndex + 1);
+    }
+  };
+
+  const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     setSelectedItem(item);
@@ -123,7 +133,6 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
     related_questions: [
       { id: '1', title: 'What is consciousness?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
@@ -164,6 +173,10 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           about={itemToShow.about}
           onLearnMore={() => handleLearnMore(itemToShow)}
           onImageClick={() => handleLearnMore(itemToShow)}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          hasPrevious={displayIndex > 0}
+          hasNext={displayIndex < forYouItems.length - 1}
         />
       </div>
 

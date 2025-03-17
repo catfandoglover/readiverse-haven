@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowRight, Share, Star } from "lucide-react";
+import { ArrowRight, ArrowLeft, Share, Star } from "lucide-react";
 
 interface ContentCardProps {
   image: string;
@@ -8,6 +8,10 @@ interface ContentCardProps {
   about: string;
   onLearnMore: () => void;
   onImageClick: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
@@ -16,6 +20,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
   about,
   onLearnMore,
   onImageClick,
+  onPrevious,
+  onNext,
+  hasPrevious = true,
+  hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -85,6 +93,31 @@ const ContentCard: React.FC<ContentCardProps> = ({
                 <ArrowRight className="h-4 w-4" />
               </span>
             </span>
+          </button>
+        </div>
+        
+        {/* Navigation buttons */}
+        <div className="flex justify-center items-center gap-6 mt-4 mb-2">
+          <button
+            onClick={onPrevious}
+            disabled={!hasPrevious}
+            className={`flex items-center justify-center w-10 h-10 rounded-full ${
+              hasPrevious ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+            } text-[#E9E7E2] transition-colors`}
+            aria-label="Previous"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          
+          <button
+            onClick={onNext}
+            disabled={!hasNext}
+            className={`flex items-center justify-center w-10 h-10 rounded-full ${
+              hasNext ? 'bg-[#282828]/50 hover:bg-[#282828]/70' : 'bg-[#282828]/20'
+            } text-[#E9E7E2] transition-colors`}
+            aria-label="Next"
+          >
+            <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>
