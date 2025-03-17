@@ -1,5 +1,6 @@
+
 import React from "react";
-import { Progress } from "../ui/progress";
+import { ProgressDisplay } from "./ProgressDisplay";
 
 interface ProgressTrackerProps {
   bookProgress: number;
@@ -15,11 +16,11 @@ const ProgressTracker = ({ bookProgress, pageInfo }: ProgressTrackerProps) => {
   return (
     <>
       <div className="space-y-2 mb-4">
-        <div className="flex justify-between text-sm text-gray-500">
-          <span>Book Progress</span>
-          <span>{bookProgress}%</span>
-        </div>
-        <Progress value={bookProgress} className="h-2" />
+        <ProgressDisplay 
+          progress={bookProgress} 
+          label="Book Progress" 
+          showLabel={true}
+        />
       </div>
       <div className="mt-4 text-sm text-gray-500">
         <span>Chapter Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}</span>

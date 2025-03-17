@@ -444,7 +444,7 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const { answers_json, assessment_id, profile_image_url } = await req.json();
+      const { answers_json, assessment_id, profile_id } = await req.json();
       
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
@@ -515,7 +515,7 @@ serve(async (req) => {
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
-        profile_image_url,
+        profile_id,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
