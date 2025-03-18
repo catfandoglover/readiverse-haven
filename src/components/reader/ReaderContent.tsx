@@ -1,22 +1,18 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
 import { useTheme } from '@/contexts/ThemeContext';
-import TableOfContents from './TableOfContents';
-import NavigationButtons from './NavigationButtons';
 import BookViewer from './BookViewer';
-import ViewerContainer from './ViewerContainer';
-import BrightnessOverlay from './BrightnessOverlay';
-import { DesktopControls } from './controls/DesktopControls';
-import { MobileControls } from './controls/MobileControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRenditionSetup } from '@/hooks/useRenditionSetup';
 import { useReaderResize } from '@/hooks/useReaderResize';
-import ReaderControls from './ReaderControls';
-import ProgressTracker from './ProgressTracker';
-import FloatingControls from './FloatingControls';
-import BookmarkDialog from './BookmarkDialog';
+import BrightnessOverlay from './BrightnessOverlay';
+import { MinimalProgressBar } from './MinimalProgressBar';
+import ReaderSidebar from './ReaderSidebar';
+import FloatingActionButton from './FloatingActionButton';
+import { MessageCircle, Menu, BookOpen, Settings, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ReaderContentProps {
   book: Book;
@@ -86,64 +82,66 @@ const ReaderContent = ({
   setSelectedColor,
   removeHighlight,
 }: ReaderContentProps) => {
-  const [container, setContainer] = useState<Element | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'toc' | 'notes' | 'bookmarks' | 'settings' | 'chat'>('toc');
+  const [showUI, setShowUI] = useState(true);
+  const [showVirgilChat, setShowVirgilChat] = useState(false);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const bookKey = book?.key() || null;
 
-  const {
-    rendition,
-    setRendition,
-    setupRendition,
-  } = useRenditionSetup(
-    book!,
-    isMobile,
-    textAlign,
-    fontFamily,
-    theme,
-    currentLocation,
-    onLocationChange,
-    onTextSelect,
-    highlights
-  );
-
-  const {
-    resizeObserver,
-    setResizeObserver,
-    debouncedContainerResize
-  } = useReaderResize(rendition);
-
-  const handleTouchStart = useCallback((e: TouchEvent | MouseEvent) => {
-    if (!isMobile || !rendition) return;
-
-    const x = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const width = window.innerWidth;
-    const threshold = width * 0.05; // 5% of screen width for tap areas
-
-    if (x < threshold) {
-      e.preventDefault();
-      onPrevPage();
-    } else if (x > width - threshold) {
-      e.preventDefault();
-      onNextPage();
-    }
-  }, [isMobile, rendition, onPrevPage, onNextPage]);
-
-  React.useEffect(() => {
-    if (!isMobile) return;
-
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('click', handleTouchStart);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('click', handleTouchStart);
+  // Hide UI after 3 seconds of inactivity
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    const resetTimer = () => {
+      clearTimeout(timeout);
+      setShowUI(true);
+      timeout = setTimeout(() => setShowUI(false), 3000);
     };
-  }, [isMobile, handleTouchStart]);
+    
+    resetTimer();
+    
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('touchstart', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('touchstart', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+    };
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const openSidebarWithTab = (tab: 'toc' | 'notes' | 'bookmarks' | 'settings' | 'chat') => {
+    setActiveTab(tab);
+    setSidebarOpen(true);
+  };
+
+  const toggleVirgilChat = () => {
+    setShowVirgilChat(!showVirgilChat);
+  };
 
   return (
-    <>
-      <ReaderControls
+    <div className="relative h-full flex">
+      {/* Sidebar Component */}
+      <ReaderSidebar 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        toc={toc}
+        onTocNavigate={onTocNavigate}
+        highlights={highlights}
+        onHighlightSelect={onLocationChange}
+        onRemoveHighlight={removeHighlight}
+        currentLocation={currentLocation}
+        onBookmarkClick={onBookmarkClick}
         fontSize={fontSize}
         onFontSizeChange={onFontSizeChange}
         fontFamily={fontFamily}
@@ -152,46 +150,17 @@ const ReaderContent = ({
         onTextAlignChange={onTextAlignChange}
         brightness={brightness}
         onBrightnessChange={onBrightnessChange}
-        currentLocation={currentLocation}
-        onBookmarkClick={onBookmarkClick}
-        onLocationChange={onLocationChange}
-        sessionTime={sessionTime}
-        highlights={highlights}
-        selectedHighlightColor={selectedColor}
-        onHighlightColorSelect={setSelectedColor}
-        onHighlightSelect={onLocationChange}
-        onRemoveHighlight={removeHighlight}
-        toc={toc}
-        onNavigate={onTocNavigate}
         bookKey={bookKey}
-      />
-      
-      <ProgressTracker 
-        bookProgress={progress.book}
-        pageInfo={pageInfo}
+        sessionTime={sessionTime}
       />
 
-      <div className="relative">
-        <NavigationButtons
-          onPrevPage={onPrevPage}
-          onNextPage={onNextPage}
-        />
-        <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
-          <TableOfContents toc={toc} onNavigate={onTocNavigate} />
-        </div>
-        <div className="relative">
-          {isMobile && (
-            <>
-              <div 
-                className="absolute left-0 top-0 w-[5%] h-full z-10"
-                onClick={onPrevPage}
-              />
-              <div 
-                className="absolute right-0 top-0 w-[5%] h-full z-10"
-                onClick={onNextPage}
-              />
-            </>
-          )}
+      {/* Main Reading Area */}
+      <div className={`flex-1 transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
+        <div 
+          className="relative overflow-hidden h-screen"
+          onClick={() => setShowUI(!showUI)}
+        >
+          {/* Book Viewer Component */}
           <BookViewer
             book={book}
             currentLocation={currentLocation}
@@ -203,30 +172,82 @@ const ReaderContent = ({
             highlights={highlights}
             onTextSelect={onTextSelect}
           />
+
+          {/* Minimal Progress Bar */}
+          <div className={`transition-opacity duration-300 ${showUI ? 'opacity-100' : 'opacity-0'}`}>
+            <MinimalProgressBar 
+              progress={progress.book} 
+              currentChapter={currentChapterTitle} 
+              pageInfo={pageInfo} 
+            />
+
+            {/* Navigation Controls */}
+            <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
+              <button
+                onClick={onPrevPage}
+                disabled={pageInfo.current <= 1}
+                className={`flex items-center justify-center w-6 h-6 rounded-full
+                ${pageInfo.current > 1 ? 'bg-background/50 hover:bg-background/70' : 'bg-background/20'}
+                text-foreground transition-colors shadow-md`}
+                aria-label="Previous"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </button>
+              
+              <button
+                onClick={onNextPage}
+                disabled={pageInfo.current >= pageInfo.total}
+                className={`flex items-center justify-center w-6 h-6 rounded-full
+                ${pageInfo.current < pageInfo.total ? 'bg-background/50 hover:bg-background/70' : 'bg-background/20'}
+                text-foreground transition-colors shadow-md`}
+                aria-label="Next"
+              >
+                <ArrowDown className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Floating Action Buttons */}
+            <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
+              <FloatingActionButton 
+                icon={Menu} 
+                onClick={toggleSidebar} 
+                tooltip="Table of Contents"
+              />
+              <FloatingActionButton 
+                icon={BookOpen} 
+                onClick={() => openSidebarWithTab('bookmarks')} 
+                tooltip="Bookmarks"
+              />
+              <FloatingActionButton 
+                icon={Settings} 
+                onClick={() => openSidebarWithTab('settings')} 
+                tooltip="Settings"
+              />
+              <FloatingActionButton 
+                icon={MessageCircle} 
+                onClick={toggleVirgilChat} 
+                tooltip="Chat with Virgil"
+              />
+            </div>
+          </div>
+
+          {/* Chat with Virgil Panel - Conditionally Rendered */}
+          {showVirgilChat && (
+            <VirgilChatPanel 
+              onClose={toggleVirgilChat} 
+              bookContext={{
+                title: book?.package?.metadata?.title,
+                author: book?.package?.metadata?.creator,
+                currentChapter: currentChapterTitle
+              }}
+            />
+          )}
+
+          {/* Brightness Overlay */}
+          <BrightnessOverlay brightness={brightness} />
         </div>
       </div>
-
-      <FloatingControls
-        currentLocation={currentLocation}
-        onLocationSelect={onLocationChange}
-        onBookmarkClick={onBookmarkClick}
-        highlights={highlights}
-        selectedColor={selectedColor}
-        onColorSelect={setSelectedColor}
-        onHighlightSelect={onLocationChange}
-        onRemoveHighlight={removeHighlight}
-        bookKey={bookKey}
-      />
-
-      <BookmarkDialog
-        open={showBookmarkDialog}
-        onOpenChange={setShowBookmarkDialog}
-        onRemoveBookmark={handleRemoveBookmark}
-        chapterTitle={currentChapterTitle}
-      />
-
-      <BrightnessOverlay brightness={brightness} />
-    </>
+    </div>
   );
 };
 

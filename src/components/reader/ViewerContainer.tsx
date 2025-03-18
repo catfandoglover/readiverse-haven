@@ -1,6 +1,7 @@
 
 import React from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
+import { motion } from 'framer-motion';
 
 interface ViewerContainerProps {
   theme: Theme;
@@ -12,9 +13,12 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   setContainer 
 }) => {
   return (
-    <div 
+    <motion.div 
       ref={(el) => setContainer(el)}
-      className="epub-view h-[80vh] border border-gray-200/10 rounded-lg overflow-hidden shadow-lg" 
+      className="epub-view h-screen border-none overflow-hidden transition-colors duration-300" 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
       style={{ 
         background: theme.background,
         color: theme.text,
@@ -26,6 +30,9 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
         overscrollBehavior: 'contain',
         whiteSpace: 'pre-line', // Preserves line breaks in text
+        fontSmoothing: 'antialiased',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
       }}
     />
   );
