@@ -17,7 +17,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   onNextPage
 }) => {
   // Margin width for click detection (percentage of container width)
-  const MARGIN_WIDTH_PERCENT = 20;
+  const MARGIN_WIDTH_PERCENT = 5; // Changed from 20% to 5%
   const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
   
   const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -91,10 +91,10 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       }}
     >
       {hoveredSide === 'left' && (
-        <div className="absolute inset-y-0 left-0 w-1/5 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-[5%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
       )}
       {hoveredSide === 'right' && (
-        <div className="absolute inset-y-0 right-0 w-1/5 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-[5%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
       )}
     </motion.div>
   );

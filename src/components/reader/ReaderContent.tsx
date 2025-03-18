@@ -11,7 +11,6 @@ import { MinimalProgressBar } from './MinimalProgressBar';
 import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
 import VirgilChatPanel from './VirgilChatPanel';
-import NavigationButtons from './NavigationButtons';
 import { BookOpen } from 'lucide-react';
 
 interface ReaderContentProps {
@@ -193,11 +192,6 @@ const ReaderContent = ({
               progress={progress.book} 
               currentChapter={currentChapterTitle} 
               pageInfo={pageInfo} 
-            />
-
-            <NavigationButtons 
-              onPrevPage={onPrevPage} 
-              onNextPage={onNextPage} 
             />
 
             <div 
