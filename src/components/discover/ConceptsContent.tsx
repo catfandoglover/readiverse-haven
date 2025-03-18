@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,12 +51,15 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         return [];
       }
 
+      // Log first concept to see what data is available
       if (data && data.length > 0) {
         console.log("First concept data:", data[0]);
       }
 
+      // Map the fields to match our component structure
       return data.map((concept: any) => ({
         ...concept,
+        // Use description field as about if it exists
         about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
@@ -63,6 +67,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     },
   });
 
+  // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/concept/')) {
       const conceptId = location.pathname.split('/view/concept/')[1];
@@ -79,13 +84,13 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
-    navigate(`/view/concept/${concept.id}`);
+    navigate(`/view/concept/${concept.id}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
   const handleCloseDetailedView = () => {
     setSelectedConcept(null);
-    window.history.back();
+    navigate('/', { replace: true });
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
