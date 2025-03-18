@@ -9,13 +9,15 @@ import {
 } from "@/components/ui/tooltip";
 
 interface FloatingActionButtonProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  iconImage?: string;
   onClick: () => void;
   tooltip: string;
 }
 
 const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   icon: Icon,
+  iconImage,
   onClick,
   tooltip
 }) => {
@@ -27,7 +29,11 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             onClick={onClick}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background/70 text-foreground transition-colors shadow-md backdrop-blur-sm border border-border/10"
           >
-            <Icon className="h-5 w-5" />
+            {Icon ? (
+              <Icon className="h-5 w-5" />
+            ) : iconImage ? (
+              <img src={iconImage} alt={tooltip} className="h-6 w-6" />
+            ) : null}
           </button>
         </TooltipTrigger>
         <TooltipContent side="right">

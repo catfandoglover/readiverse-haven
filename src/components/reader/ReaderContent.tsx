@@ -12,7 +12,7 @@ import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
 import VirgilChatPanel from './VirgilChatPanel';
 import NavigationButtons from './NavigationButtons';
-import { MessageCircle, Menu, BookOpen, Settings } from 'lucide-react';
+import { TableProperties } from 'lucide-react';
 
 interface ReaderContentProps {
   book: Book;
@@ -199,22 +199,12 @@ const ReaderContent = ({
 
             <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
               <FloatingActionButton 
-                icon={Menu} 
+                icon={TableProperties} 
                 onClick={toggleSidebar} 
                 tooltip="Table of Contents"
               />
               <FloatingActionButton 
-                icon={BookOpen} 
-                onClick={() => openSidebarWithTab('bookmarks')} 
-                tooltip="Bookmarks"
-              />
-              <FloatingActionButton 
-                icon={Settings} 
-                onClick={() => openSidebarWithTab('settings')} 
-                tooltip="Settings"
-              />
-              <FloatingActionButton 
-                icon={MessageCircle} 
+                iconImage="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
                 onClick={toggleVirgilChat} 
                 tooltip="Chat with Virgil"
               />
