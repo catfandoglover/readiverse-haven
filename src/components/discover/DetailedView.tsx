@@ -597,6 +597,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
+  const renderGreatConversation = () => {
+    if (!combinedData.great_conversation) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+        <p className="text-gray-800 font-baskerville text-lg">
+          {formatText(combinedData.great_conversation)}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -643,6 +656,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             )}
 
             {type === "icon" && renderAnecdotes()}
+            
+            {type === "icon" && renderGreatConversation()}
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
