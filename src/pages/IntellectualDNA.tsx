@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
+import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -33,6 +33,7 @@ const IntellectualDNA = () => {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
+  const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -153,6 +154,61 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
+      <header className="w-full p-4 flex justify-end">
+        <div className="flex space-x-2">
+          {isLoading ? (
+            <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
+              Loading...
+            </Button>
+          ) : user ? (
+            <>
+              <Button 
+                onClick={openProfile} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title={`Profile: ${user.Account?.Name || user.email}`}
+              >
+                <User className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline truncate max-w-[100px]">{user.Account?.Name || user.email}</span>
+              </Button>
+              <Button 
+                onClick={logout} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                onClick={openLogin} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Login"
+              >
+                <LogIn className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Login</span>
+              </Button>
+              <Button 
+                onClick={openSignup} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Sign Up"
+              >
+                <User className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Sign Up</span>
+              </Button>
+            </>
+          )}
+        </div>
+      </header>
       <main className="flex-1 flex flex-col items-center justify-between px-4 py-4 w-full">
         <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
           <div className="space-y-6 text-center w-full">
