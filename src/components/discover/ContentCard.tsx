@@ -60,7 +60,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-serif">{title}</h2>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-2 items-center">
               <button
                 className="flex items-center justify-center text-[#2A282A]"
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
