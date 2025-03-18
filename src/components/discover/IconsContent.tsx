@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,12 +33,12 @@ const INITIAL_LOAD_COUNT = 20;
 const LOAD_MORE_COUNT = 10;
 
 const IconLoadingSkeleton = () => (
-  <div className="animate-pulse space-y-4">
-    <div className="rounded-lg bg-gray-200 h-64 w-full"></div>
-    <div className="h-8 bg-gray-200 rounded w-2/3"></div>
-    <div className="h-4 bg-gray-200 rounded w-full"></div>
-    <div className="h-4 bg-gray-200 rounded w-11/12"></div>
-    <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+  <div className="animate-pulse space-y-4 p-4">
+    <div className="rounded-lg bg-gray-700/30 h-64 w-full"></div>
+    <div className="h-8 bg-gray-700/30 rounded w-2/3"></div>
+    <div className="h-4 bg-gray-700/30 rounded w-full"></div>
+    <div className="h-4 bg-gray-700/30 rounded w-11/12"></div>
+    <div className="h-4 bg-gray-700/30 rounded w-4/5"></div>
   </div>
 );
 
@@ -46,6 +47,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const [displayIndex, setDisplayIndex] = useState(currentIndex);
   const [loadedCount, setLoadedCount] = useState(INITIAL_LOAD_COUNT);
   const [allIconsCount, setAllIconsCount] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -109,20 +111,33 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       const iconParam = location.pathname.split('/view/icon/')[1];
       console.log("Icon param detected:", iconParam);
       
+      // Start transition
+      setIsTransitioning(true);
+      
       if (selectedIcon?.id !== iconParam && selectedIcon?.slug !== iconParam) {
         const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
         
         if (icon) {
           console.log("Found matching icon in list:", icon.name);
-          setSelectedIcon({...icon});
-          if (onDetailedViewShow) onDetailedViewShow();
+          setTimeout(() => {
+            setSelectedIcon({...icon});
+            if (onDetailedViewShow) onDetailedViewShow();
+            setIsTransitioning(false);
+          }, 300);
         } else {
           console.log("Icon not found in current list, fetching directly");
           fetchIconDirectly(iconParam);
         }
+      } else {
+        setIsTransitioning(false);
       }
     } else if (selectedIcon) {
-      setSelectedIcon(null);
+      // Start transition when going back
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setSelectedIcon(null);
+        setIsTransitioning(false);
+      }, 300);
     }
   }, [location.pathname, icons]);
 
@@ -143,6 +158,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           title: "Error",
           description: "Could not find the requested icon"
         });
+        setIsTransitioning(false);
         return;
       }
       
@@ -156,11 +172,15 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
         };
         
-        setSelectedIcon(processedIcon);
-        if (onDetailedViewShow) onDetailedViewShow();
+        setTimeout(() => {
+          setSelectedIcon(processedIcon);
+          if (onDetailedViewShow) onDetailedViewShow();
+          setIsTransitioning(false);
+        }, 300);
       }
     } catch (e) {
       console.error("Unexpected error in fetchIconDirectly:", e);
+      setIsTransitioning(false);
     }
   };
 
@@ -177,15 +197,37 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handleLearnMore = (icon: Icon) => {
-    setSelectedIcon(icon);
-    navigate(`/view/icon/${icon.id}`, { replace: true });
-    if (onDetailedViewShow) onDetailedViewShow();
+    // Start transition
+    setIsTransitioning(true);
+    
+    // Delay state update to allow for animation
+    setTimeout(() => {
+      setSelectedIcon(icon);
+      navigate(`/view/icon/${icon.id}`, { replace: true });
+      if (onDetailedViewShow) onDetailedViewShow();
+      
+      // End transition after a small delay
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 200);
+    }, 300);
   };
 
   const handleCloseDetailedView = () => {
-    setSelectedIcon(null);
-    navigate('/', { replace: true });
-    if (onDetailedViewHide) onDetailedViewHide();
+    // Start transition
+    setIsTransitioning(true);
+    
+    // Delay state update to allow for animation
+    setTimeout(() => {
+      setSelectedIcon(null);
+      navigate('/', { replace: true });
+      if (onDetailedViewHide) onDetailedViewHide();
+      
+      // End transition after a small delay
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 200);
+    }, 300);
   };
 
   const mockRelatedData = {
@@ -215,7 +257,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   if (isLoading || !icons.length) {
     return (
-      <div className="h-full">
+      <div className="p-4 h-full flex items-center justify-center">
         <IconLoadingSkeleton />
       </div>
     );
@@ -225,21 +267,27 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   return (
     <>
-      <div className="h-full">
-        {iconToShow && (
-          <ContentCard
-            image={iconToShow.illustration}
-            title={iconToShow.name}
-            about={iconToShow.about || ""}
-            onLearnMore={() => handleLearnMore(iconToShow)}
-            onImageClick={() => handleLearnMore(iconToShow)}
-            onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
-            onNext={displayIndex < icons.length - 1 ? () => setDisplayIndex(displayIndex + 1) : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < icons.length - 1}
-          />
-        )}
-      </div>
+      {isTransitioning ? (
+        <div className="p-4 h-full flex items-center justify-center animate-fadeIn">
+          <IconLoadingSkeleton />
+        </div>
+      ) : (
+        <div className="h-full transition-opacity duration-300 ease-in-out">
+          {iconToShow && !selectedIcon && (
+            <ContentCard
+              image={iconToShow.illustration}
+              title={iconToShow.name}
+              about={iconToShow.about || ""}
+              onLearnMore={() => handleLearnMore(iconToShow)}
+              onImageClick={() => handleLearnMore(iconToShow)}
+              onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
+              onNext={displayIndex < icons.length - 1 ? () => setDisplayIndex(displayIndex + 1) : undefined}
+              hasPrevious={displayIndex > 0}
+              hasNext={displayIndex < icons.length - 1}
+            />
+          )}
+        </div>
+      )}
 
       {selectedIcon && (
         <DetailedView
