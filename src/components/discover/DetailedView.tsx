@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  // Added this for the combined data to fix the "used before its declaration" error
   const [combinedData, setCombinedData] = useState<any>(itemData);
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
@@ -195,7 +193,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     enabled: type === "icon",
   });
 
-  // Moving this to useEffect to fix the typescript errors
   useEffect(() => {
     if (!enhancedData && !isEnhancedDataLoading) return;
     
@@ -306,11 +303,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
-  // Added this function to fix the "Cannot find name 'handleAuthorClick'" error
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (combinedData.author_id) {
-      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
+    e.stopPropagation();
+    if (combinedData?.author_id) {
+      navigate(`/view/icon/${combinedData.author_id}`);
+      
+      if (onDetailedViewShow) {
+        onDetailedViewShow();
+      }
     }
   };
 
@@ -676,16 +677,34 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
-        by {combinedData.author_id ? (
+        by {combinedData?.author_id ? (
           <a 
             href="#" 
             onClick={handleAuthorClick}
-            className="hover:underline hover:text-[#2A282A]"
+            className="hover:text-[#2A282A] relative inline-block"
+            style={{
+              textDecoration: 'none',
+              position: 'relative'
+            }}
           >
-            {combinedData.author}
+            <span className="relative inline-block">
+              {combinedData.author}
+              <span 
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 transform transition-transform duration-300"
+                style={{
+                  transformOrigin: 'bottom left',
+                  transform: 'scaleX(0)',
+                }}
+              />
+            </span>
+            <style jsx>{`
+              a:hover span span {
+                transform: scaleX(1);
+              }
+            `}</style>
           </a>
         ) : (
-          combinedData.author
+          combinedData?.author
         )}
       </h2>
     );
@@ -742,8 +761,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       >
         <div className="w-full">
           <img 
-            src={combinedData.image} 
-            alt={combinedData.title || combinedData.name} 
+            src={combinedData?.image} 
+            alt={combinedData?.title || combinedData?.name} 
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
@@ -760,7 +779,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
-            ) : combinedData.introduction ? (
+            ) : combinedData?.introduction ? (
               <p className="text-gray-800 font-baskerville text-lg mb-8">
                 {formatText(combinedData.introduction)}
               </p>

@@ -24,6 +24,23 @@ export const useBook = (slug: string | undefined) => {
         if (error) {
           console.log('Initial query error:', error);
           
+          // Next, try with the ID
+          const { data: idData, error: idError } = await supabase
+            .from('books')
+            .select('*')
+            .eq('id', slug)
+            .single();
+            
+          if (!idError && idData) {
+            console.log('Book found by ID:', {
+              found: !!idData,
+              hasEpubUrl: idData?.epub_file_url ? 'yes' : 'no',
+              hasAuthorId: idData?.author_id ? 'yes' : 'no',
+              introduction: idData?.introduction ? 'yes' : 'no'
+            });
+            return idData;
+          }
+          
           // Try with lowercase
           const { data: retryData, error: retryError } = await supabase
             .from('books')
