@@ -123,14 +123,14 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         setSelectedClassic(classic);
       }
       
-      navigate(`/view/classic/${classic.id}`, { replace: true });
+      navigate(`/view/classic/${classic.id}`);
       if (onDetailedViewShow) onDetailedViewShow();
     });
   };
 
   const handleCloseDetailedView = () => {
     setSelectedClassic(null);
-    navigate('/', { replace: true });
+    window.history.back();
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

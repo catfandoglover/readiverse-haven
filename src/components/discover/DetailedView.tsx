@@ -275,14 +275,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   }, [user, itemData.id, type]);
 
   const handleBack = () => {
+    // If onBack prop is provided, call it
     if (onBack) {
       onBack();
+      return;
+    }
+    
+    // Default behavior: go back in history or navigate to home if no history
+    if (window.history.length > 1) {
+      navigate(-1);
     } else {
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     }
   };
 
@@ -310,11 +313,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (combinedData?.author_id) {
       console.log("Navigating to author icon page:", combinedData.author_id);
       
-      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Navigate to the author's page without replacing current history entry
+      // This allows the back button to return to the book view
+      navigate(`/view/icon/${combinedData.author_id}`);
     } else {
       console.log("No author_id found for navigation:", combinedData);
       toast({

@@ -21,6 +21,14 @@ const DiscoverLayout = () => {
   const location = useLocation();
 
   const handleTabChange = (tab: TabType) => {
+    if (tab === activeTab) return;
+    
+    // Navigate to root path when changing tabs without replacing history state
+    // This creates a clean entry in the history stack for this tab
+    if (!location.pathname.includes('/view/')) {
+      navigate('/', { state: { tabChange: true } });
+    }
+    
     setActiveTab(tab);
     setCurrentIndex(0);
   };
@@ -29,18 +37,21 @@ const DiscoverLayout = () => {
     const showDetailedView = location.pathname.includes('/view/');
     setDetailedViewVisible(showDetailedView);
     
-    // Determine what tab should be active based on the route
-    if (location.pathname.includes('/view/classic/')) {
-      setActiveTab("classics");
-    } else if (location.pathname.includes('/view/icon/')) {
-      setActiveTab("icons");
-    } else if (location.pathname.includes('/view/concept/')) {
-      setActiveTab("concepts");
+    // Only update the active tab when coming directly to a detail view
+    // This prevents tab switching when navigating back from detail views
+    if (showDetailedView && !detailedViewVisible) {
+      if (location.pathname.includes('/view/classic/')) {
+        setActiveTab("classics");
+      } else if (location.pathname.includes('/view/icon/')) {
+        setActiveTab("icons");
+      } else if (location.pathname.includes('/view/concept/')) {
+        setActiveTab("concepts");
+      }
     }
     
     // Force remount of content components when route type changes
-    setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
-  }, [location.pathname]);
+    setRouteKey(`route-key-${location.pathname}`);
+  }, [location.pathname, detailedViewVisible]);
 
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {
