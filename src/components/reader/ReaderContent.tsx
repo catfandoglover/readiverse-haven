@@ -12,6 +12,7 @@ import BrightnessOverlay from './BrightnessOverlay';
 import { MinimalProgressBar } from './MinimalProgressBar';
 import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
+import VirgilChatPanel from './VirgilChatPanel';
 import { MessageCircle, Menu, BookOpen, Settings, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ReaderContentProps {
@@ -236,8 +237,8 @@ const ReaderContent = ({
             <VirgilChatPanel 
               onClose={toggleVirgilChat} 
               bookContext={{
-                title: book?.package?.metadata?.title,
-                author: book?.package?.metadata?.creator,
+                title: book?.metadata?.title || "Untitled Book",
+                author: book?.metadata?.creator || "Unknown Author",
                 currentChapter: currentChapterTitle
               }}
             />

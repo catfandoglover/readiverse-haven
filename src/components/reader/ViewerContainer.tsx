@@ -30,7 +30,6 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
         overscrollBehavior: 'contain',
         whiteSpace: 'pre-line', // Preserves line breaks in text
-        fontSmoothing: 'antialiased',
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
       }}
