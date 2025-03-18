@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -698,13 +697,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
               />
             </span>
-            <style>
-              {`
-                button:hover span span {
-                  transform: scaleX(1);
-                }
-              `}
-            </style>
+            <style jsx>{`
+              button:hover span span {
+                transform: scaleX(1);
+              }
+            `}</style>
           </button>
         ) : (
           combinedData?.author

@@ -79,7 +79,7 @@ class SpeechService {
       
       console.info('Successfully got Polly URL:', url);
       
-      return url as string;
+      return url;
     } catch (error) {
       console.error('Error synthesizing speech:', error);
       return '';
