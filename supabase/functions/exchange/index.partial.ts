@@ -1,0 +1,247 @@
+/// <reference path="../types/deno.d.ts" />
+
+// @deno-types="https://deno.land/x/types/index.d.ts"
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import * as jose from "npm:jose@4.14.4";
+
+// Declare Deno namespace for TypeScript
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
+// Define request type
+interface Request {
+  method: string;
+  headers: Headers;
+  json(): Promise<any>;
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
+serve(async (req: Request) => {
+  console.log(`[exchange] Handling ${req.method} request`);
+  
+  // Handle CORS preflight request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  // Check for token in Authorization header and body
+  let outsetaJwtAccessToken: string | null = null;
+  
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader) {
+    console.log("[exchange] Found Authorization header");
+    const parts = authHeader.split(" ");
+    if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
+      outsetaJwtAccessToken = parts[1];
+    }
+  }
+  
+  // If no token in header, try to extract from request body
+  if (!outsetaJwtAccessToken) {
+    try {
+      console.log("[exchange] No token in header, checking request body");
+      const body = await req.json();
+      if (body && body.token) {
+        outsetaJwtAccessToken = body.token;
+      }
+    } catch (e) {
+      console.log("[exchange] No JSON body or couldn't parse:", e);
+    }
+  }
+  
+  if (!outsetaJwtAccessToken) {
+    console.log("[exchange] No token found in header or body");
+    return new Response(
+      JSON.stringify({ error: "No token provided", details: "Token must be provided in Authorization header or request body" }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401
+      }
+    );
+  }
+
+  try {
+    console.log("[exchange] Processing token");
+    
+    // Get Outseta domain from environment variables
+
+    const outsetaDomain = "lightninginspiration.outseta.com";
+    const jwksUrlString = `https://${outsetaDomain}/.well-known/jwks`;
+
+    // const outsetaDomain = Deno.env.get("OUTSETA_DOMAIN");
+    if (!outsetaDomain) {
+      console.error("[exchange] Missing OUTSETA_DOMAIN environment variable");
+      throw new Error("OUTSETA_DOMAIN not configured");
+    }
+    
+    // Validate domain format - remove any https:// prefix if accidentally included in env var
+    const cleanDomain = outsetaDomain.replace(/^https?:\/\//, '');
+    console.log("[exchange] Using Outseta domain:", cleanDomain);
+    
+    // Form the JWKS URL using the clean domain
+    // const jwksUrlString = `https://${cleanDomain}/.well-known/jwks`;
+    console.log('[exchange] Fetching JWKS from:', jwksUrlString);
+    
+    // Create remote JWKS (JSON Web Key Set) for token verification
+    console.log('[exchange] Creating remote JWKS with URL:', jwksUrlString);
+    const JWKS = jose.createRemoteJWKSet(new URL(jwksUrlString));
+
+    // Verify the Outseta JWT
+    console.log('[exchange] Verifying token...');
+    
+    // Decode the token first to see what we're working with
+    const decoded = jose.decodeJwt(outsetaJwtAccessToken);
+    console.log('[exchange] Decoded token payload:', decoded);
+    
+    // After decoding the token - manually decode header since decodeProtectedHeader isn't available
+    const tokenParts = outsetaJwtAccessToken.split('.');
+    if (tokenParts.length === 3) {
+      const headerBase64 = tokenParts[0];
+      const headerJson = atob(headerBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const tokenHeader = JSON.parse(headerJson);
+      console.log('[exchange] Token header:', tokenHeader);
+    }
+    console.log('[exchange] Token payload:', decoded);
+    
+    let payload;
+    
+    try {
+      // Before JWKS verification
+      console.log('[exchange] Expected issuers:', [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`]);
+      
+      // First try: Verify with the JWKS, allowing both non-www and www issuers
+      console.log('[exchange] Attempting verification with JWKS');
+      const result = await jose.jwtVerify(outsetaJwtAccessToken, JWKS, {
+        issuer: [`https://${outsetaDomain}`, `https://www.${outsetaDomain}`],
+        algorithms: ['RS256'] // Explicitly allow RS256
+      });
+      payload = result.payload;
+      console.log('[exchange] JWT verified with JWKS, payload:', payload);
+    } catch (error) {
+      const jwksError = error as Error;
+      console.error('[exchange] JWKS verification failed:', jwksError);
+      // If JWKS verification fails
+      console.error('[exchange] JWKS verification error details:', jwksError.message, jwksError.stack);
+      console.log('[exchange] Falling back to direct key verification');
+      
+      // Fallback: Fetch JWKS manually and extract the key
+      const jwksResponse = await fetch(`https://${outsetaDomain}/.well-known/jwks`);
+      const jwks = await jwksResponse.json();
+      
+      // Log the JWKS response in fallback
+      console.log('[exchange] Fetched JWKS:', jwks);
+      
+      // Extract the kid from the token header manually
+      const tokenParts = outsetaJwtAccessToken.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid JWT format');
+      }
+      
+      // Decode the header part (first part of the JWT)
+      const headerBase64 = tokenParts[0];
+      const headerJson = atob(headerBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const tokenHeader = JSON.parse(headerJson);
+      
+      // Find the key with the specific kid from the token header
+      const key = jwks.keys.find((k: any) => k.kid === tokenHeader.kid);
+      
+      if (!key) {
+        throw new Error(`Key with kid ${tokenHeader.kid} not found in JWKS`);
+      }
+      
+      console.log(`[exchange] Found matching key with kid: ${key.kid}`);
+      
+      // Create a crypto key from the JWK components
+      const publicKeyData = {
+        kty: key.kty,
+        n: key.n,
+        e: key.e,
+        kid: key.kid,
+        alg: 'RS256'
+      };
+      
+      // Verify the token using the public key data
+      const result = await jose.jwtVerify(
+        outsetaJwtAccessToken,
+        async () => publicKeyData,
+        {
+          issuer: `https://${outsetaDomain}`,
+          algorithms: ['RS256']
+        }
+      );
+      
+      payload = result.payload;
+      console.log('[exchange] JWT verified with fallback method, payload:', payload);
+    }
+
+    // Add Supabase role to the payload
+    const payloadWithRole = { 
+      ...payload, 
+      role: "authenticated",
+      // Add a user identifier that Supabase policies can use
+      sub: String(payload.sub || payload.email || payload.user_id || ''),
+      email: payload.email,
+      // Explicitly set aud to match what Supabase expects
+      aud: "authenticated"
+    };
+    console.log('[exchange] Enhanced payload:', payloadWithRole);
+
+    // Get Supabase JWT secret from environment variables
+    // const supabaseSecret = Deno.env.get("SUPA_JWT_SECRET");
+    const supabaseSecret = "vWuwcintxMuwsNQuwhbDlxBYGdWW46un9S6QxbHrB06e9AAurTIRh6hRejlVzVqk1VjXwrmz31BluDHo9OpOBw==";
+    if (!supabaseSecret) {
+      console.error("[exchange] Missing SUPA_JWT_SECRET environment variable");
+      throw new Error("SUPA_JWT_SECRET not configured");
+    }
+    console.log('[exchange] SUPA_JWT_SECRET available (not logging it)');
+
+    // Encode the Supabase JWT secret
+    const supabaseEncodedJwtSecret = new TextEncoder().encode(supabaseSecret);
+    
+    // Create a new JWT for Supabase
+    console.log('[exchange] Creating Supabase JWT');
+    const supabaseJwt = await new jose.SignJWT(payloadWithRole)
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setIssuer("supabase")
+      .setIssuedAt(payload.iat || Math.floor(Date.now() / 1000))
+      .setExpirationTime(payload.exp || Math.floor(Date.now() / 1000) + 7200) // Default to 2 hours if no exp
+      .sign(supabaseEncodedJwtSecret);
+
+    console.log('[exchange] Supabase JWT created successfully');
+
+    return new Response(JSON.stringify({ supabaseJwt }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+    
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[exchange] Token exchange error:", {
+      message: err.message,
+      stack: err.stack
+    });
+    
+    // Provide detailed error messages for debugging
+    return new Response(
+      JSON.stringify({ 
+        error: "Invalid token or server error",
+        details: err.message,
+        stack: err.stack
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      }
+    );
+  }
+});

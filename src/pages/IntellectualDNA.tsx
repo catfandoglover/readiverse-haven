@@ -1,9 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +32,7 @@ const IntellectualDNA = () => {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
-  const { user, openLogin, openSignup, openProfile, logout } = useAuth();
+  const { user, openLogin, openSignup, openProfile, logout, supabase } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -60,6 +58,12 @@ const IntellectualDNA = () => {
   // Prefetch questions for all categories
   useEffect(() => {
     const prefetchQuestions = async () => {
+      // Only prefetch if we have a Supabase client
+      if (!supabase) {
+        console.log('No authenticated Supabase client available for prefetching');
+        return;
+      }
+      
       console.log('Starting to prefetch questions for all categories');
       
       for (const category of categories) {
@@ -96,22 +100,33 @@ const IntellectualDNA = () => {
       console.log('Completed prefetching questions for all categories');
     };
 
-    if (showNameDialog) {
+    if (showNameDialog && supabase) {
       prefetchQuestions();
     }
-  }, [showNameDialog, queryClient]);
+  }, [showNameDialog, queryClient, supabase]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
     queryFn: async () => {
+      // Skip if no authenticated client
+      if (!supabase) {
+        console.log('No authenticated Supabase client available');
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('dna_assessment_progress')
         .select('*')
         .order('created_at');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching progress:', error);
+        throw error;
+      }
       return data;
     },
+    // Only run this query if we have a Supabase client
+    enabled: !!supabase,
   });
 
   const handleNavigation = (path: string) => {
