@@ -795,9 +795,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {type === "icon" && renderAnecdotes()}
             
-            {type === "icon" && renderGreatConversation()}
-            
             {type === "icon" && renderClassicsByIcon()}
+            
+            {type === "icon" && renderGreatConversation()}
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
