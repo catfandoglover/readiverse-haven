@@ -14,6 +14,7 @@ const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [detailedViewVisible, setDetailedViewVisible] = useState(false);
+  const [routeKey, setRouteKey] = useState<string>("route-key-0");
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -27,30 +28,46 @@ const DiscoverLayout = () => {
   useEffect(() => {
     const showDetailedView = location.pathname.includes('/view/');
     setDetailedViewVisible(showDetailedView);
+    
+    // Determine what tab should be active based on the route
+    if (location.pathname.includes('/view/classic/')) {
+      setActiveTab("classics");
+    } else if (location.pathname.includes('/view/icon/')) {
+      setActiveTab("icons");
+    } else if (location.pathname.includes('/view/concept/')) {
+      setActiveTab("concepts");
+    }
+    
+    // Force remount of content components when route type changes
+    setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
   }, [location.pathname]);
 
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {
       case "for-you":
         return <ForYouContent 
+                 key={`for-you-${routeKey}`}
                  currentIndex={index} 
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
                />;
       case "classics":
         return <ClassicsContent 
+                 key={`classics-${routeKey}`}
                  currentIndex={index} 
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
                />;
       case "icons":
         return <IconsContent 
+                 key={`icons-${routeKey}`}
                  currentIndex={index} 
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
                />;
       case "concepts":
         return <ConceptsContent 
+                 key={`concepts-${routeKey}`}
                  currentIndex={index} 
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
