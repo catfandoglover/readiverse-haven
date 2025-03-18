@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -312,6 +312,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       navigate(`/view/icon/${combinedData.author_id}`);
     } else {
       console.log("No author_id found for navigation:", combinedData);
+      toast({
+        description: "Author information unavailable",
+        variant: "destructive"
+      });
     }
   };
 
@@ -678,27 +682,22 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
         by {combinedData?.author_id ? (
-          <a 
-            href={`/view/icon/${combinedData.author_id}`}
+          <button 
             onClick={handleAuthorClick}
-            className="hover:text-[#2A282A] relative inline-block"
+            className="inline-flex items-center relative font-medium text-[#9b87f5] hover:text-[#7E69AB] transition-colors"
           >
-            <span className="relative inline-block">
+            <span className="relative">
               {combinedData.author}
               <span 
-                className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 transform transition-transform duration-300"
-                style={{
-                  transformOrigin: 'bottom left',
-                  transform: 'scaleX(0)',
-                }}
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
               />
             </span>
-            <style>{`
-              a:hover span span {
+            <style jsx>{`
+              button:hover span span {
                 transform: scaleX(1);
               }
             `}</style>
-          </a>
+          </button>
         ) : (
           combinedData?.author
         )}
