@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Icon {
@@ -38,28 +38,25 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
-  // Update displayIndex when currentIndex changes from parent
   useEffect(() => {
     setDisplayIndex(currentIndex);
   }, [currentIndex]);
 
-  // Load icons with pagination
   const { data: icons = [], isLoading, refetch } = useQuery({
     queryKey: ["icons", loadedCount],
     queryFn: async () => {
-      // First get the total count
       const { count, error: countError } = await supabase
         .from("icons")
         .select("*", { count: "exact", head: true });
-        
+      
       if (countError) {
         console.error("Error counting icons:", countError);
       } else {
         setAllIconsCount(count || 0);
       }
       
-      // Then fetch the paginated data
       const { data, error } = await supabase
         .from("icons")
         .select("*")
@@ -75,7 +72,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         return [];
       }
 
-      // Enhance the data with placeholder fields if they don't exist
       return data.map((icon: any) => ({
         ...icon,
         slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'),
@@ -84,35 +80,72 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
       }));
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Load more icons when approaching the end of the list
   useEffect(() => {
     if (displayIndex >= loadedCount - 5 && loadedCount < allIconsCount) {
       setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
     }
   }, [displayIndex, loadedCount, allIconsCount]);
 
-  // Refetch when loadedCount changes
   useEffect(() => {
     refetch();
   }, [loadedCount, refetch]);
 
-  // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/icon/')) {
       const iconParam = location.pathname.split('/view/icon/')[1];
+      console.log("Icon param detected:", iconParam);
       
-      // Check if the param matches an id or slug
-      const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
-      
-      if (icon) {
-        setSelectedIcon(icon);
-        if (onDetailedViewShow) onDetailedViewShow();
+      if (selectedIcon?.id !== iconParam && selectedIcon?.slug !== iconParam) {
+        const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
+        
+        if (icon) {
+          console.log("Found matching icon:", icon.name);
+          setSelectedIcon(icon);
+          if (onDetailedViewShow) onDetailedViewShow();
+        } else {
+          console.log("Icon not found in current list, fetching directly");
+          fetchIconDirectly(iconParam);
+        }
       }
     }
   }, [location.pathname, icons, onDetailedViewShow]);
+
+  const fetchIconDirectly = async (iconId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("icons")
+        .select("*")
+        .or(`id.eq.${iconId},slug.eq.${iconId}`)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching icon directly:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not find the requested icon"
+        });
+        return;
+      }
+      
+      if (data) {
+        console.log("Directly fetched icon:", data.name);
+        setSelectedIcon({
+          ...data,
+          slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+          about: data.about || `${data.name} was a significant figure in philosophical history.`,
+          great_conversation: data.great_conversation || `${data.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
+          anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
+        });
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    } catch (e) {
+      console.error("Unexpected error in fetchIconDirectly:", e);
+    }
+  };
 
   const handlePrevious = () => {
     if (displayIndex > 0) {
@@ -130,7 +163,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
-    // Always use the icon's ID for consistent URL structure
     navigate(`/view/icon/${icon.id}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
@@ -141,7 +173,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
     related_questions: [
       { id: '1', title: 'What is the nature of being?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
@@ -193,49 +224,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
       {selectedIcon && (
         <DetailedView
-          type="icon"
-          data={{
-            ...selectedIcon,
-            image: selectedIcon.illustration,
-            ...mockRelatedData
-          }}
-          onBack={handleCloseDetailedView}
-        />
-      )}
-    </>
-  );
-};
+          key={`icon-${selectedIcon.id}`}
 
-// Loading skeleton component for better UX during loading
-const IconLoadingSkeleton = () => {
-  return (
-    <div className="flex flex-col h-full relative">
-      <Skeleton className="relative aspect-square w-full" />
-      <div className="p-4 bg-[#E9E7E2] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <Skeleton className="h-8 w-48" />
-            <div className="flex gap-1 items-center">
-              <Skeleton className="h-6 w-6 rounded-full" />
-              <Skeleton className="h-6 w-6 rounded-full" />
-            </div>
-          </div>
-          <Skeleton className="h-4 w-full mt-2" />
-          <Skeleton className="h-4 w-5/6 mt-2" />
-          <Skeleton className="h-4 w-4/6 mt-2" />
-        </div>
-        
-        <div className="py-1 flex items-center justify-start mt-4">
-          <Skeleton className="h-8 w-36" />
-        </div>
-      </div>
-      
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
-        <Skeleton className="w-6 h-6 rounded-full" />
-        <Skeleton className="w-6 h-6 rounded-full" />
-      </div>
-    </div>
-  );
-};
 
-export default IconsContent;

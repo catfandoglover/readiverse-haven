@@ -309,7 +309,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     if (combinedData?.author_id) {
       console.log("Navigating to author icon page:", combinedData.author_id);
-      navigate(`/view/icon/${combinedData.author_id}`);
+      
+      setTimeout(() => {
+        navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
+      }, 0);
     } else {
       console.log("No author_id found for navigation:", combinedData);
       toast({
@@ -684,12 +687,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         by {combinedData?.author_id ? (
           <button 
             onClick={handleAuthorClick}
-            className="inline-flex items-center relative font-medium text-[#9b87f5] hover:text-[#7E69AB] transition-colors"
+            className="inline-flex items-center relative hover:text-[#9b87f5] transition-colors"
           >
             <span className="relative">
               {combinedData.author}
               <span 
-                className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
               />
             </span>
             <style jsx>{`
@@ -851,3 +854,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
