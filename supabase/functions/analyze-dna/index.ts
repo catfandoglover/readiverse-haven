@@ -1,7 +1,8 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getPromptForSection, getCombinedPrompt } from './prompts.ts';
+import { getPromptForSection } from './prompts.ts';
 
 const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -30,9 +31,11 @@ function handlePoliticsFields(jsonString: string): string {
   
   let processed = jsonString.replace(/\\"/g, "___ESCAPED_QUOTE___");
   
+  // Enhanced regex for multiline politics fields, using [\s\S] instead of . to match across lines
   const regex = /"(politics_[^"]+)"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
   
   processed = processed.replace(regex, (match, fieldName, content) => {
+    // Clean content more aggressively for politics fields
     const cleanedContent = content
       .replace(/"/g, '\\"')
       .replace(/\r/g, ' ')
@@ -72,16 +75,20 @@ function handleProblematicFields(jsonString: string): string {
   return processed;
 }
 
+// New function to validate and ensure required fields are present
 function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
   if (section !== 2) return jsonObject;
   
   const result = { ...jsonObject };
   
+  // Specifically check for the problematic politics fields
   for (let i = 4; i <= 5; i++) {
+    // Check for the three related fields for politics_challenging_voice
     const baseField = `politics_challenging_voice_${i}`;
     const classicField = `${baseField}_classic`;
     const rationaleField = `${baseField}_rationale`;
     
+    // If any of these fields are missing, add defaults
     if (!result[baseField]) {
       console.log(`Adding missing field: ${baseField}`);
       result[baseField] = `Political Challenger ${i}`;
@@ -215,6 +222,7 @@ function repairJson(jsonString: string): string {
         try {
           const extractedObject: Record<string, string> = {};
           
+          // Enhanced politics pattern matching that's more forgiving
           const politicsPattern = /"(politics_[^"]+)"\s*:\s*"([^"]*)"/g;
           let match;
           
@@ -231,11 +239,13 @@ function repairJson(jsonString: string): string {
             extractedObject[key] = cleanValue;
           }
           
+          // Look for missing politics_challenging_voice fields specifically
           for (let i = 1; i <= 5; i++) {
             const baseKey = `politics_challenging_voice_${i}`;
             const classicKey = `${baseKey}_classic`;
             const rationaleKey = `${baseKey}_rationale`;
             
+            // If these specific keys are missing, try an even more aggressive pattern
             if (!extractedObject[baseKey]) {
               const specialPattern = new RegExp(`"(${baseKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
               if ((match = specialPattern.exec(jsonString)) !== null) {
@@ -295,202 +305,6 @@ function repairJson(jsonString: string): string {
   }
 }
 
-async function generateCombinedAnalysis(answers_json: string): Promise<{ content: Record<string, string>, raw_response: any }> {
-  console.log('Generating combined analysis for all sections');
-  const prompt = getCombinedPrompt(answers_json);
-
-  try {
-    console.log('Sending request to OpenRouter for combined analysis');
-    
-    const systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified. IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response.';
-    
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterApiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'Lovable.dev'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.7-sonnet',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 100000,
-        temperature: 0.5,
-        response_format: { type: "json_object" }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Raw response received for combined analysis');
-    
-    if (!data?.choices?.[0]?.message?.content) {
-      console.error('Unexpected API response structure:', data);
-      throw new Error('Invalid API response structure');
-    }
-
-    const rawContent = data.choices[0].message.content;
-    console.log(`Processing content for combined analysis: ${rawContent.substring(0, 100)}...`);
-    
-    const cleanedContent = cleanJsonContent(rawContent);
-    
-    try {
-      const parsed = JSON.parse(cleanedContent);
-      console.log('Successfully parsed JSON for combined analysis');
-      
-      let validatedContent = parsed;
-      
-      for (let i = 1; i <= 5; i++) {
-        const baseField = `politics_challenging_voice_${i}`;
-        const classicField = `${baseField}_classic`;
-        const rationaleField = `${baseField}_rationale`;
-        
-        if (!validatedContent[baseField] || !validatedContent[classicField] || !validatedContent[rationaleField]) {
-          console.log(`Applying field validation for ${baseField} and related fields`);
-          validatedContent = ensureRequiredFields(validatedContent, 2);
-          break;
-        }
-      }
-      
-      return {
-        content: validatedContent,
-        raw_response: data
-      };
-    } catch (parseError) {
-      console.error('JSON parsing failed for combined analysis, attempting repairs:', parseError.message);
-      
-      try {
-        const repairedJson = repairJson(cleanedContent);
-        let parsedResult;
-        
-        if (repairedJson.startsWith('{"data":')) {
-          parsedResult = JSON.parse(repairedJson).data;
-        } else {
-          parsedResult = JSON.parse(repairedJson);
-        }
-        
-        console.log('Successfully parsed JSON after repairs for combined analysis');
-        
-        const validatedResult = ensureRequiredFields(parsedResult, 2);
-        
-        return {
-          content: validatedResult,
-          raw_response: data
-        };
-      } catch (repairError) {
-        console.error('JSON repair failed for combined analysis:', repairError.message);
-        
-        const fallbackResponse: Record<string, string> = {
-          error_message: `Failed to parse combined analysis: ${repairError.message}`,
-          partial_content: cleanedContent.substring(0, 500) + "..."
-        };
-        
-        for (let i = 1; i <= 5; i++) {
-          fallbackResponse[`theology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-          fallbackResponse[`theology_kindred_spirit_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`theology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`theology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-          fallbackResponse[`theology_challenging_voice_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`theology_challenging_voice_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`epistemology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-          fallbackResponse[`epistemology_kindred_spirit_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`epistemology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`epistemology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-          fallbackResponse[`epistemology_challenging_voice_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`epistemology_challenging_voice_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`ethics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-          fallbackResponse[`ethics_kindred_spirit_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`ethics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`ethics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-          fallbackResponse[`ethics_challenging_voice_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`ethics_challenging_voice_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`politics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-          fallbackResponse[`politics_kindred_spirit_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`politics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-          
-          fallbackResponse[`politics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-          fallbackResponse[`politics_challenging_voice_${i}_classic`] = "Error (0000)";
-          fallbackResponse[`politics_challenging_voice_${i}_rationale`] = "Error retrieving data";
-        }
-        
-        console.log(`Created fallback response with ${Object.keys(fallbackResponse).length} fields`);
-        return {
-          content: fallbackResponse,
-          raw_response: {
-            error: true,
-            message: repairError.message,
-            original_response: data
-          }
-        };
-      }
-    }
-  } catch (error) {
-    console.error('Error in combined analysis:', error);
-    throw error;
-  }
-}
-
-async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
-  try {
-    console.log('Starting combined analysis for all sections...');
-    
-    try {
-      const combinedResult = await generateCombinedAnalysis(answers_json);
-      console.log('Successfully completed combined analysis');
-      
-      return {
-        sections: [
-          { analysis: combinedResult.content, raw_response: combinedResult.raw_response }
-        ]
-      };
-    } catch (combinedError) {
-      console.error('Combined analysis failed, falling back to original approach:', combinedError);
-      
-      const section1 = await generateAnalysis(answers_json, 1);
-      console.log('Successfully completed section 1');
-      
-      const section2 = await generateAnalysis(answers_json, 2);
-      console.log('Successfully completed section 2');
-      
-      const section3 = await generateAnalysis(answers_json, 3);
-      console.log('Successfully completed section 3');
-      
-      return {
-        sections: [
-          { analysis: section1.content, raw_response: section1.raw_response },
-          { analysis: section2.content, raw_response: section2.raw_response },
-          { analysis: section3.content, raw_response: section3.raw_response }
-        ]
-      };
-    }
-  } catch (error) {
-    console.error('Error in generateCompleteAnalysis:', error);
-    return {
-      sections: [],
-      error: `Failed to generate analysis: ${error.message}`
-    };
-  }
-}
-
 async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
   console.log(`Generating analysis for section ${section}`);
   const prompt = getPromptForSection(section, answers_json);
@@ -524,8 +338,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
             content: prompt
           }
         ],
-        max_tokens: 16000,
-        temperature: section === 2 ? 0.3 : 0.7,
+        max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
+        temperature: section === 2 ? 0.3 : 0.7, // Lower temperature for section 2 to improve consistency
         response_format: { type: "json_object" }
       })
     });
@@ -551,16 +365,11 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
       
-      if (section === 2) {
-        const validatedContent = ensureRequiredFields(parsed, section);
-        return {
-          content: validatedContent,
-          raw_response: data
-        };
-      }
+      // If this is section 2, ensure all required fields are present
+      const validatedContent = section === 2 ? ensureRequiredFields(parsed, section) : parsed;
       
       return {
-        content: parsed,
+        content: validatedContent,
         raw_response: data
       };
     } catch (parseError) {
@@ -582,6 +391,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
+        // Ensure all required fields are present, especially for section 2
         const validatedResult = section === 2 ? ensureRequiredFields(parsedResult, section) : parsedResult;
         
         return {
@@ -646,6 +456,34 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
   } catch (error) {
     console.error(`Error in section ${section}:`, error);
     throw error;
+  }
+}
+
+async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
+  try {
+    console.log('Starting analysis for all sections...');
+    const section1 = await generateAnalysis(answers_json, 1);
+    console.log('Successfully completed section 1');
+    
+    const section2 = await generateAnalysis(answers_json, 2);
+    console.log('Successfully completed section 2');
+    
+    const section3 = await generateAnalysis(answers_json, 3);
+    console.log('Successfully completed section 3');
+    
+    return {
+      sections: [
+        { analysis: section1.content, raw_response: section1.raw_response },
+        { analysis: section2.content, raw_response: section2.raw_response },
+        { analysis: section3.content, raw_response: section3.raw_response }
+      ]
+    };
+  } catch (error) {
+    console.error('Error in generateCompleteAnalysis:', error);
+    return {
+      sections: [],
+      error: `Failed to generate analysis: ${error.message}`
+    };
   }
 }
 
@@ -757,7 +595,7 @@ serve(async (req) => {
         profile_id,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
-        analysis_type: 'combined',
+        analysis_type: 'section_1',
         ...combinedAnalysis
       };
 
@@ -771,12 +609,12 @@ serve(async (req) => {
         throw storeError;
       }
       
-      console.log('Analysis stored successfully');
+      console.log('Combined analysis stored successfully');
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Analysis stored successfully'
+          message: 'Combined analysis stored successfully'
         }),
         { 
           headers: {
