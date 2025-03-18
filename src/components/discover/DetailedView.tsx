@@ -306,8 +306,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     if (combinedData?.author_id) {
+      console.log("Navigating to author icon page:", combinedData.author_id);
       navigate(`/view/icon/${combinedData.author_id}`);
+    } else {
+      console.log("No author_id found for navigation:", combinedData);
     }
   };
 
@@ -675,13 +679,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
         by {combinedData?.author_id ? (
           <a 
-            href="#" 
+            href={`/view/icon/${combinedData.author_id}`}
             onClick={handleAuthorClick}
             className="hover:text-[#2A282A] relative inline-block"
-            style={{
-              textDecoration: 'none',
-              position: 'relative'
-            }}
           >
             <span className="relative inline-block">
               {combinedData.author}
