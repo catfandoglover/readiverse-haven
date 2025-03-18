@@ -42,7 +42,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const location = useLocation();
   const { user, openLogin } = useAuth();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-  const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
+  const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "TOP RANKED">(type === "icon" ? "SEEKERS" : "READERS");
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
@@ -518,14 +518,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           SEEKERS {type === "icon" ? "ENCOUNTERING" : "READING"} {combinedData.title && combinedData.title.toUpperCase()}
         </h3>
         <Select
-          onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
-          defaultValue="READERS"
+          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "TOP RANKED")}
+          defaultValue={type === "icon" ? "SEEKERS" : "READERS"}
         >
           <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
             <SelectValue placeholder="Select filter" />
           </SelectTrigger>
           <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
-            <SelectItem value="READERS">READERS</SelectItem>
+            <SelectItem value={type === "icon" ? "SEEKERS" : "READERS"}>
+              {type === "icon" ? "SEEKERS" : "READERS"}
+            </SelectItem>
             <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
           </SelectContent>
         </Select>
@@ -533,9 +535,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className="border border-gray-300 rounded-md overflow-hidden">
           
           {isReadersLoading ? (
-            <div className="p-4 text-center">Loading readers...</div>
+            <div className="p-4 text-center">Loading {type === "icon" ? "seekers" : "readers"}...</div>
           ) : readersData.length === 0 ? (
-            <div className="p-4 text-center">No readers yet. Be the first!</div>
+            <div className="p-4 text-center">No {type === "icon" ? "seekers" : "readers"} yet. Be the first!</div>
           ) : (
             <ScrollArea className="h-60">
               <div className="divide-y divide-gray-200">
