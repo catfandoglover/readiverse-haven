@@ -19,7 +19,7 @@ export const MinimalProgressBar: React.FC<MinimalProgressBarProps> = ({
   pageInfo
 }) => {
   return (
-    <div className="fixed top-4 left-0 right-0 px-4 z-20 flex flex-col items-center">
+    <div className="fixed top-4 left-0 right-0 px-4 z-20 flex flex-col">
       <div className="relative w-full max-w-md h-1 bg-background/20 rounded-full overflow-hidden backdrop-blur-sm">
         <motion.div 
           className="absolute top-0 left-0 h-full bg-primary/70 rounded-full"
@@ -29,7 +29,7 @@ export const MinimalProgressBar: React.FC<MinimalProgressBarProps> = ({
         />
       </div>
       
-      <div className="mt-2 text-xs text-foreground/70 backdrop-blur-sm px-2 py-1 rounded-full bg-background/30">
+      <div className="mt-2 text-xs text-foreground/70 backdrop-blur-sm px-2 py-1 rounded-full bg-background/30 self-start">
         <span className="font-light">
           {currentChapter} • Page {pageInfo.chapterCurrent} of {pageInfo.chapterTotal}
         </span>
