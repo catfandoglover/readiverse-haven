@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
@@ -91,6 +90,122 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('Token exchanged successfully');
           const supabaseClient = createSupabaseClient(supabaseJwt);
           setSupabase(supabaseClient);
+          
+          // Check if there's a pending DNA assessment ID to associate with the profile
+          const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
+          const assessmentToSave = sessionStorage.getItem('dna_assessment_to_save');
+          
+          if ((pendingAssessmentId || assessmentToSave) && supabaseClient) {
+            // Use pending assessment or the one to save
+            const assessmentId = pendingAssessmentId || assessmentToSave;
+            try {
+              console.log('Checking for existing profile...');
+              
+              // First check if the user already has a profile
+              const { data: existingProfile, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('id')
+                .eq('outseta_user_id', outsetaUser.Uid)
+                .maybeSingle();
+                
+              if (profileError) {
+                console.error('Error checking for existing profile:', profileError);
+              }
+              
+              if (!existingProfile) {
+                // Create a new profile if it doesn't exist
+                console.log('Creating new profile...');
+                const { data: newProfile, error: insertError } = await supabaseClient
+                  .from('profiles')
+                  .insert([{
+                    outseta_user_id: outsetaUser.Uid,
+                    email: outsetaUser.email,
+                    full_name: outsetaUser.Account?.Name || null
+                  }])
+                  .select('id')
+                  .single();
+                  
+                if (insertError) {
+                  console.error('Failed to create profile:', insertError);
+                } else if (newProfile) {
+                  console.log('Profile created, associating assessment...');
+                  // Associate the assessment with the new profile
+                  const { error: updateError } = await supabaseClient
+                    .from('dna_assessment_results')
+                    .update({ 
+                      // Using a type assertion to avoid TypeScript error
+                      // since profile_id is added in the database but might not be in the TypeScript types
+                      profile_id: newProfile.id 
+                    } as any)
+                    .eq('id', assessmentId);
+                    
+                  // Also save assessment_id to the profile
+                  const { error: profileUpdateError } = await supabaseClient
+                    .from('profiles')
+                    .update({ 
+                      assessment_id: assessmentId 
+                    })
+                    .eq('id', newProfile.id);
+                    
+                  if (profileUpdateError) {
+                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
+                  } else {
+                    console.log('Successfully saved assessment_id to profile:', {
+                      profileId: newProfile.id,
+                      assessmentId
+                    });
+                  }
+                    
+                  if (updateError) {
+                    console.error('Failed to associate assessment with profile:', updateError);
+                  } else {
+                    // Clear the pending assessment IDs since they're now associated
+                    localStorage.removeItem('pending_dna_assessment_id');
+                    sessionStorage.removeItem('dna_assessment_to_save');
+                    console.log('Assessment successfully associated with new profile');
+                  }
+                }
+              } else {
+                console.log('Profile found, associating assessment...');
+                // Associate the assessment with the existing profile
+                const { error: updateError } = await supabaseClient
+                    .from('dna_assessment_results')
+                    .update({ 
+                      // Using a type assertion to avoid TypeScript error
+                      profile_id: existingProfile.id 
+                    } as any)
+                    .eq('id', assessmentId);
+                    
+                  // Also save assessment_id to the profile
+                  const { error: profileUpdateError } = await supabaseClient
+                    .from('profiles')
+                    .update({ 
+                      assessment_id: assessmentId 
+                    })
+                    .eq('id', existingProfile.id);
+                    
+                  if (profileUpdateError) {
+                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
+                  } else {
+                    console.log('Successfully saved assessment_id to profile:', {
+                      profileId: existingProfile.id,
+                      assessmentId
+                    });
+                  }
+                  
+                if (updateError) {
+                  console.error('Failed to associate assessment with profile:', updateError);
+                } else {
+                  // Clear the pending assessment IDs since they're now associated
+                  localStorage.removeItem('pending_dna_assessment_id');
+                  sessionStorage.removeItem('dna_assessment_to_save');
+                  console.log('Assessment successfully associated with existing profile');
+                }
+              }
+            } catch (error) {
+              console.error('Error associating assessment with profile:', error);
+            }
+          }
         } catch (error) {
           console.error('Failed to exchange token:', error);
           setSupabase(null);
