@@ -42,7 +42,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const location = useLocation();
   const { user, openLogin } = useAuth();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-  const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "TOP RANKED">(type === "icon" ? "SEEKERS" : "READERS");
+  const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
+    type === "icon" ? "SEEKERS" : "READERS"
+  );
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
@@ -518,7 +520,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           SEEKERS {type === "icon" ? "ENCOUNTERING" : "READING"} {combinedData.title && combinedData.title.toUpperCase()}
         </h3>
         <Select
-          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "TOP RANKED")}
+          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
           defaultValue={type === "icon" ? "SEEKERS" : "READERS"}
         >
           <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
