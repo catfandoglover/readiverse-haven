@@ -144,13 +144,14 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       
       if (data) {
         console.log("Directly fetched icon:", data.name);
-        setSelectedIcon({
+        const enhancedData = {
           ...data,
           slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
           about: data.about || `${data.name} was a significant figure in philosophical history.`,
           great_conversation: data.great_conversation || `${data.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
           anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
-        });
+        };
+        setSelectedIcon(enhancedData);
         if (onDetailedViewShow) onDetailedViewShow();
       }
     } catch (e) {
