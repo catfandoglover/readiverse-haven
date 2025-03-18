@@ -584,7 +584,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-          SEEKERS {type === "icon" ? "ENCOUNTERING" : "READING"} {combinedData.title && combinedData.title.toUpperCase()}
+          {type === "icon" 
+            ? `SEEKERS ENCOUNTERING ${combinedData.name?.toUpperCase() || ''}`
+            : `READERS READING ${combinedData.title && combinedData.title.toUpperCase()}`}
         </h3>
         <Select
           onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
