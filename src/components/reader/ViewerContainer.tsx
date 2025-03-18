@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 
@@ -18,6 +18,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
 }) => {
   // Margin width for click detection (percentage of container width)
   const MARGIN_WIDTH_PERCENT = 20;
+  const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
   
   const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
@@ -38,15 +39,40 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       onNextPage();
     }
   }, [onPrevPage, onNextPage]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const containerWidth = rect.width;
+    
+    // Calculate margins based on percentage
+    const leftMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    const rightMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    
+    if (x < leftMarginWidth) {
+      setHoveredSide('left');
+    } else if (x > containerWidth - rightMarginWidth) {
+      setHoveredSide('right');
+    } else {
+      setHoveredSide(null);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredSide(null);
+  }, []);
   
   return (
     <motion.div 
       ref={(el) => setContainer(el)}
-      className="epub-view h-screen border-none overflow-hidden transition-colors duration-300" 
+      className="epub-view h-screen border-none overflow-hidden transition-colors duration-300 relative" 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       onClick={handleContainerClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       style={{ 
         background: theme.background,
         color: theme.text,
@@ -63,7 +89,14 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         maxWidth: '100vw',
         margin: '0 auto',
       }}
-    />
+    >
+      {hoveredSide === 'left' && (
+        <div className="absolute inset-y-0 left-0 w-1/5 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+      )}
+      {hoveredSide === 'right' && (
+        <div className="absolute inset-y-0 right-0 w-1/5 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+      )}
+    </motion.div>
   );
 };
 

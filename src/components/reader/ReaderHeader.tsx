@@ -44,11 +44,11 @@ const ReaderHeader = ({
               <SearchDialog 
                 onSearch={onSearch}
                 onResultClick={onSearchResultClick}
-                triggerClassName="flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background/70 text-foreground transition-colors shadow-md backdrop-blur-sm border border-border/10"
+                triggerClassName="flex items-center justify-center w-10 h-10 rounded-full bg-background/40 hover:bg-background/70 backdrop-blur-md border border-border/5 text-foreground/70 hover:text-foreground transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
                 triggerIcon={<Search className="h-5 w-5" />}
               />
             </TooltipTrigger>
-            <TooltipContent side="left">
+            <TooltipContent side="left" className="bg-background/90 backdrop-blur-md border-border/10 shadow-md">
               <p>Search</p>
             </TooltipContent>
           </Tooltip>
