@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Icon {
   id: string;
@@ -19,6 +19,7 @@ interface Icon {
   created_at?: string;
   introduction?: string;
   slug?: string;
+  Notion_URL?: string;
 }
 
 interface IconsContentProps {
@@ -27,25 +28,51 @@ interface IconsContentProps {
   onDetailedViewHide?: () => void;
 }
 
+const INITIAL_LOAD_COUNT = 20;
+const LOAD_MORE_COUNT = 10;
+
+const IconLoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="rounded-lg bg-gray-200 h-64 w-full"></div>
+    <div className="h-8 bg-gray-200 rounded w-2/3"></div>
+    <div className="h-4 bg-gray-200 rounded w-full"></div>
+    <div className="h-4 bg-gray-200 rounded w-11/12"></div>
+    <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+  </div>
+);
+
 const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [displayIndex, setDisplayIndex] = useState(currentIndex);
+  const [loadedCount, setLoadedCount] = useState(INITIAL_LOAD_COUNT);
+  const [allIconsCount, setAllIconsCount] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
-  // Update displayIndex when currentIndex changes from parent
   useEffect(() => {
     setDisplayIndex(currentIndex);
   }, [currentIndex]);
 
-  const { data: icons = [], isLoading } = useQuery({
-    queryKey: ["icons"],
+  const { data: icons = [], isLoading, refetch } = useQuery({
+    queryKey: ["icons", loadedCount],
     queryFn: async () => {
+      const { count, error: countError } = await supabase
+        .from("icons")
+        .select("*", { count: "exact", head: true });
+      
+      if (countError) {
+        console.error("Error counting icons:", countError);
+      } else {
+        setAllIconsCount(count || 0);
+      }
+      
       const { data, error } = await supabase
         .from("icons")
         .select("*")
-        .order("randomizer");
+        .order("randomizer")
+        .range(0, loadedCount - 1);
 
       if (error) {
         toast({
@@ -56,31 +83,86 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         return [];
       }
 
-      // Enhance the data with placeholder fields if they don't exist
       return data.map((icon: any) => ({
         ...icon,
-        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'), // Use slug if exists or generate from name
+        slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
         about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
         great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
         anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
       }));
     },
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Check if we should show a detailed view based on URL parameters
+  useEffect(() => {
+    if (displayIndex >= loadedCount - 5 && loadedCount < allIconsCount) {
+      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
+    }
+  }, [displayIndex, loadedCount, allIconsCount]);
+
+  useEffect(() => {
+    refetch();
+  }, [loadedCount, refetch]);
+
   useEffect(() => {
     if (location.pathname.includes('/view/icon/')) {
       const iconParam = location.pathname.split('/view/icon/')[1];
+      console.log("Icon param detected:", iconParam);
       
-      // Check if the param matches an id or slug
-      const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
+      if (selectedIcon?.id !== iconParam && selectedIcon?.slug !== iconParam) {
+        const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
+        
+        if (icon) {
+          console.log("Found matching icon in list:", icon.name);
+          setSelectedIcon({...icon});
+          if (onDetailedViewShow) onDetailedViewShow();
+        } else {
+          console.log("Icon not found in current list, fetching directly");
+          fetchIconDirectly(iconParam);
+        }
+      }
+    } else if (selectedIcon) {
+      setSelectedIcon(null);
+    }
+  }, [location.pathname, icons]);
+
+  const fetchIconDirectly = async (iconId: string) => {
+    try {
+      console.log("Directly fetching icon with ID:", iconId);
       
-      if (icon) {
-        setSelectedIcon(icon);
+      const { data, error } = await supabase
+        .from("icons")
+        .select("*")
+        .or(`id.eq.${iconId},slug.eq.${iconId}`)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching icon directly:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not find the requested icon"
+        });
+        return;
+      }
+      
+      if (data) {
+        console.log("Directly fetched icon:", data.name);
+        const processedIcon = {
+          ...data,
+          slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
+          about: data.about || `${data.name} was a significant figure in philosophical history.`,
+          great_conversation: data.great_conversation || `${data.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
+          anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
+        };
+        
+        setSelectedIcon(processedIcon);
         if (onDetailedViewShow) onDetailedViewShow();
       }
+    } catch (e) {
+      console.error("Unexpected error in fetchIconDirectly:", e);
     }
-  }, [location.pathname, icons, onDetailedViewShow]);
+  };
 
   const handlePrevious = () => {
     if (displayIndex > 0) {
@@ -94,13 +176,9 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
-  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
-  
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
-    // Use slug for the URL if available, otherwise use ID
-    const urlParam = icon.slug || icon.id;
-    navigate(`/view/icon/${urlParam}`, { replace: true });
+    navigate(`/view/icon/${icon.id}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
@@ -110,7 +188,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  // Mock data for detailed view
   const mockRelatedData = {
     related_questions: [
       { id: '1', title: 'What is the nature of being?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
@@ -136,38 +213,39 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     ],
   };
 
-  if (isLoading || !iconToShow) {
+  if (isLoading || !icons.length) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="h-full">
+        <IconLoadingSkeleton />
       </div>
     );
   }
 
+  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
+
   return (
     <>
       <div className="h-full">
-        <ContentCard
-          image={iconToShow.illustration}
-          title={iconToShow.name}
-          about={iconToShow.about || ""}
-          onLearnMore={() => handleLearnMore(iconToShow)}
-          onImageClick={() => handleLearnMore(iconToShow)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          hasPrevious={displayIndex > 0}
-          hasNext={displayIndex < icons.length - 1}
-        />
+        {iconToShow && (
+          <ContentCard
+            image={iconToShow.illustration}
+            title={iconToShow.name}
+            about={iconToShow.about || ""}
+            onLearnMore={() => handleLearnMore(iconToShow)}
+            onImageClick={() => handleLearnMore(iconToShow)}
+            onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
+            onNext={displayIndex < icons.length - 1 ? () => setDisplayIndex(displayIndex + 1) : undefined}
+            hasPrevious={displayIndex > 0}
+            hasNext={displayIndex < icons.length - 1}
+          />
+        )}
       </div>
 
       {selectedIcon && (
         <DetailedView
+          key={`icon-detail-${selectedIcon.id}`}
           type="icon"
-          data={{
-            ...selectedIcon,
-            image: selectedIcon.illustration,
-            ...mockRelatedData
-          }}
+          data={selectedIcon}
           onBack={handleCloseDetailedView}
         />
       )}

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Book = Database['public']['Tables']['books']['Row'];
 type Icon = {
@@ -33,6 +34,9 @@ type Concept = {
   type?: string;
   introduction?: string;
 };
+
+const HOME_ICONS_LIMIT = 6;
+const HOME_CONCEPTS_LIMIT = 6;
 
 const Home = () => {
   const navigate = useNavigate();
@@ -116,36 +120,38 @@ const Home = () => {
   });
 
   const { data: icons, isLoading: iconsLoading } = useQuery({
-    queryKey: ['icons'],
+    queryKey: ['homeIcons'],
     queryFn: async () => {
       const { data, error } = await authenticatedSupabase
         .from('icons')
         .select('*')
-        .order('randomizer');
+        .order('randomizer')
+        .limit(HOME_ICONS_LIMIT);
       
       if (error) throw error;
       return data as Icon[];
     },
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000,
     refetchOnMount: false
   });
 
   const { data: conceptsData, isLoading: conceptsLoading } = useQuery({
-    queryKey: ['concepts'],
+    queryKey: ['homeConcepts'],
     queryFn: async () => {
       const { data, error } = await authenticatedSupabase
         .from('concepts')
         .select('*')
-        .order('randomizer');
+        .order('randomizer')
+        .limit(HOME_CONCEPTS_LIMIT);
       
       if (error) throw error;
-      const mappedConcepts = conceptsData?.map(concept => ({
+      const mappedConcepts = data?.map(concept => ({
         ...concept,
-        description: concept.about || "" // Add description field to make it compatible with Concept type
+        description: concept.about || ""
       })) as Concept[];
       return mappedConcepts;
     },
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000,
     refetchOnMount: false
   });
 
@@ -174,6 +180,21 @@ const Home = () => {
   const isLoading = booksLoading || iconsLoading || conceptsLoading;
 
   const buttonGradientStyles = "px-8 py-2 text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
+
+  const CardSkeleton = () => (
+    <Card className="flex-none w-48 bg-card text-card-foreground">
+      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative">
+        <Skeleton className="w-full h-full rounded-lg" />
+      </div>
+      <div className="p-2 flex justify-center">
+        <Skeleton className="h-8 w-full" />
+      </div>
+    </Card>
+  );
+
+  const renderSkeletons = (count: number) => {
+    return Array(count).fill(0).map((_, i) => <CardSkeleton key={i} />);
+  };
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 home-page">
@@ -211,37 +232,41 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {books?.map((book) => (
-                    <Card 
-                      key={book.id} 
-                      className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                    >
-                      <div 
-                        onClick={() => handleBookClick(book.Cover_super)}
-                        className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]"
+                  {booksLoading ? (
+                    renderSkeletons(6)
+                  ) : (
+                    books?.map((book) => (
+                      <Card 
+                        key={book.id} 
+                        className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
                       >
-                        <img
-                          src={book.cover_url || '/placeholder.svg'}
-                          alt={book.title}
-                          className="w-full h-full object-cover rounded-lg relative z-10"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="p-2 flex justify-center">
-                        <Button
-                          variant="ghost"
-                          className="text-[#E9E7E2] text-sm hover:text-[#9b87f5]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToBookshelf.mutate(book.id);
-                          }}
-                          disabled={addToBookshelf.isPending}
+                        <div 
+                          onClick={() => handleBookClick(book.Cover_super)}
+                          className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]"
                         >
-                          {addToBookshelf.isPending ? "ADDING..." : "ADD TO BOOKSHELF"}
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                          <img
+                            src={book.cover_url || '/placeholder.svg'}
+                            alt={book.title}
+                            className="w-full h-full object-cover rounded-lg relative z-10"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="p-2 flex justify-center">
+                          <Button
+                            variant="ghost"
+                            className="text-[#E9E7E2] text-sm hover:text-[#9b87f5]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToBookshelf.mutate(book.id);
+                            }}
+                            disabled={addToBookshelf.isPending}
+                          >
+                            {addToBookshelf.isPending ? "ADDING..." : "ADD TO BOOKSHELF"}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="flex justify-center mt-4">
@@ -259,21 +284,26 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {icons?.map((icon) => (
-                    <Card 
-                      key={icon.id} 
-                      className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                    >
-                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
-                        <img
-                          src={icon.illustration || '/placeholder.svg'}
-                          alt={icon.name}
-                          className="w-full h-full object-cover rounded-lg relative z-10"
-                          loading="lazy"
-                        />
-                      </div>
-                    </Card>
-                  ))}
+                  {iconsLoading ? (
+                    renderSkeletons(HOME_ICONS_LIMIT)
+                  ) : (
+                    icons?.map((icon) => (
+                      <Card 
+                        key={icon.id} 
+                        className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                        onClick={() => navigate(`/view/icon/${icon.id}`)}
+                      >
+                        <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                          <img
+                            src={icon.illustration || '/placeholder.svg'}
+                            alt={icon.name}
+                            className="w-full h-full object-cover rounded-lg relative z-10"
+                            loading="lazy"
+                          />
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="flex justify-center mt-4 mb-4">
@@ -291,21 +321,25 @@ const Home = () => {
               </h1>
               <div className="overflow-x-auto scrollbar-hide relative">
                 <div className="flex gap-4 pb-4 min-w-min">
-                  {conceptsData?.map((concept) => (
-                    <Card 
-                      key={concept.id} 
-                      className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                    >
-                      <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
-                        <img
-                          src={concept.illustration || '/placeholder.svg'}
-                          alt={concept.title}
-                          className="w-full h-full object-cover rounded-lg relative z-10"
-                          loading="lazy"
-                        />
-                      </div>
-                    </Card>
-                  ))}
+                  {conceptsLoading ? (
+                    renderSkeletons(HOME_CONCEPTS_LIMIT)
+                  ) : (
+                    conceptsData?.map((concept) => (
+                      <Card 
+                        key={concept.id} 
+                        className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
+                      >
+                        <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
+                          <img
+                            src={concept.illustration || '/placeholder.svg'}
+                            alt={concept.title}
+                            className="w-full h-full object-cover rounded-lg relative z-10"
+                            loading="lazy"
+                          />
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="flex justify-center mt-4 mb-4">

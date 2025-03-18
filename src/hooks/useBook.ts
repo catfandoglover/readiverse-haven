@@ -3,7 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-type Book = Database['public']['Tables']['books']['Row'];
+// Extend the Book type to include author_id
+type Book = Database['public']['Tables']['books']['Row'] & { 
+  author_id?: string; // Add author_id as an optional property
+};
 
 export const useBook = (slug: string | undefined) => {
   return useQuery<Book | null>({
@@ -24,6 +27,24 @@ export const useBook = (slug: string | undefined) => {
         if (error) {
           console.log('Initial query error:', error);
           
+          // Next, try with the ID
+          const { data: idData, error: idError } = await supabase
+            .from('books')
+            .select('*')
+            .eq('id', slug)
+            .single();
+            
+          if (!idError && idData) {
+            console.log('Book found by ID:', {
+              found: !!idData,
+              hasEpubUrl: idData?.epub_file_url ? 'yes' : 'no',
+              hasAuthor: idData?.author ? 'yes' : 'no',
+              hasAuthorId: idData?.author_id ? 'yes' : 'no',
+              introduction: idData?.introduction ? 'yes' : 'no'
+            });
+            return idData as Book;
+          }
+          
           // Try with lowercase
           const { data: retryData, error: retryError } = await supabase
             .from('books')
@@ -40,17 +61,21 @@ export const useBook = (slug: string | undefined) => {
           console.log('Retry query result:', {
             found: !!result,
             hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
+            hasAuthor: result?.author ? 'yes' : 'no',
+            hasAuthorId: result?.author_id ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
-          return result;
+          return result as Book;
         }
 
         console.log('Query result:', {
           found: !!data,
           hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
+          hasAuthor: data?.author ? 'yes' : 'no',
+          hasAuthorId: data?.author_id ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
-        return data;
+        return data as Book;
       } catch (error) {
         console.log('Unexpected error in useBook:', error);
         return null;

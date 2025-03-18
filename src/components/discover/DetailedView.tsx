@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -42,11 +42,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const location = useLocation();
   const { user, openLogin } = useAuth();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-  const [readerFilter, setReaderFilter] = useState<"READERS" | "TOP RANKED">("READERS");
+  const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
+    type === "icon" ? "SEEKERS" : "READERS"
+  );
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [combinedData, setCombinedData] = useState<any>(itemData);
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
     queryKey: ["item-details", type, itemData.id],
@@ -57,7 +60,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       const { data, error } = await supabase
         .from(tableName)
-        .select('*')
+        .select(type === 'classic' ? '*' : '*')
         .eq('id', itemData.id)
         .single();
       
@@ -149,8 +152,49 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     },
   });
 
-  const combinedData = React.useMemo(() => {
-    if (!enhancedData) return itemData;
+  const { data: authorIconData } = useQuery({
+    queryKey: ["author-icon", combinedData?.author_id],
+    queryFn: async () => {
+      if (!combinedData?.author_id) return null;
+      
+      const { data, error } = await supabase
+        .from("icons")
+        .select("*")
+        .eq("id", combinedData.author_id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching author icon data:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: type === "classic" && !!combinedData?.author_id,
+  });
+
+  const { data: authorClassics = [] } = useQuery({
+    queryKey: ["classics-by-author", itemData.id],
+    queryFn: async () => {
+      if (type !== "icon" || !itemData.id) return [];
+      
+      const { data, error } = await supabase
+        .from("books")
+        .select("*")
+        .eq("author_id", itemData.id);
+      
+      if (error) {
+        console.error("Error fetching classics by author:", error);
+        return [];
+      }
+      
+      return data;
+    },
+    enabled: type === "icon",
+  });
+
+  useEffect(() => {
+    if (!enhancedData && !isEnhancedDataLoading) return;
     
     let imageProperty: { image: string } = { image: itemData.image || '' };
     
@@ -159,28 +203,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         icon_illustration?: string; 
         cover_url?: string; 
         Cover_super?: string;
-      };
+      } | null;
       
-      imageProperty = { 
-        image: bookData.icon_illustration || 
-              bookData.cover_url || 
-              bookData.Cover_super || 
-              itemData.image || ''
-      };
+      if (bookData) {
+        imageProperty = { 
+          image: bookData.icon_illustration || 
+                bookData.cover_url || 
+                bookData.Cover_super || 
+                itemData.image || ''
+        };
+      }
     } 
     else if (type === 'icon' || type === 'concept') {
-      const conceptData = enhancedData as { illustration?: string };
-      imageProperty = { 
-        image: conceptData.illustration || itemData.image || ''
-      };
+      const conceptData = enhancedData as { illustration?: string } | null;
+      if (conceptData) {
+        imageProperty = { 
+          image: conceptData.illustration || itemData.image || ''
+        };
+      }
     }
 
-    return { 
+    setCombinedData({ 
       ...itemData,
-      ...enhancedData,
+      ...(enhancedData || {}),
       ...imageProperty
-    };
-  }, [itemData, enhancedData, type]);
+    });
+  }, [itemData, enhancedData, isEnhancedDataLoading, type]);
 
   useEffect(() => {
     if (enhancedData || isEnhancedDataLoading === false) {
@@ -251,6 +299,27 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         variant: "destructive",
         title: "Error",
         description: "This book is not available for reading"
+      });
+    }
+  };
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (combinedData?.author_id) {
+      console.log("Navigating to author icon page:", combinedData.author_id);
+      
+      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    } else {
+      console.log("No author_id found for navigation:", combinedData);
+      toast({
+        description: "Author information unavailable",
+        variant: "destructive"
       });
     }
   };
@@ -515,17 +584,21 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-          SEEKERS READING {combinedData.title && combinedData.title.toUpperCase()}
+          {type === "icon" 
+            ? `SEEKERS ENCOUNTERING ${combinedData.name?.toUpperCase() || ''}`
+            : `READERS READING ${combinedData.title && combinedData.title.toUpperCase()}`}
         </h3>
         <Select
-          onValueChange={(value) => setReaderFilter(value as "READERS" | "TOP RANKED")}
-          defaultValue="READERS"
+          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
+          defaultValue={type === "icon" ? "SEEKERS" : "READERS"}
         >
           <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
             <SelectValue placeholder="Select filter" />
           </SelectTrigger>
           <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
-            <SelectItem value="READERS">READERS</SelectItem>
+            <SelectItem value={type === "icon" ? "SEEKERS" : "READERS"}>
+              {type === "icon" ? "SEEKERS" : "READERS"}
+            </SelectItem>
             <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
           </SelectContent>
         </Select>
@@ -533,9 +606,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <div className="border border-gray-300 rounded-md overflow-hidden">
           
           {isReadersLoading ? (
-            <div className="p-4 text-center">Loading readers...</div>
+            <div className="p-4 text-center">Loading {type === "icon" ? "seekers" : "readers"}...</div>
           ) : readersData.length === 0 ? (
-            <div className="p-4 text-center">No readers yet. Be the first!</div>
+            <div className="p-4 text-center">No {type === "icon" ? "seekers" : "readers"} yet. Be the first!</div>
           ) : (
             <ScrollArea className="h-60">
               <div className="divide-y divide-gray-200">
@@ -568,6 +641,117 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
+  const renderAnecdotes = () => {
+    if (!combinedData.anecdotes) return null;
+    
+    let anecdotesArray: string[] = [];
+    
+    if (typeof combinedData.anecdotes === 'string') {
+      try {
+        anecdotesArray = JSON.parse(combinedData.anecdotes);
+      } catch (e) {
+        anecdotesArray = [combinedData.anecdotes];
+      }
+    } else if (Array.isArray(combinedData.anecdotes)) {
+      anecdotesArray = combinedData.anecdotes;
+    }
+    
+    if (anecdotesArray.length === 0) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
+        <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
+          {anecdotesArray.map((anecdote, index) => (
+            <li key={index}>{formatText(anecdote)}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  const renderGreatConversation = () => {
+    if (!combinedData.great_conversation) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+        <p className="text-gray-800 font-baskerville text-lg">
+          {formatText(combinedData.great_conversation)}
+        </p>
+      </div>
+    );
+  };
+
+  const renderAuthorField = () => {
+    if (type !== "classic") return null;
+    
+    return (
+      <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
+        by {combinedData?.author_id ? (
+          <button 
+            onClick={handleAuthorClick}
+            className="inline-flex items-center relative hover:text-[#9b87f5] transition-colors"
+          >
+            <span className="relative">
+              {combinedData.author}
+              <span 
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
+              />
+            </span>
+            <style>
+              {`
+              button:hover span span {
+                transform: scaleX(1);
+              }
+            `}
+            </style>
+          </button>
+        ) : (
+          combinedData?.author
+        )}
+      </h2>
+    );
+  };
+
+  const renderClassicsByIcon = () => {
+    if (type !== "icon" || authorClassics.length === 0) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+          CLASSICS FROM {combinedData.name?.toUpperCase()}
+        </h3>
+        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
+            {authorClassics.map((classic) => (
+              <div
+                key={classic.id}
+                className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
+                onClick={() => handleCarouselItemClick(classic, "classic")}
+              >
+                <div className="absolute inset-0 bg-[#E9E7E2]"></div>
+                <div className="absolute inset-[2px] overflow-hidden rounded-[0.4rem]">
+                  <img
+                    src={classic.cover_url || classic.Cover_super || ''}
+                    alt={classic.title || ""}
+                    className="h-full w-full object-cover"
+                    draggable="false"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                    <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
+                      {classic.title}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -581,8 +765,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       >
         <div className="w-full">
           <img 
-            src={combinedData.image} 
-            alt={combinedData.title || combinedData.name} 
+            src={combinedData?.image} 
+            alt={combinedData?.title || combinedData?.name} 
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
@@ -595,15 +779,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
             {renderIconButtons()}
             
-            {type === "classic" && 
-              <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
-                by {combinedData.author}
-              </h2>
-            }
-
+            {renderAuthorField()}
+            
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
-            ) : combinedData.introduction ? (
+            ) : combinedData?.introduction ? (
               <p className="text-gray-800 font-baskerville text-lg mb-8">
                 {formatText(combinedData.introduction)}
               </p>
@@ -612,6 +792,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 Introduction content will appear here when available.
               </p>
             )}
+
+            {type === "icon" && renderAnecdotes()}
+            
+            {type === "icon" && renderClassicsByIcon()}
+            
+            {type === "icon" && renderGreatConversation()}
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
@@ -674,4 +860,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
-
