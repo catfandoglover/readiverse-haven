@@ -14,7 +14,6 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
 
-// Fix for the deep type instantiation error by using a proper base type
 interface CarouselItem {
   id: string;
   title?: string;
@@ -682,36 +681,36 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
-const renderAuthorField = () => {
-  if (type !== "classic") return null;
-  
-  return (
-    <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
-      by {combinedData?.author_id ? (
-        <button 
-          onClick={handleAuthorClick}
-          className="inline-flex items-center relative hover:text-[#9b87f5] transition-colors"
-        >
-          <span className="relative">
-            {combinedData.author}
-            <span 
-              className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
-            />
-          </span>
-          <style>
-            {`
-            button:hover span span {
-              transform: scaleX(1);
-            }
-          `}
-          </style>
-        </button>
-      ) : (
-        combinedData?.author
-      )}
-    </h2>
-  );
-};
+  const renderAuthorField = () => {
+    if (type !== "classic") return null;
+    
+    return (
+      <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
+        by {combinedData?.author_id ? (
+          <button 
+            onClick={handleAuthorClick}
+            className="inline-flex items-center relative hover:text-[#9b87f5] transition-colors"
+          >
+            <span className="relative">
+              {combinedData.author}
+              <span 
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
+              />
+            </span>
+            <style>
+              {`
+              button:hover span span {
+                transform: scaleX(1);
+              }
+            `}
+            </style>
+          </button>
+        ) : (
+          combinedData?.author
+        )}
+      </h2>
+    );
+  };
 
   const renderClassicsByIcon = () => {
     if (type !== "icon" || authorClassics.length === 0) return null;
