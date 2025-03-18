@@ -18,7 +18,7 @@ interface Icon {
   randomizer?: number;
   created_at?: string;
   introduction?: string;
-  slug?: string; // Add slug field
+  slug?: string;
 }
 
 interface IconsContentProps {
@@ -70,8 +70,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/icon/')) {
-      const iconSlug = location.pathname.split('/view/icon/')[1];
-      const icon = icons.find(i => (i.slug === iconSlug || i.id === iconSlug));
+      const iconParam = location.pathname.split('/view/icon/')[1];
+      
+      // Check if the param matches an id or slug
+      const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
       
       if (icon) {
         setSelectedIcon(icon);
