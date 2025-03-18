@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
+// Extend the Book type to include author_id
 type Book = Database['public']['Tables']['books']['Row'] & { 
   author_id?: string; // Add author_id as an optional property
 };
