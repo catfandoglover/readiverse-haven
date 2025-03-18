@@ -310,9 +310,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (combinedData?.author_id) {
       console.log("Navigating to author icon page:", combinedData.author_id);
       
+      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
+      
       setTimeout(() => {
-        navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
-      }, 0);
+        window.location.reload();
+      }, 100);
     } else {
       console.log("No author_id found for navigation:", combinedData);
       toast({
@@ -854,4 +856,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
-

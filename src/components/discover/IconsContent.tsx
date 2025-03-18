@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,16 @@ interface IconsContentProps {
 
 const INITIAL_LOAD_COUNT = 20;
 const LOAD_MORE_COUNT = 10;
+
+const IconLoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="rounded-lg bg-gray-200 h-64 w-full"></div>
+    <div className="h-8 bg-gray-200 rounded w-2/3"></div>
+    <div className="h-4 bg-gray-200 rounded w-full"></div>
+    <div className="h-4 bg-gray-200 rounded w-11/12"></div>
+    <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+  </div>
+);
 
 const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
@@ -111,7 +122,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         }
       }
     }
-  }, [location.pathname, icons, onDetailedViewShow]);
+  }, [location.pathname, icons, onDetailedViewShow, selectedIcon]);
 
   const fetchIconDirectly = async (iconId: string) => {
     try {
@@ -225,5 +236,13 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       {selectedIcon && (
         <DetailedView
           key={`icon-${selectedIcon.id}`}
+          type="icon"
+          data={selectedIcon}
+          onBack={handleCloseDetailedView}
+        />
+      )}
+    </>
+  );
+};
 
-
+export default IconsContent;
