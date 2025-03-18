@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  // Added this for the combined data to fix the "used before its declaration" error
+  const [combinedData, setCombinedData] = useState<any>(itemData);
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
     queryKey: ["item-details", type, itemData.id],
@@ -192,8 +195,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     enabled: type === "icon",
   });
 
-  const combinedData = React.useMemo(() => {
-    if (!enhancedData) return itemData;
+  // Moving this to useEffect to fix the typescript errors
+  useEffect(() => {
+    if (!enhancedData && !isEnhancedDataLoading) return;
     
     let imageProperty: { image: string } = { image: itemData.image || '' };
     
@@ -202,28 +206,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         icon_illustration?: string; 
         cover_url?: string; 
         Cover_super?: string;
-      };
+      } | null;
       
-      imageProperty = { 
-        image: bookData.icon_illustration || 
-              bookData.cover_url || 
-              bookData.Cover_super || 
-              itemData.image || ''
-      };
+      if (bookData) {
+        imageProperty = { 
+          image: bookData.icon_illustration || 
+                bookData.cover_url || 
+                bookData.Cover_super || 
+                itemData.image || ''
+        };
+      }
     } 
     else if (type === 'icon' || type === 'concept') {
-      const conceptData = enhancedData as { illustration?: string };
-      imageProperty = { 
-        image: conceptData.illustration || itemData.image || ''
-      };
+      const conceptData = enhancedData as { illustration?: string } | null;
+      if (conceptData) {
+        imageProperty = { 
+          image: conceptData.illustration || itemData.image || ''
+        };
+      }
     }
 
-    return { 
+    setCombinedData({ 
       ...itemData,
-      ...enhancedData,
+      ...(enhancedData || {}),
       ...imageProperty
-    };
-  }, [itemData, enhancedData, type]);
+    });
+  }, [itemData, enhancedData, isEnhancedDataLoading, type]);
 
   useEffect(() => {
     if (enhancedData || isEnhancedDataLoading === false) {
@@ -295,6 +303,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         title: "Error",
         description: "This book is not available for reading"
       });
+    }
+  };
+
+  // Added this function to fix the "Cannot find name 'handleAuthorClick'" error
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (combinedData.author_id) {
+      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
     }
   };
 
