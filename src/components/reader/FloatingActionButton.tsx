@@ -32,7 +32,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             {Icon ? (
               <Icon className="h-5 w-5" />
             ) : iconImage ? (
-              <img src={iconImage} alt={tooltip} className="h-6 w-6" />
+              <img src={iconImage} alt={tooltip} className="h-full w-full p-1 object-contain" />
             ) : null}
           </button>
         </TooltipTrigger>

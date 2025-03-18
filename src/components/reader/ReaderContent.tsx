@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
@@ -12,7 +11,7 @@ import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
 import VirgilChatPanel from './VirgilChatPanel';
 import NavigationButtons from './NavigationButtons';
-import { TableProperties } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 interface ReaderContentProps {
   book: Book;
@@ -199,7 +198,7 @@ const ReaderContent = ({
 
             <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
               <FloatingActionButton 
-                icon={TableProperties} 
+                icon={BookOpen} 
                 onClick={toggleSidebar} 
                 tooltip="Table of Contents"
               />
