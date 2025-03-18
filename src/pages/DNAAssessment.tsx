@@ -436,13 +436,38 @@ const DNAAssessment = () => {
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
+            // Always show the completion popup
+            setShowLoginPrompt(true);
+            
+            // If user is logged in, we'll still associate the assessment in the dialog
+            // But we'll also save it directly to their profile here
             if (user) {
-              navigate('/dna');
-              toast.success('Assessment completed! View your results below', {
-                duration: 3000
-              });
-            } else {
-              setShowLoginPrompt(true);
+              try {
+                const { data: profileData, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('outseta_user_id', user.Uid)
+                  .maybeSingle();
+                
+                if (!profileError && profileData) {
+                  // Update the profile with the assessment ID
+                  const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ assessment_id: assessmentId })
+                    .eq('id', profileData.id);
+                  
+                  if (updateError) {
+                    console.error('Error updating profile with assessment ID:', updateError);
+                  } else {
+                    console.log('Successfully saved assessment ID to profile:', {
+                      profileId: profileData.id,
+                      assessmentId
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Error saving assessment ID to profile:', error);
+              }
             }
 
             await initAnalysis(updatedAnswers, assessmentId);
