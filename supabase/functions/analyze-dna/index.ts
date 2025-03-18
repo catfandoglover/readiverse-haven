@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -30,9 +31,11 @@ function handlePoliticsFields(jsonString: string): string {
   
   let processed = jsonString.replace(/\\"/g, "___ESCAPED_QUOTE___");
   
-  const regex = /"(politics_[^"]+)"\s*:\s*"(.*?)(?<!\\)"/gs;
+  // Enhanced regex for multiline politics fields, using [\s\S] instead of . to match across lines
+  const regex = /"(politics_[^"]+)"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
   
   processed = processed.replace(regex, (match, fieldName, content) => {
+    // Clean content more aggressively for politics fields
     const cleanedContent = content
       .replace(/"/g, '\\"')
       .replace(/\r/g, ' ')
@@ -52,7 +55,7 @@ function handleProblematicFields(jsonString: string): string {
   
   let processed = handlePoliticsFields(jsonString);
   
-  const rationaleRegex = /"([^"]+(?:_rationale|_classic))"\s*:\s*"(.*?)(?<!\\)"/gs;
+  const rationaleRegex = /"([^"]+(?:_rationale|_classic))"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
   
   processed = processed.replace(rationaleRegex, (match, fieldName, content) => {
     if (fieldName.startsWith('politics_')) {
@@ -70,6 +73,39 @@ function handleProblematicFields(jsonString: string): string {
   });
   
   return processed;
+}
+
+// New function to validate and ensure required fields are present
+function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
+  if (section !== 2) return jsonObject;
+  
+  const result = { ...jsonObject };
+  
+  // Specifically check for the problematic politics fields
+  for (let i = 4; i <= 5; i++) {
+    // Check for the three related fields for politics_challenging_voice
+    const baseField = `politics_challenging_voice_${i}`;
+    const classicField = `${baseField}_classic`;
+    const rationaleField = `${baseField}_rationale`;
+    
+    // If any of these fields are missing, add defaults
+    if (!result[baseField]) {
+      console.log(`Adding missing field: ${baseField}`);
+      result[baseField] = `Political Challenger ${i}`;
+    }
+    
+    if (!result[classicField]) {
+      console.log(`Adding missing field: ${classicField}`);
+      result[classicField] = "Unknown (0000)";
+    }
+    
+    if (!result[rationaleField]) {
+      console.log(`Adding missing field: ${rationaleField}`);
+      result[rationaleField] = `This challenger represents a political position that contrasts with your views, but the specific details could not be processed correctly.`;
+    }
+  }
+  
+  return result;
 }
 
 function repairJson(jsonString: string): string {
@@ -186,6 +222,7 @@ function repairJson(jsonString: string): string {
         try {
           const extractedObject: Record<string, string> = {};
           
+          // Enhanced politics pattern matching that's more forgiving
           const politicsPattern = /"(politics_[^"]+)"\s*:\s*"([^"]*)"/g;
           let match;
           
@@ -200,6 +237,38 @@ function repairJson(jsonString: string): string {
               .trim();
               
             extractedObject[key] = cleanValue;
+          }
+          
+          // Look for missing politics_challenging_voice fields specifically
+          for (let i = 1; i <= 5; i++) {
+            const baseKey = `politics_challenging_voice_${i}`;
+            const classicKey = `${baseKey}_classic`;
+            const rationaleKey = `${baseKey}_rationale`;
+            
+            // If these specific keys are missing, try an even more aggressive pattern
+            if (!extractedObject[baseKey]) {
+              const specialPattern = new RegExp(`"(${baseKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
+              if ((match = specialPattern.exec(jsonString)) !== null) {
+                const [_, key, value] = match;
+                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
+              }
+            }
+            
+            if (!extractedObject[classicKey]) {
+              const specialPattern = new RegExp(`"(${classicKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
+              if ((match = specialPattern.exec(jsonString)) !== null) {
+                const [_, key, value] = match;
+                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
+              }
+            }
+            
+            if (!extractedObject[rationaleKey]) {
+              const specialPattern = new RegExp(`"(${rationaleKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
+              if ((match = specialPattern.exec(jsonString)) !== null) {
+                const [_, key, value] = match;
+                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
+              }
+            }
           }
           
           const generalPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
@@ -246,7 +315,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
     
     if (section === 2) {
-      systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting.';
+      systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response, including politics_challenging_voice_4, politics_challenging_voice_5, and their associated _classic and _rationale fields. Ensure every field has a complete value.';
     }
     
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -269,8 +338,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
             content: prompt
           }
         ],
-        max_tokens: 4000,
-        temperature: 0.7,
+        max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
+        temperature: section === 2 ? 0.3 : 0.7, // Lower temperature for section 2 to improve consistency
         response_format: { type: "json_object" }
       })
     });
@@ -295,8 +364,12 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     try {
       const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
+      
+      // If this is section 2, ensure all required fields are present
+      const validatedContent = section === 2 ? ensureRequiredFields(parsed, section) : parsed;
+      
       return {
-        content: parsed,
+        content: validatedContent,
         raw_response: data
       };
     } catch (parseError) {
@@ -317,8 +390,12 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         }
         
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
+        
+        // Ensure all required fields are present, especially for section 2
+        const validatedResult = section === 2 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        
         return {
-          content: parsedResult,
+          content: validatedResult,
           raw_response: data
         };
       } catch (repairError) {
