@@ -338,7 +338,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
             content: prompt
           }
         ],
-        max_tokens: 4000,
+        max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
         temperature: section === 2 ? 0.3 : 0.7, // Lower temperature for section 2 to improve consistency
         response_format: { type: "json_object" }
       })
