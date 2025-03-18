@@ -1155,12 +1155,10 @@ Verify:
 \`\\`\ `a) Analyze specific pattern b) Consider domain context c) Select domain-appropriate elements d) Test combination e) Verify domain fit \\`\`\\`
 3. Quality Control:
 \`\\`\ `a) Check consistency b) Verify distinctiveness c) Test resonance d) Confirm accuracy \\`\`\\`
-Remember: Archetypes should be both meaningful
-and memorable, capturing deep philosophical
-patterns while remaining accessible and
+Remember: Archetypes should be both meaningful and memorable, capturing deep philosophical patterns while remaining accessible and
 "evocative.\u0060\u0060\u0060",
 "archetype_definition": "Brief poetic subtitle capturing essence",
-"introduction": "Opening paragraph describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: "You are..." "Your approach...",
+"introduction": "Opening paragraph, around 40 words, describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: "You are..." "Your approach...",
 "key_tension_1": "First key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...".",
 "key_tension_2": "Second key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1".",
 "key_tension_3": "Third key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1" or "key_tension_2".",
