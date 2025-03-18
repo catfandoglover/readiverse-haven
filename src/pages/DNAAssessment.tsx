@@ -28,7 +28,7 @@ import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { OutsetaAuth } from "@/components/OutsetaAuth";
+import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Check, LogIn, UserPlus } from "lucide-react";
 
@@ -453,7 +453,9 @@ const DNAAssessment = () => {
                   // Update the profile with the assessment ID
                   const { error: updateError } = await supabase
                     .from('profiles')
-                    .update({ assessment_id: assessmentId })
+                    .update({ 
+                      assessment_id: assessmentId 
+                    } as any)
                     .eq('id', profileData.id);
                   
                   if (updateError) {
@@ -655,7 +657,53 @@ const DNAAssessment = () => {
     navigate('/dna');
   }
 
-  // Login prompt is now handled by the Dialog component below
+  React.useEffect(() => {
+    const saveAssessmentId = async () => {
+      if (!showLoginPrompt) return;
+      
+      const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
+      if (assessmentId) {
+        localStorage.setItem('pending_dna_assessment_id', assessmentId);
+        console.log('Saved assessment ID for login/signup:', assessmentId);
+        
+        // After login this will be used to update the profile
+        sessionStorage.setItem('dna_assessment_to_save', assessmentId);
+        
+        try {
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (!userError && userData?.user) {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('outseta_user_id', userData.user.id)
+              .maybeSingle();
+            
+            if (!profileError && profileData) {
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ 
+                  assessment_id: assessmentId 
+                } as any)
+                .eq('id', profileData.id);
+                
+              if (updateError) {
+                console.error('Error updating profile with assessment ID:', updateError);
+              } else {
+                console.log('Successfully saved assessment ID to profile:', {
+                  profileId: profileData.id,
+                  assessmentId
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error saving assessment ID to profile:', error);
+        }
+      }
+    };
+    
+    saveAssessmentId();
+  }, [showLoginPrompt, completedAssessmentId, supabase]);
 
   if (questionLoading || isTransitioning || isInitializing) {
     return (
@@ -824,111 +872,21 @@ const DNAAssessment = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 mt-4">
-            <Button 
-              onClick={async () => {
-                const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
-                if (assessmentId) {
-                  localStorage.setItem('pending_dna_assessment_id', assessmentId);
-                  console.log('Saved assessment ID for signup:', assessmentId);
-                  
-                  // After signup this will be used to update the profile
-                  sessionStorage.setItem('dna_assessment_to_save', assessmentId);
-                  
-                  try {
-                    const { data: userData, error: userError } = await supabase.auth.getUser();
-                    if (!userError && userData?.user) {
-                      const { data: profileData, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('id')
-                        .eq('outseta_user_id', userData.user.id)
-                        .maybeSingle();
-                      
-                      if (!profileError && profileData) {
-                        const { error: updateError } = await supabase
-                          .from('profiles')
-                          .update({ assessment_id: assessmentId })
-                          .eq('id', profileData.id);
-                          
-                        if (updateError) {
-                          console.error('Error updating profile with assessment ID:', updateError);
-                        } else {
-                          console.log('Successfully saved assessment ID to profile:', {
-                            profileId: profileData.id,
-                            assessmentId
-                          });
-                        }
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error saving assessment ID to profile:', error);
-                  }
-                }
-                setShowLoginPrompt(false);
-                openSignup();
-              }}
-              className="py-5 rounded-xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Sign Up
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={async () => {
-                const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
-                if (assessmentId) {
-                  localStorage.setItem('pending_dna_assessment_id', assessmentId);
-                  console.log('Saved assessment ID for login:', assessmentId);
-                  
-                  // After login this will be used to update the profile
-                  sessionStorage.setItem('dna_assessment_to_save', assessmentId);
-                  
-                  try {
-                    const { data: userData, error: userError } = await supabase.auth.getUser();
-                    if (!userError && userData?.user) {
-                      const { data: profileData, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('id')
-                        .eq('outseta_user_id', userData.user.id)
-                        .maybeSingle();
-                      
-                      if (!profileError && profileData) {
-                        const { error: updateError } = await supabase
-                          .from('profiles')
-                          .update({ assessment_id: assessmentId })
-                          .eq('id', profileData.id);
-                          
-                        if (updateError) {
-                          console.error('Error updating profile with assessment ID:', updateError);
-                        } else {
-                          console.log('Successfully saved assessment ID to profile:', {
-                            profileId: profileData.id,
-                            assessmentId
-                          });
-                        }
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error saving assessment ID to profile:', error);
-                  }
-                }
-                setShowLoginPrompt(false);
-                openLogin();
-              }}
-              className="py-5 rounded-xl border-[#373763]/20 text-[#373763] hover:bg-[#373763]/10 font-oxanium text-sm font-bold uppercase tracking-wider"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={() => {
-                setShowLoginPrompt(false);
-                navigate('/dna');
-              }}
-              className="text-[#373763]/70 hover:text-[#373763] hover:bg-transparent font-oxanium text-sm font-bold uppercase tracking-wider"
-            >
-              Skip for now
-            </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-center">
+                <LoginButtons />
+              </div>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setShowLoginPrompt(false);
+                  navigate('/dna');
+                }}
+                className="text-[#373763]/70 hover:text-[#373763] hover:bg-transparent font-oxanium text-sm font-bold uppercase tracking-wider"
+              >
+                Skip for now
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
