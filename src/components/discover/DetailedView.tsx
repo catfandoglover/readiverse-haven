@@ -568,6 +568,35 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
+  const renderAnecdotes = () => {
+    if (!combinedData.anecdotes) return null;
+    
+    let anecdotesArray: string[] = [];
+    
+    if (typeof combinedData.anecdotes === 'string') {
+      try {
+        anecdotesArray = JSON.parse(combinedData.anecdotes);
+      } catch (e) {
+        anecdotesArray = [combinedData.anecdotes];
+      }
+    } else if (Array.isArray(combinedData.anecdotes)) {
+      anecdotesArray = combinedData.anecdotes;
+    }
+    
+    if (anecdotesArray.length === 0) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
+        <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
+          {anecdotesArray.map((anecdote, index) => (
+            <li key={index}>{formatText(anecdote)}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -612,6 +641,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 Introduction content will appear here when available.
               </p>
             )}
+
+            {type === "icon" && renderAnecdotes()}
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
@@ -674,4 +705,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
-
