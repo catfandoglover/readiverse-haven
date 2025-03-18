@@ -128,6 +128,39 @@ const ReaderContent = ({
     setShowVirgilChat(!showVirgilChat);
   };
 
+  // Extract book title and author using the correct property path
+  const getBookTitle = (): string => {
+    if (!book) return "Untitled Book";
+    
+    // Access the title through the package.metadata path if available
+    if (book.package?.metadata?.title) {
+      return book.package.metadata.title;
+    }
+    
+    // Fallback to direct metadata property if available
+    if ((book as any).metadata?.title) {
+      return (book as any).metadata.title;
+    }
+    
+    return "Untitled Book";
+  };
+  
+  const getBookAuthor = (): string => {
+    if (!book) return "Unknown Author";
+    
+    // Access the creator through the package.metadata path if available
+    if (book.package?.metadata?.creator) {
+      return book.package.metadata.creator;
+    }
+    
+    // Fallback to direct metadata property if available
+    if ((book as any).metadata?.creator) {
+      return (book as any).metadata.creator;
+    }
+    
+    return "Unknown Author";
+  };
+
   return (
     <div className="relative h-full flex">
       {/* Sidebar Component */}
@@ -237,8 +270,8 @@ const ReaderContent = ({
             <VirgilChatPanel 
               onClose={toggleVirgilChat} 
               bookContext={{
-                title: book?.metadata?.title || "Untitled Book",
-                author: book?.metadata?.creator || "Unknown Author",
+                title: getBookTitle(),
+                author: getBookAuthor(),
                 currentChapter: currentChapterTitle
               }}
             />
