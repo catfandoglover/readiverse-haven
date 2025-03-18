@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-type Book = Database['public']['Tables']['books']['Row'];
+type Book = Database['public']['Tables']['books']['Row'] & { 
+  author_id?: string; // Add author_id as an optional property
+};
 
 export const useBook = (slug: string | undefined) => {
   return useQuery<Book | null>({
@@ -39,7 +41,7 @@ export const useBook = (slug: string | undefined) => {
               hasAuthorId: idData?.author_id ? 'yes' : 'no',
               introduction: idData?.introduction ? 'yes' : 'no'
             });
-            return idData;
+            return idData as Book;
           }
           
           // Try with lowercase
@@ -62,7 +64,7 @@ export const useBook = (slug: string | undefined) => {
             hasAuthorId: result?.author_id ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
-          return result;
+          return result as Book;
         }
 
         console.log('Query result:', {
@@ -72,7 +74,7 @@ export const useBook = (slug: string | undefined) => {
           hasAuthorId: data?.author_id ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
-        return data;
+        return data as Book;
       } catch (error) {
         console.log('Unexpected error in useBook:', error);
         return null;
