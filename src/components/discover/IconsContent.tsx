@@ -85,7 +85,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
       return data.map((icon: any) => ({
         ...icon,
-        slug: icon.slug || icon.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
         about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
         great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
         anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
@@ -113,19 +113,23 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
         
         if (icon) {
-          console.log("Found matching icon:", icon.name);
-          setSelectedIcon(icon);
+          console.log("Found matching icon in list:", icon.name);
+          setSelectedIcon({...icon});
           if (onDetailedViewShow) onDetailedViewShow();
         } else {
           console.log("Icon not found in current list, fetching directly");
           fetchIconDirectly(iconParam);
         }
       }
+    } else if (selectedIcon) {
+      setSelectedIcon(null);
     }
-  }, [location.pathname, icons, onDetailedViewShow, selectedIcon]);
+  }, [location.pathname, icons]);
 
   const fetchIconDirectly = async (iconId: string) => {
     try {
+      console.log("Directly fetching icon with ID:", iconId);
+      
       const { data, error } = await supabase
         .from("icons")
         .select("*")
@@ -144,13 +148,15 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       
       if (data) {
         console.log("Directly fetched icon:", data.name);
-        setSelectedIcon({
+        const processedIcon = {
           ...data,
-          slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+          slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
           about: data.about || `${data.name} was a significant figure in philosophical history.`,
           great_conversation: data.great_conversation || `${data.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
           anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
-        });
+        };
+        
+        setSelectedIcon(processedIcon);
         if (onDetailedViewShow) onDetailedViewShow();
       }
     } catch (e) {
@@ -170,8 +176,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
-  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
-  
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
     navigate(`/view/icon/${icon.id}`, { replace: true });
@@ -209,7 +213,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     ],
   };
 
-  if (isLoading || !iconToShow) {
+  if (isLoading || !icons.length) {
     return (
       <div className="h-full">
         <IconLoadingSkeleton />
@@ -217,25 +221,29 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     );
   }
 
+  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
+
   return (
     <>
       <div className="h-full">
-        <ContentCard
-          image={iconToShow.illustration}
-          title={iconToShow.name}
-          about={iconToShow.about || ""}
-          onLearnMore={() => handleLearnMore(iconToShow)}
-          onImageClick={() => handleLearnMore(iconToShow)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          hasPrevious={displayIndex > 0}
-          hasNext={displayIndex < icons.length - 1}
-        />
+        {iconToShow && (
+          <ContentCard
+            image={iconToShow.illustration}
+            title={iconToShow.name}
+            about={iconToShow.about || ""}
+            onLearnMore={() => handleLearnMore(iconToShow)}
+            onImageClick={() => handleLearnMore(iconToShow)}
+            onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
+            onNext={displayIndex < icons.length - 1 ? () => setDisplayIndex(displayIndex + 1) : undefined}
+            hasPrevious={displayIndex > 0}
+            hasNext={displayIndex < icons.length - 1}
+          />
+        )}
       </div>
 
       {selectedIcon && (
         <DetailedView
-          key={`icon-${selectedIcon.id}`}
+          key={`icon-detail-${selectedIcon.id}`}
           type="icon"
           data={selectedIcon}
           onBack={handleCloseDetailedView}
