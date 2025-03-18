@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
@@ -85,6 +86,7 @@ const ReaderContent = ({
   const [activeTab, setActiveTab] = useState<'toc' | 'notes' | 'bookmarks' | 'settings' | 'chat'>('toc');
   const [showUI, setShowUI] = useState(true);
   const [showVirgilChat, setShowVirgilChat] = useState(false);
+  const [showFloatingButtons, setShowFloatingButtons] = useState(false);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const bookKey = book?.key() || null;
@@ -198,17 +200,25 @@ const ReaderContent = ({
               onNextPage={onNextPage} 
             />
 
-            <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
-              <FloatingActionButton 
-                icon={BookOpen} 
-                onClick={toggleSidebar} 
-                tooltip="Table of Contents"
-              />
-              <FloatingActionButton 
-                iconImage="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
-                onClick={toggleVirgilChat} 
-                tooltip="Chat with Virgil"
-              />
+            <div 
+              className="fixed bottom-6 left-6 flex flex-col gap-2 z-20"
+              onMouseEnter={() => setShowFloatingButtons(true)}
+              onMouseLeave={() => setShowFloatingButtons(false)}
+            >
+              <div className={`transition-all duration-300 ${showFloatingButtons ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+                <FloatingActionButton 
+                  icon={BookOpen} 
+                  onClick={toggleSidebar} 
+                  tooltip="Table of Contents"
+                />
+              </div>
+              <div className={`transition-all duration-300 ${showFloatingButtons ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+                <FloatingActionButton 
+                  iconImage="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
+                  onClick={toggleVirgilChat} 
+                  tooltip="Chat with Virgil"
+                />
+              </div>
             </div>
           </div>
 

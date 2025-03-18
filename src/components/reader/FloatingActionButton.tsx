@@ -36,6 +36,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                       shadow-sm backdrop-blur-md 
                       transition-all duration-300 ease-in-out
                       ${isHovered ? 'bg-background/70 transform scale-105 shadow-md' : ''}`}
+            aria-label={tooltip}
           >
             {Icon ? (
               <Icon className={`h-5 w-5 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-70'}`} />
