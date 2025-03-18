@@ -1,5 +1,4 @@
-
-import { PollyClient, SynthesizeSpeechCommand, Engine } from "@aws-sdk/client-polly";
+import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
 
 class SpeechService {
@@ -21,7 +20,7 @@ class SpeechService {
         OutputFormat: "mp3",
         Text: text,
         VoiceId: this.voice,
-        Engine: "neural" as Engine, // Use type assertion to Engine type
+        Engine: "neural",
         TextType: 'text'
       };
 
