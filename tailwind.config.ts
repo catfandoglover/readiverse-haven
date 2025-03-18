@@ -98,4 +98,10 @@ export default {
 			});
 		}
 	],
+	// Add the sepia variant to handle sepia:class-name styles
+	variants: {
+		extend: {
+			backgroundColor: ['sepia'],
+		},
+	},
 } satisfies Config;

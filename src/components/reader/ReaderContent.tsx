@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
@@ -91,7 +90,6 @@ const ReaderContent = ({
   const isMobile = useIsMobile();
   const bookKey = book?.key() || null;
 
-  // Hide UI after 3 seconds of inactivity
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
@@ -128,42 +126,24 @@ const ReaderContent = ({
     setShowVirgilChat(!showVirgilChat);
   };
 
-  // Extract book title and author using the correct property path
   const getBookTitle = (): string => {
     if (!book) return "Untitled Book";
     
-    // Access the title through the package.metadata path if available
-    if (book.package?.metadata?.title) {
-      return book.package.metadata.title;
-    }
+    const metadata = (book as any).metadata || (book as any).package?.metadata || {};
     
-    // Fallback to direct metadata property if available
-    if ((book as any).metadata?.title) {
-      return (book as any).metadata.title;
-    }
-    
-    return "Untitled Book";
+    return metadata.title || "Untitled Book";
   };
   
   const getBookAuthor = (): string => {
     if (!book) return "Unknown Author";
     
-    // Access the creator through the package.metadata path if available
-    if (book.package?.metadata?.creator) {
-      return book.package.metadata.creator;
-    }
+    const metadata = (book as any).metadata || (book as any).package?.metadata || {};
     
-    // Fallback to direct metadata property if available
-    if ((book as any).metadata?.creator) {
-      return (book as any).metadata.creator;
-    }
-    
-    return "Unknown Author";
+    return metadata.creator || metadata.author || "Unknown Author";
   };
 
   return (
     <div className="relative h-full flex">
-      {/* Sidebar Component */}
       <ReaderSidebar 
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -188,13 +168,11 @@ const ReaderContent = ({
         sessionTime={sessionTime}
       />
 
-      {/* Main Reading Area */}
       <div className={`flex-1 transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
         <div 
           className="relative overflow-hidden h-screen"
           onClick={() => setShowUI(!showUI)}
         >
-          {/* Book Viewer Component */}
           <BookViewer
             book={book}
             currentLocation={currentLocation}
@@ -207,7 +185,6 @@ const ReaderContent = ({
             onTextSelect={onTextSelect}
           />
 
-          {/* Minimal Progress Bar */}
           <div className={`transition-opacity duration-300 ${showUI ? 'opacity-100' : 'opacity-0'}`}>
             <MinimalProgressBar 
               progress={progress.book} 
@@ -215,7 +192,6 @@ const ReaderContent = ({
               pageInfo={pageInfo} 
             />
 
-            {/* Navigation Controls */}
             <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
               <button
                 onClick={onPrevPage}
@@ -240,7 +216,6 @@ const ReaderContent = ({
               </button>
             </div>
 
-            {/* Floating Action Buttons */}
             <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
               <FloatingActionButton 
                 icon={Menu} 
@@ -265,7 +240,6 @@ const ReaderContent = ({
             </div>
           </div>
 
-          {/* Chat with Virgil Panel - Conditionally Rendered */}
           {showVirgilChat && (
             <VirgilChatPanel 
               onClose={toggleVirgilChat} 
@@ -277,7 +251,6 @@ const ReaderContent = ({
             />
           )}
 
-          {/* Brightness Overlay */}
           <BrightnessOverlay brightness={brightness} />
         </div>
       </div>

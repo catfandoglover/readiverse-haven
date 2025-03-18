@@ -214,8 +214,13 @@
 
   /* Reading experience enhancements */
   .highlight-yellow {
-    @apply bg-yellow-200/60 dark:bg-yellow-700/40 sepia:bg-amber-200/60;
+    @apply bg-yellow-200/60 dark:bg-yellow-700/40;
     @apply rounded px-0.5 -mx-0.5 transition-colors duration-150;
+  }
+  
+  /* For sepia theme support without using the sepia variant */
+  :root.sepia .highlight-yellow {
+    @apply bg-amber-200/60;
   }
   
   .reader-sidebar {
