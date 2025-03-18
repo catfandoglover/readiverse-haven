@@ -139,16 +139,19 @@ export const useRenditionSetup = (
     // Improve mobile touch response
     newRendition.on("rendered", (_section: any) => {
       const contents = newRendition.getContents();
-      contents.forEach((content) => {
-        if (content.document && content.document.body) {
-          // Better touch gestures
-          content.document.body.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) {
-              e.preventDefault(); // Prevent zooming
-            }
-          }, { passive: false });
-        }
-      });
+      // Fix: Check if contents is an array before using forEach
+      if (contents && Array.isArray(contents)) {
+        contents.forEach((content) => {
+          if (content.document && content.document.body) {
+            // Better touch gestures
+            content.document.body.addEventListener('touchstart', (e) => {
+              if (e.touches.length > 1) {
+                e.preventDefault(); // Prevent zooming
+              }
+            }, { passive: false });
+          }
+        });
+      }
     });
 
     setRendition(newRendition);

@@ -118,7 +118,9 @@ export const useReaderResize = (rendition: Rendition | null) => {
     const handleOrientationChange = () => {
       if (rendition) {
         setTimeout(() => {
-          const container = rendition.manager?.container;
+          // Fix: Accessing the container directly without using .manager property
+          // which doesn't exist on the Rendition type
+          const container = rendition.getContents()[0]?.document.defaultView?.frameElement?.parentElement;
           if (container) {
             debouncedContainerResize(container);
           }
