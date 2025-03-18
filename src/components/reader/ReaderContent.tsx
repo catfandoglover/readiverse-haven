@@ -1,18 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
 import { useTheme } from '@/contexts/ThemeContext';
 import BookViewer from './BookViewer';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useRenditionSetup } from '@/hooks/useRenditionSetup';
-import { useReaderResize } from '@/hooks/useReaderResize';
 import BrightnessOverlay from './BrightnessOverlay';
 import { MinimalProgressBar } from './MinimalProgressBar';
 import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
 import VirgilChatPanel from './VirgilChatPanel';
-import { MessageCircle, Menu, BookOpen, Settings, ArrowUp, ArrowDown } from 'lucide-react';
+import NavigationButtons from './NavigationButtons';
+import { MessageCircle, Menu, BookOpen, Settings } from 'lucide-react';
 
 interface ReaderContentProps {
   book: Book;
@@ -143,7 +143,7 @@ const ReaderContent = ({
   };
 
   return (
-    <div className="relative h-full flex">
+    <div className="relative h-full flex overflow-hidden">
       <ReaderSidebar 
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -168,7 +168,7 @@ const ReaderContent = ({
         sessionTime={sessionTime}
       />
 
-      <div className={`flex-1 transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-in-out max-w-full ${sidebarOpen ? 'ml-80' : 'ml-0'}`}>
         <div 
           className="relative overflow-hidden h-screen"
           onClick={() => setShowUI(!showUI)}
@@ -192,29 +192,10 @@ const ReaderContent = ({
               pageInfo={pageInfo} 
             />
 
-            <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
-              <button
-                onClick={onPrevPage}
-                disabled={pageInfo.current <= 1}
-                className={`flex items-center justify-center w-6 h-6 rounded-full
-                ${pageInfo.current > 1 ? 'bg-background/50 hover:bg-background/70' : 'bg-background/20'}
-                text-foreground transition-colors shadow-md`}
-                aria-label="Previous"
-              >
-                <ArrowUp className="h-4 w-4" />
-              </button>
-              
-              <button
-                onClick={onNextPage}
-                disabled={pageInfo.current >= pageInfo.total}
-                className={`flex items-center justify-center w-6 h-6 rounded-full
-                ${pageInfo.current < pageInfo.total ? 'bg-background/50 hover:bg-background/70' : 'bg-background/20'}
-                text-foreground transition-colors shadow-md`}
-                aria-label="Next"
-              >
-                <ArrowDown className="h-4 w-4" />
-              </button>
-            </div>
+            <NavigationButtons 
+              onPrevPage={onPrevPage} 
+              onNextPage={onNextPage} 
+            />
 
             <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-20">
               <FloatingActionButton 

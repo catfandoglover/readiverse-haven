@@ -24,6 +24,8 @@ export const useRenditionSetup = (
       width: '100%',
       height: '100%',
       spread: isMobile ? 'none' : 'auto',
+      flow: 'paginated',
+      minSpreadWidth: 800,
     });
 
     // Apply theme colors and text settings
@@ -39,9 +41,14 @@ export const useRenditionSetup = (
           fontFamily === 'helvetica' ? 
           'Helvetica, Arial, sans-serif' : 
           'Times New Roman, serif',
+        'padding': '0 1.5rem',
+        'line-height': '1.6',
+        'margin': '0 auto',
+        'max-width': '42rem',
       },
       'a, h1, h2, h3, h4, h5, h6': {
         color: theme.accent,
+        'line-height': '1.3',
       },
       'p': {
         'font-family': fontFamily === 'lexend' ? 
@@ -51,6 +58,32 @@ export const useRenditionSetup = (
           fontFamily === 'helvetica' ? 
           'Helvetica, Arial, sans-serif' : 
           'Times New Roman, serif',
+        'margin-bottom': '1em',
+      },
+      'img': {
+        'max-width': '100%',
+        'height': 'auto',
+        'display': 'block',
+        'margin': '1em auto',
+      },
+      'blockquote': {
+        'border-left': `2px solid ${theme.accent}`,
+        'padding-left': '1em',
+        'margin-left': '0',
+        'font-style': 'italic',
+      },
+      '.epub-container': {
+        'overflow': 'hidden',
+        'width': '100%',
+        'height': '100%',
+        'max-width': '100%',
+      },
+      'ul, ol': {
+        'padding-left': '1.5em',
+        'margin-bottom': '1em',
+      },
+      'li': {
+        'margin-bottom': '0.5em',
       }
     });
 
@@ -101,6 +134,21 @@ export const useRenditionSetup = (
           detail: { title: chapterTitle } 
         }));
       }
+    });
+
+    // Improve mobile touch response
+    newRendition.on("rendered", (_section: any) => {
+      const contents = newRendition.getContents();
+      contents.forEach((content) => {
+        if (content.document && content.document.body) {
+          // Better touch gestures
+          content.document.body.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+              e.preventDefault(); // Prevent zooming
+            }
+          }, { passive: false });
+        }
+      });
     });
 
     setRendition(newRendition);
