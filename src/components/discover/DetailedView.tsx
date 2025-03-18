@@ -308,10 +308,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     e.stopPropagation();
     if (combinedData?.author_id) {
       navigate(`/view/icon/${combinedData.author_id}`);
-      
-      if (onDetailedViewShow) {
-        onDetailedViewShow();
-      }
     }
   };
 
@@ -697,7 +693,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 }}
               />
             </span>
-            <style jsx>{`
+            <style>{`
               a:hover span span {
                 transform: scaleX(1);
               }

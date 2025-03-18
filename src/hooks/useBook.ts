@@ -35,7 +35,7 @@ export const useBook = (slug: string | undefined) => {
             console.log('Book found by ID:', {
               found: !!idData,
               hasEpubUrl: idData?.epub_file_url ? 'yes' : 'no',
-              hasAuthorId: idData?.author_id ? 'yes' : 'no',
+              hasAuthor: idData?.author ? 'yes' : 'no',
               introduction: idData?.introduction ? 'yes' : 'no'
             });
             return idData;
@@ -57,7 +57,7 @@ export const useBook = (slug: string | undefined) => {
           console.log('Retry query result:', {
             found: !!result,
             hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
-            hasAuthorId: result?.author_id ? 'yes' : 'no',
+            hasAuthor: result?.author ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
           return result;
@@ -66,7 +66,7 @@ export const useBook = (slug: string | undefined) => {
         console.log('Query result:', {
           found: !!data,
           hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
-          hasAuthorId: data?.author_id ? 'yes' : 'no',
+          hasAuthor: data?.author ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
         return data;
