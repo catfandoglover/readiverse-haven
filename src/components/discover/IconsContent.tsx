@@ -98,9 +98,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   
   const handleLearnMore = (icon: Icon) => {
     setSelectedIcon(icon);
-    // Use slug for the URL if available, otherwise use ID
-    const urlParam = icon.slug || icon.id;
-    navigate(`/view/icon/${urlParam}`, { replace: true });
+    // Always use the icon's ID for consistent URL structure
+    navigate(`/view/icon/${icon.id}`, { replace: true });
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
