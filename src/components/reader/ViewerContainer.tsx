@@ -1,17 +1,44 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 
 interface ViewerContainerProps {
   theme: Theme;
   setContainer: (element: Element | null) => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }
 
 const ViewerContainer: React.FC<ViewerContainerProps> = ({ 
   theme,
-  setContainer 
+  setContainer,
+  onPrevPage,
+  onNextPage
 }) => {
+  // Margin width for click detection (percentage of container width)
+  const MARGIN_WIDTH_PERCENT = 20;
+  
+  const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const containerWidth = rect.width;
+    
+    // Calculate margins based on percentage
+    const leftMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    const rightMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    
+    // If click is in left margin, go to previous page
+    if (x < leftMarginWidth && onPrevPage) {
+      onPrevPage();
+    }
+    // If click is in right margin, go to next page
+    else if (x > containerWidth - rightMarginWidth && onNextPage) {
+      onNextPage();
+    }
+  }, [onPrevPage, onNextPage]);
+  
   return (
     <motion.div 
       ref={(el) => setContainer(el)}
@@ -19,6 +46,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      onClick={handleContainerClick}
       style={{ 
         background: theme.background,
         color: theme.text,

@@ -29,6 +29,8 @@ interface BookViewerProps {
   onRenditionReady?: (rendition: Rendition) => void;
   highlights?: Highlight[];
   onTextSelect?: (cfiRange: string, text: string) => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }
 
 const BookViewer = ({ 
@@ -40,7 +42,9 @@ const BookViewer = ({
   textAlign = 'left',
   onRenditionReady,
   highlights = [],
-  onTextSelect
+  onTextSelect,
+  onPrevPage,
+  onNextPage
 }: BookViewerProps) => {
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -308,7 +312,12 @@ const BookViewer = ({
 
   return (
     <div className="relative">
-      <ViewerContainer theme={theme} setContainer={setContainer} />
+      <ViewerContainer 
+        theme={theme} 
+        setContainer={setContainer} 
+        onPrevPage={onPrevPage}
+        onNextPage={onNextPage}
+      />
       <Dialog open={showTextDialog} onOpenChange={setShowTextDialog}>
         <DialogContent>
           <DialogHeader>

@@ -1,9 +1,15 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ExternalLink, ArrowLeft, MessageSquare } from "lucide-react";
+import { ExternalLink, ArrowLeft, Search } from "lucide-react";
 import SearchDialog from "./SearchDialog";
 import type { SearchResult } from '@/types/reader';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ReaderHeaderProps {
   externalLink: string | null;
@@ -31,26 +37,22 @@ const ReaderHeader = ({
           </Button>
         )}
       </div>
-      <div className="flex-none flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9"
-          onClick={() => {
-            // Open AI chat if available
-            const chatButton = document.querySelector('[data-test-id="ai-chat-button"]');
-            if (chatButton) {
-              (chatButton as HTMLButtonElement).click();
-            }
-          }}
-          title="Chat with Virgil"
-        >
-          <MessageSquare className="h-4 w-4" />
-        </Button>
-        <SearchDialog 
-          onSearch={onSearch}
-          onResultClick={onSearchResultClick}
-        />
+      <div className="flex-none">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SearchDialog 
+                onSearch={onSearch}
+                onResultClick={onSearchResultClick}
+                triggerClassName="flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background/70 text-foreground transition-colors shadow-md backdrop-blur-sm border border-border/10"
+                triggerIcon={<Search className="h-5 w-5" />}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Search</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

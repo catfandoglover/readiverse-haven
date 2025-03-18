@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,9 +17,16 @@ import type { SearchResult } from "@/types/reader";
 interface SearchDialogProps {
   onSearch: (query: string) => Promise<SearchResult[]>;
   onResultClick: (result: SearchResult) => void;
+  triggerClassName?: string;
+  triggerIcon?: React.ReactNode;
 }
 
-const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
+const SearchDialog = ({ 
+  onSearch, 
+  onResultClick, 
+  triggerClassName,
+  triggerIcon 
+}: SearchDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -60,10 +68,10 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8"
+          className={triggerClassName || "h-8 w-8"}
           title="Search"
         >
-          <Search className="h-4 w-4" />
+          {triggerIcon || <Search className="h-4 w-4" />}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

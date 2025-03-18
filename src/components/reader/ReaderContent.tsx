@@ -182,6 +182,8 @@ const ReaderContent = ({
             onRenditionReady={onRenditionReady}
             highlights={highlights}
             onTextSelect={onTextSelect}
+            onPrevPage={onPrevPage}
+            onNextPage={onNextPage}
           />
 
           <div className={`transition-opacity duration-300 ${showUI ? 'opacity-100' : 'opacity-0'}`}>
