@@ -59,7 +59,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       const { data, error } = await supabase
         .from(tableName)
-        .select('*')
+        .select(type === 'classic' ? '*' : '*')
         .eq('id', itemData.id)
         .single();
       
@@ -149,6 +149,47 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       return data;
     },
+  });
+
+  const { data: authorIconData } = useQuery({
+    queryKey: ["author-icon", combinedData?.author_id],
+    queryFn: async () => {
+      if (!combinedData?.author_id) return null;
+      
+      const { data, error } = await supabase
+        .from("icons")
+        .select("*")
+        .eq("id", combinedData.author_id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching author icon data:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: type === "classic" && !!combinedData?.author_id,
+  });
+
+  const { data: authorClassics = [] } = useQuery({
+    queryKey: ["classics-by-author", itemData.id],
+    queryFn: async () => {
+      if (type !== "icon" || !itemData.id) return [];
+      
+      const { data, error } = await supabase
+        .from("books")
+        .select("*")
+        .eq("author_id", itemData.id);
+      
+      if (error) {
+        console.error("Error fetching classics by author:", error);
+        return [];
+      }
+      
+      return data;
+    },
+    enabled: type === "icon",
   });
 
   const combinedData = React.useMemo(() => {
@@ -614,6 +655,64 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
+  const renderAuthorField = () => {
+    if (type !== "classic") return null;
+    
+    return (
+      <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
+        by {combinedData.author_id ? (
+          <a 
+            href="#" 
+            onClick={handleAuthorClick}
+            className="hover:underline hover:text-[#2A282A]"
+          >
+            {combinedData.author}
+          </a>
+        ) : (
+          combinedData.author
+        )}
+      </h2>
+    );
+  };
+
+  const renderClassicsByIcon = () => {
+    if (type !== "icon" || authorClassics.length === 0) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+          CLASSICS FROM {combinedData.name?.toUpperCase()}
+        </h3>
+        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
+          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
+            {authorClassics.map((classic) => (
+              <div
+                key={classic.id}
+                className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
+                onClick={() => handleCarouselItemClick(classic, "classic")}
+              >
+                <div className="absolute inset-0 bg-[#E9E7E2]"></div>
+                <div className="absolute inset-[2px] overflow-hidden rounded-[0.4rem]">
+                  <img
+                    src={classic.cover_url || classic.Cover_super || ''}
+                    alt={classic.title || ""}
+                    className="h-full w-full object-cover"
+                    draggable="false"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                    <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
+                      {classic.title}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -641,12 +740,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
             {renderIconButtons()}
             
-            {type === "classic" && 
-              <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
-                by {combinedData.author}
-              </h2>
-            }
-
+            {renderAuthorField()}
+            
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
             ) : combinedData.introduction ? (
@@ -662,6 +757,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {type === "icon" && renderAnecdotes()}
             
             {type === "icon" && renderGreatConversation()}
+            
+            {type === "icon" && renderClassicsByIcon()}
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">

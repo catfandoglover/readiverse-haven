@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,7 @@ interface Classic {
   icon_illustration: string;
   cover_url: string;
   author?: string;
+  author_id?: string;
   Cover_super?: string;
   epub_file_url?: string;
   amazon_link?: string;
@@ -53,17 +53,13 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         return [];
       }
 
-      // Map the fields to match our component structure
       return data.map((book: any) => ({
         ...book,
-        // We're not providing default fallbacks for introduction or great_question_connection
-        // to ensure we wait for the actual data to load
       }));
     },
     staleTime: 300000, // Cache for 5 minutes
   });
 
-  // This function loads the detailed data for a specific classic
   const fetchClassicDetails = async (classicId: string): Promise<Classic | null> => {
     try {
       const { data, error } = await supabase
@@ -84,16 +80,13 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
     }
   };
 
-  // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/classic/')) {
       const classicId = location.pathname.split('/view/classic/')[1];
       
-      // First try to find it in our already loaded classics
       const classicFromList = classics.find(c => c.id === classicId);
       
       if (classicFromList) {
-        // We have the basic info, now load full details
         fetchClassicDetails(classicId).then(detailedClassic => {
           if (detailedClassic) {
             setSelectedClassic({
@@ -102,13 +95,11 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
             });
             if (onDetailedViewShow) onDetailedViewShow();
           } else {
-            // Fallback to basic info if detailed fetch fails
             setSelectedClassic(classicFromList);
             if (onDetailedViewShow) onDetailedViewShow();
           }
         });
       } else if (!isLoading) {
-        // Direct navigation to a classic not in our list
         fetchClassicDetails(classicId).then(detailedClassic => {
           if (detailedClassic) {
             setSelectedClassic(detailedClassic);
@@ -122,7 +113,6 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
   const handleLearnMore = (classic: Classic) => {
-    // Fetch full details before showing the detailed view
     fetchClassicDetails(classic.id).then(detailedClassic => {
       if (detailedClassic) {
         setSelectedClassic({
@@ -189,6 +179,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
             image: selectedClassic.icon_illustration || selectedClassic.cover_url || selectedClassic.Cover_super,
             title: selectedClassic.title,
             author: selectedClassic.author || "Unknown Author",
+            author_id: selectedClassic.author_id,
             tagline: selectedClassic.tagline || "What lies beneath the morality you hold sacred?",
             onReadNow: () => handleReadNow(selectedClassic),
           }}

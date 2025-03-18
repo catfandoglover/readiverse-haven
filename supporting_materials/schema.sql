@@ -4,10 +4,14 @@ create table books (
   title text not null,
   slug text not null unique,
   author text,
+  author_id uuid references icons(id),
   cover_url text,
   epub_file_url text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Create an index on author_id for faster lookups
+create index if not exists idx_books_author_id on books(author_id);
 
 -- Create a storage bucket for EPUB files
 insert into storage.buckets (id, name) values ('epub_files', 'epub_files');

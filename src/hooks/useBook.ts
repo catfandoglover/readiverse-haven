@@ -40,6 +40,7 @@ export const useBook = (slug: string | undefined) => {
           console.log('Retry query result:', {
             found: !!result,
             hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
+            hasAuthorId: result?.author_id ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
           return result;
@@ -48,6 +49,7 @@ export const useBook = (slug: string | undefined) => {
         console.log('Query result:', {
           found: !!data,
           hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
+          hasAuthorId: data?.author_id ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
         return data;
