@@ -436,6 +436,9 @@ const DNAAssessment = () => {
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
+            // Set isTransitioning to false before showing the login prompt
+            setIsTransitioning(false);
+            
             // Always show the completion popup
             setShowLoginPrompt(true);
             
@@ -705,7 +708,7 @@ const DNAAssessment = () => {
     saveAssessmentId();
   }, [showLoginPrompt, completedAssessmentId, supabase]);
 
-  if (questionLoading || isTransitioning || isInitializing) {
+  if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
@@ -731,7 +734,7 @@ const DNAAssessment = () => {
     );
   }
 
-  if (!currentQuestion) {
+  if (!currentQuestion && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
         <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
@@ -895,7 +898,7 @@ const DNAAssessment = () => {
         open={showAIChat}
         onOpenChange={setShowAIChat}
         sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
-        currentQuestion={currentQuestion.question?.question || ''}
+        currentQuestion={currentQuestion?.question?.question || ''}
       />
     </>
   );
