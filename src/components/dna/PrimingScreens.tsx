@@ -38,6 +38,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
   };
 
   const handleExit = () => {
+    // Go back to the DNA start page directly without confirmation
     navigate('/dna');
   };
 
