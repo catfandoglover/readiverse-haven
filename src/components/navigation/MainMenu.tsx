@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, BookOpen, Compass, Hexagon, LayoutDashboard } from "lucide-react";
+import { Menu, BookOpen, Compass, Hexagon, LayoutDashboard, GraduationCap } from "lucide-react";
 
 const MainMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +33,15 @@ const MainMenu: React.FC = () => {
               >
                 <Compass className="h-5 w-5 mr-3" />
                 <span className="font-oxanium">Discover</span>
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
+                onClick={() => handleNavigation("/virgil")}
+              >
+                <GraduationCap className="h-5 w-5 mr-3" />
+                <span className="font-oxanium">Virgil's Office</span>
               </Button>
               
               <Button 

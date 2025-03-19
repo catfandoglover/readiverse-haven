@@ -21,6 +21,7 @@ import Dashboard from "./pages/Dashboard";
 import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
+import VirgilOffice from "./pages/VirgilOffice";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
+                <Route path="/virgil" element={<VirgilOffice />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>
