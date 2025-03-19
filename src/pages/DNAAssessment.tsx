@@ -846,11 +846,11 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="absolute bottom-10 left-0 right-0 px-6">
+          <div className="w-full max-w-md mb-16 px-6">
             <div className="max-w-md mx-auto">
               <Button 
                 onClick={handleContinue}
-                className="w-full h-[60px] py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+                className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
               >
                 CONTINUE
               </Button>
