@@ -708,23 +708,6 @@ const DNAAssessment = () => {
     saveAssessmentId();
   }, [showLoginPrompt, completedAssessmentId, supabase]);
 
-  const [categoryIndex, setCategoryIndex] = React.useState(() => {
-    return categoryOrder.findIndex(cat => cat === upperCategory) || 0;
-  });
-
-  const handleContinue = () => {
-    if (!currentQuestion) return;
-    
-    // For now, this will just move to the next category
-    if (currentCategoryIndex < categoryOrder.length - 1) {
-      const nextCat = categoryOrder[currentCategoryIndex + 1].toLowerCase();
-      navigate(`/dna/${nextCat}`);
-    } else {
-      // At the end, show completion dialog
-      setShowLoginPrompt(true);
-    }
-  };
-
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
@@ -846,14 +829,9 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="w-full max-w-md mb-16 px-6">
-            <div className="max-w-md mx-auto">
-              <Button 
-                onClick={handleContinue}
-                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
-              >
-                CONTINUE
-              </Button>
+          <div className="absolute bottom-6 left-0 right-0 text-center">
+            <div className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
+              LIGHTNING
             </div>
           </div>
         </div>
@@ -901,12 +879,27 @@ const DNAAssessment = () => {
               <div className="flex justify-center">
                 <LoginButtons />
               </div>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setShowLoginPrompt(false);
+                  navigate('/dna');
+                }}
+                className="text-[#373763]/70 hover:text-[#373763] hover:bg-transparent font-oxanium text-sm font-bold uppercase tracking-wider"
+              >
+                Skip for now
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <AIChatDialog open={showAIChat} onOpenChange={setShowAIChat} />
+      <AIChatDialog 
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+        currentQuestion={currentQuestion?.question?.question || ''}
+      />
     </>
   );
 };

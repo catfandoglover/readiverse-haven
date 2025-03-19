@@ -4,11 +4,8 @@ import { useNavigate } from "react-router-dom";
 import PrimingScreens from "@/components/dna/PrimingScreens";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
 
-type DNACategory = Database["public"]["Enums"]["dna_category"];
-
-const categories: DNACategory[] = [
+const categories = [
   "ETHICS",
   "EPISTEMOLOGY",
   "POLITICS",
