@@ -1,20 +1,14 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import PrimingScreens from "@/components/dna/PrimingScreens";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -30,7 +24,7 @@ const categories: DNACategory[] = [
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showNameDialog, setShowNameDialog] = useState(false);
+  const [showPrimingScreens, setShowPrimingScreens] = useState(false);
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
@@ -95,10 +89,10 @@ const IntellectualDNA = () => {
       console.log('Completed prefetching questions for all categories');
     };
 
-    if (showNameDialog) {
+    if (showPrimingScreens) {
       prefetchQuestions();
     }
-  }, [showNameDialog, queryClient]);
+  }, [showPrimingScreens, queryClient]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
@@ -126,15 +120,15 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    setShowNameDialog(true);
+    setShowPrimingScreens(true);
   };
 
-  const handleNameSubmit = () => {
-    if (name.trim()) {
-      sessionStorage.setItem('dna_assessment_name', name.trim());
-      setShowNameDialog(false);
-      navigate('/dna/ethics');
-    }
+  const handlePrimingComplete = (userName: string) => {
+    // Set default name if empty
+    const finalName = userName.trim() || "Anonymous";
+    sessionStorage.setItem('dna_assessment_name', finalName);
+    setShowPrimingScreens(false);
+    navigate('/dna/ethics');
   };
 
   const isCurrentSection = (path: string) => {
@@ -154,6 +148,13 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
+      {showPrimingScreens && (
+        <PrimingScreens 
+          onComplete={handlePrimingComplete} 
+          defaultName={name}
+        />
+      )}
+      
       <header className="w-full p-4 flex justify-end">
         <div className="flex space-x-2">
           {isLoading ? (
@@ -223,7 +224,7 @@ const IntellectualDNA = () => {
             <div className="w-full px-2 flex justify-center">
               <Button 
                 variant="secondary"
-                className="w-full py-4 rounded-xl font-oxanium text-sm uppercase font-bold bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+                className="w-full py-4 rounded-xl font-oxanium text-sm uppercase font-bold bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 transition-colors duration-200"
                 onClick={handleStartAssessment}
               >
                 <span>GET STARTED</span>
@@ -243,37 +244,6 @@ const IntellectualDNA = () => {
           </p>
         </div>
       </main>
-
-      <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-        <DialogContent className="bg-[#E9E7E2]">
-          <DialogHeader>
-            <DialogTitle className="font-baskerville text-[#373763]">Enter Your Name</DialogTitle>
-            <DialogDescription className="font-oxanium text-[#332E38]/70">
-              Please enter your name to begin the DNA assessment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) {
-                  handleNameSubmit();
-                }
-              }}
-              className="bg-white/50 border-[#373763]/20 text-[#282828]"
-            />
-            <Button 
-              onClick={handleNameSubmit}
-              disabled={!name.trim()}
-              className="w-full bg-[#373763] text-[#E9E7E2] font-oxanium uppercase tracking-wider hover:opacity-90 transition-opacity duration-200"
-            >
-              Begin Assessment
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
