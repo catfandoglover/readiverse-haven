@@ -1,11 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore, getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
-
-// Fixed assessment ID - same as used in DomainDetail.tsx
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 interface DNAAnalysisResult {
   [key: string]: string | null;
@@ -29,15 +28,49 @@ const DomainCard: React.FC<DomainCardProps> = ({
   const navigate = useNavigate();
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const { user, supabase: authSupabase } = useAuth();
+  
+  useEffect(() => {
+    const fetchUserAssessmentId = async () => {
+      if (!user?.Uid) return;
+      
+      try {
+        const client = authSupabase || supabase;
+        const { data, error } = await client
+          .from('profiles')
+          .select('assessment_id')
+          .eq('outseta_user_id', user.Uid)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching user assessment ID:", error);
+          return;
+        }
+        
+        if (data && data.assessment_id) {
+          console.log("User assessment ID:", data.assessment_id);
+          setAssessmentId(data.assessment_id);
+        }
+      } catch (e) {
+        console.error("Exception fetching user assessment ID:", e);
+      }
+    };
+    
+    fetchUserAssessmentId();
+  }, [user, authSupabase]);
   
   useEffect(() => {
     const fetchDomainData = async () => {
+      if (!assessmentId) return;
+      
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+        const client = authSupabase || supabase;
+        const { data, error } = await client
           .from('dna_analysis_results')
           .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', assessmentId)
           .maybeSingle();
           
         if (data && !error) {
@@ -50,8 +83,10 @@ const DomainCard: React.FC<DomainCardProps> = ({
       }
     };
     
-    fetchDomainData();
-  }, []);
+    if (assessmentId) {
+      fetchDomainData();
+    }
+  }, [assessmentId, authSupabase]);
   
   // Calculate the highest progress level across both kindred and challenging resources
   const getHighestProgressLevel = (): number => {

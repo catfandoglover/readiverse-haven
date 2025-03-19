@@ -36,9 +36,9 @@ interface DNAAnalysisResult {
 interface Profile {
   id: string;
   outseta_user_id: string;
-  assessment_id: string | null;
   email: string;
   full_name: string | null;
+  assessment_id?: string | null;
 }
 
 const DashboardLayout: React.FC = () => {
@@ -89,6 +89,7 @@ const DashboardLayout: React.FC = () => {
           
           // If the profile has an assessment ID, fetch the analysis result
           if (data.assessment_id) {
+            console.log("Fetching analysis for assessment ID:", data.assessment_id);
             fetchDNAAnalysisResult(data.assessment_id, client);
           } else {
             console.log("User has no assessment ID");

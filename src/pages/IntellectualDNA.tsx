@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,34 @@ const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
+  const { user, isLoading, logout, openLogin, openSignup, openProfile, supabase: authSupabase } = useAuth();
+  const [checkingProfile, setCheckingProfile] = useState(false);
+
+  useEffect(() => {
+    const checkUserAssessment = async () => {
+      if (!user?.Uid || !authSupabase) return;
+      
+      try {
+        setCheckingProfile(true);
+        const { data, error } = await authSupabase
+          .from('profiles')
+          .select('assessment_id')
+          .eq('outseta_user_id', user.Uid)
+          .maybeSingle();
+          
+        if (!error && data && data.assessment_id) {
+          // User has an assessment, redirect to dashboard
+          navigate('/dashboard');
+        }
+      } catch (e) {
+        console.error("Error checking user assessment:", e);
+      } finally {
+        setCheckingProfile(false);
+      }
+    };
+    
+    checkUserAssessment();
+  }, [user, authSupabase, navigate]);
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -91,94 +117,98 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      <header className="w-full p-4 flex justify-end">
-        <div className="flex space-x-2">
-          {isLoading ? (
-            <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
-              Loading...
-            </Button>
-          ) : user ? (
-            <>
-              <Button 
-                onClick={openProfile} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title={`Profile: ${user.Account?.Name || user.email}`}
-              >
-                <User className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline truncate max-w-[100px]">{user.Account?.Name || user.email}</span>
-              </Button>
-              <Button 
-                onClick={logout} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                onClick={openLogin} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title="Login"
-              >
-                <LogIn className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Login</span>
-              </Button>
-              <Button 
-                onClick={openSignup} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title="Sign Up"
-              >
-                <User className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Sign Up</span>
-              </Button>
-            </>
-          )}
-        </div>
-      </header>
-      <main className="flex-1 flex flex-col items-center justify-between px-4 py-4 w-full">
-        <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
-          <div className="space-y-6 text-center w-full">
-            <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
-              UNCOVER YOUR WORLDVIEW
-            </h2>
-            
-            <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight">
-              Trace your<br />Intellectual DNA
-            </h1>
-            
-            <div className="w-full px-2 flex justify-center">
-              <Button 
-                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
-                onClick={handleStartAssessment}
-              >
-                GET STARTED
-              </Button>
+      {!checkingProfile && (
+        <>
+          <header className="w-full p-4 flex justify-end">
+            <div className="flex space-x-2">
+              {isLoading ? (
+                <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
+                  Loading...
+                </Button>
+              ) : user ? (
+                <>
+                  <Button 
+                    onClick={openProfile} 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                    title={`Profile: ${user.Account?.Name || user.email}`}
+                  >
+                    <User className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline truncate max-w-[100px]">{user.Account?.Name || user.email}</span>
+                  </Button>
+                  <Button 
+                    onClick={logout} 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    onClick={openLogin} 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                    title="Login"
+                  >
+                    <LogIn className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Login</span>
+                  </Button>
+                  <Button 
+                    onClick={openSignup} 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                    title="Sign Up"
+                  >
+                    <User className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Sign Up</span>
+                  </Button>
+                </>
+              )}
+            </div>
+          </header>
+          <main className="flex-1 flex flex-col items-center justify-between px-4 py-4 w-full">
+            <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
+              <div className="space-y-6 text-center w-full">
+                <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
+                  UNCOVER YOUR WORLDVIEW
+                </h2>
+                
+                <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight">
+                  Trace your<br />Intellectual DNA
+                </h1>
+                
+                <div className="w-full px-2 flex justify-center">
+                  <Button 
+                    className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
+                    onClick={handleStartAssessment}
+                  >
+                    GET STARTED
+                  </Button>
+                </div>
+
+                <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
+                  ESTIMATED TIME: 10 MINUTES
+                </p>
+              </div>
             </div>
 
-            <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
-              ESTIMATED TIME: 10 MINUTES
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="w-full text-center pb-4">
-          <p className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
-            LIGHTNING
-          </p>
-        </div>
-      </main>
+            {/* Footer */}
+            <div className="w-full text-center pb-4">
+              <p className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
+                LIGHTNING
+              </p>
+            </div>
+          </main>
+        </>
+      )}
     </div>
   );
 };
