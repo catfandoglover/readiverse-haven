@@ -24,7 +24,7 @@ const VirgilOffice: React.FC = () => {
             
             <div className="space-y-4 mt-8">
               <Button
-                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
+                className="w-full py-4 rounded-2xl bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border-[#E9E7E2]/20 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
                 onClick={() => console.log("Chat with Virgil clicked")}
               >
                 CHAT WITH VIRGIL
