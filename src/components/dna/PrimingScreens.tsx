@@ -49,6 +49,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
           onClick={handleExit}
           className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
           type="button"
+          aria-label="Go back to DNA start page"
         >
           BACK
         </button>
