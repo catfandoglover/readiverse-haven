@@ -41,24 +41,31 @@ const DomainCard: React.FC<DomainCardProps> = ({
       try {
         const client = authSupabase || supabase;
         
-        console.log("Fetching profile with Outseta Account.Uid:", user.Account.Uid);
+        console.log("Fetching assessment ID for Outseta Account.Uid:", user.Account.Uid);
         
+        // First, get the dna_assessment_results directly using the Outseta Account.Uid
+        // Instead of looking for assessment_id in profiles
         const { data, error } = await client
-          .from('profiles')
-          .select('assessment_id')
+          .from('dna_assessment_results')
+          .select('id')
           .eq('outseta_user_id', user.Account.Uid)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
           
         if (error) {
-          console.error("Error fetching user assessment ID:", error);
+          console.error("Error fetching assessment ID:", error);
           return;
         }
         
-        if (data && data.assessment_id) {
-          console.log("User assessment ID:", data.assessment_id);
-          setAssessmentId(data.assessment_id);
+        if (data && data.id) {
+          console.log("User assessment ID:", data.id);
+          setAssessmentId(data.id);
         } else {
-          console.log("No assessment ID found for user:", user.Account.Uid);
+          // Fallback to fixed assessment ID for demo purposes
+          const fallbackId = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+          console.log("No assessment ID found, using fallback:", fallbackId);
+          setAssessmentId(fallbackId);
         }
       } catch (e) {
         console.error("Exception fetching user assessment ID:", e);

@@ -91,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const supabaseClient = createSupabaseClient(supabaseJwt);
           setSupabase(supabaseClient);
           
-          // Check if there's a pending DNA assessment ID to associate with the profile
+          // Check if there's a pending DNA assessment ID to associate
           const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
           const assessmentToSave = sessionStorage.getItem('dna_assessment_to_save');
           
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               const { data: existingProfile, error: profileError } = await supabaseClient
                 .from('profiles')
                 .select('id')
-                .eq('outseta_user_id', outsetaUser.Uid)
+                .eq('outseta_user_id', outsetaUser.Account.Uid)
                 .maybeSingle();
                 
               if (profileError) {
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 const { data: newProfile, error: insertError } = await supabaseClient
                   .from('profiles')
                   .insert([{
-                    outseta_user_id: outsetaUser.Uid,
+                    outseta_user_id: outsetaUser.Account.Uid,
                     email: outsetaUser.email,
                     full_name: outsetaUser.Account?.Name || null
                   }])
@@ -133,28 +133,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   const { error: updateError } = await supabaseClient
                     .from('dna_assessment_results')
                     .update({ 
-                      // Using a type assertion to avoid TypeScript error
-                      // since profile_id is added in the database but might not be in the TypeScript types
+                      // Update the outseta_user_id to link this assessment to this user
+                      outseta_user_id: outsetaUser.Account.Uid,
                       profile_id: newProfile.id 
-                    } as any)
-                    .eq('id', assessmentId);
-                    
-                  // Also save assessment_id to the profile
-                  const { error: profileUpdateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
                     })
-                    .eq('id', newProfile.id);
-                    
-                  if (profileUpdateError) {
-                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
-                  } else {
-                    console.log('Successfully saved assessment_id to profile:', {
-                      profileId: newProfile.id,
-                      assessmentId
-                    });
-                  }
+                    .eq('id', assessmentId);
                     
                   if (updateError) {
                     console.error('Failed to associate assessment with profile:', updateError);
@@ -171,27 +154,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 const { error: updateError } = await supabaseClient
                     .from('dna_assessment_results')
                     .update({ 
-                      // Using a type assertion to avoid TypeScript error
+                      // Update the outseta_user_id to link this assessment to this user
+                      outseta_user_id: outsetaUser.Account.Uid,
                       profile_id: existingProfile.id 
-                    } as any)
-                    .eq('id', assessmentId);
-                    
-                  // Also save assessment_id to the profile
-                  const { error: profileUpdateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
                     })
-                    .eq('id', existingProfile.id);
-                    
-                  if (profileUpdateError) {
-                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
-                  } else {
-                    console.log('Successfully saved assessment_id to profile:', {
-                      profileId: existingProfile.id,
-                      assessmentId
-                    });
-                  }
+                    .eq('id', assessmentId);
                   
                 if (updateError) {
                   console.error('Failed to associate assessment with profile:', updateError);
@@ -335,3 +302,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   );
 }
+
+export default AuthContext;

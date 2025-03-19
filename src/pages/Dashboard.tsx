@@ -3,10 +3,9 @@ import React, { useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard: React.FC = () => {
-  const { user, isLoading, supabase: authSupabase } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
