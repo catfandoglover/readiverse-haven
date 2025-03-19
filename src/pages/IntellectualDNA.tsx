@@ -219,7 +219,7 @@ const IntellectualDNA = () => {
             
             <div className="w-full px-2 flex justify-center">
               <Button 
-                className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
+                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
                 onClick={handleStartAssessment}
               >
                 GET STARTED
