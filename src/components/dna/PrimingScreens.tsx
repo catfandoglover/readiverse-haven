@@ -54,7 +54,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center text-center max-w-xl w-full">
+      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
         <h2 className="font-oxanium uppercase text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
