@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +21,6 @@ type Book = {
   // Add other fields as needed
 };
 
-// Update the Concept type to make category optional and description optional
 type Concept = {
   id: string;
   title: string;
@@ -145,9 +143,9 @@ const Home = () => {
   };
 
   const handleNavigation = (path: string) => {
-    if (path === '/' && location.pathname !== '/') {
-      navigate('/');
-    } else if (path === '/dna') {
+    if (path === '/discover' && location.pathname !== '/discover') {
+      navigate('/discover');
+    } else if (path === '/') {
       navigate(getLastVisited('dna'));
     } else if (path === '/bookshelf') {
       navigate(getLastVisited('bookshelf'));
@@ -316,15 +314,15 @@ const Home = () => {
         <nav className="fixed bottom-0 left-0 right-0 border-t border-border bg-background py-2 z-50" style={{ aspectRatio: "1290/152", maxHeight: "152px" }}>
           <div className="flex justify-between items-center max-w-sm mx-auto px-8 h-full">
             <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/')}
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/discover') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/discover')}
             >
               <Compass className="h-6 w-6" />
               <span className="text-xs font-oxanium uppercase">Discover</span>
             </button>
             <button 
-              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/dna') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
-              onClick={() => handleNavigation('/dna')}
+              className={`h-14 w-20 inline-flex flex-col items-center justify-center gap-1 rounded-md text-[#E9E7E2] hover:bg-accent hover:text-accent-foreground transition-all duration-200 ${isCurrentPath('/') ? 'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]' : ''}`}
+              onClick={() => handleNavigation('/')}
             >
               <div className="relative">
                 <Hexagon className="h-7 w-7" />

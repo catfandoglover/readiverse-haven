@@ -3,8 +3,8 @@ const LAST_VISITED_KEY_PREFIX = 'last-visited-';
 const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 
 export const sections = {
-  dna: '/dna',
-  discover: '/',
+  dna: '/',
+  discover: '/discover',
   bookshelf: '/bookshelf'
 } as const;
 
