@@ -38,7 +38,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
   };
 
   return (
-    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between z-50 overflow-hidden">
+    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between px-6 py-4 z-50 overflow-hidden">
       {/* Progress indicator */}
       <div className="w-full max-w-md flex justify-center pt-4">
         <div className="flex space-x-2">
