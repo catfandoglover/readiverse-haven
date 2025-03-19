@@ -63,6 +63,7 @@ const DNAAssessment = () => {
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
+  const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -317,13 +318,18 @@ const DNAAssessment = () => {
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
 
-  const handleAnswer = async (answer: "A" | "B") => {
-    if (!currentQuestion || !assessmentId) return;
-
+  const handleAnswerSelection = (answer: "A" | "B") => {
+    setSelectedAnswer(answer);
+    
     if (showAIChat) {
       setShowAIChat(false);
     }
+  };
 
+  const handleContinue = async () => {
+    if (!selectedAnswer || !currentQuestion || !assessmentId) return;
+    
+    const answer = selectedAnswer;
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
     
@@ -499,6 +505,7 @@ const DNAAssessment = () => {
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
             setAnswers("");
+            setSelectedAnswer(null);
           }
         } catch (error) {
           console.error('Error updating assessment:', error);
@@ -531,6 +538,7 @@ const DNAAssessment = () => {
 
         setCurrentPosition(nextQuestion.tree_position);
         setCurrentQuestionNumber(prev => prev + 1);
+        setSelectedAnswer(null);
       } catch (error) {
         console.error('Error in question transition:', error);
       }
@@ -792,14 +800,22 @@ const DNAAssessment = () => {
             showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <Button
-                onClick={() => handleAnswer("A")}
-                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
+                onClick={() => handleAnswerSelection("A")}
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
+                  selectedAnswer === "A" 
+                    ? "bg-[#332E38]/10 text-[#373763] border border-[#373763]/20" 
+                    : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
+                }`}
               >
                 {buttonTextA}
               </Button>
               <Button
-                onClick={() => handleAnswer("B")}
-                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
+                onClick={() => handleAnswerSelection("B")}
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
+                  selectedAnswer === "B" 
+                    ? "bg-[#332E38]/10 text-[#373763] border border-[#373763]/20" 
+                    : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
+                }`}
               >
                 {buttonTextB}
               </Button>
@@ -824,8 +840,13 @@ const DNAAssessment = () => {
           
           <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
             <Button 
-              onClick={() => handleAnswer("A")}
-              className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
+              onClick={handleContinue}
+              disabled={selectedAnswer === null}
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button ${
+                selectedAnswer !== null 
+                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90" 
+                  : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20 cursor-not-allowed"
+              }`}
             >
               CONTINUE
             </Button>
