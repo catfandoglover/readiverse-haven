@@ -38,6 +38,7 @@ interface Profile {
   outseta_user_id: string;
   email: string;
   full_name: string | null;
+  assessment_id?: string | null;
 }
 
 const DashboardLayout: React.FC = () => {
@@ -45,7 +46,6 @@ const DashboardLayout: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, supabase: authSupabase } = useAuth();
@@ -57,8 +57,7 @@ const DashboardLayout: React.FC = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!user?.Account?.Uid) {
-        console.log("No Outseta Account.Uid available");
+      if (!user?.Uid) {
         setIsLoadingIntroduction(false);
         return;
       }
@@ -67,64 +66,41 @@ const DashboardLayout: React.FC = () => {
         // Use the authenticated client if available, otherwise use the default client
         const client = authSupabase || supabase;
         
-        // First, try to fetch the user profile with the outseta_user_id
-        const { data: profileData, error: profileError } = await client
+        const { data, error } = await client
           .from('profiles')
-          .select('id, outseta_user_id, email, full_name')
-          .eq('outseta_user_id', user.Account.Uid)
+          .select('id, outseta_user_id, assessment_id, email, full_name')
+          .eq('outseta_user_id', user.Uid)
           .maybeSingle();
           
-        if (profileError) {
-          console.error("Error fetching user profile:", profileError);
+        if (error) {
+          console.error("Error fetching user profile:", error);
           toast({
             title: "Error",
             description: "Failed to load your profile. Please try again later.",
             variant: "destructive",
           });
+          setIsLoadingIntroduction(false);
+          return;
         }
         
-        if (profileData) {
-          console.log("User profile found:", profileData);
-          setUserProfile(profileData as Profile);
-        } else {
-          console.log("No profile found for user", user.Account.Uid);
-        }
-        
-        // Now, fetch the assessment ID directly from dna_assessment_results
-        const { data: assessmentData, error: assessmentError } = await client
-          .from('dna_assessment_results')
-          .select('id')
-          .eq('outseta_user_id', user.Account.Uid)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        if (data) {
+          console.log("User profile:", data);
+          setUserProfile(data as Profile);
           
-        if (assessmentError) {
-          console.error("Error fetching assessment ID:", assessmentError);
-        }
-        
-        let finalAssessmentId: string | null = null;
-        
-        if (assessmentData && assessmentData.id) {
-          console.log("User assessment ID found:", assessmentData.id);
-          finalAssessmentId = assessmentData.id;
-          setAssessmentId(assessmentData.id);
+          // If the profile has an assessment ID, fetch the analysis result
+          if (data.assessment_id) {
+            console.log("Fetching analysis for assessment ID:", data.assessment_id);
+            fetchDNAAnalysisResult(data.assessment_id, client);
+          } else {
+            console.log("User has no assessment ID");
+            setIsLoadingIntroduction(false);
+          }
         } else {
-          // Fallback to fixed assessment ID for demo purposes
-          const fallbackId = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
-          console.log("No assessment ID found, using fallback:", fallbackId);
-          finalAssessmentId = fallbackId;
-          setAssessmentId(fallbackId);
-        }
-        
-        // Now fetch the analysis result with the assessment ID
-        if (finalAssessmentId) {
-          await fetchDNAAnalysisResult(finalAssessmentId, client);
-        } else {
+          console.log("No profile found for user", user.Uid);
           setIsLoadingIntroduction(false);
         }
       } catch (e) {
-        console.error("Exception in profile/assessment flow:", e);
+        console.error("Exception fetching user profile:", e);
         setIsLoadingIntroduction(false);
       }
     };

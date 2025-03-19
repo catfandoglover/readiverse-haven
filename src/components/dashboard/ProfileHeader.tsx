@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -25,7 +24,6 @@ interface DNAAnalysisResult {
   created_at: string;
 }
 
-// This is a fallback assessment ID used for demo purposes
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const ProfileHeader: React.FC = () => {
@@ -47,12 +45,12 @@ const ProfileHeader: React.FC = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (user?.Account?.Uid) {
+      if (user?.Uid) {
         try {
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('outseta_user_id', user.Account.Uid)
+            .eq('outseta_user_id', user.Uid)
             .maybeSingle();
             
           if (data && !error) {
@@ -80,29 +78,10 @@ const ProfileHeader: React.FC = () => {
     const fetchDNAAnalysisResult = async () => {
       try {
         setIsLoadingAnalysis(true);
-        
-        // First try to get the latest assessment ID for this user
-        let assessmentId = FIXED_ASSESSMENT_ID;
-        
-        if (user?.Account?.Uid) {
-          const { data: assessmentData, error: assessmentError } = await supabase
-            .from('dna_assessment_results')
-            .select('id')
-            .eq('outseta_user_id', user.Account.Uid)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-            
-          if (assessmentData && !assessmentError && assessmentData.id) {
-            assessmentId = assessmentData.id;
-          }
-        }
-        
-        // Now get the analysis result
         const { data, error } = await supabase
           .from('dna_analysis_results')
           .select('id, assessment_id, archetype, created_at')
-          .eq('assessment_id', assessmentId)
+          .eq('assessment_id', FIXED_ASSESSMENT_ID)
           .maybeSingle();
           
         if (data && !error) {
