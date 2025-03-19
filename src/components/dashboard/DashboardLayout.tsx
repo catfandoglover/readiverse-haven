@@ -71,7 +71,7 @@ const DashboardLayout: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
       <main className="flex-1 relative overflow-y-auto">
         <div className="absolute top-4 left-4 z-10">
           <MainMenu />
