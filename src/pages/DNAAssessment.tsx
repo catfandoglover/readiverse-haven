@@ -821,6 +821,16 @@ const DNAAssessment = () => {
               </button>
             </div>
           </div>
+          
+          {/* Added continue button with the same styling as priming screens */}
+          <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
+            <Button 
+              onClick={() => handleAnswer("A")}
+              className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
+            >
+              CONTINUE
+            </Button>
+          </div>
         </div>
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
