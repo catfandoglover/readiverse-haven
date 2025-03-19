@@ -803,35 +803,34 @@ const DNAAssessment = () => {
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
             showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
-              <Button
+              {/* Replaced Button with native button */}
+              <button
                 onClick={() => handleAnswerSelection("A")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
+                type="button"
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 inline-flex items-center justify-center ${
                   selectedAnswer === "A" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextA}
-              </Button>
-              <Button
+              </button>
+              {/* Replaced Button with native button */}
+              <button
                 onClick={() => handleAnswerSelection("B")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
+                type="button"
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 inline-flex items-center justify-center ${
                   selectedAnswer === "B" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextB}
-              </Button>
+              </button>
             </div>
             
             <div className="mt-8 text-center">
-              <button 
-                className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
-                onClick={() => setShowAIChat(true)}
-              >
-                I HAVE MORE TO SAY
-              </button>
+              
               
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
@@ -846,7 +845,8 @@ const DNAAssessment = () => {
             <Button 
               onClick={handleContinue}
               disabled={selectedAnswer === null}
-              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
+              variant="noTransition"
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border ${
                 selectedAnswer !== null 
                   ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
                   : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
@@ -857,27 +857,7 @@ const DNAAssessment = () => {
           </div>
         </div>
 
-        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-          <AlertDialogContent className="bg-[#E9E7E2]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
-              <AlertDialogDescription className="font-oxanium">
-                Your progress will not be saved and you will need to retake the assessment from the beginning.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#E9E7E2] border border-[#373763] text-[#373763] font-oxanium">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={confirmExit}
-                className="bg-[#373763] text-white font-oxanium"
-              >
-                Exit Assessment
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        
       </div>
 
       <AIChatDialog 
