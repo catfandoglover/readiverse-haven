@@ -14,7 +14,9 @@ const VirgilOffice: React.FC = () => {
         
         <div className="flex flex-col items-center justify-center h-full px-6 py-10">
           <div className="max-w-md w-full mx-auto text-center">
-            <h1 className="text-3xl font-serif mb-8 text-[#E9E7E2]">Virgil's Office</h1>
+            <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mb-8">
+              Virgil's Office
+            </h2>
             
             <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight">
               What brings you here today?
