@@ -99,6 +99,116 @@ const DNAAssessment = () => {
 
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
+  const associateAssessmentWithProfile = async (assessmentId: string) => {
+    if (!user) return false;
+    
+    try {
+      console.log('Associating assessment with user profile...');
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('outseta_user_id', user.Uid)
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return false;
+      }
+      
+      if (!profileData) {
+        console.log('No profile found for user, creating one...');
+        
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert([{
+            outseta_user_id: user.Uid,
+            email: user.email,
+            full_name: user.Account?.Name || null,
+            assessment_id: assessmentId
+          }])
+          .select('id')
+          .single();
+        
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          return false;
+        }
+        
+        console.log('New profile created:', newProfile);
+        
+        const { error: updateError } = await supabase
+          .from('dna_assessment_results')
+          .update({ 
+            profile_id: newProfile.id 
+          } as any)
+          .eq('id', assessmentId);
+        
+        if (updateError) {
+          console.error('Error updating assessment with profile ID:', updateError);
+          return false;
+        }
+        
+        return true;
+      }
+      
+      console.log('Profile found, updating with assessment ID:', profileData);
+      
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ 
+          assessment_id: assessmentId 
+        } as any)
+        .eq('id', profileData.id);
+      
+      if (profileUpdateError) {
+        console.error('Error updating profile with assessment ID:', profileUpdateError);
+      }
+      
+      const { error: assessmentUpdateError } = await supabase
+        .from('dna_assessment_results')
+        .update({ 
+          profile_id: profileData.id 
+        } as any)
+        .eq('id', assessmentId);
+      
+      if (assessmentUpdateError) {
+        console.error('Error updating assessment with profile ID:', assessmentUpdateError);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in associateAssessmentWithProfile:', error);
+      return false;
+    }
+  };
+
+  const handleAssessmentCompletion = async (assessmentId: string, answers: Record<string, string>) => {
+    console.log('Assessment complete, checking authentication status...');
+    setCompletedAssessmentId(assessmentId);
+    localStorage.setItem('pending_dna_assessment_id', assessmentId);
+    
+    await initAnalysis(answers, assessmentId);
+    
+    if (user) {
+      console.log('User is authenticated, associating assessment and redirecting...');
+      const associated = await associateAssessmentWithProfile(assessmentId);
+      
+      if (associated) {
+        toast.success('Assessment completed successfully!');
+        console.log('Assessment associated with profile, redirecting to dashboard...');
+        navigate('/dashboard');
+      } else {
+        console.log('Failed to associate assessment, showing login prompt...');
+        setShowLoginPrompt(true);
+      }
+    } else {
+      console.log('User is not authenticated, showing login prompt...');
+      setShowLoginPrompt(true);
+    }
+  };
+
   React.useEffect(() => {
     const initializeAssessment = async () => {
       if (!assessmentId && currentCategoryIndex === 0) {
@@ -436,47 +546,7 @@ const DNAAssessment = () => {
           }
 
           if (!nextCategory) {
-            console.log('Assessment complete, showing login prompt...');
-            
-            setCompletedAssessmentId(assessmentId);
-            
-            localStorage.setItem('pending_dna_assessment_id', assessmentId);
-            
-            setIsTransitioning(false);
-            
-            setShowLoginPrompt(true);
-            
-            if (user) {
-              try {
-                const { data: profileData, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('id')
-                  .eq('outseta_user_id', user.Uid)
-                  .maybeSingle();
-                
-                if (!profileError && profileData) {
-                  const { error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
-                    } as any)
-                    .eq('id', profileData.id);
-                  
-                  if (updateError) {
-                    console.error('Error updating profile with assessment ID:', updateError);
-                  } else {
-                    console.log('Successfully saved assessment ID to profile:', {
-                      profileId: profileData.id,
-                      assessmentId
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error('Error saving assessment ID to profile:', error);
-              }
-            }
-
-            await initAnalysis(updatedAnswers, assessmentId);
+            await handleAssessmentCompletion(assessmentId, updatedAnswers);
           } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
