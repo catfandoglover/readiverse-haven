@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import PrimingScreens from "@/components/dna/PrimingScreens";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -23,8 +23,6 @@ const categories: DNACategory[] = [
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showPrimingScreens, setShowPrimingScreens] = useState(false);
-  const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
 
@@ -48,49 +46,6 @@ const IntellectualDNA = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [location.pathname]);
-
-  useEffect(() => {
-    const prefetchQuestions = async () => {
-      console.log('Starting to prefetch questions for all categories');
-      
-      for (const category of categories) {
-        console.log(`Prefetching questions for category: ${category}`);
-        
-        // Prefetch initial question (Q1) for each category
-        await queryClient.prefetchQuery({
-          queryKey: ['dna-question', category, 'Q1'],
-          queryFn: async () => {
-            const { data, error } = await supabase
-              .from('dna_tree_structure')
-              .select(`
-                *,
-                question:great_questions!dna_tree_structure_question_id_fkey (
-                  question,
-                  category_number
-                )
-              `)
-              .eq('category', category)
-              .eq('tree_position', 'Q1')
-              .maybeSingle();
-
-            if (error) {
-              console.error('Error prefetching questions:', error);
-              throw error;
-            }
-
-            console.log(`Successfully prefetched Q1 for ${category}`);
-            return data;
-          },
-        });
-      }
-      
-      console.log('Completed prefetching questions for all categories');
-    };
-
-    if (showPrimingScreens) {
-      prefetchQuestions();
-    }
-  }, [showPrimingScreens, queryClient]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
@@ -118,15 +73,7 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    setShowPrimingScreens(true);
-  };
-
-  const handlePrimingComplete = (userName: string) => {
-    // Set default name if empty
-    const finalName = userName.trim() || "Anonymous";
-    sessionStorage.setItem('dna_assessment_name', finalName);
-    setShowPrimingScreens(false);
-    navigate('/dna/ethics');
+    navigate('/dna/priming');
   };
 
   const isCurrentSection = (path: string) => {
@@ -144,13 +91,6 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      {showPrimingScreens && (
-        <PrimingScreens 
-          onComplete={handlePrimingComplete} 
-          defaultName={name}
-        />
-      )}
-      
       <header className="w-full p-4 flex justify-end">
         <div className="flex space-x-2">
           {isLoading ? (

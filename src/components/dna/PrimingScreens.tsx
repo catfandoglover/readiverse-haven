@@ -47,7 +47,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
         <button 
           onClick={handleExit}
-          className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
+          className="text-[#332E38]/25 hover:text-[#332E38]/50 font-oxanium text-sm uppercase tracking-wider font-bold transition-colors"
           type="button"
           aria-label="Go back to DNA start page"
         >

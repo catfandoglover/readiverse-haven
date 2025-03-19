@@ -18,6 +18,7 @@ import { useBook } from '@/hooks/useBook';
 import Dashboard from "./pages/Dashboard";
 import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
+import DNAPriming from "./pages/DNAPriming";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
+                <Route path="/dna/priming" element={<DNAPriming />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
