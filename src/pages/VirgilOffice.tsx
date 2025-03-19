@@ -16,9 +16,9 @@ const VirgilOffice: React.FC = () => {
           <div className="max-w-md w-full mx-auto text-center">
             <h1 className="text-3xl font-serif mb-8 text-[#E9E7E2]">Virgil's Office</h1>
             
-            <p className="font-oxanium text-[#E9E7E2]/80 mb-8">
-              Welcome to Virgil's Office. Here you can engage with Virgil, explore courses, and test your philosophical knowledge.
-            </p>
+            <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight">
+              What brings you here today?.
+            </h1>
             
             <div className="space-y-4 mt-8">
               <Button
