@@ -436,14 +436,10 @@ const DNAAssessment = () => {
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
-            // Set isTransitioning to false before showing the login prompt
             setIsTransitioning(false);
             
-            // Always show the completion popup
             setShowLoginPrompt(true);
             
-            // If user is logged in, we'll still associate the assessment in the dialog
-            // But we'll also save it directly to their profile here
             if (user) {
               try {
                 const { data: profileData, error: profileError } = await supabase
@@ -453,7 +449,6 @@ const DNAAssessment = () => {
                   .maybeSingle();
                 
                 if (!profileError && profileData) {
-                  // Update the profile with the assessment ID
                   const { error: updateError } = await supabase
                     .from('profiles')
                     .update({ 
@@ -669,7 +664,6 @@ const DNAAssessment = () => {
         localStorage.setItem('pending_dna_assessment_id', assessmentId);
         console.log('Saved assessment ID for login/signup:', assessmentId);
         
-        // After login this will be used to update the profile
         sessionStorage.setItem('dna_assessment_to_save', assessmentId);
         
         try {
@@ -762,8 +756,8 @@ const DNAAssessment = () => {
     );
   }
 
-  const buttonTextA = currentQuestion.question?.answer_a || "YES";
-  const buttonTextB = currentQuestion.question?.answer_b || "NO";
+  const buttonTextA = currentQuestion?.question?.answer_a || "YES";
+  const buttonTextB = currentQuestion?.question?.answer_b || "NO";
 
   return (
     <>
@@ -791,21 +785,21 @@ const DNAAssessment = () => {
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
           <div className={`flex-1 flex items-center justify-center py-8 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
             <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
-              {currentQuestion.question?.question}
+              {currentQuestion?.question?.question}
             </h1>
           </div>
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
             showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
-            <div className="flex flex-row gap-4 max-w-md mx-auto w-full">
+            <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <Button
                 onClick={() => handleAnswer("A")}
-                className="flex-1 py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
               >
                 {buttonTextA}
               </Button>
               <Button
                 onClick={() => handleAnswer("B")}
-                className="flex-1 py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
               >
                 {buttonTextB}
               </Button>
@@ -819,7 +813,6 @@ const DNAAssessment = () => {
                 I HAVE MORE TO SAY
               </button>
               
-              {/* Test button - REMOVE AFTER TESTING */}
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
                 onClick={() => setShowLoginPrompt(true)}
@@ -829,10 +822,13 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="absolute bottom-6 left-0 right-0 text-center">
-            <div className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
-              LIGHTNING
-            </div>
+          <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
+            <Button 
+              onClick={() => handleAnswer("A")}
+              className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
+            >
+              CONTINUE
+            </Button>
           </div>
         </div>
 
