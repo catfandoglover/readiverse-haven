@@ -99,116 +99,6 @@ const DNAAssessment = () => {
 
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
-  const associateAssessmentWithProfile = async (assessmentId: string) => {
-    if (!user) return false;
-    
-    try {
-      console.log('Associating assessment with user profile...');
-      
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('outseta_user_id', user.Uid)
-        .maybeSingle();
-      
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return false;
-      }
-      
-      if (!profileData) {
-        console.log('No profile found for user, creating one...');
-        
-        const { data: newProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert([{
-            outseta_user_id: user.Uid,
-            email: user.email,
-            full_name: user.Account?.Name || null,
-            assessment_id: assessmentId
-          }])
-          .select('id')
-          .single();
-        
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          return false;
-        }
-        
-        console.log('New profile created:', newProfile);
-        
-        const { error: updateError } = await supabase
-          .from('dna_assessment_results')
-          .update({ 
-            profile_id: newProfile.id 
-          } as any)
-          .eq('id', assessmentId);
-        
-        if (updateError) {
-          console.error('Error updating assessment with profile ID:', updateError);
-          return false;
-        }
-        
-        return true;
-      }
-      
-      console.log('Profile found, updating with assessment ID:', profileData);
-      
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({ 
-          assessment_id: assessmentId 
-        } as any)
-        .eq('id', profileData.id);
-      
-      if (profileUpdateError) {
-        console.error('Error updating profile with assessment ID:', profileUpdateError);
-      }
-      
-      const { error: assessmentUpdateError } = await supabase
-        .from('dna_assessment_results')
-        .update({ 
-          profile_id: profileData.id 
-        } as any)
-        .eq('id', assessmentId);
-      
-      if (assessmentUpdateError) {
-        console.error('Error updating assessment with profile ID:', assessmentUpdateError);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error in associateAssessmentWithProfile:', error);
-      return false;
-    }
-  };
-
-  const handleAssessmentCompletion = async (assessmentId: string, answers: Record<string, string>) => {
-    console.log('Assessment complete, checking authentication status...');
-    setCompletedAssessmentId(assessmentId);
-    localStorage.setItem('pending_dna_assessment_id', assessmentId);
-    
-    await initAnalysis(answers, assessmentId);
-    
-    if (user) {
-      console.log('User is authenticated, associating assessment and redirecting...');
-      const associated = await associateAssessmentWithProfile(assessmentId);
-      
-      if (associated) {
-        toast.success('Assessment completed successfully!');
-        console.log('Assessment associated with profile, redirecting to dashboard...');
-        navigate('/dashboard');
-      } else {
-        console.log('Failed to associate assessment, showing login prompt...');
-        setShowLoginPrompt(true);
-      }
-    } else {
-      console.log('User is not authenticated, showing login prompt...');
-      setShowLoginPrompt(true);
-    }
-  };
-
   React.useEffect(() => {
     const initializeAssessment = async () => {
       if (!assessmentId && currentCategoryIndex === 0) {
@@ -546,7 +436,47 @@ const DNAAssessment = () => {
           }
 
           if (!nextCategory) {
-            await handleAssessmentCompletion(assessmentId, updatedAnswers);
+            console.log('Assessment complete, showing login prompt...');
+            
+            setCompletedAssessmentId(assessmentId);
+            
+            localStorage.setItem('pending_dna_assessment_id', assessmentId);
+            
+            setIsTransitioning(false);
+            
+            setShowLoginPrompt(true);
+            
+            if (user) {
+              try {
+                const { data: profileData, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('outseta_user_id', user.Uid)
+                  .maybeSingle();
+                
+                if (!profileError && profileData) {
+                  const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ 
+                      assessment_id: assessmentId 
+                    } as any)
+                    .eq('id', profileData.id);
+                  
+                  if (updateError) {
+                    console.error('Error updating profile with assessment ID:', updateError);
+                  } else {
+                    console.log('Successfully saved assessment ID to profile:', {
+                      profileId: profileData.id,
+                      assessmentId
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Error saving assessment ID to profile:', error);
+              }
+            }
+
+            await initAnalysis(updatedAnswers, assessmentId);
           } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
@@ -912,4 +842,83 @@ const DNAAssessment = () => {
             <Button 
               onClick={handleContinue}
               disabled={selectedAnswer === null}
-              className={`w-full py-6 rounded-2
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button ${
+                selectedAnswer !== null 
+                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90" 
+                  : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20 cursor-not-allowed"
+              }`}
+            >
+              CONTINUE
+            </Button>
+          </div>
+        </div>
+
+        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+          <AlertDialogContent className="bg-[#E9E7E2]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
+              <AlertDialogDescription className="font-oxanium">
+                Your progress will not be saved and you will need to retake the assessment from the beginning.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#E9E7E2] border border-[#373763] text-[#373763] font-oxanium">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmExit}
+                className="bg-[#373763] text-white font-oxanium"
+              >
+                Exit Assessment
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <DialogContent className="bg-[#E9E7E2] max-w-md">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-[#373763]/10 p-3">
+              <Check className="h-6 w-6 text-[#373763]" />
+            </div>
+          </div>
+          <DialogHeader>
+            <DialogTitle className="font-baskerville text-[#373763] text-center text-xl">
+              Assessment Completed!
+            </DialogTitle>
+            <DialogDescription className="font-oxanium text-[#332E38] text-center text-base mt-2">
+              To view your results please create an account or login.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-center">
+                <LoginButtons />
+              </div>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setShowLoginPrompt(false);
+                  navigate('/dna');
+                }}
+                className="text-[#373763]/70 hover:text-[#373763] hover:bg-transparent font-oxanium text-sm font-bold uppercase tracking-wider"
+              >
+                Skip for now
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AIChatDialog 
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+        currentQuestion={currentQuestion?.question?.question || ''}
+      />
+    </>
+  );
+};
+
+export default DNAAssessment;
