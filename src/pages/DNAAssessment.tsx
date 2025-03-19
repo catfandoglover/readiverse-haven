@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +62,7 @@ const DNAAssessment = () => {
   const [profileId, setProfileId] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
+  const [treeError, setTreeError] = React.useState<string | null>(null);
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
 
@@ -221,7 +223,7 @@ const DNAAssessment = () => {
     initializeAssessment();
   }, [assessmentId, currentCategoryIndex]);
 
-  const { data: currentQuestion, isLoading: questionLoading } = useQuery({
+  const { data: currentQuestion, isLoading: questionLoading, error: questionError } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
       console.log('Fetching question for:', { upperCategory, currentPosition });
@@ -230,6 +232,52 @@ const DNAAssessment = () => {
         throw new Error('Category is required');
       }
 
+      // Special handling for problematic ETHICS AAA path
+      if (upperCategory === 'ETHICS' && currentPosition === 'AAA') {
+        console.log('Special handling for ETHICS AAA path');
+        
+        // First, try to retrieve the question data
+        try {
+          const { data, error } = await supabase
+            .from('dna_tree_structure')
+            .select(`
+              *,
+              question:great_questions!dna_tree_structure_question_id_fkey (
+                question,
+                category_number,
+                answer_a,
+                answer_b
+              )
+            `)
+            .eq('category', upperCategory)
+            .eq('tree_position', currentPosition)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error fetching ETHICS AAA question:', error);
+            throw error;
+          }
+          
+          if (!data) {
+            console.error('No question found for ETHICS AAA');
+            throw new Error('Critical path ETHICS AAA not found in tree structure');
+          }
+          
+          // Check if next question references exist
+          if (!data.next_question_a_id || !data.next_question_b_id) {
+            console.error('Missing next question references in ETHICS AAA:', data);
+            throw new Error('ETHICS AAA path is incomplete: missing next question references');
+          }
+          
+          console.log('Successfully retrieved ETHICS AAA question:', data);
+          return data;
+        } catch (error) {
+          console.error('Error in ETHICS AAA special handling:', error);
+          setTreeError('The ethics assessment path is broken at position AAA. Please contact support.');
+          throw error;
+        }
+      }
+      
       const { data, error } = await supabase
         .from('dna_tree_structure')
         .select(`
@@ -262,6 +310,27 @@ const DNAAssessment = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+
+  React.useEffect(() => {
+    if (questionError) {
+      console.error('Question query error:', questionError);
+      
+      // Check if it's the known ETHICS AAA issue
+      if (upperCategory === 'ETHICS' && currentPosition === 'AAA') {
+        toast.error('There is an issue with this question path. Redirecting to the next category.');
+        
+        // Log the error for debugging
+        console.error('ETHICS AAA path error detected, attempting to recover');
+        
+        // Attempt to skip to the next category
+        if (nextCategory) {
+          navigate(`/dna/${nextCategory.toLowerCase()}`);
+        } else {
+          navigate('/dna');
+        }
+      }
+    }
+  }, [questionError, upperCategory, currentPosition, nextCategory, navigate]);
 
   React.useEffect(() => {
     const prefetchNextQuestions = async () => {
@@ -387,6 +456,83 @@ const DNAAssessment = () => {
       const nextQuestionId = answer === "A" 
         ? currentQuestion.next_question_a_id 
         : currentQuestion.next_question_b_id;
+
+      // Special handling for known problematic path in ETHICS
+      if (upperCategory === 'ETHICS' && currentPosition === 'AAA') {
+        console.log('Special path handling for ETHICS AAA');
+        
+        try {
+          // First try to verify the next question exists
+          if (!nextQuestionId) {
+            console.error('Missing next question ID for ETHICS AAA');
+            throw new Error('Missing next question ID');
+          }
+          
+          const { data: nextQuestionCheck, error: checkError } = await supabase
+            .from('dna_tree_structure')
+            .select('id, tree_position')
+            .eq('id', nextQuestionId)
+            .maybeSingle();
+            
+          if (checkError || !nextQuestionCheck) {
+            console.error('Invalid next question reference in ETHICS AAA:', { nextQuestionId, error: checkError });
+            throw new Error('Invalid next question reference');
+          }
+          
+          console.log('Verified next question exists:', nextQuestionCheck);
+        } catch (error) {
+          console.error('Error during ETHICS AAA validation:', error);
+          
+          // Log this event
+          console.log('Attempting to recover from ETHICS AAA path failure');
+          toast.error('There was an issue with this question path. Moving to the next category.');
+          
+          // Skip to the next category
+          if (nextCategory) {
+            // Update the assessment with what we have so far for ETHICS
+            try {
+              const { data: currentData, error: fetchError } = await supabase
+                .from('dna_assessment_results')
+                .select('answers')
+                .eq('id', assessmentId)
+                .maybeSingle();
+
+              if (!fetchError && currentData) {
+                const currentAnswers = (currentData?.answers as Record<string, string>) || {};
+                const updatedAnswers = {
+                  ...currentAnswers,
+                  [upperCategory]: newAnswers
+                };
+
+                const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
+                const updateData = {
+                  answers: updatedAnswers,
+                  [sequenceColumnName]: newAnswers
+                };
+
+                console.log('Updating assessment before skipping category:', updateData);
+                await supabase
+                  .from('dna_assessment_results')
+                  .update(updateData)
+                  .eq('id', assessmentId);
+              }
+            } catch (updateError) {
+              console.error('Error updating assessment before skip:', updateError);
+            }
+            
+            // Navigate to next category
+            navigate(`/dna/${nextCategory.toLowerCase()}`);
+            setCurrentPosition("Q1");
+            setCurrentQuestionNumber(prev => prev + 1);
+            setAnswers("");
+            return;
+          } else {
+            // This was the last category, go to results
+            navigate('/dna');
+            return;
+          }
+        }
+      }
 
       if (!nextQuestionId) {
         setIsTransitioning(true);
@@ -526,6 +672,23 @@ const DNAAssessment = () => {
 
         if (!nextQuestion) {
           console.error('Next question not found for ID:', nextQuestionId);
+          
+          // Special handling if this happens in ETHICS category
+          if (upperCategory === 'ETHICS') {
+            console.error('Critical path error in ETHICS category');
+            toast.error('There was an issue with the question path. Moving to next category.');
+            
+            if (nextCategory) {
+              navigate(`/dna/${nextCategory.toLowerCase()}`);
+              setCurrentPosition("Q1");
+              setCurrentQuestionNumber(prev => prev + 1);
+              setAnswers("");
+            } else {
+              navigate('/dna');
+            }
+            return;
+          }
+          
           return;
         }
 
@@ -648,6 +811,52 @@ const DNAAssessment = () => {
         console.error('Error in manual save:', error);
       }
     };
+    
+    // Debug function specifically for ETHICS AAA path
+    (window as any).debugEthicsPath = async () => {
+      try {
+        console.log('Debugging ETHICS AAA path...');
+        
+        const { data: ethicsData, error: ethicsError } = await supabase
+          .from('dna_tree_structure')
+          .select('id, tree_position, category, next_question_a_id, next_question_b_id, question_id')
+          .eq('category', 'ETHICS')
+          .eq('tree_position', 'AAA')
+          .maybeSingle();
+          
+        console.log('ETHICS AAA node:', ethicsData);
+        console.log('ETHICS AAA error:', ethicsError);
+        
+        if (ethicsData) {
+          // Check next question links
+          if (ethicsData.next_question_a_id) {
+            const { data: nextA } = await supabase
+              .from('dna_tree_structure')
+              .select('id, tree_position')
+              .eq('id', ethicsData.next_question_a_id)
+              .maybeSingle();
+              
+            console.log('Next A exists:', nextA);
+          } else {
+            console.log('Next A link is missing');
+          }
+          
+          if (ethicsData.next_question_b_id) {
+            const { data: nextB } = await supabase
+              .from('dna_tree_structure')
+              .select('id, tree_position')
+              .eq('id', ethicsData.next_question_b_id)
+              .maybeSingle();
+              
+            console.log('Next B exists:', nextB);
+          } else {
+            console.log('Next B link is missing');
+          }
+        }
+      } catch (error) {
+        console.error('Error debugging ethics path:', error);
+      }
+    };
   }, [assessmentId, currentPosition]);
 
   const handleViewResults = () => {
@@ -728,7 +937,7 @@ const DNAAssessment = () => {
     );
   }
 
-  if (!currentQuestion && !showLoginPrompt) {
+  if (treeError || (!currentQuestion && !showLoginPrompt)) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
         <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
@@ -742,7 +951,7 @@ const DNAAssessment = () => {
         </header>
         <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-4rem)] px-4">
           <h1 className="text-2xl font-oxanium text-center mb-8">
-            Question not found
+            {treeError || "Question not found"}
           </h1>
           <Button
             variant="outline"
@@ -902,3 +1111,4 @@ const DNAAssessment = () => {
 };
 
 export default DNAAssessment;
+
