@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
@@ -50,7 +49,6 @@ const IntellectualDNA = () => {
     };
   }, [location.pathname]);
 
-  // Prefetch questions for all categories
   useEffect(() => {
     const prefetchQuestions = async () => {
       console.log('Starting to prefetch questions for all categories');
@@ -144,8 +142,6 @@ const IntellectualDNA = () => {
     return false;
   };
 
-  const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
-
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
       {showPrimingScreens && (
@@ -223,11 +219,10 @@ const IntellectualDNA = () => {
             
             <div className="w-full px-2 flex justify-center">
               <Button 
-                variant="secondary"
-                className="w-full py-4 rounded-xl font-oxanium text-sm uppercase font-bold bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 transition-colors duration-200"
+                className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
                 onClick={handleStartAssessment}
               >
-                <span>GET STARTED</span>
+                GET STARTED
               </Button>
             </div>
 
