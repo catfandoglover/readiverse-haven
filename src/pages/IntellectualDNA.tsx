@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,25 +23,51 @@ const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
+  const { user, isLoading, logout, openLogin, openSignup, openProfile, supabase: authSupabase } = useAuth();
+  const [redirectChecked, setRedirectChecked] = useState(false);
+
+  useEffect(() => {
+    const checkAssessmentAndRedirect = async () => {
+      if (!isLoading && user && authSupabase) {
+        try {
+          const { data: profile, error } = await authSupabase
+            .from('profiles')
+            .select('assessment_id')
+            .eq('outseta_user_id', user.Uid)
+            .maybeSingle();
+
+          if (error) {
+            console.error('Error fetching profile:', error);
+          } else if (profile && profile.assessment_id) {
+            navigate('/dashboard');
+            return;
+          }
+        } catch (err) {
+          console.error('Error in assessment redirect check:', err);
+        }
+      }
+      
+      setRedirectChecked(true);
+    };
+
+    checkAssessmentAndRedirect();
+  }, [user, isLoading, navigate, authSupabase]);
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
 
-    // Restore scroll position when component mounts
     const savedPosition = getScrollPosition(location.pathname);
     if (savedPosition) {
       window.scrollTo(0, savedPosition);
     }
 
-    // Save scroll position when component unmounts or location changes
     const handleScroll = () => {
       saveScrollPosition(location.pathname, window.scrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => {
-      handleScroll(); // Save final position before unmounting
+      handleScroll();
       window.removeEventListener('scroll', handleScroll);
     };
   }, [location.pathname]);
@@ -88,6 +113,12 @@ const IntellectualDNA = () => {
     }
     return false;
   };
+
+  if (!redirectChecked && (isLoading || (user && !redirectChecked))) {
+    return <div className="flex items-center justify-center h-screen">
+      <p className="text-[#373763] font-oxanium">Loading...</p>
+    </div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
@@ -172,7 +203,6 @@ const IntellectualDNA = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="w-full text-center pb-4">
           <p className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
             LIGHTNING
