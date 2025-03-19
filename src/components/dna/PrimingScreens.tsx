@@ -19,12 +19,12 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       title: "Take a couple breaths.",
     },
     {
-      subtitle: "THESE AREN'T YOUR TYPICAL QUESTIONS",
-      title: "There are no wrong answers.",
+      subtitle: "BEFORE WE GET STARTED",
+      title: "Take a couple breaths.",
     },
     {
-      subtitle: "BECOME WHO YOU ARE",
-      title: "Let's get started.",
+      subtitle: "BEFORE WE GET STARTED",
+      title: "Take a couple breaths.",
     },
   ];
 
@@ -37,22 +37,8 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
     }
   };
 
-  const handleExit = () => {
-    navigate('/dna');
-  };
-
   return (
-    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between p-6 z-50 overflow-hidden">
-      <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2] w-full">
-        <button 
-          onClick={handleExit}
-          className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-          type="button"
-        >
-          BACK
-        </button>
-      </header>
-
+    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between z-50 overflow-hidden">
       {/* Progress indicator */}
       <div className="w-full max-w-md flex justify-center pt-4">
         <div className="flex space-x-2">
@@ -69,7 +55,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
-        <h2 className="font-oxanium uppercase text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
+        <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight">
