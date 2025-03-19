@@ -20,11 +20,11 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
     },
     {
       subtitle: "THESE AREN'T YOUR TYPICAL QUESTIONS",
-      title: "There are no wrong answers..",
+      title: "There are no wrong answers.",
     },
     {
       subtitle: "BECOME WHO YOU ARE",
-      title: "Let’s get started..",
+      title: "Let’s get started.",
     },
   ];
 
