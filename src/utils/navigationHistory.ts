@@ -5,7 +5,8 @@ const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 export const sections = {
   dna: '/',
   discover: '/discover',
-  bookshelf: '/bookshelf'
+  bookshelf: '/bookshelf',
+  dashboard: '/dashboard'
 } as const;
 
 export const saveLastVisited = (section: keyof typeof sections, path: string) => {

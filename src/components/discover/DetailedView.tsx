@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, sections } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -281,7 +281,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       if (window.history.length > 1) {
         navigate(-1);
       } else {
-        navigate('/');
+        navigate('/discover');
       }
     }
   };
@@ -497,7 +497,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <div className="flex items-center h-full px-4">
         <button 
           onClick={handleBack} 
-          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#2A282A]"
+          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#E9E7E2]"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
