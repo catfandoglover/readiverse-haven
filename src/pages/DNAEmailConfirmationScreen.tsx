@@ -3,17 +3,15 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { Check } from "lucide-react";
+import { Inbox } from "lucide-react";
 
-const DNACompletionScreen = () => {
+const DNAEmailConfirmationScreen = () => {
   const navigate = useNavigate();
   const { openLogin } = useAuth();
 
   const handleLoginClick = () => {
-    // Open the Outseta login/register modal
-    openLogin({
-      widgetMode: 'login|register', // Keep the combined mode as requested
-    });
+    // Open the Outseta login modal
+    openLogin();
   };
 
   return (
@@ -27,14 +25,14 @@ const DNACompletionScreen = () => {
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
         <div className="flex justify-center mb-8">
           <div className="rounded-full bg-[#373763]/10 p-4">
-            <Check className="h-8 w-8 text-[#373763]" />
+            <Inbox className="h-8 w-8 text-[#373763]" />
           </div>
         </div>
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          ASSESSMENT COMPLETED
+          CHECK YOUR EMAIL
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight mb-8">
-          Create an account to view your results
+          Confirm your email to view your results
         </h1>
       </div>
 
@@ -44,11 +42,11 @@ const DNACompletionScreen = () => {
           onClick={handleLoginClick}
           className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
         >
-          LOGIN / REGISTER
+          I'VE CONFIRMED MY EMAIL
         </Button>
       </div>
     </div>
   );
 };
 
-export default DNACompletionScreen;
+export default DNAEmailConfirmationScreen;

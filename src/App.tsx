@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import Bookshelf from "@/components/Bookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
 import DNAAssessment from "./pages/DNAAssessment";
 import DNACompletionScreen from "./pages/DNACompletionScreen";
+import DNAEmailConfirmationScreen from "./pages/DNAEmailConfirmationScreen";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
@@ -66,6 +68,7 @@ const App = () => (
                 <Route path="/dna/priming" element={<DNAPriming />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/dna/completion" element={<DNACompletionScreen />} />
+                <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/dashboard" element={<Dashboard />} />
