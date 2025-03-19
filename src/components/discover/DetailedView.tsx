@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { saveLastVisited, getLastVisited, sections, getPreviousPage } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -275,29 +275,33 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   }, [user, itemData.id, type]);
 
   const handleBack = () => {
+    console.log("Back button clicked, location state:", location.state);
+    
     if (onBack) {
       onBack();
-    } else {
-      const previousPage = getPreviousPage();
-      
-      if (previousPage && previousPage !== location.pathname) {
-        console.log("Navigating to previous page:", previousPage);
-        navigate(previousPage);
-      } 
-      else if (location.state?.fromSection) {
-        const fromSection = location.state.fromSection as keyof typeof sections;
-        const lastVisitedPath = getLastVisited(fromSection);
-        console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
-        navigate(lastVisitedPath);
-      }
-      else if (window.history.length > 1) {
-        console.log("Using browser history navigation");
-        navigate(-1);
-      } 
-      else {
-        console.log("Fallback to discover page");
-        navigate('/discover');
-      }
+      return;
+    }
+    
+    const previousPage = getPreviousPage();
+    console.log("Previous page from history:", previousPage);
+    
+    if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
+      console.log("Navigating to previous page:", previousPage);
+      navigate(previousPage);
+    } 
+    else if (location.state?.fromSection) {
+      const fromSection = location.state.fromSection as keyof typeof sections;
+      const lastVisitedPath = getLastVisited(fromSection);
+      console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
+      navigate(lastVisitedPath);
+    }
+    else if (window.history.length > 1) {
+      console.log("Using browser history navigation");
+      navigate(-1);
+    } 
+    else {
+      console.log("Fallback to discover page");
+      navigate('/discover');
     }
   };
 

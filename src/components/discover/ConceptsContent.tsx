@@ -80,6 +80,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   
   const handleLearnMore = (concept: Concept) => {
     saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing concept:", location.pathname);
     
     setSelectedConcept(concept);
     navigate(`/view/concept/${concept.id}`, { 

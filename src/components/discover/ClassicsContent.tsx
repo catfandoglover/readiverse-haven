@@ -115,6 +115,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
 
   const handleLearnMore = (classic: Classic) => {
     saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing classic:", location.pathname);
     
     fetchClassicDetails(classic.id).then(detailedClassic => {
       if (detailedClassic) {

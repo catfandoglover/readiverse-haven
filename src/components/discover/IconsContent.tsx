@@ -15,7 +15,7 @@ interface Icon {
   category?: string;
   about?: string;
   great_conversation?: string;
-  anecdotes?: string;
+  anecdotes?: string | string[];
   randomizer?: number;
   created_at?: string;
   introduction?: string;
@@ -179,6 +179,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   const handleLearnMore = (icon: Icon) => {
     saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing icon:", location.pathname);
     
     setSelectedIcon(icon);
     navigate(`/view/icon/${icon.id}`, { 
