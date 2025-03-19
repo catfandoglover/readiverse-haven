@@ -793,13 +793,13 @@ const DNAAssessment = () => {
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <Button
                 onClick={() => handleAnswer("A")}
-                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal h-auto"
+                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
               >
                 {buttonTextA}
               </Button>
               <Button
                 onClick={() => handleAnswer("B")}
-                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal h-auto"
+                className="flex-1 min-w-[120px] py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal"
               >
                 {buttonTextB}
               </Button>
