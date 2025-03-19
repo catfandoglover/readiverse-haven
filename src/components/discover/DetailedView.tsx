@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -278,9 +279,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (onBack) {
       onBack();
     } else {
-      if (window.history.length > 1) {
+      // Check for previously visited section
+      const fromSection = location.state?.fromSection as keyof typeof sections | undefined;
+      
+      if (fromSection) {
+        // Navigate to the last visited page in that section
+        const lastVisitedPath = getLastVisited(fromSection);
+        navigate(lastVisitedPath);
+      } else if (window.history.length > 1) {
+        // Fall back to browser history
         navigate(-1);
       } else {
+        // Last resort fallback to discover
         navigate('/discover');
       }
     }
