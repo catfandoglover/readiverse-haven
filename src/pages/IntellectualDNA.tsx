@@ -78,7 +78,7 @@ const IntellectualDNA = () => {
 
   const isCurrentSection = (path: string) => {
     if (path === '/dna') {
-      return location.pathname === '/' || location.pathname.startsWith('/dna');
+      return location.pathname === '/dna' || location.pathname.startsWith('/dna/');
     }
     if (path === '/discover') {
       return location.pathname === '/discover';

@@ -4,7 +4,7 @@ const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 const PREVIOUS_PAGE_KEY = 'previous-page';
 
 export const sections = {
-  dna: '/',
+  dna: '/dna',   // Changed from '/' to '/dna'
   discover: '/discover',
   bookshelf: '/bookshelf',
   dashboard: '/dashboard'
