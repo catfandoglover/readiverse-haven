@@ -7,17 +7,17 @@ import MainMenu from "@/components/navigation/MainMenu";
 const VirgilOffice: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
+      <div className="flex items-center pt-4 px-4">
+        <MainMenu />
+        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
+          Virgil's Office
+        </h2>
+        <div className="w-10"></div> {/* Spacer to balance the MainMenu width */}
+      </div>
+      
       <main className="flex-1 relative overflow-y-auto">
-        <div className="absolute top-4 left-4 z-10">
-          <MainMenu />
-        </div>
-        
         <div className="flex flex-col items-center justify-center h-full px-6 py-10">
           <div className="max-w-md w-full mx-auto text-center">
-            <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mb-8">
-              Virgil's Office
-            </h2>
-            
             <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight">
               What brings you here today?
             </h1>
