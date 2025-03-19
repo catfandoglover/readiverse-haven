@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -156,13 +155,6 @@
 }
 
 @layer components {
-  /* DNA Continue Button shared class */
-  .dna-continue-button {
-    height: 60px;
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
   .ai-chat-button {
     @apply fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg 
            hover:shadow-xl transition-all duration-200 bg-background;
