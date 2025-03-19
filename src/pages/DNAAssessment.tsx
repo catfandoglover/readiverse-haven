@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -802,20 +803,20 @@ const DNAAssessment = () => {
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <Button
                 onClick={() => handleAnswerSelection("A")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-200 ${
                   selectedAnswer === "A" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
-                    : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
+                    : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextA}
               </Button>
               <Button
                 onClick={() => handleAnswerSelection("B")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-200 ${
                   selectedAnswer === "B" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
-                    : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
+                    : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextB}
@@ -843,10 +844,10 @@ const DNAAssessment = () => {
             <Button 
               onClick={handleContinue}
               disabled={selectedAnswer === null}
-              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button ${
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
                 selectedAnswer !== null 
-                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90" 
-                  : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20 cursor-not-allowed"
+                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
+                  : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
               }`}
             >
               CONTINUE
