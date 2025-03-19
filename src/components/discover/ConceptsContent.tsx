@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 
 interface Concept {
   id: string;
@@ -51,15 +51,12 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         return [];
       }
 
-      // Log first concept to see what data is available
       if (data && data.length > 0) {
         console.log("First concept data:", data[0]);
       }
 
-      // Map the fields to match our component structure
       return data.map((concept: any) => ({
         ...concept,
-        // Use description field as about if it exists
         about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
@@ -67,7 +64,6 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     },
   });
 
-  // Check if we should show a detailed view based on URL parameters
   useEffect(() => {
     if (location.pathname.includes('/view/concept/')) {
       const conceptId = location.pathname.split('/view/concept/')[1];
@@ -83,14 +79,24 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
   
   const handleLearnMore = (concept: Concept) => {
+    saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing concept:", location.pathname);
+    
     setSelectedConcept(concept);
-    navigate(`/view/concept/${concept.id}`, { replace: true });
+    navigate(`/view/concept/${concept.id}`, { 
+      replace: true,
+      state: { fromSection: 'discover' }
+    });
+    
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
   const handleCloseDetailedView = () => {
     setSelectedConcept(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

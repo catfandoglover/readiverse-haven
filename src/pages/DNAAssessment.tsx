@@ -436,15 +436,13 @@ const DNAAssessment = () => {
           }
 
           if (!nextCategory) {
-            console.log('Assessment complete, showing login prompt...');
+            console.log('Assessment complete, navigating to completion screen...');
             
             setCompletedAssessmentId(assessmentId);
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
             setIsTransitioning(false);
-            
-            setShowLoginPrompt(true);
             
             if (user) {
               try {
@@ -477,6 +475,9 @@ const DNAAssessment = () => {
             }
 
             await initAnalysis(updatedAnswers, assessmentId);
+            
+            navigate('/dna/completion');
+            return;
           } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
@@ -831,9 +832,9 @@ const DNAAssessment = () => {
               
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={() => setShowLoginPrompt(true)}
+                onClick={() => navigate('/dna/completion')}
               >
-                TEST COMPLETION POPUP
+                TEST COMPLETION SCREEN
               </button>
             </div>
           </div>
@@ -875,41 +876,6 @@ const DNAAssessment = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
-        <DialogContent className="bg-[#E9E7E2] max-w-md">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-[#373763]/10 p-3">
-              <Check className="h-6 w-6 text-[#373763]" />
-            </div>
-          </div>
-          <DialogHeader>
-            <DialogTitle className="font-baskerville text-[#373763] text-center text-xl">
-              Assessment Completed!
-            </DialogTitle>
-            <DialogDescription className="font-oxanium text-[#332E38] text-center text-base mt-2">
-              To view your results please create an account or login.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 mt-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-center">
-                <LoginButtons />
-              </div>
-              <Button 
-                variant="ghost"
-                onClick={() => {
-                  setShowLoginPrompt(false);
-                  navigate('/dna');
-                }}
-                className="text-[#373763]/70 hover:text-[#373763] hover:bg-transparent font-oxanium text-sm font-bold uppercase tracking-wider"
-              >
-                Skip for now
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AIChatDialog 
         open={showAIChat}

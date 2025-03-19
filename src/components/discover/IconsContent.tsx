@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Icon {
@@ -14,7 +15,7 @@ interface Icon {
   category?: string;
   about?: string;
   great_conversation?: string;
-  anecdotes?: string;
+  anecdotes?: string | string[];
   randomizer?: number;
   created_at?: string;
   introduction?: string;
@@ -177,14 +178,24 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handleLearnMore = (icon: Icon) => {
+    saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing icon:", location.pathname);
+    
     setSelectedIcon(icon);
-    navigate(`/view/icon/${icon.id}`, { replace: true });
+    navigate(`/view/icon/${icon.id}`, { 
+      replace: true,
+      state: { fromSection: 'discover' }
+    });
+    
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
   const handleCloseDetailedView = () => {
     setSelectedIcon(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

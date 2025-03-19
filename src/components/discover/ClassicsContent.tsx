@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 
 interface Classic {
   id: string;
@@ -57,7 +58,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         ...book,
       }));
     },
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 300000,
   });
 
   const fetchClassicDetails = async (classicId: string): Promise<Classic | null> => {
@@ -113,6 +114,9 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
   const handleLearnMore = (classic: Classic) => {
+    saveLastVisited('discover', location.pathname);
+    console.log("Saving current location before viewing classic:", location.pathname);
+    
     fetchClassicDetails(classic.id).then(detailedClassic => {
       if (detailedClassic) {
         setSelectedClassic({
@@ -123,14 +127,21 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         setSelectedClassic(classic);
       }
       
-      navigate(`/view/classic/${classic.id}`, { replace: true });
+      navigate(`/view/classic/${classic.id}`, { 
+        replace: true,
+        state: { fromSection: 'discover' }
+      });
+      
       if (onDetailedViewShow) onDetailedViewShow();
     });
   };
 
   const handleCloseDetailedView = () => {
     setSelectedClassic(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

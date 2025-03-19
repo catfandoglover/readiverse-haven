@@ -63,7 +63,7 @@ const IntellectualDNA = () => {
   const handleNavigation = (path: string) => {
     if (path === '/dna' && location.pathname !== '/dna') {
       navigate('/dna');
-    } else if (path === '/') {
+    } else if (path === '/discover') {
       navigate(getLastVisited('discover'));
     } else if (path === '/bookshelf') {
       navigate(getLastVisited('bookshelf'));
@@ -78,10 +78,10 @@ const IntellectualDNA = () => {
 
   const isCurrentSection = (path: string) => {
     if (path === '/dna') {
-      return location.pathname.startsWith('/dna');
+      return location.pathname === '/dna' || location.pathname.startsWith('/dna/');
     }
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === '/discover') {
+      return location.pathname === '/discover';
     }
     if (path === '/bookshelf') {
       return location.pathname.startsWith('/bookshelf');
