@@ -802,7 +802,7 @@ const DNAAssessment = () => {
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <button
                 onClick={() => handleAnswerSelection("A")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
+                className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
                   selectedAnswer === "A" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
@@ -813,7 +813,7 @@ const DNAAssessment = () => {
               </button>
               <button
                 onClick={() => handleAnswerSelection("B")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
+                className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
                   selectedAnswer === "B" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
@@ -845,7 +845,7 @@ const DNAAssessment = () => {
             <Button 
               onClick={handleContinue}
               disabled={selectedAnswer === null}
-              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
+              className={`w-full h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
                 selectedAnswer !== null 
                   ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
                   : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
