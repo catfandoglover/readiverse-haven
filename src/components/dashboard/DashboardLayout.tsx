@@ -34,13 +34,13 @@ interface DNAAnalysisResult {
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const DashboardLayout: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
+  const [activeSection, setActiveSection] = useState<"dashboard" | "become" | "profile">("dashboard");
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSectionChange = (section: "become" | "profile") => {
+  const handleSectionChange = (section: "dashboard" | "become" | "profile") => {
     setActiveSection(section);
   };
 
@@ -85,6 +85,23 @@ const DashboardLayout: React.FC = () => {
               variant="ghost"
               className={cn(
                 "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                activeSection === "dashboard" 
+                  ? "text-[#E9E7E2]" 
+                  : "text-[#E9E7E2]/60"
+              )}
+              onClick={() => handleSectionChange("dashboard")}
+            >
+              <span className={cn(
+                "relative",
+                activeSection === "dashboard" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
+              )}>
+                DASHBOARD
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
                 activeSection === "profile" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -112,12 +129,17 @@ const DashboardLayout: React.FC = () => {
                 "relative",
                 activeSection === "become" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
               )}>
-                FIND YOUR WAY
+                
+                FIND YOUR PATH
               </span>
             </Button>
           </div>
           
-          {activeSection === "become" ? (
+          {activeSection === "dashboard" ? (
+            <div className="space-y-4">
+              {/* Dashboard content will go here */}
+            </div>
+          ) : activeSection === "become" ? (
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
                 {isLoadingIntroduction ? (
