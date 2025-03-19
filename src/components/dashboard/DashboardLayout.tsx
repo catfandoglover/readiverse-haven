@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface DNAAnalysisResult {
   id: string;
@@ -31,27 +33,84 @@ interface DNAAnalysisResult {
   created_at: string;
 }
 
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+interface Profile {
+  id: string;
+  outseta_user_id: string;
+  assessment_id: string | null;
+  email: string;
+  full_name: string | null;
+}
 
 const DashboardLayout: React.FC = () => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">("profile");
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, supabase: authSupabase } = useAuth();
+  const { toast } = useToast();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
 
   useEffect(() => {
-    const fetchDNAAnalysisResult = async () => {
+    const fetchUserProfile = async () => {
+      if (!user?.Uid) {
+        setIsLoadingIntroduction(false);
+        return;
+      }
+
+      try {
+        // Use the authenticated client if available, otherwise use the default client
+        const client = authSupabase || supabase;
+        
+        const { data, error } = await client
+          .from('profiles')
+          .select('id, outseta_user_id, assessment_id, email, full_name')
+          .eq('outseta_user_id', user.Uid)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load your profile. Please try again later.",
+            variant: "destructive",
+          });
+          setIsLoadingIntroduction(false);
+          return;
+        }
+        
+        if (data) {
+          console.log("User profile:", data);
+          setUserProfile(data as Profile);
+          
+          // If the profile has an assessment ID, fetch the analysis result
+          if (data.assessment_id) {
+            fetchDNAAnalysisResult(data.assessment_id, client);
+          } else {
+            console.log("User has no assessment ID");
+            setIsLoadingIntroduction(false);
+          }
+        } else {
+          console.log("No profile found for user", user.Uid);
+          setIsLoadingIntroduction(false);
+        }
+      } catch (e) {
+        console.error("Exception fetching user profile:", e);
+        setIsLoadingIntroduction(false);
+      }
+    };
+    
+    const fetchDNAAnalysisResult = async (assessmentId: string, client = supabase) => {
       try {
         setIsLoadingIntroduction(true);
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from('dna_analysis_results')
           .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', assessmentId)
           .maybeSingle();
           
         if (data && !error) {
@@ -59,6 +118,11 @@ const DashboardLayout: React.FC = () => {
           setAnalysisResult(data as DNAAnalysisResult);
         } else {
           console.error("Error fetching DNA analysis result:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load your DNA analysis. Please try again later.",
+            variant: "destructive",
+          });
         }
       } catch (e) {
         console.error("Exception fetching DNA analysis result:", e);
@@ -67,8 +131,8 @@ const DashboardLayout: React.FC = () => {
       }
     };
     
-    fetchDNAAnalysisResult();
-  }, []);
+    fetchUserProfile();
+  }, [user, authSupabase, toast]);
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
