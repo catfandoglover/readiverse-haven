@@ -1,10 +1,10 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { flushSync } from "react-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,7 +320,9 @@ const DNAAssessment = () => {
   }, [currentQuestion, queryClient]);
 
   const handleAnswerSelection = (answer: "A" | "B") => {
-    setSelectedAnswer(answer);
+    flushSync(() => {
+      setSelectedAnswer(answer);
+    });
     
     if (showAIChat) {
       setShowAIChat(false);
@@ -803,7 +805,7 @@ const DNAAssessment = () => {
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <Button
                 onClick={() => handleAnswerSelection("A")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-100 active:bg-[#332E38]/10 ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
                   selectedAnswer === "A" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
@@ -813,7 +815,7 @@ const DNAAssessment = () => {
               </Button>
               <Button
                 onClick={() => handleAnswerSelection("B")}
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-100 active:bg-[#332E38]/10 ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
                   selectedAnswer === "B" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
