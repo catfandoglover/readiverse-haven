@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Compass, BookOpen, ArrowRight, MoveLeft, Hexagon } from "lucide-react";
@@ -68,26 +67,20 @@ const DomainDetail = () => {
   
   useEffect(() => {
     const fetchUserAssessmentId = async () => {
-      if (!user) return;
+      if (!user || !user.Account?.Uid) {
+        console.log("No user Account.Uid available:", user);
+        return;
+      }
       
       try {
         const client = authSupabase || supabase;
         
-        // First, get the profile ID from the authenticated user
-        const { data: userData, error: userError } = await client.auth.getUser();
-        
-        if (userError || !userData?.user?.id) {
-          console.error("Error fetching Supabase user ID:", userError);
-          return;
-        }
-        
-        const supabaseUserId = userData.user.id;
-        console.log("Supabase user ID for domain detail:", supabaseUserId);
+        console.log("Fetching profile with Outseta Account.Uid:", user.Account.Uid);
         
         const { data, error } = await client
           .from('profiles')
           .select('assessment_id')
-          .eq('id', supabaseUserId)
+          .eq('outseta_user_id', user.Account.Uid)
           .maybeSingle();
           
         if (error) {
@@ -98,6 +91,8 @@ const DomainDetail = () => {
         if (data && data.assessment_id) {
           console.log("User assessment ID for domain detail:", data.assessment_id);
           setAssessmentId(data.assessment_id);
+        } else {
+          console.log("No assessment ID found for user:", user.Account.Uid);
         }
       } catch (e) {
         console.error("Exception fetching user assessment ID:", e);
@@ -264,7 +259,7 @@ const DomainDetail = () => {
                     </button>
                   </div>
                 )}
-                                {kindredSpirit3 && (
+                {kindredSpirit3 && (
                   <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="relative mr-4">
@@ -293,7 +288,7 @@ const DomainDetail = () => {
                     </button>
                   </div>
                 )}
-                                {kindredSpirit4 && (
+                {kindredSpirit4 && (
                   <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="relative mr-4">

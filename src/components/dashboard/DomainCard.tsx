@@ -33,26 +33,20 @@ const DomainCard: React.FC<DomainCardProps> = ({
   
   useEffect(() => {
     const fetchUserAssessmentId = async () => {
-      if (!user) return;
+      if (!user || !user.Account?.Uid) {
+        console.log("No user Account.Uid available:", user);
+        return;
+      }
       
       try {
         const client = authSupabase || supabase;
         
-        // First, get the profile ID from the authenticated user
-        const { data: userData, error: userError } = await client.auth.getUser();
-        
-        if (userError || !userData?.user?.id) {
-          console.error("Error fetching Supabase user ID:", userError);
-          return;
-        }
-        
-        const supabaseUserId = userData.user.id;
-        console.log("Supabase user ID:", supabaseUserId);
+        console.log("Fetching profile with Outseta Account.Uid:", user.Account.Uid);
         
         const { data, error } = await client
           .from('profiles')
           .select('assessment_id')
-          .eq('id', supabaseUserId)
+          .eq('outseta_user_id', user.Account.Uid)
           .maybeSingle();
           
         if (error) {
@@ -63,6 +57,8 @@ const DomainCard: React.FC<DomainCardProps> = ({
         if (data && data.assessment_id) {
           console.log("User assessment ID:", data.assessment_id);
           setAssessmentId(data.assessment_id);
+        } else {
+          console.log("No assessment ID found for user:", user.Account.Uid);
         }
       } catch (e) {
         console.error("Exception fetching user assessment ID:", e);

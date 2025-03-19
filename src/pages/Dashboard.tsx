@@ -17,22 +17,19 @@ const Dashboard: React.FC = () => {
       navigate("/");
     }
     
-    // Validate that we have access to the Supabase user profile
-    const checkSupabaseAuth = async () => {
+    // Validate that the user's Outseta Account.Uid is available
+    const checkOutsetaAuth = async () => {
       if (user) {
-        const client = authSupabase || supabase;
-        const { data, error } = await client.auth.getUser();
-        
-        if (error || !data?.user) {
-          console.error("Error validating Supabase auth:", error);
+        if (user.Account?.Uid) {
+          console.log("Outseta Account.Uid available:", user.Account.Uid);
         } else {
-          console.log("Supabase auth validated:", data.user.id);
+          console.error("Outseta Account.Uid not available in user object:", user);
         }
       }
     };
     
-    checkSupabaseAuth();
-  }, [user, isLoading, navigate, authSupabase]);
+    checkOutsetaAuth();
+  }, [user, isLoading, navigate]);
   
   // Show the dashboard only if the user is authenticated
   return user ? <DashboardLayout /> : null;
