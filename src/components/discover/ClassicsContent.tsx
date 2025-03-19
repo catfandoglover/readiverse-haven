@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { saveLastVisited } from "@/utils/navigationHistory";
 
 interface Classic {
   id: string;
@@ -113,6 +114,8 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
   const classicToShow = classics[currentIndex % Math.max(1, classics.length)] || null;
 
   const handleLearnMore = (classic: Classic) => {
+    saveLastVisited('discover', location.pathname);
+    
     fetchClassicDetails(classic.id).then(detailedClassic => {
       if (detailedClassic) {
         setSelectedClassic({
@@ -123,7 +126,11 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         setSelectedClassic(classic);
       }
       
-      navigate(`/view/classic/${classic.id}`, { replace: true });
+      navigate(`/view/classic/${classic.id}`, { 
+        replace: true,
+        state: { fromSection: 'discover' }
+      });
+      
       if (onDetailedViewShow) onDetailedViewShow();
     });
   };

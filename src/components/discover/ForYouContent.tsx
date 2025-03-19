@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
+import { saveLastVisited } from "@/utils/navigationHistory";
 
 interface ForYouContentItem {
   id: string;
@@ -122,8 +123,14 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
+    saveLastVisited('discover', location.pathname);
+    
     setSelectedItem(item);
-    navigate(`/view/${item.type}/${item.id}`, { replace: true });
+    navigate(`/view/${item.type}/${item.id}`, { 
+      replace: true,
+      state: { fromSection: 'discover' }
+    });
+    
     if (onDetailedViewShow) onDetailedViewShow();
   };
 

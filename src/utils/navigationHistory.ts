@@ -16,10 +16,18 @@ export const sections = {
 export const saveLastVisited = (section: keyof typeof sections, path: string) => {
   localStorage.setItem(`${LAST_VISITED_KEY_PREFIX}${section}`, path);
   
-  // Also save as previous page for back navigation
-  const currentPage = localStorage.getItem(PREVIOUS_PAGE_KEY);
-  if (currentPage !== path) {
+  // Store current path as previous page for back navigation
+  // Only update if it's a different path to avoid circular references
+  const currentPrevious = localStorage.getItem(PREVIOUS_PAGE_KEY);
+  if (currentPrevious !== path) {
+    // Store the current previous page as the new previous page
+    if (currentPrevious) {
+      localStorage.setItem(PREVIOUS_PAGE_KEY, currentPrevious);
+    }
+    
+    // Update the current page
     localStorage.setItem(PREVIOUS_PAGE_KEY, path);
+    console.log("Saved previous page:", path);
   }
 };
 

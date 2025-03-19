@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { saveLastVisited, getLastVisited, sections } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, sections, getPreviousPage } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -279,18 +278,24 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (onBack) {
       onBack();
     } else {
-      // Check for previously visited section
-      const fromSection = location.state?.fromSection as keyof typeof sections | undefined;
+      const previousPage = getPreviousPage();
       
-      if (fromSection) {
-        // Navigate to the last visited page in that section
+      if (previousPage && previousPage !== location.pathname) {
+        console.log("Navigating to previous page:", previousPage);
+        navigate(previousPage);
+      } 
+      else if (location.state?.fromSection) {
+        const fromSection = location.state.fromSection as keyof typeof sections;
         const lastVisitedPath = getLastVisited(fromSection);
+        console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
         navigate(lastVisitedPath);
-      } else if (window.history.length > 1) {
-        // Fall back to browser history
+      }
+      else if (window.history.length > 1) {
+        console.log("Using browser history navigation");
         navigate(-1);
-      } else {
-        // Last resort fallback to discover
+      } 
+      else {
+        console.log("Fallback to discover page");
         navigate('/discover');
       }
     }

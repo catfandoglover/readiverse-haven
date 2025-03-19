@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { saveLastVisited } from "@/utils/navigationHistory";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Icon {
@@ -177,8 +178,14 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handleLearnMore = (icon: Icon) => {
+    saveLastVisited('discover', location.pathname);
+    
     setSelectedIcon(icon);
-    navigate(`/view/icon/${icon.id}`, { replace: true });
+    navigate(`/view/icon/${icon.id}`, { 
+      replace: true,
+      state: { fromSection: 'discover' }
+    });
+    
     if (onDetailedViewShow) onDetailedViewShow();
   };
 
