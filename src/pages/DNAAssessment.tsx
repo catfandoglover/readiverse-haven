@@ -1,10 +1,10 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { flushSync } from "react-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,9 +320,7 @@ const DNAAssessment = () => {
   }, [currentQuestion, queryClient]);
 
   const handleAnswerSelection = (answer: "A" | "B") => {
-    flushSync(() => {
-      setSelectedAnswer(answer);
-    });
+    setSelectedAnswer(answer);
     
     if (showAIChat) {
       setShowAIChat(false);
@@ -803,34 +801,35 @@ const DNAAssessment = () => {
           <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
             showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
-              {/* Replaced Button with native button */}
-              <button
+              <Button
                 onClick={() => handleAnswerSelection("A")}
-                type="button"
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 inline-flex items-center justify-center ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-100 active:bg-[#332E38]/10 ${
                   selectedAnswer === "A" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextA}
-              </button>
-              {/* Replaced Button with native button */}
-              <button
+              </Button>
+              <Button
                 onClick={() => handleAnswerSelection("B")}
-                type="button"
-                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 inline-flex items-center justify-center ${
+                className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 transition-colors duration-100 active:bg-[#332E38]/10 ${
                   selectedAnswer === "B" 
                     ? "bg-[#332E38]/10 text-[#373763]" 
                     : "bg-[#E9E7E2] text-[#373763]"
                 }`}
               >
                 {buttonTextB}
-              </button>
+              </Button>
             </div>
             
             <div className="mt-8 text-center">
-              
+              <button 
+                className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
+                onClick={() => setShowAIChat(true)}
+              >
+                I HAVE MORE TO SAY
+              </button>
               
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
@@ -845,8 +844,7 @@ const DNAAssessment = () => {
             <Button 
               onClick={handleContinue}
               disabled={selectedAnswer === null}
-              variant="noTransition"
-              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border ${
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
                 selectedAnswer !== null 
                   ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
                   : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
@@ -857,7 +855,27 @@ const DNAAssessment = () => {
           </div>
         </div>
 
-        
+        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+          <AlertDialogContent className="bg-[#E9E7E2]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
+              <AlertDialogDescription className="font-oxanium">
+                Your progress will not be saved and you will need to retake the assessment from the beginning.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#E9E7E2] border border-[#373763] text-[#373763] font-oxanium">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmExit}
+                className="bg-[#373763] text-white font-oxanium"
+              >
+                Exit Assessment
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <AIChatDialog 
