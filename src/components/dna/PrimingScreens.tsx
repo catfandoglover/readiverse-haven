@@ -37,18 +37,25 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
     }
   };
 
+  const handleExit = () => {
+    navigate('/dna');
+  };
+
   return (
-    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between px-6 py-4 z-50 overflow-hidden">
-      <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-          <button 
-            onClick={handleExit}
-            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-            type="button"
-          >
-            BACK
-          </button>
+    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
+      <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
+        <button 
+          onClick={handleExit}
+          className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
+          type="button"
+        >
+          BACK
+        </button>
+        <div className="flex-1"></div> {/* Spacer */}
+      </header>
+
       {/* Progress indicator */}
-      <div className="w-full max-w-md flex justify-center pt-4">
+      <div className="w-full max-w-md flex justify-center pt-4 px-6">
         <div className="flex space-x-2">
           {screens.map((_, index) => (
             <div 
@@ -62,7 +69,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
+      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
@@ -72,7 +79,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       </div>
 
       {/* Continue button */}
-      <div className="w-full max-w-md mb-16">
+      <div className="w-full max-w-md mb-16 px-6">
         <Button 
           onClick={handleContinue}
           className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
