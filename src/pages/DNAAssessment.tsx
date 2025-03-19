@@ -803,7 +803,7 @@ const DNAAssessment = () => {
                 onClick={() => handleAnswerSelection("A")}
                 className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
                   selectedAnswer === "A" 
-                    ? "bg-[#332E38]/10 text-[#373763]" 
+                    ? "bg-[#332E38]/10 text-[#373763] border border-[#373763]/20" 
                     : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
                 }`}
               >
@@ -813,7 +813,7 @@ const DNAAssessment = () => {
                 onClick={() => handleAnswerSelection("B")}
                 className={`flex-1 min-w-[120px] py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal ${
                   selectedAnswer === "B" 
-                    ? "bg-[#332E38]/10 text-[#373763]" 
+                    ? "bg-[#332E38]/10 text-[#373763] border border-[#373763]/20" 
                     : "bg-[#E9E7E2] text-[#373763] border border-[#373763]/20"
                 }`}
               >
