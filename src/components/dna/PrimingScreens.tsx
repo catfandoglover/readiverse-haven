@@ -39,6 +39,14 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
   return (
     <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between px-6 py-4 z-50 overflow-hidden">
+      <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
+          <button 
+            onClick={handleExit}
+            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
+            type="button"
+          >
+            BACK
+          </button>
       {/* Progress indicator */}
       <div className="w-full max-w-md flex justify-center pt-4">
         <div className="flex space-x-2">
