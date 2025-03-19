@@ -822,7 +822,6 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          {/* Added continue button with the same styling as priming screens */}
           <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
             <Button 
               onClick={() => handleAnswer("A")}
