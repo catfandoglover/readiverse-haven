@@ -19,12 +19,12 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       title: "Take a couple breaths.",
     },
     {
-      subtitle: "THESE AREN'T YOUR TYPICAL QUESTIONS",
-      title: "Take a couple breaths.",
+      subtitle: "BEFORE WE GET STARTED",
+      title: "There are no wrong answers.",
     },
     {
-      subtitle: "BEFORE WE GET STARTED",
-      title: "Take a couple breaths.",
+      subtitle: "BECOME WHO YOU ARE",
+      title: "Let’s get started.",
     },
   ];
 
@@ -55,7 +55,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
-        <h2 className="font-oxanium UPPERCASE text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
+        <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight">
