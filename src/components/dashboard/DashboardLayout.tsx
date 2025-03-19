@@ -129,7 +129,7 @@ const DashboardLayout: React.FC = () => {
                 "relative",
                 activeSection === "become" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
               )}>
-                BECOME WHO YOU ARE
+                FIND YOUR PATH
               </span>
             </Button>
           </div>
