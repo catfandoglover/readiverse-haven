@@ -1,17 +1,10 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -30,8 +23,6 @@ const categories: DNACategory[] = [
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showNameDialog, setShowNameDialog] = useState(false);
-  const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
 
@@ -56,7 +47,7 @@ const IntellectualDNA = () => {
     };
   }, [location.pathname]);
 
-  // Prefetch questions for all categories
+  // Prefetch questions for all categories when component mounts
   useEffect(() => {
     const prefetchQuestions = async () => {
       console.log('Starting to prefetch questions for all categories');
@@ -95,10 +86,8 @@ const IntellectualDNA = () => {
       console.log('Completed prefetching questions for all categories');
     };
 
-    if (showNameDialog) {
-      prefetchQuestions();
-    }
-  }, [showNameDialog, queryClient]);
+    prefetchQuestions();
+  }, [queryClient]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
@@ -126,15 +115,8 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    setShowNameDialog(true);
-  };
-
-  const handleNameSubmit = () => {
-    if (name.trim()) {
-      sessionStorage.setItem('dna_assessment_name', name.trim());
-      setShowNameDialog(false);
-      navigate('/dna/priming');
-    }
+    // Navigate directly to the priming screens
+    navigate('/dna/priming');
   };
 
   const isCurrentSection = (path: string) => {
@@ -243,37 +225,6 @@ const IntellectualDNA = () => {
           </p>
         </div>
       </main>
-
-      <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-        <DialogContent className="bg-[#E9E7E2]">
-          <DialogHeader>
-            <DialogTitle className="font-baskerville text-[#373763]">Enter Your Name</DialogTitle>
-            <DialogDescription className="font-oxanium text-[#332E38]/70">
-              Please enter your name to begin the DNA assessment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) {
-                  handleNameSubmit();
-                }
-              }}
-              className="bg-white/50 border-[#373763]/20 text-[#282828]"
-            />
-            <Button 
-              onClick={handleNameSubmit}
-              disabled={!name.trim()}
-              className="w-full bg-[#373763] text-[#E9E7E2] font-oxanium uppercase tracking-wider hover:opacity-90 transition-opacity duration-200"
-            >
-              Begin Assessment
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

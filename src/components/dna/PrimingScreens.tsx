@@ -1,17 +1,13 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 interface PrimingScreensProps {
-  onComplete: (name: string) => void;
-  defaultName?: string;
+  onComplete: () => void;
 }
 
-const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) => {
+const PrimingScreens = ({ onComplete }: PrimingScreensProps) => {
   const [currentScreen, setCurrentScreen] = useState(0);
-  const [name, setName] = useState(defaultName);
-  const navigate = useNavigate();
 
   const screens = [
     {
@@ -33,26 +29,13 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       setCurrentScreen(prev => prev + 1);
     } else {
       // When we reach the last screen, complete the priming process
-      onComplete(name);
+      onComplete();
     }
-  };
-
-  const handleExit = () => {
-    // Navigate directly to the DNA start page
-    navigate('/dna');
   };
 
   return (
     <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
       <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-        <button 
-          onClick={handleExit}
-          className="text-[#332E38]/25 hover:text-[#332E38]/50 font-oxanium text-sm uppercase tracking-wider font-bold transition-colors"
-          type="button"
-          aria-label="Go back to DNA start page"
-        >
-          BACK
-        </button>
         <div className="flex-1"></div> {/* Spacer */}
       </header>
 
@@ -94,4 +77,3 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 };
 
 export default PrimingScreens;
-=======
