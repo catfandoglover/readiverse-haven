@@ -436,15 +436,13 @@ const DNAAssessment = () => {
           }
 
           if (!nextCategory) {
-            console.log('Assessment complete, showing login prompt...');
+            console.log('Assessment complete, checking auth status...');
             
             setCompletedAssessmentId(assessmentId);
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
             setIsTransitioning(false);
-            
-            setShowLoginPrompt(true);
             
             if (user) {
               try {
@@ -469,12 +467,16 @@ const DNAAssessment = () => {
                       profileId: profileData.id,
                       assessmentId
                     });
+                    navigate('/dashboard');
+                    return;
                   }
                 }
               } catch (error) {
                 console.error('Error saving assessment ID to profile:', error);
               }
             }
+            
+            setShowLoginPrompt(true);
 
             await initAnalysis(updatedAnswers, assessmentId);
           } else {
@@ -827,13 +829,6 @@ const DNAAssessment = () => {
                 onClick={() => setShowAIChat(true)}
               >
                 I HAVE MORE TO SAY
-              </button>
-              
-              <button 
-                className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={() => setShowLoginPrompt(true)}
-              >
-                TEST COMPLETION POPUP
               </button>
             </div>
           </div>
