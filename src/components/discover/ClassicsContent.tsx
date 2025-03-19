@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 
 interface Classic {
   id: string;
@@ -58,7 +58,7 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
         ...book,
       }));
     },
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 300000,
   });
 
   const fetchClassicDetails = async (classicId: string): Promise<Classic | null> => {
@@ -138,7 +138,10 @@ const ClassicsContent: React.FC<ClassicsContentProps> = ({ currentIndex, onDetai
 
   const handleCloseDetailedView = () => {
     setSelectedClassic(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

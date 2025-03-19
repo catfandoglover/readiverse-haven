@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 
 interface ForYouContentItem {
   id: string;
@@ -136,7 +136,10 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

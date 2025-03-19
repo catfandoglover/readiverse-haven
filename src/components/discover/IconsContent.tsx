@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { saveLastVisited } from "@/utils/navigationHistory";
+import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Icon {
@@ -192,7 +192,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   const handleCloseDetailedView = () => {
     setSelectedIcon(null);
-    navigate('/', { replace: true });
+    const previousPath = getPreviousPage();
+    console.log("Navigating back to previous page:", previousPath);
+    navigate(previousPath, { replace: true });
+    
     if (onDetailedViewHide) onDetailedViewHide();
   };
 

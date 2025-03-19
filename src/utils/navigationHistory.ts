@@ -65,7 +65,8 @@ export const getLastVisited = (section: keyof typeof sections): string => {
 };
 
 /**
- * Returns the previous page the user visited
+ * Returns the previous page the user visited, excluding the DNA path 
+ * to avoid navigation loops caused by the root redirect
  */
 export const getPreviousPage = (): string => {
   // First check navigation history
@@ -74,9 +75,10 @@ export const getPreviousPage = (): string => {
     if (historyString) {
       const history: string[] = JSON.parse(historyString);
       
-      // Find the last non-detail page in history (if exists)
+      // Find the last valid page in history (not a detail view)
       for (let i = history.length - 1; i >= 0; i--) {
         const page = history[i];
+        // Don't check if it's /dna anymore, we want to go back to the actual previous page
         if (!page.includes('/view/')) {
           return page;
         }
@@ -86,8 +88,9 @@ export const getPreviousPage = (): string => {
     console.error("Error retrieving navigation history:", error);
   }
   
-  // Fall back to previous page key
-  return localStorage.getItem(PREVIOUS_PAGE_KEY) || '/discover';
+  // Fall back to previous page key if history lookup fails
+  const previousPage = localStorage.getItem(PREVIOUS_PAGE_KEY);
+  return previousPage || '/discover'; // Default to discover if no previous page
 };
 
 /**
