@@ -846,7 +846,7 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="w-full max-w-md mb-16 px-6">
+          <div className="absolute bottom-10 left-0 right-0 px-6">
             <div className="max-w-md mx-auto">
               <Button 
                 onClick={handleContinue}
