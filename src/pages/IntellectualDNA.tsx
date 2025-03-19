@@ -133,7 +133,7 @@ const IntellectualDNA = () => {
     if (name.trim()) {
       sessionStorage.setItem('dna_assessment_name', name.trim());
       setShowNameDialog(false);
-      navigate('/dna/priming');
+      navigate('/dna/ethics');
     }
   };
 
