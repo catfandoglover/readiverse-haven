@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Hexagon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore, getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
@@ -33,14 +33,26 @@ const DomainCard: React.FC<DomainCardProps> = ({
   
   useEffect(() => {
     const fetchUserAssessmentId = async () => {
-      if (!user?.Uid) return;
+      if (!user) return;
       
       try {
         const client = authSupabase || supabase;
+        
+        // First, get the profile ID from the authenticated user
+        const { data: userData, error: userError } = await client.auth.getUser();
+        
+        if (userError || !userData?.user?.id) {
+          console.error("Error fetching Supabase user ID:", userError);
+          return;
+        }
+        
+        const supabaseUserId = userData.user.id;
+        console.log("Supabase user ID:", supabaseUserId);
+        
         const { data, error } = await client
           .from('profiles')
           .select('assessment_id')
-          .eq('outseta_user_id', user.Uid)
+          .eq('id', supabaseUserId)
           .maybeSingle();
           
         if (error) {

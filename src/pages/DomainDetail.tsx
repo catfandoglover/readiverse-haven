@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Compass, BookOpen, ArrowRight, MoveLeft } from "lucide-react";
+import { ArrowLeft, Compass, BookOpen, ArrowRight, MoveLeft, Hexagon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -67,14 +68,26 @@ const DomainDetail = () => {
   
   useEffect(() => {
     const fetchUserAssessmentId = async () => {
-      if (!user?.Uid) return;
+      if (!user) return;
       
       try {
         const client = authSupabase || supabase;
+        
+        // First, get the profile ID from the authenticated user
+        const { data: userData, error: userError } = await client.auth.getUser();
+        
+        if (userError || !userData?.user?.id) {
+          console.error("Error fetching Supabase user ID:", userError);
+          return;
+        }
+        
+        const supabaseUserId = userData.user.id;
+        console.log("Supabase user ID for domain detail:", supabaseUserId);
+        
         const { data, error } = await client
           .from('profiles')
           .select('assessment_id')
-          .eq('outseta_user_id', user.Uid)
+          .eq('id', supabaseUserId)
           .maybeSingle();
           
         if (error) {
