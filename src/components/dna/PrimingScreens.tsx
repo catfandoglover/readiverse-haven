@@ -94,4 +94,3 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 };
 
 export default PrimingScreens;
-=======

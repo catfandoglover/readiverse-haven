@@ -1,17 +1,10 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -30,8 +23,6 @@ const categories: DNACategory[] = [
 const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showNameDialog, setShowNameDialog] = useState(false);
-  const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
 
@@ -55,50 +46,6 @@ const IntellectualDNA = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [location.pathname]);
-
-  // Prefetch questions for all categories
-  useEffect(() => {
-    const prefetchQuestions = async () => {
-      console.log('Starting to prefetch questions for all categories');
-      
-      for (const category of categories) {
-        console.log(`Prefetching questions for category: ${category}`);
-        
-        // Prefetch initial question (Q1) for each category
-        await queryClient.prefetchQuery({
-          queryKey: ['dna-question', category, 'Q1'],
-          queryFn: async () => {
-            const { data, error } = await supabase
-              .from('dna_tree_structure')
-              .select(`
-                *,
-                question:great_questions!dna_tree_structure_question_id_fkey (
-                  question,
-                  category_number
-                )
-              `)
-              .eq('category', category)
-              .eq('tree_position', 'Q1')
-              .maybeSingle();
-
-            if (error) {
-              console.error('Error prefetching questions:', error);
-              throw error;
-            }
-
-            console.log(`Successfully prefetched Q1 for ${category}`);
-            return data;
-          },
-        });
-      }
-      
-      console.log('Completed prefetching questions for all categories');
-    };
-
-    if (showNameDialog) {
-      prefetchQuestions();
-    }
-  }, [showNameDialog, queryClient]);
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
@@ -126,15 +73,7 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    setShowNameDialog(true);
-  };
-
-  const handleNameSubmit = () => {
-    if (name.trim()) {
-      sessionStorage.setItem('dna_assessment_name', name.trim());
-      setShowNameDialog(false);
-      navigate('/dna/priming');
-    }
+    navigate('/dna/priming');
   };
 
   const isCurrentSection = (path: string) => {
@@ -149,8 +88,6 @@ const IntellectualDNA = () => {
     }
     return false;
   };
-
-  const buttonGradientStyles = "text-[#E9E7E2] bg-[#2A282A] hover:bg-[#2A282A]/90 transition-all duration-300 font-oxanium border-2 border-transparent hover:border-transparent active:border-transparent relative before:absolute before:inset-[-2px] before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-0 after:rounded-[4px] after:bg-[#2A282A] after:z-[0] hover:after:bg-[#2A282A]/90 [&>span]:relative [&>span]:z-[1]";
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
@@ -222,11 +159,10 @@ const IntellectualDNA = () => {
             
             <div className="w-full px-2 flex justify-center">
               <Button 
-                variant="secondary"
-                className="w-full py-4 rounded-xl font-oxanium text-sm uppercase font-bold bg-[#373763] text-[#E9E7E2] hover:bg-[#424278] transition-colors duration-200"
+                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
                 onClick={handleStartAssessment}
               >
-                <span>GET STARTED</span>
+                GET STARTED
               </Button>
             </div>
 
@@ -243,37 +179,6 @@ const IntellectualDNA = () => {
           </p>
         </div>
       </main>
-
-      <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-        <DialogContent className="bg-[#E9E7E2]">
-          <DialogHeader>
-            <DialogTitle className="font-baskerville text-[#373763]">Enter Your Name</DialogTitle>
-            <DialogDescription className="font-oxanium text-[#332E38]/70">
-              Please enter your name to begin the DNA assessment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) {
-                  handleNameSubmit();
-                }
-              }}
-              className="bg-white/50 border-[#373763]/20 text-[#282828]"
-            />
-            <Button 
-              onClick={handleNameSubmit}
-              disabled={!name.trim()}
-              className="w-full bg-[#373763] text-[#E9E7E2] font-oxanium uppercase tracking-wider hover:opacity-90 transition-opacity duration-200"
-            >
-              Begin Assessment
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
