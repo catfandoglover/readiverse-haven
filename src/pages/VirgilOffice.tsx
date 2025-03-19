@@ -24,21 +24,21 @@ const VirgilOffice: React.FC = () => {
             
             <div className="space-y-4 mt-8">
               <Button
-                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/90 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
+                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/90 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 tracking-wider text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
                 onClick={() => console.log("Chat with Virgil clicked")}
               >
                 CHAT WITH VIRGIL
               </Button>
               
               <Button
-                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
+                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 tracking-wider text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
                 onClick={() => console.log("Take a course clicked")}
               >
                 TAKE A COURSE
               </Button>
               
               <Button
-                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
+                className="w-full py-4 bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2]/50 tracking-wider text-sm text-bold font-oxanium uppercase rounded-2xl transition-all"
                 onClick={() => console.log("Test my knowledge clicked")}
               >
                 TEST MY KNOWLEDGE
