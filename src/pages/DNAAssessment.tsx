@@ -436,14 +436,10 @@ const DNAAssessment = () => {
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
-            // Set isTransitioning to false before showing the login prompt
             setIsTransitioning(false);
             
-            // Always show the completion popup
             setShowLoginPrompt(true);
             
-            // If user is logged in, we'll still associate the assessment in the dialog
-            // But we'll also save it directly to their profile here
             if (user) {
               try {
                 const { data: profileData, error: profileError } = await supabase
@@ -453,7 +449,6 @@ const DNAAssessment = () => {
                   .maybeSingle();
                 
                 if (!profileError && profileData) {
-                  // Update the profile with the assessment ID
                   const { error: updateError } = await supabase
                     .from('profiles')
                     .update({ 
@@ -669,7 +664,6 @@ const DNAAssessment = () => {
         localStorage.setItem('pending_dna_assessment_id', assessmentId);
         console.log('Saved assessment ID for login/signup:', assessmentId);
         
-        // After login this will be used to update the profile
         sessionStorage.setItem('dna_assessment_to_save', assessmentId);
         
         try {
@@ -819,19 +813,12 @@ const DNAAssessment = () => {
                 I HAVE MORE TO SAY
               </button>
               
-              {/* Test button - REMOVE AFTER TESTING */}
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
                 onClick={() => setShowLoginPrompt(true)}
               >
                 TEST COMPLETION POPUP
               </button>
-            </div>
-          </div>
-          
-          <div className="absolute bottom-6 left-0 right-0 text-center">
-            <div className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold">
-              LIGHTNING
             </div>
           </div>
         </div>
