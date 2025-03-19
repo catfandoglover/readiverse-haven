@@ -52,14 +52,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
           ))}
         </div>
       </div>
-      {/* Back Button */}
-      <button 
-            onClick={handleExit}
-            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-            type="button"
-          >
-            BACK
-          </button>
+
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
         <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
@@ -74,7 +67,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       <div className="w-full max-w-md mb-16">
         <Button 
           onClick={handleContinue}
-          className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
         >
           CONTINUE
         </Button>
