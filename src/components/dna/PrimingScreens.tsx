@@ -19,7 +19,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       title: "Take a couple breaths.",
     },
     {
-      subtitle: "BEFORE WE GET STARTED",
+      subtitle: "THESE AREN'T YOUR TYPICAL QUESTIONS",
       title: "Take a couple breaths.",
     },
     {
@@ -55,7 +55,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full">
-        <h2 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
+        <h2 className="font-oxanium UPPERCASE text-[#332E38]/50 uppercase tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight">
@@ -67,7 +67,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
       <div className="w-full max-w-md mb-16">
         <Button 
           onClick={handleContinue}
-          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          className="w-full py-6 rounded-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
         >
           CONTINUE
         </Button>
