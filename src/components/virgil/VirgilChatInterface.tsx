@@ -14,6 +14,7 @@ interface VirgilChatInterfaceProps {
   isOpen: boolean;
   onClose: () => void;
   variant?: 'virgilchat' | 'virgildna' | 'default';
+  initialMessage?: string;
 }
 
 interface Message {
@@ -27,7 +28,8 @@ interface Message {
 const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({ 
   isOpen, 
   onClose,
-  variant = 'default'
+  variant = 'default',
+  initialMessage
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -74,21 +76,21 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const initialGreeting = "What's on your mind today?";
+      const greeting = initialMessage || "What's on your mind today?";
       setMessages([
         {
           id: uuidv4(),
-          content: initialGreeting,
+          content: greeting,
           role: 'assistant',
           isNew: true
         }
       ]);
       
       setTimeout(() => {
-        generateAudioForText(initialGreeting);
+        generateAudioForText(greeting);
       }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, initialMessage]);
 
   useEffect(() => {
     scrollToBottom();
