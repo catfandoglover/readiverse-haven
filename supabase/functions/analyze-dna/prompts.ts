@@ -257,7 +257,6 @@ Template:
 "ethics_challenging_voice_5_rationale": "Challenge explanation"
 }`;
 
-```
   case 3:
     return `${basePrompt}
 
