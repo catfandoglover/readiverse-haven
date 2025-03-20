@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, X, Send } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
@@ -11,6 +10,7 @@ import conversationManager, { Message as ConversationMessage } from '@/services/
 import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 
 interface Message {
   id: string;
@@ -345,6 +345,23 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     )}>
       <div className="relative w-full max-w-md mx-auto h-[360px]">
         <div className="absolute bottom-0 left-0 right-0 chat-dialog-container flex flex-col font-oxanium h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-[#E7E4DB] border-b border-[#D0CBBD]/25">
+            <div className="w-6" /> {/* Spacer for balance */}
+            <h2 className="font-oxanium text-sm font-bold tracking-wider uppercase text-[#282828]">
+              Discuss
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-6 w-6"
+            >
+              <X className="h-4 w-4 text-[#282828]" aria-hidden="true" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          
           <div className="chat-content-container flex-1 p-4 space-y-2 overflow-y-auto">
             {messages.map((msg, index) => {
               const previousMessage = index > 0 ? messages[index - 1] : null;
@@ -367,15 +384,16 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           </div>
           
           <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-[inset_0px_1px_10px_rgba(255,255,255,0.3)]">
-            <Input
+            <AutoResizeTextarea
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? "Recording..." : "Message Virgil..."}
-              className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
+              placeholder={isRecording ? "Recording..." : "Message..."}
+              className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium min-h-[40px]"
               disabled={isProcessing || isRecording}
-              autoComplete="off"
+              minRows={1}
+              maxRows={4}
             />
             <Button 
               type="button" 
@@ -384,7 +402,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               onClick={toggleRecording}
               disabled={isProcessing}
               className={cn(
-                "h-10 w-10 rounded-full",
+                "h-10 w-10 rounded-full flex-shrink-0",
                 isRecording 
                   ? "bg-[#CCFF23] hover:bg-[#CCFF23]/90" 
                   : "text-[#282828]"
@@ -397,8 +415,18 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
                 <Mic className="h-4 w-4" />
               )}
             </Button>
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon"
+              disabled={!inputMessage.trim() && !isRecording || isProcessing}
+              className="h-10 w-10 rounded-full text-[#282828] flex-shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
             {isProcessing && (
-              <div className="flex items-center justify-center h-10 w-10">
+              <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
             )}
