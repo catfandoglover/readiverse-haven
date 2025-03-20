@@ -573,7 +573,6 @@ serve(async (req) => {
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
-        profile_id,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
