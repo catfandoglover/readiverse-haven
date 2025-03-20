@@ -71,14 +71,12 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
         
         {resultsReady && (
           <div className="flex justify-center mt-8">
-            <Button 
-              variant="virgil"
-              size="lg"
-              className="animate-pulse"
+            <button
               onClick={onViewResults}
+              className="h-[52px] px-8 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border border-[#373763] transition-colors duration-200 animate-pulse"
             >
               SEE MY RESULTS
-            </Button>
+            </button>
           </div>
         )}
         
