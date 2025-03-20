@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -75,9 +74,11 @@ function handleProblematicFields(jsonString: string): string {
   return processed;
 }
 
-// New function to validate and ensure required fields are present
+// Updated function to validate and ensure required fields are present
 function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
-  if (section !== 2) return jsonObject;
+  // Changed from section !== 1 to section !== 2
+  // This ensures we only apply this special handling to section 1
+  if (section !== 1) return jsonObject;
   
   const result = { ...jsonObject };
   
@@ -314,7 +315,9 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     
     let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
     
-    if (section === 2) {
+    // Changed from section === 1 to section === 1 
+    // This ensures special system prompt is applied to section 1 where politics fields are now located
+    if (section === 1) {
       systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response, including politics_challenging_voice_4, politics_challenging_voice_5, and their associated _classic and _rationale fields. Ensure every field has a complete value.';
     }
     
@@ -339,7 +342,9 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
           }
         ],
         max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
-        temperature: section === 2 ? 0.3 : 0.7, // Lower temperature for section 2 to improve consistency
+        // Changed from section === 1 to section === 1
+        // This ensures lower temperature is applied to section 1 where politics fields are now located
+        temperature: section === 1 ? 0.3 : 0.7, // Lower temperature for section 1 to improve consistency
         response_format: { type: "json_object" }
       })
     });
@@ -365,8 +370,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
       
-      // If this is section 2, ensure all required fields are present
-      const validatedContent = section === 2 ? ensureRequiredFields(parsed, section) : parsed;
+      // If this is section 1, ensure all required fields are present
+      const validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
       
       return {
         content: validatedContent,
@@ -375,7 +380,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     } catch (parseError) {
       console.error(`JSON parsing failed for section ${section}, attempting repairs:`, parseError.message);
       
-      if (section === 2) {
+      if (section === 1) {
         console.log(`Applying specialized handling for section ${section} which contains challenging fields`);
       }
       
@@ -391,8 +396,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
-        // Ensure all required fields are present, especially for section 2
-        const validatedResult = section === 2 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        // Ensure all required fields are present, especially for section 1
+        const validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
         
         return {
           content: validatedResult,
@@ -406,32 +411,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
           partial_content: cleanedContent.substring(0, 500) + "..."
         };
         
-        if (section === 2) {
+        if (section === 1) {
           for (let i = 1; i <= 5; i++) {
-            fallbackResponse[`theology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-            fallbackResponse[`theology_kindred_spirit_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`theology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`theology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-            fallbackResponse[`theology_challenging_voice_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`theology_challenging_voice_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`epistemology_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-            fallbackResponse[`epistemology_kindred_spirit_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`epistemology_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`epistemology_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-            fallbackResponse[`epistemology_challenging_voice_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`epistemology_challenging_voice_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`ethics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-            fallbackResponse[`ethics_kindred_spirit_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`ethics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`ethics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-            fallbackResponse[`ethics_challenging_voice_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`ethics_challenging_voice_${i}_rationale`] = "Error retrieving data";
-            
             fallbackResponse[`politics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
             fallbackResponse[`politics_kindred_spirit_${i}_classic`] = "Error (0000)";
             fallbackResponse[`politics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
