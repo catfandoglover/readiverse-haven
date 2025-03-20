@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -38,7 +37,6 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionId = useRef(uuidv4()).current;
 
-  // Determine theme colors based on variant
   const colors = {
     virgilchat: {
       background: 'bg-[#332E38]',
@@ -74,7 +72,6 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
 
   const themeColors = colors[variant];
 
-  // Initial greeting
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const initialGreeting = "What's on your mind today?";
@@ -87,19 +84,16 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
         }
       ]);
       
-      // Generate audio for initial greeting
       setTimeout(() => {
         generateAudioForText(initialGreeting);
       }, 100);
     }
   }, [isOpen]);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Focus input when open
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -110,7 +104,6 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
     }
   }, [isOpen]);
 
-  // Stop audio when closed
   useEffect(() => {
     if (!isOpen) {
       stopAllAudio();
@@ -313,49 +306,54 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           themeColors.background
         )}
       >
-        {/* Header */}
         <div className={cn(
           "flex items-center justify-between p-4 border-b",
           themeColors.border
         )}>
-          <div className="w-6" /> {/* Spacer for balance */}
+          <div className="w-6" />
           <h2 className={cn(
             "font-oxanium text-sm font-bold tracking-wider uppercase",
             themeColors.text
           )}>
             Virgil's Office
           </h2>
-          <div className="w-6" /> {/* Spacer for balance */}
+          <div className="w-6" />
         </div>
 
-        {/* Messages */}
         <div className="flex-1 p-4 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)]">
           {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex items-start max-w-[80%] p-3 rounded-xl",
-                message.role === 'user' 
-                  ? cn("ml-auto", themeColors.userMessageBg) 
-                  : cn("mr-auto", themeColors.assistantMessageBg),
-                themeColors.text
-              )}
-            >
-              {message.role === 'assistant' && (
+            message.role === 'user' ? (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex items-start max-w-[80%] p-3 rounded-xl ml-auto",
+                  themeColors.userMessageBg,
+                  themeColors.text
+                )}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+            ) : (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex items-start max-w-[80%] mr-auto",
+                  themeColors.text
+                )}
+              >
                 <img 
                   src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
                   className="h-5 w-5 mt-1 mr-2 flex-shrink-0" 
                   aria-hidden="true" 
                   alt="Virgil" 
                 />
-              )}
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-            </div>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+            )
           ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input form */}
         <form 
           onSubmit={handleSubmit} 
           className={cn(
