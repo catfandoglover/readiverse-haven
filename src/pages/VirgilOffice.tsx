@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
+import { MessageCircle } from "lucide-react";
 
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -15,7 +16,14 @@ const VirgilOffice: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Virgil's Office
         </h2>
-        <div className="w-10"></div> {/* Spacer to balance the MainMenu width */}
+        <Button
+          variant="ghost" 
+          size="icon"
+          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
+          aria-label="Chat History"
+        >
+          <MessageCircle className="h-5 w-5" />
+        </Button>
       </div>
       
       <main className={cn(
