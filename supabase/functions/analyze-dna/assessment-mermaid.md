@@ -111,87 +111,38 @@ meaning?"]
     BBBB -->|Yes| BBBBA
     BBBB -->|No| BBBBB```
 
-Ontology
-```mermaid
 graph TD
-    Q1["The stars would still shine even if no 
-one was looking at them."]
-    
-    Q1 -->|Agree| A["When you see a sunset, are 
-you discovering its beauty or creating it?"]
-    Q1 -->|Disagree| B["If everyone suddenly 
-vanished, would their art still be beautiful?"]
-    
-    A -->|Discovering| AA["Could science one day 
-explain everything about human consciousness?"]
-    A -->|Creating| AB["Is truth more like a map 
-we draw or a territory we explore?"]
-    
-    B -->|Yes| BA["Do numbers exist in the same 
-way that trees exist?"]
-    B -->|No| BB["If you could prove God exists, 
-would that make faith meaningless?"]
-    
-    AA -->|Yes| AAA["If you could predict 
-everything about tomorrow, would free will 
-exist?"]
-    AA -->|No| AAB["Do dreams tell us more about 
-reality than textbooks?"]
-    
-    AB -->|Map| ABA["Would perfect virtual 
-happiness be worth living in an illusion?"]
-    AB -->|Territory| ABB["If a computer felt 
-pain, would it matter morally?"]
-    
-    BA -->|Yes| BAA["Is mathematics discovered 
-or invented?"]
-    BA -->|No| BAB["Could an AI ever truly 
-understand poetry?"]
-    
-    BB -->|Yes| BBA["Would you rather be right 
-or be kind?"]
-    BB -->|No| BBB["Is wisdom more about 
-questions or answers?"]
-    AAA -->|Yes| AAAA["Is love just chemistry in 
-the brain?"]
-    AAA -->|No| AAAB["Can something be true 
-before we discover it?"]
-    
-    AAB -->|Yes| AABA["Are some illusions more 
-real than reality?"]
-    AAB -->|No| AABB["Does order exist in nature 
-or just in our minds?"]
-    
-    ABA -->|Yes| ABAA["Is meaning found or 
-created?"]
-    ABA -->|No| ABAB["Could a perfect copy of 
-you be you?"]
-    
-    ABB -->|Yes| ABBA["Is there more to truth 
-than usefulness?"]
-    ABB -->|No| ABBB["Do we see reality or just 
-our expectations?"]
-    
-    BAA -->|Yes| BAAA["Can beauty exist without 
-an observer?"]
-    BAA -->|No| BAAB["Is consciousness 
-fundamental to reality?"]
-    
-    BAB -->|Yes| BABA["Are we part of nature or 
-separate from it?"]
-    BAB -->|No| BABB["Does infinity exist 
-outside mathematics?"]
-    
-    BBA -->|Yes| BBAA["Is time more like a line 
-or a circle?"]
-    BBA -->|No| BBAB["Could perfect knowledge 
-eliminate mystery?"]
-    
-    BBB -->|Yes| BBBA["Is randomness real or 
-just unexplained order?"]
-    BBB -->|No| BBBB["Does understanding 
-something change what it is?"]
-    
+    Q1["The stars would still shine even if no one was looking at them."]
+    Q1 -->|Agree| A["When you see a sunset, are you discovering its beauty or creating it?"]
+    Q1 -->|Disagree| B["If everyone suddenly vanished, would their art still be beautiful?"]
+    A -->|Discovering| AA["Could science one day explain everything about human consciousness?"]
+    A -->|Creating| AB["Is truth more like a map we draw or a territory we explore?"]
+    B -->|Yes| BA["Do numbers exist in the same way that trees exist?"]
+    B -->|No| BB["If you could prove God exists, would that make faith meaningless?"]
+    AA -->|Yes| AAA["If you could predict everything about tomorrow, would free will exist?"]
+    AA -->|No| AAB["Do dreams tell us more about reality than textbooks?"]
+    AB -->|Map| ABA["Would perfect virtual happiness be worth living in an illusion?"]
+    AB -->|Territory| ABB["If a computer felt pain, would it matter morally?"]
+    BA -->|Yes| BAA["Is mathematics discovered or invented?"]
+    BA -->|No| BAB["Could an AI ever truly understand poetry?"]
+    BB -->|Yes| BBA["Would you rather be right or be kind?"]
+    BB -->|No| BBB["Is wisdom more about questions or answers?"]
+    AAA -->|Yes| AAAA["Is love just chemistry in the brain?"]
+    AAA -->|No| AAAB["Can something be true before we discover it?"]
+    AAB -->|Yes| AABA["Are some illusions more real than reality?"]
+    AAB -->|No| AABB["Does order exist in nature or just in our minds?"]
+    ABA -->|Yes| ABAA["Is meaning found or created?"]
+    ABA -->|No| ABAB["Could a perfect copy of you be you?"]
+    ABB -->|Yes| ABBA["Is there more to truth than usefulness?"]
+    ABB -->|No| ABBB["Do we see reality or just our expectations?"]
+    BAA -->|Yes| BAAA["Can beauty exist without an observer?"]
+    BAA -->|No| BAAB["Is consciousness fundamental to reality?"]
+    BAB -->|Yes| BABA["Are we part of nature or separate from it?"]
+    BAB -->|No| BABB["Does infinity exist outside mathematics?"]
+    BBA -->|Yes| BBAA["Is time more like a line or a circle?"]
+    BBA -->|No| BBAB["Could perfect knowledge eliminate mystery?"]
+    BBB -->|Yes| BBBA["Is randomness real or just unexplained order?"]
+    BBB -->|No| BBBB["Does understanding something change what it is?"]
     AAAA -->|Yes| AAAAA
     AAAA -->|No| AAAAB
     AAAB -->|Yes| AAABA
@@ -223,7 +174,9 @@ something change what it is?"]
     BBBA -->|Yes| BBBAA
     BBBA -->|No| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
+
+
 Epistemology
 ```mermaid
 graph TD
