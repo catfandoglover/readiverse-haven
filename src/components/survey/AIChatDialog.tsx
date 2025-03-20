@@ -350,7 +350,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           <div className="flex items-center justify-between p-4 bg-[#E7E4DB] border-b border-[#D0CBBD]/25">
             <div className="w-6" /> {/* Spacer for balance */}
             <h2 className="font-oxanium text-sm font-bold tracking-wider uppercase text-[#282828]">
-              Discuss with Virgil
+              Discuss
             </h2>
             <Button
               variant="ghost"
