@@ -268,7 +268,78 @@ Template:
   "ethics_challenging_voice_5_classic": "Work title (date)",
   "ethics_challenging_voice_5_rationale": "Challenge explanation"
 }`;
-    
+
+  case 3:
+    return `${basePrompt}
+
+Template:
+{
+"ontology_kindred_spirit_1": "First ontology kindred thinker",
+"ontology_kindred_spirit_1_classic": "Work title (date)",
+"ontology_kindred_spirit_1_rationale": "Resonance explanation",
+"ontology_kindred_spirit_2": "Second ontology kindred thinker",
+"ontology_kindred_spirit_2_classic": "Work title (date)",
+"ontology_kindred_spirit_2_rationale": "Resonance explanation",
+"ontology_kindred_spirit_3": "Third ontology kindred thinker",
+"ontology_kindred_spirit_3_classic": "Work title (date)",
+"ontology_kindred_spirit_3_rationale": "Resonance explanation",
+"ontology_kindred_spirit_4": "Fourth ontology kindred thinker",
+"ontology_kindred_spirit_4_classic": "Work title (date)",
+"ontology_kindred_spirit_4_rationale": "Resonance explanation",
+"ontology_kindred_spirit_5": "Fifth ontology kindred thinker",
+"ontology_kindred_spirit_5_classic": "Work title (date)",
+"ontology_kindred_spirit_5_rationale": "Resonance explanation",
+"ontology_challenging_voice_1": "First ontology challenging thinker",
+"ontology_challenging_voice_1_classic": "Work title (date)",
+"ontology_challenging_voice_1_rationale": "Challenge explanation",
+"ontology_challenging_voice_2": "Second ontology challenging thinker",
+"ontology_challenging_voice_2_classic": "Work title (date)",
+"ontology_challenging_voice_2_rationale": "Challenge explanation",
+"ontology_challenging_voice_3": "Third ontology challenging thinker",
+"ontology_challenging_voice_3_classic": "Work title (date)",
+"ontology_challenging_voice_3_rationale": "Challenge explanation",
+"ontology_challenging_voice_4": "Fourth ontology challenging thinker",
+"ontology_challenging_voice_4_classic": "Work title (date)",
+"ontology_challenging_voice_4_rationale": "Challenge explanation",
+"ontology_challenging_voice_5": "Fifth ontology challenging thinker",
+"ontology_challenging_voice_5_classic": "Work title (date)",
+"ontology_challenging_voice_5_rationale": "Challenge explanation",
+"aesthetics_kindred_spirit_1": "First aesthetics kindred thinker",
+"aesthetics_kindred_spirit_1_classic": "Work title (date)",
+"aesthetics_kindred_spirit_1_rationale": "Resonance explanation",
+"aesthetics_kindred_spirit_2": "Second aesthetics kindred thinker",
+"aesthetics_kindred_spirit_2_classic": "Work title (date)",
+"aesthetics_kindred_spirit_2_rationale": "Resonance explanation",
+"aesthetics_kindred_spirit_3": "Third aesthetics kindred thinker",
+"aesthetics_kindred_spirit_3_classic": "Work title (date)",
+"aesthetics_kindred_spirit_3_rationale": "Resonance explanation",
+"aesthetics_kindred_spirit_4": "Fourth aesthetics kindred thinker",
+"aesthetics_kindred_spirit_4_classic": "Work title (date)",
+"aesthetics_kindred_spirit_4_rationale": "Resonance explanation",
+"aesthetics_kindred_spirit_5": "Fifth aesthetics kindred thinker",
+"aesthetics_kindred_spirit_5_classic": "Work title (date)",
+"aesthetics_kindred_spirit_5_rationale": "Resonance explanation",
+"aesthetics_challenging_voice_1": "First aesthetics challenging thinker",
+"aesthetics_challenging_voice_1_classic": "Work title (date)",
+"aesthetics_challenging_voice_1_rationale": "Challenge explanation",
+"aesthetics_challenging_voice_2": "Second aesthetics challenging thinker",
+"aesthetics_challenging_voice_2_classic": "Work title (date)",
+"aesthetics_challenging_voice_2_rationale": "Challenge explanation",
+"aesthetics_challenging_voice_3": "Third aesthetics challenging thinker",
+"aesthetics_challenging_voice_3_classic": "Work title (date)",
+"aesthetics_challenging_voice_3_rationale": "Challenge explanation",
+"aesthetics_challenging_voice_4": "Fourth aesthetics challenging thinker",
+"aesthetics_challenging_voice_4_classic": "Work title (date)",
+"aesthetics_challenging_voice_4_rationale": "Challenge explanation",
+"aesthetics_challenging_voice_5": "Fifth aesthetics challenging thinker",
+"aesthetics_challenging_voice_5_classic": "Work title (date)",
+"aesthetics_challenging_voice_5_rationale": "Challenge explanation",
+"most_kindred_spirit": "The thinker, drawn from the examples given above in this profile, who most closely aligns with the overall philosophical profile",
+"most_challenging_voice": "The thinker, drawn from the examples given above in this profile, who most directly and forcefully challenges the overall philosophical profile",
+"conclusion": "Overall synthesis",
+"next_steps": "Areas for exploration"
+}`;
+      
     default:
       throw new Error(`Invalid section number: ${section}`);
   }
