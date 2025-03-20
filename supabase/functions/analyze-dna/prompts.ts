@@ -1,3 +1,4 @@
+
 export function getPromptForSection(section: number, answers_json: string): string {
 const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
 Answer requirements:
@@ -1174,7 +1175,37 @@ Remember: Archetypes should be both meaningful and memorable, capturing deep phi
 "epistemology_introduction": "Epistemology approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
 "ethics_introduction": "Ethics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
 "politics_introduction": "Politics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-"aesthetics_introduction": "Aesthetics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices"
+"aesthetics_introduction": "Aesthetics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+"politics_kindred_spirit_1": "First politics kindred thinker",
+"politics_kindred_spirit_1_classic": "Work title (date)",
+"politics_kindred_spirit_1_rationale": "Resonance explanation",
+"politics_kindred_spirit_2": "Second politics kindred thinker",
+"politics_kindred_spirit_2_classic": "Work title (date)",
+"politics_kindred_spirit_2_rationale": "Resonance explanation",
+"politics_kindred_spirit_3": "Third politics kindred thinker",
+"politics_kindred_spirit_3_classic": "Work title (date)",
+"politics_kindred_spirit_3_rationale": "Resonance explanation",
+"politics_kindred_spirit_4": "Fourth politics kindred thinker",
+"politics_kindred_spirit_4_classic": "Work title (date)",
+"politics_kindred_spirit_4_rationale": "Resonance explanation",
+"politics_kindred_spirit_5": "Fifth politics kindred thinker",
+"politics_kindred_spirit_5_classic": "Work title (date)",
+"politics_kindred_spirit_5_rationale": "Resonance explanation",
+"politics_challenging_voice_1": "First politics challenging thinker",
+"politics_challenging_voice_1_classic": "Work title (date)",
+"politics_challenging_voice_1_rationale": "Challenge explanation",
+"politics_challenging_voice_2": "Second politics challenging thinker",
+"politics_challenging_voice_2_classic": "Work title (date)",
+"politics_challenging_voice_2_rationale": "Challenge explanation",
+"politics_challenging_voice_3": "Third politics challenging thinker",
+"politics_challenging_voice_3_classic": "Work title (date)",
+"politics_challenging_voice_3_rationale": "Challenge explanation",
+"politics_challenging_voice_4": "Fourth politics challenging thinker",
+"politics_challenging_voice_4_classic": "Work title (date)",
+"politics_challenging_voice_4_rationale": "Challenge explanation",
+"politics_challenging_voice_5": "Fifth politics challenging thinker",
+"politics_challenging_voice_5_classic": "Work title (date)",
+"politics_challenging_voice_5_rationale": "Challenge explanation"
 }`;
     
     case 2:
@@ -1272,37 +1303,7 @@ Template:
 "ethics_challenging_voice_4_rationale": "Challenge explanation",
 "ethics_challenging_voice_5": "Fifth ethics challenging thinker",
 "ethics_challenging_voice_5_classic": "Work title (date)",
-"ethics_challenging_voice_5_rationale": "Challenge explanation",
-"politics_kindred_spirit_1": "First politics kindred thinker",
-"politics_kindred_spirit_1_classic": "Work title (date)",
-"politics_kindred_spirit_1_rationale": "Resonance explanation",
-"politics_kindred_spirit_2": "Second politics kindred thinker",
-"politics_kindred_spirit_2_classic": "Work title (date)",
-"politics_kindred_spirit_2_rationale": "Resonance explanation",
-"politics_kindred_spirit_3": "Third politics kindred thinker",
-"politics_kindred_spirit_3_classic": "Work title (date)",
-"politics_kindred_spirit_3_rationale": "Resonance explanation",
-"politics_kindred_spirit_4": "Fourth politics kindred thinker",
-"politics_kindred_spirit_4_classic": "Work title (date)",
-"politics_kindred_spirit_4_rationale": "Resonance explanation",
-"politics_kindred_spirit_5": "Fifth politics kindred thinker",
-"politics_kindred_spirit_5_classic": "Work title (date)",
-"politics_kindred_spirit_5_rationale": "Resonance explanation",
-"politics_challenging_voice_1": "First politics challenging thinker",
-"politics_challenging_voice_1_classic": "Work title (date)",
-"politics_challenging_voice_1_rationale": "Challenge explanation",
-"politics_challenging_voice_2": "Second politics challenging thinker",
-"politics_challenging_voice_2_classic": "Work title (date)",
-"politics_challenging_voice_2_rationale": "Challenge explanation",
-"politics_challenging_voice_3": "Third politics challenging thinker",
-"politics_challenging_voice_3_classic": "Work title (date)",
-"politics_challenging_voice_3_rationale": "Challenge explanation",
-"politics_challenging_voice_4": "Fourth politics challenging thinker",
-"politics_challenging_voice_4_classic": "Work title (date)",
-"politics_challenging_voice_4_rationale": "Challenge explanation",
-"politics_challenging_voice_5": "Fifth politics challenging thinker",
-"politics_challenging_voice_5_classic": "Work title (date)",
-"politics_challenging_voice_5_rationale": "Challenge explanation"
+"ethics_challenging_voice_5_rationale": "Challenge explanation"
 }`;
 
 ```
@@ -1387,3 +1388,5 @@ Template:
 ```
 
 }
+
+```
