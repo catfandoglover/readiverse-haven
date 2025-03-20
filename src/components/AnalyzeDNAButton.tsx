@@ -30,13 +30,12 @@ export function AnalyzeDNAButton() {
       if (supabaseClient) {
         const { data: assessmentData, error: assessmentError } = await supabaseClient
           .from('dna_assessment_results')
-          .insert([
-            { 
-              answers_json: SAMPLE_ANSWERS,
-              status: 'processing',
-              profile_id: user?.Uid ? user.Uid : null
-            }
-          ])
+          .insert({
+            name: 'Quick Analysis',
+            answers: SAMPLE_ANSWERS,
+            status: 'processing',
+            profile_id: user?.Uid ? user.Uid : null
+          })
           .select('id')
           .single();
 
@@ -52,12 +51,11 @@ export function AnalyzeDNAButton() {
         console.log('No authenticated user, creating anonymous assessment');
         const { data: assessmentData, error: assessmentError } = await supabase
           .from('dna_assessment_results')
-          .insert([
-            { 
-              answers_json: SAMPLE_ANSWERS,
-              status: 'processing'
-            }
-          ])
+          .insert({
+            name: 'Anonymous Analysis',
+            answers: SAMPLE_ANSWERS,
+            status: 'processing'
+          })
           .select('id')
           .single();
 
