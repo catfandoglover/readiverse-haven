@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -33,8 +32,12 @@ interface DNAAnalysisResult {
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
-const DashboardLayout: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<"dashboard" | "become" | "profile">("dashboard");
+interface DashboardLayoutProps {
+  initialTab?: "dashboard" | "become" | "profile";
+}
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
+  const [activeSection, setActiveSection] = useState<"dashboard" | "become" | "profile">(initialTab || "dashboard");
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -143,7 +146,7 @@ const DashboardLayout: React.FC = () => {
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
                 {isLoadingIntroduction ? (
-                  <span className="inline-block animate-pulse">Loading wisdom guidance...</span>
+                  <span className="inline-block">Loading wisdom guidance...</span>
                 ) : (
                   analysisResult?.become_who_you_are || 
                   "Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace."
@@ -156,7 +159,7 @@ const DashboardLayout: React.FC = () => {
             <div className="space-y-4">
               <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
                 {isLoadingIntroduction ? (
-                  <span className="inline-block animate-pulse">Loading your intellectual profile...</span>
+                  <span className="inline-block">Loading your intellectual profile...</span>
                 ) : (
                   analysisResult?.introduction || 
                   "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension."
@@ -181,7 +184,7 @@ const DashboardLayout: React.FC = () => {
                   <div>
                     <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
                       {isLoadingIntroduction ? (
-                        <span className="inline-block animate-pulse">Loading...</span>
+                        <span className="inline-block">Loading...</span>
                       ) : (
                         analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
                       )}
@@ -212,7 +215,7 @@ const DashboardLayout: React.FC = () => {
                   <div>
                     <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
                       {isLoadingIntroduction ? (
-                        <span className="inline-block animate-pulse">Loading...</span>
+                        <span className="inline-block">Loading...</span>
                       ) : (
                         analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
                       )}
@@ -230,7 +233,7 @@ const DashboardLayout: React.FC = () => {
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_1 || 
                       "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
@@ -238,7 +241,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_2 || 
                       "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
@@ -246,7 +249,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_3 || 
                       "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
@@ -260,7 +263,7 @@ const DashboardLayout: React.FC = () => {
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_1 || 
                       "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
@@ -268,7 +271,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_2 || 
                       "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
@@ -276,7 +279,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_3 || 
                       "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
@@ -290,7 +293,7 @@ const DashboardLayout: React.FC = () => {
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_1 || 
                       "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
@@ -298,7 +301,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_2 || 
                       "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
@@ -306,7 +309,7 @@ const DashboardLayout: React.FC = () => {
                   </li>
                   <li>
                     {isLoadingIntroduction ? (
-                      <span className="inline-block animate-pulse">Loading...</span>
+                      <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_3 || 
                       "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
@@ -319,7 +322,7 @@ const DashboardLayout: React.FC = () => {
                 <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
                 <p className="font-oxanium text-[#E9E7E2]/80">
                   {isLoadingIntroduction ? (
-                    <span className="inline-block animate-pulse">Loading...</span>
+                    <span className="inline-block">Loading...</span>
                   ) : (
                     analysisResult?.conclusion || 
                     "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
@@ -331,7 +334,7 @@ const DashboardLayout: React.FC = () => {
                 <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
                 <p className="font-oxanium text-[#E9E7E2]/80">
                   {isLoadingIntroduction ? (
-                    <span className="inline-block animate-pulse">Loading...</span>
+                    <span className="inline-block">Loading...</span>
                   ) : (
                     analysisResult?.next_steps || 
                     "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."

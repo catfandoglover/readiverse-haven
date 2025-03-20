@@ -83,16 +83,21 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInputForm
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        handleSubmit={handleSubmit}
-        isRecording={isRecording}
-        isProcessing={isProcessing}
-        toggleRecording={toggleRecording}
-        themeColors={themeColors}
-        disabled={disableChat || resultsReady}
-      />
+      <div className={cn(
+        "transition-transform duration-500 ease-in-out",
+        resultsReady ? "transform translate-y-full" : ""
+      )}>
+        <ChatInputForm
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          handleSubmit={handleSubmit}
+          isRecording={isRecording}
+          isProcessing={isProcessing}
+          toggleRecording={toggleRecording}
+          themeColors={themeColors}
+          disabled={disableChat || resultsReady}
+        />
+      </div>
     </div>
   );
 };

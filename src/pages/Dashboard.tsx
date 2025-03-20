@@ -1,13 +1,18 @@
 
 import React, { useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useLocation } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get('tab') as "dashboard" | "become" | "profile" | null;
+
   useEffect(() => {
     document.title = "Your DNA Dashboard | Intellectual DNA";
   }, []);
   
-  return <DashboardLayout />;
+  return <DashboardLayout initialTab={initialTab || undefined} />;
 };
 
 export default Dashboard;
