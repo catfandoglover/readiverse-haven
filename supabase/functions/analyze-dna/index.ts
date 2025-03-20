@@ -580,6 +580,13 @@ serve(async (req) => {
         ...combinedAnalysis
       };
 
+      // Debug logging to see the full objects before saving
+      console.log('===== DEBUG: combinedAnalysis keys =====');
+      console.log(Object.keys(combinedAnalysis));
+      
+      console.log('===== DEBUG: Full analysisRecord =====');
+      console.log(JSON.stringify(analysisRecord, null, 2));
+      
       console.log('Storing combined analysis in database...');
       const { error: storeError } = await supabase
         .from('dna_analysis_results')
