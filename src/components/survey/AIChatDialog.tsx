@@ -389,7 +389,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? "Recording..." : "Message Virgil..."}
+              placeholder={isRecording ? "Recording..." : "Message..."}
               className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium min-h-[40px]"
               disabled={isProcessing || isRecording}
               minRows={1}
