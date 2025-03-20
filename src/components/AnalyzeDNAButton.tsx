@@ -33,7 +33,6 @@ export function AnalyzeDNAButton() {
           .insert({
             name: 'Quick Analysis',
             answers: SAMPLE_ANSWERS,
-            status: 'processing',
             profile_id: user?.Uid ? user.Uid : null
           })
           .select('id')
@@ -53,8 +52,7 @@ export function AnalyzeDNAButton() {
           .from('dna_assessment_results')
           .insert({
             name: 'Anonymous Analysis',
-            answers: SAMPLE_ANSWERS,
-            status: 'processing'
+            answers: SAMPLE_ANSWERS
           })
           .select('id')
           .single();
