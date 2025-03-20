@@ -3,6 +3,7 @@
 // Helper function to read the mermaid content from Supabase
 async function readMermaidFile(): Promise<string> {
   try {
+    console.log('Attempting to fetch prompt from Supabase');
     const { data, error } = await supabase
       .from('prompts')
       .select('prompt')
@@ -12,6 +13,10 @@ async function readMermaidFile(): Promise<string> {
       console.error('Error fetching mermaid content:', error);
       return '';
     }
+
+    // Log the full prompt retrieved
+    console.log('Successfully retrieved prompt from Supabase');
+    console.log('Prompt content:', data.prompt);
     
     return data.prompt;
   } catch (error) {
