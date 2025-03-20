@@ -79,7 +79,7 @@ graph TD
     BBBA -->|Yes| BBBAA
     BBBA -->|No| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
 
 # Ontology
 ```mermaid
