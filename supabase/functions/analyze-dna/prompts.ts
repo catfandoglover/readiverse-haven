@@ -23,7 +23,7 @@ async function readMermaidFile(): Promise<string> {
 
     // Log the full prompt retrieved
     console.log('Successfully retrieved prompt from Supabase');
-    console.log('Prompt content:', data.prompt);
+    console.log('mermaide content:', data.prompt);
     
     return data.prompt;
   } catch (error) {
@@ -36,6 +36,9 @@ export async function getPromptForSection(section: number, answers_json: string)
   // Read the mermaid file content
   const mermaidContent = await readMermaidFile();
   
+  // Ensure mermaid content is properly formatted for insertion
+  const formattedMermaidContent = mermaidContent.replace(/```/g, '\\`\\`\\`');
+  
   const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
 Answer requirements:
 Temporal Distribution - When selecting thinkers, only select thinkers whose works were published before 1970.
@@ -46,13 +49,14 @@ Selection Criteria - Mix iconic and lesser-known influential voices - Choose thi
 
 Question sets and dna_assessment decision tree to which the answers correspond:
 
-${mermaidContent}
+${formattedMermaidContent}
 
 ${answers_json}`;
 
   switch (section) {
     case 1:
       return `${basePrompt}
+
 
 Template:
 {
