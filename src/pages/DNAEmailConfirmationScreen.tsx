@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -7,11 +7,24 @@ import { Inbox } from "lucide-react";
 
 const DNAEmailConfirmationScreen = () => {
   const navigate = useNavigate();
-  const { openLogin } = useAuth();
+  const { user, openLogin } = useAuth();
+
+  // Check authentication status and redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      // If user is authenticated, redirect to welcome screen
+      navigate('/dna/welcome');
+    }
+  }, [user, navigate]);
 
   const handleLoginClick = () => {
     // Open the Outseta login modal
-    openLogin();
+    openLogin({
+      onSuccess: () => {
+        // After successful login, redirect to welcome page
+        navigate('/dna/welcome');
+      }
+    });
   };
 
   return (

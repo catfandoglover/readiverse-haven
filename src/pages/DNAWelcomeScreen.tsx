@@ -4,60 +4,50 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 
-const DNACompletionScreen = () => {
+const DNAWelcomeScreen = () => {
   const navigate = useNavigate();
-  const { user, openSignup } = useAuth();
+  const { user } = useAuth();
 
-  const handleCreateAccount = () => {
-    openSignup({
-      onSuccess: () => {
-        // If signup successful and user is confirmed, go to welcome
-        // If email verification is required, this will be handled by authentication context
-        if (user) {
-          navigate('/dna/welcome');
-        }
-      }
-    });
-  };
-
-  // If user is already authenticated, redirect to welcome screen
+  // Ensure user is authenticated for this screen
   useEffect(() => {
-    if (user) {
-      navigate('/dna/welcome');
+    if (!user) {
+      navigate('/dna/confirm-email');
     }
   }, [user, navigate]);
 
+  const handleContinue = () => {
+    // Navigate to Virgil welcome screen
+    navigate('/virgil/welcome');
+  };
+
   return (
     <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
-      {/* No back button in header */}
       <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-        <div className="flex-1"></div> {/* Spacer */}
+        <div className="flex-1"></div>
       </header>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          ASSESSMENT COMPLETE
+          WELCOME
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight mb-8">
-          Create an account to view your results
+          Your Intellectual DNA Results Are Ready
         </h1>
         <p className="text-[#373763]/70 mb-8">
-          Your intellectual DNA profile has been generated. Create an account to save your results and explore your philosophical profile.
+          Thanks for confirming your email. You're now ready to explore your intellectual profile with our guide, Virgil.
         </p>
       </div>
 
-      {/* Continue button */}
       <div className="w-full max-w-md mb-16 px-6">
         <Button 
-          onClick={handleCreateAccount}
+          onClick={handleContinue}
           className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
         >
-          CREATE ACCOUNT
+          MEET VIRGIL
         </Button>
       </div>
     </div>
   );
 };
 
-export default DNACompletionScreen;
+export default DNAWelcomeScreen;
