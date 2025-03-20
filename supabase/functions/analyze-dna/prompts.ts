@@ -123,7 +123,7 @@ Template:
   Remember: Archetypes should be both meaningful and memorable, capturing deep philosophical patterns while remaining accessible and evocative.
   \`\`\`",
   "archetype_definition": "Brief poetic subtitle capturing essence",
-  "introduction": "Opening paragraph, around 40 words, describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: \"You are...\" \"Your approach...\"",
+  "introduction": "Opening paragraph describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: \"You are...\" \"Your approach...\"",
   "key_tension_1": "First key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as \"Wrestles with...\" \"Balances...\" or \"Navigates...\".",
   "key_tension_2": "Second key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as \"Wrestles with...\" \"Balances...\" or \"Navigates...\". Do not repeat the dialectic theme from \"key_tension_1\".",
   "key_tension_3": "Third key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as \"Wrestles with...\" \"Balances...\" or \"Navigates...\". Do not repeat the dialectic theme from \"key_tension_1\" or \"key_tension_2\".",
