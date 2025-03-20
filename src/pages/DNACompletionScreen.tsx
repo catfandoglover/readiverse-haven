@@ -1,31 +1,20 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { Check } from "lucide-react";
 
 const DNACompletionScreen = () => {
   const navigate = useNavigate();
-  const { user, openSignup } = useAuth();
+  const { openLogin } = useAuth();
 
-  const handleCreateAccount = () => {
-    openSignup({
-      onSuccess: () => {
-        // If signup successful and user is confirmed, go to welcome
-        // If email verification is required, this will be handled by authentication context
-        if (user) {
-          navigate('/dna/welcome');
-        }
-      }
+  const handleLoginClick = () => {
+    // Open the Outseta login/register modal
+    openLogin({
+      widgetMode: 'login|register', // Keep the combined mode as requested
     });
   };
-
-  // If user is already authenticated, redirect to welcome screen
-  useEffect(() => {
-    if (user) {
-      navigate('/dna/welcome');
-    }
-  }, [user, navigate]);
 
   return (
     <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
@@ -36,24 +25,26 @@ const DNACompletionScreen = () => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
+        <div className="flex justify-center mb-8">
+          <div className="rounded-full bg-[#373763]/10 p-4">
+            <Check className="h-8 w-8 text-[#373763]" />
+          </div>
+        </div>
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          ASSESSMENT COMPLETE
+          ASSESSMENT COMPLETED
         </h2>
         <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight mb-8">
           Create an account to view your results
         </h1>
-        <p className="text-[#373763]/70 mb-8">
-          Your intellectual DNA profile has been generated. Create an account to save your results and explore your philosophical profile.
-        </p>
       </div>
 
       {/* Continue button */}
       <div className="w-full max-w-md mb-16 px-6">
         <Button 
-          onClick={handleCreateAccount}
-          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          onClick={handleLoginClick}
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
         >
-          CREATE ACCOUNT
+          LOGIN / REGISTER
         </Button>
       </div>
     </div>
