@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import aiService from '@/services/AIService';
@@ -9,6 +8,7 @@ import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
 import { v4 as uuidv4 } from 'uuid';
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 
 interface VirgilChatInterfaceProps {
   isOpen: boolean;
@@ -362,23 +362,25 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
             themeColors.inputBackground
           )}
         >
-          <Input
+          <AutoResizeTextarea
             ref={inputRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isRecording ? "Recording..." : "Message Virgil..."}
             className={cn(
-              "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0",
+              "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px]",
               themeColors.inputBackground,
               themeColors.inputText,
               themeColors.inputPlaceholder
             )}
             disabled={isProcessing || isRecording}
+            minRows={1}
+            maxRows={4}
             autoComplete="off"
           />
           {isProcessing ? (
-            <div className="flex items-center justify-center h-10 w-10">
+            <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
               <Loader2 className={cn("h-4 w-4 animate-spin", themeColors.text)} />
             </div>
           ) : (
@@ -389,7 +391,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
                 size="icon"
                 onClick={toggleRecording}
                 className={cn(
-                  "h-10 w-10 rounded-full",
+                  "h-10 w-10 rounded-full flex-shrink-0",
                   isRecording && "bg-[#CCFF23] hover:bg-[#CCFF23]/90"
                 )}
                 aria-label={isRecording ? "Stop recording" : "Start recording"}
@@ -405,7 +407,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
                 variant="ghost" 
                 size="icon"
                 disabled={!inputMessage.trim() && !isRecording}
-                className="h-10 w-10 rounded-full"
+                className="h-10 w-10 rounded-full flex-shrink-0"
                 aria-label="Send message"
               >
                 <Send className={cn("h-4 w-4", themeColors.text)} />

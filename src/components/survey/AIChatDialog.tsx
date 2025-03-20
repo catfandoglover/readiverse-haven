@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Mic, MicOff, Loader2, X, Send } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
@@ -11,6 +10,7 @@ import conversationManager, { Message as ConversationMessage } from '@/services/
 import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 
 interface Message {
   id: string;
@@ -384,15 +384,16 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           </div>
           
           <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-[inset_0px_1px_10px_rgba(255,255,255,0.3)]">
-            <Input
+            <AutoResizeTextarea
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? "Recording..." : "Message Virgil..."}
-              className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium"
+              className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium min-h-[40px]"
               disabled={isProcessing || isRecording}
-              autoComplete="off"
+              minRows={1}
+              maxRows={4}
             />
             <Button 
               type="button" 
@@ -401,7 +402,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               onClick={toggleRecording}
               disabled={isProcessing}
               className={cn(
-                "h-10 w-10 rounded-full",
+                "h-10 w-10 rounded-full flex-shrink-0",
                 isRecording 
                   ? "bg-[#CCFF23] hover:bg-[#CCFF23]/90" 
                   : "text-[#282828]"
@@ -419,13 +420,13 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               variant="ghost" 
               size="icon"
               disabled={!inputMessage.trim() && !isRecording || isProcessing}
-              className="h-10 w-10 rounded-full text-[#282828]"
+              className="h-10 w-10 rounded-full text-[#282828] flex-shrink-0"
               aria-label="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>
             {isProcessing && (
-              <div className="flex items-center justify-center h-10 w-10">
+              <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
             )}
