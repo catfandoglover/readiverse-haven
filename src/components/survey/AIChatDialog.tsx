@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Loader2, X } from "lucide-react";
+import { Mic, MicOff, Loader2, X, Send } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
@@ -414,6 +413,16 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               ) : (
                 <Mic className="h-4 w-4" />
               )}
+            </Button>
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon"
+              disabled={!inputMessage.trim() && !isRecording || isProcessing}
+              className="h-10 w-10 rounded-full text-[#282828]"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" />
             </Button>
             {isProcessing && (
               <div className="flex items-center justify-center h-10 w-10">
