@@ -45,7 +45,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   // Effect to add the "results ready" message when resultsReady changes to true
   useEffect(() => {
     if (resultsReady) {
-      addAssistantMessage("Your DNA results are now ready to explore. Click the button below to see your intellectual profile.");
+      addAssistantMessage("Your DNA results are now ready to explore. Click the button below to see your intellectual profile. We can pick this conversation back up in my office at any time.");
     }
   }, [resultsReady, addAssistantMessage]);
 
