@@ -1,6 +1,22 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Helper function to read the mermaid file
+function readMermaidFile(): string {
+  try {
+    const filePath = path.join(process.cwd(), 'assessment-mermaid.md');
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    console.error('Error reading mermaid file:', error);
+    return ''; // Return empty string or some default content if file cannot be read
+  }
+}
 
 export function getPromptForSection(section: number, answers_json: string): string {
-const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
+  // Read the mermaid file content
+  const mermaidContent = readMermaidFile();
+  
+  const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
 Answer requirements:
 Temporal Distribution - When selecting thinkers, only select thinkers whose works were published before 1970.
 Include minimum 20% pre-medieval thinkers
@@ -10,7 +26,7 @@ Selection Criteria - Mix iconic and lesser-known influential voices - Choose thi
 
 Question sets and dna_assessment decision tree to which the answers correspond:
 
-{{INSERT MERMAID FILE FROM readiverse-haven/supabase/functions/analyze-dna/assessment-mermaid.md}}
+${mermaidContent}
 
 ${answers_json}`;
 
