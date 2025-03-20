@@ -57,7 +57,7 @@ ${answers_json}`;
 Template:
 {
   "archetype": "Archetype (format: [First Word] [Second Word]) drawn from these instructions:
-  \`\`\`mermaid
+  \`\\`\`mermaid
   # Mythopoetic Archetype Generation System
   ## Core Components
   ### First Word Elements should describe the nature and/or state of the respondent based on their answer sequence
