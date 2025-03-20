@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
 import { NotionSyncButton } from "@/components/NotionSyncButton";
+import { AnalyzeDNAButton } from "@/components/AnalyzeDNAButton";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
@@ -196,7 +198,10 @@ const GreatQuestions = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <NotionSyncButton />
+          <div className="flex gap-2">
+            <AnalyzeDNAButton />
+            <NotionSyncButton />
+          </div>
           <button
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-foreground hover:bg-white/10 transition-all duration-200"
             onClick={() => handleNavigation('/search')}
