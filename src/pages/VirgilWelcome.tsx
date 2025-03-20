@@ -1,16 +1,13 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import conversationManager from '@/services/ConversationManager';
 
 const VirgilWelcome: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const [resultsReady, setResultsReady] = useState(false);
-  const chatRef = useRef<ReturnType<typeof useVirgilChat>>();
   const navigate = useNavigate();
 
   // Initial animation timing
@@ -31,33 +28,16 @@ const VirgilWelcome: React.FC = () => {
     };
   }, [navigate]);
 
-  // Poll for DNA analysis completion
-  const { data: analysisData } = useQuery({
-    queryKey: ['dna-analysis-status'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('dna_analysis_results')
-        .select('status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) {
-        console.error('Error fetching DNA analysis status:', error);
-        return null;
-      }
-      
-      return data && data.length > 0 ? data[0] : null;
-    },
-    refetchInterval: 5000, // Poll every 5 seconds
-    enabled: state === 'chat' && !resultsReady
-  });
-
-  // When analysis is complete, set results ready
+  // Two-minute timer for DNA results
   useEffect(() => {
-    if (analysisData && analysisData.status === 'completed' && !resultsReady) {
-      setResultsReady(true);
+    if (state === 'chat') {
+      const resultsTimer = setTimeout(() => {
+        setResultsReady(true);
+      }, 120000); // 2 minutes (120,000 ms)
+      
+      return () => clearTimeout(resultsTimer);
     }
-  }, [analysisData, resultsReady]);
+  }, [state]);
 
   // Save conversation and handle navigation
   const handleViewResults = async () => {
@@ -65,15 +45,13 @@ const VirgilWelcome: React.FC = () => {
       // Save the conversation to Supabase
       const sessionId = Math.random().toString(36).substring(2, 15);
       
-      // If we have any messages in the VirgilChat component, save them to Supabase
-      if (chatRef.current && chatRef.current.messages) {
-        await conversationManager.saveConversationToSupabase(
-          sessionId,
-          "dna-welcome",
-          null, // userId 
-          "welcome"
-        );
-      }
+      // Save the conversation to Supabase
+      await conversationManager.saveConversationToSupabase(
+        sessionId,
+        "dna-welcome",
+        null, // userId 
+        "welcome"
+      );
       
       // Navigate to the dashboard with profile tab
       navigate('/dashboard?tab=profile');
