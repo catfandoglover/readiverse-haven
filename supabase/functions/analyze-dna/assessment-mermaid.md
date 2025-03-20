@@ -161,7 +161,7 @@ graph TD
     BBBA -->|Yes| BBBAA
     BBBA -->|No| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
 
 
 # Epistemology
@@ -245,7 +245,7 @@ graph TD
     BBBA -->|Agree| BBBAA
     BBBA -->|Disagree| BBBAB
     BBBB -->|Agree| BBBBA
-    BBBB -->|Disagree| BBBBB```
+    BBBB -->|Disagree| BBBBB
 
 # Ethics
 ```mermaid
@@ -328,7 +328,7 @@ graph TD
     BBBA -->|Yes| BBBAA
     BBBA -->|No| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
 
 # Politics
 ```mermaid
@@ -411,7 +411,7 @@ graph TD
     BBBA -->|Yes| BBBAA
     BBBA -->|No| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
 
 # Aesthetics
 ```mermaid
@@ -494,4 +494,4 @@ graph TD
     BBBA -->|Express| BBBAA
     BBBA -->|Evoke| BBBAB
     BBBB -->|Yes| BBBBA
-    BBBB -->|No| BBBBB```
+    BBBB -->|No| BBBBB
