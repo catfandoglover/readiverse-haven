@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -442,8 +443,7 @@ const DNAAssessment = () => {
             
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
-            setIsTransitioning(false);
-            
+            // Update user profile with assessment ID if logged in
             if (user) {
               try {
                 const { data: profileData, error: profileError } = await supabase
@@ -474,8 +474,14 @@ const DNAAssessment = () => {
               }
             }
 
-            await initAnalysis(updatedAnswers, assessmentId);
+            // Start analysis in the background but don't wait for it
+            initAnalysis(updatedAnswers, assessmentId)
+              .catch(error => {
+                console.error('Error during DNA analysis:', error);
+              });
             
+            // Critical fix: Ensure we navigate to completion screen regardless of analysis state
+            setIsTransitioning(false);
             navigate('/dna/completion');
             return;
           } else {
@@ -511,11 +517,13 @@ const DNAAssessment = () => {
         } catch (error) {
           console.error('Error updating assessment:', error);
           toast.error('Error saving your progress');
+          // Critical fix: If there's an error, still try to navigate to completion when done
           if (!nextCategory) {
-            navigate('/dna');
+            setIsTransitioning(false);
+            navigate('/dna/completion');
+          } else {
+            setIsTransitioning(false);
           }
-        } finally {
-          setIsTransitioning(false);
         }
         return;
       }
