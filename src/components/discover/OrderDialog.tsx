@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ExternalLink } from "lucide-react";
@@ -40,29 +41,29 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
           ORDER
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#2A282A] text-[#E9E7E2] border-gray-700">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Order "{title}"</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogTitle>Order "{title}"</DialogTitle>
+          <DialogDescription>
             Choose where you'd like to purchase this book.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4 py-4">
+        <DialogFooter className="flex flex-col gap-4 sm:flex-col">
           <Button
             onClick={handleAmazonOrder}
-            className="w-full bg-[#FF9900] hover:bg-[#FF9900]/90 text-black flex justify-between items-center"
+            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm uppercase tracking-wider rounded-2xl flex justify-between items-center"
           >
             Buy on Amazon
             <ExternalLink className="h-4 w-4" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="w-full bg-[#4C7C9B] hover:bg-[#4C7C9B]/90 flex justify-between items-center"
+            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm uppercase tracking-wider rounded-2xl flex justify-between items-center"
           >
             Buy From Independent Bookseller
             <ExternalLink className="h-4 w-4" />
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
