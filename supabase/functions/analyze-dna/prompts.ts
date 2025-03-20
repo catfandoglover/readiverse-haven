@@ -10,56 +10,6 @@ Selection Criteria - Mix iconic and lesser-known influential voices - Choose thi
 
 Question sets and dna_assessment decision tree to which the answers correspond:
 
-1
-
-2
-
-3
-
-4
-
-5
-
-6
-
-7
-
-8
-
-9
-
-10
-
-11
-
-12
-
-13
-
-14
-
-15
-
-16
-
-17
-
-18
-
-19
-
-20
-
-21
-
-22
-
-23
-
-24
-
-25
-
 Theology
 ```mermaid
 graph TD
