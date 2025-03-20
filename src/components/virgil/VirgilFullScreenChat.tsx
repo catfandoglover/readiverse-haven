@@ -60,20 +60,6 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
-      <div className={cn(
-        "flex items-center justify-between p-4 border-b",
-        themeColors.border
-      )}>
-        <div className="w-6" />
-        <h2 className={cn(
-          "font-oxanium text-sm font-bold tracking-wider uppercase",
-          themeColors.text
-        )}>
-          Virgil's Office
-        </h2>
-        <div className="w-6" />
-      </div>
-
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {messages.map((message) => (
           <MessageBubble 
