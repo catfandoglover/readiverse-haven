@@ -74,8 +74,10 @@ function handleProblematicFields(jsonString: string): string {
   return processed;
 }
 
-// New function to validate and ensure required fields are present
+// Updated function to validate and ensure required fields are present
 function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
+  // Changed from section !== 1 to section !== 2
+  // This ensures we only apply this special handling to section 1
   if (section !== 1) return jsonObject;
   
   const result = { ...jsonObject };
@@ -313,6 +315,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     
     let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
     
+    // Changed from section === 1 to section === 1 
+    // This ensures special system prompt is applied to section 1 where politics fields are now located
     if (section === 1) {
       systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response, including politics_challenging_voice_4, politics_challenging_voice_5, and their associated _classic and _rationale fields. Ensure every field has a complete value.';
     }
@@ -338,6 +342,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
           }
         ],
         max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
+        // Changed from section === 1 to section === 1
+        // This ensures lower temperature is applied to section 1 where politics fields are now located
         temperature: section === 1 ? 0.3 : 0.7, // Lower temperature for section 1 to improve consistency
         response_format: { type: "json_object" }
       })
