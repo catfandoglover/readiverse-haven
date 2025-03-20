@@ -1,38 +1,28 @@
 /// <reference lib="deno.ns" />
-import { createClient } from 'https://esm.sh/@supabase/supabase-js';
 
-// Function to fetch the mermaid content from Supabase
-async function fetchMermaidContentFromSupabase(): Promise<string> {
+// Helper function to read the mermaid content from Supabase
+async function readMermaidFile(): Promise<string> {
   try {
-    // You'll need to replace these values with your actual Supabase URL and anon key
-    const supabaseUrl = 'YOUR_SUPABASE_URL';
-    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-    
-    // Create Supabase client
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Fetch the prompt from the 'prompts' table where id = 1
     const { data, error } = await supabase
       .from('prompts')
       .select('prompt')
-      .eq('id', 1)
       .single();
     
     if (error) {
-      console.error('Error fetching from Supabase:', error);
-      return ''; // Return empty string if there's an error
+      console.error('Error fetching mermaid content:', error);
+      return '';
     }
     
-    return data.prompt || '';
+    return data.prompt;
   } catch (error) {
-    console.error('Error in Supabase connection:', error);
-    return ''; // Return empty string or some default content if there's an error
+    console.error('Error reading mermaid content:', error);
+    return '';
   }
 }
 
 export async function getPromptForSection(section: number, answers_json: string): Promise<string> {
-  // Fetch the mermaid content from Supabase
-  const mermaidContent = await fetchMermaidContentFromSupabase();
+  // Read the mermaid file content
+  const mermaidContent = await readMermaidFile();
   
   const basePrompt = `Analyze the following philosophical answers to the provided mermaid chart sequence of potential questions in a philosophical metaframework and provide insights in second person ("you"). Format your response as a valid JSON object with the exact field names shown in the template below. The JSON must be parsed by JSON.parse() without any modifications:
 Answer requirements:
@@ -41,7 +31,9 @@ Include minimum 20% pre-medieval thinkers
 Represent spread across available periods
 Cultural Distribution - Draw 70% from Western philosophical traditions - Draw 30% from Non-Western philosophical traditions
 Selection Criteria - Mix iconic and lesser-known influential voices - Choose thinkers reflecting your specific decision tree paths - Maintain diverse perspectives within constraints.
+
 Question sets and dna_assessment decision tree to which the answers correspond:
+
 ${mermaidContent}
 
 ${answers_json}`;
