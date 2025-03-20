@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -325,15 +325,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           )}>
             Virgil's Office
           </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-6 w-6"
-          >
-            <X className={cn("h-4 w-4", themeColors.text)} aria-hidden="true" />
-            <span className="sr-only">Close</span>
-          </Button>
+          <div className="w-6" /> {/* Spacer for balance */}
         </div>
 
         {/* Messages */}

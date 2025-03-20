@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, X } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
@@ -345,6 +346,23 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     )}>
       <div className="relative w-full max-w-md mx-auto h-[360px]">
         <div className="absolute bottom-0 left-0 right-0 chat-dialog-container flex flex-col font-oxanium h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-[#E7E4DB] border-b border-[#D0CBBD]/25">
+            <div className="w-6" /> {/* Spacer for balance */}
+            <h2 className="font-oxanium text-sm font-bold tracking-wider uppercase text-[#282828]">
+              Discuss with Virgil
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-6 w-6"
+            >
+              <X className="h-4 w-4 text-[#282828]" aria-hidden="true" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          
           <div className="chat-content-container flex-1 p-4 space-y-2 overflow-y-auto">
             {messages.map((msg, index) => {
               const previousMessage = index > 0 ? messages[index - 1] : null;
