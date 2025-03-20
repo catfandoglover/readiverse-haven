@@ -260,8 +260,6 @@ Template:
   case 3:
     return `${basePrompt}
 
-```
-
 Template:
 {
 "ontology_kindred_spirit_1": "First ontology kindred thinker",
