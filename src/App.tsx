@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,7 @@ import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
+import VirgilWelcome from "./pages/VirgilWelcome";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +71,7 @@ const App = () => (
                 <Route path="/dna/:category" element={<DNAAssessment />} />
                 <Route path="/dna/completion" element={<DNACompletionScreen />} />
                 <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
+                <Route path="/dna/welcome" element={<VirgilWelcome />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/dashboard" element={<Dashboard />} />
