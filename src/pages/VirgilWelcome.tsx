@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import VirgilChatInterface from '@/components/virgil/VirgilChatInterface';
+import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 
 const VirgilWelcome: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
 
   // Initial animation timing
@@ -17,7 +16,6 @@ const VirgilWelcome: React.FC = () => {
       // Allow time for header transition before showing chat
       const chatTimer = setTimeout(() => {
         setState('chat');
-        setIsChatOpen(true);
       }, 500); // 500ms for the header transition
 
       return () => clearTimeout(chatTimer);
@@ -61,15 +59,17 @@ const VirgilWelcome: React.FC = () => {
           <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">Meet Virgil.</h1>
           <p className="font-inter text-lg text-[#E9E7E2]/70">Your Philosophical Guide</p>
         </div>
+        
+        {/* Chat interface - only shows after transition */}
+        {state === 'chat' && (
+          <div className="absolute inset-0 flex flex-col">
+            <VirgilFullScreenChat 
+              variant="virgilchat"
+              initialMessage="I'm Virgil, your philosophical guide to humanity's great conversation. Your intellectual DNA results are processing in our ideas lab. We'll take you over to your results in about 2 minutes. In the meantime, how was that experience for you?"
+            />
+          </div>
+        )}
       </div>
-      
-      {/* Chat interface */}
-      <VirgilChatInterface 
-        isOpen={isChatOpen} 
-        onClose={() => {}} // No-op since we don't want to close it
-        variant="virgilchat"
-        initialMessage="I'm Virgil, your philosophical guide to humanity's great conversation. Your intellectual DNA results are processing in our ideas lab. We'll take you over to your results in about 2 minutes. In the meantime, how was that experience for you?"
-      />
     </div>
   );
 };
