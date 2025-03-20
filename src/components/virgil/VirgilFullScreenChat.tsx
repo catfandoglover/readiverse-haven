@@ -7,15 +7,22 @@ import { useVirgilChat } from '@/hooks/useVirgilChat';
 import MessageBubble from './MessageBubble';
 import ChatInputForm from './ChatInputForm';
 import { ChatVariant } from '@/types/chat';
+import { Button } from "@/components/ui/button";
 
 interface VirgilFullScreenChatProps {
   variant?: ChatVariant;
   initialMessage?: string;
+  resultsReady?: boolean;
+  onViewResults?: () => void;
+  disableChat?: boolean;
 }
 
 const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({ 
   variant = 'default',
-  initialMessage
+  initialMessage,
+  resultsReady = false,
+  onViewResults,
+  disableChat = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
@@ -25,7 +32,8 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     isRecording,
     isProcessing,
     toggleRecording,
-    handleSubmitMessage
+    handleSubmitMessage,
+    addAssistantMessage
   } = useVirgilChat(initialMessage);
 
   const themeColors = chatThemes[variant];
@@ -33,6 +41,13 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Effect to add the "results ready" message when resultsReady changes to true
+  useEffect(() => {
+    if (resultsReady) {
+      addAssistantMessage("Your DNA results are now ready to explore. Click the button below to see your intellectual profile.");
+    }
+  }, [resultsReady, addAssistantMessage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,6 +82,20 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
             themeColors={themeColors} 
           />
         ))}
+        
+        {resultsReady && (
+          <div className="flex justify-center mt-8">
+            <Button 
+              variant="virgil"
+              size="lg"
+              className="animate-pulse"
+              onClick={onViewResults}
+            >
+              SEE MY RESULTS
+            </Button>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
@@ -78,6 +107,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
         isProcessing={isProcessing}
         toggleRecording={toggleRecording}
         themeColors={themeColors}
+        disabled={disableChat || resultsReady}
       />
     </div>
   );

@@ -1,11 +1,12 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/types/chat';
 import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
+import conversationManager from '@/services/ConversationManager';
 
 export const useVirgilChat = (initialMessage?: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -54,6 +55,17 @@ export const useVirgilChat = (initialMessage?: string) => {
       console.error('Error generating audio:', error);
     }
   };
+
+  const addAssistantMessage = useCallback((content: string) => {
+    const newMessage: ChatMessage = {
+      id: uuidv4(),
+      content,
+      role: 'assistant',
+      isNew: true
+    };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    generateAudioForText(content);
+  }, []);
 
   const processMessage = async (userMessage: string) => {
     setIsProcessing(true);
@@ -213,6 +225,8 @@ export const useVirgilChat = (initialMessage?: string) => {
     isRecording,
     isProcessing,
     toggleRecording,
-    handleSubmitMessage
+    handleSubmitMessage,
+    addAssistantMessage,
+    sessionId
   };
 };

@@ -14,6 +14,7 @@ interface ChatInputFormProps {
   isProcessing: boolean;
   toggleRecording: () => void;
   themeColors: ThemeColors;
+  disabled?: boolean;
 }
 
 const ChatInputForm: React.FC<ChatInputFormProps> = ({
@@ -23,7 +24,8 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
   isRecording,
   isProcessing,
   toggleRecording,
-  themeColors
+  themeColors,
+  disabled = false
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,14 +50,14 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
         value={inputMessage}
         onChange={(e) => setInputMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={isRecording ? "Recording..." : "Message Virgil..."}
+        placeholder={isRecording ? "Recording..." : disabled ? "Chat is disabled while your results are ready" : "Message Virgil..."}
         className={cn(
           "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px]",
           themeColors.inputBackground,
           themeColors.inputText,
           themeColors.inputPlaceholder
         )}
-        disabled={isProcessing || isRecording}
+        disabled={isProcessing || isRecording || disabled}
         minRows={1}
         maxRows={4}
         autoComplete="off"
@@ -76,6 +78,7 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
               isRecording && "bg-[#CCFF23] hover:bg-[#CCFF23]/90"
             )}
             aria-label={isRecording ? "Stop recording" : "Start recording"}
+            disabled={disabled}
           >
             {isRecording ? (
               <MicOff className="h-4 w-4 text-[#282828]" />
@@ -87,7 +90,7 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
             type="submit" 
             variant="ghost" 
             size="icon"
-            disabled={!inputMessage.trim() && !isRecording}
+            disabled={(!inputMessage.trim() && !isRecording) || disabled}
             className="h-10 w-10 rounded-full flex-shrink-0"
             aria-label="Send message"
           >
