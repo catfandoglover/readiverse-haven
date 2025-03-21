@@ -7,7 +7,6 @@ import { Card, CardContent } from "../ui/card";
 import { GraduationCap, Hexagon, Award, Clock, LineChart } from "lucide-react";
 import TimeWithVirgil from "./TimeWithVirgil";
 import BadgesPage from "./BadgesPage";
-import BottomNav from "../discover/BottomNav";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
@@ -30,7 +29,7 @@ const DashboardLayout: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto">
         <div className="container max-w-4xl mx-auto px-4 py-6">
           {/* Image Card */}
           <Card className="mb-6 bg-[#383741] border-none overflow-hidden">
@@ -166,11 +165,6 @@ const DashboardLayout: React.FC = () => {
           )}
         </div>
       </main>
-      
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-30">
-        <BottomNav activeTab="dashboard" />
-      </div>
     </div>
   );
 };
