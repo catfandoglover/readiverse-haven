@@ -8,17 +8,27 @@ import { supabase } from "@/integrations/supabase/client";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
+// Define the Quote type to match what we expect from the database
 type Quote = {
   id: string;
   text: string;
   author: string;
+  icon_id?: string;
   category?: string;
+};
+
+// Define the Icon type for the author information
+type Icon = {
+  id: string;
+  name: string;
+  illustration: string;
 };
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const [badgeCount, setBadgeCount] = useState<number>(0);
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [icon, setIcon] = useState<Icon | null>(null);
 
   // Fetch badge count and quote on component mount
   useEffect(() => {
@@ -27,8 +37,9 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
+        // Query the profile_badges table instead of badges
         const { count, error } = await supabase
-          .from('badges')
+          .from('profile_badges')
           .select('*', { count: 'exact', head: true })
           .eq('profile_id', userData.user.id);
           
@@ -45,20 +56,52 @@ const DashboardLayout: React.FC = () => {
 
     const fetchRandomQuote = async () => {
       try {
+        // Fetch a random quote from the quotes table
         const { data, error } = await supabase
           .from('quotes')
           .select('*')
+          .order('id', { ascending: false })
           .limit(1)
           .single();
           
         if (error) {
           console.error('Error fetching quote:', error);
+          setQuote({
+            id: "1",
+            text: "Our difficulties grow miracles.",
+            author: "Jean de La Bruyère",
+            category: "LIGHTNING"
+          });
           return;
         }
         
-        setQuote(data);
+        setQuote(data as Quote);
+        
+        // If we have an icon_id, fetch the corresponding icon
+        if (data.icon_id) {
+          fetchIcon(data.icon_id);
+        }
       } catch (error) {
         console.error('Error in quote fetch:', error);
+      }
+    };
+
+    const fetchIcon = async (iconId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('icons')
+          .select('*')
+          .eq('id', iconId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching icon:', error);
+          return;
+        }
+        
+        setIcon(data as Icon);
+      } catch (error) {
+        console.error('Error in icon fetch:', error);
       }
     };
 
@@ -109,6 +152,11 @@ const DashboardLayout: React.FC = () => {
     console.log("Badge button clicked");
     // Will navigate to badges page in the future
   };
+  
+  const handleVirgilButtonClick = () => {
+    console.log("Virgil button clicked");
+    // Will implement Virgil functionality in the future
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
@@ -121,7 +169,7 @@ const DashboardLayout: React.FC = () => {
         {/* Badge count hexagon button */}
         <button 
           onClick={handleBadgeClick}
-          className="relative flex items-center justify-center w-12 h-12 cursor-pointer"
+          className="relative flex items-center justify-center w-9 h-9 cursor-pointer"
         >
           <Hexagon className="w-full h-full text-[#B8C7FF] stroke-current fill-transparent" strokeWidth={1.5} />
           <span className="absolute font-oxanium font-bold text-lg text-[#E9E7E2]">
@@ -133,17 +181,17 @@ const DashboardLayout: React.FC = () => {
       {/* Main content */}
       <main className="flex-1 px-6 py-8">
         {/* Quote Card */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
             <img 
-              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png" 
+              src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"} 
               alt="Philosopher portrait"
               className="w-full h-full object-cover rounded-lg"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
             
             {/* Quote text */}
-            <div className="absolute bottom-28 left-4 right-4">
+            <div className="absolute bottom-16 left-4 right-4">
               <p className="text-white text-xl font-bold">{quoteData.text}</p>
             </div>
             
@@ -152,22 +200,27 @@ const DashboardLayout: React.FC = () => {
               <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 mr-2 overflow-hidden">
                   <img 
-                    src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"
+                    src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"}
                     alt="Author" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
-                  {quoteData.author}
+                  {icon?.name || quoteData.author}
                 </span>
-                <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 ml-3 overflow-hidden">
-                  <img 
-                    src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png"
-                    alt="Virgil" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
               </div>
+              
+              {/* Virgil button with rounded corners */}
+              <button 
+                onClick={handleVirgilButtonClick}
+                className="w-10 h-10 rounded-2xl bg-[#E9E7E2]/20 overflow-hidden flex items-center justify-center"
+              >
+                <img 
+                  src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png"
+                  alt="Virgil" 
+                  className="w-full h-full object-cover"
+                />
+              </button>
             </div>
           </Card>
         </div>
