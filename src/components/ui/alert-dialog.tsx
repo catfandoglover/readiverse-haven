@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { X } from "lucide-react"
@@ -57,7 +56,7 @@ const AlertDialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-left pt-10", // Increased from pt-6 to pt-10 to create more space between X and title
+      "flex flex-col space-y-1.5 text-left pt-10",
       className
     )}
     {...props}
@@ -71,7 +70,7 @@ const AlertDialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-4 mt-5", // Reduced from mt-8 to mt-5 to reduce space between text and buttons
+      "flex flex-col space-y-4 mt-5",
       className
     )}
     {...props}
@@ -130,7 +129,7 @@ const AlertDialogCancel = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants({ variant: "outline" }),
-      "bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20",
+      "bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20",
       className
     )}
     {...props}
