@@ -36,16 +36,14 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-[80%] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border-0 bg-[#E9E7E2] p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl",
-        "dark:bg-[#332E38] dark:text-[#E9E7E2]",
-        "sepia:bg-[#E9E7E2] sepia:text-[#282828]",
+        "fixed left-[50%] top-[50%] z-50 grid w-[80%] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-6 border-0 bg-[#E9E7E2] p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl",
         className
       )}
       {...props}
     >
       {children}
-      <AlertDialogPrimitive.Cancel className="absolute right-4 top-4 rounded-full h-8 w-8 flex items-center justify-center bg-background/10 opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-        <X className="h-4 w-4" />
+      <AlertDialogPrimitive.Cancel className="absolute right-6 top-6 rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
+        <X className="h-6 w-6" />
         <span className="sr-only">Close</span>
       </AlertDialogPrimitive.Cancel>
     </AlertDialogPrimitive.Content>
@@ -59,7 +57,7 @@ const AlertDialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-left",
+      "flex flex-col space-y-1.5 text-left pt-6",
       className
     )}
     {...props}
@@ -73,7 +71,7 @@ const AlertDialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 mt-6",
+      "flex flex-col space-y-4 mt-8",
       className
     )}
     {...props}
@@ -88,7 +86,7 @@ const AlertDialogTitle = React.forwardRef<
   <AlertDialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-xl font-baskerville leading-none tracking-tight",
+      "text-3xl font-baskerville leading-none tracking-tight",
       className
     )}
     {...props}
@@ -102,7 +100,7 @@ const AlertDialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm font-oxanium mt-2 text-muted-foreground", className)}
+    className={cn("text-sm font-oxanium mt-3 text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -116,7 +114,7 @@ const AlertDialogAction = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants(),
-      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl",
+      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-14",
       className
     )}
     {...props}
@@ -132,9 +130,7 @@ const AlertDialogCancel = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants({ variant: "outline" }),
-      "mt-2 sm:mt-0 border-[#373763]/30 text-[#373763] hover:bg-[#373763]/10 font-oxanium text-sm uppercase tracking-wider rounded-2xl",
-      "dark:border-[#E9E7E2]/30 dark:text-[#E9E7E2] dark:hover:bg-[#E9E7E2]/10",
-      "sepia:border-[#5B4636]/30 sepia:text-[#5B4636] sepia:hover:bg-[#5B4636]/10",
+      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-14",
       className
     )}
     {...props}
