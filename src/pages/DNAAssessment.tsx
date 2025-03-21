@@ -715,32 +715,63 @@ const DNAAssessment = () => {
   React.useEffect(() => {
     const loadTidyCalScript = () => {
       console.log("Loading TidyCal script...");
+      
+      // Remove existing script first if it exists to ensure clean reloading
       const existingScript = document.getElementById('tidycal-script');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
-        script.id = 'tidycal-script';
-        script.async = true;
-        script.onload = () => {
-          console.log("TidyCal script loaded successfully");
-          if (window.TidyCal) {
-            window.TidyCal.init();
-            console.log("TidyCal initialized on script load");
-          }
-        };
-        document.body.appendChild(script);
-      } else if (window.TidyCal) {
-        window.TidyCal.init();
-        console.log("TidyCal reinitialized with existing script");
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+        console.log("Removed existing TidyCal script");
       }
+      
+      // Create and append new script
+      const script = document.createElement('script');
+      script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
+      script.id = 'tidycal-script';
+      script.async = true;
+      
+      script.onload = () => {
+        console.log("TidyCal script loaded successfully");
+        setTimeout(() => {
+          if (window.TidyCal && typeof window.TidyCal.init === 'function') {
+            console.log("Initializing TidyCal...");
+            window.TidyCal.init();
+            console.log("TidyCal initialized");
+          } else {
+            console.error("TidyCal object not available after script load");
+          }
+        }, 500); // Short delay to ensure DOM is ready
+      };
+      
+      script.onerror = (error) => {
+        console.error("Error loading TidyCal script:", error);
+      };
+      
+      document.body.appendChild(script);
+      console.log("Added TidyCal script to body");
     };
     
     loadTidyCalScript();
     
     return () => {
       // Do not remove the script on unmount to prevent reloading issues
+      console.log("Component unmounting, TidyCal script remains loaded");
     };
   }, []);
+  
+  // Add an effect to initialize TidyCal when the dialog is shown
+  React.useEffect(() => {
+    if (showTidyCal && window.TidyCal) {
+      console.log("showTidyCal is true, initializing TidyCal...");
+      setTimeout(() => {
+        if (window.TidyCal && typeof window.TidyCal.init === 'function') {
+          window.TidyCal.init();
+          console.log("TidyCal reinitialized when dialog opened");
+        } else {
+          console.error("TidyCal object not available when trying to reinitialize");
+        }
+      }, 300);
+    }
+  }, [showTidyCal]);
 
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
@@ -875,104 +906,4 @@ const DNAAssessment = () => {
           <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
             <Button 
               onClick={handleContinue}
-              disabled={selectedAnswer === null}
-              className={`w-full h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
-                selectedAnswer !== null 
-                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
-                  : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
-              }`}
-            >
-              CONTINUE
-            </Button>
-          </div>
-        </div>
-
-        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-          <AlertDialogContent className="bg-[#E9E7E2]">
-            {!showTidyCal && (
-              <AlertDialogHeader className="tidycal-header">
-                <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
-                <AlertDialogDescription className="font-oxanium">
-                  These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-            )}
-            
-            {showTidyCal && (
-              <div 
-                id="tidycal-container" 
-                className="w-full min-h-[500px] flex items-center justify-center overflow-visible"
-              >
-                <div 
-                  className="tidycal-embed w-full h-[500px]" 
-                  data-path="team/intellectual-genetic-counselors/intake"
-                  style={{ display: 'block' }}
-                ></div>
-              </div>
-            )}
-            
-            {!showTidyCal && (
-              <AlertDialogFooter className="tidycal-footer">
-                <AlertDialogAction 
-                  className="bg-[#373763] text-white font-oxanium"
-                  onClick={(e) => {
-                    e.preventDefault(); // Prevent default to keep dialog open
-                    console.log("Book a counselor button clicked");
-                    setShowTidyCal(true);
-                    
-                    // Add a small delay before initializing TidyCal
-                    setTimeout(() => {
-                      console.log("Attempting to initialize TidyCal...");
-                      if (window.TidyCal && typeof window.TidyCal.init === 'function') {
-                        window.TidyCal.init();
-                        console.log("TidyCal initialized after clicking button");
-                      } else {
-                        console.error("TidyCal object not available");
-                      }
-                      
-                      // Add message event listener for booking completion
-                      window.addEventListener('message', (event) => {
-                        console.log("Message received:", event.data);
-                        if (event.data === 'tidycal:booking-completed') {
-                          setShowExitAlert(false);
-                          navigate('/discover');
-                        }
-                      });
-                    }, 300);
-                  }}
-                >
-                  BOOK A COUNSELOR
-                </AlertDialogAction>
-                <AlertDialogCancel 
-                  onClick={confirmExit}
-                  className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
-                >
-                  EXIT ASSESSMENT
-                </AlertDialogCancel>
-              </AlertDialogFooter>
-            )}
-            
-            {showTidyCal && (
-              <Button
-                onClick={() => setShowTidyCal(false)}
-                className="mt-4 bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border-none"
-              >
-                Back to Options
-              </Button>
-            )}
-          </AlertDialogContent>
-        </AlertDialog>
-        
-      </div>
-
-      <AIChatDialog 
-        open={showAIChat}
-        onOpenChange={setShowAIChat}
-        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
-        currentQuestion={currentQuestion?.question?.question || ''}
-      />
-    </>
-  );
-};
-
-export default DNAAssessment;
+              disabled={
