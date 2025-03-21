@@ -41,27 +41,27 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
           ORDER
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Order "{title}"</DialogTitle>
           <DialogDescription>
             Choose where you'd like to purchase this book.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-4 sm:flex-col">
           <Button
             onClick={handleAmazonOrder}
-            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-base uppercase tracking-wider rounded-full h-14 flex justify-between items-center"
+            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm uppercase tracking-wider rounded-2xl flex justify-between items-center"
           >
-            BUY ON AMAZON
-            <ExternalLink className="h-5 w-5" />
+            Buy on Amazon
+            <ExternalLink className="h-4 w-4" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-base uppercase tracking-wider rounded-full h-14 flex justify-between items-center"
+            className="w-full bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm uppercase tracking-wider rounded-2xl flex justify-between items-center"
           >
-            BUY FROM INDEPENDENT BOOKSELLER
-            <ExternalLink className="h-5 w-5" />
+            Buy From Independent Bookseller
+            <ExternalLink className="h-4 w-4" />
           </Button>
         </DialogFooter>
       </DialogContent>
