@@ -10,7 +10,10 @@ const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
+    <div 
+      className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Office%20Background.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBPZmZpY2UgQmFja2dyb3VuZC5wbmciLCJpYXQiOjE3NDI1NzQ3MzEsImV4cCI6ODY1NzQyNTc0NzMxfQ.UZlV0Zvc415GIfBykAxsyL7vuG-VKam5PfAiO3vQ0QE')" }}
+    >
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
@@ -38,21 +41,21 @@ const VirgilOffice: React.FC = () => {
             
             <div className="space-y-4 mt-8">
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
                 onClick={() => setIsChatOpen(true)}
               >
                 CHAT WITH VIRGIL
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
                 onClick={() => console.log("Take a course clicked")}
               >
                 TAKE A COURSE
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38] hover:bg-[#332E38]/80 hover:opacity-90 border border-[#E9E7E2]/20 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
                 onClick={() => console.log("Test my knowledge clicked")}
               >
                 TEST MY KNOWLEDGE
