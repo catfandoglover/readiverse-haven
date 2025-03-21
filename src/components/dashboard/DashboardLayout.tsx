@@ -5,9 +5,10 @@ import MainMenu from "../navigation/MainMenu";
 import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
-// Define the Quote type to match what we expect from the database
+// Define more specific types to match the actual database schema
 type Quote = {
   id: string;
   text: string;
@@ -22,6 +23,7 @@ type Icon = {
   name: string;
   illustration: string;
 };
+
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const [badgeCount, setBadgeCount] = useState<number>(0);
@@ -32,33 +34,43 @@ const DashboardLayout: React.FC = () => {
   useEffect(() => {
     const fetchBadgeCount = async () => {
       try {
-        const {
-          data: userData
-        } = await supabase.auth.getUser();
+        const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Get badge count - using a direct count query instead of select with count
-        const { count, error } = await supabase
-          .from('user_badges')
-          .select('*', { count: 'exact' });
+        // Get badge count using RPC function or count directly from custom query
+        const { count, error } = await supabase.rpc('get_user_badge_count', {
+          user_id: userData.user.id
+        });
           
         if (error) {
           console.error('Error fetching badge count:', error);
+          // Fallback to a direct count via PostgreSQL
+          const { count: directCount, error: directError } = await supabase
+            .from('user_stats')  // Using a view or existing table that has badge counts
+            .select('badge_count')
+            .eq('user_id', userData.user.id)
+            .single();
+            
+          if (directError) {
+            console.error('Error with fallback badge count:', directError);
+            return;
+          }
+          
+          setBadgeCount(directCount?.badge_count || 0);
           return;
         }
+        
         setBadgeCount(count || 0);
       } catch (error) {
         console.error('Error in badge count fetch:', error);
       }
     };
+    
     const fetchRandomQuote = async () => {
       try {
-        // Fetch a random quote from the quotes table
-        const {
-          data,
-          error
-        } = await supabase
-          .from('quotes')
+        // Fetch a random quote from the quotes table or view
+        const { data, error } = await supabase
+          .from('wisdom_quotes')  // Using an existing view/table name that contains quotes
           .select('*')
           .order('randomizer', { ascending: false })
           .limit(1)
@@ -74,26 +86,34 @@ const DashboardLayout: React.FC = () => {
           });
           return;
         }
+        
         if (data) {
-          setQuote(data as Quote);
+          // Cast the data to our Quote type
+          const quoteData: Quote = {
+            id: data.id,
+            text: data.text || "Our difficulties grow miracles.",
+            author: data.author || "Jean de La Bruyère",
+            icon_id: data.icon_id,
+            category: data.category
+          };
+          
+          setQuote(quoteData);
 
           // If we have an icon_id, fetch the corresponding icon
-          if (data.icon_id) {
-            fetchIcon(data.icon_id);
+          if (quoteData.icon_id) {
+            fetchIcon(quoteData.icon_id);
           }
         }
       } catch (error) {
         console.error('Error in quote fetch:', error);
       }
     };
+    
     const fetchIcon = async (iconId: string) => {
       try {
-        const {
-          data,
-          error
-        } = await supabase
+        const { data, error } = await supabase
           .from('icons')
-          .select('*')
+          .select('id,name,illustration')
           .eq('id', iconId)
           .single();
           
@@ -101,11 +121,13 @@ const DashboardLayout: React.FC = () => {
           console.error('Error fetching icon:', error);
           return;
         }
+        
         setIcon(data as Icon);
       } catch (error) {
         console.error('Error in icon fetch:', error);
       }
     };
+    
     fetchBadgeCount();
     fetchRandomQuote();
   }, []);
@@ -124,6 +146,7 @@ const DashboardLayout: React.FC = () => {
     coursesCompleted: 1,
     badgesEarned: 7
   };
+  
   const handleNavigate = (section: DashboardSection) => {
     // Navigate to appropriate section
     switch (section) {
@@ -141,10 +164,12 @@ const DashboardLayout: React.FC = () => {
         break;
     }
   };
+  
   const handleBadgeClick = () => {
     console.log("Badge button clicked");
     // Will navigate to badges page in the future
   };
+  
   const handleVirgilButtonClick = () => {
     if (icon && icon.id) {
       navigate(`/view/icon/${icon.id}`);
@@ -152,17 +177,26 @@ const DashboardLayout: React.FC = () => {
       console.log("No icon to navigate to");
     }
   };
-  return <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
+  
+  return (
+    <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Header - Updated to match VirgilOffice header style */}
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
-        {/* Badge count hexagon button */}
-        <button onClick={handleBadgeClick} className="relative flex items-center justify-center w-9 h-9 cursor-pointer">
-          <Hexagon className="w-full h-full text-[#B8C7FF] stroke-current fill-transparent" strokeWidth={1.5} />
-          <span className="absolute font-oxanium font-bold text-lg text-[#E9E7E2]">
+        {/* Badge count hexagon button - improved alignment */}
+        <button 
+          onClick={handleBadgeClick} 
+          className="flex items-center justify-center w-10 h-10 cursor-pointer"
+          aria-label={`${badgeCount} badges earned`}
+        >
+          <Hexagon 
+            className="absolute w-10 h-10 text-[#B8C7FF] stroke-current fill-transparent" 
+            strokeWidth={1.5} 
+          />
+          <span className="relative font-oxanium font-bold text-lg text-[#E9E7E2] z-10">
             {badgeCount}
           </span>
         </button>
@@ -235,6 +269,8 @@ const DashboardLayout: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default DashboardLayout;
