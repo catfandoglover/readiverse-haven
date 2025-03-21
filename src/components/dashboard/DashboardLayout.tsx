@@ -6,9 +6,7 @@ import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
-import { toast } from "@/components/ui/use-toast";
-
-type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
+import { useToast } from "@/hooks/use-toast";
 
 // Define more specific types to match the actual database schema
 type Quote = {
@@ -33,6 +31,7 @@ const DashboardLayout: React.FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [icon, setIcon] = useState<Icon | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
   // Fetch badge count and quote on component mount
   useEffect(() => {
@@ -67,7 +66,7 @@ const DashboardLayout: React.FC = () => {
       const { data, error } = await supabase
         .from("user_badges")
         .select("*")
-        .eq("user_id", userData.user.id);
+        .eq("user_id", userData.user.id) as { data: any[], error: any };
           
       if (error) {
         console.error('Error fetching badge count:', error);
@@ -97,7 +96,7 @@ const DashboardLayout: React.FC = () => {
         .select("*")
         .order("id")
         .limit(1)
-        .single();
+        .single() as { data: Quote | null, error: any };
         
       if (error) {
         console.error('Error fetching quote:', error);
@@ -119,13 +118,12 @@ const DashboardLayout: React.FC = () => {
       
       if (data) {
         // Set quote data
-        const quoteData = data as Quote;
-        setQuote(quoteData);
+        setQuote(data);
 
         // If we have an icon_id, fetch the corresponding icon
-        if (quoteData.icon_id) {
-          console.log('Fetching icon with ID:', quoteData.icon_id);
-          await fetchIcon(quoteData.icon_id);
+        if (data.icon_id) {
+          console.log('Fetching icon with ID:', data.icon_id);
+          await fetchIcon(data.icon_id);
         } else {
           console.warn('Quote has no icon_id, using author name only');
         }
@@ -142,7 +140,7 @@ const DashboardLayout: React.FC = () => {
         .from("icons")
         .select("id,name,illustration")
         .eq("id", iconId)
-        .single();
+        .single() as { data: Icon | null, error: any };
         
       if (error) {
         console.error('Error fetching icon:', error);
@@ -150,7 +148,9 @@ const DashboardLayout: React.FC = () => {
       }
       
       console.log('Icon data fetched successfully:', data);
-      setIcon(data as Icon);
+      if (data) {
+        setIcon(data);
+      }
     } catch (error) {
       console.error('Error in icon fetch:', error);
     }
@@ -171,7 +171,7 @@ const DashboardLayout: React.FC = () => {
     badgesEarned: 7
   };
   
-  const handleNavigate = (section: DashboardSection) => {
+  const handleNavigate = (section: "timeWithVirgil" | "courses" | "badges" | "reports") => {
     // Navigate to appropriate section
     switch (section) {
       case "timeWithVirgil":

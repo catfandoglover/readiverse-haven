@@ -22,7 +22,7 @@ export const useBook = (slug: string | undefined) => {
           .from('books')
           .select('*')
           .eq('slug', slug)
-          .single();
+          .single() as { data: Book | null, error: any };
 
         if (error) {
           console.log('Initial query error:', error);
@@ -32,7 +32,7 @@ export const useBook = (slug: string | undefined) => {
             .from('books')
             .select('*')
             .eq('id', slug)
-            .single();
+            .single() as { data: Book | null, error: any };
             
           if (!idError && idData) {
             console.log('Book found by ID:', {
@@ -42,7 +42,7 @@ export const useBook = (slug: string | undefined) => {
               hasAuthorId: idData?.author_id ? 'yes' : 'no',
               introduction: idData?.introduction ? 'yes' : 'no'
             });
-            return idData as Book;
+            return idData;
           }
           
           // Try with lowercase
@@ -50,7 +50,7 @@ export const useBook = (slug: string | undefined) => {
             .from('books')
             .select()
             .ilike('slug', slug)
-            .limit(1);
+            .limit(1) as { data: Book[] | null, error: any };
 
           if (retryError) {
             console.log('Retry query error:', retryError);
@@ -65,7 +65,7 @@ export const useBook = (slug: string | undefined) => {
             hasAuthorId: result?.author_id ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
-          return result as Book;
+          return result;
         }
 
         console.log('Query result:', {
@@ -75,7 +75,7 @@ export const useBook = (slug: string | undefined) => {
           hasAuthorId: data?.author_id ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
-        return data as Book;
+        return data;
       } catch (error) {
         console.log('Unexpected error in useBook:', error);
         return null;
