@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +91,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
         great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
         anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
-      }));
+      })) as Icon[];
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -149,7 +150,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       
       if (data) {
         console.log("Directly fetched icon:", data.name);
-        const processedIcon = {
+        const processedIcon: Icon = {
           ...data,
           slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
           about: data.about || `${data.name} was a significant figure in philosophical history.`,

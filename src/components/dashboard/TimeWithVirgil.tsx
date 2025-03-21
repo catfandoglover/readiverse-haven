@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LightningBolt } from "lucide-react";
+import { Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ProgressChart from "./ProgressChart";
 
@@ -86,7 +86,7 @@ const TimeWithVirgil: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-oxanium text-[#E9E7E2]">Emotional</h3>
               <div className="h-8 w-8 rounded-full bg-[#FD8F8F]/20 flex items-center justify-center">
-                <LightningBolt className="h-5 w-5 text-[#FD8F8F]" />
+                <Zap className="h-5 w-5 text-[#FD8F8F]" />
               </div>
             </div>
             <p className="text-sm text-[#E9E7E2]/70 mb-4">
@@ -103,7 +103,7 @@ const TimeWithVirgil: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-oxanium text-[#E9E7E2]">Intellectual</h3>
               <div className="h-8 w-8 rounded-full bg-[#7E69AB]/20 flex items-center justify-center">
-                <LightningBolt className="h-5 w-5 text-[#7E69AB]" />
+                <Zap className="h-5 w-5 text-[#7E69AB]" />
               </div>
             </div>
             <p className="text-sm text-[#E9E7E2]/70 mb-4">
@@ -120,7 +120,7 @@ const TimeWithVirgil: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-oxanium text-[#E9E7E2]">Practical</h3>
               <div className="h-8 w-8 rounded-full bg-[#8DD7CF]/20 flex items-center justify-center">
-                <LightningBolt className="h-5 w-5 text-[#8DD7CF]" />
+                <Zap className="h-5 w-5 text-[#8DD7CF]" />
               </div>
             </div>
             <p className="text-sm text-[#E9E7E2]/70 mb-4">
