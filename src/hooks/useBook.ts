@@ -42,7 +42,7 @@ export const useBook = (slug: string | undefined) => {
               hasAuthorId: idData?.author_id ? 'yes' : 'no',
               introduction: idData?.introduction ? 'yes' : 'no'
             });
-             return idData as Book;
+            return idData as Book;
           }
           
           // Try with lowercase
