@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
@@ -32,6 +31,7 @@ const DashboardLayout: React.FC = () => {
 
   // Fetch badge count and quote on component mount
   useEffect(() => {
+    
     const fetchBadgeCount = async () => {
       try {
         const { data: userData } = await supabase.auth.getUser();
@@ -189,14 +189,14 @@ const DashboardLayout: React.FC = () => {
         {/* Badge count hexagon button - improved alignment */}
         <button 
           onClick={handleBadgeClick} 
-          className="flex items-center justify-center w-10 h-10 cursor-pointer"
+          className="relative flex items-center justify-center w-10 h-10 cursor-pointer"
           aria-label={`${badgeCount} badges earned`}
         >
           <Hexagon 
             className="absolute w-10 h-10 text-[#B8C7FF] stroke-current fill-transparent" 
             strokeWidth={1.5} 
           />
-          <span className="relative font-oxanium font-bold text-lg text-[#E9E7E2] z-10">
+          <span className="text-[#E9E7E2] font-oxanium font-bold text-lg">
             {badgeCount}
           </span>
         </button>
@@ -220,12 +220,9 @@ const DashboardLayout: React.FC = () => {
               <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
-            {/* Kindred spirit container */}
+            {/* Kindred spirit container - REMOVING THE IMAGE HERE */}
             <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1 cursor-pointer" onClick={handleVirgilButtonClick}>
-                <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 mr-2 overflow-hidden">
-                  <img src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"} alt="Author" className="w-full h-full object-cover" />
-                </div>
+              <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" onClick={handleVirgilButtonClick}>
                 <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
                   {icon?.name || quoteData.author}
                 </span>
