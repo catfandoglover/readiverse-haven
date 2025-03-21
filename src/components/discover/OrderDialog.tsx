@@ -49,22 +49,22 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <DialogFooter className="flex flex-col space-y-4 mt-5 w-full">
+        <div className="flex flex-col space-y-4 mt-5 w-full overflow-hidden">
           <Button
             onClick={handleAmazonOrder}
-            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex justify-between items-center px-4"
+            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex items-center justify-between px-4"
           >
-            <span>Buy on Amazon</span>
+            <span className="truncate mr-2">Buy on Amazon</span>
             <ExternalLink className="h-4 w-4 flex-shrink-0" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex justify-between items-center px-4"
+            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex items-center justify-between px-4"
           >
-            <span>Buy From Independent Bookseller</span>
+            <span className="truncate mr-2">Buy From Independent Bookseller</span>
             <ExternalLink className="h-4 w-4 flex-shrink-0" />
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
