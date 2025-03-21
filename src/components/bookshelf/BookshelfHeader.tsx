@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Search } from "lucide-react";
 import MainMenu from "../navigation/MainMenu";
+import { LoginButtons } from "@/components/auth/LoginButtons";
 
 type TabType = "bookshelf" | "favorites";
 
@@ -45,13 +45,14 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ activeTab, onTabChang
           >
             FAVORITES
           </button>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end items-center gap-4">
             <button 
               className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
               aria-label="Search"
             >
               <Search className="h-2 w-2" />
             </button>
+            <LoginButtons />
           </div>
         </div>
       </div>
