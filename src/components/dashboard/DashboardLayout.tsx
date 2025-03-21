@@ -50,10 +50,10 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
-      {/* Header */}
-      <div className="flex items-center pt-6 px-6">
+      {/* Header - Updated to match VirgilOffice header style */}
+      <div className="flex items-center pt-4 px-4">
         <MainMenu />
-        <h2 className="font-baskerville text-[#E9E7E2] text-3xl mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
         <div className="w-10 h-10" /> {/* Empty div for spacing balance */}
