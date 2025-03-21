@@ -33,13 +33,13 @@ const BookmarkDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onRemoveBookmark}
             aria-label="Remove bookmark"
           >
-            Remove
+            REMOVE
           </AlertDialogAction>
+          <AlertDialogCancel>CANCEL</AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
