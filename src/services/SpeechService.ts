@@ -1,235 +1,116 @@
-import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import { getSignedUrl } from "@aws-sdk/s3-presigner";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
-interface Credentials {
-  accessKeyId: string;
-  secretAccessKey: string;
-}
+import { 
+  PollyClient, 
+  SynthesizeSpeechCommand,
+  OutputFormat,
+  Engine,
+  VoiceId,
+  TextType
+} from "@aws-sdk/client-polly";
+import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
+import useAudioStore, { createAudioContext } from './AudioContext';
+import { toast } from 'sonner';
 
-class PresignerPolly {
-  private s3Client: S3Client;
-  private region: string;
-  private credentials: Credentials;
-
-  constructor(config: { region: string; credentials: Credentials }) {
-    this.region = config.region;
-    this.credentials = config.credentials;
-    this.s3Client = new S3Client({
-      region: this.region,
-      credentials: this.credentials,
-    });
-  }
-
-  public async getPresignedUrl(bucket: string, key: string): Promise<string> {
-    try {
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      });
-      const url = await getSignedUrl(this.s3Client, command, { expiresIn: 3600 }); // 1 hour
-      return url;
-    } catch (error) {
-      console.error("Error generating presigned URL", error);
-      throw error;
-    }
-  }
-}
-
-export class SpeechService {
-  private static instance: SpeechService;
-  private audioContext: AudioContext | null;
-  private audioQueue: AudioBuffer[] = [];
-  private isPlaying = false;
-  private audioSource: AudioBufferSourceNode | null = null;
-  private gainNode: GainNode | null = null;
-  private volume = 1.0;
-  private rate = 1.0;
-  private pitch = 0;
-  private voice: string = "Matthew"; // Default voice
+class SpeechService {
   private pollyClient: PollyClient | null = null;
-  private presigner: PresignerPolly | null = null;
+  private initialized: boolean = false;
 
-  private constructor() {
-    this.audioContext = null;
-    this.initializeAudioContext();
+  constructor() {
+    this.initializePolly();
   }
 
-  public static getInstance(): SpeechService {
-    if (!SpeechService.instance) {
-      SpeechService.instance = new SpeechService();
-    }
-    return SpeechService.instance;
-  }
-
-  private initializeAudioContext() {
+  private initializePolly() {
     try {
-      // Create AudioContext only when user interacts with the page
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioContextClass) {
-        this.audioContext = new AudioContextClass();
-        
-        // Create gain node for volume control
-        if (this.audioContext) {
-          this.gainNode = this.audioContext.createGain();
-          this.gainNode.gain.value = this.volume;
-          this.gainNode.connect(this.audioContext.destination);
-        }
+      const region = import.meta.env.VITE_AWS_REGION;
+      const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+      const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+      
+      // Check if we have the necessary credentials
+      if (!region || !accessKeyId || !secretAccessKey) {
+        console.warn('Missing AWS credentials for Polly service');
+        return;
       }
-    } catch (error) {
-      console.error("Web Audio API is not supported in this browser", error);
-    }
-  }
-
-  public setPollyClient(region: string, credentials: any) {
-    try {
+      
+      // Initialize the Polly client
       this.pollyClient = new PollyClient({
         region,
-        credentials
-      });
-      this.presigner = new PresignerPolly({
-        region,
-        credentials
-      });
-    } catch (error) {
-      console.error("Failed to initialize Polly client", error);
-    }
-  }
-
-  public async speakText(text: string): Promise<void> {
-    if (!text) return Promise.resolve();
-    
-    if (!this.audioContext) {
-      this.initializeAudioContext();
-    }
-    
-    try {
-      const audioBuffer = await this.synthesizeSpeech(text);
-      if (audioBuffer) {
-        this.audioQueue.push(audioBuffer);
-        if (!this.isPlaying) {
-          this.playNextInQueue();
+        credentials: {
+          accessKeyId,
+          secretAccessKey
         }
-      }
+      });
+      
+      this.initialized = true;
+      console.log('AWS Polly service initialized successfully');
     } catch (error) {
-      console.error("Error speaking text:", error);
+      console.error('Error initializing AWS Polly:', error);
+      this.initialized = false;
     }
   }
 
-  public setVoice(voice: string): void {
-    this.voice = voice;  // Using string type instead of String object
+  public isInitialized(): boolean {
+    return this.initialized;
   }
 
-  private async synthesizeSpeech(text: string): Promise<AudioBuffer | null> {
-    if (!this.pollyClient) {
-      console.warn("Polly client is not initialized.");
-      return null;
+  public async synthesizeSpeech(text: string): Promise<string> {
+    if (!this.initialized || !this.pollyClient) {
+      console.warn('Polly service not initialized');
+      return '';
     }
 
     try {
+      // Use Arthur voice (British English male)
       const params = {
-        OutputFormat: "pcm",
+        OutputFormat: OutputFormat.MP3,
         SampleRate: "16000",
         Text: text,
-        TextType: "text",
-        VoiceId: this.voice,
+        TextType: TextType.TEXT,
+        VoiceId: VoiceId.Arthur,  // Using Arthur voice
+        Engine: Engine.NEURAL
       };
-
-      const command = new SynthesizeSpeechCommand(params);
-      const data = await this.pollyClient.send(command);
-
-      if (data.AudioStream) {
-        const buffer = await data.AudioStream.transformToByteArray();
-        return await this.decodeAudioData(buffer);
-      } else {
-        console.warn("No audio stream received from Polly.");
-        return null;
-      }
+      
+      console.info('Attempting to get Polly URL with params:', params);
+      
+      // Get a presigned URL for the speech
+      const url = await getSynthesizeSpeechUrl({
+        client: this.pollyClient,
+        params
+      });
+      
+      console.info('Successfully got Polly URL:', url);
+      
+      return url;
     } catch (error) {
-      console.error("Error synthesizing speech:", error);
-      return null;
+      console.error('Error synthesizing speech:', error);
+      return '';
     }
   }
 
-  private async decodeAudioData(arrayBuffer: Uint8Array): Promise<AudioBuffer | null> {
-    if (!this.audioContext) {
-      this.initializeAudioContext();
-      if (!this.audioContext) {
-        console.error("Audio context is not available.");
-        return null;
-      }
-    }
-
+  public async playAudio(url: string): Promise<void> {
     try {
-      return await this.audioContext.decodeAudioData(arrayBuffer.buffer);
+      if (!url) {
+        console.warn('No audio URL provided');
+        return;
+      }
+      
+      // Use the AudioContext helper from AudioContext.ts
+      const audioContext = createAudioContext();
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Decode the audio data and play it
+      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+      });
     } catch (error) {
-      console.error("Error decoding audio data:", error);
-      return null;
+      console.error('Error playing audio:', error);
     }
-  }
-
-  private async playNextInQueue(): Promise<void> {
-    if (this.isPlaying) return;
-    if (this.audioQueue.length === 0) return;
-
-    this.isPlaying = true;
-    const audioBuffer = this.audioQueue.shift();
-
-    if (audioBuffer && this.audioContext) {
-      this.audioSource = this.audioContext.createBufferSource();
-      this.audioSource.buffer = audioBuffer;
-      this.audioSource.onended = () => {
-        this.stopPlayback();
-        if (this.audioQueue.length > 0) {
-          this.playNextInQueue();
-        } else {
-          this.isPlaying = false;
-        }
-      };
-
-      // Connect the audio source to the gain node for volume control
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.gain.value = this.volume; // Set the gain value
-
-      this.audioSource.connect(this.gainNode);
-      this.gainNode.connect(this.audioContext.destination);
-
-      this.audioSource.start(0);
-    }
-  }
-
-  public stopPlayback(): void {
-    if (this.audioSource) {
-      this.audioSource.stop();
-      this.audioSource.disconnect();
-      this.audioSource = null;
-    }
-    this.isPlaying = false;
-  }
-
-  public setVolume(volume: number): void {
-    this.volume = volume;
-    if (this.gainNode) {
-      this.gainNode.gain.value = this.volume;
-    }
-  }
-
-  public setRate(rate: number): void {
-    this.rate = rate;
-    if (this.audioSource) {
-      this.audioSource.playbackRate.value = this.rate;
-    }
-  }
-
-  public setPitch(pitch: number): void {
-    this.pitch = pitch;
-    // Implement pitch shifting if needed (complex and may require additional libraries)
-    console.warn("Pitch control is not yet implemented.");
-  }
-
-  public clearQueue(): void {
-      this.stopPlayback();
-      this.audioQueue = [];
-      this.isPlaying = false;
   }
 }
+
+// Create a singleton instance
+export const speechService = new SpeechService();
+export default speechService;
