@@ -57,7 +57,7 @@ const AlertDialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-left pt-6",
+      "flex flex-col space-y-1.5 text-left pt-10", // Increased from pt-6 to pt-10 to create more space between X and title
       className
     )}
     {...props}
@@ -71,7 +71,7 @@ const AlertDialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-4 mt-8",
+      "flex flex-col space-y-4 mt-5", // Reduced from mt-8 to mt-5 to reduce space between text and buttons
       className
     )}
     {...props}
