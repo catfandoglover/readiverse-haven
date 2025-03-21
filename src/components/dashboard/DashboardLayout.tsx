@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
@@ -36,19 +37,16 @@ const DashboardLayout: React.FC = () => {
         } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Get badge count
-        const {
-          data,
-          error
-        } = await supabase.from('user_badges').select('*', {
-          count: 'exact',
-          head: true
-        }).eq('user_id', userData.user.id);
+        // Get badge count - using a direct count query instead of select with count
+        const { count, error } = await supabase
+          .from('user_badges')
+          .select('*', { count: 'exact' });
+          
         if (error) {
           console.error('Error fetching badge count:', error);
           return;
         }
-        setBadgeCount(data?.count || 0);
+        setBadgeCount(count || 0);
       } catch (error) {
         console.error('Error in badge count fetch:', error);
       }
@@ -59,9 +57,13 @@ const DashboardLayout: React.FC = () => {
         const {
           data,
           error
-        } = await supabase.from('quotes').select('*').order('randomizer', {
-          ascending: false
-        }).limit(1).single();
+        } = await supabase
+          .from('quotes')
+          .select('*')
+          .order('randomizer', { ascending: false })
+          .limit(1)
+          .single();
+          
         if (error) {
           console.error('Error fetching quote:', error);
           setQuote({
@@ -89,7 +91,12 @@ const DashboardLayout: React.FC = () => {
         const {
           data,
           error
-        } = await supabase.from('icons').select('*').eq('id', iconId).single();
+        } = await supabase
+          .from('icons')
+          .select('*')
+          .eq('id', iconId)
+          .single();
+          
         if (error) {
           console.error('Error fetching icon:', error);
           return;
@@ -217,18 +224,15 @@ const DashboardLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Badges earned */}
-          <div className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer" onClick={() => handleNavigate("badges")}>
+          {/* Weekly reports - number removed */}
+          <div className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer" onClick={() => handleNavigate("reports")}>
             <h3 className="font-oxanium uppercase tracking-wider">WEEKLY REPORTS</h3>
             <div className="flex items-center">
-              <span className="text-[#E9E7E2]/70 mr-4">{stats.badgesEarned}</span>
               <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
                 <ChevronRight className="w-5 h-5 text-[#E9E7E2]/70" />
               </div>
             </div>
           </div>
-
-          {/* REMOVED: Weekly reports - as requested by the user */}
         </div>
       </main>
     </div>;
