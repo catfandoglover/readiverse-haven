@@ -195,20 +195,17 @@ const DashboardLayout: React.FC = () => {
   };
   
   const handleVirgilButtonClick = () => {
-    // More robust navigation handling
-    if (icon && icon.id) {
-      // Enhanced logging
-      console.log(`Navigating to icon: ${icon.id} with path: /view/icon/${icon.id}`);
+    // Get the icon_id to use for navigation
+    const iconIdForNavigation = quote?.icon_id;
+    
+    if (iconIdForNavigation) {
+      // Log the navigation details for debugging
+      console.log(`Navigating to icon with ID: ${iconIdForNavigation}`);
       
-      // Navigate with explicit path structure
-      navigate(`/view/icon/${icon.id}`);
-    } else if (quote && quote.icon_id) {
-      // Fallback to using icon_id directly from quote if icon state isn't set yet
-      console.log(`Using quote's icon_id for navigation: ${quote.icon_id}`);
-      navigate(`/view/icon/${quote.icon_id}`);
+      // Navigate to the DetailedView component for the icon
+      navigate(`/icon/${iconIdForNavigation}`);
     } else {
-      console.log("No icon to navigate to, using fallback");
-      // Consider a fallback navigation or show an error message
+      console.log("No icon_id found for navigation");
       toast({
         title: "Navigation Error",
         description: "Unable to find the requested content. Please try again later.",
