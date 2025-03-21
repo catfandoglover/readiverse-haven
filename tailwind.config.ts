@@ -26,6 +26,7 @@ export default {
 				times: ['Times New Roman', 'serif'],
 				baskerville: ['Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
 				'baskerville-bold': ['"Baskerville Bold"', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
+				'baskerville-semibold': ['"Baskerville SemiBold"', 'Baskerville SemiBold', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
 				baskervville: ['Baskervville', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
 				oxanium: ['Oxanium', 'cursive']
 			},
