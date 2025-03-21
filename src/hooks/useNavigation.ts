@@ -19,6 +19,7 @@ export const useNavigation = (rendition: Rendition | null) => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Keyboard navigation - use arrow keys
       if (e.key === "ArrowLeft") {
         handlePrevPage();
       } else if (e.key === "ArrowRight") {
