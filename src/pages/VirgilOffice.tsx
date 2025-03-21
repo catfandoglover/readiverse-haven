@@ -35,27 +35,27 @@ const VirgilOffice: React.FC = () => {
       )}>
         <div className="flex flex-col items-center justify-center h-full px-6 py-10">
           <div className="max-w-md w-full mx-auto text-center">
-            <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight">
+            <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight shadow-[0_4px_8px_rgba(0,0,0,0.3)] drop-shadow-lg">
               What brings you here today?
             </h1>
             
             <div className="space-y-4 mt-8">
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => setIsChatOpen(true)}
               >
                 CHAT WITH VIRGIL
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => console.log("Take a course clicked")}
               >
                 TAKE A COURSE
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => console.log("Test my knowledge clicked")}
               >
                 TEST MY KNOWLEDGE
