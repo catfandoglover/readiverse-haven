@@ -40,12 +40,11 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Simplified badge count fetch approach
-        // Using a direct count query
-        const { count, error } = await supabase
-          .from('user_badges')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userData.user.id);
+        // Using normal select query instead of count
+        const { data, error } = await supabase
+          .from("user_badges")
+          .select("*")
+          .eq("user_id", userData.user.id);
             
         if (error) {
           console.error('Error fetching badge count:', error);
@@ -53,12 +52,12 @@ const DashboardLayout: React.FC = () => {
         }
         
         // Calculate badge level based on count
-        const count = data?.length || 0;
-        setBadgeCount(count);
+        const badgeTotal = data?.length || 0;
+        setBadgeCount(badgeTotal);
         
         // Determine badge level based on count
         // This could be enhanced with actual badge levels from the backend
-        const progress = Math.min(count * 16.67, 100); // Convert count to percentage (max 6 levels)
+        const progress = Math.min(badgeTotal * 16.67, 100); // Convert count to percentage (max 6 levels)
         const level = getProgressLevel(progress);
         const stageName = getStageName(level);
         setBadgeLevel(stageName);
@@ -70,10 +69,11 @@ const DashboardLayout: React.FC = () => {
     const fetchRandomQuote = async () => {
       try {
         // Fetch a random quote from the quotes table
+        // Using a workaround since it seems quotes might not be in the generated types
         const { data, error } = await supabase
-          .from('quotes')
-          .select('*')
-          .order('id')
+          .from("quotes")
+          .select("*")
+          .order("id")
           .limit(1)
           .single();
           
@@ -89,18 +89,27 @@ const DashboardLayout: React.FC = () => {
         }
         
         if (data) {
+          // Type assertion since we know what fields to expect
+          const quoteData = data as unknown as {
+            id: string;
+            text: string;
+            author: string;
+            icon_id?: string;
+            category?: string;
+          };
+          
           // Set quote data
           setQuote({
-            id: data.id,
-            text: data.text || "Our difficulties grow miracles.",
-            author: data.author || "Jean de La Bruyère",
-            icon_id: data.icon_id,
-            category: data.category
+            id: quoteData.id,
+            text: quoteData.text || "Our difficulties grow miracles.",
+            author: quoteData.author || "Jean de La Bruyère",
+            icon_id: quoteData.icon_id,
+            category: quoteData.category
           });
 
           // If we have an icon_id, fetch the corresponding icon
-          if (data.icon_id) {
-            fetchIcon(data.icon_id);
+          if (quoteData.icon_id) {
+            fetchIcon(quoteData.icon_id);
           }
         }
       } catch (error) {
@@ -111,9 +120,9 @@ const DashboardLayout: React.FC = () => {
     const fetchIcon = async (iconId: string) => {
       try {
         const { data, error } = await supabase
-          .from('icons')
-          .select('id,name,illustration')
-          .eq('id', iconId)
+          .from("icons")
+          .select("id,name,illustration")
+          .eq("id", iconId)
           .single();
           
         if (error) {
