@@ -37,7 +37,6 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Query the profile_badges table instead of badges
         const { count, error } = await supabase
           .from('profile_badges')
           .select('*', { count: 'exact', head: true })
@@ -117,12 +116,6 @@ const DashboardLayout: React.FC = () => {
     category: "LIGHTNING"
   };
 
-  // Mock data for current book/author
-  const currentBook = {
-    author: "MARIE STENDHAL",
-    title: "The Charterhouse of Parma (1839)"
-  };
-
   // Mock stats
   const stats = {
     timeWithVirgil: "+7%",
@@ -154,8 +147,11 @@ const DashboardLayout: React.FC = () => {
   };
   
   const handleVirgilButtonClick = () => {
-    console.log("Virgil button clicked");
-    // Will implement Virgil functionality in the future
+    if (icon && icon.id) {
+      navigate(`/view/icon/${icon.id}`);
+    } else {
+      console.log("No icon to navigate to");
+    }
   };
 
   return (
@@ -190,13 +186,25 @@ const DashboardLayout: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
             
+            {/* Virgil button moved to top right */}
+            <button 
+              onClick={handleVirgilButtonClick}
+              className="absolute top-4 right-4 w-8 h-8 rounded-2xl bg-[#E9E7E2]/20 overflow-hidden flex items-center justify-center"
+            >
+              <img 
+                src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png"
+                alt="Virgil" 
+                className="w-full h-full object-cover"
+              />
+            </button>
+            
             {/* Quote text */}
             <div className="absolute bottom-16 left-4 right-4">
               <p className="text-white text-xl font-bold">{quoteData.text}</p>
             </div>
             
             {/* Kindred spirit container */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+            <div className="absolute bottom-4 left-4 right-4">
               <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 mr-2 overflow-hidden">
                   <img 
@@ -208,44 +216,6 @@ const DashboardLayout: React.FC = () => {
                 <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
                   {icon?.name || quoteData.author}
                 </span>
-              </div>
-              
-              {/* Virgil button with rounded corners */}
-              <button 
-                onClick={handleVirgilButtonClick}
-                className="w-10 h-10 rounded-2xl bg-[#E9E7E2]/20 overflow-hidden flex items-center justify-center"
-              >
-                <img 
-                  src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png"
-                  alt="Virgil" 
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            </div>
-          </Card>
-        </div>
-
-        {/* Current book card */}
-        <div className="mb-12">
-          <Card className="bg-[#3A3842] border-none rounded-full p-2 overflow-hidden">
-            <div className="flex items-center px-4 py-2">
-              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/20 mr-4 overflow-hidden">
-                <img 
-                  src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png"
-                  alt="Author" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-oxanium uppercase tracking-wider text-lg">{currentBook.author}</h3>
-                <p className="text-[#E9E7E2]/60 text-sm">{currentBook.title}</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/20 overflow-hidden">
-                <img 
-                  src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png"
-                  alt="Book cover" 
-                  className="w-full h-full object-cover"
-                />
               </div>
             </div>
           </Card>
