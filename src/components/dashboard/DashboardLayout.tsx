@@ -6,7 +6,7 @@ import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
-import { useToast } from "@/hooks/use-toast"; // Fixed import path
+import { toast } from "@/components/ui/use-toast";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
@@ -33,7 +33,6 @@ const DashboardLayout: React.FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [icon, setIcon] = useState<Icon | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { toast } = useToast(); // Using the hook correctly
 
   // Fetch badge count and quote on component mount
   useEffect(() => {
@@ -64,11 +63,11 @@ const DashboardLayout: React.FC = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Using normal select query with proper type casting
+      // Using normal select query instead of count
       const { data, error } = await supabase
-        .from('user_badges')
-        .select('*')
-        .eq('user_id', userData.user.id);
+        .from("user_badges")
+        .select("*")
+        .eq("user_id", userData.user.id);
           
       if (error) {
         console.error('Error fetching badge count:', error);
@@ -92,11 +91,11 @@ const DashboardLayout: React.FC = () => {
   const fetchRandomQuote = async () => {
     try {
       console.log('Fetching random quote...');
-      // Fetch a random quote from the quotes table with proper type casting
+      // Fetch a random quote from the quotes table
       const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .order('id')
+        .from("quotes")
+        .select("*")
+        .order("id")
         .limit(1)
         .single();
         
@@ -119,8 +118,8 @@ const DashboardLayout: React.FC = () => {
       console.log('Quote fetched successfully:', data);
       
       if (data) {
-        // Set quote data with proper type casting
-        const quoteData = data as unknown as Quote;
+        // Set quote data
+        const quoteData = data as Quote;
         setQuote(quoteData);
 
         // If we have an icon_id, fetch the corresponding icon
@@ -140,9 +139,9 @@ const DashboardLayout: React.FC = () => {
     try {
       console.log('Fetching icon details for ID:', iconId);
       const { data, error } = await supabase
-        .from('icons')
-        .select('id,name,illustration')
-        .eq('id', iconId)
+        .from("icons")
+        .select("id,name,illustration")
+        .eq("id", iconId)
         .single();
         
       if (error) {
@@ -151,7 +150,7 @@ const DashboardLayout: React.FC = () => {
       }
       
       console.log('Icon data fetched successfully:', data);
-      setIcon(data as unknown as Icon);
+      setIcon(data as Icon);
     } catch (error) {
       console.error('Error in icon fetch:', error);
     }
