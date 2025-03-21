@@ -37,11 +37,11 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Use the correct table name and query structure
+        // Use RPC function to get badge count
         const { count, error } = await supabase
-          .from('badges')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userData.user.id);
+          .rpc('get_user_badges_count', { 
+            user_id_param: userData.user.id 
+          });
           
         if (error) {
           console.error('Error fetching badge count:', error);
@@ -56,7 +56,7 @@ const DashboardLayout: React.FC = () => {
 
     const fetchRandomQuote = async () => {
       try {
-        // Fetch a random quote from the quotes table with the correct query
+        // Use RPC function to get a random quote
         const { data, error } = await supabase
           .rpc('get_random_quote')
           .single();
@@ -187,9 +187,9 @@ const DashboardLayout: React.FC = () => {
             {/* Virgil button moved to top right */}
             <button 
               onClick={handleVirgilButtonClick}
-              className="absolute top-4 right-4 rounded-2xl bg-[#E9E7E2]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider"
+              className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider"
             >
-              {icon?.name || quoteData.author}
+              KINDRED SPIRIT
             </button>
             
             {/* Quote text */}
@@ -199,7 +199,10 @@ const DashboardLayout: React.FC = () => {
             
             {/* Kindred spirit container */}
             <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1">
+              <div 
+                className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1 cursor-pointer"
+                onClick={handleVirgilButtonClick}
+              >
                 <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 mr-2 overflow-hidden">
                   <img 
                     src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"}
