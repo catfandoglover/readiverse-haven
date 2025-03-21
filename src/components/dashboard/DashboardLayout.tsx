@@ -56,7 +56,6 @@ const DashboardLayout: React.FC = () => {
         setBadgeCount(badgeTotal);
         
         // Determine badge level based on count
-        // This could be enhanced with actual badge levels from the backend
         const progress = Math.min(badgeTotal * 16.67, 100); // Convert count to percentage (max 6 levels)
         const level = getProgressLevel(progress);
         const stageName = getStageName(level);
@@ -180,9 +179,9 @@ const DashboardLayout: React.FC = () => {
   
   const handleVirgilButtonClick = () => {
     if (icon && icon.id) {
-      // Fixed navigation - ensure we're using the correct path format
+      // Fixed navigation - ensure we're using the correct path format with type as "icon"
+      console.log(`Attempting to navigate to icon: ${icon.id}`);
       navigate(`/view/icon/${icon.id}`);
-      console.log(`Navigating to icon: ${icon.id}`);
     } else {
       console.log("No icon to navigate to");
     }
@@ -222,9 +221,9 @@ const DashboardLayout: React.FC = () => {
         {/* Quote Card */}
         <div className="mb-6">
           <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
-            {/* Make the entire card clickable */}
+            {/* Improved clickable overlay with higher z-index */}
             <div 
-              className="absolute inset-0 z-10 cursor-pointer" 
+              className="absolute inset-0 z-20 cursor-pointer" 
               onClick={handleVirgilButtonClick}
               aria-label="View kindred spirit details"
             ></div>
@@ -236,24 +235,30 @@ const DashboardLayout: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
             
-            {/* Virgil button moved to top right - ensure it works with z-index */}
+            {/* Kindred spirit button with even higher z-index */}
             <button 
-              onClick={handleVirgilButtonClick} 
-              className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider z-20"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent click from bubbling to the overlay
+                handleVirgilButtonClick();
+              }} 
+              className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider z-30"
             >
               KINDRED SPIRIT
             </button>
             
             {/* Quote text */}
-            <div className="absolute bottom-16 left-4 right-4">
+            <div className="absolute bottom-16 left-4 right-4 z-10">
               <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
-            {/* Kindred spirit container - ensure it works with z-index */}
-            <div className="absolute bottom-4 left-4 z-20">
+            {/* Kindred spirit container with higher z-index */}
+            <div className="absolute bottom-4 left-4 z-30">
               <div 
                 className="inline-flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" 
-                onClick={handleVirgilButtonClick}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent click from bubbling to the overlay
+                  handleVirgilButtonClick();
+                }}
               >
                 <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
                   {icon?.name || quoteData.author}
