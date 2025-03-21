@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
+import OrderDialog from "./OrderDialog";
 
 interface CarouselItem {
   id: string;
@@ -847,33 +847,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
       {type === "classic" && renderClassicButtons()}
 
-      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-        <DialogContent className="bg-[#E9E7E2] text-[#2A282A] border-gray-300 max-w-sm mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-baskerville text-[#2A282A] text-center">Purchase Options</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col space-y-4 mt-4">
-            <a 
-              href={combinedData.amazon_link || "#"} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#FF9900] hover:bg-[#FF9900]/90 text-black font-bold rounded-md flex items-center justify-center ${!combinedData.amazon_link && 'opacity-50 cursor-not-allowed'}`}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Buy on Amazon
-            </a>
-            <a 
-              href={combinedData.bookshop_link || "#"} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`w-full px-4 py-3 bg-[#44B4A1] hover:bg-[#44B4A1]/90 text-white font-bold rounded-md flex items-center justify-center ${!combinedData.bookshop_link && 'opacity-50 cursor-not-allowed'}`}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Buy from Independent Booksellers
-            </a>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <OrderDialog 
+        title={combinedData?.title || combinedData?.name || ""} 
+        amazonLink={combinedData?.amazon_link}
+      />
     </div>
   );
 };
