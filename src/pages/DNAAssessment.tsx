@@ -872,7 +872,7 @@ const DNAAssessment = () => {
               </AlertDialogAction>
               <AlertDialogCancel 
                 onClick={confirmExit}
-                className="bg-[#373763] text-white font-oxanium"
+                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
               >
                 EXIT ASSESSMENT
               </AlertDialogCancel>

@@ -43,7 +43,7 @@ const AlertDialogContent = React.forwardRef<
     >
       {children}
       <AlertDialogPrimitive.Cancel className="absolute right-6 top-6 rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-        <X className="h-6 w-6" />
+        <X className="h-6 w-6 text-black" />
         <span className="sr-only">Close</span>
       </AlertDialogPrimitive.Cancel>
     </AlertDialogPrimitive.Content>
@@ -86,7 +86,7 @@ const AlertDialogTitle = React.forwardRef<
   <AlertDialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-3xl font-baskerville leading-none tracking-tight",
+      "text-3xl font-baskerville leading-none tracking-tight text-black font-bold",
       className
     )}
     {...props}
@@ -114,7 +114,7 @@ const AlertDialogAction = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants(),
-      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-14",
+      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12",
       className
     )}
     {...props}
@@ -130,7 +130,7 @@ const AlertDialogCancel = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants({ variant: "outline" }),
-      "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-14",
+      "bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2]/70 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20",
       className
     )}
     {...props}
