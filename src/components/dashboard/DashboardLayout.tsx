@@ -37,18 +37,18 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Use RPC function to get badge count
-        const { count, error } = await supabase
-          .rpc('get_user_badges_count', { 
-            user_id_param: userData.user.id 
-          });
+        // Get badge count
+        const { data, error } = await supabase
+          .from('user_badges')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userData.user.id);
           
         if (error) {
           console.error('Error fetching badge count:', error);
           return;
         }
         
-        setBadgeCount(count || 0);
+        setBadgeCount(data?.count || 0);
       } catch (error) {
         console.error('Error in badge count fetch:', error);
       }
@@ -56,9 +56,12 @@ const DashboardLayout: React.FC = () => {
 
     const fetchRandomQuote = async () => {
       try {
-        // Use RPC function to get a random quote
+        // Fetch a random quote from the quotes table
         const { data, error } = await supabase
-          .rpc('get_random_quote')
+          .from('quotes')
+          .select('*')
+          .order('randomizer', { ascending: false })
+          .limit(1)
           .single();
           
         if (error) {
@@ -88,7 +91,9 @@ const DashboardLayout: React.FC = () => {
     const fetchIcon = async (iconId: string) => {
       try {
         const { data, error } = await supabase
-          .rpc('get_icon_by_id', { icon_id: iconId })
+          .from('icons')
+          .select('*')
+          .eq('id', iconId)
           .single();
           
         if (error) {
@@ -262,18 +267,7 @@ const DashboardLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Weekly reports */}
-          <div 
-            className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer"
-            onClick={() => handleNavigate("reports")}
-          >
-            <h3 className="font-oxanium uppercase tracking-wider">WEEKLY REPORTS</h3>
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                <ChevronRight className="w-5 h-5 text-[#E9E7E2]/70" />
-              </div>
-            </div>
-          </div>
+          {/* REMOVED: Weekly reports - as requested by the user */}
         </div>
       </main>
     </div>
