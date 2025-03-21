@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,7 +17,7 @@ import DNAEmailConfirmationScreen from "./pages/DNAEmailConfirmationScreen";
 import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
-import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
@@ -74,7 +75,8 @@ const App = () => (
                 <Route path="/dna/welcome" element={<VirgilWelcome />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/dashboard" element={<Navigate to="/profile" replace />} /> {/* Redirect for backward compatibility */}
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
