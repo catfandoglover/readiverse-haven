@@ -42,7 +42,7 @@ const VirgilOffice: React.FC = () => {
         )}>
           <div className={cn(
             "max-w-md w-full mx-auto text-center",
-            isMobile && "mt-12" // Remove top margin on mobile
+            isMobile && "mt-0" // Remove top margin on mobile
           )}>
             <h1 
               className="font-baskerville text-[#2A282A] text-3xl md:text-4xl font-bold" 
