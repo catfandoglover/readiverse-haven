@@ -11,12 +11,12 @@ const VirgilOffice: React.FC = () => {
 
   return (
     <div 
-      className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat opacity-75"
-      style={{ backgroundImage: "url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Office%20Background.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBPZmZpY2UgQmFja2dyb3VuZC5wbmciLCJpYXQiOjE3NDI1NzU3OTksImV4cCI6MjYwNjQ4OTM5OX0.Dfld0HEUCOC3JgTCI5e1ngjUBBX1ZeuvefXWmCOjmqU')" }}
+      className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Office%20Background.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBPZmZpY2UgQmFja2dyb3VuZC5wbmciLCJpYXQiOjE3NDI1NzQ3MzEsImV4cCI6ODY1NzQyNTc0NzMxfQ.UZlV0Zvc415GIfBykAxsyL7vuG-VKam5PfAiO3vQ0QE')" }}
     >
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
-        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Virgil's Office
         </h2>
         <Button
@@ -35,7 +35,7 @@ const VirgilOffice: React.FC = () => {
       )}>
         <div className="flex flex-col items-center justify-center h-full px-6 py-10">
           <div className="max-w-md w-full mx-auto text-center">
-            <h1 className="font-baskerville text-[#2A282A] text-3xl md:text-4xl text-shadow-lg font-bold" style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}>
+            <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight text-shadow-lg" style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}>
               What brings you here today?
             </h1>
             
