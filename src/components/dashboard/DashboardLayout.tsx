@@ -8,18 +8,29 @@ import { supabase } from "@/integrations/supabase/client";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
+type Quote = {
+  id: string;
+  text: string;
+  author: string;
+  category?: string;
+};
+
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const [badgeCount, setBadgeCount] = useState<number>(0);
+  const [quote, setQuote] = useState<Quote | null>(null);
 
-  // Fetch badge count on component mount
+  // Fetch badge count and quote on component mount
   useEffect(() => {
     const fetchBadgeCount = async () => {
       try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
         const { count, error } = await supabase
           .from('badges')
           .select('*', { count: 'exact', head: true })
-          .eq('profile_id', supabase.auth.getUser().then(res => res.data.user?.id));
+          .eq('profile_id', userData.user.id);
           
         if (error) {
           console.error('Error fetching badge count:', error);
@@ -32,13 +43,34 @@ const DashboardLayout: React.FC = () => {
       }
     };
 
+    const fetchRandomQuote = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .limit(1)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching quote:', error);
+          return;
+        }
+        
+        setQuote(data);
+      } catch (error) {
+        console.error('Error in quote fetch:', error);
+      }
+    };
+
     fetchBadgeCount();
+    fetchRandomQuote();
   }, []);
 
-  // Mock data for the quote card
-  const quoteData = {
-    icon: "Jean de La Bruyère",
-    quote: "Our difficulties grow miracles.",
+  // Default quote if none is fetched
+  const quoteData = quote || {
+    id: "1",
+    text: "Our difficulties grow miracles.",
+    author: "Jean de La Bruyère",
     category: "LIGHTNING"
   };
 
@@ -73,6 +105,11 @@ const DashboardLayout: React.FC = () => {
     }
   };
 
+  const handleBadgeClick = () => {
+    console.log("Badge button clicked");
+    // Will navigate to badges page in the future
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Header - Updated to match VirgilOffice header style */}
@@ -81,52 +118,55 @@ const DashboardLayout: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
-        {/* Badge count hexagon */}
-        <div className="relative flex items-center justify-center w-14 h-14">
+        {/* Badge count hexagon button */}
+        <button 
+          onClick={handleBadgeClick}
+          className="relative flex items-center justify-center w-12 h-12 cursor-pointer"
+        >
           <Hexagon className="w-full h-full text-[#B8C7FF] stroke-current fill-transparent" strokeWidth={1.5} />
           <span className="absolute font-oxanium font-bold text-lg text-[#E9E7E2]">
             {badgeCount}
           </span>
-        </div>
+        </button>
       </div>
 
       {/* Main content */}
       <main className="flex-1 px-6 py-8">
         {/* Quote Card */}
         <div className="mb-8">
-          <Card className="bg-[#3F2E4A] border-none rounded-lg overflow-hidden relative">
-            <div className="relative aspect-square">
-              <img 
-                src="public/lovable-uploads/74acaaef-095b-4afe-91ff-fee54557c514.png" 
-                alt="Philosopher portrait"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#3F2E4A]/80"></div>
-              
-              {/* Quote marks */}
-              <div className="absolute top-4 left-4 text-white text-6xl font-serif">"</div>
-              
-              {/* Lightning icon */}
-              <div className="absolute top-4 right-4 text-white font-oxanium uppercase tracking-wider text-sm">
-                {quoteData.category}
-              </div>
-              
-              {/* Quote text */}
-              <div className="absolute bottom-16 left-4 right-4">
-                <p className="text-white text-xl font-bold">{quoteData.quote}</p>
-              </div>
-              
-              {/* Attribution */}
-              <div className="absolute bottom-4 left-4 right-4 text-white/80 font-oxanium uppercase text-sm tracking-wider">
-                {quoteData.icon}
-              </div>
-              
-              {/* Icons at bottom corners */}
-              <div className="absolute bottom-4 left-4 rounded-full bg-white/20 w-8 h-8 flex items-center justify-center">
-                <div className="text-white">@</div>
-              </div>
-              <div className="absolute bottom-4 right-4 rounded-full bg-white/20 w-8 h-8 flex items-center justify-center">
-                <div className="text-white">⚡</div>
+          <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
+            <img 
+              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png" 
+              alt="Philosopher portrait"
+              className="w-full h-full object-cover rounded-lg"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
+            
+            {/* Quote text */}
+            <div className="absolute bottom-28 left-4 right-4">
+              <p className="text-white text-xl font-bold">{quoteData.text}</p>
+            </div>
+            
+            {/* Kindred spirit container */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-1 pr-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 mr-2 overflow-hidden">
+                  <img 
+                    src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"
+                    alt="Author" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
+                  {quoteData.author}
+                </span>
+                <div className="w-8 h-8 rounded-full bg-[#E9E7E2]/20 ml-3 overflow-hidden">
+                  <img 
+                    src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png"
+                    alt="Virgil" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
             </div>
           </Card>
