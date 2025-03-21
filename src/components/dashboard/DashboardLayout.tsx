@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
@@ -37,30 +38,19 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        // Get badge count using RPC function or count directly from custom query
-        const { count, error } = await supabase.rpc('get_user_badge_count', {
-          user_id: userData.user.id
-        });
-          
+        // Simplified badge count fetch approach
+        // Using a direct count query
+        const { data, error } = await supabase
+          .from('user_badges')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userData.user.id);
+            
         if (error) {
           console.error('Error fetching badge count:', error);
-          // Fallback to a direct count via PostgreSQL
-          const { count: directCount, error: directError } = await supabase
-            .from('user_stats')  // Using a view or existing table that has badge counts
-            .select('badge_count')
-            .eq('user_id', userData.user.id)
-            .single();
-            
-          if (directError) {
-            console.error('Error with fallback badge count:', directError);
-            return;
-          }
-          
-          setBadgeCount(directCount?.badge_count || 0);
           return;
         }
         
-        setBadgeCount(count || 0);
+        setBadgeCount(data?.length || 0);
       } catch (error) {
         console.error('Error in badge count fetch:', error);
       }
@@ -68,11 +58,11 @@ const DashboardLayout: React.FC = () => {
     
     const fetchRandomQuote = async () => {
       try {
-        // Fetch a random quote from the quotes table or view
+        // Fetch a random quote from the quotes table
         const { data, error } = await supabase
-          .from('wisdom_quotes')  // Using an existing view/table name that contains quotes
+          .from('quotes')
           .select('*')
-          .order('randomizer', { ascending: false })
+          .order('id')
           .limit(1)
           .single();
           
@@ -88,20 +78,18 @@ const DashboardLayout: React.FC = () => {
         }
         
         if (data) {
-          // Cast the data to our Quote type
-          const quoteData: Quote = {
+          // Set quote data
+          setQuote({
             id: data.id,
             text: data.text || "Our difficulties grow miracles.",
             author: data.author || "Jean de La Bruyère",
             icon_id: data.icon_id,
             category: data.category
-          };
-          
-          setQuote(quoteData);
+          });
 
           // If we have an icon_id, fetch the corresponding icon
-          if (quoteData.icon_id) {
-            fetchIcon(quoteData.icon_id);
+          if (data.icon_id) {
+            fetchIcon(data.icon_id);
           }
         }
       } catch (error) {
@@ -220,9 +208,12 @@ const DashboardLayout: React.FC = () => {
               <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
-            {/* Kindred spirit container - REMOVING THE IMAGE HERE */}
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" onClick={handleVirgilButtonClick}>
+            {/* Kindred spirit container - width auto to fit content */}
+            <div className="absolute bottom-4 left-4">
+              <div 
+                className="inline-flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" 
+                onClick={handleVirgilButtonClick}
+              >
                 <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
                   {icon?.name || quoteData.author}
                 </span>
