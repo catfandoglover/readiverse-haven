@@ -67,10 +67,13 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
           </Button>
         </DialogFooter>
         
-        <DialogClose className="absolute right-6 top-6 rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-          <X className="h-6 w-6 text-black" />
-          <span className="sr-only">Close</span>
-        </DialogClose>
+        {/* Override the default DialogClose component with our own custom styling */}
+        <div className="absolute right-6 top-6">
+          <DialogClose className="rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
+            <X className="h-6 w-6 text-black" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
+        </div>
       </DialogContent>
     </Dialog>
   );
