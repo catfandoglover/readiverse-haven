@@ -6,6 +6,7 @@ import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
+import { toast } from "@/components/ui/use-toast";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
@@ -31,113 +32,129 @@ const DashboardLayout: React.FC = () => {
   const [badgeLevel, setBadgeLevel] = useState<string>("SEEKER");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [icon, setIcon] = useState<Icon | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Fetch badge count and quote on component mount
   useEffect(() => {
-    
-    const fetchBadgeCount = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) return;
+        await Promise.all([
+          fetchBadgeCount(),
+          fetchRandomQuote(),
+        ]);
+      } catch (error) {
+        console.error('Error in data fetching:', error);
+        toast({
+          title: "Error loading dashboard",
+          description: "Please try refreshing the page.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        // Using normal select query instead of count
-        const { data, error } = await supabase
-          .from("user_badges")
-          .select("*")
-          .eq("user_id", userData.user.id);
-            
-        if (error) {
-          console.error('Error fetching badge count:', error);
-          return;
-        }
-        
-        // Calculate badge level based on count
-        const badgeTotal = data?.length || 0;
-        setBadgeCount(badgeTotal);
-        
-        // Determine badge level based on count
-        const progress = Math.min(badgeTotal * 16.67, 100); // Convert count to percentage (max 6 levels)
-        const level = getProgressLevel(progress);
-        const stageName = getStageName(level);
-        setBadgeLevel(stageName);
-      } catch (error) {
-        console.error('Error in badge count fetch:', error);
-      }
-    };
-    
-    const fetchRandomQuote = async () => {
-      try {
-        // Fetch a random quote from the quotes table
-        // Using a workaround since it seems quotes might not be in the generated types
-        const { data, error } = await supabase
-          .from("quotes")
-          .select("*")
-          .order("id")
-          .limit(1)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching quote:', error);
-          setQuote({
-            id: "1",
-            text: "Our difficulties grow miracles.",
-            author: "Jean de La Bruyère",
-            category: "LIGHTNING"
-          });
-          return;
-        }
-        
-        if (data) {
-          // Type assertion since we know what fields to expect
-          const quoteData = data as unknown as {
-            id: string;
-            text: string;
-            author: string;
-            icon_id?: string;
-            category?: string;
-          };
-          
-          // Set quote data
-          setQuote({
-            id: quoteData.id,
-            text: quoteData.text || "Our difficulties grow miracles.",
-            author: quoteData.author || "Jean de La Bruyère",
-            icon_id: quoteData.icon_id,
-            category: quoteData.category
-          });
-
-          // If we have an icon_id, fetch the corresponding icon
-          if (quoteData.icon_id) {
-            fetchIcon(quoteData.icon_id);
-          }
-        }
-      } catch (error) {
-        console.error('Error in quote fetch:', error);
-      }
-    };
-    
-    const fetchIcon = async (iconId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from("icons")
-          .select("id,name,illustration")
-          .eq("id", iconId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching icon:', error);
-          return;
-        }
-        
-        setIcon(data as Icon);
-      } catch (error) {
-        console.error('Error in icon fetch:', error);
-      }
-    };
-    
-    fetchBadgeCount();
-    fetchRandomQuote();
+    fetchData();
   }, []);
+    
+  const fetchBadgeCount = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      // Using normal select query instead of count
+      const { data, error } = await supabase
+        .from("user_badges")
+        .select("*")
+        .eq("user_id", userData.user.id);
+          
+      if (error) {
+        console.error('Error fetching badge count:', error);
+        return;
+      }
+      
+      // Calculate badge level based on count
+      const badgeTotal = data?.length || 0;
+      setBadgeCount(badgeTotal);
+      
+      // Determine badge level based on count
+      const progress = Math.min(badgeTotal * 16.67, 100); // Convert count to percentage (max 6 levels)
+      const level = getProgressLevel(progress);
+      const stageName = getStageName(level);
+      setBadgeLevel(stageName);
+    } catch (error) {
+      console.error('Error in badge count fetch:', error);
+    }
+  };
+  
+  const fetchRandomQuote = async () => {
+    try {
+      console.log('Fetching random quote...');
+      // Fetch a random quote from the quotes table
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .order("id")
+        .limit(1)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching quote:', error);
+        // Set fallback quote and continue with default quote
+        setQuote({
+          id: "1",
+          text: "Our difficulties grow miracles.",
+          author: "Jean de La Bruyère",
+          category: "LIGHTNING",
+          icon_id: "def-icon-1" // Fallback icon ID
+        });
+        
+        // Optional: Try to fetch a default icon
+        fetchIcon("def-icon-1");
+        return;
+      }
+      
+      console.log('Quote fetched successfully:', data);
+      
+      if (data) {
+        // Set quote data
+        const quoteData = data as Quote;
+        setQuote(quoteData);
+
+        // If we have an icon_id, fetch the corresponding icon
+        if (quoteData.icon_id) {
+          console.log('Fetching icon with ID:', quoteData.icon_id);
+          await fetchIcon(quoteData.icon_id);
+        } else {
+          console.warn('Quote has no icon_id, using author name only');
+        }
+      }
+    } catch (error) {
+      console.error('Error in quote fetch:', error);
+    }
+  };
+  
+  const fetchIcon = async (iconId: string) => {
+    try {
+      console.log('Fetching icon details for ID:', iconId);
+      const { data, error } = await supabase
+        .from("icons")
+        .select("id,name,illustration")
+        .eq("id", iconId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching icon:', error);
+        return;
+      }
+      
+      console.log('Icon data fetched successfully:', data);
+      setIcon(data as Icon);
+    } catch (error) {
+      console.error('Error in icon fetch:', error);
+    }
+  };
 
   // Default quote if none is fetched
   const quoteData = quote || {
@@ -178,12 +195,25 @@ const DashboardLayout: React.FC = () => {
   };
   
   const handleVirgilButtonClick = () => {
+    // More robust navigation handling
     if (icon && icon.id) {
-      // Fixed navigation - ensure we're using the correct path format with type as "icon"
-      console.log(`Attempting to navigate to icon: ${icon.id}`);
+      // Enhanced logging
+      console.log(`Navigating to icon: ${icon.id} with path: /view/icon/${icon.id}`);
+      
+      // Navigate with explicit path structure
       navigate(`/view/icon/${icon.id}`);
+    } else if (quote && quote.icon_id) {
+      // Fallback to using icon_id directly from quote if icon state isn't set yet
+      console.log(`Using quote's icon_id for navigation: ${quote.icon_id}`);
+      navigate(`/view/icon/${quote.icon_id}`);
     } else {
-      console.log("No icon to navigate to");
+      console.log("No icon to navigate to, using fallback");
+      // Consider a fallback navigation or show an error message
+      toast({
+        title: "Navigation Error",
+        description: "Unable to find the requested content. Please try again later.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -221,10 +251,13 @@ const DashboardLayout: React.FC = () => {
         {/* Quote Card */}
         <div className="mb-6">
           <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
-            {/* Improved clickable overlay with higher z-index */}
+            {/* Clickable overlay with clearer debugging */}
             <div 
               className="absolute inset-0 z-20 cursor-pointer" 
-              onClick={handleVirgilButtonClick}
+              onClick={() => {
+                console.log("Card overlay clicked, calling handleVirgilButtonClick");
+                handleVirgilButtonClick();
+              }}
               aria-label="View kindred spirit details"
             ></div>
             
@@ -235,10 +268,11 @@ const DashboardLayout: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
             
-            {/* Kindred spirit button with even higher z-index */}
+            {/* Kindred spirit button with higher z-index and improved click handling */}
             <button 
               onClick={(e) => {
                 e.stopPropagation(); // Prevent click from bubbling to the overlay
+                console.log("Kindred spirit button clicked directly");
                 handleVirgilButtonClick();
               }} 
               className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider z-30"
@@ -251,12 +285,13 @@ const DashboardLayout: React.FC = () => {
               <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
-            {/* Kindred spirit container with higher z-index */}
+            {/* Kindred spirit container at bottom with improved click handling */}
             <div className="absolute bottom-4 left-4 z-30">
               <div 
                 className="inline-flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" 
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent click from bubbling to the overlay
+                  console.log("Author name badge clicked");
                   handleVirgilButtonClick();
                 }}
               >
@@ -265,6 +300,13 @@ const DashboardLayout: React.FC = () => {
                 </span>
               </div>
             </div>
+            
+            {/* Loading overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-40">
+                <div className="h-8 w-8 border-4 border-t-[#D5B8FF] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </Card>
         </div>
 
