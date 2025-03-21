@@ -850,6 +850,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       <OrderDialog 
         title={combinedData?.title || combinedData?.name || ""} 
         amazonLink={combinedData?.amazon_link}
+        open={isOrderDialogOpen}
+        onOpenChange={setIsOrderDialogOpen}
       />
     </div>
   );

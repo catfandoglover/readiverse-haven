@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ExternalLink, X } from "lucide-react";
@@ -15,9 +16,16 @@ import { ShoppingCart, ExternalLink, X } from "lucide-react";
 interface OrderDialogProps {
   title: string;
   amazonLink?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
+const OrderDialog: React.FC<OrderDialogProps> = ({ 
+  title, 
+  amazonLink,
+  open,
+  onOpenChange
+}) => {
   const handleAmazonOrder = () => {
     if (amazonLink) {
       window.open(amazonLink, '_blank');
@@ -31,16 +39,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center justify-center gap-2 bg-transparent"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          ORDER
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[80%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
         <DialogHeader className="flex flex-col space-y-1.5 text-left pt-10">
           <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold">
@@ -68,10 +67,10 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
           </Button>
         </DialogFooter>
         
-        <button className="absolute right-6 top-6 rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
+        <DialogClose className="absolute right-6 top-6 rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
           <X className="h-6 w-6 text-black" />
           <span className="sr-only">Close</span>
-        </button>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );
