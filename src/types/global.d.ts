@@ -13,3 +13,35 @@ declare namespace JSX {
     };
   }
 }
+
+// TidyCal API types
+interface TidyCalTimeSlot {
+  date: string;
+  start_time: string;
+  end_time: string;
+  timezone: string;
+  id: string;
+}
+
+interface TidyCalService {
+  id: string;
+  name: string;
+  duration: number;
+  description?: string;
+  price?: number;
+}
+
+interface TidyCalBookingData {
+  name: string;
+  email: string;
+  service_id: string;
+  time_slot_id: string;
+  timezone: string;
+  custom_fields?: Record<string, string>;
+}
+
+interface TidyCalBookingResponse {
+  id: string;
+  status: 'confirmed' | 'pending';
+  meeting_link?: string;
+}
