@@ -1,88 +1,51 @@
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+export const useBook = (slug: string) => {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-// Extend the Book type to include author_id
-type Book = Database['public']['Tables']['books']['Row'] & { 
-  author_id?: string; // Add author_id as an optional property
-};
+  useEffect(() => {
+    const fetchBook = async () => {
+      setIsLoading(true);
+      setError(null);
 
-export const useBook = (slug: string | undefined) => {
-  return useQuery<Book | null>({
-    queryKey: ['book', slug],
-    queryFn: async () => {
-      if (!slug) return null;
-
-      console.log('Fetching book with slug:', slug);
-      
       try {
-        // First try with exact case
-        const { data, error } = await supabase
+        const { data: book, error: bookError } = await supabase
           .from('books')
-          .select('*')
+          .select(`
+            *,
+            book_domain!inner(
+              domain_id,
+              domains(
+                name
+              )
+            ),
+            book_author!inner(
+              author_id,
+              authors(
+                name
+              )
+            )
+          `)
           .eq('slug', slug)
           .single();
 
-        if (error) {
-          console.log('Initial query error:', error);
-          
-          // Next, try with the ID
-          const { data: idData, error: idError } = await supabase
-            .from('books')
-            .select('*')
-            .eq('id', slug)
-            .single();
-            
-          if (!idError && idData) {
-            console.log('Book found by ID:', {
-              found: !!idData,
-              hasEpubUrl: idData?.epub_file_url ? 'yes' : 'no',
-              hasAuthor: idData?.author ? 'yes' : 'no',
-              hasAuthorId: idData?.author_id ? 'yes' : 'no',
-              introduction: idData?.introduction ? 'yes' : 'no'
-            });
-            return idData as Book;
-          }
-          
-          // Try with lowercase
-          const { data: retryData, error: retryError } = await supabase
-            .from('books')
-            .select()
-            .ilike('slug', slug)
-            .limit(1);
-
-          if (retryError) {
-            console.log('Retry query error:', retryError);
-            return null;
-          }
-
-          const result = retryData?.[0] || null;
-          console.log('Retry query result:', {
-            found: !!result,
-            hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
-            hasAuthor: result?.author ? 'yes' : 'no',
-            hasAuthorId: result?.author_id ? 'yes' : 'no',
-            introduction: result?.introduction ? 'yes' : 'no'
-          });
-          return result as Book;
+        if (bookError) {
+          setError(bookError);
         }
 
-        console.log('Query result:', {
-          found: !!data,
-          hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
-          hasAuthor: data?.author ? 'yes' : 'no',
-          hasAuthorId: data?.author_id ? 'yes' : 'no',
-          introduction: data?.introduction ? 'yes' : 'no'
-        });
-        return data as Book;
-      } catch (error) {
-        console.log('Unexpected error in useBook:', error);
-        return null;
+        setData(book);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setIsLoading(false);
       }
-    },
-    enabled: !!slug,
-    retry: false,
-    retryOnMount: false
-  });
+    };
+
+    fetchBook();
+  }, [slug]);
+
+  return { data, isLoading, error };
 };
