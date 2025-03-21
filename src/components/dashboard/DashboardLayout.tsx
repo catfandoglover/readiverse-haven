@@ -5,6 +5,7 @@ import MainMenu from "../navigation/MainMenu";
 import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getProgressLevel, getStageName } from "../reader/MasteryScore";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
@@ -27,6 +28,7 @@ type Icon = {
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const [badgeCount, setBadgeCount] = useState<number>(0);
+  const [badgeLevel, setBadgeLevel] = useState<string>("SEEKER");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [icon, setIcon] = useState<Icon | null>(null);
 
@@ -50,7 +52,16 @@ const DashboardLayout: React.FC = () => {
           return;
         }
         
-        setBadgeCount(data?.length || 0);
+        // Calculate badge level based on count
+        const count = data?.length || 0;
+        setBadgeCount(count);
+        
+        // Determine badge level based on count
+        // This could be enhanced with actual badge levels from the backend
+        const progress = Math.min(count * 16.67, 100); // Convert count to percentage (max 6 levels)
+        const level = getProgressLevel(progress);
+        const stageName = getStageName(level);
+        setBadgeLevel(stageName);
       } catch (error) {
         console.error('Error in badge count fetch:', error);
       }
@@ -174,20 +185,25 @@ const DashboardLayout: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
-        {/* Badge count hexagon button - improved alignment */}
-        <button 
-          onClick={handleBadgeClick} 
-          className="relative flex items-center justify-center w-10 h-10 cursor-pointer"
-          aria-label={`${badgeCount} badges earned`}
-        >
-          <Hexagon 
-            className="absolute w-10 h-10 text-[#B8C7FF] stroke-current fill-transparent" 
-            strokeWidth={1.5} 
-          />
-          <span className="text-[#E9E7E2] font-oxanium font-bold text-lg">
-            {badgeCount}
+        {/* Badge count hexagon button with level text below */}
+        <div className="flex flex-col items-center">
+          <button 
+            onClick={handleBadgeClick} 
+            className="relative flex items-center justify-center w-10 h-10 cursor-pointer"
+            aria-label={`${badgeCount} badges earned`}
+          >
+            <Hexagon 
+              className="absolute w-10 h-10 text-[#B8C7FF] stroke-current fill-transparent" 
+              strokeWidth={1.5} 
+            />
+            <span className="text-[#E9E7E2] font-oxanium font-bold text-lg">
+              {badgeCount}
+            </span>
+          </button>
+          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">
+            {badgeLevel}
           </span>
-        </button>
+        </div>
       </div>
 
       {/* Main content */}
