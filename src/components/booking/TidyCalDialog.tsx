@@ -27,7 +27,12 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 bg-[#E9E7E2]">
+      <DialogContent className="w-[80%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold pt-10">
+            Book a Session
+          </DialogTitle>
+        </DialogHeader>
         <TidyCalBooking 
           onClose={() => onOpenChange(false)} 
           onSuccess={handleSuccess}
