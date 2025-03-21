@@ -901,10 +901,10 @@ const DNAAssessment = () => {
             {showTidyCal && (
               <div 
                 id="tidycal-container" 
-                className="w-full h-[600px] flex items-center justify-center overflow-visible"
+                className="w-full min-h-[500px] flex items-center justify-center overflow-visible"
               >
                 <div 
-                  className="tidycal-embed w-full h-[600px]" 
+                  className="tidycal-embed w-full h-[500px]" 
                   data-path="team/intellectual-genetic-counselors/intake"
                   style={{ display: 'block' }}
                 ></div>
@@ -955,7 +955,7 @@ const DNAAssessment = () => {
             {showTidyCal && (
               <Button
                 onClick={() => setShowTidyCal(false)}
-                className="mt-4 bg-[#9b87f5] hover:bg-[#7E69AB] text-white font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border-none"
+                className="mt-4 bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border-none"
               >
                 Back to Options
               </Button>
