@@ -7,16 +7,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface OrderDialogProps {
   title: string;
   amazonLink?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
+const OrderDialog: React.FC<OrderDialogProps> = ({ 
+  title, 
+  amazonLink,
+  open,
+  onOpenChange
+}) => {
   const handleAmazonOrder = () => {
     if (amazonLink) {
       window.open(amazonLink, '_blank');
@@ -30,37 +38,31 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ title, amazonLink }) => {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center justify-center gap-2 bg-transparent"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          ORDER
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#2A282A] text-[#E9E7E2] border-gray-700">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Order "{title}"</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Choose where you'd like to purchase this book.
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[90%] sm:w-[80%] max-w-md bg-[#E9E7E2] p-6 rounded-2xl">
+        <DialogHeader className="flex flex-col space-y-1.5 text-left pt-10">
+          <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold">
+            Order "{title}"
+          </DialogTitle>
+          <DialogDescription className="text-sm font-oxanium mt-3 text-muted-foreground">
+            Choose where to purchase this book.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4 py-4">
+        
+        <div className="flex flex-col space-y-4 mt-5 w-full overflow-hidden">
           <Button
             onClick={handleAmazonOrder}
-            className="w-full bg-[#FF9900] hover:bg-[#FF9900]/90 text-black flex justify-between items-center"
+            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex items-center justify-center px-4"
           >
-            Buy on Amazon
-            <ExternalLink className="h-4 w-4" />
+            <span className="truncate mr-1">Amazon</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="w-full bg-[#4C7C9B] hover:bg-[#4C7C9B]/90 flex justify-between items-center"
+            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex items-center justify-center px-4"
           >
-            Buy From Independent Bookseller
-            <ExternalLink className="h-4 w-4" />
+            <span className="truncate mr-1">Independent Booksellers</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
         </div>
       </DialogContent>

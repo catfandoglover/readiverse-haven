@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,7 +61,7 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8"
+          className="h-8 w-8 rounded-full"
           title="Search"
         >
           <Search className="h-4 w-4" />
@@ -81,7 +82,7 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                   handleSearch();
                 }
               }}
-              className="pr-8"
+              className="pr-8 rounded-xl"
             />
             {query && (
               <Button
@@ -98,7 +99,7 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
             onClick={handleSearch}
             disabled={isSearching}
             size="icon"
-            className="shrink-0"
+            className="shrink-0 rounded-full"
           >
             {isSearching ? (
               <div className="animate-spin">⌛</div>
@@ -118,14 +119,14 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                     onClick={() => handleResultClick(result)}
                     className="w-full text-left px-4 py-3 hover:bg-accent rounded-md transition-colors flex flex-col gap-1"
                   >
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-bold font-baskerville">
                       {result.chapterTitle || `Chapter ${Math.floor(index / 5) + 1}`}
                     </span>
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground font-oxanium">
                         Page {index + 1}
                       </span>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 font-oxanium">
                         {result.excerpt}
                       </p>
                     </div>
@@ -133,7 +134,7 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
                 ))}
               </div>
             </ScrollArea>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center text-sm text-muted-foreground font-oxanium">
               {results.length} matches found
             </div>
           </>
