@@ -1,0 +1,241 @@
+erDiagram
+    books {
+        uuid id PK
+        text title
+        text slug UK "Unique"
+        text author
+        text cover_url
+        text epub_file_url
+        timestamp created_at
+        text Cover_super
+        text Notion_URL
+        double randomizer
+        text[] categories
+        text amazon_link
+        text about
+        text icon_illustration
+        text introduction
+        text bookshop_link
+        text great_question_connection
+        uuid author_id FK
+    }
+    
+    art {
+        uuid id PK
+        text title
+        text slug UK "Unique"
+        text author
+        text art_file_url
+        timestamp created_at
+        text Notion_URL
+        double randomizer
+        text about
+        text icon_illustration
+        text introduction
+    }
+    
+    icons {
+        uuid id PK
+        text name
+        text illustration
+        double randomizer
+        timestamp created_at
+        text about
+        text introduction
+        text Notion_URL
+        text[] anecdotes
+        text great_conversation
+        text slug
+    }
+    
+    concepts {
+        uuid id PK
+        text title
+        text illustration
+        text type
+        double randomizer
+        timestamp created_at
+        text about
+        text introduction
+        text Notion_URL
+    }
+    
+    great_questions {
+        uuid id PK
+        text category_number
+        text category
+        text question
+        text notion_id UK "Unique"
+        timestamp created_at
+        text[] related_classics
+        text illustration
+        text answer_a
+        text answer_b
+    }
+    
+    book_questions {
+        uuid question_id PK,FK
+        uuid book_id PK,FK
+        double randomizer
+        timestamp created_at
+    }
+    
+    profiles {
+        uuid id PK
+        varchar outseta_user_id UK "Unique"
+        varchar email
+        timestamp created_at
+        timestamp updated_at
+        varchar full_name
+        text profile_image
+        text landscape_image
+        uuid assessment_id
+    }
+    
+    user_books {
+        uuid id PK
+        uuid book_id FK
+        varchar outseta_user_id FK
+        text status
+        integer current_page
+        text current_cfi
+        timestamp last_read_at
+        timestamp created_at
+        timestamp updated_at
+        CONSTRAINT "book_id_outseta_user_id" UK "Unique(book_id, outseta_user_id)"
+    }
+    
+    user_favorites {
+        uuid id PK
+        varchar outseta_user_id FK
+        uuid item_id
+        text item_type
+        timestamp added_at
+        CONSTRAINT "outseta_user_id_item_id_item_type" UK "Unique(outseta_user_id, item_id, item_type)"
+    }
+    
+    reading_lists {
+        uuid id PK
+        text name
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    reading_list_books {
+        uuid reading_list_id PK,FK
+        uuid book_id PK,FK
+        timestamp added_at
+    }
+    
+    reading_progress {
+        uuid id PK
+        uuid book_id FK
+        double position
+        text device_id
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    dna_assessment_results {
+        uuid id PK
+        timestamp created_at
+        text name
+        jsonb answers
+        text ethics_sequence
+        text epistemology_sequence
+        text politics_sequence
+        text theology_sequence
+        text ontology_sequence
+        text aesthetics_sequence
+        text profile_id
+    }
+    
+    dna_analysis_results {
+        uuid id PK
+        timestamp created_at
+        uuid assessment_id FK
+        text analysis_text
+        jsonb raw_response
+        text archetype
+        text introduction
+        text archetype_definition
+        text key_tension_1
+        text key_tension_2
+        text key_tension_3
+    }
+    
+    dna_tree_structure {
+        uuid id PK
+        uuid question_id FK
+        dna_category category
+        uuid next_question_a_id FK
+        uuid next_question_b_id FK
+        text tree_position
+        timestamp created_at
+        CONSTRAINT "category_position" UK "Unique(category, tree_position)"
+        CONSTRAINT "question_id_category" UK "Unique(question_id, category)"
+    }
+    
+    dna_question_responses {
+        uuid id PK
+        uuid assessment_id FK
+        dna_category category
+        uuid question_id FK
+        text answer
+        timestamp created_at
+    }
+    
+    dna_assessment_progress {
+        uuid id PK
+        uuid user_id FK
+        dna_category category
+        text current_position
+        jsonb responses
+        boolean completed
+        timestamp created_at
+        timestamp updated_at
+        CONSTRAINT "user_id_category" UK "Unique(user_id, category)"
+    }
+    
+    custom_domain_books {
+        uuid id PK
+        uuid domain_id FK
+        text title
+        text author
+        text cover_url
+        uuid user_id FK
+        timestamp created_at
+        CONSTRAINT "domain_id_title_author" UK "Unique(domain_id, title, author)"
+    }
+    
+    custom_domains {
+        uuid id PK
+        text name
+        uuid user_id FK
+        timestamp created_at
+        text outseta_user_id FK
+    }
+    
+    share_messages {
+        uuid id PK
+        share_message_type type
+        text message
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    books ||--o{ book_questions : "has"
+    great_questions ||--o{ book_questions : "has"
+    books ||--o{ reading_list_books : "included_in"
+    reading_lists ||--o{ reading_list_books : "contains"
+    books ||--o{ reading_progress : "tracked_in"
+    books ||--o{ user_books : "tracked_in"
+    profiles ||--o{ user_books : "owns"
+    profiles ||--o{ user_favorites : "has"
+    great_questions ||--o{ dna_tree_structure : "used_in"
+    dna_tree_structure ||--o{ dna_question_responses : "has_responses"
+    dna_assessment_results ||--o{ dna_analysis_results : "has_analysis"
+    dna_assessment_results ||--o{ dna_question_responses : "has_responses"
+    profiles ||--o{ dna_assessment_progress : "has_progress"
+    icons ||--o{ books : "authored"
+    custom_domains ||--o{ custom_domain_books : "contains"
