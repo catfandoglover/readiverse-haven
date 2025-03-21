@@ -37,10 +37,11 @@ const DashboardLayout: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
+        // Use the correct table name and query structure
         const { count, error } = await supabase
-          .from('profile_badges')
+          .from('badges')
           .select('*', { count: 'exact', head: true })
-          .eq('profile_id', userData.user.id);
+          .eq('user_id', userData.user.id);
           
         if (error) {
           console.error('Error fetching badge count:', error);
@@ -55,12 +56,9 @@ const DashboardLayout: React.FC = () => {
 
     const fetchRandomQuote = async () => {
       try {
-        // Fetch a random quote from the quotes table
+        // Fetch a random quote from the quotes table with the correct query
         const { data, error } = await supabase
-          .from('quotes')
-          .select('*')
-          .order('id', { ascending: false })
-          .limit(1)
+          .rpc('get_random_quote')
           .single();
           
         if (error) {
@@ -74,11 +72,13 @@ const DashboardLayout: React.FC = () => {
           return;
         }
         
-        setQuote(data as Quote);
-        
-        // If we have an icon_id, fetch the corresponding icon
-        if (data.icon_id) {
-          fetchIcon(data.icon_id);
+        if (data) {
+          setQuote(data as Quote);
+          
+          // If we have an icon_id, fetch the corresponding icon
+          if (data.icon_id) {
+            fetchIcon(data.icon_id);
+          }
         }
       } catch (error) {
         console.error('Error in quote fetch:', error);
@@ -88,9 +88,7 @@ const DashboardLayout: React.FC = () => {
     const fetchIcon = async (iconId: string) => {
       try {
         const { data, error } = await supabase
-          .from('icons')
-          .select('*')
-          .eq('id', iconId)
+          .rpc('get_icon_by_id', { icon_id: iconId })
           .single();
           
         if (error) {
@@ -189,13 +187,9 @@ const DashboardLayout: React.FC = () => {
             {/* Virgil button moved to top right */}
             <button 
               onClick={handleVirgilButtonClick}
-              className="absolute top-4 right-4 w-8 h-8 rounded-2xl bg-[#E9E7E2]/20 overflow-hidden flex items-center justify-center"
+              className="absolute top-4 right-4 rounded-2xl bg-[#E9E7E2]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider"
             >
-              <img 
-                src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png"
-                alt="Virgil" 
-                className="w-full h-full object-cover"
-              />
+              {icon?.name || quoteData.author}
             </button>
             
             {/* Quote text */}
