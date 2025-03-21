@@ -54,14 +54,14 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
             onClick={handleAmazonOrder}
             className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex items-center justify-center px-4"
           >
-            <span className="truncate mr-1">Buy on Amazon</span>
+            <span className="truncate mr-1">Amazon</span>
             <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
             className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex items-center justify-center px-4"
           >
-            <span className="truncate mr-1">Buy From Independent Bookseller</span>
+            <span className="truncate mr-1">Independent Booksellers</span>
             <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
         </div>
