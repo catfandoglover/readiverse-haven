@@ -45,7 +45,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
             Order "{title}"
           </DialogTitle>
           <DialogDescription className="text-sm font-oxanium mt-3 text-muted-foreground">
-            Choose where you'd like to purchase this book.
+            Choose where to purchase this book.
           </DialogDescription>
         </DialogHeader>
         
