@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface OrderDialogProps {
   title: string;
@@ -39,7 +39,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[80%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
+      <DialogContent className="w-[90%] sm:w-[80%] max-w-md bg-[#E9E7E2] p-6 rounded-2xl">
         <DialogHeader className="flex flex-col space-y-1.5 text-left pt-10">
           <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold">
             Order "{title}"
@@ -49,24 +49,22 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <DialogFooter className="flex flex-col space-y-4 mt-5">
+        <DialogFooter className="flex flex-col space-y-4 mt-5 w-full">
           <Button
             onClick={handleAmazonOrder}
-            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 max-w-full flex justify-between items-center"
+            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex justify-between items-center px-4"
           >
-            Buy on Amazon
-            <ExternalLink className="h-4 w-4" />
+            <span>Buy on Amazon</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 max-w-full flex justify-between items-center"
+            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex justify-between items-center px-4"
           >
-            Buy From Independent Bookseller
-            <ExternalLink className="h-4 w-4" />
+            <span>Buy From Independent Bookseller</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0" />
           </Button>
         </DialogFooter>
-        
-        {/* Removed the duplicate close button - the default one from DialogContent will be used */}
       </DialogContent>
     </Dialog>
   );
