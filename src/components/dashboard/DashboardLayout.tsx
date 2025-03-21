@@ -1,14 +1,39 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
+  const [badgeCount, setBadgeCount] = useState<number>(0);
+
+  // Fetch badge count on component mount
+  useEffect(() => {
+    const fetchBadgeCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('badges')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', supabase.auth.getUser().then(res => res.data.user?.id));
+          
+        if (error) {
+          console.error('Error fetching badge count:', error);
+          return;
+        }
+        
+        setBadgeCount(count || 0);
+      } catch (error) {
+        console.error('Error in badge count fetch:', error);
+      }
+    };
+
+    fetchBadgeCount();
+  }, []);
 
   // Mock data for the quote card
   const quoteData = {
@@ -56,20 +81,12 @@ const DashboardLayout: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
-        <div className="w-10 h-10" /> {/* Empty div for spacing balance */}
-      </div>
-
-      {/* Learning progress hexagons */}
-      <div className="mt-12 px-6">
-        <p className="text-center mb-4 font-oxanium uppercase tracking-wider text-sm">LEARNING BOLT</p>
-        <div className="flex justify-center space-x-2">
-          {[1, 2, 3, 4, 5, 6, 7].map((item, index) => (
-            <div key={index} className={`${index === 3 ? 'bg-[#B8C7FF]' : 'bg-[#E9E7E2]/20'} w-12 h-14 flex items-center justify-center`}
-              style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}
-            >
-              {index === 3 && <span className="font-oxanium text-[#2A282A] font-bold">999</span>}
-            </div>
-          ))}
+        {/* Badge count hexagon */}
+        <div className="relative flex items-center justify-center w-14 h-14">
+          <Hexagon className="w-full h-full text-[#B8C7FF] stroke-current fill-transparent" strokeWidth={1.5} />
+          <span className="absolute font-oxanium font-bold text-lg text-[#E9E7E2]">
+            {badgeCount}
+          </span>
         </div>
       </div>
 
