@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,17 +12,22 @@ const AllBooksContent: React.FC = () => {
     queryFn: async () => {
       if (!user?.Account?.Uid) return [];
 
-      const { data, error } = await supabase
-        .from("user_books")
-        .select("*, book:books(id, title, author, cover_url)")
-        .eq("outseta_user_id", user.Account.Uid);
+      try {
+        const { data, error } = await supabase
+          .from("user_books")
+          .select("*, book:books!user_books_book_id_fkey(id, title, author, cover_url)")
+          .eq("outseta_user_id", user.Account.Uid);
 
-      if (error) {
-        console.error("Error fetching all books:", error);
+        if (error) {
+          console.error("Error fetching all books:", error);
+          return [];
+        }
+
+        return data || [];
+      } catch (err) {
+        console.error("Exception fetching all books:", err);
         return [];
       }
-
-      return data || [];
     },
     enabled: !!user?.Account?.Uid,
   });

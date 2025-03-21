@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
@@ -50,22 +49,14 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
 
     setIsLoading(true);
     try {
-      // Get the current authenticated user's UUID from Supabase
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      
-      if (!supabaseUser) {
-        toast.error("Could not verify your authentication status");
-        setIsLoading(false);
-        return;
-      }
-      
-      const userId = supabaseUser.id; // Use UUID from Supabase
+      // Use the Outseta user ID directly
+      const outsetaUserId = user.Account.Uid;
 
       // First, try to find if a custom domain with this name already exists
-      const { data: existingDomains, error: searchError } = await supabase
+      const { data: existingDomains, error: searchError } = await (supabase as any)
         .from("custom_domains")
         .select("*")
-        .eq("user_id", userId)
+        .eq("outseta_user_id", outsetaUserId)
         .eq("name", values.name)
         .limit(1);
 
@@ -83,12 +74,12 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
       }
 
       // Create the new domain
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("custom_domains")
         .insert([
           {
             name: values.name,
-            user_id: userId,
+            outseta_user_id: outsetaUserId,
           },
         ])
         .select()

@@ -30,24 +30,20 @@ const BookshelfContent: React.FC = () => {
   const { user } = useAuth();
 
   const { data: fetchedCustomDomains, refetch: refetchCustomDomains } = useQuery({
-    queryKey: ["custom-domains", user?.Uid],
+    queryKey: ["custom-domains", user?.Account?.Uid],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !user.Account?.Uid) return [];
 
       try {
-        const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+        // Use the outseta_user_id directly from the user object
+        const outsetaUserId = user.Account.Uid;
         
-        if (!supabaseUser) {
-          console.error("Error: No authenticated user found");
-          return [];
-        }
-        
-        const userId = supabaseUser.id;
-        
-        const { data, error } = await supabase
+        // Query using outseta_user_id instead of user_id
+        // Using "any" type assertion until proper types are generated
+        const { data, error } = await (supabase as any)
           .from("custom_domains")
           .select("id, name")
-          .eq("user_id", userId)
+          .eq("outseta_user_id", outsetaUserId)
           .order("created_at", { ascending: false });
         
         if (error) {
@@ -55,17 +51,19 @@ const BookshelfContent: React.FC = () => {
           return [];
         }
         
-        return data || [];
+        // Cast the data to the expected type
+        return (data || []) as CustomDomain[];
       } catch (error) {
         console.error("Exception fetching custom domains:", error);
         return [];
       }
     },
-    enabled: !!user,
+    enabled: !!user && !!user.Account?.Uid,
   });
 
   useEffect(() => {
     if (fetchedCustomDomains) {
+      // Cast the data to the expected type
       setCustomDomains(fetchedCustomDomains as CustomDomain[]);
     }
   }, [fetchedCustomDomains]);
