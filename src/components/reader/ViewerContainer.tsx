@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 
@@ -17,7 +17,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   onNextPage
 }) => {
   // Margin width for click detection (percentage of container width)
-  const MARGIN_WIDTH_PERCENT = 5; // Changed from 20% to 5%
+  const MARGIN_WIDTH_PERCENT = 10; // Changed from 5% to 10%
   const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
   
   const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -62,6 +62,23 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   const handleMouseLeave = useCallback(() => {
     setHoveredSide(null);
   }, []);
+
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && onPrevPage) {
+        onPrevPage();
+      } else if (e.key === 'ArrowRight' && onNextPage) {
+        onNextPage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onPrevPage, onNextPage]);
   
   return (
     <motion.div 
@@ -99,10 +116,10 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
       }}
     >
       {hoveredSide === 'left' && (
-        <div className="absolute inset-y-0 left-0 w-[5%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-[10%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
       )}
       {hoveredSide === 'right' && (
-        <div className="absolute inset-y-0 right-0 w-[5%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-[10%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
       )}
     </motion.div>
   );
