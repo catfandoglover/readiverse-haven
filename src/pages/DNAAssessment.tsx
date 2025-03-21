@@ -31,6 +31,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
+import TidyCalDialog from "@/components/booking/TidyCalDialog";
+import { useTidyCalBooking } from "@/components/booking/useTidyCalBooking";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -61,10 +63,11 @@ const DNAAssessment = () => {
   const [profileId, setProfileId] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
-  const [showTidyCal, setShowTidyCal] = React.useState(false);
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
+  
+  const { showBookingDialog, openBookingDialog, closeBookingDialog, handleBookingCompletedEvents } = useTidyCalBooking();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -889,81 +892,43 @@ const DNAAssessment = () => {
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
-            {!showTidyCal && (
-              <AlertDialogHeader className="tidycal-header">
-                <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
-                <AlertDialogDescription className="font-oxanium">
-                  These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-            )}
+            <AlertDialogHeader className="tidycal-header">
+              <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
+              <AlertDialogDescription className="font-oxanium">
+                These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
             
-            {showTidyCal && (
-              <div 
-                id="tidycal-container" 
-                className="w-full min-h-[500px] flex items-center justify-center overflow-visible"
+            <AlertDialogFooter className="tidycal-footer">
+              <AlertDialogAction 
+                className="bg-[#373763] text-white font-oxanium"
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent default to keep dialog open
+                  openBookingDialog();
+                }}
               >
-                <div 
-                  className="tidycal-embed w-full h-[500px]" 
-                  data-path="team/intellectual-genetic-counselors/intake"
-                  style={{ display: 'block' }}
-                ></div>
-              </div>
-            )}
-            
-            {!showTidyCal && (
-              <AlertDialogFooter className="tidycal-footer">
-                <AlertDialogAction 
-                  className="bg-[#373763] text-white font-oxanium"
-                  onClick={(e) => {
-                    e.preventDefault(); // Prevent default to keep dialog open
-                    console.log("Book a counselor button clicked");
-                    setShowTidyCal(true);
-                    
-                    // Add a small delay before initializing TidyCal
-                    setTimeout(() => {
-                      console.log("Attempting to initialize TidyCal...");
-                      if (window.TidyCal && typeof window.TidyCal.init === 'function') {
-                        window.TidyCal.init();
-                        console.log("TidyCal initialized after clicking button");
-                      } else {
-                        console.error("TidyCal object not available");
-                      }
-                      
-                      // Add message event listener for booking completion
-                      window.addEventListener('message', (event) => {
-                        console.log("Message received:", event.data);
-                        if (event.data === 'tidycal:booking-completed') {
-                          setShowExitAlert(false);
-                          navigate('/discover');
-                        }
-                      });
-                    }, 300);
-                  }}
-                >
-                  BOOK A COUNSELOR
-                </AlertDialogAction>
-                <AlertDialogCancel 
-                  onClick={confirmExit}
-                  className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
-                >
-                  EXIT ASSESSMENT
-                </AlertDialogCancel>
-              </AlertDialogFooter>
-            )}
-            
-            {showTidyCal && (
-              <Button
-                onClick={() => setShowTidyCal(false)}
-                className="mt-4 bg-[#373763] hover:bg-[#373763]/90 text-white font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border-none"
+                BOOK A COUNSELOR
+              </AlertDialogAction>
+              <AlertDialogCancel 
+                onClick={confirmExit}
+                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
               >
-                Back to Options
-              </Button>
-            )}
+                EXIT ASSESSMENT
+              </AlertDialogCancel>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
         
       </div>
+
+      <TidyCalDialog
+        open={showBookingDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeBookingDialog();
+          }
+        }}
+      />
 
       <AIChatDialog 
         open={showAIChat}
