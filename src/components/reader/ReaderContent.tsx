@@ -11,7 +11,7 @@ import { MinimalProgressBar } from './MinimalProgressBar';
 import ReaderSidebar from './ReaderSidebar';
 import FloatingActionButton from './FloatingActionButton';
 import VirgilChatPanel from './VirgilChatPanel';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Search } from 'lucide-react';
 
 interface ReaderContentProps {
   book: Book;
@@ -201,16 +201,16 @@ const ReaderContent = ({
             >
               <div className={`transition-all duration-300 ${showFloatingButtons ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
                 <FloatingActionButton 
-                  icon={BookOpen} 
-                  onClick={toggleSidebar} 
-                  tooltip="Table of Contents"
+                  iconImage="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
+                  onClick={toggleVirgilChat} 
+                  tooltip="Chat with Virgil"
                 />
               </div>
               <div className={`transition-all duration-300 ${showFloatingButtons ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
                 <FloatingActionButton 
-                  iconImage="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil%20Chat.png" 
-                  onClick={toggleVirgilChat} 
-                  tooltip="Chat with Virgil"
+                  icon={BookOpen} 
+                  onClick={toggleSidebar} 
+                  tooltip="Table of Contents"
                 />
               </div>
             </div>

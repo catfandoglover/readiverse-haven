@@ -79,16 +79,23 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitUserSelect: 'text',
         userSelect: 'text',
         WebkitTouchCallout: 'default',
-        touchAction: 'none', // Changed from 'pan-y' to 'none'
+        touchAction: 'none',
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-        overscrollBehavior: 'none', // Changed from 'contain'
+        overscrollBehavior: 'none',
         whiteSpace: 'pre-wrap',
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         maxWidth: '100vw',
         margin: '0 auto',
-        overflow: 'hidden', // Added overflow: hidden
+        overflow: 'hidden',
+        overflowY: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: '100vh',
       }}
     >
       {hoveredSide === 'left' && (
