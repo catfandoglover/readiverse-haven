@@ -134,19 +134,3 @@ export const getScrollPosition = (path: string): number => {
 export const clearScrollPosition = (path: string) => {
   localStorage.removeItem(`${SCROLL_POSITION_KEY_PREFIX}${path}`);
 };
-
-/**
- * Save tidycal redirect information
- */
-export const setTidyCalRedirect = () => {
-  localStorage.setItem('tidycal_redirect', '/discover');
-};
-
-/**
- * Get and clear tidycal redirect information
- */
-export const getTidyCalRedirect = (): string | null => {
-  const redirect = localStorage.getItem('tidycal_redirect');
-  localStorage.removeItem('tidycal_redirect');
-  return redirect;
-};
