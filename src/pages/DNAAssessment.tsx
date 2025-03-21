@@ -30,7 +30,7 @@ import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { Check, LogIn, UserPlus } from "lucide-react";
+import { Check, LogIn, UserPlus, X } from "lucide-react";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -859,21 +859,23 @@ const DNAAssessment = () => {
        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
             <AlertDialogHeader>
-              <AlertDialogTitle className="font-basekerville ">Need time to think?</AlertDialogTitle>
+              <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#E9E7E2]/50 border border-[#282828] text-[#282828] font-oxanium font-bold uppercase">
-                Cancel
-              </AlertDialogCancel>
               <AlertDialogAction 
-                onClick={confirmExit}
                 className="bg-[#373763] text-white font-oxanium"
               >
-                Exit Assessment
+                BOOK A COUNSELOR
               </AlertDialogAction>
+              <AlertDialogCancel 
+                onClick={confirmExit}
+                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
+              >
+                EXIT ASSESSMENT
+              </AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
