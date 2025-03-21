@@ -9,14 +9,14 @@ const AllBooksContent: React.FC = () => {
   const { user } = useAuth();
 
   const { data: books, isLoading } = useQuery({
-    queryKey: ["all-user-books", user?.Uid],
+    queryKey: ["all-user-books", user?.Account?.Uid],
     queryFn: async () => {
-      if (!user?.Uid) return [];
+      if (!user?.Account?.Uid) return [];
 
       const { data, error } = await supabase
         .from("user_books")
         .select("*, book:books(id, title, author, cover_url)")
-        .eq("user_id", user.Uid);
+        .eq("outseta_user_id", user.Account.Uid);
 
       if (error) {
         console.error("Error fetching all books:", error);
@@ -25,7 +25,7 @@ const AllBooksContent: React.FC = () => {
 
       return data || [];
     },
-    enabled: !!user?.Uid,
+    enabled: !!user?.Account?.Uid,
   });
 
   if (isLoading) {
