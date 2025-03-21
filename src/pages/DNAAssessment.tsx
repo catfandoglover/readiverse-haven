@@ -30,7 +30,7 @@ import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { Check, LogIn, UserPlus } from "lucide-react";
+import { Check, LogIn, UserPlus, X } from "lucide-react";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -865,15 +865,17 @@ const DNAAssessment = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#E9E7E2]/50 border border-[#282828] text-[#282828] font-oxanium font-bold uppercase">
-                Cancel
-              </AlertDialogCancel>
               <AlertDialogAction 
-                onClick={confirmExit}
                 className="bg-[#373763] text-white font-oxanium"
               >
-                Exit Assessment
+                BOOK A COUNSELOR
               </AlertDialogAction>
+              <AlertDialogCancel 
+                onClick={confirmExit}
+                className="bg-[#E9E7E2]/50 border border-[#282828] text-[#282828] font-oxanium font-bold uppercase"
+              >
+                Exit Assessment
+              </AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
