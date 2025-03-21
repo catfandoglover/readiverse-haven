@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -295,10 +294,10 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
                 toc={toc}
                 currentChapterTitle={currentChapterTitle}
                 showBookmarkDialog={showBookmarkDialog}
-                onFontSizeChange={(value: number) => handleFontSizeChange([value])}
+                onFontSizeChange={handleFontSizeChange}
                 onFontFamilyChange={handleFontFamilyChange}
                 onTextAlignChange={setTextAlign}
-                onBrightnessChange={(value: number) => handleBrightnessChange([value])}
+                onBrightnessChange={handleBrightnessChange}
                 onBookmarkClick={handleBookmarkClick}
                 onLocationChange={handleLocationChange}
                 onPrevPage={handlePrevPage}
@@ -310,8 +309,6 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
                 handleRemoveBookmark={handleRemoveBookmark}
                 setSelectedColor={setSelectedColor}
                 removeHighlight={removeHighlight}
-                onSearch={handleSearch}
-                onSearchResultClick={handleSearchResultClick}
               />
             </>
           )}

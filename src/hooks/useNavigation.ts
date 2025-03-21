@@ -27,16 +27,6 @@ export const useNavigation = (rendition: Rendition | null) => {
       }
     };
 
-    // Add keyboard event listeners
-    window.addEventListener("keydown", handleKeyPress);
-    
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [rendition]);
-
-  // Handle touch/swipe navigation separately
-  useEffect(() => {
     // Add touch event listeners for the entire document
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
@@ -50,7 +40,7 @@ export const useNavigation = (rendition: Rendition | null) => {
       const touchEndX = e.changedTouches[0].clientX;
       const diff = touchEndX - touchStartX;
       
-      // Threshold for swipe detection
+      // Threshold for swipe detection (adjust as needed)
       const threshold = 50;
       
       if (diff > threshold) {
@@ -62,10 +52,12 @@ export const useNavigation = (rendition: Rendition | null) => {
       setTouchStartX(null);
     };
 
+    window.addEventListener("keyup", handleKeyPress);
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchend", handleTouchEnd);
     
     return () => {
+      window.removeEventListener("keyup", handleKeyPress);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
     };

@@ -1,57 +1,110 @@
 
-import React, { useRef, useEffect } from 'react';
-import { Theme } from '@/contexts/ThemeContext';
+import React, { useCallback, useState } from 'react';
+import type { Theme } from '@/contexts/ThemeContext';
+import { motion } from 'framer-motion';
 
 interface ViewerContainerProps {
   theme: Theme;
-  setContainer: (element: HTMLElement | null) => void;
+  setContainer: (element: Element | null) => void;
   onPrevPage?: () => void;
   onNextPage?: () => void;
 }
 
 const ViewerContainer: React.FC<ViewerContainerProps> = ({ 
-  theme, 
+  theme,
   setContainer,
   onPrevPage,
   onNextPage
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Margin width for click detection (percentage of container width)
+  const MARGIN_WIDTH_PERCENT = 10; // Set to 10% as requested
+  const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
   
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainer(containerRef.current);
-    }
-  }, [setContainer]);
-
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || !onPrevPage || !onNextPage) return;
+  const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const containerWidth = rect.width;
     
-    const containerWidth = containerRef.current.offsetWidth;
-    const clickX = e.nativeEvent.offsetX;
+    // Calculate margins based on percentage
+    const leftMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    const rightMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
     
-    // Calculate 10% margin width
-    const marginWidth = containerWidth * 0.1;
-    
-    // Check if click is within left 10% margin
-    if (clickX < marginWidth) {
+    // If click is in left margin, go to previous page
+    if (x < leftMarginWidth && onPrevPage) {
       onPrevPage();
     }
-    // Check if click is within right 10% margin
-    else if (clickX > containerWidth - marginWidth) {
+    // If click is in right margin, go to next page
+    else if (x > containerWidth - rightMarginWidth && onNextPage) {
       onNextPage();
     }
-  };
+  }, [onPrevPage, onNextPage]);
 
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const containerWidth = rect.width;
+    
+    // Calculate margins based on percentage
+    const leftMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    const rightMarginWidth = containerWidth * (MARGIN_WIDTH_PERCENT / 100);
+    
+    if (x < leftMarginWidth) {
+      setHoveredSide('left');
+    } else if (x > containerWidth - rightMarginWidth) {
+      setHoveredSide('right');
+    } else {
+      setHoveredSide(null);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredSide(null);
+  }, []);
+  
   return (
-    <div 
-      ref={containerRef} 
-      onClick={handleClick}
-      className={`w-full min-h-[70vh] md:min-h-[80vh] ${
-        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 
-        theme === 'sepia' ? 'bg-amber-50 text-amber-900' : 
-        'bg-white text-gray-900'
-      } transition-colors duration-300 rounded-lg overflow-hidden`}
-    />
+    <motion.div 
+      ref={(el) => setContainer(el)}
+      className="epub-view h-screen border-none overflow-hidden transition-colors duration-300 relative" 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      onClick={handleContainerClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ 
+        background: theme.background,
+        color: theme.text,
+        WebkitUserSelect: 'text',
+        userSelect: 'text',
+        WebkitTouchCallout: 'default',
+        touchAction: 'none',
+        WebkitOverflowScrolling: 'touch',
+        WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+        overscrollBehavior: 'none',
+        whiteSpace: 'pre-wrap',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        maxWidth: '100vw',
+        margin: '0 auto',
+        overflow: 'hidden',
+        overflowY: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: '100vh',
+      }}
+    >
+      {hoveredSide === 'left' && (
+        <div className="absolute inset-y-0 left-0 w-[10%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+      )}
+      {hoveredSide === 'right' && (
+        <div className="absolute inset-y-0 right-0 w-[10%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
+      )}
+    </motion.div>
   );
 };
 
