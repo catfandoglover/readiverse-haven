@@ -886,56 +886,57 @@ const DNAAssessment = () => {
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div id="tidycal-container" className="hidden">
+              <div className="tidycal-embed" data-path="team/intellectual-genetic-counselors/intake"></div>
+            </div>
             <AlertDialogFooter>
               <AlertDialogAction 
                 className="bg-[#373763] text-white font-oxanium"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // Insert TidyCal embed where the button is
-                  const actionButton = e.currentTarget;
-                  const parentElement = actionButton.parentElement;
-                  if (parentElement) {
-                    // Clear existing content
-                    actionButton.textContent = '';
-                    actionButton.style.height = 'auto';
-                    actionButton.style.width = '100%';
+                onClick={() => {
+                  // Show TidyCal embed in the dialog content
+                  const container = document.getElementById('tidycal-container');
+                  const footer = document.querySelector('.AlertDialogFooter');
+                  const header = document.querySelector('.AlertDialogHeader');
+                  
+                  if (container) {
+                    container.classList.remove('hidden');
                     
-                    // Create the TidyCal embed container
-                    const embedContainer = document.createElement('div');
-                    embedContainer.className = 'tidycal-embed';
-                    embedContainer.setAttribute('data-path', 'team/intellectual-genetic-counselors/intake');
-                    
-                    // Append the container to the button
-                    actionButton.appendChild(embedContainer);
-                    
-                    // Refresh TidyCal embed if script is already loaded
-                    if (window.TidyCal && typeof window.TidyCal.init === 'function') {
-                      window.TidyCal.init();
+                    if (footer) {
+                      footer.classList.add('hidden');
                     }
                     
-                    // Add event listener for iframe load to detect when booking is complete
-                    const observer = new MutationObserver((mutations) => {
-                      mutations.forEach((mutation) => {
-                        if (mutation.addedNodes.length) {
-                          mutation.addedNodes.forEach((node) => {
-                            if (node.nodeName === 'IFRAME') {
-                              const iframe = node as HTMLIFrameElement;
-                              iframe.addEventListener('load', () => {
-                                // Add message listener to detect completion
-                                window.addEventListener('message', (event) => {
-                                  if (event.data === 'tidycal:booking-completed') {
-                                    navigate('/discover');
-                                  }
-                                });
-                              });
-                            }
-                          });
-                        }
-                      });
-                    });
-                    
-                    observer.observe(embedContainer, { childList: true, subtree: true });
+                    if (header) {
+                      header.classList.add('hidden');
+                    }
                   }
+                  
+                  // Initialize TidyCal if it's loaded
+                  if (window.TidyCal && typeof window.TidyCal.init === 'function') {
+                    window.TidyCal.init();
+                  }
+                  
+                  // Add observer to detect booking completion
+                  const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      if (mutation.addedNodes.length) {
+                        mutation.addedNodes.forEach((node) => {
+                          if (node.nodeName === 'IFRAME') {
+                            const iframe = node as HTMLIFrameElement;
+                            iframe.addEventListener('load', () => {
+                              // Add message listener to detect completion
+                              window.addEventListener('message', (event) => {
+                                if (event.data === 'tidycal:booking-completed') {
+                                  navigate('/discover');
+                                }
+                              });
+                            });
+                          }
+                        });
+                      }
+                    });
+                  });
+                  
+                  observer.observe(container, { childList: true, subtree: true });
                 }}
               >
                 BOOK A COUNSELOR
