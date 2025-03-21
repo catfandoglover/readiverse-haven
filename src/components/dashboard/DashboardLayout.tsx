@@ -5,7 +5,6 @@ import MainMenu from "../navigation/MainMenu";
 import { Card } from "../ui/card";
 import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "../ui/button";
 
 type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
@@ -17,11 +16,10 @@ const DashboardLayout: React.FC = () => {
   useEffect(() => {
     const fetchBadgeCount = async () => {
       try {
-        // Using profile_badges table instead of badges
         const { count, error } = await supabase
-          .from('profile_badges')
+          .from('badges')
           .select('*', { count: 'exact', head: true })
-          .eq('profile_id', (await supabase.auth.getUser()).data.user?.id);
+          .eq('profile_id', supabase.auth.getUser().then(res => res.data.user?.id));
           
         if (error) {
           console.error('Error fetching badge count:', error);
@@ -75,11 +73,6 @@ const DashboardLayout: React.FC = () => {
     }
   };
 
-  const handleBadgeClick = () => {
-    // For now, this doesn't navigate anywhere
-    console.log("Badge button clicked");
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Header - Updated to match VirgilOffice header style */}
@@ -88,17 +81,13 @@ const DashboardLayout: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
           Dashboard
         </h2>
-        {/* Badge count hexagon - now 50% bigger than the hamburger and clickable */}
-        <Button 
-          variant="ghost" 
-          onClick={handleBadgeClick} 
-          className="p-0 w-11 h-11 flex items-center justify-center relative"
-        >
+        {/* Badge count hexagon */}
+        <div className="relative flex items-center justify-center w-14 h-14">
           <Hexagon className="w-full h-full text-[#B8C7FF] stroke-current fill-transparent" strokeWidth={1.5} />
           <span className="absolute font-oxanium font-bold text-lg text-[#E9E7E2]">
             {badgeCount}
           </span>
-        </Button>
+        </div>
       </div>
 
       {/* Main content */}
