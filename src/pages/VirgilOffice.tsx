@@ -11,7 +11,7 @@ const VirgilOffice: React.FC = () => {
 
   return (
     <div 
-      className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat"
+      className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat opacity-75"
       style={{ backgroundImage: "url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Office%20Background.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBPZmZpY2UgQmFja2dyb3VuZC5wbmciLCJpYXQiOjE3NDI1NzQ3MzEsImV4cCI6ODY1NzQyNTc0NzMxfQ.UZlV0Zvc415GIfBykAxsyL7vuG-VKam5PfAiO3vQ0QE')" }}
     >
       <div className="flex items-center pt-4 px-4">
