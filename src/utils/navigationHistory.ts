@@ -8,7 +8,8 @@ export const sections = {
   dna: '/dna',
   discover: '/discover',
   bookshelf: '/bookshelf',
-  profile: '/profile'  // Changed from dashboard to profile
+  profile: '/profile',
+  dashboard: '/dashboard'
 } as const;
 
 // Store a stack of the last 10 visited pages to provide better back navigation

@@ -1,332 +1,176 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from "./ProfileHeader";
-import DomainsList from "./DomainsList";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, Hexagon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { GraduationCap, Hexagon, Award, Clock, LineChart } from "lucide-react";
+import TimeWithVirgil from "./TimeWithVirgil";
+import BadgesPage from "./BadgesPage";
+import BottomNav from "../discover/BottomNav";
 
-interface DNAAnalysisResult {
-  id: string;
-  assessment_id: string;
-  archetype: string | null;
-  introduction: string | null;
-  most_kindred_spirit: string | null;
-  most_challenging_voice: string | null;
-  key_tension_1: string | null;
-  key_tension_2: string | null;
-  key_tension_3: string | null;
-  natural_strength_1: string | null;
-  natural_strength_2: string | null;
-  natural_strength_3: string | null;
-  growth_edges_1: string | null;
-  growth_edges_2: string | null;
-  growth_edges_3: string | null;
-  become_who_you_are: string | null;
-  conclusion: string | null;
-  next_steps: string | null;
-  created_at: string;
-}
+type DashboardSection = "timeWithVirgil" | "courses" | "badges" | "reports";
 
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
-
-interface DashboardLayoutProps {
-  initialTab?: "dashboard" | "become" | "profile";
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
-  const [activeSection, setActiveSection] = useState<"dashboard" | "become" | "profile">(initialTab || "profile");
-  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
-  const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
+const DashboardLayout: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<DashboardSection>("timeWithVirgil");
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const handleSectionChange = (section: "dashboard" | "become" | "profile") => {
+  const handleSectionChange = (section: DashboardSection) => {
     setActiveSection(section);
   };
 
-  useEffect(() => {
-    const fetchDNAAnalysisResult = async () => {
-      try {
-        setIsLoadingIntroduction(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
-          .maybeSingle();
-          
-        if (data && !error) {
-          console.log("DNA analysis result:", data);
-          setAnalysisResult(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching DNA analysis result:", error);
-        }
-      } catch (e) {
-        console.error("Exception fetching DNA analysis result:", e);
-      } finally {
-        setIsLoadingIntroduction(false);
-      }
-    };
-    
-    fetchDNAAnalysisResult();
-  }, []);
-
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      <main className="flex-1 relative overflow-y-auto">
-        <div className="absolute top-4 left-4 z-10">
+    <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-[#2A282A] shadow-md px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
           <MainMenu />
+          <h1 className="ml-4 text-2xl font-baskerville">Dashboard</h1>
         </div>
-        
-        <ProfileHeader />
-        
-        <div className="px-6 mt-4 mb-6">
-          <div className="flex items-center space-x-4 mb-6">
-            <Button
-              variant="ghost"
-              className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
-                activeSection === "profile" 
-                  ? "text-[#E9E7E2]" 
-                  : "text-[#E9E7E2]/60"
-              )}
-              onClick={() => handleSectionChange("profile")}
+      </header>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto pb-20">
+        <div className="container max-w-4xl mx-auto px-4 py-6">
+          {/* Image Card */}
+          <Card className="mb-6 bg-[#383741] border-none overflow-hidden">
+            <div className="relative h-48 bg-gradient-to-r from-[#332E38] to-[#2A282A]">
+              <img 
+                src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png" 
+                alt="Virgil" 
+                className="absolute right-4 bottom-0 h-40 object-contain"
+              />
+              <div className="absolute inset-0 flex flex-col justify-center px-6">
+                <h2 className="text-3xl font-baskerville text-[#E9E7E2] mb-2">Welcome Back</h2>
+                <p className="text-[#E9E7E2]/70 max-w-[60%] mb-4">
+                  Your intellectual journey continues with personalized insights and achievements.
+                </p>
+                <Button 
+                  variant="virgil" 
+                  className="w-fit"
+                  onClick={() => navigate("/virgil")}
+                >
+                  Visit Virgil
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Icon Container */}
+          <div className="mb-6 flex items-center justify-between bg-[#383741] p-4 rounded-lg">
+            <div className="flex items-center space-x-4">
+              <div 
+                className="cursor-pointer"
+                onClick={() => navigate("/view/icons/virgil")}
+              >
+                <div className="relative">
+                  <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img 
+                      src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images/Virgil.png" 
+                      alt="Virgil" 
+                      className="h-10 w-10 object-cover"
+                      style={{ 
+                        clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-oxanium text-[#E9E7E2]">Virgil</h3>
+                <p className="text-sm text-[#E9E7E2]/70">Your philosophical guide</p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
+              onClick={() => navigate("/virgil")}
             >
-              <span className={cn(
-                "relative",
-                activeSection === "profile" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-              )}>
-                PROFILE
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
-                activeSection === "become" 
-                  ? "text-[#E9E7E2]" 
-                  : "text-[#E9E7E2]/60"
-              )}
-              onClick={() => handleSectionChange("become")}
-            >
-              <span className={cn(
-                "relative",
-                activeSection === "become" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-              )}>
-                FIND YOUR PATH
-              </span>
+              <GraduationCap className="h-6 w-6" />
+              <span className="ml-2 font-oxanium">Visit classroom</span>
             </Button>
           </div>
-          
-          {activeSection === "dashboard" ? (
-            <div className="space-y-4">
-              {/* Dashboard content will go here */}
+
+          {/* Navigation Menu */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Button
+              variant="ghost"
+              className={`flex flex-col py-6 ${
+                activeSection === "timeWithVirgil" 
+                  ? "bg-[#383741] text-[#E9E7E2]" 
+                  : "bg-[#333238] text-[#E9E7E2]/60 hover:bg-[#383741] hover:text-[#E9E7E2]"
+              } rounded-lg transition-all`}
+              onClick={() => handleSectionChange("timeWithVirgil")}
+            >
+              <Clock className="h-6 w-6 mb-2" />
+              <span className="font-oxanium text-sm">Time with Virgil</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className={`flex flex-col py-6 ${
+                activeSection === "courses" 
+                  ? "bg-[#383741] text-[#E9E7E2]" 
+                  : "bg-[#333238] text-[#E9E7E2]/60 hover:bg-[#383741] hover:text-[#E9E7E2]"
+              } rounded-lg transition-all`}
+              onClick={() => handleSectionChange("courses")}
+            >
+              <GraduationCap className="h-6 w-6 mb-2" />
+              <span className="font-oxanium text-sm">Courses Completed</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className={`flex flex-col py-6 ${
+                activeSection === "badges" 
+                  ? "bg-[#383741] text-[#E9E7E2]" 
+                  : "bg-[#333238] text-[#E9E7E2]/60 hover:bg-[#383741] hover:text-[#E9E7E2]"
+              } rounded-lg transition-all`}
+              onClick={() => handleSectionChange("badges")}
+            >
+              <Award className="h-6 w-6 mb-2" />
+              <span className="font-oxanium text-sm">Badges Earned</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className={`flex flex-col py-6 ${
+                activeSection === "reports" 
+                  ? "bg-[#383741] text-[#E9E7E2]" 
+                  : "bg-[#333238] text-[#E9E7E2]/60 hover:bg-[#383741] hover:text-[#E9E7E2]"
+              } rounded-lg transition-all`}
+              onClick={() => handleSectionChange("reports")}
+            >
+              <LineChart className="h-6 w-6 mb-2" />
+              <span className="font-oxanium text-sm">Weekly Reports</span>
+            </Button>
+          </div>
+
+          {/* Dynamic Content */}
+          {activeSection === "timeWithVirgil" && <TimeWithVirgil />}
+          {activeSection === "badges" && <BadgesPage />}
+          {activeSection === "courses" && (
+            <div className="flex flex-col items-center justify-center p-12 bg-[#383741] rounded-lg">
+              <GraduationCap className="h-16 w-16 text-[#E9E7E2]/30 mb-4" />
+              <h3 className="text-xl font-baskerville text-[#E9E7E2] mb-2">Coming Soon</h3>
+              <p className="text-[#E9E7E2]/70 text-center">Courses are currently in development. Check back soon for updates.</p>
             </div>
-          ) : activeSection === "become" ? (
-            <div className="space-y-4">
-              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                {isLoadingIntroduction ? (
-                  <span className="inline-block">Loading wisdom guidance...</span>
-                ) : (
-                  analysisResult?.become_who_you_are || 
-                  "Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace."
-                )}
-              </p>
-              
-              <DomainsList />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                {isLoadingIntroduction ? (
-                  <span className="inline-block">Loading your intellectual profile...</span>
-                ) : (
-                  analysisResult?.introduction || 
-                  "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension."
-                )}
-              </p>
-              
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Friedrich%20Nietzsche.png" 
-                        alt="Friedrich Nietzsche" 
-                        className="h-10 w-10 object-cover"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                      {isLoadingIntroduction ? (
-                        <span className="inline-block">Loading...</span>
-                      ) : (
-                        analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
-                      )}
-                    </h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
-                  </div>
-                </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
-              </div>
-              
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Martin%20Heidegger.png" 
-                        alt="Martin Heidegger" 
-                        className="h-10 w-10 object-cover"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                      {isLoadingIntroduction ? (
-                        <span className="inline-block">Loading...</span>
-                      ) : (
-                        analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
-                      )}
-                    </h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
-                  </div>
-                </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_1 || 
-                      "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_2 || 
-                      "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_3 || 
-                      "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_1 || 
-                      "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_2 || 
-                      "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_3 || 
-                      "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_1 || 
-                      "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_2 || 
-                      "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_3 || 
-                      "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
-                  {isLoadingIntroduction ? (
-                    <span className="inline-block">Loading...</span>
-                  ) : (
-                    analysisResult?.conclusion || 
-                    "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
-                  )}
-                </p>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
-                  {isLoadingIntroduction ? (
-                    <span className="inline-block">Loading...</span>
-                  ) : (
-                    analysisResult?.next_steps || 
-                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
-                  )}
-                </p>
-              </div>
+          )}
+          {activeSection === "reports" && (
+            <div className="flex flex-col items-center justify-center p-12 bg-[#383741] rounded-lg">
+              <LineChart className="h-16 w-16 text-[#E9E7E2]/30 mb-4" />
+              <h3 className="text-xl font-baskerville text-[#E9E7E2] mb-2">Coming Soon</h3>
+              <p className="text-[#E9E7E2]/70 text-center">Weekly reports are currently in development. Check back soon for updates.</p>
             </div>
           )}
         </div>
       </main>
+      
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-30">
+        <BottomNav activeTab="dashboard" />
+      </div>
     </div>
   );
 };

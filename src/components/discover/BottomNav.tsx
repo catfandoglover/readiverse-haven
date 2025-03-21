@@ -1,10 +1,10 @@
 
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, Compass, Hexagon, LayoutDashboard } from "lucide-react";
+import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart } from "lucide-react";
 import { saveLastVisited, sections } from "@/utils/navigationHistory";
 
-type TabType = "discover" | "dna" | "bookshelf" | "profile";
+type TabType = "discover" | "dna" | "dashboard" | "profile" | "bookshelf";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -27,8 +27,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
       currentSection = 'dna';
     } else if (currentPath.startsWith('/bookshelf')) {
       currentSection = 'bookshelf';
-    } else if (currentPath.startsWith('/profile') || currentPath.startsWith('/dashboard')) {
+    } else if (currentPath.startsWith('/profile')) {
       currentSection = 'profile';
+    } else if (currentPath.startsWith('/dashboard')) {
+      currentSection = 'dashboard';
     }
     
     // Save the last visited path for this section
@@ -69,6 +71,16 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
         >
           <Hexagon className="h-5 w-5" />
           <span className="text-xs font-oxanium">DNA</span>
+        </button>
+        
+        <button 
+          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
+            activeTab === "dashboard" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
+          }`}
+          onClick={() => handleNavigation("dashboard", "/dashboard")}
+        >
+          <LineChart className="h-5 w-5" />
+          <span className="text-xs font-oxanium">Dashboard</span>
         </button>
         
         <button 
