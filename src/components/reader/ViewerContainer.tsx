@@ -17,7 +17,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   onNextPage
 }) => {
   // Margin width for click detection (percentage of container width)
-  const MARGIN_WIDTH_PERCENT = 10; // Set to 10% as requested
+  const MARGIN_WIDTH_PERCENT = 5; // Changed from 20% to 5%
   const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
   
   const handleContainerClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -79,30 +79,23 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitUserSelect: 'text',
         userSelect: 'text',
         WebkitTouchCallout: 'default',
-        touchAction: 'none',
+        touchAction: 'none', // Changed from 'pan-y' to 'none'
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-        overscrollBehavior: 'none',
+        overscrollBehavior: 'none', // Changed from 'contain'
         whiteSpace: 'pre-wrap',
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         maxWidth: '100vw',
         margin: '0 auto',
-        overflow: 'hidden',
-        overflowY: 'hidden',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: '100vh',
+        overflow: 'hidden', // Added overflow: hidden
       }}
     >
       {hoveredSide === 'left' && (
-        <div className="absolute inset-y-0 left-0 w-[10%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-[5%] bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
       )}
       {hoveredSide === 'right' && (
-        <div className="absolute inset-y-0 right-0 w-[10%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-[5%] bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
       )}
     </motion.div>
   );

@@ -1,28 +1,18 @@
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import SearchDialog from "./SearchDialog";
-import type { SearchResult } from '@/types/reader';
 
 interface NavigationButtonsProps {
   onPrevPage: () => void;
   onNextPage: () => void;
-  onSearch?: (query: string) => Promise<SearchResult[]>;
-  onSearchResultClick?: (result: SearchResult) => void;
 }
 
-const NavigationButtons = ({ 
-  onPrevPage, 
-  onNextPage, 
-  onSearch,
-  onSearchResultClick
-}: NavigationButtonsProps) => {
+const NavigationButtons = ({ onPrevPage, onNextPage }: NavigationButtonsProps) => {
   const isMobile = useIsMobile();
   const [hoveredLeft, setHoveredLeft] = useState(false);
   const [hoveredRight, setHoveredRight] = useState(false);
-  const [hoveredSearch, setHoveredSearch] = useState(false);
   
   return (
     <>
@@ -54,19 +44,6 @@ const NavigationButtons = ({
           <ChevronRight className={`h-4 w-4 md:h-5 md:w-5 transition-opacity duration-300 ${hoveredRight ? 'opacity-100' : 'opacity-70'}`} />
         </Button>
       </div>
-      {onSearch && onSearchResultClick && (
-        <div className="fixed bottom-4 left-24 z-10">
-          <SearchDialog
-            onSearch={onSearch}
-            onResultClick={onSearchResultClick}
-            triggerClassName={`h-10 w-10 rounded-full shadow-sm bg-background/40 backdrop-blur-sm border-0 hover:bg-background/80 
-                           transition-all duration-300 ease-in-out ${hoveredSearch ? 'bg-background/70 transform scale-105' : ''}`}
-            triggerIcon={<Search className="h-5 w-5" />}
-            onTriggerMouseEnter={() => setHoveredSearch(true)}
-            onTriggerMouseLeave={() => setHoveredSearch(false)}
-          />
-        </div>
-      )}
     </>
   );
 };
