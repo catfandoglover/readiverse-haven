@@ -1,8 +1,9 @@
 
 import React, { useRef, useEffect } from 'react';
+import { Theme } from '@/contexts/ThemeContext';
 
 interface ViewerContainerProps {
-  theme: string;
+  theme: Theme;
   setContainer: (element: HTMLElement | null) => void;
   onPrevPage?: () => void;
   onNextPage?: () => void;
