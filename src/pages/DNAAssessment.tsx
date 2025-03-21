@@ -4,24 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import AIChatButton from '@/components/survey/AIChatButton';
@@ -30,23 +14,15 @@ import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
-import { Check, LogIn, UserPlus, X } from "lucide-react";
-
+import { Check, LogIn, UserPlus } from "lucide-react";
 type DNACategory = Database["public"]["Enums"]["dna_category"];
-
-const categoryOrder: DNACategory[] = [
-  "ETHICS",
-  "EPISTEMOLOGY",
-  "POLITICS",
-  "THEOLOGY",
-  "ONTOLOGY",
-  "AESTHETICS"
-];
-
+const categoryOrder: DNACategory[] = ["ETHICS", "EPISTEMOLOGY", "POLITICS", "THEOLOGY", "ONTOLOGY", "AESTHETICS"];
 const TOTAL_QUESTIONS = 30; // 5 questions per category × 6 categories
 
 const DNAAssessment = () => {
-  const { category } = useParams();
+  const {
+    category
+  } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
@@ -61,44 +37,40 @@ const DNAAssessment = () => {
   const [profileId, setProfileId] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
-  const { user, openLogin, openSignup } = useAuth();
+  const {
+    user,
+    openLogin,
+    openSignup
+  } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
-
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
-
     try {
-      const { error } = await supabase.functions.invoke('analyze-dna', {
+      const {
+        error
+      } = await supabase.functions.invoke('analyze-dna', {
         body: {
           answers_json: JSON.stringify(answers),
           assessment_id: assessmentId,
           profile_id: profileId
         }
       });
-
       if (error) {
         console.error('Error analyzing DNA results:', error);
         toast.error('Error analyzing results');
         throw error;
       }
-
       toast.success('Analysis completed successfully');
     } catch (error) {
       console.error('Error in DNA analysis:', error);
       toast.error('Error analyzing results');
     }
   };
-
   const upperCategory = category?.toUpperCase() as DNACategory;
-
   const currentCategoryIndex = categoryOrder.findIndex(cat => cat === upperCategory);
-  const nextCategory = currentCategoryIndex < categoryOrder.length - 1 
-    ? categoryOrder[currentCategoryIndex + 1] 
-    : null;
-
-  const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
-
+  const nextCategory = currentCategoryIndex < categoryOrder.length - 1 ? categoryOrder[currentCategoryIndex + 1] : null;
+  const progressPercentage = currentQuestionNumber / TOTAL_QUESTIONS * 100;
   React.useEffect(() => {
     const initializeAssessment = async () => {
       if (!assessmentId && currentCategoryIndex === 0) {
@@ -106,7 +78,6 @@ const DNAAssessment = () => {
           setIsInitializing(true);
           const name = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
           let userProfileId = null;
-          
           const storedAssessmentId = sessionStorage.getItem('dna_assessment_id');
           if (storedAssessmentId) {
             console.log('Found stored assessment ID:', storedAssessmentId);
@@ -114,12 +85,12 @@ const DNAAssessment = () => {
             setIsInitializing(false);
             return;
           }
-          
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          
+          const {
+            data: userData,
+            error: userError
+          } = await supabase.auth.getUser();
           if (userError) {
             console.error('Error getting user:', userError);
-            
             const allowAnonymous = true;
             if (allowAnonymous) {
               console.log('Continuing in anonymous mode');
@@ -132,13 +103,10 @@ const DNAAssessment = () => {
             }
           } else if (userData && userData.user) {
             console.log('Current user:', userData.user);
-            
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('outseta_user_id', userData.user.id)
-              .maybeSingle();
-              
+            const {
+              data: profileData,
+              error: profileError
+            } = await supabase.from('profiles').select('id').eq('outseta_user_id', userData.user.id).maybeSingle();
             if (profileError) {
               console.error('Error getting profile:', profileError);
               sessionStorage.setItem('user_id', userData.user.id);
@@ -156,8 +124,7 @@ const DNAAssessment = () => {
             const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
             sessionStorage.setItem('user_id', tempId);
           }
-          
-          const assessmentData = { 
+          const assessmentData = {
             name,
             answers: {},
             profile_id: userProfileId,
@@ -168,45 +135,35 @@ const DNAAssessment = () => {
             ontology_sequence: '',
             aesthetics_sequence: ''
           };
-          
           if (!userProfileId) {
             delete assessmentData.profile_id;
           }
-          
-          const { data: newAssessment, error: createError } = await supabase
-            .from('dna_assessment_results')
-            .insert([assessmentData])
-            .select()
-            .maybeSingle();
-
+          const {
+            data: newAssessment,
+            error: createError
+          } = await supabase.from('dna_assessment_results').insert([assessmentData]).select().maybeSingle();
           if (createError) {
             console.error('Error creating assessment:', createError);
             toast.error('Error starting assessment');
             return;
           }
-
           if (!newAssessment) {
             console.error('No assessment created');
             toast.error('Error creating assessment');
             return;
           }
-
           setAssessmentId(newAssessment.id);
           console.log('Created new assessment with ID:', newAssessment.id);
           sessionStorage.setItem('dna_assessment_id', newAssessment.id);
-          
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('dna_assessment_results')
-            .select('*')
-            .eq('id', newAssessment.id)
-            .maybeSingle();
-
+          const {
+            data: verifyData,
+            error: verifyError
+          } = await supabase.from('dna_assessment_results').select('*').eq('id', newAssessment.id).maybeSingle();
           if (verifyError || !verifyData) {
             console.error('Error verifying assessment:', verifyError);
             toast.error('Error verifying assessment');
             return;
           }
-
           console.log('Verified assessment exists:', verifyData);
         } catch (error) {
           console.error('Error in assessment initialization:', error);
@@ -218,22 +175,25 @@ const DNAAssessment = () => {
         setIsInitializing(false);
       }
     };
-
     initializeAssessment();
   }, [assessmentId, currentCategoryIndex]);
-
-  const { data: currentQuestion, isLoading: questionLoading } = useQuery({
+  const {
+    data: currentQuestion,
+    isLoading: questionLoading
+  } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
-      console.log('Fetching question for:', { upperCategory, currentPosition });
-      
+      console.log('Fetching question for:', {
+        upperCategory,
+        currentPosition
+      });
       if (!upperCategory) {
         throw new Error('Category is required');
       }
-
-      const { data, error } = await supabase
-        .from('dna_tree_structure')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('dna_tree_structure').select(`
           *,
           question:great_questions!dna_tree_structure_question_id_fkey (
             question,
@@ -241,55 +201,43 @@ const DNAAssessment = () => {
             answer_a,
             answer_b
           )
-        `)
-        .eq('category', upperCategory)
-        .eq('tree_position', currentPosition)
-        .maybeSingle();
-      
+        `).eq('category', upperCategory).eq('tree_position', currentPosition).maybeSingle();
       if (error) {
         console.error('Error fetching question:', error);
         throw error;
       }
-      
       if (!data) {
-        console.error('No question found for:', { upperCategory, currentPosition });
+        console.error('No question found for:', {
+          upperCategory,
+          currentPosition
+        });
         throw new Error('Question not found');
       }
-
       console.log('Found question:', data);
       return data;
     },
     enabled: !!upperCategory && !isTransitioning && !isInitializing,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000
   });
-
   React.useEffect(() => {
     const prefetchNextQuestions = async () => {
       if (!currentQuestion) return;
-
       console.log('Starting to prefetch next possible questions');
-
-      const nextQuestionIds = [
-        currentQuestion.next_question_a_id,
-        currentQuestion.next_question_b_id
-      ].filter(Boolean);
-
+      const nextQuestionIds = [currentQuestion.next_question_a_id, currentQuestion.next_question_b_id].filter(Boolean);
       for (const nextId of nextQuestionIds) {
         try {
-          const { data: nextQuestion } = await supabase
-            .from('dna_tree_structure')
-            .select('tree_position, category')
-            .eq('id', nextId)
-            .maybeSingle();
-
+          const {
+            data: nextQuestion
+          } = await supabase.from('dna_tree_structure').select('tree_position, category').eq('id', nextId).maybeSingle();
           if (nextQuestion) {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextQuestion.category, nextQuestion.tree_position],
               queryFn: async () => {
-                const { data, error } = await supabase
-                  .from('dna_tree_structure')
-                  .select(`
+                const {
+                  data,
+                  error
+                } = await supabase.from('dna_tree_structure').select(`
                     *,
                     question:great_questions!dna_tree_structure_question_id_fkey (
                       question,
@@ -297,16 +245,12 @@ const DNAAssessment = () => {
                       answer_a,
                       answer_b
                     )
-                  `)
-                  .eq('category', nextQuestion.category)
-                  .eq('tree_position', nextQuestion.tree_position)
-                  .maybeSingle();
-
+                  `).eq('category', nextQuestion.category).eq('tree_position', nextQuestion.tree_position).maybeSingle();
                 if (error) throw error;
                 console.log(`Prefetched question: ${nextQuestion.category} - ${nextQuestion.tree_position}`);
                 return data;
               },
-              staleTime: 5 * 60 * 1000,
+              staleTime: 5 * 60 * 1000
             });
           }
         } catch (error) {
@@ -314,59 +258,35 @@ const DNAAssessment = () => {
         }
       }
     };
-
     prefetchNextQuestions();
   }, [currentQuestion, queryClient]);
-
   const handleAnswerSelection = (answer: "A" | "B") => {
     setSelectedAnswer(answer);
-    
     if (showAIChat) {
       setShowAIChat(false);
     }
   };
-
   const handleContinue = async () => {
     if (!selectedAnswer || !currentQuestion || !assessmentId) return;
-    
     const answer = selectedAnswer;
     const newAnswers = answers + answer;
     setAnswers(newAnswers);
-    
     const questionText = currentQuestion.question?.question || '';
-    
-    const answerLabel = answer === "A" 
-      ? (currentQuestion.question?.answer_a || "Yes") 
-      : (currentQuestion.question?.answer_b || "No");
-    
-    conversationManager.addQuestionToPath(
-      sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
-      currentPosition,
-      questionText,
-      answerLabel
-    );
-
+    const answerLabel = answer === "A" ? currentQuestion.question?.answer_a || "Yes" : currentQuestion.question?.answer_b || "No";
+    conversationManager.addQuestionToPath(sessionStorage.getItem('dna_assessment_name') || 'Anonymous', currentPosition, questionText, answerLabel);
     const userId = sessionStorage.getItem('user_id');
     const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-    
     console.log('Preparing to save conversation:', {
       sessionId,
       assessmentId,
       userId,
       currentPosition
     });
-    
     try {
-      await conversationManager.saveConversationToSupabase(
-        sessionId,
-        assessmentId,
-        userId,
-        currentPosition
-      );
+      await conversationManager.saveConversationToSupabase(sessionId, assessmentId, userId, currentPosition);
     } catch (error) {
       console.error('Error in saveConversationToSupabase:', error);
     }
-
     try {
       console.log('Storing question response:', {
         assessment_id: assessmentId,
@@ -374,92 +294,68 @@ const DNAAssessment = () => {
         question_id: currentQuestion.id,
         answer
       });
-
-      const { error: responseError } = await supabase
-        .from('dna_question_responses')
-        .insert({
-          assessment_id: assessmentId,
-          category: upperCategory,
-          question_id: currentQuestion.id,
-          answer
-        });
-
+      const {
+        error: responseError
+      } = await supabase.from('dna_question_responses').insert({
+        assessment_id: assessmentId,
+        category: upperCategory,
+        question_id: currentQuestion.id,
+        answer
+      });
       if (responseError) {
         console.error('Error storing question response:', responseError);
         toast.error('Error saving your answer');
         return;
       }
-
-      const nextQuestionId = answer === "A" 
-        ? currentQuestion.next_question_a_id 
-        : currentQuestion.next_question_b_id;
-
+      const nextQuestionId = answer === "A" ? currentQuestion.next_question_a_id : currentQuestion.next_question_b_id;
       if (!nextQuestionId) {
         setIsTransitioning(true);
-
         try {
-          const { data: currentData, error: fetchError } = await supabase
-            .from('dna_assessment_results')
-            .select('answers')
-            .eq('id', assessmentId)
-            .maybeSingle();
-
+          const {
+            data: currentData,
+            error: fetchError
+          } = await supabase.from('dna_assessment_results').select('answers').eq('id', assessmentId).maybeSingle();
           if (fetchError) {
             console.error('Error fetching current answers:', fetchError);
             toast.error('Error updating results');
             return;
           }
-
-          const currentAnswers = (currentData?.answers as Record<string, string>) || {};
+          const currentAnswers = currentData?.answers as Record<string, string> || {};
           const updatedAnswers = {
             ...currentAnswers,
             [upperCategory]: newAnswers
           };
-
           const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
           const updateData = {
             answers: updatedAnswers,
             [sequenceColumnName]: newAnswers
           };
-
           console.log('Updating assessment with:', updateData);
-
-          const { error: updateError } = await supabase
-            .from('dna_assessment_results')
-            .update(updateData)
-            .eq('id', assessmentId);
-
+          const {
+            error: updateError
+          } = await supabase.from('dna_assessment_results').update(updateData).eq('id', assessmentId);
           if (updateError) {
             console.error('Error updating assessment results:', updateError);
             toast.error('Error saving category results');
             return;
           }
-
           if (!nextCategory) {
             console.log('Assessment complete, navigating to completion screen...');
-            
             setCompletedAssessmentId(assessmentId);
-            
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
-            
             setIsTransitioning(false);
-            
             if (user) {
               try {
-                const { data: profileData, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('id')
-                  .eq('outseta_user_id', user.Uid)
-                  .maybeSingle();
-                
+                const {
+                  data: profileData,
+                  error: profileError
+                } = await supabase.from('profiles').select('id').eq('outseta_user_id', user.Uid).maybeSingle();
                 if (!profileError && profileData) {
-                  const { error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
-                    } as any)
-                    .eq('id', profileData.id);
-                  
+                  const {
+                    error: updateError
+                  } = await supabase.from('profiles').update({
+                    assessment_id: assessmentId
+                  } as any).eq('id', profileData.id);
                   if (updateError) {
                     console.error('Error updating profile with assessment ID:', updateError);
                   } else {
@@ -473,18 +369,17 @@ const DNAAssessment = () => {
                 console.error('Error saving assessment ID to profile:', error);
               }
             }
-
             await initAnalysis(updatedAnswers, assessmentId);
-            
             navigate('/dna/completion');
             return;
           } else {
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextCategory, 'Q1'],
               queryFn: async () => {
-                const { data, error } = await supabase
-                  .from('dna_tree_structure')
-                  .select(`
+                const {
+                  data,
+                  error
+                } = await supabase.from('dna_tree_structure').select(`
                     *,
                     question:great_questions!dna_tree_structure_question_id_fkey (
                       question,
@@ -492,16 +387,11 @@ const DNAAssessment = () => {
                       answer_a,
                       answer_b
                     )
-                  `)
-                  .eq('category', nextCategory)
-                  .eq('tree_position', 'Q1')
-                  .maybeSingle();
-
+                  `).eq('category', nextCategory).eq('tree_position', 'Q1').maybeSingle();
                 if (error) throw error;
                 return data;
-              },
+              }
             });
-
             navigate(`/dna/${nextCategory.toLowerCase()}`);
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
@@ -519,24 +409,19 @@ const DNAAssessment = () => {
         }
         return;
       }
-
       try {
-        const { data: nextQuestion, error: nextQuestionError } = await supabase
-          .from('dna_tree_structure')
-          .select('tree_position')
-          .eq('id', nextQuestionId)
-          .maybeSingle();
-
+        const {
+          data: nextQuestion,
+          error: nextQuestionError
+        } = await supabase.from('dna_tree_structure').select('tree_position').eq('id', nextQuestionId).maybeSingle();
         if (nextQuestionError) {
           console.error('Error fetching next question:', nextQuestionError);
           return;
         }
-
         if (!nextQuestion) {
           console.error('Next question not found for ID:', nextQuestionId);
           return;
         }
-
         setCurrentPosition(nextQuestion.tree_position);
         setCurrentQuestionNumber(prev => prev + 1);
         setSelectedAnswer(null);
@@ -548,38 +433,33 @@ const DNAAssessment = () => {
       toast.error('Error processing your answer');
     }
   };
-
   const handleExit = () => {
     setShowExitAlert(true);
   };
-
   const confirmExit = () => {
     navigate('/dna');
     setShowExitAlert(false);
   };
-
   React.useEffect(() => {
     const ensureUserId = async () => {
       const existingUserId = sessionStorage.getItem('user_id');
       if (!existingUserId) {
         console.log('No user_id found in sessionStorage, attempting to set it');
-        
         try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          
+          const {
+            data: userData,
+            error: userError
+          } = await supabase.auth.getUser();
           if (userError) {
             console.log('User is not authenticated, using anonymous ID');
             const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
             sessionStorage.setItem('user_id', tempId);
           } else if (userData && userData.user) {
             console.log('Found authenticated user:', userData.user.id);
-            
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('outseta_user_id', userData.user.id)
-              .maybeSingle();
-              
+            const {
+              data: profileData,
+              error: profileError
+            } = await supabase.from('profiles').select('id').eq('outseta_user_id', userData.user.id).maybeSingle();
             if (profileError) {
               console.error('Error getting profile:', profileError);
               sessionStorage.setItem('user_id', userData.user.id);
@@ -608,10 +488,8 @@ const DNAAssessment = () => {
         }
       }
     };
-    
     ensureUserId();
   }, [profileId]);
-
   React.useEffect(() => {
     (window as any).debugDNAConversation = () => {
       console.log('Debug info:');
@@ -620,78 +498,62 @@ const DNAAssessment = () => {
       console.log('userId (sessionStorage):', sessionStorage.getItem('user_id'));
       console.log('sessionId (dna_assessment_name):', sessionStorage.getItem('dna_assessment_name'));
       console.log('currentPosition:', currentPosition);
-      
       const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
       const conversation = conversationManager.getHistory(sessionId);
       const questionPath = conversationManager.getQuestionPath(sessionId);
       console.log('Conversation:', conversation);
       console.log('QuestionPath:', questionPath);
     };
-    
     (window as any).manualSaveConversation = async () => {
       const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
       const assessmentIdToUse = assessmentId || sessionStorage.getItem('dna_assessment_id');
       const userIdToUse = sessionStorage.getItem('user_id') || 'temp-' + Math.random().toString(36).substring(2, 15);
-      
       if (!assessmentIdToUse) {
         console.error('No assessment ID available for manual save');
         return;
       }
-      
       console.log('Manual save with:', {
         sessionId,
         assessmentId: assessmentIdToUse,
         userId: userIdToUse,
         questionId: currentPosition
       });
-      
       try {
-        await conversationManager.saveConversationToSupabase(
-          sessionId,
-          assessmentIdToUse,
-          userIdToUse,
-          currentPosition
-        );
+        await conversationManager.saveConversationToSupabase(sessionId, assessmentIdToUse, userIdToUse, currentPosition);
         console.log('Manual save completed');
       } catch (error) {
         console.error('Error in manual save:', error);
       }
     };
   }, [assessmentId, currentPosition]);
-
   const handleViewResults = () => {
     setShowLoginPrompt(false);
     navigate('/dna');
-  }
-
+  };
   React.useEffect(() => {
     const saveAssessmentId = async () => {
       if (!showLoginPrompt) return;
-      
       const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
       if (assessmentId) {
         localStorage.setItem('pending_dna_assessment_id', assessmentId);
         console.log('Saved assessment ID for login/signup:', assessmentId);
-        
         sessionStorage.setItem('dna_assessment_to_save', assessmentId);
-        
         try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          const {
+            data: userData,
+            error: userError
+          } = await supabase.auth.getUser();
           if (!userError && userData?.user) {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('outseta_user_id', userData.user.id)
-              .maybeSingle();
-            
+            const {
+              data: profileData,
+              error: profileError
+            } = await supabase.from('profiles').select('id').eq('outseta_user_id', userData.user.id).maybeSingle();
             if (!profileError && profileData) {
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                  assessment_id: assessmentId 
-                } as any)
-                .eq('id', profileData.id);
-                
+              const {
+                error: updateError
+              } = await supabase.from('profiles').update({
+                assessment_id: assessmentId
+              } as any).eq('id', profileData.id);
               if (updateError) {
                 console.error('Error updating profile with assessment ID:', updateError);
               } else {
@@ -707,13 +569,10 @@ const DNAAssessment = () => {
         }
       }
     };
-    
     saveAssessmentId();
   }, [showLoginPrompt, completedAssessmentId, supabase]);
-
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
-    return (
-      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
+    return <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <div className="h-10 w-10" />
           <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
@@ -723,29 +582,19 @@ const DNAAssessment = () => {
           </div>
         </header>
         <div className="px-6">
-          <Progress 
-            value={progressPercentage}
-            className="h-2 bg-[#373763]/30"
-          />
+          <Progress value={progressPercentage} className="h-2 bg-[#373763]/30" />
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="font-oxanium text-lg text-[#373763]">
             {isInitializing ? 'Initializing assessment...' : 'Loading next question...'}
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!currentQuestion && !showLoginPrompt) {
-    return (
-      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
+    return <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
         <header className="sticky top-0 px-6 py-4 relative z-50 bg-[#E9E7E2]">
-          <button 
-            onClick={handleExit}
-            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-            type="button"
-          >
+          <button onClick={handleExit} className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold" type="button">
             BACK
           </button>
         </header>
@@ -753,30 +602,18 @@ const DNAAssessment = () => {
           <h1 className="text-2xl font-oxanium text-center mb-8">
             Question not found
           </h1>
-          <Button
-            variant="outline"
-            onClick={handleExit}
-            className="px-8 py-2 text-white bg-[#373763] hover:bg-[#373763]/90 transition-all duration-300 font-oxanium rounded-md"
-          >
+          <Button variant="outline" onClick={handleExit} className="px-8 py-2 text-white bg-[#373763] hover:bg-[#373763]/90 transition-all duration-300 font-oxanium rounded-md">
             GO BACK
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const buttonTextA = currentQuestion?.question?.answer_a || "YES";
   const buttonTextB = currentQuestion?.question?.answer_b || "NO";
-
-  return (
-    <>
+  return <>
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-          <button 
-            onClick={handleExit}
-            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-            type="button"
-          >
+          <button onClick={handleExit} className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold" type="button">
             BACK
           </button>
           <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
@@ -786,10 +623,7 @@ const DNAAssessment = () => {
           </div>
         </header>
         <div className="px-6">
-          <Progress 
-            value={progressPercentage}
-            className="h-2 bg-[#373763]/30"
-          />
+          <Progress value={progressPercentage} className="h-2 bg-[#373763]/30" />
         </div>
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
           <div className={`flex-1 flex items-center justify-center py-8 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
@@ -797,60 +631,29 @@ const DNAAssessment = () => {
               {currentQuestion?.question?.question}
             </h1>
           </div>
-          <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
-            showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
+          <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
-              <button
-                onClick={() => handleAnswerSelection("A")}
-                className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
-                  selectedAnswer === "A" 
-                    ? "bg-[#332E38]/10 text-[#373763]" 
-                    : "bg-[#E9E7E2] text-[#373763]"
-                }`}
-                type="button"
-              >
+              <button onClick={() => handleAnswerSelection("A")} className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${selectedAnswer === "A" ? "bg-[#332E38]/10 text-[#373763]" : "bg-[#E9E7E2] text-[#373763]"}`} type="button">
                 {buttonTextA}
               </button>
-              <button
-                onClick={() => handleAnswerSelection("B")}
-                className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${
-                  selectedAnswer === "B" 
-                    ? "bg-[#332E38]/10 text-[#373763]" 
-                    : "bg-[#E9E7E2] text-[#373763]"
-                }`}
-                type="button"
-              >
+              <button onClick={() => handleAnswerSelection("B")} className={`flex-1 min-w-[120px] h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider whitespace-normal border border-[#373763]/20 ${selectedAnswer === "B" ? "bg-[#332E38]/10 text-[#373763]" : "bg-[#E9E7E2] text-[#373763]"}`} type="button">
                 {buttonTextB}
               </button>
             </div>
             
             <div className="mt-8 text-center">
-              <button 
-                className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
-                onClick={() => setShowAIChat(true)}
-              >
+              <button className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold" onClick={() => setShowAIChat(true)}>
                 I HAVE MORE TO SAY
               </button>
               
-              <button 
-                className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={() => navigate('/dna/completion')}
-              >
+              <button className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30" onClick={() => navigate('/dna/completion')}>
                 TEST COMPLETION SCREEN
               </button>
             </div>
           </div>
           
           <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
-            <Button 
-              onClick={handleContinue}
-              disabled={selectedAnswer === null}
-              className={`w-full h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
-                selectedAnswer !== null 
-                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
-                  : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
-              }`}
-            >
+            <Button onClick={handleContinue} disabled={selectedAnswer === null} className={`w-full h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${selectedAnswer !== null ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"}`}>
               CONTINUE
             </Button>
           </div>
@@ -859,37 +662,25 @@ const DNAAssessment = () => {
        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
             <AlertDialogHeader>
-              <AlertDialogTitle className="font-baskerville-semibold">Need some time to think?</AlertDialogTitle>
+              <AlertDialogTitle className="font-basekerville ">Need time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction 
-                className="bg-[#373763] text-white font-oxanium"
-              >
-                BOOK A COUNSELOR
-              </AlertDialogAction>
-              <AlertDialogCancel 
-                onClick={confirmExit}
-                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
-              >
-                EXIT ASSESSMENT
+              <AlertDialogCancel className="bg-[#E9E7E2]/50 border border-[#282828] text-[#282828] font-oxanium font-bold uppercase">
+                Cancel
               </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmExit} className="bg-[#373763] text-white font-oxanium">
+                Exit Assessment
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
         
       </div>
 
-      <AIChatDialog 
-        open={showAIChat}
-        onOpenChange={setShowAIChat}
-        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
-        currentQuestion={currentQuestion?.question?.question || ''}
-      />
-    </>
-  );
+      <AIChatDialog open={showAIChat} onOpenChange={setShowAIChat} sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'} currentQuestion={currentQuestion?.question?.question || ''} />
+    </>;
 };
-
 export default DNAAssessment;
