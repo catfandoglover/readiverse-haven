@@ -42,7 +42,7 @@ const DashboardLayout: React.FC = () => {
 
         // Simplified badge count fetch approach
         // Using a direct count query
-        const { data, error } = await supabase
+        const { count, error } = await supabase
           .from('user_badges')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', userData.user.id);
@@ -171,7 +171,9 @@ const DashboardLayout: React.FC = () => {
   
   const handleVirgilButtonClick = () => {
     if (icon && icon.id) {
+      // Fixed navigation - ensure we're using the correct path format
       navigate(`/view/icon/${icon.id}`);
+      console.log(`Navigating to icon: ${icon.id}`);
     } else {
       console.log("No icon to navigate to");
     }
@@ -211,11 +213,25 @@ const DashboardLayout: React.FC = () => {
         {/* Quote Card */}
         <div className="mb-6">
           <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
-            <img src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"} alt="Philosopher portrait" className="w-full h-full object-cover rounded-lg" />
+            {/* Make the entire card clickable */}
+            <div 
+              className="absolute inset-0 z-10 cursor-pointer" 
+              onClick={handleVirgilButtonClick}
+              aria-label="View kindred spirit details"
+            ></div>
+            
+            <img 
+              src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"} 
+              alt="Philosopher portrait" 
+              className="w-full h-full object-cover rounded-lg" 
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
             
-            {/* Virgil button moved to top right */}
-            <button onClick={handleVirgilButtonClick} className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider">
+            {/* Virgil button moved to top right - ensure it works with z-index */}
+            <button 
+              onClick={handleVirgilButtonClick} 
+              className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider z-20"
+            >
               KINDRED SPIRIT
             </button>
             
@@ -224,8 +240,8 @@ const DashboardLayout: React.FC = () => {
               <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
-            {/* Kindred spirit container - width auto to fit content */}
-            <div className="absolute bottom-4 left-4">
+            {/* Kindred spirit container - ensure it works with z-index */}
+            <div className="absolute bottom-4 left-4 z-20">
               <div 
                 className="inline-flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" 
                 onClick={handleVirgilButtonClick}
