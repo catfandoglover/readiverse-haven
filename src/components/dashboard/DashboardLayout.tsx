@@ -43,7 +43,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSectionChange = (section: "become" | "profile") => {
+  const handleSectionChange = (section: "dashboard" | "become" | "profile") => {
     setActiveSection(section);
   };
 
@@ -96,6 +96,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
             >
               <span className={cn(
                 "relative",
+                activeSection === "dashboard" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
+              )}>
+                DASHBOARD
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                activeSection === "profile" 
+                  ? "text-[#E9E7E2]" 
+                  : "text-[#E9E7E2]/60"
+              )}
+              onClick={() => handleSectionChange("profile")}
+            >
+              <span className={cn(
+                "relative",
                 activeSection === "profile" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
               )}>
                 PROFILE
@@ -116,7 +133,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
                 activeSection === "become" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
               )}>
                 
-                BECOME WHO YOU ARE
+                FIND YOUR PATH
               </span>
             </Button>
           </div>
