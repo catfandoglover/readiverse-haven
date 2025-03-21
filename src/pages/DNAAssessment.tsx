@@ -61,6 +61,7 @@ const DNAAssessment = () => {
   const [profileId, setProfileId] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
+  const [showTidyCal, setShowTidyCal] = React.useState(false);
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
@@ -722,18 +723,22 @@ const DNAAssessment = () => {
         script.async = true;
         script.onload = () => {
           console.log("TidyCal script loaded successfully");
+          if (window.TidyCal) {
+            window.TidyCal.init();
+            console.log("TidyCal initialized on script load");
+          }
         };
         document.body.appendChild(script);
+      } else if (window.TidyCal) {
+        window.TidyCal.init();
+        console.log("TidyCal reinitialized with existing script");
       }
     };
     
     loadTidyCalScript();
     
     return () => {
-      const script = document.getElementById('tidycal-script');
-      if (script) {
-        document.body.removeChild(script);
-      }
+      // Do not remove the script on unmount to prevent reloading issues
     };
   }, []);
 
@@ -884,97 +889,76 @@ const DNAAssessment = () => {
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
-            <AlertDialogHeader className="tidycal-header">
-              <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
-              <AlertDialogDescription className="font-oxanium">
-                These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+            {!showTidyCal && (
+              <AlertDialogHeader className="tidycal-header">
+                <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
+                <AlertDialogDescription className="font-oxanium">
+                  These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+            )}
             
-            <div id="tidycal-container" className="hidden w-full h-[400px] mt-4">
-              <div className="tidycal-embed w-full h-full" data-path="team/intellectual-genetic-counselors/intake"></div>
-            </div>
+            {showTidyCal && (
+              <div 
+                id="tidycal-container" 
+                className="w-full min-h-[500px] flex items-center justify-center"
+              >
+                <div 
+                  className="tidycal-embed w-full h-[500px]" 
+                  data-path="team/intellectual-genetic-counselors/intake"
+                ></div>
+              </div>
+            )}
             
-            <AlertDialogFooter className="tidycal-footer">
-              <AlertDialogAction 
-                className="bg-[#373763] text-white font-oxanium"
-                onClick={() => {
-                  console.log("Book a counselor button clicked");
-                  const container = document.getElementById('tidycal-container');
-                  
-                  if (container) {
-                    container.classList.remove('hidden');
-                    container.style.display = 'block';
-                    console.log("TidyCal container is now visible");
+            {!showTidyCal && (
+              <AlertDialogFooter className="tidycal-footer">
+                <AlertDialogAction 
+                  className="bg-[#373763] text-white font-oxanium"
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent default to keep dialog open
+                    console.log("Book a counselor button clicked");
+                    setShowTidyCal(true);
                     
-                    const headers = document.getElementsByClassName('tidycal-header');
-                    const footers = document.getElementsByClassName('tidycal-footer');
-                    
-                    if (headers.length > 0) {
-                      for (let i = 0; i < headers.length; i++) {
-                        (headers[i] as HTMLElement).style.display = 'none';
+                    // Add a small delay before initializing TidyCal
+                    setTimeout(() => {
+                      console.log("Attempting to initialize TidyCal...");
+                      if (window.TidyCal && typeof window.TidyCal.init === 'function') {
+                        window.TidyCal.init();
+                        console.log("TidyCal initialized after clicking button");
+                      } else {
+                        console.error("TidyCal object not available");
                       }
-                      console.log("Headers hidden");
-                    }
-                    
-                    if (footers.length > 0) {
-                      for (let i = 0; i < footers.length; i++) {
-                        (footers[i] as HTMLElement).style.display = 'none';
-                      }
-                      console.log("Footers hidden");
-                    }
-                  } else {
-                    console.error("TidyCal container not found");
-                  }
-                  
-                  setTimeout(() => {
-                    console.log("Attempting to initialize TidyCal...");
-                    if (window.TidyCal && typeof window.TidyCal.init === 'function') {
-                      window.TidyCal.init();
-                      console.log("TidyCal initialized");
-                    } else {
-                      console.error("TidyCal object not available");
-                    }
-                    
-                    const observer = new MutationObserver((mutations) => {
-                      console.log("Mutation observed", mutations);
-                      mutations.forEach((mutation) => {
-                        if (mutation.addedNodes.length) {
-                          mutation.addedNodes.forEach((node) => {
-                            if (node.nodeName === 'IFRAME') {
-                              console.log("iframe added to DOM", node);
-                              const iframe = node as HTMLIFrameElement;
-                              iframe.addEventListener('load', () => {
-                                console.log("iframe loaded");
-                                window.addEventListener('message', (event) => {
-                                  console.log("Message received:", event.data);
-                                  if (event.data === 'tidycal:booking-completed') {
-                                    navigate('/discover');
-                                  }
-                                });
-                              });
-                            }
-                          });
+                      
+                      // Add message event listener for booking completion
+                      window.addEventListener('message', (event) => {
+                        console.log("Message received:", event.data);
+                        if (event.data === 'tidycal:booking-completed') {
+                          setShowExitAlert(false);
+                          navigate('/discover');
                         }
                       });
-                    });
-                    
-                    if (container) {
-                      observer.observe(container, { childList: true, subtree: true });
-                      console.log("Mutation observer attached to container");
-                    }
-                  }, 300);
-                }}
+                    }, 300);
+                  }}
+                >
+                  BOOK A COUNSELOR
+                </AlertDialogAction>
+                <AlertDialogCancel 
+                  onClick={confirmExit}
+                  className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
+                >
+                  EXIT ASSESSMENT
+                </AlertDialogCancel>
+              </AlertDialogFooter>
+            )}
+            
+            {showTidyCal && (
+              <Button
+                className="mt-4 bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
+                onClick={() => setShowTidyCal(false)}
               >
-                BOOK A COUNSELOR
-              </AlertDialogAction>
-              <AlertDialogCancel 
-                onClick={confirmExit}
-                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
-              >
-                EXIT ASSESSMENT
-              </AlertDialogCancel>
-            </AlertDialogFooter>
+                Back to Options
+              </Button>
+            )}
           </AlertDialogContent>
         </AlertDialog>
         
