@@ -38,7 +38,7 @@ const VirgilOffice: React.FC = () => {
         {/* Adjust the main content container with mobile-specific styling */}
         <div className={cn(
           "flex flex-col items-center justify-center h-full",
-          isMobile ? "px-4 py-12" : "px-6 py-10" // Reduced padding on mobile and add bottom padding for iOS navigation
+          isMobile ? "px-4 mt-12 mb-12" : "px-6 py-10" // Reduced padding on mobile and add bottom padding for iOS navigation
         )}>
           <div className={cn(
             "max-w-md w-full mx-auto text-center",
