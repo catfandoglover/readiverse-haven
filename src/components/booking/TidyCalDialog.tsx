@@ -3,6 +3,7 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,11 +28,14 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[80%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold pt-10">
+      <DialogContent className="w-[95%] max-w-md mx-auto bg-background p-6 rounded-lg border border-border shadow-lg">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-xl font-baskerville font-semibold text-foreground">
             Book a Session
           </DialogTitle>
+          <DialogDescription className="text-sm font-oxanium text-muted-foreground">
+            Schedule time with an intellectual genetic counselor
+          </DialogDescription>
         </DialogHeader>
         <TidyCalBooking 
           onClose={() => onOpenChange(false)} 
