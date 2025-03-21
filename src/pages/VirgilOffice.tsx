@@ -36,7 +36,7 @@ const VirgilOffice: React.FC = () => {
       )}>
         <div className={cn(
           "flex flex-col items-center h-full",
-          isMobile ? "justify-start pt-[28vh]" : "justify-center px-6 py-10"
+          isMobile ? "justify-start pt-[20vh]" : "justify-center px-6 py-10"
         )}>
           <div className="max-w-md w-full mx-auto text-center px-6">
             <h1 
