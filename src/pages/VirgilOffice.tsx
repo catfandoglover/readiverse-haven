@@ -35,15 +35,16 @@ const VirgilOffice: React.FC = () => {
         "flex-1 relative overflow-y-auto transition-transform duration-300",
         isChatOpen && "transform -translate-y-full"
       )}>
-        {/* Adjust the main content container with mobile-specific styling */}
-        <div className={cn(
-          "flex flex-col items-center justify-center",
-         isMobile ? "min-h-[80vh] px-4 py-0" : "h-full px-6 py-10" // Use min-height instead of height for mobile
+ 
+      {/* Adjust the main content container with mobile-specific styling */}
+      <div className={cn(
+        "absolute inset-0 flex flex-col items-center justify-center",
+        isMobile ? "px-4 py-0 pb-12" : "h-full px-6 py-10" // Added bottom padding to shift content up visually
       )}>
-          <div className={cn(
-            "max-w-md w-full mx-auto text-center",
-            isMobile && "my-auto" // Center vertically on mobile
-        )}>
+        <div className={cn(
+          "max-w-md w-full mx-auto text-center",
+          isMobile && "transform translate-y-[-10%]" // Manually shift up by 10% on mobile
+      )}>
             <h1 
               className="font-baskerville text-[#2A282A] text-3xl md:text-4xl font-bold" 
               style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}
