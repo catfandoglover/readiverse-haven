@@ -856,27 +856,47 @@ const DNAAssessment = () => {
           </div>
         </div>
 
-        <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
-          <AlertDialogContent className="bg-[#E9E7E2]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-oxanium">Are you sure you want to exit?</AlertDialogTitle>
-              <AlertDialogDescription className="font-oxanium">
-                Your progress will not be saved and you will need to retake the assessment from the beginning.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#E9E7E2] border border-[#373763] text-[#373763] font-oxanium">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={confirmExit}
-                className="bg-[#373763] text-white font-oxanium"
-              >
-                Exit Assessment
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+       <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+  <AlertDialogContent className="bg-[#E9E7E2] rounded-2xl relative text-left">
+    <button 
+      onClick={() => setShowExitAlert(false)}
+      className="absolute top-3 right-3 text-[#282828] hover:text-[#373763]"
+      aria-label="Close dialog"
+    >
+      <X className="h-5 w-5"/>
+    </button>
+
+    <AlertDialogHeader>
+      <AlertDialogTitle className="font-basekerville text-xl">
+        Need some time to think?
+      </AlertDialogTitle>
+      <AlertDialogDescription className="font-oxanium">
+        These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter className="flex flex-col md:flex-row justify-end gap-2">
+      <AlertDialogCancel className="bg-[#E9E7E2]/50 border border-[#282828] text-[#282828] font-oxanium font-bold uppercase">
+        Cancel
+      </AlertDialogCancel>
+
+      <AlertDialogAction
+        onClick={confirmExit}
+        className="bg-[#373763] text-white font-oxanium"
+      >
+        Restart Assessment
+      </AlertDialogAction>
+
+      <a
+        href="/book-session"
+        className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-[#A18A68] text-white font-oxanium font-semibold"
+      >
+        Book Counselor
+      </a>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+        
       </div>
 
       <AIChatDialog 
