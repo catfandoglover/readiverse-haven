@@ -200,7 +200,7 @@ const DashboardLayout: React.FC = () => {
             
             {/* Quote text */}
             <div className="absolute bottom-16 left-4 right-4">
-              <p className="text-white text-xl font-bold">{quoteData.text}</p>
+              <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
             
             {/* Kindred spirit container */}
