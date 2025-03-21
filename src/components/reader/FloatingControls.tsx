@@ -1,8 +1,11 @@
-import ThemeSwitcher from './ThemeSwitcher';
+
 import BookmarkControls from './BookmarkControls';
 import HighlightsMenu from './HighlightsMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Highlight } from '@/types/highlight';
+import SearchDialog from './SearchDialog';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
 
 interface FloatingControlsProps {
   currentLocation: string | null;
@@ -14,6 +17,8 @@ interface FloatingControlsProps {
   onHighlightSelect: (cfiRange: string) => void;
   onRemoveHighlight: (id: string) => void;
   bookKey: string | null;
+  onSearch?: (query: string) => Promise<any[]>;
+  onSearchResultClick?: (result: any) => void;
 }
 
 const FloatingControls = ({
@@ -25,9 +30,12 @@ const FloatingControls = ({
   onColorSelect,
   onHighlightSelect,
   onRemoveHighlight,
-  bookKey
+  bookKey,
+  onSearch,
+  onSearchResultClick
 }: FloatingControlsProps) => {
   const isMobile = useIsMobile();
+  const [hoveredSearch, setHoveredSearch] = useState(false);
 
   return (
     <>
@@ -49,8 +57,21 @@ const FloatingControls = ({
             onRemoveHighlight={onRemoveHighlight}
           />
         </div>
-        <ThemeSwitcher />
       </div>
+      
+      {onSearch && onSearchResultClick && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <SearchDialog
+            onSearch={onSearch}
+            onResultClick={onSearchResultClick}
+            triggerClassName={`h-10 w-10 rounded-full shadow-sm bg-background/40 backdrop-blur-sm border-0 hover:bg-background/80 
+                           transition-all duration-300 ease-in-out ${hoveredSearch ? 'bg-background/70 transform scale-105' : ''}`}
+            triggerIcon={<Search className="h-5 w-5" />}
+            onTriggerMouseEnter={() => setHoveredSearch(true)}
+            onTriggerMouseLeave={() => setHoveredSearch(false)}
+          />
+        </div>
+      )}
     </>
   );
 };

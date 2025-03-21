@@ -1,7 +1,10 @@
+
 import React from 'react';
 import BookViewer from './BookViewer';
 import NavigationButtons from './NavigationButtons';
 import FloatingControls from './FloatingControls';
+import { MessageSquare } from 'lucide-react';
+import FloatingActionButton from './FloatingActionButton';
 import type { Highlight } from '@/types/highlight';
 
 interface ReaderContentProps {
@@ -91,8 +94,6 @@ const ReaderContent = ({
       <NavigationButtons 
         onPrevPage={onPrevPage}
         onNextPage={onNextPage}
-        onSearch={onSearch}
-        onSearchResultClick={onSearchResultClick}
       />
       
       <FloatingControls
@@ -105,7 +106,18 @@ const ReaderContent = ({
         onHighlightSelect={cfiRange => onTocNavigate(cfiRange)}
         onRemoveHighlight={removeHighlight}
         bookKey={book?.key() || null}
+        onSearch={onSearch}
+        onSearchResultClick={onSearchResultClick}
       />
+      
+      {/* Virgil chat button in the top right without hover state */}
+      <div className="fixed top-4 right-4 z-50">
+        <FloatingActionButton
+          icon={MessageSquare}
+          onClick={() => window.dispatchEvent(new CustomEvent('openVirgilChat'))}
+          tooltip="Chat with Virgil"
+        />
+      </div>
     </div>
   );
 };
