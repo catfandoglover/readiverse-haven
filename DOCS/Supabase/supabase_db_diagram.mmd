@@ -89,7 +89,7 @@ erDiagram
         varchar full_name
         text profile_image
         text landscape_image
-        uuid assessment_id
+        uuid assessment_id FK
     }
     
     user_books {
@@ -102,7 +102,7 @@ erDiagram
         timestamp last_read_at
         timestamp created_at
         timestamp updated_at
-        CONSTRAINT "book_id_outseta_user_id" UK "Unique(book_id, outseta_user_id)"
+        text book_outseta_unique UK "Unique composite key (book_id, outseta_user_id)"
     }
     
     user_favorites {
@@ -111,7 +111,7 @@ erDiagram
         uuid item_id
         text item_type
         timestamp added_at
-        CONSTRAINT "outseta_user_id_item_id_item_type" UK "Unique(outseta_user_id, item_id, item_type)"
+        text favorite_unique UK "Unique composite key (outseta_user_id, item_id, item_type)"
     }
     
     reading_lists {
@@ -162,6 +162,7 @@ erDiagram
         text key_tension_1
         text key_tension_2
         text key_tension_3
+        dna_result_type analysis_type
     }
     
     dna_tree_structure {
@@ -172,8 +173,8 @@ erDiagram
         uuid next_question_b_id FK
         text tree_position
         timestamp created_at
-        CONSTRAINT "category_position" UK "Unique(category, tree_position)"
-        CONSTRAINT "question_id_category" UK "Unique(question_id, category)"
+        text category_position UK "Unique composite key (category, tree_position)"
+        text question_category UK "Unique composite key (question_id, category)"
     }
     
     dna_question_responses {
@@ -194,7 +195,7 @@ erDiagram
         boolean completed
         timestamp created_at
         timestamp updated_at
-        CONSTRAINT "user_id_category" UK "Unique(user_id, category)"
+        text user_category UK "Unique composite key (user_id, category)"
     }
     
     custom_domain_books {
@@ -205,7 +206,7 @@ erDiagram
         text cover_url
         uuid user_id FK
         timestamp created_at
-        CONSTRAINT "domain_id_title_author" UK "Unique(domain_id, title, author)"
+        text domain_book UK "Unique composite key (domain_id, title, author)"
     }
     
     custom_domains {
@@ -224,6 +225,44 @@ erDiagram
         timestamp updated_at
     }
     
+    quotes {
+        bigint id PK
+        timestamp created_at
+        uuid icon_id FK
+        text quote
+        text icon
+    }
+    
+    user_badges {
+        bigint id PK
+        timestamp created_at
+        text userid
+        uuid entry_text FK
+        text score
+        text summary
+        uuid entry_icon FK
+        uuid entry_concepts FK
+        numeric session_duration
+    }
+    
+    external_links {
+        uuid id PK
+        text url
+        timestamp created_at
+    }
+    
+    dna_conversations {
+        uuid id PK
+        uuid assessment_id FK
+        uuid user_id FK
+        text session_id
+        jsonb messages
+        timestamp created_at
+        timestamp updated_at
+        text question_id
+        jsonb metadata
+    }
+    
     books ||--o{ book_questions : "has"
     great_questions ||--o{ book_questions : "has"
     books ||--o{ reading_list_books : "included_in"
@@ -239,3 +278,13 @@ erDiagram
     profiles ||--o{ dna_assessment_progress : "has_progress"
     icons ||--o{ books : "authored"
     custom_domains ||--o{ custom_domain_books : "contains"
+    icons ||--o{ quotes : "has"
+    books ||--o{ user_badges : "referenced_by"
+    icons ||--o{ user_badges : "referenced_by"
+    concepts ||--o{ user_badges : "referenced_by"
+    dna_tree_structure ||--o{ dna_tree_structure : "next_question_a"
+    dna_tree_structure ||--o{ dna_tree_structure : "next_question_b"
+    profiles ||--o{ dna_conversations : "has"
+    dna_assessment_results ||--o{ dna_conversations : "belongs_to"
+    profiles }|--o{ custom_domains : "owns"
+    dna_assessment_results ||--|| profiles : "associated_with"
