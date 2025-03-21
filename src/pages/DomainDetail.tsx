@@ -476,11 +476,12 @@ const DomainDetail: React.FC = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/profile")}
           className="p-0 h-auto w-auto hover:bg-transparent"
         >
           <X className="h-8 w-8 text-white" />
         </Button>
+        
         <div className="flex flex-col items-center">
           <div className="relative">
             <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />

@@ -8,6 +8,7 @@ export const sections = {
   dna: '/dna',
   discover: '/discover',
   bookshelf: '/bookshelf',
+  profile: '/profile',
   dashboard: '/dashboard'
 } as const;
 

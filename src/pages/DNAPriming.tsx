@@ -12,7 +12,9 @@ const categories = [
   "THEOLOGY",
   "ONTOLOGY",
   "AESTHETICS"
-];
+] as const;
+
+type Category = typeof categories[number];
 
 const DNAPriming = () => {
   const navigate = useNavigate();

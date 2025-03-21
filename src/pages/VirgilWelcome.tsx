@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -52,11 +53,11 @@ const VirgilWelcome: React.FC = () => {
         "welcome"
       );
       
-      // Navigate to the dashboard with profile tab
-      navigate('/dashboard?tab=profile');
+      // Navigate to the profile page with profile tab
+      navigate('/profile?tab=profile');
     } catch (error) {
       console.error('Error saving conversation:', error);
-      navigate('/dashboard?tab=profile');
+      navigate('/profile?tab=profile');
     }
   };
 

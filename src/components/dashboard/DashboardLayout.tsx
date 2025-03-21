@@ -1,348 +1,348 @@
+
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from "./ProfileHeader";
-import DomainsList from "./DomainsList";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, Hexagon } from "lucide-react";
+import { Card } from "../ui/card";
+import { Hexagon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getProgressLevel, getStageName } from "../reader/MasteryScore";
+import { useToast } from "@/hooks/use-toast";
 
-interface DNAAnalysisResult {
+// Define more specific types to match the actual database schema
+type Quote = {
   id: string;
-  assessment_id: string;
-  archetype: string | null;
-  introduction: string | null;
-  most_kindred_spirit: string | null;
-  most_challenging_voice: string | null;
-  key_tension_1: string | null;
-  key_tension_2: string | null;
-  key_tension_3: string | null;
-  natural_strength_1: string | null;
-  natural_strength_2: string | null;
-  natural_strength_3: string | null;
-  growth_edges_1: string | null;
-  growth_edges_2: string | null;
-  growth_edges_3: string | null;
-  become_who_you_are: string | null;
-  conclusion: string | null;
-  next_steps: string | null;
-  created_at: string;
-}
+  text: string;
+  author: string;
+  icon_id?: string;
+  category?: string;
+};
 
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+// Define the Icon type for the author information
+type Icon = {
+  id: string;
+  name: string;
+  illustration: string;
+};
 
-interface DashboardLayoutProps {
-  initialTab?: "dashboard" | "become" | "profile";
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ initialTab }) => {
-  const [activeSection, setActiveSection] = useState<"dashboard" | "become" | "profile">(initialTab || "dashboard");
-  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
-  const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
+const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [badgeCount, setBadgeCount] = useState<number>(0);
+  const [badgeLevel, setBadgeLevel] = useState<string>("SEEKER");
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [icon, setIcon] = useState<Icon | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
-  const handleSectionChange = (section: "dashboard" | "become" | "profile") => {
-    setActiveSection(section);
-  };
-
+  // Fetch badge count and quote on component mount
   useEffect(() => {
-    const fetchDNAAnalysisResult = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        setIsLoadingIntroduction(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
-          .maybeSingle();
-          
-        if (data && !error) {
-          console.log("DNA analysis result:", data);
-          setAnalysisResult(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching DNA analysis result:", error);
-        }
-      } catch (e) {
-        console.error("Exception fetching DNA analysis result:", e);
+        await Promise.all([
+          fetchBadgeCount(),
+          fetchRandomQuote(),
+        ]);
+      } catch (error) {
+        console.error('Error in data fetching:', error);
+        toast({
+          title: "Error loading dashboard",
+          description: "Please try refreshing the page.",
+          variant: "destructive"
+        });
       } finally {
-        setIsLoadingIntroduction(false);
+        setIsLoading(false);
       }
     };
-    
-    fetchDNAAnalysisResult();
-  }, []);
 
-  return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      <main className="flex-1 relative overflow-y-auto">
-        <div className="absolute top-4 left-4 z-10">
-          <MainMenu />
-        </div>
-        
-        <ProfileHeader />
-        
-        <div className="px-6 mt-4 mb-6">
-          <div className="flex items-center space-x-4 mb-6">
-            <Button
-              variant="ghost"
-              className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
-                activeSection === "dashboard" 
-                  ? "text-[#E9E7E2]" 
-                  : "text-[#E9E7E2]/60"
-              )}
-              onClick={() => handleSectionChange("dashboard")}
-            >
-              <span className={cn(
-                "relative",
-                activeSection === "dashboard" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-              )}>
-                DASHBOARD
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
-                activeSection === "profile" 
-                  ? "text-[#E9E7E2]" 
-                  : "text-[#E9E7E2]/60"
-              )}
-              onClick={() => handleSectionChange("profile")}
-            >
-              <span className={cn(
-                "relative",
-                activeSection === "profile" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-              )}>
-                PROFILE
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
-                activeSection === "become" 
-                  ? "text-[#E9E7E2]" 
-                  : "text-[#E9E7E2]/60"
-              )}
-              onClick={() => handleSectionChange("become")}
-            >
-              <span className={cn(
-                "relative",
-                activeSection === "become" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-              )}>
-                
-                FIND YOUR PATH
-              </span>
-            </Button>
-          </div>
+    fetchData();
+  }, []);
+    
+  const fetchBadgeCount = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      // Using normal select query instead of count
+      const { data, error } = await supabase
+        .from("user_badges")
+        .select("*")
+        .eq("user_id", userData.user.id) as { data: any[], error: any };
           
-          {activeSection === "dashboard" ? (
-            <div className="space-y-4">
-              {/* Dashboard content will go here */}
+      if (error) {
+        console.error('Error fetching badge count:', error);
+        return;
+      }
+      
+      // Calculate badge level based on count
+      const badgeTotal = data?.length || 0;
+      setBadgeCount(badgeTotal);
+      
+      // Determine badge level based on count
+      const progress = Math.min(badgeTotal * 16.67, 100); // Convert count to percentage (max 6 levels)
+      const level = getProgressLevel(progress);
+      const stageName = getStageName(level);
+      setBadgeLevel(stageName);
+    } catch (error) {
+      console.error('Error in badge count fetch:', error);
+    }
+  };
+  
+  const fetchRandomQuote = async () => {
+    try {
+      console.log('Fetching random quote...');
+      // Fetch a random quote from the quotes table
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .order("id")
+        .limit(1)
+        .single() as { data: Quote | null, error: any };
+        
+      if (error) {
+        console.error('Error fetching quote:', error);
+        // Set fallback quote and continue with default quote
+        setQuote({
+          id: "1",
+          text: "Our difficulties grow miracles.",
+          author: "Jean de La Bruyère",
+          category: "LIGHTNING",
+          icon_id: "def-icon-1" // Fallback icon ID
+        });
+        
+        // Optional: Try to fetch a default icon
+        fetchIcon("def-icon-1");
+        return;
+      }
+      
+      console.log('Quote fetched successfully:', data);
+      
+      if (data) {
+        // Set quote data
+        setQuote(data);
+
+        // If we have an icon_id, fetch the corresponding icon
+        if (data.icon_id) {
+          console.log('Fetching icon with ID:', data.icon_id);
+          await fetchIcon(data.icon_id);
+        } else {
+          console.warn('Quote has no icon_id, using author name only');
+        }
+      }
+    } catch (error) {
+      console.error('Error in quote fetch:', error);
+    }
+  };
+  
+  const fetchIcon = async (iconId: string) => {
+    try {
+      console.log('Fetching icon details for ID:', iconId);
+      const { data, error } = await supabase
+        .from("icons")
+        .select("id,name,illustration")
+        .eq("id", iconId)
+        .single() as { data: Icon | null, error: any };
+        
+      if (error) {
+        console.error('Error fetching icon:', error);
+        return;
+      }
+      
+      console.log('Icon data fetched successfully:', data);
+      if (data) {
+        setIcon(data);
+      }
+    } catch (error) {
+      console.error('Error in icon fetch:', error);
+    }
+  };
+
+  // Default quote if none is fetched
+  const quoteData = quote || {
+    id: "1",
+    text: "Our difficulties grow miracles.",
+    author: "Jean de La Bruyère",
+    category: "LIGHTNING"
+  };
+
+  // Mock stats
+  const stats = {
+    timeWithVirgil: "+7%",
+    coursesCompleted: 1,
+    badgesEarned: 7
+  };
+  
+  const handleNavigate = (section: "timeWithVirgil" | "courses" | "badges" | "reports") => {
+    // Navigate to appropriate section
+    switch (section) {
+      case "timeWithVirgil":
+        navigate("/virgil");
+        break;
+      case "courses":
+        navigate("/courses");
+        break;
+      case "badges":
+        navigate("/badges");
+        break;
+      case "reports":
+        navigate("/reports");
+        break;
+    }
+  };
+  
+  const handleBadgeClick = () => {
+    console.log("Badge button clicked");
+    // Will navigate to badges page in the future
+  };
+  
+  const handleVirgilButtonClick = () => {
+    // More robust navigation handling
+    if (icon && icon.id) {
+      // Enhanced logging
+      console.log(`Navigating to icon: ${icon.id} with path: /view/icon/${icon.id}`);
+      
+      // Navigate with explicit path structure
+      navigate(`/view/icon/${icon.id}`);
+    } else if (quote && quote.icon_id) {
+      // Fallback to using icon_id directly from quote if icon state isn't set yet
+      console.log(`Using quote's icon_id for navigation: ${quote.icon_id}`);
+      navigate(`/view/icon/${quote.icon_id}`);
+    } else {
+      console.log("No icon to navigate to, using fallback");
+      // Consider a fallback navigation or show an error message
+      toast({
+        title: "Navigation Error",
+        description: "Unable to find the requested content. Please try again later.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  return (
+    <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
+      {/* Header - Updated to match VirgilOffice header style */}
+      <div className="flex items-center pt-4 px-4">
+        <MainMenu />
+        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
+          Dashboard
+        </h2>
+        {/* Badge count hexagon button with level text below */}
+        <div className="flex flex-col items-center">
+          <button 
+            onClick={handleBadgeClick} 
+            className="relative flex items-center justify-center w-10 h-10 cursor-pointer"
+            aria-label={`${badgeCount} badges earned`}
+          >
+            <Hexagon 
+              className="absolute w-10 h-10 text-[#B8C7FF] stroke-current fill-transparent" 
+              strokeWidth={1.5} 
+            />
+            <span className="text-[#E9E7E2] font-oxanium font-bold text-lg">
+              {badgeCount}
+            </span>
+          </button>
+          <span className="text-[#E9E7E2] uppercase tracking-wider font-oxanium text-xs mt-1">
+            {badgeLevel}
+          </span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <main className="flex-1 px-6 py-8">
+        {/* Quote Card */}
+        <div className="mb-6">
+          <Card className="bg-transparent border-none rounded-lg overflow-hidden relative aspect-[4/3]">
+            {/* Clickable overlay with clearer debugging */}
+            <div 
+              className="absolute inset-0 z-20 cursor-pointer" 
+              onClick={() => {
+                console.log("Card overlay clicked, calling handleVirgilButtonClick");
+                handleVirgilButtonClick();
+              }}
+              aria-label="View kindred spirit details"
+            ></div>
+            
+            <img 
+              src={icon?.illustration || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Jean%20de%20la%20Bruyere.png"} 
+              alt="Philosopher portrait" 
+              className="w-full h-full object-cover rounded-lg" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/80 to-transparent"></div>
+            
+            {/* Kindred spirit button with higher z-index and improved click handling */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent click from bubbling to the overlay
+                console.log("Kindred spirit button clicked directly");
+                handleVirgilButtonClick();
+              }} 
+              className="absolute top-4 right-4 rounded-2xl bg-[#D5B8FF]/20 px-3 py-1 text-white font-oxanium text-sm uppercase tracking-wider z-30"
+            >
+              KINDRED SPIRIT
+            </button>
+            
+            {/* Quote text */}
+            <div className="absolute bottom-16 left-4 right-4 z-10">
+              <p className="text-white text-xl font-semibold font-baskerville">{quoteData.text}</p>
             </div>
-          ) : activeSection === "become" ? (
-            <div className="space-y-4">
-              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                {isLoadingIntroduction ? (
-                  <span className="inline-block">Loading wisdom guidance...</span>
-                ) : (
-                  analysisResult?.become_who_you_are || 
-                  "Trust your capacity to be both mystic and philosopher, knowing that wisdom often emerges from holding these tensions with grace."
-                )}
-              </p>
-              
-              <DomainsList />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                {isLoadingIntroduction ? (
-                  <span className="inline-block">Loading your intellectual profile...</span>
-                ) : (
-                  analysisResult?.introduction || 
-                  "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension."
-                )}
-              </p>
-              
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Friedrich%20Nietzsche.png" 
-                        alt="Friedrich Nietzsche" 
-                        className="h-10 w-10 object-cover"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                      {isLoadingIntroduction ? (
-                        <span className="inline-block">Loading...</span>
-                      ) : (
-                        analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
-                      )}
-                    </h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
-                  </div>
-                </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
-              </div>
-              
-              <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative mr-4">
-                    <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Martin%20Heidegger.png" 
-                        alt="Martin Heidegger" 
-                        className="h-10 w-10 object-cover"
-                        style={{ 
-                          clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                      {isLoadingIntroduction ? (
-                        <span className="inline-block">Loading...</span>
-                      ) : (
-                        analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
-                      )}
-                    </h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
-                  </div>
-                </div>
-                <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_1 || 
-                      "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_2 || 
-                      "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_3 || 
-                      "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_1 || 
-                      "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_2 || 
-                      "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_3 || 
-                      "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_1 || 
-                      "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_2 || 
-                      "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_3 || 
-                      "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
-                  {isLoadingIntroduction ? (
-                    <span className="inline-block">Loading...</span>
-                  ) : (
-                    analysisResult?.conclusion || 
-                    "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
-                  )}
-                </p>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
-                  {isLoadingIntroduction ? (
-                    <span className="inline-block">Loading...</span>
-                  ) : (
-                    analysisResult?.next_steps || 
-                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
-                  )}
-                </p>
+            
+            {/* Kindred spirit container at bottom with improved click handling */}
+            <div className="absolute bottom-4 left-4 z-30">
+              <div 
+                className="inline-flex items-center bg-[#3F2E4A]/80 backdrop-blur-sm rounded-full pl-3 pr-3 py-1 cursor-pointer" 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent click from bubbling to the overlay
+                  console.log("Author name badge clicked");
+                  handleVirgilButtonClick();
+                }}
+              >
+                <span className="font-oxanium uppercase text-white/90 text-sm tracking-wider">
+                  {icon?.name || quoteData.author}
+                </span>
               </div>
             </div>
-          )}
+            
+            {/* Loading overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-40">
+                <div className="h-8 w-8 border-4 border-t-[#D5B8FF] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Dashboard sections */}
+        <div className="space-y-6">
+          {/* Time with Virgil */}
+          <div className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer" onClick={() => handleNavigate("timeWithVirgil")}>
+            <h3 className="font-oxanium uppercase tracking-wider">TIME WITH VIRGIL</h3>
+            <div className="flex items-center">
+              <span className="text-[#CCFF23] mr-4">{stats.timeWithVirgil}</span>
+              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                <ChevronRight className="w-5 h-5 text-[#E9E7E2]/70" />
+              </div>
+            </div>
+          </div>
+
+          {/* Courses completed */}
+          <div className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer" onClick={() => handleNavigate("courses")}>
+            <h3 className="font-oxanium uppercase tracking-wider">COURSES COMPLETED</h3>
+            <div className="flex items-center">
+              <span className="text-[#E9E7E2]/70 mr-4">{stats.coursesCompleted}</span>
+              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                <ChevronRight className="w-5 h-5 text-[#E9E7E2]/70" />
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly reports - number removed */}
+          <div className="flex items-center justify-between py-4 border-b border-[#E9E7E2]/10 cursor-pointer" onClick={() => handleNavigate("reports")}>
+            <h3 className="font-oxanium uppercase tracking-wider">WEEKLY REPORTS</h3>
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                <ChevronRight className="w-5 h-5 text-[#E9E7E2]/70" />
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
