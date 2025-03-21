@@ -8,10 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ExternalLink, X } from "lucide-react";
+import { ShoppingCart, ExternalLink } from "lucide-react";
 
 interface OrderDialogProps {
   title: string;
@@ -53,27 +52,21 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
         <DialogFooter className="flex flex-col space-y-4 mt-5">
           <Button
             onClick={handleAmazonOrder}
-            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex justify-between items-center"
+            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 max-w-full flex justify-between items-center"
           >
             Buy on Amazon
             <ExternalLink className="h-4 w-4" />
           </Button>
           <Button
             onClick={handleIndependentOrder}
-            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex justify-between items-center"
+            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 max-w-full flex justify-between items-center"
           >
             Buy From Independent Bookseller
             <ExternalLink className="h-4 w-4" />
           </Button>
         </DialogFooter>
         
-        {/* Override the default DialogClose component with our own custom styling */}
-        <div className="absolute right-6 top-6">
-          <DialogClose className="rounded-full h-8 w-8 flex items-center justify-center opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-            <X className="h-6 w-6 text-black" />
-            <span className="sr-only">Close</span>
-          </DialogClose>
-        </div>
+        {/* Removed the duplicate close button - the default one from DialogContent will be used */}
       </DialogContent>
     </Dialog>
   );
