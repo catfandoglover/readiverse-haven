@@ -1,14 +1,15 @@
-
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
 import { MessageCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
-
+  const isMobile = useIsMobile();
+  
   return (
     <div 
       className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden bg-cover bg-center bg-no-repeat"
@@ -33,13 +34,22 @@ const VirgilOffice: React.FC = () => {
         "flex-1 relative overflow-y-auto transition-transform duration-300",
         isChatOpen && "transform -translate-y-full"
       )}>
-        <div className="flex flex-col items-center justify-center h-full px-6 py-10">
-          <div className="max-w-md w-full mx-auto text-center">
-            <h1 className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight text-shadow-lg" style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}>
+        <div className={cn(
+          "flex flex-col items-center h-full",
+          isMobile ? "justify-start pt-[28vh]" : "justify-center px-6 py-10"
+        )}>
+          <div className="max-w-md w-full mx-auto text-center px-6">
+            <h1 
+              className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight" 
+              style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}
+            >
               What brings you here today?
             </h1>
             
-            <div className="space-y-4 mt-8">
+            <div className={cn(
+              "space-y-4",
+              isMobile ? "mt-6" : "mt-8"
+            )}>
               <Button
                 className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => setIsChatOpen(true)}
