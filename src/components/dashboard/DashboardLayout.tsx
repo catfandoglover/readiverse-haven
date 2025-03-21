@@ -21,12 +21,13 @@ const DashboardLayout: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#2A282A] shadow-md px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <MainMenu />
-          <h1 className="ml-4 text-2xl font-baskerville">Dashboard</h1>
-        </div>
-      </header>
+      <div className="flex items-center pt-4 px-4">
+        <MainMenu />
+        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
+          Dashboard
+        </h2>
+        <div className="w-10 h-10" /> {/* Empty div for spacing balance */}
+      </div>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
