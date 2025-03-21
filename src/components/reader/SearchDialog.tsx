@@ -19,13 +19,17 @@ interface SearchDialogProps {
   onResultClick: (result: SearchResult) => void;
   triggerClassName?: string;
   triggerIcon?: React.ReactNode;
+  onTriggerMouseEnter?: () => void;
+  onTriggerMouseLeave?: () => void;
 }
 
 const SearchDialog = ({ 
   onSearch, 
   onResultClick, 
   triggerClassName,
-  triggerIcon 
+  triggerIcon,
+  onTriggerMouseEnter,
+  onTriggerMouseLeave
 }: SearchDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -70,6 +74,8 @@ const SearchDialog = ({
           size="icon"
           className={triggerClassName || "h-8 w-8"}
           title="Search"
+          onMouseEnter={onTriggerMouseEnter}
+          onMouseLeave={onTriggerMouseLeave}
         >
           {triggerIcon || <Search className="h-4 w-4" />}
         </Button>
