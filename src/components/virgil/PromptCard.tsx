@@ -4,12 +4,13 @@ import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
 interface Prompt {
-  id: string;
+  id: string | number;
   user_title: string;
-  section: string;
-  icon_display: string;
-  context: string;
+  section?: string;
+  icon_display?: string;
+  context?: string;
   user_subtitle?: string;
+  initial_message?: string;
 }
 
 interface PromptCardProps {
@@ -18,7 +19,7 @@ interface PromptCardProps {
   onSelect: () => void;
 }
 
-const getSectionColor = (section: string): string => {
+const getSectionColor = (section: string = "intellectual"): string => {
   switch (section?.toLowerCase()) {
     case "emotional":
       return "#FFC49A";
@@ -44,7 +45,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           className="w-10 h-10 flex items-center justify-center rounded-full mr-4"
           style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
         >
-          {prompt.icon_display}
+          {prompt.icon_display || "📝"}
         </div>
         <div className="flex-1">
           <h3 className="font-baskerville text-lg text-[#E9E7E2]">{prompt.user_title}</h3>
@@ -66,7 +67,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         className="w-12 h-12 flex items-center justify-center rounded-full mb-4"
         style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
       >
-        {prompt.icon_display}
+        {prompt.icon_display || "📝"}
       </div>
       <h3 className="font-baskerville text-xl text-[#E9E7E2] mb-2">{prompt.user_title}</h3>
       {prompt.user_subtitle && (

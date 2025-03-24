@@ -7,31 +7,68 @@ import { cn } from '@/lib/utils';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
+import { toast } from 'sonner';
+
+// Define the shape of data coming from the database
+interface DbPrompt {
+  id: number;
+  user_title?: string;
+  user_subtitle?: string;
+  section?: string;
+  icon_display?: string;
+  context?: string;
+  prompt?: string;
+  initial_message?: string;
+}
+
+// Transform DB data to the format we need
+const formatPrompt = (dbPrompt: DbPrompt) => {
+  return {
+    id: dbPrompt.id,
+    user_title: dbPrompt.user_title || "Untitled Prompt",
+    user_subtitle: dbPrompt.user_subtitle,
+    section: dbPrompt.section || "intellectual",
+    icon_display: dbPrompt.icon_display || "💭",
+    context: dbPrompt.context || "chat",
+    initial_message: dbPrompt.prompt || dbPrompt.initial_message || `Let's have a conversation.`,
+  };
+};
 
 const VirgilChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
 
-  const { data: prompt, isLoading, error } = useQuery({
+  const { data: dbPrompt, isLoading, error } = useQuery({
     queryKey: ['virgilPrompt', id],
     queryFn: async () => {
       if (!id) return null;
       
-      const { data, error } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching prompt:', error);
-        throw new Error(error.message);
+      console.log("Fetching prompt with ID:", id);
+      try {
+        const { data, error } = await supabase
+          .from('prompts')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error fetching prompt:', error);
+          toast.error("Failed to load conversation prompt");
+          throw new Error(error.message);
+        }
+        
+        console.log("Fetched prompt:", data);
+        return data;
+      } catch (err) {
+        console.error("Exception in fetchPrompt:", err);
+        return null;
       }
-      
-      return data;
     }
   });
+
+  // Format the prompt data with fallbacks
+  const prompt = dbPrompt ? formatPrompt(dbPrompt) : null;
 
   // Initial animation timing
   useEffect(() => {
@@ -125,7 +162,7 @@ const VirgilChat: React.FC = () => {
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
               variant="virgilchat"
-              initialMessage={prompt.initial_message || `Let's talk about ${prompt.user_title}.`}
+              initialMessage={prompt.initial_message}
             />
           </div>
         )}

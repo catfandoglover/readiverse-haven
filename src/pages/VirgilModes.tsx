@@ -8,6 +8,32 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
+import { toast } from "sonner";
+
+// Define the shape of data coming from the database
+interface DbPrompt {
+  id: number;
+  user_title?: string;
+  user_subtitle?: string;
+  section?: string;
+  icon_display?: string;
+  context?: string;
+  prompt?: string;
+  initial_message?: string;
+}
+
+// Transform DB data to the format expected by PromptCard
+const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
+  return {
+    id: dbPrompt.id,
+    user_title: dbPrompt.user_title || "Untitled Prompt",
+    user_subtitle: dbPrompt.user_subtitle,
+    section: dbPrompt.section || "intellectual",
+    icon_display: dbPrompt.icon_display || "💭",
+    context: dbPrompt.context || "chat",
+    initial_message: dbPrompt.prompt || dbPrompt.initial_message,
+  };
+};
 
 const VirgilModes: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
@@ -17,20 +43,41 @@ const VirgilModes: React.FC = () => {
     queryKey: ["virgilPrompts"],
     queryFn: async () => {
       console.log("Fetching prompts...");
-      const { data, error } = await supabase
-        .from("prompts")
-        .select("*")
-        .eq("context", "chat");
-      
-      if (error) {
-        console.error("Error fetching prompts:", error);
-        throw new Error(error.message);
+      try {
+        const { data, error } = await supabase
+          .from("prompts")
+          .select("*")
+          .eq("context", "chat");
+        
+        if (error) {
+          console.error("Error fetching prompts:", error);
+          toast.error("Failed to load conversation prompts");
+          throw new Error(error.message);
+        }
+        
+        console.log("Fetched prompts:", data);
+        
+        // If we have data but it's empty, log that specifically
+        if (!data || data.length === 0) {
+          console.log("No prompts returned from the database");
+        }
+        
+        // Check if the data has the expected shape
+        if (data && data.length > 0) {
+          console.log("Sample prompt:", data[0]);
+        }
+        
+        return data || [];
+      } catch (err) {
+        console.error("Exception in fetchPrompts:", err);
+        return [];
       }
-      
-      console.log("Fetched prompts:", data);
-      return data || [];
     }
   });
+
+  // Map database prompts to the format our components expect
+  const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
+  console.log("Formatted prompts:", formattedPrompts);
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
@@ -83,9 +130,10 @@ const VirgilModes: React.FC = () => {
               Return to Virgil's Office
             </Button>
           </div>
-        ) : (prompts?.length ?? 0) === 0 ? (
+        ) : (formattedPrompts.length === 0) ? (
           <div className="text-center py-8 text-[#E9E7E2]/70">
             <p>No conversation prompts available.</p>
+            <p className="mt-2 text-sm">Check the database to ensure prompts with context="chat" exist.</p>
             <Button 
               variant="ghost"
               className="mt-4 text-[#CCFF23]"
@@ -100,7 +148,7 @@ const VirgilModes: React.FC = () => {
               ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" 
               : "space-y-4"
           )}>
-            {prompts?.map((prompt) => (
+            {formattedPrompts.map((prompt) => (
               <PromptCard 
                 key={prompt.id}
                 prompt={prompt}
