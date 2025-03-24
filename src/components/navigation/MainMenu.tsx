@@ -73,7 +73,7 @@ const MainMenu: React.FC = () => {
                 className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/virgil")}
               >
-                <div className="flex-shrink-0 rounded-full p-2">
+                <div className="flex-shrink-0 rounded-full ">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
                   </Avatar>
