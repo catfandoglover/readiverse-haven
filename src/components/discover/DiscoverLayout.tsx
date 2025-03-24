@@ -87,31 +87,19 @@ const DiscoverLayout = () => {
         ref={contentRef}
       >
         {!detailedViewVisible && (
-          <header 
-            className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
-            style={{
-              aspectRatio: "1290/152",
-              maxHeight: "152px"
-            }}
-          >
-            <div className="flex items-center px-4 py-3 h-full w-full">
-              <div className="flex-none">
-                <MainMenu />
-              </div>
-              <div className="flex-1 flex items-center justify-between pl-2">
-                <h2 className="text-[#E9E7E2] font-oxanium uppercase text-xs">
-                  FOR YOU
-                </h2>
-                <button 
-                  className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-                  aria-label="Search"
-                  onClick={() => navigate('/search')}
-                >
-                  <Search className="h-2 w-2" />
-                </button>
-              </div>
-            </div>
-          </header>
+          <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
+            <MainMenu />
+            <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+              FOR YOU
+            </h2>
+            <button 
+              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"
+              aria-label="Search"
+              onClick={() => navigate('/search')}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
         )}
         
         <div className="w-full h-full relative bg-[#E9E7E2]">

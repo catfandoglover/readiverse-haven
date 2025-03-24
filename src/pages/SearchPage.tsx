@@ -1,12 +1,10 @@
-
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 
 const SearchPage = () => {
   const navigate = useNavigate();
-
+  
   const handleCategoryClick = (category: string) => {
     navigate(`/search/${category.toLowerCase()}`);
   };
