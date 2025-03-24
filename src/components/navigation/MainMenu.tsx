@@ -52,7 +52,7 @@ const MainMenu: React.FC = () => {
 
               {/* DNA Navigation Item */}
               <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/dna")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
@@ -70,7 +70,7 @@ const MainMenu: React.FC = () => {
               
               {/* Virgil's Office Navigation Item */}
               <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/virgil")}
               >
                 <div className="flex-shrink-0 rounded-full p-1">
@@ -91,7 +91,7 @@ const MainMenu: React.FC = () => {
               
               {/* Discover Navigation Item */}
               <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/discover")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
@@ -109,7 +109,7 @@ const MainMenu: React.FC = () => {
               
               {/* Study Navigation Item */}
               <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/bookshelf")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
