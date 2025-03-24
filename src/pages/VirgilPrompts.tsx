@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,30 +32,9 @@ const VirgilPrompts = () => {
       setError(null);
       
       try {
-        // First, try to fetch all prompts to see how many there are in total
-        const totalResponse = await supabase
-          .from("prompts")
-          .select("id, context, user_title")
-          .order("display_order", { ascending: true });
-          
-        if (totalResponse.error) {
-          throw new Error(`Error fetching all prompts: ${totalResponse.error.message}`);
-        }
+        console.log("Fetching prompts...");
         
-        console.log(`Total prompts in database: ${totalResponse.data?.length}`);
-        
-        if (totalResponse.data && totalResponse.data.length === 0) {
-          console.log("No prompts found in the database at all");
-          setPrompts([]);
-          return;
-        }
-        
-        // Log all prompts to inspect their context values
-        totalResponse.data?.forEach(prompt => {
-          console.log(`Prompt ID: ${prompt.id}, Title: ${prompt.user_title}, Context: ${prompt.context || 'null/undefined'}`);
-        });
-
-        // Try a more inclusive approach - fetch all prompts and filter client-side
+        // Fetch all prompts without filtering
         const { data, error } = await supabase
           .from("prompts")
           .select("*")
@@ -66,33 +44,55 @@ const VirgilPrompts = () => {
           throw new Error(`Error fetching prompts: ${error.message}`);
         }
 
-        console.log(`Fetched ${data?.length || 0} total prompts`);
+        console.log(`Fetched ${data?.length || 0} total prompts:`, data);
         
-        // Filter prompts client-side to be more flexible with matching
-        const chatPrompts = data?.filter(prompt => {
-          // Check if context exists and contains 'chat' in any case
-          const contextIncludesChat = prompt.context && 
-            prompt.context.toLowerCase().includes('chat');
+        if (!data || data.length === 0) {
+          console.log("No prompts found in the database");
+          setPrompts([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Log each prompt's details to debug context field issues
+        data.forEach(prompt => {
+          console.log(`Prompt #${prompt.id}:`, {
+            title: prompt.user_title,
+            context: prompt.context,
+            contextType: typeof prompt.context,
+            hasChat: prompt.context ? prompt.context.toLowerCase().includes('chat') : false
+          });
+        });
+        
+        // Filter for chat prompts (case-insensitive match on the context field)
+        const chatPrompts = data.filter(prompt => {
+          // Handle null/undefined context values safely
+          const context = String(prompt.context || '').toLowerCase();
+          const includesChat = context.includes('chat');
           
-          // Log each prompt's evaluation
-          console.log(`Prompt ${prompt.id}: context=${prompt.context || 'null/undefined'}, includes 'chat'=${contextIncludesChat}`);
+          console.log(`Prompt #${prompt.id} context check:`, { 
+            context, 
+            includesChat 
+          });
           
-          return contextIncludesChat;
-        }) || [];
+          return includesChat;
+        });
         
-        console.log(`Found ${chatPrompts.length} prompts with 'chat' in context after client-side filtering`);
+        console.log(`Found ${chatPrompts.length} chat prompts after filtering`);
         
-        // If no chat prompts found but there are prompts, show all prompts as fallback
-        if (chatPrompts.length === 0 && data && data.length > 0) {
-          console.log("No chat prompts found, showing all prompts as fallback");
-          setPrompts(data);
-          toast.info("Showing all available prompts");
-        } else {
+        // If we have chat prompts, display those
+        if (chatPrompts.length > 0) {
           setPrompts(chatPrompts);
+          console.log("Setting chat prompts:", chatPrompts);
+        } 
+        // Otherwise use all prompts as fallback
+        else if (data.length > 0) {
+          setPrompts(data);
+          console.log("No chat prompts found, showing all prompts");
+          toast.info("Showing all available prompts");
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error("Error:", errorMessage);
+        console.error("Error fetching prompts:", errorMessage);
         setError(errorMessage);
         toast.error("Failed to load prompts");
       } finally {
