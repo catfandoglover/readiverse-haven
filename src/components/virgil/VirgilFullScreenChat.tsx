@@ -95,7 +95,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
           isProcessing={isProcessing}
           toggleRecording={toggleRecording}
           themeColors={themeColors}
-          disabled={disableChat || resultsReady}
+          disabled={disableChat}
         />
       </div>
     </div>

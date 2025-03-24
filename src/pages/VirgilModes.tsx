@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -125,6 +126,11 @@ const VirgilModes: React.FC = () => {
   const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
   const sortedOtherPrompts = sortAlphabetically(otherPrompts);
 
+  const handlePromptSelect = (prompt: Prompt) => {
+    console.log("Prompt selected:", prompt);
+    navigate('/virgil-chat');
+  };
+
   const renderListView = () => {
     return (
       <>
@@ -153,7 +159,7 @@ const VirgilModes: React.FC = () => {
             key={prompt.id}
             prompt={prompt}
             viewMode="grid"
-            onSelect={() => navigate('/virgil-chat')}
+            onSelect={() => handlePromptSelect(prompt)}
           />
         ))}
       </div>
@@ -176,7 +182,7 @@ const VirgilModes: React.FC = () => {
               key={prompt.id}
               prompt={prompt}
               viewMode="list"
-              onSelect={() => navigate('/virgil-chat')}
+              onSelect={() => handlePromptSelect(prompt)}
             />
           ))}
         </div>
