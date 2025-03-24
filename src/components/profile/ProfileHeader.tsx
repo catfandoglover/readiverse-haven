@@ -38,7 +38,6 @@ const ProfileHeader: React.FC = () => {
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
-  const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   const archetype = analysisResult?.archetype || "Twilight Navigator";
