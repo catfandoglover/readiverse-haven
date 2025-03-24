@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, LayoutGrid, List } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PromptCard from "@/components/virgil/PromptCard";
@@ -24,61 +24,70 @@ const VirgilPrompts = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const fetchPrompts = async () => {
-      setIsLoading(true);
-      setError(null);
+  const fetchPrompts = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log("===== FETCHING PROMPTS =====");
       
-      try {
-        // Direct approach to get ALL prompts without any filtering
-        const { data, error } = await supabase
-          .from("prompts")
-          .select("*");
+      // Direct approach to get ALL prompts without any filtering
+      const { data, error } = await supabase
+        .from("prompts")
+        .select("*");
 
-        if (error) {
-          throw new Error(`Error fetching prompts: ${error.message}`);
-        }
-
-        console.log("Raw prompts data:", data);
-        
-        if (!data || data.length === 0) {
-          console.log("No prompts found in database");
-          setPrompts([]);
-          setIsLoading(false);
-          return;
-        }
-
-        // Log each prompt for debugging
-        data.forEach((prompt, index) => {
-          console.log(`Prompt ${index + 1}:`, {
-            id: prompt.id,
-            title: prompt.user_title,
-            subtitle: prompt.user_subtitle,
-            section: prompt.section,
-            context: typeof prompt.context === 'string' ? prompt.context : String(prompt.context),
-            hasContext: !!prompt.context
-          });
-        });
-
-        // Set all prompts for display
-        setPrompts(data);
-        console.log(`Retrieved ${data.length} prompts from database`);
-        
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error("Error fetching prompts:", errorMessage);
-        setError(errorMessage);
-        toast.error("Failed to load prompts");
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        throw new Error(`Error fetching prompts: ${error.message}`);
       }
-    };
 
+      console.log("===== RAW PROMPTS DATA =====", data);
+      
+      if (!data || data.length === 0) {
+        console.log("No prompts found in database");
+        setPrompts([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Transform the data to ensure all expected fields are present
+      const processedPrompts = data.map(prompt => ({
+        id: prompt.id || 0,
+        user_title: prompt.user_title || "Untitled Prompt",
+        user_subtitle: prompt.user_subtitle || "No description available",
+        prompt: prompt.prompt || "",
+        section: prompt.section || "intellectual",
+        context: prompt.context || ""
+      }));
+
+      console.log("===== PROCESSED PROMPTS =====", processedPrompts);
+      
+      // Set all prompts for display
+      setPrompts(processedPrompts);
+      console.log(`Retrieved ${processedPrompts.length} prompts from database`);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error("Error fetching prompts:", errorMessage);
+      setError(errorMessage);
+      toast.error("Failed to load prompts");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPrompts();
   }, []);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchPrompts();
+  };
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
@@ -127,35 +136,55 @@ const VirgilPrompts = () => {
           </div>
         ) : error ? (
           <div className="flex justify-center items-center h-full flex-col">
+            <AlertTriangle className="h-8 w-8 text-[#FFC49A] mb-2" />
             <div className="text-[#E9E7E2]/70 mb-2">Error loading prompts</div>
             <div className="text-[#E9E7E2]/50 text-sm">{error}</div>
+            <Button 
+              variant="ghost" 
+              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+              {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
+            </Button>
           </div>
         ) : prompts.length === 0 ? (
           <div className="flex justify-center items-center h-full flex-col">
+            <AlertTriangle className="h-8 w-8 text-[#FFC49A] mb-2" />
             <div className="text-[#E9E7E2]/70 mb-2">No prompts available</div>
-            <div className="text-[#E9E7E2]/50 text-sm">
-              Check the database to ensure prompts are properly configured
+            <div className="text-[#E9E7E2]/50 text-sm text-center max-w-md">
+              Check the database to ensure prompts are properly configured in the "prompts" table
             </div>
             <Button 
               variant="ghost" 
-              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90"
-              onClick={() => window.location.reload()}
+              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
             >
-              Refresh Page
+              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+              {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
             </Button>
           </div>
-        ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {prompts.map((prompt) => (
-              <PromptCard key={prompt.id} prompt={prompt} />
-            ))}
-          </div>
         ) : (
-          <div className="space-y-4">
-            {prompts.map((prompt) => (
-              <PromptCardList key={prompt.id} prompt={prompt} />
-            ))}
-          </div>
+          <>
+            <div className="mb-4 text-sm text-[#E9E7E2]/70">
+              Found {prompts.length} prompts
+            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {prompts.map((prompt) => (
+                  <PromptCard key={prompt.id} prompt={prompt} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {prompts.map((prompt) => (
+                  <PromptCardList key={prompt.id} prompt={prompt} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

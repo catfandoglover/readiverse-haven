@@ -50,6 +50,23 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     navigate(`/virgil-chat/${prompt.id}`);
   };
 
+  // If the prompt object is invalid, render a placeholder with an error style
+  if (!prompt || typeof prompt !== 'object') {
+    console.error("Invalid prompt object:", prompt);
+    return (
+      <div className="bg-[#221F26] rounded-xl p-4 border border-red-500">
+        <div className="flex flex-col h-full">
+          <div className="flex justify-center mb-3">
+            <Brain className="h-6 w-6 text-red-400" />
+          </div>
+          <h3 className="font-baskervville text-center text-red-400 mb-1 text-base md:text-lg">
+            Error: Invalid Prompt
+          </h3>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="bg-[#221F26] rounded-xl p-4 hover:scale-105 transition-transform cursor-pointer"
