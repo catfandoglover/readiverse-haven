@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,11 +8,13 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
+type NavigationTab = "discover" | "virgil" | "dna" | "profile" | "bookshelf";
+
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<string>("discover");
+  const [activeTab, setActiveTab] = useState<NavigationTab>("discover");
   
   const virgilImageUrl = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Chat.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBDaGF0LnBuZyIsImlhdCI6MTc0Mjg0NTcyNCwiZXhwIjoxMDM4Mjc1OTMyNH0.J-iilXzSgK_tEdHvm3FTLAH9rtAxoqJjMMdJz5NF_LA";
 
@@ -32,7 +35,7 @@ const DashboardLayout: React.FC = () => {
     
     // Save current location for this section
     const currentPath = location.pathname;
-    let currentSection: string | null = null;
+    let currentSection: NavigationTab | null = null;
     
     if (currentPath.startsWith('/discover')) {
       currentSection = 'discover';
@@ -51,7 +54,7 @@ const DashboardLayout: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const handleNavigation = (tab: string, defaultPath: string) => {
+  const handleNavigation = (tab: NavigationTab, defaultPath: string) => {
     // Try to navigate to the last visited path for this section
     const lastPath = getLastVisited(tab);
     navigate(lastPath || defaultPath);

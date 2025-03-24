@@ -1,116 +1,90 @@
 
-import { 
-  PollyClient, 
+import {
+  PollyClient,
   SynthesizeSpeechCommand,
   OutputFormat,
   Engine,
   VoiceId,
-  TextType
+  LanguageCode
 } from "@aws-sdk/client-polly";
-import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
-import useAudioStore, { createAudioContext } from './AudioContext';
-import { toast } from 'sonner';
+import { getSignedUrl } from "@aws-sdk/polly-request-presigner";
 
 class SpeechService {
-  private pollyClient: PollyClient | null = null;
-  private initialized: boolean = false;
+  private polly: PollyClient;
+  private cacheMap: Map<string, string>;
+  private defaultVoiceId: VoiceId;
+  private defaultLanguageCode: LanguageCode;
+  private defaultEngine: Engine;
 
   constructor() {
-    this.initializePolly();
-  }
-
-  private initializePolly() {
-    try {
-      const region = import.meta.env.VITE_AWS_REGION;
-      const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
-      const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
-      
-      // Check if we have the necessary credentials
-      if (!region || !accessKeyId || !secretAccessKey) {
-        console.warn('Missing AWS credentials for Polly service');
-        return;
+    this.polly = new PollyClient({
+      region: "us-east-1",
+      credentials: {
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || "",
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ""
       }
-      
-      // Initialize the Polly client
-      this.pollyClient = new PollyClient({
-        region,
-        credentials: {
-          accessKeyId,
-          secretAccessKey
-        }
-      });
-      
-      this.initialized = true;
-      console.log('AWS Polly service initialized successfully');
-    } catch (error) {
-      console.error('Error initializing AWS Polly:', error);
-      this.initialized = false;
-    }
+    });
+    
+    this.cacheMap = new Map<string, string>();
+    this.defaultVoiceId = VoiceId.Joanna;
+    this.defaultLanguageCode = LanguageCode.EN_US;
+    this.defaultEngine = Engine.NEURAL;
   }
 
-  public isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  public async synthesizeSpeech(text: string): Promise<string> {
-    if (!this.initialized || !this.pollyClient) {
-      console.warn('Polly service not initialized');
-      return '';
+  public async synthesizeSpeech(
+    text: string,
+    voiceId = this.defaultVoiceId,
+    languageCode = this.defaultLanguageCode,
+    engine = this.defaultEngine
+  ): Promise<string> {
+    const key = `${text}_${voiceId}_${languageCode}_${engine}`;
+    
+    // Check cache first
+    if (this.cacheMap.has(key)) {
+      return this.cacheMap.get(key) as string;
     }
-
+    
     try {
-      // Use Arthur voice (British English male)
-      const params = {
+      // Clean the text to avoid issues with special characters
+      const cleanedText = this.sanitizeText(text);
+      
+      // Prepare the command with the cleaned text
+      const command = new SynthesizeSpeechCommand({
+        Text: cleanedText,
         OutputFormat: OutputFormat.MP3,
-        SampleRate: "16000", // Fixed: Using string instead of String object
-        Text: text,
-        TextType: TextType.TEXT,
-        VoiceId: VoiceId.Arthur,  // Using Arthur voice
-        Engine: Engine.NEURAL
-      };
-      
-      console.info('Attempting to get Polly URL with params:', params);
-      
-      // Get a presigned URL for the speech
-      const url = await getSynthesizeSpeechUrl({
-        client: this.pollyClient,
-        params
+        VoiceId: voiceId,
+        LanguageCode: languageCode,
+        Engine: engine
       });
       
-      console.info('Successfully got Polly URL:', url);
+      // Get the signed URL
+      const url = await getSignedUrl(this.polly, command, { expiresIn: 3600 });
+      
+      // Store in cache
+      this.cacheMap.set(key, url);
       
       return url;
     } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      return '';
+      console.error("Error synthesizing speech:", error);
+      throw error;
     }
   }
-
-  public async playAudio(url: string): Promise<void> {
-    try {
-      if (!url) {
-        console.warn('No audio URL provided');
-        return;
-      }
-      
-      // Use the AudioContext helper from AudioContext.ts
-      const audioContext = createAudioContext();
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      
-      // Decode the audio data and play it
-      audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        source.start(0);
-      });
-    } catch (error) {
-      console.error('Error playing audio:', error);
-    }
+  
+  private sanitizeText(text: string): string {
+    // Remove special characters that might cause issues
+    return text
+      .replace(/&/g, " and ")
+      .replace(/</g, "")
+      .replace(/>/g, "")
+      .replace(/"/g, "")
+      .replace(/'/g, "")
+      .trim();
+  }
+  
+  public clearCache(): void {
+    this.cacheMap.clear();
   }
 }
 
-// Create a singleton instance
-export const speechService = new SpeechService();
+const speechService = new SpeechService();
 export default speechService;

@@ -31,8 +31,8 @@ const MainMenu: React.FC = () => {
             <h2 className="text-xl font-serif mb-8">Navigation</h2>
             <div className="space-y-6">
               {/* Discover Navigation Item */}
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+                <div className="flex-shrink-0 rounded-full p-3">
                   <Compass className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
@@ -53,8 +53,8 @@ const MainMenu: React.FC = () => {
               </div>
               
               {/* Virgil's Office Navigation Item */}
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-1 overflow-hidden">
+              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+                <div className="flex-shrink-0 rounded-full p-1">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
                   </Avatar>
@@ -77,8 +77,8 @@ const MainMenu: React.FC = () => {
               </div>
               
               {/* DNA Navigation Item */}
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+                <div className="flex-shrink-0 rounded-full p-3">
                   <Dna className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
@@ -99,8 +99,8 @@ const MainMenu: React.FC = () => {
               </div>
               
               {/* Profile Navigation Item */}
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+                <div className="flex-shrink-0 rounded-full p-3">
                   <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
@@ -121,8 +121,8 @@ const MainMenu: React.FC = () => {
               </div>
               
               {/* Study Navigation Item */}
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+                <div className="flex-shrink-0 rounded-full p-3">
                   <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
