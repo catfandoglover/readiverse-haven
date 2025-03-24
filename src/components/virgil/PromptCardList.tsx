@@ -15,9 +15,10 @@ interface PromptCardListProps {
 
 const PromptCardList: React.FC<PromptCardListProps> = ({ prompt }) => {
   const navigate = useNavigate();
+  console.log("Rendering PromptCardList with prompt:", prompt);
 
   const getSectionColor = (section: string) => {
-    switch (section.toLowerCase()) {
+    switch ((section || "").toLowerCase()) {
       case "emotional":
         return "#FFC49A";
       case "intellectual":
@@ -32,7 +33,7 @@ const PromptCardList: React.FC<PromptCardListProps> = ({ prompt }) => {
   const getSectionIcon = (section: string) => {
     const color = getSectionColor(section);
     
-    switch (section.toLowerCase()) {
+    switch ((section || "").toLowerCase()) {
       case "emotional":
         return <Heart className="h-5 w-5" style={{ color }} />;
       case "intellectual":
@@ -45,6 +46,7 @@ const PromptCardList: React.FC<PromptCardListProps> = ({ prompt }) => {
   };
 
   const handleClick = () => {
+    console.log("List item clicked, navigating to:", `/virgil-chat/${prompt.id}`);
     navigate(`/virgil-chat/${prompt.id}`);
   };
 
@@ -59,10 +61,10 @@ const PromptCardList: React.FC<PromptCardListProps> = ({ prompt }) => {
         </div>
         <div className="flex-1">
           <h3 className="font-baskervville text-[#E9E7E2] text-base">
-            {prompt.user_title}
+            {prompt.user_title || "Untitled Prompt"}
           </h3>
           <p className="text-[#E9E7E2]/70 text-xs">
-            {prompt.user_subtitle}
+            {prompt.user_subtitle || "No description available"}
           </p>
         </div>
         <ChevronRight className="h-5 w-5 text-[#E9E7E2]/50" />

@@ -33,9 +33,7 @@ const VirgilPrompts = () => {
       setError(null);
       
       try {
-        console.log("Fetching all prompts from database...");
-        
-        // Get ALL prompts without any filtering
+        // Direct approach to get ALL prompts without any filtering
         const { data, error } = await supabase
           .from("prompts")
           .select("*");
@@ -44,28 +42,30 @@ const VirgilPrompts = () => {
           throw new Error(`Error fetching prompts: ${error.message}`);
         }
 
-        console.log(`Raw database response:`, data);
+        console.log("Raw prompts data:", data);
         
         if (!data || data.length === 0) {
-          console.log("Database returned no prompts");
+          console.log("No prompts found in database");
           setPrompts([]);
           setIsLoading(false);
           return;
         }
 
-        // IMPORTANT: Display all prompts regardless of context
-        console.log(`Setting all ${data.length} prompts for display`);
-        setPrompts(data);
-        
         // Log each prompt for debugging
-        data.forEach(prompt => {
-          console.log(`Prompt ID ${prompt.id}:`, {
+        data.forEach((prompt, index) => {
+          console.log(`Prompt ${index + 1}:`, {
+            id: prompt.id,
             title: prompt.user_title,
-            context: prompt.context,
-            contextType: typeof prompt.context,
-            allFields: prompt
+            subtitle: prompt.user_subtitle,
+            section: prompt.section,
+            context: typeof prompt.context === 'string' ? prompt.context : String(prompt.context),
+            hasContext: !!prompt.context
           });
         });
+
+        // Set all prompts for display
+        setPrompts(data);
+        console.log(`Retrieved ${data.length} prompts from database`);
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
