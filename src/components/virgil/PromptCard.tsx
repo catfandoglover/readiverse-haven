@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import * as LucideIcons from "lucide-react";
 
 interface Prompt {
   id: string | number;
@@ -34,6 +35,11 @@ const getSectionColor = (section: string = "intellectual"): string => {
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) => {
   const sectionColor = getSectionColor(prompt.section);
   
+  // Dynamically get the icon component from lucide-react
+  const IconComponent = prompt.icon_display && LucideIcons[prompt.icon_display as keyof typeof LucideIcons] 
+    ? LucideIcons[prompt.icon_display as keyof typeof LucideIcons] 
+    : LucideIcons.FileText;
+  
   if (viewMode === "list") {
     return (
       <div 
@@ -44,7 +50,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           className="w-8 h-8 flex items-center justify-center rounded-full mr-4"
           style={{ color: sectionColor }}
         >
-          {prompt.icon_display || "📝"}
+          <IconComponent size={18} />
         </div>
         <div className="flex-1">
           <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
@@ -64,7 +70,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         className="w-12 h-12 flex items-center justify-center rounded-full mb-4"
         style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
       >
-        {prompt.icon_display || "📝"}
+        <IconComponent size={24} />
       </div>
       <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
         {prompt.user_title}
