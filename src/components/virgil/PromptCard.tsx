@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { type LucideIcon } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -37,10 +38,15 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
   const sectionColor = getSectionColor(prompt.section);
   const isMobile = useIsMobile();
   
-  // Dynamically get the icon component from lucide-react
-  const IconComponent = prompt.icon_display && LucideIcons[prompt.icon_display as keyof typeof LucideIcons] 
-    ? LucideIcons[prompt.icon_display as keyof typeof LucideIcons] 
-    : LucideIcons.FileText;
+  // Get the Lucide icon component safely
+  let IconComponent: LucideIcon = LucideIcons.FileText;
+  
+  if (prompt.icon_display && typeof prompt.icon_display === 'string') {
+    const iconName = prompt.icon_display as keyof typeof LucideIcons;
+    if (LucideIcons[iconName] && typeof LucideIcons[iconName] === 'function') {
+      IconComponent = LucideIcons[iconName] as LucideIcon;
+    }
+  }
   
   if (viewMode === "list") {
     return (

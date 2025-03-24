@@ -30,7 +30,7 @@ const formatPrompt = (dbPrompt: DbPrompt) => {
     user_title: dbPrompt.user_title || "Untitled Prompt",
     user_subtitle: dbPrompt.user_subtitle,
     section: dbPrompt.section || "intellectual",
-    icon_display: dbPrompt.icon_display || "💭",
+    icon_display: dbPrompt.icon_display || "FileText",
     context: dbPrompt.context || "chat",
     initial_message: dbPrompt.prompt || dbPrompt.initial_message || `Let's have a conversation.`,
   };
@@ -48,8 +48,13 @@ const VirgilChat: React.FC = () => {
       
       console.log("Fetching prompt with ID:", id);
       try {
-        // Convert string ID to number if needed
-        const numericId = isNaN(Number(id)) ? id : Number(id);
+        // Convert string ID to number for query
+        const numericId = parseInt(id, 10);
+        
+        if (isNaN(numericId)) {
+          throw new Error("Invalid ID format");
+        }
+        
         console.log("Using ID for query:", numericId);
         
         const { data, error } = await supabase
@@ -144,7 +149,7 @@ const VirgilChat: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/70 tracking-wider text-sm font-bold mx-auto">
-          {prompt.user_title}
+          {prompt?.user_title}
         </h2>
         <div className="w-10 h-10" />
       </div>
@@ -158,14 +163,14 @@ const VirgilChat: React.FC = () => {
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">{prompt.user_title}</h1>
-          {prompt.user_subtitle && (
+          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">{prompt?.user_title}</h1>
+          {prompt?.user_subtitle && (
             <p className="font-inter text-lg text-[#E9E7E2]/70">{prompt.user_subtitle}</p>
           )}
         </div>
         
         {/* Chat interface - only shows after transition */}
-        {state === 'chat' && (
+        {state === 'chat' && prompt && (
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
               variant="virgilchat"
