@@ -55,10 +55,10 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         onClick={onSelect}
       >
         <div 
-          className={cn("flex items-center justify-center rounded-full mr-4", isMobile ? "w-7 h-7" : "w-8 h-8")}
+          className={cn("flex items-center justify-center mr-4")}
           style={{ color: sectionColor }}
         >
-          <IconComponent size={isMobile ? 16 : 18} />
+          <IconComponent size={isMobile ? 14 : 16} />
         </div>
         <div className="flex-1">
           <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
@@ -76,11 +76,11 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       onClick={onSelect}
     >
       <div 
-        className={cn("flex items-center justify-center rounded-full mb-4", 
-          isMobile ? "w-10 h-10 mb-3" : "w-12 h-12")}
-        style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
+        className={cn("flex items-center justify-center mb-4", 
+          isMobile ? "mb-3" : "")}
+        style={{ color: sectionColor }}
       >
-        <IconComponent size={isMobile ? 20 : 24} />
+        <IconComponent size={isMobile ? 18 : 22} />
       </div>
       <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
         {prompt.user_title}
