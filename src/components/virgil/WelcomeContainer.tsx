@@ -27,19 +27,24 @@ const WelcomeContainer: React.FC<WelcomeContainerProps> = ({ onDismiss }) => {
         <X size={isMobile ? 18 : 24} />
       </button>
       
-      <h1 className={cn(
-        "font-baskerville text-[#E9E7E2] leading-tight mb-3",
-        isMobile ? "text-xl" : "text-2xl"
+      <div className={cn(
+        "pt-4",
+        isMobile ? "px-4 pb-4" : "px-8 pb-6"
       )}>
-        Discover, awaken, and direct a love of learning.
-      </h1>
-      
-      <h2 className={cn(
-        subtitleColor, "font-normal leading-relaxed",
-        isMobile ? "text-sm" : "text-base"
-      )}>
-        Choose your own emotional, intellectual, or practical path to become who you are.
-      </h2>
+        <h1 className={cn(
+          "font-baskerville text-[#E9E7E2] leading-tight mb-3",
+          isMobile ? "text-xl" : "text-2xl"
+        )}>
+          Discover, awaken, and direct a love of learning.
+        </h1>
+        
+        <h2 className={cn(
+          subtitleColor, "font-normal leading-relaxed",
+          isMobile ? "text-sm" : "text-base"
+        )}>
+          Choose your own emotional, intellectual, or practical path to become who you are.
+        </h2>
+      </div>
     </div>
   );
 };
