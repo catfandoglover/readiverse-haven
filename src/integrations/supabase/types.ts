@@ -92,7 +92,6 @@ export type Database = {
           about: string | null
           amazon_link: string | null
           author: string | null
-          author_id: string | null
           bookshop_link: string | null
           categories: string[] | null
           Cover_super: string | null
@@ -112,7 +111,6 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
-          author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
@@ -132,7 +130,6 @@ export type Database = {
           about?: string | null
           amazon_link?: string | null
           author?: string | null
-          author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
           Cover_super?: string | null
@@ -148,127 +145,43 @@ export type Database = {
           slug?: string
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "books_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "icons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       concepts: {
         Row: {
           about: string | null
-          concept_type: string | null
           created_at: string
-          great_conversation: string | null
           id: string
           illustration: string
           introduction: string | null
           Notion_URL: string | null
           randomizer: number
-          slug: string | null
           title: string
+          type: string | null
         }
         Insert: {
           about?: string | null
-          concept_type?: string | null
           created_at?: string
-          great_conversation?: string | null
           id?: string
           illustration: string
           introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number
-          slug?: string | null
           title: string
+          type?: string | null
         }
         Update: {
           about?: string | null
-          concept_type?: string | null
           created_at?: string
-          great_conversation?: string | null
           id?: string
           illustration?: string
           introduction?: string | null
           Notion_URL?: string | null
           randomizer?: number
-          slug?: string | null
           title?: string
+          type?: string | null
         }
         Relationships: []
-      }
-      custom_domain_books: {
-        Row: {
-          author: string | null
-          cover_url: string | null
-          created_at: string
-          domain_id: string
-          id: string
-          title: string
-          user_id: string
-        }
-        Insert: {
-          author?: string | null
-          cover_url?: string | null
-          created_at?: string
-          domain_id: string
-          id?: string
-          title: string
-          user_id: string
-        }
-        Update: {
-          author?: string | null
-          cover_url?: string | null
-          created_at?: string
-          domain_id?: string
-          id?: string
-          title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "custom_domain_books_domain_id_fkey"
-            columns: ["domain_id"]
-            isOneToOne: false
-            referencedRelation: "custom_domains"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      custom_domains: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          outseta_user_id: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          outseta_user_id?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          outseta_user_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_custom_domains_profile"
-            columns: ["outseta_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["outseta_user_id"]
-          },
-        ]
       }
       dna_analysis_results: {
         Row: {
@@ -964,7 +877,6 @@ export type Database = {
           name: string
           ontology_sequence: string | null
           politics_sequence: string | null
-          profile_id: string | null
           theology_sequence: string | null
         }
         Insert: {
@@ -977,7 +889,6 @@ export type Database = {
           name: string
           ontology_sequence?: string | null
           politics_sequence?: string | null
-          profile_id?: string | null
           theology_sequence?: string | null
         }
         Update: {
@@ -990,7 +901,6 @@ export type Database = {
           name?: string
           ontology_sequence?: string | null
           politics_sequence?: string | null
-          profile_id?: string | null
           theology_sequence?: string | null
         }
         Relationships: []
@@ -1218,169 +1128,65 @@ export type Database = {
         }
         Relationships: []
       }
-      icon_update_temp: {
-        Row: {
-          anecdotes: string[] | null
-          created_at: string
-          icon_id: string | null
-          id: string
-        }
-        Insert: {
-          anecdotes?: string[] | null
-          created_at?: string
-          icon_id?: string | null
-          id?: string
-        }
-        Update: {
-          anecdotes?: string[] | null
-          created_at?: string
-          icon_id?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
       icons: {
         Row: {
           about: string | null
-          anecdotes: string[] | null
           created_at: string
-          great_conversation: string | null
           id: string
           illustration: string
           introduction: string | null
           name: string
           Notion_URL: string | null
           randomizer: number
-          slug: string | null
         }
         Insert: {
           about?: string | null
-          anecdotes?: string[] | null
           created_at?: string
-          great_conversation?: string | null
           id?: string
           illustration: string
           introduction?: string | null
           name: string
           Notion_URL?: string | null
           randomizer?: number
-          slug?: string | null
         }
         Update: {
           about?: string | null
-          anecdotes?: string[] | null
           created_at?: string
-          great_conversation?: string | null
           id?: string
           illustration?: string
           introduction?: string | null
           name?: string
           Notion_URL?: string | null
           randomizer?: number
-          slug?: string | null
         }
         Relationships: []
       }
       profiles: {
         Row: {
-          assessment_id: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
-          landscape_image: string | null
           outseta_user_id: string
-          profile_image: string | null
           updated_at: string
         }
         Insert: {
-          assessment_id?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id?: string
-          landscape_image?: string | null
           outseta_user_id: string
-          profile_image?: string | null
           updated_at?: string
         }
         Update: {
-          assessment_id?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
-          landscape_image?: string | null
           outseta_user_id?: string
-          profile_image?: string | null
           updated_at?: string
         }
         Relationships: []
-      }
-      prompts: {
-        Row: {
-          context: string | null
-          display_order: number | null
-          id: number
-          prompt: string | null
-          purpose: string | null
-          section: string | null
-          user_subtitle: string | null
-          user_title: string | null
-        }
-        Insert: {
-          context?: string | null
-          display_order?: number | null
-          id?: number
-          prompt?: string | null
-          purpose?: string | null
-          section?: string | null
-          user_subtitle?: string | null
-          user_title?: string | null
-        }
-        Update: {
-          context?: string | null
-          display_order?: number | null
-          id?: number
-          prompt?: string | null
-          purpose?: string | null
-          section?: string | null
-          user_subtitle?: string | null
-          user_title?: string | null
-        }
-        Relationships: []
-      }
-      quotes: {
-        Row: {
-          created_at: string
-          icon: string | null
-          icon_id: string | null
-          id: number
-          quote: string | null
-        }
-        Insert: {
-          created_at?: string
-          icon?: string | null
-          icon_id?: string | null
-          id?: number
-          quote?: string | null
-        }
-        Update: {
-          created_at?: string
-          icon?: string | null
-          icon_id?: string | null
-          id?: number
-          quote?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quotes_icon_id_fkey"
-            columns: ["icon_id"]
-            isOneToOne: false
-            referencedRelation: "icons"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       reading_list_books: {
         Row: {
@@ -1515,64 +1321,6 @@ export type Database = {
           person_uid?: string | null
         }
         Relationships: []
-      }
-      user_badges: {
-        Row: {
-          created_at: string
-          entry_concepts: string | null
-          entry_icon: string | null
-          entry_text: string | null
-          id: number
-          score: string | null
-          session_duration: number | null
-          summary: string | null
-          userid: string | null
-        }
-        Insert: {
-          created_at?: string
-          entry_concepts?: string | null
-          entry_icon?: string | null
-          entry_text?: string | null
-          id?: number
-          score?: string | null
-          session_duration?: number | null
-          summary?: string | null
-          userid?: string | null
-        }
-        Update: {
-          created_at?: string
-          entry_concepts?: string | null
-          entry_icon?: string | null
-          entry_text?: string | null
-          id?: number
-          score?: string | null
-          session_duration?: number | null
-          summary?: string | null
-          userid?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "badges_entry_icon_fkey"
-            columns: ["entry_icon"]
-            isOneToOne: false
-            referencedRelation: "icons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "badges_entry_text_fkey"
-            columns: ["entry_text"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_badges_entry_concepts_fkey"
-            columns: ["entry_concepts"]
-            isOneToOne: false
-            referencedRelation: "concepts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_books: {
         Row: {
