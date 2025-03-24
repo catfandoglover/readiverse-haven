@@ -32,7 +32,7 @@ const formatPrompt = (dbPrompt: DbPrompt) => {
     section: dbPrompt.section || "intellectual",
     icon_display: dbPrompt.icon_display || "FileText",
     context: dbPrompt.context || "chat",
-    initial_message: dbPrompt.initial_message || "Let's have a conversation.",
+    initial_message: dbPrompt.prompt || dbPrompt.initial_message || `Let's have a conversation.`,
   };
 };
 
@@ -40,7 +40,6 @@ const VirgilChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
-  const [showChat, setShowChat] = useState(false);
 
   const { data: dbPrompt, isLoading, error } = useQuery({
     queryKey: ['virgilPrompt', id],
@@ -92,7 +91,6 @@ const VirgilChat: React.FC = () => {
         // Allow time for header transition before showing chat
         const chatTimer = setTimeout(() => {
           setState('chat');
-          setShowChat(true);
         }, 500); // 500ms for the header transition
 
         return () => clearTimeout(chatTimer);
@@ -161,7 +159,7 @@ const VirgilChat: React.FC = () => {
         {/* Initial centered text */}
         <div 
           className={cn(
-            "flex flex-col items-center justify-center text-center transition-all duration-500 absolute inset-0",
+            "flex flex-col items-center justify-center text-center transition-all duration-500",
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
@@ -171,19 +169,15 @@ const VirgilChat: React.FC = () => {
           )}
         </div>
         
-        {/* Chat interface - always rendered but opacity controlled */}
-        <div 
-          className={cn(
-            "absolute inset-0 flex flex-col transition-opacity duration-500",
-            showChat ? "opacity-100" : "opacity-0 pointer-events-none"
-          )}
-        >
-          <VirgilFullScreenChat 
-            key={`chat-${prompt.id}`}
-            variant="virgilchat"
-            initialMessage={prompt.initial_message}
-          />
-        </div>
+        {/* Chat interface - only shows after transition */}
+        {state === 'chat' && prompt && (
+          <div className="absolute inset-0 flex flex-col">
+            <VirgilFullScreenChat 
+              variant="virgilchat"
+              initialMessage={prompt.initial_message}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

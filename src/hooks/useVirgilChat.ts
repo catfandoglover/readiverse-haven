@@ -8,12 +8,29 @@ import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
 import conversationManager from '@/services/ConversationManager';
 
-export const useVirgilChat = () => {
+export const useVirgilChat = (initialMessage?: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const sessionId = useRef(uuidv4()).current;
+
+  useEffect(() => {
+    if (messages.length === 0 && initialMessage) {
+      setMessages([
+        {
+          id: uuidv4(),
+          content: initialMessage,
+          role: 'assistant',
+          isNew: true
+        }
+      ]);
+      
+      setTimeout(() => {
+        generateAudioForText(initialMessage);
+      }, 100);
+    }
+  }, [initialMessage]);
 
   const generateAudioForText = async (text: string) => {
     try {
