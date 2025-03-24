@@ -24,7 +24,7 @@ const MainMenu: React.FC = () => {
       <SheetContent side="left" className="w-[250px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
         <nav className="flex flex-col gap-6 mt-8">
           <div className="px-2 py-4">
-            <h2 className="text-xl font-serif mb-6">LIGHTNING</h2>
+            <h2 className="text-xl font-serif mb-6">Lightning</h2>
             <div className="space-y-4">
               <Button 
                 variant="ghost" 
