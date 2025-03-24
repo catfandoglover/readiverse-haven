@@ -18,7 +18,7 @@ const ConceptsFeedPage = () => {
       >
         <div className="flex items-center px-4 py-3 h-full w-full">
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/discover/search')}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
             aria-label="Back"
           >

@@ -95,7 +95,7 @@ const DiscoverLayout = () => {
             <button 
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"
               aria-label="Search"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/discover/search')}
             >
               <Search className="h-5 w-5" />
             </button>

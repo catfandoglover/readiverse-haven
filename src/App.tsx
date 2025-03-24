@@ -72,10 +72,10 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/dna" replace />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/search/icons" element={<IconsFeedPage />} />
-                <Route path="/search/concepts" element={<ConceptsFeedPage />} />
-                <Route path="/search/classics" element={<ClassicsFeedPage />} />
+                <Route path="/discover/search" element={<SearchPage />} /> 
+                <Route path="/discover/search/icons" element={<IconsFeedPage />} />
+                <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
+                <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
@@ -93,6 +93,12 @@ const App = () => (
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />
                 <Route path="/virgil-chat" element={<VirgilChat />} />
+                
+                {/* Redirects from old paths to new paths */}
+                <Route path="/search" element={<Navigate to="/discover/search" replace />} />
+                <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
+                <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
+                <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>

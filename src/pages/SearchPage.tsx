@@ -1,12 +1,14 @@
+
 import React from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 
 const SearchPage = () => {
   const navigate = useNavigate();
   
   const handleCategoryClick = (category: string) => {
-    navigate(`/search/${category.toLowerCase()}`);
+    navigate(`/discover/search/${category.toLowerCase()}`);
   };
 
   return (
@@ -21,7 +23,7 @@ const SearchPage = () => {
       >
         <div className="flex items-center px-4 py-3 h-full w-full">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/discover')}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
             aria-label="Back"
           >
