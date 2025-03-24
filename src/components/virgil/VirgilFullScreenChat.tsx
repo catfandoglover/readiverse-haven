@@ -25,6 +25,8 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   disableChat = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+  
   const {
     messages,
     inputMessage,
@@ -34,9 +36,17 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     toggleRecording,
     handleSubmitMessage,
     addAssistantMessage
-  } = useVirgilChat(initialMessage);
+  } = useVirgilChat();
 
   const themeColors = chatThemes[variant];
+
+  // Handle initial message only once
+  useEffect(() => {
+    if (initialMessage && !initialized.current && messages.length === 0) {
+      initialized.current = true;
+      addAssistantMessage(initialMessage);
+    }
+  }, [initialMessage, addAssistantMessage, messages.length]);
 
   useEffect(() => {
     scrollToBottom();
