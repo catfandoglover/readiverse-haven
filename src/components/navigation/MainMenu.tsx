@@ -39,7 +39,7 @@ const MainMenu: React.FC = () => {
                   <Compass className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Discover
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
@@ -59,7 +59,7 @@ const MainMenu: React.FC = () => {
                   </Avatar>
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Virgil's Office
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
@@ -77,7 +77,7 @@ const MainMenu: React.FC = () => {
                   <Dna className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     DNA
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
@@ -95,7 +95,7 @@ const MainMenu: React.FC = () => {
                   <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Profile
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
@@ -113,7 +113,7 @@ const MainMenu: React.FC = () => {
                   <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Study
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
