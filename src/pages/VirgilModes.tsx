@@ -16,6 +16,7 @@ const VirgilModes: React.FC = () => {
   const { data: prompts, isLoading, error } = useQuery({
     queryKey: ["virgilPrompts"],
     queryFn: async () => {
+      console.log("Fetching prompts...");
       const { data, error } = await supabase
         .from("prompts")
         .select("*")
@@ -26,6 +27,7 @@ const VirgilModes: React.FC = () => {
         throw new Error(error.message);
       }
       
+      console.log("Fetched prompts:", data);
       return data || [];
     }
   });

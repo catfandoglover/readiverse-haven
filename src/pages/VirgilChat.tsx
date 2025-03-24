@@ -100,7 +100,7 @@ const VirgilChat: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/70 tracking-wider text-sm font-bold mx-auto">
-          {prompt.title}
+          {prompt.user_title}
         </h2>
         <div className="w-10 h-10" />
       </div>
@@ -114,9 +114,9 @@ const VirgilChat: React.FC = () => {
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">{prompt.title}</h1>
-          {prompt.description && (
-            <p className="font-inter text-lg text-[#E9E7E2]/70">{prompt.description}</p>
+          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">{prompt.user_title}</h1>
+          {prompt.user_subtitle && (
+            <p className="font-inter text-lg text-[#E9E7E2]/70">{prompt.user_subtitle}</p>
           )}
         </div>
         
@@ -125,7 +125,7 @@ const VirgilChat: React.FC = () => {
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
               variant="virgilchat"
-              initialMessage={prompt.initial_message || `Let's talk about ${prompt.title}.`}
+              initialMessage={prompt.initial_message || `Let's talk about ${prompt.user_title}.`}
             />
           </div>
         )}

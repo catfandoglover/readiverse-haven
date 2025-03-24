@@ -5,11 +5,11 @@ import { ArrowRight } from "lucide-react";
 
 interface Prompt {
   id: string;
-  title: string;
+  user_title: string;
   section: string;
   icon_display: string;
   context: string;
-  description?: string;
+  user_subtitle?: string;
 }
 
 interface PromptCardProps {
@@ -47,9 +47,9 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           {prompt.icon_display}
         </div>
         <div className="flex-1">
-          <h3 className="font-baskerville text-lg text-[#E9E7E2]">{prompt.title}</h3>
-          {prompt.description && (
-            <p className="text-sm text-[#E9E7E2]/70 mt-1 line-clamp-1">{prompt.description}</p>
+          <h3 className="font-baskerville text-lg text-[#E9E7E2]">{prompt.user_title}</h3>
+          {prompt.user_subtitle && (
+            <p className="text-sm text-[#E9E7E2]/70 mt-1 line-clamp-1">{prompt.user_subtitle}</p>
           )}
         </div>
         <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
@@ -68,9 +68,9 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       >
         {prompt.icon_display}
       </div>
-      <h3 className="font-baskerville text-xl text-[#E9E7E2] mb-2">{prompt.title}</h3>
-      {prompt.description && (
-        <p className="text-sm text-[#E9E7E2]/70 flex-1 line-clamp-2">{prompt.description}</p>
+      <h3 className="font-baskerville text-xl text-[#E9E7E2] mb-2">{prompt.user_title}</h3>
+      {prompt.user_subtitle && (
+        <p className="text-sm text-[#E9E7E2]/70 flex-1 line-clamp-2">{prompt.user_subtitle}</p>
       )}
       <div className="flex items-center justify-end mt-4">
         <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
