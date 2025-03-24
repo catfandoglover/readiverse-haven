@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
+import WelcomeContainer from "@/components/virgil/WelcomeContainer";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,6 +34,8 @@ interface Prompt {
   initial_message?: string;
 }
 
+const WELCOME_DISMISSED_KEY = "virgil_welcome_dismissed";
+
 const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
   console.log("Processing DB prompt:", dbPrompt);
   return {
@@ -48,8 +51,28 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 
 const VirgilModes: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // Load the welcome dismissed state from localStorage on component mount
+  useEffect(() => {
+    const welcomeDismissed = localStorage.getItem(WELCOME_DISMISSED_KEY) === "true";
+    setShowWelcome(!welcomeDismissed);
+  }, []);
+
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem(WELCOME_DISMISSED_KEY, "true");
+    
+    // If we have a logged in user, we could also store this preference in Supabase
+    // This is a placeholder for that functionality
+    const user = supabase.auth.getUser();
+    if (user) {
+      // Store user preference in database (implementation would depend on your data model)
+      console.log("Would store welcome dismissed preference for user in database");
+    }
+  };
 
   const toggleViewMode = () => {
     setViewMode(viewMode === "grid" ? "list" : "grid");
@@ -221,7 +244,10 @@ const VirgilModes: React.FC = () => {
             </Button>
           </div>
         ) : (
-          viewMode === "list" ? renderListView() : renderGridView()
+          <>
+            {showWelcome && <WelcomeContainer onDismiss={handleDismissWelcome} />}
+            {viewMode === "list" ? renderListView() : renderGridView()}
+          </>
         )}
       </main>
     </div>
