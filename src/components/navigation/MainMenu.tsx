@@ -34,7 +34,7 @@ const MainMenu: React.FC = () => {
               
               {/* Profile Navigation Item */}
               <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
                 onClick={() => handleNavigation("/profile")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
