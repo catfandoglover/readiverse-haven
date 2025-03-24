@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -55,7 +54,6 @@ const VirgilModes: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Load the welcome dismissed state from localStorage on component mount
   useEffect(() => {
     const welcomeDismissed = localStorage.getItem(WELCOME_DISMISSED_KEY) === "true";
     setShowWelcome(!welcomeDismissed);
@@ -65,11 +63,8 @@ const VirgilModes: React.FC = () => {
     setShowWelcome(false);
     localStorage.setItem(WELCOME_DISMISSED_KEY, "true");
     
-    // If we have a logged in user, we could also store this preference in Supabase
-    // This is a placeholder for that functionality
     const user = supabase.auth.getUser();
     if (user) {
-      // Store user preference in database (implementation would depend on your data model)
       console.log("Would store welcome dismissed preference for user in database");
     }
   };
@@ -114,7 +109,6 @@ const VirgilModes: React.FC = () => {
 
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
   
-  // Filter prompts by section - only used in list view
   const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
   const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
   const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
@@ -122,7 +116,6 @@ const VirgilModes: React.FC = () => {
     !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
   );
 
-  // Sort prompts alphabetically by title within each section
   const sortAlphabetically = (prompts: Prompt[]) => {
     return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
   };
@@ -146,7 +139,6 @@ const VirgilModes: React.FC = () => {
   const renderGridView = () => {
     const mobileSpacing = isMobile ? "gap-3" : "gap-4";
     
-    // For grid view, combine the sorted sections in the specified order
     const orderedPrompts = [
       ...sortedIntellectualPrompts,
       ...sortedEmotionalPrompts,
@@ -161,7 +153,7 @@ const VirgilModes: React.FC = () => {
             key={prompt.id}
             prompt={prompt}
             viewMode="grid"
-            onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
+            onSelect={() => navigate('/virgil-chat')}
           />
         ))}
       </div>
@@ -184,7 +176,7 @@ const VirgilModes: React.FC = () => {
               key={prompt.id}
               prompt={prompt}
               viewMode="list"
-              onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
+              onSelect={() => navigate('/virgil-chat')}
             />
           ))}
         </div>
