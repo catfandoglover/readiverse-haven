@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -89,15 +90,42 @@ const VirgilModes: React.FC = () => {
   });
 
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
-  console.log("Formatted prompts for rendering:", formattedPrompts);
   
+  // Filter prompts by section - only used in list view
   const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
   const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
   const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
-  
   const otherPrompts = formattedPrompts.filter(p => 
     !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
   );
+
+  const renderListView = () => {
+    return (
+      <>
+        {renderPromptSection("INTELLECTUAL", intellectualPrompts)}
+        {renderPromptSection("EMOTIONAL", emotionalPrompts)}
+        {renderPromptSection("PRACTICAL", practicalPrompts)}
+        {renderPromptSection("OTHER", otherPrompts)}
+      </>
+    );
+  };
+
+  const renderGridView = () => {
+    const mobileSpacing = isMobile ? "gap-3" : "gap-4";
+    
+    return (
+      <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${mobileSpacing}`}>
+        {formattedPrompts.map((prompt) => (
+          <PromptCard 
+            key={prompt.id}
+            prompt={prompt}
+            viewMode="grid"
+            onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const renderPromptSection = (title: string, sectionPrompts: Prompt[]) => {
     if (sectionPrompts.length === 0) return null;
@@ -109,17 +137,12 @@ const VirgilModes: React.FC = () => {
         <h3 className={cn("text-[#9D9D9D] uppercase tracking-wider text-sm font-medium mb-4", isMobile && "mb-3")}>
           {title}
         </h3>
-        <div className={cn(
-          viewMode === "grid" 
-            ? `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${mobileSpacing}` 
-            : "space-y-3",
-          isMobile && viewMode === "list" && "space-y-2"
-        )}>
+        <div className="space-y-3">
           {sectionPrompts.map((prompt) => (
             <PromptCard 
               key={prompt.id}
               prompt={prompt}
-              viewMode={viewMode}
+              viewMode="list"
               onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
             />
           ))}
@@ -180,12 +203,7 @@ const VirgilModes: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <div>
-            {renderPromptSection("INTELLECTUAL", intellectualPrompts)}
-            {renderPromptSection("EMOTIONAL", emotionalPrompts)}
-            {renderPromptSection("PRACTICAL", practicalPrompts)}
-            {renderPromptSection("OTHER", otherPrompts)}
-          </div>
+          viewMode === "list" ? renderListView() : renderGridView()
         )}
       </main>
     </div>
