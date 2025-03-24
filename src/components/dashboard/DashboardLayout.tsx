@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
-type NavigationTab = "discover" | "virgil" | "dna" | "profile" | "bookshelf";
+type NavigationTab = "discover" | "virgil" | "dna" | "profile" | "bookshelf" | "dashboard";
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
