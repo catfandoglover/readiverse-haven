@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -49,7 +50,8 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 };
 
 const VirgilModes: React.FC = () => {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  // Changed default view mode from "list" to "grid"
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();

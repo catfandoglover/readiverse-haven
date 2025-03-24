@@ -62,7 +62,7 @@ class SpeechService {
       // Use Arthur voice (British English male)
       const params = {
         OutputFormat: OutputFormat.MP3,
-        SampleRate: "16000",
+        SampleRate: "16000", // Fixed: Using string instead of String object
         Text: text,
         TextType: TextType.TEXT,
         VoiceId: VoiceId.Arthur,  // Using Arthur voice
