@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
@@ -157,15 +156,6 @@ const IntellectualDNA = () => {
               Trace your<br />Intellectual DNA
             </h1>
             
-            <div className="w-full px-2 flex justify-center">
-              <Button 
-                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
-                onClick={handleStartAssessment}
-              >
-                GET STARTED
-              </Button>
-            </div>
-
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
             </p>
