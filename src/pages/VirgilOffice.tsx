@@ -17,7 +17,7 @@ const VirgilOffice: React.FC = () => {
     >
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
-        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Virgil's Office
         </h2>
         <Button
