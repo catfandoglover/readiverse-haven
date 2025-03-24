@@ -99,13 +99,23 @@ const VirgilModes: React.FC = () => {
     !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
   );
 
+  // Sort prompts alphabetically by title within each section
+  const sortAlphabetically = (prompts: Prompt[]) => {
+    return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
+  };
+
+  const sortedIntellectualPrompts = sortAlphabetically(intellectualPrompts);
+  const sortedEmotionalPrompts = sortAlphabetically(emotionalPrompts);
+  const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
+  const sortedOtherPrompts = sortAlphabetically(otherPrompts);
+
   const renderListView = () => {
     return (
       <>
-        {renderPromptSection("INTELLECTUAL", intellectualPrompts)}
-        {renderPromptSection("EMOTIONAL", emotionalPrompts)}
-        {renderPromptSection("PRACTICAL", practicalPrompts)}
-        {renderPromptSection("OTHER", otherPrompts)}
+        {renderPromptSection("INTELLECTUAL", sortedIntellectualPrompts)}
+        {renderPromptSection("EMOTIONAL", sortedEmotionalPrompts)}
+        {renderPromptSection("PRACTICAL", sortedPracticalPrompts)}
+        {renderPromptSection("OTHER", sortedOtherPrompts)}
       </>
     );
   };
@@ -113,9 +123,17 @@ const VirgilModes: React.FC = () => {
   const renderGridView = () => {
     const mobileSpacing = isMobile ? "gap-3" : "gap-4";
     
+    // For grid view, combine the sorted sections in the specified order
+    const orderedPrompts = [
+      ...sortedIntellectualPrompts,
+      ...sortedEmotionalPrompts,
+      ...sortedPracticalPrompts,
+      ...sortedOtherPrompts
+    ];
+    
     return (
       <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${mobileSpacing}`}>
-        {formattedPrompts.map((prompt) => (
+        {orderedPrompts.map((prompt) => (
           <PromptCard 
             key={prompt.id}
             prompt={prompt}
