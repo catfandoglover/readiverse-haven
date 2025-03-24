@@ -83,11 +83,13 @@ const VirgilChat: React.FC = () => {
         {/* Initial centered text */}
         <div 
           className={cn(
-            "flex flex-col items-center justify-center text-center transition-all duration-500",
+            "flex flex-col items-center justify-center text-center transition-all duration-500 px-6",
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">Explore Ideas</h1>
+          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">
+            {promptData?.user_title || "Explore Ideas"}
+          </h1>
           <p className="font-inter text-lg text-[#E9E7E2]/70">
             {promptData?.user_subtitle || "Chat with Virgil about anything"}
           </p>
