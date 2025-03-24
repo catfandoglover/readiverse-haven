@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, BookOpen, Compass, Dna, CircleUserRound } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const MainMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -24,59 +25,122 @@ const MainMenu: React.FC = () => {
           <Menu className="h-7.5 w-7.5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[250px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
-        <nav className="flex flex-col gap-6 mt-8">
-          <div className="px-2 py-4">
-            <h2 className="text-xl font-serif mb-6">Navigation</h2>
-            <div className="space-y-4">
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
-                onClick={() => handleNavigation("/discover")}
-              >
-                <Compass className="h-5 w-5 mr-3" />
-                <span className="font-oxanium">Discover</span>
-              </Button>
+      <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
+        <nav className="flex flex-col gap-8 mt-10">
+          <div className="px-2">
+            <h2 className="text-xl font-serif mb-8">Navigation</h2>
+            <div className="space-y-6">
+              {/* Discover Navigation Item */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+                  <Compass className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                    Discover
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
+                    onClick={() => handleNavigation("/discover")}
+                  >
+                    <span className="font-oxanium text-sm">Explore</span>
+                  </Button>
+                </div>
+              </div>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
-                onClick={() => handleNavigation("/virgil")}
-              >
-                <div className="h-5 w-5 mr-3 rounded-full overflow-hidden">
-                  <Avatar className="h-5 w-5">
+              {/* Virgil's Office Navigation Item */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-1 overflow-hidden">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
                   </Avatar>
                 </div>
-                <span className="font-oxanium">Virgil's Office</span>
-              </Button>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                    Virgil's Office
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
+                    onClick={() => handleNavigation("/virgil")}
+                  >
+                    <span className="font-oxanium text-sm">Visit</span>
+                  </Button>
+                </div>
+              </div>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
-                onClick={() => handleNavigation("/dna")}
-              >
-                <Dna className="h-5 w-5 mr-3" />
-                <span className="font-oxanium">DNA</span>
-              </Button>
+              {/* DNA Navigation Item */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+                  <Dna className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                    DNA
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
+                    onClick={() => handleNavigation("/dna")}
+                  >
+                    <span className="font-oxanium text-sm">Analyze</span>
+                  </Button>
+                </div>
+              </div>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
-                onClick={() => handleNavigation("/profile")}
-              >
-                <CircleUserRound className="h-5 w-5 mr-3" />
-                <span className="font-oxanium">Profile</span>
-              </Button>
+              {/* Profile Navigation Item */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+                  <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                    Profile
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
+                    onClick={() => handleNavigation("/profile")}
+                  >
+                    <span className="font-oxanium text-sm">View</span>
+                  </Button>
+                </div>
+              </div>
               
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-[#E9E7E2]/80 hover:text-[#E9E7E2] hover:bg-[#E9E7E2]/5"
-                onClick={() => handleNavigation("/bookshelf")}
-              >
-                <BookOpen className="h-5 w-5 mr-3" />
-                <span className="font-oxanium">Study</span>
-              </Button>
+              {/* Study Navigation Item */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-[#373763]/30 rounded-full p-3">
+                  <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-base font-medium tracking-wide">
+                    Study
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
+                    onClick={() => handleNavigation("/bookshelf")}
+                  >
+                    <span className="font-oxanium text-sm">Read</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </nav>
