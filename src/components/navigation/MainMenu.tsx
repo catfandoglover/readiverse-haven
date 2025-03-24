@@ -45,7 +45,7 @@ const MainMenu: React.FC = () => {
                     Profile
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
+                    Become who you are
                   </p>
                 </div>
               </div>
@@ -63,7 +63,7 @@ const MainMenu: React.FC = () => {
                     DNA
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
+                    Uncover your worldview
                   </p>
                 </div>
               </div>
@@ -80,10 +80,10 @@ const MainMenu: React.FC = () => {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
-                    Virgil's Office
+                    Virgil
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
+                    Consult your guide
                   </p>
                 </div>
               </div>
@@ -102,7 +102,7 @@ const MainMenu: React.FC = () => {
                     Discover
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
+                    Find inspiration
                   </p>
                 </div>
               </div>
@@ -120,7 +120,7 @@ const MainMenu: React.FC = () => {
                     Study
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
+                    Curate your collection
                   </p>
                 </div>
               </div>
