@@ -83,7 +83,7 @@ const App = () => (
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />
-                <Route path="/virgil-chat/:id" element={<VirgilChat />} />
+                <Route path="/virgil-chat" element={<VirgilChat />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>

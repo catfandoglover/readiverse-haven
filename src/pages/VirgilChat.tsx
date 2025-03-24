@@ -1,14 +1,35 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 
+interface PromptData {
+  id: string | number;
+  user_title: string;
+  user_subtitle?: string;
+  section?: string;
+  icon_display?: string;
+  context?: string;
+  initial_message: string;
+}
+
+interface LocationState {
+  promptData?: PromptData;
+}
+
 const VirgilChat: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as LocationState;
+  
+  // Get the prompt data from location state or use default message
+  const promptData = locationState?.promptData;
+  const initialMessage = promptData?.initial_message || 
+    "I'm Virgil, your philosophical guide to humanity's great conversation. How can I help you explore ideas today?";
 
   // Initial animation timing
   useEffect(() => {
@@ -52,7 +73,7 @@ const VirgilChat: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/70 tracking-wider text-sm font-bold mx-auto">
-          VIRGIL
+          {promptData?.user_title || "VIRGIL"}
         </h2>
         <div className="w-10 h-10" />
       </div>
@@ -67,7 +88,9 @@ const VirgilChat: React.FC = () => {
           )}
         >
           <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">Explore Ideas</h1>
-          <p className="font-inter text-lg text-[#E9E7E2]/70">Chat with Virgil about anything</p>
+          <p className="font-inter text-lg text-[#E9E7E2]/70">
+            {promptData?.user_subtitle || "Chat with Virgil about anything"}
+          </p>
         </div>
         
         {/* Chat interface - only shows after transition */}
@@ -75,7 +98,8 @@ const VirgilChat: React.FC = () => {
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
               variant="virgilchat"
-              initialMessage="I'm Virgil, your philosophical guide to humanity's great conversation. How can I help you explore ideas today?"
+              initialMessage={initialMessage}
+              resultsReady={false}
             />
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -128,7 +127,11 @@ const VirgilModes: React.FC = () => {
 
   const handlePromptSelect = (prompt: Prompt) => {
     console.log("Prompt selected:", prompt);
-    navigate('/virgil-chat');
+    navigate('/virgil-chat', { 
+      state: { 
+        promptData: prompt 
+      }
+    });
   };
 
   const renderListView = () => {
