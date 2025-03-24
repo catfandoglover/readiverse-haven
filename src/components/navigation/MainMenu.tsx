@@ -44,7 +44,7 @@ const MainMenu: React.FC = () => {
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Profile
                   </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Become who you are
                   </p>
                 </div>
@@ -62,7 +62,7 @@ const MainMenu: React.FC = () => {
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     DNA
                   </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Uncover your worldview
                   </p>
                 </div>
@@ -82,7 +82,7 @@ const MainMenu: React.FC = () => {
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Virgil
                   </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Consult your guide
                   </p>
                 </div>
@@ -101,7 +101,7 @@ const MainMenu: React.FC = () => {
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Discover
                   </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Find inspiration
                   </p>
                 </div>
@@ -119,7 +119,7 @@ const MainMenu: React.FC = () => {
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
                     Study
                   </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Curate your collection
                   </p>
                 </div>
