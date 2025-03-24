@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -102,6 +101,8 @@ const ProfileHeader: React.FC = () => {
     fetchDNAAnalysisResult();
   }, [user]);
 
+  const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
+
   const handleProfileEditClick = () => {
     openProfile({ tab: 'profile' });
   };
@@ -153,10 +154,20 @@ const ProfileHeader: React.FC = () => {
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1 hover:bg-white/10"
+          onClick={handleShareClick}
+          aria-label="Share profile"
+        >
+          <Share className="h-7.5 w-7.5" />
+        </Button>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col items-center text-[#E9E7E2]">
-        <div className="flex w-full justify-between items-end mb-4">
+      <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
+        <div className="flex items-end space-x-4">
           <div className="relative h-20 w-20">
             <svg 
               viewBox="0 0 100 100" 
@@ -193,22 +204,15 @@ const ProfileHeader: React.FC = () => {
             </button>
           </div>
           
-          <Button
-            onClick={handleShareClick}
-            className="rounded-full px-4 py-2 h-10 bg-[#263934] hover:bg-[#263934]/90 text-white flex items-center gap-2"
-            size="sm"
-          >
-            <Share className="h-4 w-4" />
-            <span>SHARE PROFILE</span>
-          </Button>
-        </div>
-        
-        {/* Name and archetype positioned below the profile image */}
-        <div className="text-center mt-2">
-          <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
-          <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
-            {isLoadingAnalysis ? 'Loading...' : archetype}
-          </p>
+          <div>
+            <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
+            <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
+              {isLoadingAnalysis ? 'Loading...' : archetype}
+            </p>
+            <p className="text-xs text-[#E9E7E2]/60">
+              {email}
+            </p>
+          </div>
         </div>
       </div>
     </div>
