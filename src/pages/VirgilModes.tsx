@@ -9,8 +9,8 @@ import { LayoutGrid, List, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import { toast } from "sonner";
-import { Toggle } from "@/components/ui/toggle";
 
+// Define the shape of data coming from the database
 interface DbPrompt {
   id: number;
   user_title?: string;
@@ -22,8 +22,8 @@ interface DbPrompt {
   initial_message?: string;
 }
 
+// Transform DB data to the format expected by PromptCard
 const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
-  console.log("Processing DB prompt:", dbPrompt);
   return {
     id: dbPrompt.id,
     user_title: dbPrompt.user_title || "Untitled Prompt",
@@ -31,17 +31,13 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
     section: dbPrompt.section || "intellectual",
     icon_display: dbPrompt.icon_display || "💭",
     context: dbPrompt.context || "chat",
-    initial_message: dbPrompt.prompt || dbPrompt.initial_message || "Let's have a conversation.",
+    initial_message: dbPrompt.prompt || dbPrompt.initial_message,
   };
 };
 
 const VirgilModes: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const navigate = useNavigate();
-
-  const toggleViewMode = () => {
-    setViewMode(viewMode === "grid" ? "list" : "grid");
-  };
 
   const { data: prompts, isLoading, error } = useQuery({
     queryKey: ["virgilPrompts"],
@@ -51,7 +47,7 @@ const VirgilModes: React.FC = () => {
         const { data, error } = await supabase
           .from("prompts")
           .select("*")
-          .or('context.eq.chat,context.is.null');
+          .eq("context", "chat");
         
         if (error) {
           console.error("Error fetching prompts:", error);
@@ -59,12 +55,14 @@ const VirgilModes: React.FC = () => {
           throw new Error(error.message);
         }
         
-        console.log("Raw data from database:", data);
+        console.log("Fetched prompts:", data);
         
+        // If we have data but it's empty, log that specifically
         if (!data || data.length === 0) {
           console.log("No prompts returned from the database");
         }
         
+        // Check if the data has the expected shape
         if (data && data.length > 0) {
           console.log("Sample prompt:", data[0]);
         }
@@ -77,8 +75,9 @@ const VirgilModes: React.FC = () => {
     }
   });
 
+  // Map database prompts to the format our components expect
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
-  console.log("Formatted prompts for rendering:", formattedPrompts);
+  console.log("Formatted prompts:", formattedPrompts);
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
@@ -87,19 +86,31 @@ const VirgilModes: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Chat with Virgil
         </h2>
-        <div>
-          <Toggle 
-            pressed={viewMode === "list"}
-            onPressedChange={toggleViewMode}
-            aria-label="Toggle View Mode"
-            className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50 data-[state=on]:text-[#E9E7E2] data-[state=on]:bg-[#4A4351]/50"
-          >
-            {viewMode === "grid" ? (
-              <List className="h-5 w-5" />
-            ) : (
-              <LayoutGrid className="h-5 w-5" />
+        <div className="flex space-x-2">
+          <Button
+            variant="ghost" 
+            size="icon"
+            className={cn(
+              "w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50",
+              viewMode === "list" && "text-[#E9E7E2] bg-[#4A4351]/50"
             )}
-          </Toggle>
+            onClick={() => setViewMode("list")}
+            aria-label="List View"
+          >
+            <List className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost" 
+            size="icon"
+            className={cn(
+              "w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50",
+              viewMode === "grid" && "text-[#E9E7E2] bg-[#4A4351]/50"
+            )}
+            onClick={() => setViewMode("grid")}
+            aria-label="Grid View"
+          >
+            <LayoutGrid className="h-5 w-5" />
+          </Button>
         </div>
       </div>
       
@@ -122,7 +133,7 @@ const VirgilModes: React.FC = () => {
         ) : (formattedPrompts.length === 0) ? (
           <div className="text-center py-8 text-[#E9E7E2]/70">
             <p>No conversation prompts available.</p>
-            <p className="mt-2 text-sm">Check the database to ensure prompts exist.</p>
+            <p className="mt-2 text-sm">Check the database to ensure prompts with context="chat" exist.</p>
             <Button 
               variant="ghost"
               className="mt-4 text-[#CCFF23]"
@@ -134,7 +145,7 @@ const VirgilModes: React.FC = () => {
         ) : (
           <div className={cn(
             viewMode === "grid" 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
+              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" 
               : "space-y-4"
           )}>
             {formattedPrompts.map((prompt) => (
