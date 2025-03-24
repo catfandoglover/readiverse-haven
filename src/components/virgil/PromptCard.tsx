@@ -34,19 +34,52 @@ const getSectionColor = (section: string = "intellectual"): string => {
   }
 };
 
+// Helper function to convert database icon name to correct Lucide icon
+const getLucideIcon = (iconName: string): LucideIcon => {
+  // Default fallback icon
+  let Icon: LucideIcon = LucideIcons.FileText;
+  
+  if (!iconName) return Icon;
+  
+  try {
+    // Try direct access first (in case it's already correct case)
+    if (LucideIcons[iconName as keyof typeof LucideIcons]) {
+      return LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
+    }
+    
+    // Try converting first character to uppercase (for PascalCase)
+    const pascalCase = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+    if (LucideIcons[pascalCase as keyof typeof LucideIcons]) {
+      return LucideIcons[pascalCase as keyof typeof LucideIcons] as LucideIcon;
+    }
+    
+    // Try kebab-case to PascalCase conversion (e.g., "file-text" to "FileText")
+    if (iconName.includes('-')) {
+      const pascalFromKebab = iconName
+        .split('-')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join('');
+      
+      if (LucideIcons[pascalFromKebab as keyof typeof LucideIcons]) {
+        return LucideIcons[pascalFromKebab as keyof typeof LucideIcons] as LucideIcon;
+      }
+    }
+    
+    console.log(`Icon not found: ${iconName}, using default FileText icon`);
+  } catch (error) {
+    console.error(`Error processing icon: ${iconName}`, error);
+  }
+  
+  // Fallback to FileText if no match or error
+  return Icon;
+};
+
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) => {
   const sectionColor = getSectionColor(prompt.section);
   const isMobile = useIsMobile();
   
-  // Get the Lucide icon component safely
-  let IconComponent: LucideIcon = LucideIcons.FileText;
-  
-  if (prompt.icon_display && typeof prompt.icon_display === 'string') {
-    const iconName = prompt.icon_display as keyof typeof LucideIcons;
-    if (LucideIcons[iconName] && typeof LucideIcons[iconName] === 'function') {
-      IconComponent = LucideIcons[iconName] as LucideIcon;
-    }
-  }
+  // Get the Lucide icon component with our enhanced conversion function
+  const IconComponent = getLucideIcon(prompt.icon_display || "");
   
   if (viewMode === "list") {
     return (
