@@ -28,7 +28,7 @@ const WelcomeContainer: React.FC<WelcomeContainerProps> = ({ onDismiss }) => {
       </button>
       
       <h1 className={cn(
-        "font-baskerville text-[#E9E7E2] font-bold mb-3",
+        "font-baskerville text-[#E9E7E2] leading-tight mb-3",
         isMobile ? "text-xl" : "text-2xl"
       )}>
         Discover, awaken, and direct a love of learning.
