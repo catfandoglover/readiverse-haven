@@ -98,27 +98,51 @@ const IntellectualDNA = () => {
               Loading...
             </Button>
           ) : user ? (
-            <Button 
-              onClick={logout} 
-              variant="outline" 
-              size="sm" 
-              className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
+            <>
+              <Button 
+                onClick={openProfile} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title={`Profile: ${user.Account?.Name || user.email}`}
+              >
+                <User className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline truncate max-w-[100px]">{user.Account?.Name || user.email}</span>
+              </Button>
+              <Button 
+                onClick={logout} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </>
           ) : (
-            <Button 
-              onClick={openLogin} 
-              variant="outline" 
-              size="sm" 
-              className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-              title="Login"
-            >
-              <LogIn className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Login</span>
-            </Button>
+            <>
+              <Button 
+                onClick={openLogin} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Login"
+              >
+                <LogIn className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Login</span>
+              </Button>
+              <Button 
+                onClick={openSignup} 
+                variant="outline" 
+                size="sm" 
+                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
+                title="Sign Up"
+              >
+                <User className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Sign Up</span>
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -133,20 +157,19 @@ const IntellectualDNA = () => {
               Trace your<br />Intellectual DNA
             </h1>
             
+            <div className="w-full px-2 flex justify-center">
+              <Button 
+                className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider"
+                onClick={handleStartAssessment}
+              >
+                GET STARTED
+              </Button>
+            </div>
+
             <p className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold">
               ESTIMATED TIME: 10 MINUTES
             </p>
           </div>
-        </div>
-
-        {/* Continue button - Positioned at bottom like in PrimingScreens */}
-        <div className="w-full max-w-md mb-16 px-6">
-          <Button 
-            onClick={handleStartAssessment}
-            className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
-          >
-            GET STARTED
-          </Button>
         </div>
 
         {/* Footer */}
