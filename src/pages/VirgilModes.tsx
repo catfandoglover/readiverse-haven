@@ -22,6 +22,16 @@ interface DbPrompt {
   initial_message?: string;
 }
 
+interface Prompt {
+  id: string | number;
+  user_title: string;
+  user_subtitle?: string;
+  section?: string;
+  icon_display?: string;
+  context?: string;
+  initial_message?: string;
+}
+
 const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
   console.log("Processing DB prompt:", dbPrompt);
   return {
@@ -36,7 +46,7 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 };
 
 const VirgilModes: React.FC = () => {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const navigate = useNavigate();
 
   const toggleViewMode = () => {
@@ -79,13 +89,47 @@ const VirgilModes: React.FC = () => {
 
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
   console.log("Formatted prompts for rendering:", formattedPrompts);
+  
+  // Group prompts by section
+  const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
+  const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
+  const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
+  
+  // For other sections or undefined
+  const otherPrompts = formattedPrompts.filter(p => 
+    !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
+  );
+
+  const renderPromptSection = (title: string, sectionPrompts: Prompt[]) => {
+    if (sectionPrompts.length === 0) return null;
+    
+    return (
+      <div className="mb-8">
+        <h3 className="text-[#9D9D9D] uppercase tracking-wider text-sm font-medium mb-4">{title}</h3>
+        <div className={cn(
+          viewMode === "grid" 
+            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
+            : "space-y-3"
+        )}>
+          {sectionPrompts.map((prompt) => (
+            <PromptCard 
+              key={prompt.id}
+              prompt={prompt}
+              viewMode={viewMode}
+              onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
-          Chat with Virgil
+          BOLTS
         </h2>
         <div>
           <Toggle 
@@ -132,19 +176,11 @@ const VirgilModes: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <div className={cn(
-            viewMode === "grid" 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
-              : "space-y-4"
-          )}>
-            {formattedPrompts.map((prompt) => (
-              <PromptCard 
-                key={prompt.id}
-                prompt={prompt}
-                viewMode={viewMode}
-                onSelect={() => navigate(`/virgil-chat/${prompt.id}`)}
-              />
-            ))}
+          <div>
+            {renderPromptSection("INTELLECTUAL", intellectualPrompts)}
+            {renderPromptSection("EMOTIONAL", emotionalPrompts)}
+            {renderPromptSection("PRACTICAL", practicalPrompts)}
+            {renderPromptSection("OTHER", otherPrompts)}
           </div>
         )}
       </main>
