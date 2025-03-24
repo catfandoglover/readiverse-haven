@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,64 +33,40 @@ const VirgilPrompts = () => {
       setError(null);
       
       try {
-        console.log("Fetching prompts...");
+        console.log("Fetching all prompts from database...");
         
-        // Fetch all prompts without filtering
+        // Get ALL prompts without any filtering
         const { data, error } = await supabase
           .from("prompts")
-          .select("*")
-          .order("display_order", { ascending: true });
+          .select("*");
 
         if (error) {
           throw new Error(`Error fetching prompts: ${error.message}`);
         }
 
-        console.log(`Fetched ${data?.length || 0} total prompts:`, data);
+        console.log(`Raw database response:`, data);
         
         if (!data || data.length === 0) {
-          console.log("No prompts found in the database");
+          console.log("Database returned no prompts");
           setPrompts([]);
           setIsLoading(false);
           return;
         }
 
-        // Log each prompt's details to debug context field issues
+        // IMPORTANT: Display all prompts regardless of context
+        console.log(`Setting all ${data.length} prompts for display`);
+        setPrompts(data);
+        
+        // Log each prompt for debugging
         data.forEach(prompt => {
-          console.log(`Prompt #${prompt.id}:`, {
+          console.log(`Prompt ID ${prompt.id}:`, {
             title: prompt.user_title,
             context: prompt.context,
             contextType: typeof prompt.context,
-            hasChat: prompt.context ? prompt.context.toLowerCase().includes('chat') : false
+            allFields: prompt
           });
         });
         
-        // Filter for chat prompts (case-insensitive match on the context field)
-        const chatPrompts = data.filter(prompt => {
-          // Handle null/undefined context values safely
-          const context = String(prompt.context || '').toLowerCase();
-          const includesChat = context.includes('chat');
-          
-          console.log(`Prompt #${prompt.id} context check:`, { 
-            context, 
-            includesChat 
-          });
-          
-          return includesChat;
-        });
-        
-        console.log(`Found ${chatPrompts.length} chat prompts after filtering`);
-        
-        // If we have chat prompts, display those
-        if (chatPrompts.length > 0) {
-          setPrompts(chatPrompts);
-          console.log("Setting chat prompts:", chatPrompts);
-        } 
-        // Otherwise use all prompts as fallback
-        else if (data.length > 0) {
-          setPrompts(data);
-          console.log("No chat prompts found, showing all prompts");
-          toast.info("Showing all available prompts");
-        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         console.error("Error fetching prompts:", errorMessage);
@@ -157,7 +134,7 @@ const VirgilPrompts = () => {
           <div className="flex justify-center items-center h-full flex-col">
             <div className="text-[#E9E7E2]/70 mb-2">No prompts available</div>
             <div className="text-[#E9E7E2]/50 text-sm">
-              Try creating prompts in the database with 'chat' in the context field
+              Check the database to ensure prompts are properly configured
             </div>
             <Button 
               variant="ghost" 
