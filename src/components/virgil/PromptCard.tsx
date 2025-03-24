@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Brain, Tool } from "lucide-react";
+import { Heart, Brain, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PromptCardProps {
@@ -38,7 +38,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
       case "intellectual":
         return <Brain className="h-6 w-6" style={{ color }} />;
       case "practical":
-        return <Tool className="h-6 w-6" style={{ color }} />;
+        return <Wrench className="h-6 w-6" style={{ color }} />;
       default:
         return <Brain className="h-6 w-6" style={{ color }} />;
     }
