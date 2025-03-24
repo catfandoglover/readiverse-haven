@@ -155,42 +155,52 @@ const ProfileHeader: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col items-center text-[#E9E7E2]">
-        <div className="flex w-full justify-between items-end mb-4">
-          <div className="relative h-20 w-20">
-            <svg 
-              viewBox="0 0 100 100" 
-              className="absolute inset-0 h-full w-full text-[#CCFF23]"
-            >
-              <polygon 
-                points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3"
-              />
-            </svg>
-            
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ 
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-              }}
-            >
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+      <div className="absolute bottom-0 left-0 w-full p-6">
+        <div className="flex w-full justify-between items-end">
+          <div className="flex items-center gap-4">
+            <div className="relative h-20 w-20">
+              <svg 
+                viewBox="0 0 100 100" 
+                className="absolute inset-0 h-full w-full text-[#CCFF23]"
+              >
+                <polygon 
+                  points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="3"
+                />
+              </svg>
+              
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ 
+                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                }}
+              >
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              <button 
+                onClick={handleProfileEditClick}
+                className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                aria-label="Edit profile picture"
+              >
+                <Pen size={12} className="text-gray-700" />
+              </button>
             </div>
             
-            <button 
-              onClick={handleProfileEditClick}
-              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
-              aria-label="Edit profile picture"
-            >
-              <Pen size={12} className="text-gray-700" />
-            </button>
+            {/* Name and archetype positioned to the left of the profile image */}
+            <div className="text-left text-[#E9E7E2] -mt-4">
+              <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
+              <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
+                {isLoadingAnalysis ? 'Loading...' : archetype}
+              </p>
+            </div>
           </div>
           
           <Button
@@ -201,14 +211,6 @@ const ProfileHeader: React.FC = () => {
             <Share className="h-4 w-4" />
             <span>SHARE PROFILE</span>
           </Button>
-        </div>
-        
-        {/* Name and archetype positioned below the profile image */}
-        <div className="text-center mt-2">
-          <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
-          <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
-            {isLoadingAnalysis ? 'Loading...' : archetype}
-          </p>
         </div>
       </div>
     </div>
