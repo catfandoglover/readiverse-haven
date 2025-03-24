@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +23,7 @@ import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
 import VirgilWelcome from "./pages/VirgilWelcome";
 import Dashboard from "./pages/Dashboard";
+import VirgilPrompts from "./pages/VirgilPrompts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,41 +53,45 @@ const ReaderWrapper = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <ErrorBoundary>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/" element={<Navigate to="/dna" replace />} />
-                <Route path="/discover" element={<DiscoverLayout />} /> 
-                <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
-                <Route path="/home-old" element={<Home />} /> 
-                <Route path="/bookshelf" element={<Bookshelf />} />
-                <Route path="/dna" element={<IntellectualDNA />} />
-                <Route path="/dna/priming" element={<DNAPriming />} />
-                <Route path="/dna/:category" element={<DNAAssessment />} />
-                <Route path="/dna/completion" element={<DNACompletionScreen />} />
-                <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
-                <Route path="/dna/welcome" element={<VirgilWelcome />} />
-                <Route path="/great-questions" element={<GreatQuestions />} />
-                <Route path="/read/:slug" element={<ReaderWrapper />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
-                <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
-                <Route path="/virgil" element={<VirgilOffice />} />
-              </Routes>
-            </ErrorBoundary>
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <ErrorBoundary>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dna" replace />} />
+                  <Route path="/discover" element={<DiscoverLayout />} /> 
+                  <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
+                  <Route path="/home-old" element={<Home />} /> 
+                  <Route path="/bookshelf" element={<Bookshelf />} />
+                  <Route path="/dna" element={<IntellectualDNA />} />
+                  <Route path="/dna/priming" element={<DNAPriming />} />
+                  <Route path="/dna/:category" element={<DNAAssessment />} />
+                  <Route path="/dna/completion" element={<DNACompletionScreen />} />
+                  <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
+                  <Route path="/dna/welcome" element={<VirgilWelcome />} />
+                  <Route path="/great-questions" element={<GreatQuestions />} />
+                  <Route path="/read/:slug" element={<ReaderWrapper />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
+                  <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
+                  <Route path="/virgil" element={<VirgilOffice />} />
+                  <Route path="/virgil-office" element={<VirgilOffice />} />
+                  <Route path="/virgil-prompts" element={<VirgilPrompts />} />
+                </Routes>
+              </ErrorBoundary>
+            </TooltipProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
