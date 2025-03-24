@@ -123,6 +123,19 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           {prompt.user_subtitle}
         </p>
       )}
+            
+       {/* Spacer to push the section label to the bottom */}
+       <div className="flex-grow"></div>
+       
+       {/* Section label at bottom left */}
+       {prompt.section && (
+         <div className="mt-4">
+           <p className="uppercase text-xs tracking-wider opacity-70">
+             {prompt.section}
+           </p>
+         </div>
+       )}
+      
     </div>
   );
 };
