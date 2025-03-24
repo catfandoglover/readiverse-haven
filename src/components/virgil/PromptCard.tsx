@@ -130,7 +130,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       {/* Section label at bottom left */}
       {prompt.section && (
         <div className="mt-4">
-          <p className="uppercase text-xs tracking-wider opacity-70">
+          <p className="uppercase text-[10px] tracking-wider opacity-85">
             {prompt.section}
           </p>
         </div>
