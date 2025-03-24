@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -6,12 +5,10 @@ import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
 import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
 
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   
   return (
     <div 
@@ -55,7 +52,7 @@ const VirgilOffice: React.FC = () => {
             )}>
               <Button
                 className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
-                onClick={() => navigate("/virgil-prompts")}
+                onClick={() => setIsChatOpen(true)}
               >
                 CHAT WITH VIRGIL
               </Button>
