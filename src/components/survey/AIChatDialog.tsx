@@ -41,7 +41,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   const initialGreetings = [
