@@ -55,7 +55,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         onClick={onSelect}
       >
         <div 
-          className={cn("flex items-center justify-center mr-4")}
+          className="flex items-center mr-4"
           style={{ color: sectionColor }}
         >
           <IconComponent size={isMobile ? 14 : 16} />
@@ -76,7 +76,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       onClick={onSelect}
     >
       <div 
-        className={cn("flex items-center justify-center mb-4", 
+        className={cn("flex items-start mb-4", 
           isMobile ? "mb-3" : "")}
         style={{ color: sectionColor }}
       >
