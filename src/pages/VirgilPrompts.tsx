@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, LayoutGrid, List, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, LayoutGrid, List, AlertTriangle, RefreshCw, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PromptCard from "@/components/virgil/PromptCard";
@@ -12,11 +12,11 @@ import { toast } from "sonner";
 
 interface Prompt {
   id: number;
-  user_title: string;
-  user_subtitle: string;
-  prompt: string;
-  section: string;
-  context: string;
+  user_title?: string;
+  user_subtitle?: string;
+  prompt?: string;
+  section?: string;
+  context?: string;
 }
 
 const VirgilPrompts = () => {
@@ -25,6 +25,7 @@ const VirgilPrompts = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [rawData, setRawData] = useState<any[]>([]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -45,6 +46,7 @@ const VirgilPrompts = () => {
       }
 
       console.log("===== RAW PROMPTS DATA =====", data);
+      setRawData(data || []);
       
       if (!data || data.length === 0) {
         console.log("No prompts found in database");
@@ -53,14 +55,22 @@ const VirgilPrompts = () => {
         return;
       }
 
+      // Ensure each object in the data array has an id property
+      // This addresses issues where the id might be missing
+      const validData = data.filter(item => item && typeof item.id !== 'undefined');
+      
+      if (validData.length === 0) {
+        throw new Error("No valid prompts found. All retrieved items are missing an ID.");
+      }
+
       // Transform the data to ensure all expected fields are present
-      const processedPrompts = data.map(prompt => ({
-        id: prompt.id || 0,
-        user_title: prompt.user_title || "Untitled Prompt",
-        user_subtitle: prompt.user_subtitle || "No description available",
-        prompt: prompt.prompt || "",
-        section: prompt.section || "intellectual",
-        context: prompt.context || ""
+      const processedPrompts = validData.map(prompt => ({
+        id: prompt.id,
+        user_title: prompt.user_title || undefined,
+        user_subtitle: prompt.user_subtitle || undefined,
+        prompt: prompt.prompt || undefined,
+        section: prompt.section || undefined,
+        context: prompt.context || undefined
       }));
 
       console.log("===== PROCESSED PROMPTS =====", processedPrompts);
@@ -87,6 +97,12 @@ const VirgilPrompts = () => {
   const handleRefresh = () => {
     setIsRefreshing(true);
     fetchPrompts();
+  };
+
+  // Function to view raw database structure for debugging
+  const viewRawData = () => {
+    console.log("Raw Database Data:", rawData);
+    toast.info("Raw data logged to console. Press F12 to view.");
   };
 
   return (
@@ -138,38 +154,71 @@ const VirgilPrompts = () => {
           <div className="flex justify-center items-center h-full flex-col">
             <AlertTriangle className="h-8 w-8 text-[#FFC49A] mb-2" />
             <div className="text-[#E9E7E2]/70 mb-2">Error loading prompts</div>
-            <div className="text-[#E9E7E2]/50 text-sm">{error}</div>
-            <Button 
-              variant="ghost" 
-              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-              {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
-            </Button>
+            <div className="text-[#E9E7E2]/50 text-sm max-w-lg text-center mb-4">{error}</div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="ghost" 
+                className="text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="text-[#E9E7E2]/70 hover:text-[#E9E7E2] flex items-center gap-2"
+                onClick={viewRawData}
+              >
+                <Database className="h-4 w-4" />
+                View Raw Data
+              </Button>
+            </div>
           </div>
         ) : prompts.length === 0 ? (
           <div className="flex justify-center items-center h-full flex-col">
             <AlertTriangle className="h-8 w-8 text-[#FFC49A] mb-2" />
             <div className="text-[#E9E7E2]/70 mb-2">No prompts available</div>
-            <div className="text-[#E9E7E2]/50 text-sm text-center max-w-md">
-              Check the database to ensure prompts are properly configured in the "prompts" table
+            <div className="text-[#E9E7E2]/50 text-sm text-center max-w-md mb-4">
+              {rawData.length > 0 
+                ? "Found data in the database but couldn't process it correctly. Check the browser console for details."
+                : "No prompts found in the database. Make sure prompts are properly configured in the 'prompts' table."}
             </div>
-            <Button 
-              variant="ghost" 
-              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-              {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="ghost" 
+                className="text-[#CCFF23] hover:text-[#CCFF23]/90 flex items-center gap-2"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                {isRefreshing ? "Refreshing..." : "Refresh Prompts"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="text-[#E9E7E2]/70 hover:text-[#E9E7E2] flex items-center gap-2"
+                onClick={viewRawData}
+              >
+                <Database className="h-4 w-4" />
+                View Raw Data
+              </Button>
+            </div>
           </div>
         ) : (
           <>
-            <div className="mb-4 text-sm text-[#E9E7E2]/70">
-              Found {prompts.length} prompts
+            <div className="mb-4 flex justify-between items-center">
+              <div className="text-sm text-[#E9E7E2]/70">
+                Found {prompts.length} prompts
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-[#E9E7E2]/70 hover:text-[#E9E7E2] flex items-center gap-2"
+                onClick={viewRawData}
+              >
+                <Database className="h-4 w-4" />
+                Debug
+              </Button>
             </div>
             {viewMode === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
