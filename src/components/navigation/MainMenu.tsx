@@ -31,7 +31,10 @@ const MainMenu: React.FC = () => {
             <h2 className="text-xl font-serif mb-8">Navigation</h2>
             <div className="space-y-6">
               {/* Discover Navigation Item */}
-              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/discover")}
+              >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <Compass className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
@@ -42,18 +45,14 @@ const MainMenu: React.FC = () => {
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
-                    onClick={() => handleNavigation("/discover")}
-                  >
-                    <span className="font-oxanium text-sm">Explore</span>
-                  </Button>
                 </div>
               </div>
               
               {/* Virgil's Office Navigation Item */}
-              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/virgil")}
+              >
                 <div className="flex-shrink-0 rounded-full p-1">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
@@ -66,18 +65,14 @@ const MainMenu: React.FC = () => {
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
-                    onClick={() => handleNavigation("/virgil")}
-                  >
-                    <span className="font-oxanium text-sm">Visit</span>
-                  </Button>
                 </div>
               </div>
               
               {/* DNA Navigation Item */}
-              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/dna")}
+              >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <Dna className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
@@ -88,18 +83,14 @@ const MainMenu: React.FC = () => {
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
-                    onClick={() => handleNavigation("/dna")}
-                  >
-                    <span className="font-oxanium text-sm">Analyze</span>
-                  </Button>
                 </div>
               </div>
               
               {/* Profile Navigation Item */}
-              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/profile")}
+              >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
@@ -110,18 +101,14 @@ const MainMenu: React.FC = () => {
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
-                    onClick={() => handleNavigation("/profile")}
-                  >
-                    <span className="font-oxanium text-sm">View</span>
-                  </Button>
                 </div>
               </div>
               
               {/* Study Navigation Item */}
-              <div className="flex items-start space-x-4 shadow-md rounded-lg p-3 bg-[#E3E0D9]/10">
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/bookshelf")}
+              >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
@@ -132,13 +119,6 @@ const MainMenu: React.FC = () => {
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start p-0 h-auto mt-2 hover:bg-transparent hover:text-[#E9E7E2] hover:underline"
-                    onClick={() => handleNavigation("/bookshelf")}
-                  >
-                    <span className="font-oxanium text-sm">Read</span>
-                  </Button>
                 </div>
               </div>
             </div>

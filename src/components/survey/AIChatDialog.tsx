@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, X, Send } from "lucide-react";
@@ -43,6 +44,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isFirstOpen, setIsFirstOpen] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const [lastQuestion, setLastQuestion] = useState(currentQuestion);
 
   const initialGreetings = [
     "Tell me more",
@@ -56,8 +58,6 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     "How does this question connect with your own experience?",
     "What dimensions of this question intrigue you?"
   ];
-
-  const [lastQuestion, setLastQuestion] = useState(currentQuestion);
 
   useEffect(() => {
     if (open) {
