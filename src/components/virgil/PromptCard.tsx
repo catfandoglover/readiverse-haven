@@ -47,7 +47,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           {prompt.icon_display || "📝"}
         </div>
         <div className="flex-1">
-          <h3 className="font-oxanium text-base text-[#E9E7E2] uppercase">
+          <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
             {prompt.user_title}
           </h3>
         </div>
@@ -66,7 +66,9 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       >
         {prompt.icon_display || "📝"}
       </div>
-      <h3 className="font-oxanium text-lg text-[#E9E7E2] mb-2 uppercase">{prompt.user_title}</h3>
+      <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
+        {prompt.user_title}
+      </h3>
       {prompt.user_subtitle && (
         <p className="text-sm text-[#E9E7E2]/70 flex-1 line-clamp-2">{prompt.user_subtitle}</p>
       )}
