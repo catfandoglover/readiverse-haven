@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +23,8 @@ import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
 import VirgilWelcome from "./pages/VirgilWelcome";
 import Dashboard from "./pages/Dashboard";
+import VirgilModes from "./pages/VirgilModes";
+import VirgilChat from "./pages/VirgilChat";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,8 @@ const App = () => (
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
+                <Route path="/virgil-modes" element={<VirgilModes />} />
+                <Route path="/virgil-chat" element={<VirgilChat />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>

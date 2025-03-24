@@ -1,4 +1,6 @@
+
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
@@ -9,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   return (
     <div 
@@ -17,7 +20,7 @@ const VirgilOffice: React.FC = () => {
     >
       <div className="flex items-center pt-4 px-4">
         <MainMenu />
-        <h2 className="font-oxanium uppercase text-[#E9E7E2]/50 tracking-wider text-sm font-bold mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Virgil's Office
         </h2>
         <Button
@@ -52,7 +55,7 @@ const VirgilOffice: React.FC = () => {
             )}>
               <Button
                 className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
-                onClick={() => setIsChatOpen(true)}
+                onClick={() => navigate("/virgil-modes")}
               >
                 CHAT WITH VIRGIL
               </Button>
