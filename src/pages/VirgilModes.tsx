@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +9,7 @@ import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DbPrompt {
   id: number;
@@ -48,6 +48,7 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 const VirgilModes: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const toggleViewMode = () => {
     setViewMode(viewMode === "grid" ? "list" : "grid");
@@ -90,12 +91,10 @@ const VirgilModes: React.FC = () => {
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
   console.log("Formatted prompts for rendering:", formattedPrompts);
   
-  // Group prompts by section
   const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
   const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
   const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
   
-  // For other sections or undefined
   const otherPrompts = formattedPrompts.filter(p => 
     !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
   );
@@ -103,13 +102,18 @@ const VirgilModes: React.FC = () => {
   const renderPromptSection = (title: string, sectionPrompts: Prompt[]) => {
     if (sectionPrompts.length === 0) return null;
     
+    const mobileSpacing = isMobile ? "gap-3 mb-6" : "gap-4 mb-8";
+    
     return (
-      <div className="mb-8">
-        <h3 className="text-[#9D9D9D] uppercase tracking-wider text-sm font-medium mb-4">{title}</h3>
+      <div className={cn("mb-8", isMobile && "mb-6")}>
+        <h3 className={cn("text-[#9D9D9D] uppercase tracking-wider text-sm font-medium mb-4", isMobile && "mb-3")}>
+          {title}
+        </h3>
         <div className={cn(
           viewMode === "grid" 
-            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
-            : "space-y-3"
+            ? `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${mobileSpacing}` 
+            : "space-y-3",
+          isMobile && viewMode === "list" && "space-y-2"
         )}>
           {sectionPrompts.map((prompt) => (
             <PromptCard 
@@ -147,7 +151,7 @@ const VirgilModes: React.FC = () => {
         </div>
       </div>
       
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className={cn("flex-1 overflow-y-auto", isMobile ? "px-3 py-5" : "px-4 py-6")}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/70" />

@@ -2,6 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Prompt {
   id: string | number;
@@ -34,6 +35,7 @@ const getSectionColor = (section: string = "intellectual"): string => {
 
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) => {
   const sectionColor = getSectionColor(prompt.section);
+  const isMobile = useIsMobile();
   
   // Dynamically get the icon component from lucide-react
   const IconComponent = prompt.icon_display && LucideIcons[prompt.icon_display as keyof typeof LucideIcons] 
@@ -43,14 +45,14 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
   if (viewMode === "list") {
     return (
       <div 
-        className="flex items-center cursor-pointer py-3"
+        className={cn("flex items-center cursor-pointer", isMobile ? "py-2.5" : "py-3")}
         onClick={onSelect}
       >
         <div 
-          className="w-8 h-8 flex items-center justify-center rounded-full mr-4"
+          className={cn("flex items-center justify-center rounded-full mr-4", isMobile ? "w-7 h-7" : "w-8 h-8")}
           style={{ color: sectionColor }}
         >
-          <IconComponent size={18} />
+          <IconComponent size={isMobile ? 16 : 18} />
         </div>
         <div className="flex-1">
           <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
@@ -63,14 +65,16 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
   
   return (
     <div 
-      className="bg-[#4A4351]/50 rounded-xl p-6 cursor-pointer hover:bg-[#4A4351] transition-colors h-full flex flex-col"
+      className={cn("bg-[#4A4351]/50 rounded-xl cursor-pointer hover:bg-[#4A4351] transition-colors h-full flex flex-col", 
+        isMobile ? "p-5" : "p-6")}
       onClick={onSelect}
     >
       <div 
-        className="w-12 h-12 flex items-center justify-center rounded-full mb-4"
+        className={cn("flex items-center justify-center rounded-full mb-4", 
+          isMobile ? "w-10 h-10 mb-3" : "w-12 h-12")}
         style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
       >
-        <IconComponent size={24} />
+        <IconComponent size={isMobile ? 20 : 24} />
       </div>
       <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
         {prompt.user_title}
