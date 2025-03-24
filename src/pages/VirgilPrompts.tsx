@@ -36,7 +36,7 @@ const VirgilPrompts = () => {
         // First, try to fetch all prompts to see how many there are in total
         const totalResponse = await supabase
           .from("prompts")
-          .select("id, context")
+          .select("id, context, user_title")
           .order("display_order", { ascending: true });
           
         if (totalResponse.error) {
@@ -44,28 +44,52 @@ const VirgilPrompts = () => {
         }
         
         console.log(`Total prompts in database: ${totalResponse.data?.length}`);
-        console.log("Prompts with context containing 'chat':", 
-          totalResponse.data?.filter(p => p.context && p.context.toLowerCase().includes('chat')).length);
         
-        // Now fetch the prompts we want to display
+        if (totalResponse.data && totalResponse.data.length === 0) {
+          console.log("No prompts found in the database at all");
+          setPrompts([]);
+          return;
+        }
+        
+        // Log all prompts to inspect their context values
+        totalResponse.data?.forEach(prompt => {
+          console.log(`Prompt ID: ${prompt.id}, Title: ${prompt.user_title}, Context: ${prompt.context || 'null/undefined'}`);
+        });
+
+        // Try a more inclusive approach - fetch all prompts and filter client-side
         const { data, error } = await supabase
           .from("prompts")
           .select("*")
-          .ilike("context", "%chat%")
           .order("display_order", { ascending: true });
 
         if (error) {
-          throw new Error(`Error fetching chat prompts: ${error.message}`);
+          throw new Error(`Error fetching prompts: ${error.message}`);
         }
 
-        console.log(`Fetched ${data?.length || 0} chat prompts`);
-        if (data) {
-          data.forEach(prompt => {
-            console.log(`Prompt ID: ${prompt.id}, Title: ${prompt.user_title}, Context: ${prompt.context}`);
-          });
+        console.log(`Fetched ${data?.length || 0} total prompts`);
+        
+        // Filter prompts client-side to be more flexible with matching
+        const chatPrompts = data?.filter(prompt => {
+          // Check if context exists and contains 'chat' in any case
+          const contextIncludesChat = prompt.context && 
+            prompt.context.toLowerCase().includes('chat');
+          
+          // Log each prompt's evaluation
+          console.log(`Prompt ${prompt.id}: context=${prompt.context || 'null/undefined'}, includes 'chat'=${contextIncludesChat}`);
+          
+          return contextIncludesChat;
+        }) || [];
+        
+        console.log(`Found ${chatPrompts.length} prompts with 'chat' in context after client-side filtering`);
+        
+        // If no chat prompts found but there are prompts, show all prompts as fallback
+        if (chatPrompts.length === 0 && data && data.length > 0) {
+          console.log("No chat prompts found, showing all prompts as fallback");
+          setPrompts(data);
+          toast.info("Showing all available prompts");
+        } else {
+          setPrompts(chatPrompts);
         }
-
-        setPrompts(data || []);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         console.error("Error:", errorMessage);
@@ -132,7 +156,16 @@ const VirgilPrompts = () => {
         ) : prompts.length === 0 ? (
           <div className="flex justify-center items-center h-full flex-col">
             <div className="text-[#E9E7E2]/70 mb-2">No prompts available</div>
-            <div className="text-[#E9E7E2]/50 text-sm">Try refreshing the page or check back later</div>
+            <div className="text-[#E9E7E2]/50 text-sm">
+              Try creating prompts in the database with 'chat' in the context field
+            </div>
+            <Button 
+              variant="ghost" 
+              className="mt-4 text-[#CCFF23] hover:text-[#CCFF23]/90"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </Button>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
