@@ -50,8 +50,7 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 };
 
 const VirgilModes: React.FC = () => {
-  // Changed default view mode from "list" to "grid"
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
