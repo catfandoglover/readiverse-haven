@@ -42,7 +42,7 @@ const VirgilChat: React.FC = () => {
       }, 500); // 500ms for the header transition
 
       return () => clearTimeout(chatTimer);
-    }, 500); // 0.5 seconds for initial display
+    }, 2500); // 2.5 seconds for initial display
 
     return () => {
       clearTimeout(timer);
