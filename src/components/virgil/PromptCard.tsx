@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 
 interface Prompt {
   id: string | number;
@@ -32,14 +33,7 @@ const getSectionColor = (section: string = "intellectual"): string => {
 };
 
 const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) => {
-  // Log prompt data for debugging
-  console.log("PromptCard rendering with data:", prompt);
-  
-  // Default values for missing fields
-  const title = prompt.user_title || "Untitled Prompt";
-  const section = prompt.section || "intellectual";
-  const sectionColor = getSectionColor(section);
-  const icon = prompt.icon_display || "💭";
+  const sectionColor = getSectionColor(prompt.section);
   
   if (viewMode === "list") {
     return (
@@ -51,14 +45,15 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           className="w-10 h-10 flex items-center justify-center rounded-full mr-4"
           style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
         >
-          {icon}
+          {prompt.icon_display || "📝"}
         </div>
         <div className="flex-1">
-          <h3 className="font-baskerville text-lg text-[#E9E7E2]">{title}</h3>
+          <h3 className="font-oxanmium text-lg text-[#E9E7E2]">{prompt.user_title}</h3>
           {prompt.user_subtitle && (
             <p className="text-sm text-[#E9E7E2]/70 mt-1 line-clamp-1">{prompt.user_subtitle}</p>
           )}
         </div>
+        <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
       </div>
     );
   }
@@ -72,12 +67,15 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         className="w-12 h-12 flex items-center justify-center rounded-full mb-4"
         style={{ backgroundColor: `${sectionColor}20`, color: sectionColor }}
       >
-        {icon}
+        {prompt.icon_display || "📝"}
       </div>
-      <h3 className="font-baskerville text-xl text-[#E9E7E2] mb-2">{title}</h3>
+      <h3 className="font-oxanimum text-xl text-[#E9E7E2] mb-2">{prompt.user_title}</h3>
       {prompt.user_subtitle && (
         <p className="text-sm text-[#E9E7E2]/70 flex-1 line-clamp-2">{prompt.user_subtitle}</p>
       )}
+      <div className="flex items-center justify-end mt-4">
+        <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
+      </div>
     </div>
   );
 };
