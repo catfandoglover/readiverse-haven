@@ -41,7 +41,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   const initialGreetings = [
@@ -162,7 +162,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -345,8 +345,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     )}>
       <div className="relative w-full max-w-md mx-auto h-[360px]">
         <div className="absolute bottom-0 left-0 right-0 chat-dialog-container flex flex-col font-oxanium h-full">
+          {/* Header */}
           <div className="flex items-center justify-between p-4 bg-[#E7E4DB] border-b border-[#D0CBBD]/25">
-            <div className="w-6" />
+            <div className="w-6" /> {/* Spacer for balance */}
             <h2 className="font-oxanium text-sm font-bold tracking-wider uppercase text-[#282828]">
               Discuss
             </h2>
