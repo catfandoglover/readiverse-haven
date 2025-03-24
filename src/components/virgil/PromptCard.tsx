@@ -1,7 +1,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { ArrowRight } from "lucide-react";
 
 interface Prompt {
   id: string | number;
@@ -60,7 +59,6 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
             <p className="text-sm text-[#E9E7E2]/70 mt-1 line-clamp-1">{prompt.user_subtitle}</p>
           )}
         </div>
-        <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
       </div>
     );
   }
@@ -80,9 +78,6 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       {prompt.user_subtitle && (
         <p className="text-sm text-[#E9E7E2]/70 flex-1 line-clamp-2">{prompt.user_subtitle}</p>
       )}
-      <div className="flex items-center justify-end mt-4">
-        <ArrowRight className="h-5 w-5 text-[#E9E7E2]/50" />
-      </div>
     </div>
   );
 };
