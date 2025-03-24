@@ -91,7 +91,6 @@ const DiscoverLayout = () => {
             className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
             style={{
               aspectRatio: "1290/152",
-              boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
               maxHeight: "152px"
             }}
           >
@@ -100,49 +99,13 @@ const DiscoverLayout = () => {
                 <MainMenu />
               </div>
               <div className="flex-1 flex items-center justify-between pl-2">
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "for-you" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("for-you")}
-                >
+                <h2 className="text-[#E9E7E2] font-oxanium uppercase text-xs">
                   FOR YOU
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "classics" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("classics")}
-                >
-                  CLASSICS
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "icons" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("icons")}
-                >
-                  ICONS
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "concepts" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("concepts")}
-                >
-                  CONCEPTS
-                </button>
+                </h2>
                 <button 
                   className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
                   aria-label="Search"
+                  onClick={() => navigate('/search')}
                 >
                   <Search className="h-2 w-2" />
                 </button>

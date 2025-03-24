@@ -1186,6 +1186,7 @@ export type Database = {
           category: string
           category_number: string | null
           created_at: string
+          great_conversation: string | null
           id: string
           illustration: string | null
           notion_id: string
@@ -1198,6 +1199,7 @@ export type Database = {
           category: string
           category_number?: string | null
           created_at?: string
+          great_conversation?: string | null
           id?: string
           illustration?: string | null
           notion_id: string
@@ -1210,6 +1212,7 @@ export type Database = {
           category?: string
           category_number?: string | null
           created_at?: string
+          great_conversation?: string | null
           id?: string
           illustration?: string | null
           notion_id?: string

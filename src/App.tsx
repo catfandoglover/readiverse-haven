@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,10 @@ import VirgilWelcome from "./pages/VirgilWelcome";
 import Dashboard from "./pages/Dashboard";
 import VirgilModes from "./pages/VirgilModes";
 import VirgilChat from "./pages/VirgilChat";
+import SearchPage from "./pages/SearchPage";
+import IconsFeedPage from "./pages/IconsFeedPage";
+import ConceptsFeedPage from "./pages/ConceptsFeedPage";
+import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +72,10 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/dna" replace />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/search/icons" element={<IconsFeedPage />} />
+                <Route path="/search/concepts" element={<ConceptsFeedPage />} />
+                <Route path="/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
