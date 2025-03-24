@@ -23,6 +23,8 @@ interface DbPrompt {
 
 // Transform DB data to the format we need
 const formatPrompt = (dbPrompt: DbPrompt) => {
+  console.log("Formatting prompt data:", dbPrompt);
+  
   return {
     id: dbPrompt.id,
     user_title: dbPrompt.user_title || "Untitled Prompt",
@@ -46,10 +48,14 @@ const VirgilChat: React.FC = () => {
       
       console.log("Fetching prompt with ID:", id);
       try {
+        // Convert string ID to number if needed
+        const numericId = isNaN(Number(id)) ? id : Number(id);
+        console.log("Using ID for query:", numericId);
+        
         const { data, error } = await supabase
           .from('prompts')
           .select('*')
-          .eq('id', id)
+          .eq('id', numericId)
           .maybeSingle();
         
         if (error) {
@@ -58,7 +64,7 @@ const VirgilChat: React.FC = () => {
           throw new Error(error.message);
         }
         
-        console.log("Fetched prompt:", data);
+        console.log("Raw prompt data from database:", data);
         return data;
       } catch (err) {
         console.error("Exception in fetchPrompt:", err);
@@ -69,6 +75,7 @@ const VirgilChat: React.FC = () => {
 
   // Format the prompt data with fallbacks
   const prompt = dbPrompt ? formatPrompt(dbPrompt) : null;
+  console.log("Formatted prompt for chat:", prompt);
 
   // Initial animation timing
   useEffect(() => {

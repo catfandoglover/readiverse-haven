@@ -24,6 +24,10 @@ interface DbPrompt {
 
 // Transform DB data to the format expected by PromptCard
 const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
+  // Log each record to inspect it
+  console.log("Processing DB prompt:", dbPrompt);
+  
+  // Return mapped object with defaults for missing fields
   return {
     id: dbPrompt.id,
     user_title: dbPrompt.user_title || "Untitled Prompt",
@@ -31,7 +35,7 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
     section: dbPrompt.section || "intellectual",
     icon_display: dbPrompt.icon_display || "💭",
     context: dbPrompt.context || "chat",
-    initial_message: dbPrompt.prompt || dbPrompt.initial_message,
+    initial_message: dbPrompt.prompt || dbPrompt.initial_message || "Let's have a conversation.",
   };
 };
 
@@ -44,10 +48,11 @@ const VirgilModes: React.FC = () => {
     queryFn: async () => {
       console.log("Fetching prompts...");
       try {
+        // Get prompts with context="chat" or if context is null (for backward compatibility)
         const { data, error } = await supabase
           .from("prompts")
           .select("*")
-          .eq("context", "chat");
+          .or('context.eq.chat,context.is.null');
         
         if (error) {
           console.error("Error fetching prompts:", error);
@@ -55,7 +60,7 @@ const VirgilModes: React.FC = () => {
           throw new Error(error.message);
         }
         
-        console.log("Fetched prompts:", data);
+        console.log("Raw data from database:", data);
         
         // If we have data but it's empty, log that specifically
         if (!data || data.length === 0) {
@@ -77,7 +82,7 @@ const VirgilModes: React.FC = () => {
 
   // Map database prompts to the format our components expect
   const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
-  console.log("Formatted prompts:", formattedPrompts);
+  console.log("Formatted prompts for rendering:", formattedPrompts);
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
@@ -133,7 +138,7 @@ const VirgilModes: React.FC = () => {
         ) : (formattedPrompts.length === 0) ? (
           <div className="text-center py-8 text-[#E9E7E2]/70">
             <p>No conversation prompts available.</p>
-            <p className="mt-2 text-sm">Check the database to ensure prompts with context="chat" exist.</p>
+            <p className="mt-2 text-sm">Check the database to ensure prompts exist.</p>
             <Button 
               variant="ghost"
               className="mt-4 text-[#CCFF23]"
