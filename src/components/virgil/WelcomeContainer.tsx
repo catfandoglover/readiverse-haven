@@ -16,7 +16,7 @@ const WelcomeContainer: React.FC<WelcomeContainerProps> = ({ onDismiss }) => {
   
   return (
     <div className={cn(
-      "bg-[#4A4351]/50 rounded-xl relative mb-8",
+      "bg-[#4A4351]/50 rounded-xl relative mb-8 mx-8",
       isMobile ? "p-5" : "p-8"
     )}>
       <button 

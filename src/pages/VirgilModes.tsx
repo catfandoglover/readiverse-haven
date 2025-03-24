@@ -194,7 +194,7 @@ const VirgilModes: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
-      <div className="flex items-center pt-4 px-4">
+      <div className="flex items-center pt-4 px-8">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOLTS
@@ -215,7 +215,7 @@ const VirgilModes: React.FC = () => {
         </div>
       </div>
       
-      <main className={cn("flex-1 overflow-y-auto", isMobile ? "px-3 py-5" : "px-4 py-6")}>
+      <main className={cn("flex-1 overflow-y-auto", isMobile ? "px-6 py-5" : "px-8 py-6")}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/70" />
