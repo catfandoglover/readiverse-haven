@@ -30,17 +30,37 @@ const MainMenu: React.FC = () => {
           <div className="px-2">
             <h2 className="text-xl font-serif mb-8">Navigation</h2>
             <div className="space-y-6">
-              {/* Discover Navigation Item */}
+              
+              
+              {/* Profile Navigation Item */}
               <div 
                 className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/discover")}
+                onClick={() => handleNavigation("/profile")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
-                  <Compass className="h-6 w-6 text-[#E9E7E2]" />
+                  <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
-                    Discover
+                    Profile
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
+                    LOREM IPSUM DOLOR SIT
+                  </p>
+                </div>
+              </div>
+
+              {/* DNA Navigation Item */}
+              <div 
+                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/dna")}
+              >
+                <div className="flex-shrink-0 rounded-full p-3">
+                  <Dna className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
+                    DNA
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
@@ -67,36 +87,19 @@ const MainMenu: React.FC = () => {
                   </p>
                 </div>
               </div>
+            
               
-              {/* DNA Navigation Item */}
+              {/* Discover Navigation Item */}
               <div 
                 className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/dna")}
+                onClick={() => handleNavigation("/discover")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
-                  <Dna className="h-6 w-6 text-[#E9E7E2]" />
+                  <Compass className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
-                    DNA
-                  </h3>
-                  <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
-                    LOREM IPSUM DOLOR SIT
-                  </p>
-                </div>
-              </div>
-              
-              {/* Profile Navigation Item */}
-              <div 
-                className="flex items-start space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/profile")}
-              >
-                <div className="flex-shrink-0 rounded-full p-3">
-                  <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-medium tracking-wide">
-                    Profile
+                    Discover
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-xs uppercase tracking-wider mt-1">
                     LOREM IPSUM DOLOR SIT
