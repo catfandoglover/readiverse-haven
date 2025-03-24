@@ -71,7 +71,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
   
   return (
     <div 
-      className={cn("bg-[#4A4351]/50 rounded-xl cursor-pointer hover:bg-[#4A4351] transition-colors flex flex-col", 
+      className={cn("bg-[#4A4351]/50 rounded-xl cursor-pointer hover:bg-[#4A4351] transition-colors h-full flex flex-col", 
         isMobile ? "p-5" : "p-6")}
       onClick={onSelect}
     >
@@ -85,13 +85,11 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
         {prompt.user_title}
       </h3>
-      <div className="h-12 overflow-hidden">
-        {prompt.user_subtitle && (
-          <p className="text-sm text-[#E9E7E2]/70 line-clamp-2">
-            {prompt.user_subtitle}
-          </p>
-        )}
-      </div>
+      {prompt.user_subtitle && (
+        <p className="text-sm text-[#E9E7E2]/70">
+          {prompt.user_subtitle}
+        </p>
+      )}
     </div>
   );
 };
