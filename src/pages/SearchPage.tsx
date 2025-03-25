@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowLeft, Search, User2, BookText, Network, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -174,11 +173,9 @@ const SearchPage = () => {
 
 // Trending Section Component
 const TrendingSection = () => {
-  // Fetch trending items
   const { data: trendingItems, isLoading } = useQuery({
     queryKey: ['trending-items'],
     queryFn: async () => {
-      // Fetch a mix of content from different tables
       const [icons, concepts, questions, books] = await Promise.all([
         fetchTrendingItems('icons', 6),
         fetchTrendingItems('concepts', 6),
@@ -190,7 +187,6 @@ const TrendingSection = () => {
     }
   });
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -201,8 +197,6 @@ const TrendingSection = () => {
 
   return (
     <div className="space-y-8">
-      
-      {/* Classics Carousel */}
       {trendingItems?.books && trendingItems.books.length > 0 && (
         <TrendingCarousel 
           title="Classics" 
@@ -211,7 +205,6 @@ const TrendingSection = () => {
         />
       )}
       
-      {/* Icons Carousel */}
       {trendingItems?.icons && trendingItems.icons.length > 0 && (
         <TrendingCarousel 
           title="Icons" 
@@ -220,7 +213,6 @@ const TrendingSection = () => {
         />
       )}
       
-      {/* Concepts Carousel */}
       {trendingItems?.concepts && trendingItems.concepts.length > 0 && (
         <TrendingCarousel 
           title="Concepts" 
@@ -229,7 +221,6 @@ const TrendingSection = () => {
         />
       )}
       
-      {/* Questions Carousel */}
       {trendingItems?.questions && trendingItems.questions.length > 0 && (
         <TrendingCarousel 
           title="Great Questions" 
@@ -245,6 +236,7 @@ const TrendingSection = () => {
 const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   let column = 'title';
   let imageColumn = 'icon_illustration';
+  let orderBy = 'randomizer';
   
   switch (tableName) {
     case 'icons':
@@ -254,24 +246,27 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
     case 'great_questions':
       column = 'question';
       imageColumn = 'illustration';
+      orderBy = 'created_at';
       break;
     case 'concepts':
       imageColumn = 'illustration';
       break;
   }
 
-  const { data, error } = await supabase
+  const query = supabase
     .from(tableName)
     .select(`id, ${column}, ${imageColumn}`)
-    .order('randomizer', { ascending: true })
     .limit(limit);
+    
+  const { data, error } = tableName === 'great_questions' 
+    ? await query.order('created_at', { ascending: false })
+    : await query.order('randomizer', { ascending: true });
 
   if (error) {
     console.error(`Error fetching ${tableName}:`, error);
     return [];
   }
 
-  // Transform data to common format
   return data.map(item => ({
     id: item.id,
     title: item[column],
