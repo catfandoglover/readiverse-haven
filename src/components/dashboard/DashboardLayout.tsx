@@ -8,7 +8,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 
-type NavigationTab = "discover" | "virgil" | "dna" | "profile" | "bookshelf";
+type NavigationTab = "discover" | "virgil" | "dna" | "profile" | "bookshelf" | "dashboard";
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
