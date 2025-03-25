@@ -186,6 +186,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           image={itemToShow.image}
           title={itemToShow.title}
           about={itemToShow.about}
+          itemId={itemToShow.id}
+          itemType={itemToShow.type}
           onLearnMore={() => handleLearnMore(itemToShow)}
           onImageClick={() => handleLearnMore(itemToShow)}
           onPrevious={handlePrevious}

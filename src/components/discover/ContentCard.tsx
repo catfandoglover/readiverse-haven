@@ -1,11 +1,17 @@
 
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useBookshelfManager } from "@/hooks/useBookshelfManager";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentCardProps {
   image: string;
   title: string;
   about: string;
+  itemId?: string;
+  itemType?: "classic" | "icon" | "concept";
   onLearnMore: () => void;
   onImageClick: () => void;
   onPrevious?: () => void;
@@ -18,6 +24,8 @@ const ContentCard: React.FC<ContentCardProps> = ({
   image,
   title,
   about,
+  itemId,
+  itemType = "classic",
   onLearnMore,
   onImageClick,
   onPrevious,
@@ -26,10 +34,91 @@ const ContentCard: React.FC<ContentCardProps> = ({
   hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const { user, openLogin } = useAuth();
+  const { addToBookshelf } = useBookshelfManager();
+  const { toast } = useToast();
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  React.useEffect(() => {
+    if (user && itemId && itemType) {
+      const checkFavoriteStatus = async () => {
+        try {
+          const { data } = await supabase
+            .from('user_favorites')
+            .select('*')
+            .eq('item_id', itemId)
+            .eq('outseta_user_id', user.Uid)
+            .eq('item_type', itemType)
+            .single();
+          
+          if (data) {
+            setIsFavorite(true);
+          }
+        } catch (error) {
+          console.error("Error checking favorite status:", error);
+        }
+      };
+      
+      checkFavoriteStatus();
+    }
+  }, [user, itemId, itemType]);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+    
+    if (!itemId || !itemType) {
+      console.error("Missing itemId or itemType for favorite operation");
+      return;
+    }
+    
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('item_id', itemId)
+          .eq('outseta_user_id', user.Uid)
+          .eq('item_type', itemType);
+          
+        if (error) throw error;
+        
+        setIsFavorite(false);
+        toast({
+          description: `${itemType === 'classic' ? 'Book' : itemType} removed from favorites`,
+        });
+      } else {
+        const { error } = await supabase
+          .from('user_favorites')
+          .insert({
+            item_id: itemId,
+            outseta_user_id: user.Uid,
+            item_type: itemType,
+            added_at: new Date().toISOString()
+          });
+          
+        if (error) throw error;
+        
+        setIsFavorite(true);
+        toast({
+          description: `${itemType === 'classic' ? 'Book' : itemType} added to favorites`,
+        });
+        
+        // If it's a book/classic, also add it to the bookshelf
+        if (itemType === 'classic') {
+          addToBookshelf.mutate(itemId);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update favorites. Please try again.",
+      });
+    }
   };
 
   // Function to format text with line breaks

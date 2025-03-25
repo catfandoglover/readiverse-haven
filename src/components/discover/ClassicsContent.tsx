@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ForYouContentItem {
   id: string;
@@ -155,6 +157,18 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     ],
   };
 
+  if (isLoading || !itemToShow) {
+    return (
+      <div className="flex flex-col h-full justify-center items-center">
+        <Skeleton className="h-64 w-full mb-4" />
+        <Skeleton className="h-8 w-2/3 mb-2" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="h-full">
@@ -162,6 +176,8 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           image={itemToShow.image}
           title={itemToShow.title}
           about={itemToShow.about}
+          itemId={itemToShow.id}
+          itemType={itemToShow.type}
           onLearnMore={() => handleLearnMore(itemToShow)}
           onImageClick={() => handleLearnMore(itemToShow)}
           onPrevious={handlePrevious}
