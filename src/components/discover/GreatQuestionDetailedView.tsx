@@ -429,7 +429,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
                     />
                   </div>
                 </div>
-                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5]">
+                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase transition-colors group-hover:text-[#9b87f5] w-36 break-words line-clamp-2">
                   {item[textKey]}
                 </h4>
               </div>
