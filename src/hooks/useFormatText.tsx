@@ -1,51 +1,50 @@
-
 import React from 'react';
 
 export const useFormatText = () => {
-  const formatText = (text: string | null | undefined): React.ReactNode => {
-    if (!text) return null;
+  const formatText = (text: string) => {
+    if (!text) return '';
     
-    // Process text to handle markdown-like syntax
-    const parts = text.split(/(\n\n|\n|\*\*.*?\*\*|\*.*?\*|###.*?(?=\n|$))/g);
-    
-    return parts.map((part, index) => {
-      // Handle headers
-      if (part.startsWith('###')) {
+    return text.split('\\n').map((line, i) => {
+      let processedLine = line;
+      
+      if (processedLine.startsWith('### ')) {
         return (
-          <h3 key={index} className="text-xl font-bold mt-4 mb-2">
-            {part.substring(3).trim()}
-          </h3>
+          <React.Fragment key={i}>
+            <h3 className="text-xl font-bold mb-2 mt-4">
+              {processedLine.replace('### ', '')}
+            </h3>
+            {i < text.split('\\n').length - 1 && <br />}
+          </React.Fragment>
         );
       }
       
-      // Handle bold text
-      else if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+      processedLine = processedLine.replace(
+        /\*(.*?)\*/g, 
+        (_, match) => `<strong>${match}</strong>`
+      );
+      
+      processedLine = processedLine.replace(
+        /_(.*?)_/g, 
+        (_, match) => `<em>${match}</em>`
+      );
+      
+      if (processedLine.includes('<')) {
+        return (
+          <React.Fragment key={i}>
+            <span dangerouslySetInnerHTML={{ __html: processedLine }} />
+            {i < text.split('\\n').length - 1 && <br />}
+          </React.Fragment>
+        );
       }
       
-      // Handle italic text
-      else if (part.startsWith('*') && part.endsWith('*')) {
-        return <em key={index}>{part.substring(1, part.length - 1)}</em>;
-      }
-      
-      // Handle paragraph breaks
-      else if (part === '\n\n') {
-        return <br key={index} />;
-      }
-      
-      // Handle line breaks
-      else if (part === '\n') {
-        return <br key={index} />;
-      }
-      
-      // Return regular text
-      else if (part.trim()) {
-        return <span key={index}>{part}</span>;
-      }
-      
-      return null;
+      return (
+        <React.Fragment key={i}>
+          {processedLine}
+          {i < text.split('\\n').length - 1 && <br />}
+        </React.Fragment>
+      );
     });
   };
-  
+
   return { formatText };
 };

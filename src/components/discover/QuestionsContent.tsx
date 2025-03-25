@@ -26,24 +26,18 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ["discover-questions"],
     queryFn: async () => {
-      try {
-        console.log("Fetching questions");
-        const { data, error } = await supabase
-          .from("great_questions")
-          .select("*")
-          .limit(20);
+      const { data, error } = await supabase
+        .from("great_questions")
+        .select("*")
+        .order("randomizer", { ascending: true })
+        .limit(20);
 
-        if (error) {
-          console.error("Error fetching questions:", error);
-          throw error;
-        }
-
-        console.log("Fetched questions:", data?.length || 0);
-        return data || [];
-      } catch (err) {
-        console.error("Error in question fetch:", err);
-        return [];
+      if (error) {
+        console.error("Error fetching questions:", error);
+        throw error;
       }
+
+      return data || [];
     },
     staleTime: 60000,
   });
@@ -51,7 +45,6 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   useEffect(() => {
     // Check if we're on a question detail route
     if (type === "question" && slug) {
-      console.log("Loading question details for:", slug);
       const loadQuestionDetails = async () => {
         try {
           const { data, error } = await supabase
@@ -60,19 +53,12 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
             .eq("id", slug)
             .single();
 
-          if (error) {
-            console.error("Error loading question details:", error);
-            throw error;
-          }
+          if (error) throw error;
 
-          console.log("Question details loaded:", data?.question);
           if (data) {
             setSelectedQuestion(data);
             setDetailViewVisible(true);
             onDetailedViewShow();
-          } else {
-            console.error("No question data found for ID:", slug);
-            navigate("/discover", { replace: true });
           }
         } catch (err) {
           console.error("Error loading question details:", err);
@@ -95,7 +81,6 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
 
   // Navigate to question detail
   const handleQuestionSelect = (question: any) => {
-    console.log("Selecting question:", question.id, question.question);
     setSelectedQuestion(question);
     setDetailViewVisible(true);
     onDetailedViewShow();
@@ -116,7 +101,7 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   if (questions.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-[#E9E7E2]">No questions found. Please try again later.</div>
+        <div className="text-[#E9E7E2]">No questions found</div>
       </div>
     );
   }
