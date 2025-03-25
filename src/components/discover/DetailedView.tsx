@@ -815,7 +815,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
-              maxHeight: "100vh" 
+              maxHeight: "100vh",
+              ...(type === "classic" ? {
+                objectPosition: "center -5vh"
+              } : {})
             }} 
           />
         </div>
