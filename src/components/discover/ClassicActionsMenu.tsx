@@ -40,7 +40,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
       <DropdownMenuContent 
         align="end" 
         className={cn(
-          "flex flex-col p-0 border-none shadow-lg w-12", // Added w-12 to reduce width
+          "flex flex-col p-0 border-none shadow-lg",
           shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : "backdrop-blur-md bg-black/30"
         )}
       >
