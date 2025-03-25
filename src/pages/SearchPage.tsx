@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ArrowLeft, Search, User2, BookText, Network, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -327,7 +328,7 @@ const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type 
               onClick={() => handleItemClick(item)}
             >
               <div className="w-32 mb-2">
-                <AspectRatio ratio={1} className="rounded-md overflow-hidden">
+                <AspectRatio ratio={1} className="rounded-2xl overflow-hidden">
                   <img
                     src={item.image}
                     alt={item.title}
