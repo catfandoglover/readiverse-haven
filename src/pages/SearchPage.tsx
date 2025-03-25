@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -254,7 +255,7 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   }
 
   const query = supabase
-    .from(tableName)
+    .from(tableName as any)
     .select(`id, ${column}, ${imageColumn}`)
     .limit(limit);
     
@@ -267,7 +268,7 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
     return [];
   }
 
-  return data.map(item => ({
+  return data.map((item: any) => ({
     id: item.id,
     title: item[column],
     image: item[imageColumn] || '/placeholder.svg'
@@ -325,15 +326,17 @@ const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type 
               className="w-32 flex-none cursor-pointer group"
               onClick={() => handleItemClick(item)}
             >
-              <div className="relative h-44 w-32 rounded-md overflow-hidden mb-2">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/placeholder.svg";
-                  }}
-                />
+              <div className="w-32 mb-2">
+                <AspectRatio ratio={1} className="rounded-md overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/placeholder.svg";
+                    }}
+                  />
+                </AspectRatio>
               </div>
               <h4 className="text-sm font-medium line-clamp-2 text-gray-300 group-hover:text-white transition-colors">
                 {item.title}
