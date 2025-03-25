@@ -148,9 +148,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
       </div>
       <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-2xl font-serif">{title}</h2>
-            <div className="flex gap-2 items-center">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-2xl font-serif max-w-[70%]">{title}</h2>
+            <div className="flex gap-2 items-center shrink-0">
               <button
                 className="flex items-center justify-center text-[#2A282A]"
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
