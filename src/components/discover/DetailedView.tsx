@@ -814,7 +814,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 onClick={() => handleCarouselItemClick(classic, "classic")}
               >
                 <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="absolute inset-0 bg-[#E9E7E2]"></div>
+                  <div className="absolute inset-0 bg-[#2A282A]"></div>
                   <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
                     <img
                       src={classic.cover_url || classic.Cover_super || ''}
