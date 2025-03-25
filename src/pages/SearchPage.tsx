@@ -1,6 +1,8 @@
+
 import React from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -40,13 +42,13 @@ const SearchPage = () => {
           <input
             type="text"
             placeholder="Search by vibe, question, or specific entry..."
-            className="w-full bg-[#4A4351]/50 rounded-xl p-4 pl-4 pr-10 text-[#E9E7E2] placeholder-[#E9E7E2]/60 focus:outline-none focus:ring-2 focus:ring-[#D5B8FF]/50"
+            className="w-full bg-[#E9E7E2] rounded-xl p-4 pl-4 pr-10 text-[#2A282A] placeholder-[#2A282A]/60 focus:outline-none focus:ring-2 focus:ring-[#D5B8FF]/50"
           />
           <button 
             className="absolute right-4 top-1/2 transform -translate-y-1/2"
             aria-label="Search"
           >
-            <Search className="h-5 w-5 text-[#E9E7E2]/60" />
+            <Search className="h-5 w-5 text-[#2A282A]/60" />
           </button>
         </div>
       </div>
