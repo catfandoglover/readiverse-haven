@@ -104,7 +104,7 @@ const SearchPage = () => {
               FOR YOU
             </h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              A curated selection based on your intellectual DNA profile
+              Curated entries based on your intellectual DNA
             </p>
           </Card>
 
