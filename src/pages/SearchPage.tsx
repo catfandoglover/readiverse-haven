@@ -1,14 +1,51 @@
 
 import React from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, User2, BookText, Network, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { cn } from "@/lib/utils";
 
 const SearchPage = () => {
   const navigate = useNavigate();
+  const { user, supabase } = useAuth();
+  const [hasAssessment, setHasAssessment] = React.useState<boolean>(false);
+  
+  React.useEffect(() => {
+    const checkAssessment = async () => {
+      if (supabase && user?.Uid) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('assessment_id')
+            .eq('outseta_user_id', user.Uid)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error checking assessment:", error);
+            return;
+          }
+          
+          setHasAssessment(!!profile?.assessment_id);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      }
+    };
+    
+    checkAssessment();
+  }, [supabase, user]);
   
   const handleCategoryClick = (category: string) => {
-    navigate(`/search/${category.toLowerCase()}`);
+    if (category === "for-you" && !hasAssessment) {
+      return; // Prevent navigation if user doesn't have an assessment
+    }
+    
+    if (category === "for-you") {
+      navigate(`/discover`); // Navigate to the main discover page which shows "for-you" by default
+    } else {
+      navigate(`/search/${category.toLowerCase()}`);
+    }
   };
 
   return (
@@ -49,21 +86,35 @@ const SearchPage = () => {
         </div>
       </div>
 
-      {/* Category Cards */}
-      <div className="px-4 py-4 space-y-6">
-        <h2 className="font-oxanium uppercase text-xs tracking-wider text-[#E9E7E2]/70 mb-4">CATEGORIES</h2>
-        
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Category Cards - 2x2 on mobile, 1x4 on tablet/desktop */}
+      <div className="px-4 py-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* FOR YOU Card */}
+          <Card 
+            onClick={() => handleCategoryClick("for-you")}
+            className={cn(
+              "bg-[#4A4351]/50 hover:bg-[#4A4351] transition-colors rounded-xl p-6 cursor-pointer border-none",
+              !hasAssessment && "opacity-50 cursor-not-allowed hover:bg-[#4A4351]/50"
+            )}
+          >
+            <div className="flex items-start mb-4 text-[#CCFF23]">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
+              FOR YOU
+            </h3>
+            <p className="text-sm text-[#E9E7E2]/70">
+              A curated selection based on your intellectual DNA profile
+            </p>
+          </Card>
+
           {/* ICONS Card */}
           <Card 
             onClick={() => handleCategoryClick("Icons")}
             className="bg-[#4A4351]/50 hover:bg-[#4A4351] transition-colors rounded-xl p-6 cursor-pointer border-none"
           >
             <div className="flex items-start mb-4 text-[#F9F9F9]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-                <circle cx="12" cy="8" r="5" />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-              </svg>
+              <User2 className="h-6 w-6" />
             </div>
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               ICONS
@@ -79,12 +130,7 @@ const SearchPage = () => {
             className="bg-[#4A4351]/50 hover:bg-[#4A4351] transition-colors rounded-xl p-6 cursor-pointer border-none"
           >
             <div className="flex items-start mb-4 text-[#FFC49A]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-                <circle cx="18" cy="18" r="3" />
-                <circle cx="6" cy="6" r="3" />
-                <path d="M13 6h3a2 2 0 0 1 2 2v7" />
-                <path d="M11 18H8a2 2 0 0 1-2-2V9" />
-              </svg>
+              <Network className="h-6 w-6" />
             </div>
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               CONCEPTS
@@ -100,9 +146,7 @@ const SearchPage = () => {
             className="bg-[#4A4351]/50 hover:bg-[#4A4351] transition-colors rounded-xl p-6 cursor-pointer border-none"
           >
             <div className="flex items-start mb-4 text-[#D5B8FF]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-              </svg>
+              <BookText className="h-6 w-6" />
             </div>
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               CLASSICS
