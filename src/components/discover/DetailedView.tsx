@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -515,7 +516,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1 text-center">
-          <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold drop-shadow-md">
+          <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold drop-shadow-md text-[#E9E7E2]">
             {combinedData?.title || combinedData?.name || type.toUpperCase()}
           </h1>
         </div>
