@@ -1,38 +1,42 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { MessageSquareText } from "lucide-react";
-import AIChatDialog from './AIChatDialog';
+import { MessageSquare } from "lucide-react";
+import AIChatDialog from "./AIChatDialog";
 
-interface AIChatButtonProps {
-  currentQuestion: string;
-  enabled?: boolean;
-}
+const AIChatButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [sessionId, setSessionId] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState("");
 
-const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = true }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Get a consistent session ID from sessionStorage
-  const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
+  useEffect(() => {
+    const generateSessionId = () => {
+      return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    };
 
-  if (!enabled) return null;
+    if (!sessionId) {
+      setSessionId(generateSessionId());
+    }
+  }, [sessionId]);
+
+  const handleChatOpen = () => {
+    setIsOpen(true);
+    setCurrentQuestion("");
+  };
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg hover:shadow-xl 
-          transition-all duration-200 bg-background border-2 border-primary z-50"
-        onClick={() => setIsDialogOpen(true)}
-        aria-label="Talk to AI Assistant"
+      <button
+        onClick={handleChatOpen}
+        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-accent-foreground hover:bg-secondary h-9 px-4 py-2"
       >
-        <MessageSquareText className="h-6 w-6 text-primary" />
-      </Button>
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Chat with Virgil
+      </button>
       
-      <AIChatDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+      <AIChatDialog 
+        open={isOpen}
+        onOpenChange={setIsOpen}
         currentQuestion={currentQuestion}
         sessionId={sessionId}
       />
