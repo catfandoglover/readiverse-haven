@@ -37,7 +37,7 @@ const SearchPage = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search by vibe, question, or specific entry..."
+            placeholder="Search by vibe, question, or entry..."
             className="w-full bg-[#E9E7E2] rounded-xl p-4 pl-4 pr-10 text-[#2A282A] placeholder-[#2A282A]/60 focus:outline-none focus:ring-2 focus:ring-[#D5B8FF]/50"
           />
           <button 
