@@ -201,10 +201,20 @@ const TrendingSection = () => {
 
   return (
     <div className="space-y-8">
+      
+      {/* Classics Carousel */}
+      {trendingItems?.books && trendingItems.books.length > 0 && (
+        <TrendingCarousel 
+          title="Classics" 
+          items={trendingItems.books} 
+          type="classics" 
+        />
+      )}
+      
       {/* Icons Carousel */}
       {trendingItems?.icons && trendingItems.icons.length > 0 && (
         <TrendingCarousel 
-          title="Iconic Thinkers" 
+          title="Icons" 
           items={trendingItems.icons} 
           type="icons" 
         />
@@ -213,7 +223,7 @@ const TrendingSection = () => {
       {/* Concepts Carousel */}
       {trendingItems?.concepts && trendingItems.concepts.length > 0 && (
         <TrendingCarousel 
-          title="Trending Concepts" 
+          title="Concepts" 
           items={trendingItems.concepts} 
           type="concepts" 
         />
@@ -225,15 +235,6 @@ const TrendingSection = () => {
           title="Great Questions" 
           items={trendingItems.questions} 
           type="questions" 
-        />
-      )}
-      
-      {/* Classics Carousel */}
-      {trendingItems?.books && trendingItems.books.length > 0 && (
-        <TrendingCarousel 
-          title="Timeless Classics" 
-          items={trendingItems.books} 
-          type="classics" 
         />
       )}
     </div>
