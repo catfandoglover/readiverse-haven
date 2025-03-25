@@ -102,7 +102,7 @@ const MainMenu: React.FC = () => {
                     Discover
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
-                    Find inspiration
+                    Explore Alexandria and find inspiration
                   </p>
                 </div>
               </div>
