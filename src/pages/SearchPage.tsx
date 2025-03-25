@@ -103,7 +103,7 @@ const SearchPage = () => {
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               FOR YOU
             </h3>
-            <p className="text-sm text-[#E9E7E2]/70">
+            <p className="font-oxanium text-sm text-[#E9E7E2]/70">
               Curated entries based on your intellectual DNA
             </p>
           </Card>
@@ -119,7 +119,7 @@ const SearchPage = () => {
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               ICONS
             </h3>
-            <p className="text-sm text-[#E9E7E2]/70">
+            <p className="font-oxanium text-sm text-[#E9E7E2]/70">
               Meet the giants that shaped your world
             </p>
           </Card>
@@ -135,7 +135,7 @@ const SearchPage = () => {
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               CONCEPTS
             </h3>
-            <p className="text-sm text-[#E9E7E2]/70">
+            <p className="font-oxanium text-sm text-[#E9E7E2]/70">
               Unearth concepts that inform your life
             </p>
           </Card>
@@ -151,7 +151,7 @@ const SearchPage = () => {
             <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
               CLASSICS
             </h3>
-            <p className="text-sm text-[#E9E7E2]/70">
+            <p className="font-oxanium text-sm text-[#E9E7E2]/70">
               Read timeless works that shaped the great conversation
             </p>
           </Card>
