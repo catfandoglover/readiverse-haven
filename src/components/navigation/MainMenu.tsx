@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,16 +20,15 @@ const MainMenu: React.FC = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1">
+        <Button variant="ghost" size="icon" className="text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1 z-20">
           <Menu className="h-7.5 w-7.5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
+      <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10 z-50">
         <nav className="flex flex-col gap-8 mt-10">
           <div className="px-2">
             <h2 className="text-xl font-serif mb-8">Navigation</h2>
             <div className="space-y-6">
-              
               
               {/* Profile Navigation Item */}
               <div 

@@ -142,6 +142,11 @@
   .fixed-bottom-safe {
     bottom: env(safe-area-inset-bottom, 0);
   }
+  
+  /* Ensure transparent elements remain transparent */
+  .bg-transparent {
+    background-color: transparent !important;
+  }
 }
 
 /* Global fixes for iOS Safari */

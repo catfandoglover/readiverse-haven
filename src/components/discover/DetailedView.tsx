@@ -506,7 +506,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <header className="backdrop-blur-sm bg-gradient-to-b from-white/20 to-white/5 border-b border-[#E9E7E2]/10 sticky top-0 z-10">
+    <header className="bg-transparent fixed top-0 left-0 right-0 z-10">
       <div className="flex items-center justify-between px-4 py-4">
         <button
           onClick={handleBack}
