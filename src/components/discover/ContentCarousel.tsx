@@ -51,7 +51,7 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <h4 className="text-sm font-medium line-clamp-2 text-gray-300 group-hover:text-white transition-colors">
+              <h4 className="text-sm font-oxanium uppercase line-clamp-2 text-gray-300 group-hover:text-white transition-colors">
                 {item.title}
               </h4>
             </div>
