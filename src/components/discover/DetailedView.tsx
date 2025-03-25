@@ -505,21 +505,39 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <header 
-      className="fixed top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm pt-safe"
-      style={{
-        aspectRatio: "1290/152",
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-        maxHeight: "152px"
-      }}
-    >
-      <div className="flex items-center h-full px-4">
-        <button 
-          onClick={handleBack} 
-          className="h-8 w-8 rounded-md flex items-center justify-center bg-[#E9E7E2]/10 text-[#E9E7E2]"
+    <header className="bg-[#2A282A]/80 backdrop-blur-sm border-b border-[#E9E7E2]/10 sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 py-4">
+        <button
+          onClick={handleBack}
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
+          aria-label="Back to Discover"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
+        <div className="flex-1 text-center">
+          <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold drop-shadow-md">
+            {combinedData?.title || combinedData?.name || type.toUpperCase()}
+          </h1>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            onClick={toggleFavorite}
+          >
+            <Star 
+              className="h-5 w-5" 
+              fill={isFavorite ? "#EFFE91" : "none"} 
+            />
+          </button>
+          <button
+            className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
+            aria-label="Share"
+            onClick={handleShare}
+          >
+            <Share className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -577,25 +595,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderIconButtons = () => (
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-3xl font-serif">{combinedData.title || combinedData.name}</h2>
-      <div className="flex gap-2 items-center">
-        <button
-          className="flex items-center justify-center text-[#2A282A]"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          onClick={toggleFavorite}
-        >
-          <Star 
-            className="h-6 w-6" 
-            fill={isFavorite ? "#EFFE91" : "none"} 
-          />
-        </button>
-        <button
-          className="flex items-center justify-center text-[#2A282A]"
-          aria-label="Share"
-          onClick={handleShare}
-        >
-          <Share className="h-6 w-6" />
-        </button>
-      </div>
     </div>
   );
 
