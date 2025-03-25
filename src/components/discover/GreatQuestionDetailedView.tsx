@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -71,7 +70,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     queryFn: async () => {
       if (!itemData.id) return [];
       
-      // First, get related book IDs from the book_questions table
       const { data: bookQuestions, error: bookQuestionsError } = await supabase
         .from("book_questions")
         .select("book_id")
@@ -84,7 +82,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       
       const bookIds = bookQuestions.map(bq => bq.book_id);
       
-      // Then, get the actual books
       const { data: books, error: booksError } = await supabase
         .from("books")
         .select("*")
@@ -475,10 +472,10 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
             ) : combinedData?.great_conversation ? (
-              <div className="mb-8">
-                <p className="text-gray-800 font-baskerville text-lg">
+              <div className="mb-8 prose prose-slate">
+                <div className="text-gray-800 font-baskerville text-lg">
                   {formatText(combinedData.great_conversation)}
-                </p>
+                </div>
               </div>
             ) : (
               <p className="text-gray-800 font-baskerville text-lg mb-8 italic">
