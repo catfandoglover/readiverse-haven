@@ -704,7 +704,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 <h4 className={cn(
                   "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
                   "w-36 break-words line-clamp-2",
-                  type === "classic" ? "text-white" : "text-[#2A282A]"
+                  type === "classics" ? "text-white" : "text-[#2A282A]"
                 )}>
                   {item[textKey]}
                 </h4>
@@ -922,3 +922,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
