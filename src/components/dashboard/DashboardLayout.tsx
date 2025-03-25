@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -18,7 +19,7 @@ interface NavigationTabProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,6 +88,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     );
   };
 
+  const handleLogout = () => {
+    logout(); // Use the logout function from OutsetaAuthContext
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <Header />
@@ -126,16 +131,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex flex-col h-full">
             <div className="p-4 flex items-center justify-between border-b">
               <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage src={user?.ProfilePictureUrl} />
-                  <AvatarFallback>{user?.FirstName?.[0]}{user?.LastName?.[0]}</AvatarFallback>
+                <Avatar className="h-12 w-12 mr-4">
+                  <AvatarImage src={user?.ProfileImageS3Url} alt={`${user?.FirstName} ${user?.LastName}`} />
+                  <AvatarFallback>{user?.FirstName?.charAt(0) || 'U'}{user?.LastName?.charAt(0) || ''}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">{user?.FirstName} {user?.LastName}</div>
-                  <div className="text-sm text-muted-foreground">{user?.Email}</div>
+                  <h3 className="font-bold">{user?.FirstName} {user?.LastName}</h3>
+                  <p className="text-sm text-gray-600">{user?.Email}</p>
                 </div>
               </div>
-              <Button variant="destructive" size="sm" onClick={() => signOut()}>Sign Out</Button>
+              <Button variant="destructive" size="sm" onClick={handleLogout}>Sign Out</Button>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-4">

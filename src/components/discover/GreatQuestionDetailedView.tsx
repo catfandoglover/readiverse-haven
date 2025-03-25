@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -44,58 +45,76 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const imageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  console.log("GreatQuestionDetailedView received data:", itemData?.id, itemData?.question);
+
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
-    queryKey: ["question-details", itemData.id],
+    queryKey: ["question-details", itemData?.id],
     queryFn: async () => {
-      if (!itemData.id) return null;
-      
-      const { data, error } = await supabase
-        .from("great_questions")
-        .select("*")
-        .eq('id', itemData.id)
-        .single();
-      
-      if (error) {
-        console.error(`Error fetching enhanced question data:`, error);
+      if (!itemData?.id) {
+        console.log("No item data ID provided, skipping enhanced data fetch");
         return null;
       }
       
-      return data;
+      try {
+        console.log("Fetching enhanced question data for ID:", itemData.id);
+        const { data, error } = await supabase
+          .from("great_questions")
+          .select("*")
+          .eq('id', itemData.id)
+          .single();
+        
+        if (error) {
+          console.error(`Error fetching enhanced question data:`, error);
+          return null;
+        }
+        
+        console.log("Enhanced question data fetched successfully:", data?.question);
+        return data;
+      } catch (err) {
+        console.error("Error in enhanced data fetch:", err);
+        return null;
+      }
     },
     staleTime: 60000,
+    enabled: !!itemData?.id,
   });
 
   const { data: relatedClassics = [] } = useQuery({
-    queryKey: ["related-classics-for-question", itemData.id],
+    queryKey: ["related-classics-for-question", itemData?.id],
     queryFn: async () => {
-      if (!itemData.id) return [];
+      if (!itemData?.id) return [];
       
-      const { data: bookQuestions, error: bookQuestionsError } = await supabase
-        .from("book_questions")
-        .select("book_id")
-        .eq("question_id", itemData.id);
-      
-      if (bookQuestionsError || !bookQuestions?.length) {
-        console.error("Error fetching related book IDs:", bookQuestionsError);
+      try {
+        const { data: bookQuestions, error: bookQuestionsError } = await supabase
+          .from("book_questions")
+          .select("book_id")
+          .eq("question_id", itemData.id);
+        
+        if (bookQuestionsError || !bookQuestions?.length) {
+          console.error("Error fetching related book IDs:", bookQuestionsError);
+          return [];
+        }
+        
+        const bookIds = bookQuestions.map(bq => bq.book_id);
+        
+        const { data: books, error: booksError } = await supabase
+          .from("books")
+          .select("*")
+          .in("id", bookIds)
+          .limit(10);
+        
+        if (booksError) {
+          console.error("Error fetching related classics:", booksError);
+          return [];
+        }
+        
+        return books || [];
+      } catch (err) {
+        console.error("Error in related classics fetch:", err);
         return [];
       }
-      
-      const bookIds = bookQuestions.map(bq => bq.book_id);
-      
-      const { data: books, error: booksError } = await supabase
-        .from("books")
-        .select("*")
-        .in("id", bookIds)
-        .limit(10);
-      
-      if (booksError) {
-        console.error("Error fetching related classics:", booksError);
-        return [];
-      }
-      
-      return books || [];
     },
-    enabled: !!itemData.id,
+    enabled: !!itemData?.id,
   });
 
   const { data: concepts = [] } = useQuery({
@@ -121,12 +140,13 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   });
 
   useEffect(() => {
+    console.log("Effect - updating combined data", enhancedData?.question);
     if (!enhancedData && !isEnhancedDataLoading) return;
     
     setCombinedData({ 
       ...itemData,
       ...(enhancedData || {}),
-      image: enhancedData?.illustration || itemData.illustration || ''
+      image: enhancedData?.illustration || itemData?.illustration || ''
     });
   }, [itemData, enhancedData, isEnhancedDataLoading]);
 
@@ -175,7 +195,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   }, []);
 
   useEffect(() => {
-    if (user && itemData.id) {
+    if (user && itemData?.id) {
       const checkFavoriteStatus = async () => {
         try {
           const { data } = await supabase
@@ -196,7 +216,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       
       checkFavoriteStatus();
     }
-  }, [user, itemData.id]);
+  }, [user, itemData?.id]);
 
   const handleBack = () => {
     console.log("Back button clicked, location state:", location.state);
@@ -438,6 +458,14 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       </div>
     );
   };
+
+  if (!combinedData) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] flex items-center justify-center">
+        <p>Loading question data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
