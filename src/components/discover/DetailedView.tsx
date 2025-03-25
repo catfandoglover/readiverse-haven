@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
+import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory } from "@/utils/navigationHistory";
@@ -333,19 +333,49 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
-  const handleReadNow = () => {
-    if (combinedData.epub_file_url) {
-      navigate(`/read/${combinedData.id}`, { 
-        state: { 
-          bookUrl: combinedData.epub_file_url,
-          metadata: { Cover_super: combinedData.Cover_super || combinedData.cover_url }
-        } 
-      });
-    } else {
+  const handleReadNow = async () => {
+    try {
+      // First try to add to favorites if user is logged in
+      if (user && combinedData.id) {
+        if (!isFavorite) {
+          const { error } = await supabase
+            .from('user_favorites')
+            .insert({
+              item_id: combinedData.id,
+              outseta_user_id: user.Uid,
+              item_type: type,
+              added_at: new Date().toISOString()
+            });
+            
+          if (!error) {
+            setIsFavorite(true);
+            toast({
+              description: `Added to favorites`,
+            });
+          }
+        }
+      }
+      
+      // Then navigate to reader
+      if (combinedData.epub_file_url) {
+        navigate(`/read/${combinedData.id}`, { 
+          state: { 
+            bookUrl: combinedData.epub_file_url,
+            metadata: { Cover_super: combinedData.Cover_super || combinedData.cover_url }
+          } 
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "This book is not available for reading"
+        });
+      }
+    } catch (error) {
+      console.error("Error handling read action:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "This book is not available for reading"
+        description: "Something went wrong. Please try again."
       });
     }
   };
@@ -557,20 +587,45 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            onClick={toggleFavorite}
-          >
-            <Star 
-              className="h-5 w-5" 
-              fill={isFavorite ? "#EFFE91" : "none"} 
-              stroke={shouldBlurHeader ? "#2A282A" : "white"}
-            />
-          </button>
+          {type === "classic" ? (
+            <>
+              <button
+                className={cn(
+                  "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                )}
+                aria-label="Read"
+                onClick={handleReadNow}
+              >
+                <BookOpenText className="h-5 w-5" />
+              </button>
+              <button
+                className={cn(
+                  "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                )}
+                aria-label="Order"
+                onClick={handleOrder}
+              >
+                <ShoppingCart className="h-5 w-5" />
+              </button>
+            </>
+          ) : (
+            <button
+              className={cn(
+                "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+              )}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              onClick={toggleFavorite}
+            >
+              <Star 
+                className="h-5 w-5" 
+                fill={isFavorite ? "#EFFE91" : "none"} 
+                stroke={shouldBlurHeader ? "#2A282A" : "white"}
+              />
+            </button>
+          )}
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
@@ -622,88 +677,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
-  const renderClassicButtons = () => (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#E9E7E2] p-4 border-t border-gray-300 z-10 pb-safe">
-      <Button className="flex-1 mr-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleReadNow}>
-        <BookOpen className="mr-2 h-4 w-4" /> READ
-      </Button>
-      <Button className="flex-1 mx-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleAddToLibrary}>
-        <Plus className="mr-2 h-4 w-4" /> ADD
-      </Button>
-      <Button className="flex-1 ml-2 bg-[#2A282A] text-[#E9E7E2] hover:bg-[#2A282A]/80 font-oxanium" onClick={handleOrder}>
-        <ShoppingCart className="mr-2 h-4 w-4" /> ORDER
-      </Button>
-    </div>
-  );
+  // Remove the classic buttons at the bottom since we moved them to the top
+  const renderClassicButtons = () => null;
 
   const renderIconButtons = () => (
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-3xl font-serif">{combinedData.title || combinedData.name}</h2>
     </div>
   );
-
- /*
-const renderReadersLeaderboard = () => {
-    return (
-      <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-          {type === "icon" 
-            ? `SEEKERS ENCOUNTERING ${combinedData.name?.toUpperCase() || ''}`
-            : `READERS READING ${combinedData.title && combinedData.title.toUpperCase()}`}
-        </h3>
-        <Select
-          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
-          defaultValue={type === "icon" ? "SEEKERS" : "READERS"}
-        >
-          <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
-            <SelectValue placeholder="Select filter" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
-            <SelectItem value={type === "icon" ? "SEEKERS" : "READERS"}>
-              {type === "icon" ? "SEEKERS" : "READERS"}
-            </SelectItem>
-            <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <div className="border border-gray-300 rounded-md overflow-hidden">
-          
-          {isReadersLoading ? (
-            <div className="p-4 text-center">Loading {type === "icon" ? "seekers" : "readers"}...</div>
-          ) : readersData.length === 0 ? (
-            <div className="p-4 text-center">No {type === "icon" ? "seekers" : "readers"} yet. Be the first!</div>
-          ) : (
-            <ScrollArea className="h-60">
-              <div className="divide-y divide-gray-200">
-                {readersData.map((reader, index) => (
-                  <div 
-                    key={`${reader.outseta_user_id}-${index}`} 
-                    className={cn(
-                      "p-4 flex items-center gap-4",
-                      index % 2 === 0 ? "bg-[#F5F5F5]" : "bg-white"
-                    )}
-                  >
-                    <div className="w-6 h-6 flex items-center justify-center bg-[#2A282A] text-[#E9E7E2] rounded-full font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-baskerville font-semibold">
-                        {reader.profiles?.full_name || "Anonymous Reader"}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {reader.status === "completed" ? "Completed" : "Currently reading"}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
-      </div>
-    );
-  };
-*/
 
   const renderAnecdotes = () => {
     if (!combinedData.anecdotes) return null;
@@ -825,7 +806,7 @@ const renderReadersLeaderboard = () => {
         className="h-full w-full overflow-y-auto" 
         style={{ 
           paddingTop: "env(safe-area-inset-top, 0px)",
-          paddingBottom: type === "classic" ? "calc(80px + env(safe-area-inset-bottom, 20px))" : "0" 
+          paddingBottom: "env(safe-area-inset-bottom, 0px)"
         }}
       >
         <div ref={imageRef} className="w-full">
@@ -842,7 +823,7 @@ const renderReadersLeaderboard = () => {
 
         <div className="relative -mt-6">
           <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
-            {renderIconButtons()}
+            {type !== "classic" && renderIconButtons()}
             
             {renderAuthorField()}
             
@@ -880,8 +861,6 @@ const renderReadersLeaderboard = () => {
 
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
 
-            {/*    {renderReadersLeaderboard()} */}
-
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
 
             {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
@@ -890,8 +869,6 @@ const renderReadersLeaderboard = () => {
           </div>
         </div>
       </div>
-
-      {type === "classic" && renderClassicButtons()}
 
       <OrderDialog 
         title={combinedData?.title || combinedData?.name || ""} 
