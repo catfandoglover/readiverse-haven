@@ -313,7 +313,7 @@ const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type 
 
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-oxanium uppercase mb-4 text-[#E9E7E2]/80">{title}</h3>
+      <h3 className="text-sm font-oxanium uppercase mb-4 text-[#E9E7E2]/80">{title}</h3>
       
       <ScrollArea className="w-full" enableDragging orientation="horizontal">
         <div className="flex space-x-4 pb-4">
