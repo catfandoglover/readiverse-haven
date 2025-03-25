@@ -120,7 +120,7 @@ const SearchPage = () => {
               ICONS
             </h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              Discover influential figures who shaped history
+              Meet the giants that shaped your world
             </p>
           </Card>
 
@@ -136,7 +136,7 @@ const SearchPage = () => {
               CONCEPTS
             </h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              Explore foundational ideas that changed thinking
+              Unearth concepts that inform your life
             </p>
           </Card>
 
@@ -152,7 +152,7 @@ const SearchPage = () => {
               CLASSICS
             </h3>
             <p className="text-sm text-[#E9E7E2]/70">
-              Read timeless works that shaped civilization
+              Read timeless works that shaped the great conversation
             </p>
           </Card>
         </div>
