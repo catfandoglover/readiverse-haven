@@ -30,6 +30,7 @@ import SearchPage from "./pages/SearchPage";
 import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
+import GreatQuestionDetailView from "./components/discover/GreatQuestionDetailedView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +89,7 @@ const App = () => (
                 <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
                 <Route path="/dna/welcome" element={<VirgilWelcome />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
+                <Route path="/great-questions/:id" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/dashboard" element={<Dashboard />} />

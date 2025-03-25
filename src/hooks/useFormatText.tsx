@@ -7,6 +7,7 @@ export const useFormatText = () => {
     return text.split('\\n').map((line, i) => {
       let processedLine = line;
       
+      // Handle headings
       if (processedLine.startsWith('### ')) {
         return (
           <React.Fragment key={i}>
@@ -18,16 +19,19 @@ export const useFormatText = () => {
         );
       }
       
+      // Handle bold text
       processedLine = processedLine.replace(
         /\*(.*?)\*/g, 
         (_, match) => `<strong>${match}</strong>`
       );
       
+      // Handle italic text
       processedLine = processedLine.replace(
         /_(.*?)_/g, 
         (_, match) => `<em>${match}</em>`
       );
       
+      // If the line contains HTML, render it using dangerouslySetInnerHTML
       if (processedLine.includes('<')) {
         return (
           <React.Fragment key={i}>
@@ -37,6 +41,7 @@ export const useFormatText = () => {
         );
       }
       
+      // Otherwise render plain text
       return (
         <React.Fragment key={i}>
           {processedLine}
