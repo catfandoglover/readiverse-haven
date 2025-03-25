@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -209,7 +210,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     const previousPage = getPreviousPage();
     console.log("Previous page from history:", previousPage);
     
-    if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
+    if (previousPage && previousPage !== location.pathname) {
       console.log("Navigating to previous page:", previousPage);
       navigate(previousPage);
     } 
@@ -362,7 +363,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
             "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
             shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
           )}
-          aria-label="Back to Discover"
+          aria-label="Back to previous page"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
