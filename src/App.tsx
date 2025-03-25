@@ -72,10 +72,13 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/dna" replace />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
+                <Route path="/discover/questions" element={<DiscoverLayout />} />
+                <Route path="/discover/questions/:index" element={<DiscoverLayout />} />
                 <Route path="/discover/search" element={<SearchPage />} /> 
                 <Route path="/discover/search/icons" element={<IconsFeedPage />} />
                 <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
                 <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
+                <Route path="/discover/search/questions" element={<GreatQuestions />} />
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<Bookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
@@ -99,6 +102,7 @@ const App = () => (
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
                 <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
                 <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
+                <Route path="/search/questions" element={<Navigate to="/discover/search/questions" replace />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>

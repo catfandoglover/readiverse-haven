@@ -5,10 +5,11 @@ import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
 import IconsContent from "./IconsContent";
 import ConceptsContent from "./ConceptsContent";
+import QuestionsContent from "./QuestionsContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 
-type TabType = "for-you" | "classics" | "icons" | "concepts";
+type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
 const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
@@ -36,6 +37,10 @@ const DiscoverLayout = () => {
       setActiveTab("icons");
     } else if (location.pathname.includes('/view/concept/')) {
       setActiveTab("concepts");
+    } else if (location.pathname.includes('/view/question/')) {
+      setActiveTab("questions");
+    } else if (location.pathname.includes('/discover/questions')) {
+      setActiveTab("questions");
     }
     
     // Force remount of content components when route type changes
@@ -72,6 +77,13 @@ const DiscoverLayout = () => {
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
                />;
+      case "questions":
+        return <QuestionsContent 
+                 key={`questions-${routeKey}`}
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
     }
   };
 
@@ -90,7 +102,11 @@ const DiscoverLayout = () => {
           <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
             <MainMenu />
             <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
-              FOR YOU
+              {activeTab === "for-you" ? "FOR YOU" : 
+               activeTab === "classics" ? "CLASSICS" : 
+               activeTab === "icons" ? "ICONS" : 
+               activeTab === "concepts" ? "CONCEPTS" :
+               "QUESTIONS"}
             </h2>
             <button 
               className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"

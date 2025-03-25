@@ -4,26 +4,98 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Item {
   id: string;
-  title: string;
-  image: string;
+  title?: string;
+  name?: string;
+  question?: string;
+  image?: string;
+  illustration?: string;
 }
 
 interface ContentCarouselProps {
   title: string;
   items: Item[];
   type: "questions" | "classics" | "icons" | "concepts";
+  onItemClick?: (item: Item) => void;
 }
 
 const ContentCarousel: React.FC<ContentCarouselProps> = ({
   title,
   items,
   type,
+  onItemClick,
 }) => {
+  const navigate = useNavigate();
+  
   // If there are no items, don't render anything
   if (!items || items.length === 0) return null;
+
+  const handleViewAll = () => {
+    switch (type) {
+      case "questions":
+        navigate("/discover/search/questions");
+        break;
+      case "classics":
+        navigate("/discover/search/classics");
+        break;
+      case "icons":
+        navigate("/discover/search/icons");
+        break;
+      case "concepts":
+        navigate("/discover/search/concepts");
+        break;
+    }
+  };
+
+  const handleItemClick = (item: Item) => {
+    if (onItemClick) {
+      onItemClick(item);
+      return;
+    }
+    
+    let viewType: string;
+    let itemId = item.id;
+    
+    switch (type) {
+      case "questions":
+        viewType = "question";
+        break;
+      case "classics":
+        viewType = "classic";
+        break;
+      case "icons":
+        viewType = "icon";
+        break;
+      case "concepts":
+        viewType = "concept";
+        break;
+      default:
+        viewType = "classic";
+    }
+    
+    navigate(`/view/${viewType}/${itemId}`);
+  };
+
+  const getItemTitle = (item: Item): string => {
+    if (type === "questions" && item.question) {
+      return item.question;
+    } else if (type === "icons" && item.name) {
+      return item.name;
+    } else {
+      return item.title || "";
+    }
+  };
+
+  const getItemImage = (item: Item): string => {
+    if (type === "questions" || type === "concepts" || type === "icons") {
+      return item.illustration || "";
+    } else {
+      return item.image || "";
+    }
+  };
 
   return (
     <div className="mb-10">
@@ -33,6 +105,7 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
           variant="ghost"
           size="sm"
           className="text-gray-400 hover:text-white"
+          onClick={handleViewAll}
         >
           View All <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
@@ -44,11 +117,12 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
             <div
               key={item.id}
               className="w-32 flex-none cursor-pointer group"
+              onClick={() => handleItemClick(item)}
             >
               <div className="relative h-44 w-32 rounded-md overflow-hidden mb-2">
                 <img
-                  src={item.image}
-                  alt={item.title}
+                  src={getItemImage(item)}
+                  alt={getItemTitle(item)}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
@@ -58,7 +132,7 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
                   type === "classics" ? "text-white" : "text-[#2A282A]"
                 )}
               >
-                {item.title}
+                {getItemTitle(item)}
               </h4>
             </div>
           ))}
