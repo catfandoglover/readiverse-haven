@@ -37,16 +37,38 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-[#E9E7E2]">
-        <DropdownMenuItem onClick={toggleFavorite} className="flex items-center gap-2">
-          <Star className="h-4 w-4" fill={isFavorite ? "#EFFE91" : "none"} /> 
-          {isFavorite ? "Remove from favorites" : "Add to favorites"}
+      <DropdownMenuContent 
+        align="end" 
+        className="bg-transparent border-none shadow-lg p-0"
+      >
+        <DropdownMenuItem 
+          onClick={toggleFavorite} 
+          className={cn(
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+          )}
+        >
+          <Star className="h-5 w-5" fill={isFavorite ? "#EFFE91" : "none"} />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleOrder} className="flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4" /> Order book
+        
+        <DropdownMenuItem 
+          onClick={handleOrder} 
+          className={cn(
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+          )}
+        >
+          <ShoppingCart className="h-5 w-5" />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleShare} className="flex items-center gap-2">
-          <Share className="h-4 w-4" /> Share
+        
+        <DropdownMenuItem 
+          onClick={handleShare} 
+          className={cn(
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+          )}
+        >
+          <Share className="h-5 w-5" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
