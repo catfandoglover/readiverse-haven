@@ -880,7 +880,7 @@ const renderReadersLeaderboard = () => {
 
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
 
-            {renderReadersLeaderboard()}
+        /*    {renderReadersLeaderboard()} */
 
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
 
