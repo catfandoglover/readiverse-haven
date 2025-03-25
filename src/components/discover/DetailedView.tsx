@@ -745,23 +745,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {authorClassics.map((classic) => (
               <div
                 key={classic.id}
-                className="relative h-36 w-36 flex-none cursor-pointer rounded-lg overflow-hidden"
+                className="relative flex-none cursor-pointer group"
                 onClick={() => handleCarouselItemClick(classic, "classic")}
               >
-                <div className="absolute inset-0 bg-[#E9E7E2]"></div>
-                <div className="absolute inset-[2px] overflow-hidden rounded-[0.4rem]">
-                  <img
-                    src={classic.cover_url || classic.Cover_super || ''}
-                    alt={classic.title || ""}
-                    className="h-full w-full object-cover"
-                    draggable="false"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
-                    <h4 className="text-white text-sm font-baskerville drop-shadow-lg line-clamp-2">
-                      {classic.title}
-                    </h4>
+                <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
+                  <div className="absolute inset-0 bg-[#E9E7E2]"></div>
+                  <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
+                    <img
+                      src={classic.cover_url || classic.Cover_super || ''}
+                      alt={classic.title || ""}
+                      className="h-full w-full object-cover"
+                      draggable="false"
+                    />
                   </div>
                 </div>
+                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5]">
+                  {classic.title}
+                </h4>
               </div>
             ))}
           </div>
@@ -857,3 +857,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
