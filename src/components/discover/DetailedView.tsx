@@ -591,7 +591,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
+        {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3> */}
         <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
             {items.map((item) => (
@@ -645,11 +645,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderReadersLeaderboard = () => {
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+        {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
           {type === "icon" 
             ? `SEEKERS ENCOUNTERING ${combinedData.name?.toUpperCase() || ''}`
             : `READERS READING ${combinedData.title && combinedData.title.toUpperCase()}`}
-        </h3>
+        </h3> */}
         <Select
           onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
           defaultValue={type === "icon" ? "SEEKERS" : "READERS"}
@@ -722,7 +722,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
+        {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3> */}
         <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
           {anecdotesArray.map((anecdote, index) => (
             <li key={index}>{formatText(anecdote)}</li>
@@ -737,7 +737,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+        {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3> */}
         <p className="text-gray-800 font-baskerville text-lg">
           {formatText(combinedData.great_conversation)}
         </p>
@@ -864,12 +864,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3> */}
                 <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
               </div>
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                {/* <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3> */}
                 <p className="text-gray-800 font-baskerville text-lg">{formatText(combinedData.great_question_connection)}</p>
               </div>
             ) : null}
@@ -879,26 +879,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
 
             {renderReadersLeaderboard()}
-
-            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
-
-            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
-            
-            <div className="h-32"></div>
-          </div>
-        </div>
-      </div>
-
-      {type === "classic" && renderClassicButtons()}
-
-      <OrderDialog 
-        title={combinedData?.title || combinedData?.name || ""} 
-        amazonLink={combinedData?.amazon_link}
-        open={isOrderDialogOpen}
-        onOpenChange={setIsOrderDialogOpen}
-      />
-    </div>
-  );
-};
-
-export default DetailedView;
