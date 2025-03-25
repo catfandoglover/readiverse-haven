@@ -695,7 +695,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="absolute inset-0 bg-[#2A282A]/5"></div>
                   <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
                     <img
                       src={item[imageKey] || ''}
@@ -922,3 +921,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+

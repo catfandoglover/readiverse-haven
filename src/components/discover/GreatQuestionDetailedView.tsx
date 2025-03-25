@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     queryFn: async () => {
       if (!itemData.id) return [];
       
-      // First get the book IDs related to this question
       const { data: bookQuestions, error: bookQuestionsError } = await supabase
         .from("book_questions")
         .select("book_id")
@@ -83,7 +81,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
         return [];
       }
       
-      // Then get the details of those books
       const bookIds = bookQuestions.map(bq => bq.book_id);
       
       const { data: books, error: booksError } = await supabase
@@ -423,7 +420,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
                 onClick={() => handleCarouselItemClick(item, itemType)}
               >
                 <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="absolute inset-0 bg-[#E9E7E2]"></div>
                   <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
                     <img
                       src={item[imageKey] || ''}
@@ -443,65 +439,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       </div>
     );
   };
-
-  /*
-  const renderReadersLeaderboard = () => {
-    return (
-      <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
-          SEEKERS EXPLORING THIS QUESTION
-        </h3>
-        <Select
-          onValueChange={(value) => setReaderFilter(value as "SEEKERS" | "READERS" | "TOP RANKED")}
-          defaultValue="SEEKERS"
-        >
-          <SelectTrigger className="bg-[#E9E7E2] border-gray-300 text-[#2A282A] w-full mb-4">
-            <SelectValue placeholder="Select filter" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#E9E7E2] border-gray-300 text-[#2A282A]">
-            <SelectItem value="SEEKERS">SEEKERS</SelectItem>
-            <SelectItem value="TOP RANKED">TOP RANKED</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <div className="border border-gray-300 rounded-md overflow-hidden">
-          
-          {isReadersLoading ? (
-            <div className="p-4 text-center">Loading seekers...</div>
-          ) : readersData.length === 0 ? (
-            <div className="p-4 text-center">No seekers yet. Be the first!</div>
-          ) : (
-            <ScrollArea className="h-60">
-              <div className="divide-y divide-gray-200">
-                {readersData.map((reader, index) => (
-                  <div 
-                    key={`${reader.outseta_user_id}-${index}`} 
-                    className={cn(
-                      "p-4 flex items-center gap-4",
-                      index % 2 === 0 ? "bg-[#F5F5F5]" : "bg-white"
-                    )}
-                  >
-                    <div className="w-6 h-6 flex items-center justify-center bg-[#2A282A] text-[#E9E7E2] rounded-full font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-baskerville font-semibold">
-                        {reader.profiles?.full_name || "Anonymous Reader"}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {reader.status === "completed" ? "Completed" : "Currently exploring"}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
-      </div>
-    );
-  };
-  */
 
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
@@ -550,8 +487,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
             {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
 
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
-
-            {/* {renderReadersLeaderboard()} */}
 
             {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
             
