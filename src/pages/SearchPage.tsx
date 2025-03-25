@@ -46,7 +46,7 @@ const SearchPage = () => {
     }
     
     if (category === "for-you") {
-      navigate(`/discover`); // Navigate to the main discover page which shows "for-you" by default
+      navigate('/discover'); // Navigate to the main discover page which shows "for-you" by default
     } else {
       navigate(`/search/${category.toLowerCase()}`);
     }
@@ -58,9 +58,9 @@ const SearchPage = () => {
       <header className="bg-[#2A282A]/80 backdrop-blur-sm border-b border-[#E9E7E2]/10 sticky top-0 z-10">
         <div className="flex items-center justify-between px-4 py-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/discover')}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
-            aria-label="Back"
+            aria-label="Back to Discover"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
