@@ -24,7 +24,7 @@ const SearchPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 text-center">
-            <h1 className="font-oxanium text-base uppercase tracking-wider font-bold drop-shadow-md">
+            <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold drop-shadow-md">
               DISCOVER
             </h1>
           </div>
