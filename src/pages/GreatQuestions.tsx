@@ -35,7 +35,15 @@ const getCategorySubheader = (category: string) => {
 };
 
 const CategoryQuestions = ({ category, questions }: { category: string, questions: Question[] }) => {
+  const navigate = useNavigate();
+  
   if (!questions.length) return null;
+
+  const handleQuestionClick = (question: Question) => {
+    navigate(`/view/question/${question.id}`, { 
+      state: { fromSection: 'discover' }
+    });
+  };
 
   return (
     <div className="space-y-6 mb-12">
@@ -53,10 +61,11 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
           {questions.map((question) => (
             <Card 
               key={question.id}
-              className="flex-none w-[85vw] md:w-[400px] overflow-hidden border-0"
+              className="flex-none w-[85vw] md:w-[400px] overflow-hidden border-0 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
               }}
+              onClick={() => handleQuestionClick(question)}
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex-1 mb-4">

@@ -578,7 +578,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const handleCarouselItemClick = (item: CarouselItem, itemType: "classic" | "concept" | "question" | "icon") => {
-    let targetType: "classic" | "concept" | "icon" = "classic";
+    let targetType: "classic" | "concept" | "icon" | "question" = "classic";
     
     switch(itemType) {
       case "classic":
@@ -591,11 +591,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         targetType = "icon";
         break;
       case "question":
-        toast({
-          title: "Great Question",
-          description: item.question || "Loading question details..."
-        });
-        return;
+        targetType = "question";
+        break;
     }
     
     navigate(`/view/${targetType}/${item.id}`, { replace: true });
@@ -925,3 +922,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+

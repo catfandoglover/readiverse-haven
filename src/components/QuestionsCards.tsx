@@ -72,6 +72,12 @@ const QuestionsCards = () => {
     }
   });
 
+  const handleQuestionClick = (question: Question) => {
+    navigate(`/view/question/${question.id}`, { 
+      state: { fromSection: 'discover' }
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -91,10 +97,11 @@ const QuestionsCards = () => {
           {questions?.map((question) => (
             <Card 
               key={question.id}
-              className="flex-none w-[85vw] md:w-[400px] overflow-hidden"
+              className="flex-none w-[85vw] md:w-[400px] overflow-hidden cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
               }}
+              onClick={() => handleQuestionClick(question)}
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex-1 mb-4">

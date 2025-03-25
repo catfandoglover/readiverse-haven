@@ -1,6 +1,6 @@
+
 import React, { useEffect, useState, useRef } from "react";
-import { ArrowLeft, Share, Star, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited, getPreviousPage, sections } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -71,6 +71,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     queryFn: async () => {
       if (!itemData.id) return [];
       
+      // First, get related book IDs from the book_questions table
       const { data: bookQuestions, error: bookQuestionsError } = await supabase
         .from("book_questions")
         .select("book_id")
@@ -83,6 +84,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       
       const bookIds = bookQuestions.map(bq => bq.book_id);
       
+      // Then, get the actual books
       const { data: books, error: booksError } = await supabase
         .from("books")
         .select("*")
