@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -157,6 +161,187 @@ const SearchPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Trending Section */}
+      <div className="px-4 py-8 mt-4">
+        <h2 className="text-2xl font-baskerville text-[#E9E7E2] mb-2">Trending</h2>
+        <Separator className="bg-[#E9E7E2] opacity-20 mb-6" />
+        <TrendingSection />
+      </div>
+    </div>
+  );
+};
+
+// Trending Section Component
+const TrendingSection = () => {
+  // Fetch trending items
+  const { data: trendingItems, isLoading } = useQuery({
+    queryKey: ['trending-items'],
+    queryFn: async () => {
+      // Fetch a mix of content from different tables
+      const [icons, concepts, questions, books] = await Promise.all([
+        fetchTrendingItems('icons', 6),
+        fetchTrendingItems('concepts', 6),
+        fetchTrendingItems('great_questions', 6),
+        fetchTrendingItems('books', 6)
+      ]);
+      
+      return { icons, concepts, questions, books };
+    }
+  });
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-pulse text-[#E9E7E2]/60">Loading trending content...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Icons Carousel */}
+      {trendingItems?.icons && trendingItems.icons.length > 0 && (
+        <TrendingCarousel 
+          title="Iconic Thinkers" 
+          items={trendingItems.icons} 
+          type="icons" 
+        />
+      )}
+      
+      {/* Concepts Carousel */}
+      {trendingItems?.concepts && trendingItems.concepts.length > 0 && (
+        <TrendingCarousel 
+          title="Trending Concepts" 
+          items={trendingItems.concepts} 
+          type="concepts" 
+        />
+      )}
+      
+      {/* Questions Carousel */}
+      {trendingItems?.questions && trendingItems.questions.length > 0 && (
+        <TrendingCarousel 
+          title="Great Questions" 
+          items={trendingItems.questions} 
+          type="questions" 
+        />
+      )}
+      
+      {/* Classics Carousel */}
+      {trendingItems?.books && trendingItems.books.length > 0 && (
+        <TrendingCarousel 
+          title="Timeless Classics" 
+          items={trendingItems.books} 
+          type="classics" 
+        />
+      )}
+    </div>
+  );
+};
+
+// Helper function to fetch trending items
+const fetchTrendingItems = async (table: string, limit: number = 6) => {
+  let column = 'title';
+  let imageColumn = 'icon_illustration';
+  
+  if (table === 'icons') {
+    column = 'name';
+    imageColumn = 'illustration';
+  } else if (table === 'great_questions') {
+    column = 'question';
+    imageColumn = 'illustration';
+  } else if (table === 'concepts') {
+    imageColumn = 'illustration';
+  }
+
+  const { data, error } = await supabase
+    .from(table)
+    .select(`id, ${column}, ${imageColumn}`)
+    .order('randomizer', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error(`Error fetching ${table}:`, error);
+    return [];
+  }
+
+  // Transform data to common format
+  return data.map(item => ({
+    id: item.id,
+    title: item[column],
+    image: item[imageColumn] || '/placeholder.svg'
+  }));
+};
+
+// Trending Carousel Component
+interface TrendingItem {
+  id: string;
+  title: string;
+  image: string;
+}
+
+interface TrendingCarouselProps {
+  title: string;
+  items: TrendingItem[];
+  type: "questions" | "classics" | "icons" | "concepts";
+}
+
+const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type }) => {
+  const navigate = useNavigate();
+
+  const handleItemClick = (item: TrendingItem) => {
+    let route = '';
+    
+    switch (type) {
+      case 'icons':
+        route = `/view/icon/${item.id}`;
+        break;
+      case 'concepts':
+        route = `/view/concept/${item.id}`;
+        break;
+      case 'questions':
+        route = `/great-questions/${item.id}`;
+        break;
+      case 'classics':
+        route = `/reader/${item.id}`;
+        break;
+    }
+    
+    if (route) {
+      navigate(route);
+    }
+  };
+
+  return (
+    <div className="mb-8">
+      <h3 className="text-lg font-oxanium uppercase mb-4 text-[#E9E7E2]/80">{title}</h3>
+      
+      <ScrollArea className="w-full" enableDragging orientation="horizontal">
+        <div className="flex space-x-4 pb-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="w-32 flex-none cursor-pointer group"
+              onClick={() => handleItemClick(item)}
+            >
+              <div className="relative h-44 w-32 rounded-md overflow-hidden mb-2">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
+              </div>
+              <h4 className="text-sm font-medium line-clamp-2 text-gray-300 group-hover:text-white transition-colors">
+                {item.title}
+              </h4>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
