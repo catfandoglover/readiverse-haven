@@ -1191,7 +1191,6 @@ export type Database = {
           illustration: string | null
           notion_id: string
           question: string
-          randomizer: number | null
           related_classics: string[] | null
         }
         Insert: {
@@ -1205,7 +1204,6 @@ export type Database = {
           illustration?: string | null
           notion_id: string
           question: string
-          randomizer?: number | null
           related_classics?: string[] | null
         }
         Update: {
@@ -1219,7 +1217,6 @@ export type Database = {
           illustration?: string | null
           notion_id?: string
           question?: string
-          randomizer?: number | null
           related_classics?: string[] | null
         }
         Relationships: []
