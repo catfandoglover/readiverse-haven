@@ -335,7 +335,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
   const handleReadNow = async () => {
     try {
-      // First try to add to favorites if user is logged in
       if (user && combinedData.id) {
         if (!isFavorite) {
           const { error } = await supabase
@@ -356,7 +355,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         }
       }
       
-      // Then navigate to reader
       if (combinedData.epub_file_url) {
         navigate(`/read/${combinedData.id}`, { 
           state: { 
@@ -489,6 +487,43 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
+  const addToBookshelf = async (itemId: string) => {
+    if (!user) return;
+    
+    try {
+      const { data: existingBook, error: checkError } = await supabase
+        .from('user_books')
+        .select('*')
+        .eq('book_id', itemId)
+        .eq('outseta_user_id', user.Uid)
+        .single();
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Error checking bookshelf:", checkError);
+        return;
+      }
+      
+      if (!existingBook) {
+        const { error } = await supabase
+          .from('user_books')
+          .insert({
+            book_id: itemId,
+            outseta_user_id: user.Uid,
+            status: 'reading'
+          });
+
+        if (error) {
+          console.error("Error adding book to bookshelf:", error);
+          return;
+        }
+        
+        console.log("Book added to bookshelf:", itemId);
+      }
+    } catch (error) {
+      console.error("Error in add to bookshelf process:", error);
+    }
+  };
+
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -528,6 +563,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         toast({
           description: `${type === 'classic' ? 'Book' : type} added to favorites`,
         });
+        
+        if (type === 'classic') {
+          await addToBookshelf(combinedData.id);
+        }
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
