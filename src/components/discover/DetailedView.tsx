@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -505,7 +506,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <header className="backdrop-blur-sm bg-gradient-to-b from-white/60 to-white/30 border-b border-[#E9E7E2]/10 sticky top-0 z-10">
+    <header className="backdrop-blur-sm bg-gradient-to-b from-white/30 to-white/10 border-b border-[#E9E7E2]/10 sticky top-0 z-10">
       <div className="flex items-center justify-between px-4 py-4">
         <button
           onClick={handleBack}
