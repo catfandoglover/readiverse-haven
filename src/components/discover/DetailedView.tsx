@@ -546,7 +546,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1 text-center">
-          <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold text-[#2A282A]">
+          <h1 className="font-oxanium text-sm uppercase tracking-wider font-bold text-[#E9E7E2]">
             {combinedData?.title || combinedData?.name || type.toUpperCase()}
           </h1>
         </div>
