@@ -241,28 +241,32 @@ const TrendingSection = () => {
 };
 
 // Helper function to fetch trending items
-const fetchTrendingItems = async (table: string, limit: number = 6) => {
+const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   let column = 'title';
   let imageColumn = 'icon_illustration';
   
-  if (table === 'icons') {
-    column = 'name';
-    imageColumn = 'illustration';
-  } else if (table === 'great_questions') {
-    column = 'question';
-    imageColumn = 'illustration';
-  } else if (table === 'concepts') {
-    imageColumn = 'illustration';
+  switch (tableName) {
+    case 'icons':
+      column = 'name';
+      imageColumn = 'illustration';
+      break;
+    case 'great_questions':
+      column = 'question';
+      imageColumn = 'illustration';
+      break;
+    case 'concepts':
+      imageColumn = 'illustration';
+      break;
   }
 
   const { data, error } = await supabase
-    .from(table)
+    .from(tableName)
     .select(`id, ${column}, ${imageColumn}`)
     .order('randomizer', { ascending: true })
     .limit(limit);
 
   if (error) {
-    console.error(`Error fetching ${table}:`, error);
+    console.error(`Error fetching ${tableName}:`, error);
     return [];
   }
 
