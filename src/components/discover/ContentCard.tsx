@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import VirgilChatButton from "./VirgilChatButton";
 
 interface ContentCardProps {
   image: string;
@@ -160,6 +161,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                 />
               </button>
+              {itemId && (
+                <VirgilChatButton
+                  contentTitle={title}
+                  contentId={itemId}
+                  contentType={itemType}
+                  className="text-[#2A282A]"
+                />
+              )}
               <button
                 className="flex items-center justify-center text-[#2A282A]"
                 aria-label="Share"

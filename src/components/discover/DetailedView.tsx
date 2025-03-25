@@ -13,6 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
 import OrderDialog from "./OrderDialog";
+import VirgilChatButton from "./VirgilChatButton";
+import ClassicActionsMenu from "./ClassicActionsMenu";
 
 interface CarouselItem {
   id: string;
@@ -623,6 +625,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
+          <VirgilChatButton
+            contentTitle={combinedData?.title || combinedData?.name || type}
+            contentId={combinedData?.id || ""}
+            contentType={type}
+            className={cn(
+              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            )}
+            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
+          />
+          
           {type === "classic" ? (
             <>
               <button
@@ -635,43 +648,42 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               >
                 <BookOpenText className="h-5 w-5" />
               </button>
+              <ClassicActionsMenu
+                isFavorite={isFavorite}
+                toggleFavorite={toggleFavorite}
+                handleOrder={handleOrder}
+                handleShare={handleShare}
+                shouldBlurHeader={shouldBlurHeader}
+              />
+            </>
+          ) : (
+            <>
               <button
                 className={cn(
                   "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
                   shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
                 )}
-                aria-label="Order"
-                onClick={handleOrder}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                onClick={toggleFavorite}
               >
-                <ShoppingCart className="h-5 w-5" />
+                <Star 
+                  className="h-5 w-5" 
+                  fill={isFavorite ? "#EFFE91" : "none"} 
+                  stroke={shouldBlurHeader ? "#2A282A" : "white"}
+                />
+              </button>
+              <button
+                className={cn(
+                  "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                )}
+                aria-label="Share"
+                onClick={handleShare}
+              >
+                <Share className="h-5 w-5" />
               </button>
             </>
-          ) : (
-            <button
-              className={cn(
-                "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-              )}
-              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-              onClick={toggleFavorite}
-            >
-              <Star 
-                className="h-5 w-5" 
-                fill={isFavorite ? "#EFFE91" : "none"} 
-                stroke={shouldBlurHeader ? "#2A282A" : "white"}
-              />
-            </button>
           )}
-          <button
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            aria-label="Share"
-            onClick={handleShare}
-          >
-            <Share className="h-5 w-5" />
-          </button>
         </div>
       </div>
     </header>
@@ -922,4 +934,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
-

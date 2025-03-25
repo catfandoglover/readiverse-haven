@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
+import VirgilChatButton from "./VirgilChatButton";
 
 interface CarouselItem {
   id: string;
@@ -371,6 +372,16 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
+          <VirgilChatButton
+            contentTitle={combinedData?.question || "Great Question"}
+            contentId={combinedData?.id || ""}
+            contentType="question"
+            className={cn(
+              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            )}
+            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
+          />
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
