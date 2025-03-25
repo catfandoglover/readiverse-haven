@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -207,27 +206,23 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       return;
     }
     
+    if (window.history.length > 1) {
+      console.log("Using browser history navigation");
+      window.history.back();
+      return;
+    }
+    
     const previousPage = getPreviousPage();
     console.log("Previous page from history:", previousPage);
     
     if (previousPage && previousPage !== location.pathname) {
       console.log("Navigating to previous page:", previousPage);
       navigate(previousPage);
-    } 
-    else if (location.state?.fromSection) {
-      const fromSection = location.state.fromSection as keyof typeof sections;
-      const lastVisitedPath = getLastVisited(fromSection);
-      console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
-      navigate(lastVisitedPath);
+      return;
     }
-    else if (window.history.length > 1) {
-      console.log("Using browser history navigation");
-      navigate(-1);
-    } 
-    else {
-      console.log("Fallback to discover page");
-      navigate('/discover');
-    }
+    
+    console.log("Fallback to discover/search page");
+    navigate('/discover/search');
   };
 
   const handleShare = async () => {
