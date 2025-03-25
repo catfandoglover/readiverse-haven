@@ -1,3 +1,4 @@
+
 import { 
   PollyClient, 
   SynthesizeSpeechCommand,
@@ -108,25 +109,6 @@ class SpeechService {
       console.error('Error playing audio:', error);
     }
   }
-}
-
-export function getVoiceIdFromLanguage(language: string) {
-  switch(language) {
-    case 'en-US':
-      return 'Ruth';
-    case 'es-ES':
-      return 'Lucia';
-    case 'fr-FR':
-      return 'Celine';
-    case 'de-DE':
-      return 'Marlene';
-    default:
-      return 'Ruth'; // Default to English Ruth voice
-  }
-}
-
-export function getVirgilVoiceId(): string {
-  return 'Matthew';
 }
 
 // Create a singleton instance
