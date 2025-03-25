@@ -73,7 +73,7 @@ const QuestionsCards = () => {
   });
 
   const handleQuestionClick = (question: Question) => {
-    navigate(`/view/question/${question.id}`, { 
+    navigate(`/great-questions/${question.id}`, { 
       state: { fromSection: 'discover' }
     });
   };

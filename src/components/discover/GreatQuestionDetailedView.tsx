@@ -234,7 +234,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
 
   const handleShare = async () => {
     try {
-      const shareUrl = `${window.location.origin}/view/question/${combinedData.id}`;
+      const shareUrl = `${window.location.origin}/great-questions/${combinedData.id}`;
       const shareTitle = combinedData.question || "Great Question";
       const shareText = combinedData.great_conversation || `Check out this great question!`;
       

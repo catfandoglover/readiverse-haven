@@ -1,115 +1,107 @@
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from "@/components/theme-provider"
+import Index from '@/pages/Index';
+import IntellectualDNA from '@/pages/dna/IntellectualDNA';
+import DNAPriming from '@/pages/dna/DNAPriming';
+import DNAAssessment from '@/pages/dna/DNAAssessment';
+import DNAEmailConfirmationScreen from '@/pages/dna/DNAEmailConfirmationScreen';
+import DNACompletionScreen from '@/pages/dna/DNACompletionScreen';
+import Bookshelf from '@/pages/Bookshelf';
+import Reader from '@/pages/Reader';
+import DiscoverLayout from '@/layouts/DiscoverLayout';
+import GreatQuestions from '@/pages/GreatQuestions';
+import Dashboard from '@/pages/Dashboard';
+import DomainDetail from '@/pages/DomainDetail';
+import Profile from '@/pages/Profile';
+import ClassicsFeedPage from '@/pages/ClassicsFeedPage';
+import ConceptsFeedPage from '@/pages/ConceptsFeedPage';
+import IconsFeedPage from '@/pages/IconsFeedPage';
+import AllBooks from '@/pages/AllBooks';
+import AllIcons from '@/pages/AllIcons';
+import SearchPage from '@/pages/SearchPage';
+import VirgilOffice from '@/pages/virgil/VirgilOffice';
+import VirgilWelcome from '@/pages/virgil/VirgilWelcome';
+import VirgilChat from '@/pages/virgil/VirgilChat';
+import VirgilModes from '@/pages/virgil/VirgilModes';
+import BecomeWhoYouAre from '@/pages/virgil/BecomeWhoYouAre';
+import { OutsetaProvider } from '@/contexts/OutsetaAuthContext';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AuthProvider } from "@/contexts/OutsetaAuthContext";
-import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
-import Home from "@/components/Home";
-import Bookshelf from "@/components/Bookshelf";
-import IntellectualDNA from "./pages/IntellectualDNA";
-import DNAAssessment from "./pages/DNAAssessment";
-import DNACompletionScreen from "./pages/DNACompletionScreen";
-import DNAEmailConfirmationScreen from "./pages/DNAEmailConfirmationScreen";
-import GreatQuestions from "@/pages/GreatQuestions";
-import { Reader } from "@/components/Reader";
-import { useBook } from '@/hooks/useBook';
-import Profile from "./pages/Profile";
-import DomainDetail from "./pages/DomainDetail";
-import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
-import DNAPriming from "./pages/DNAPriming";
-import VirgilOffice from "./pages/VirgilOffice";
-import VirgilWelcome from "./pages/VirgilWelcome";
-import Dashboard from "./pages/Dashboard";
-import VirgilModes from "./pages/VirgilModes";
-import VirgilChat from "./pages/VirgilChat";
-import SearchPage from "./pages/SearchPage";
-import IconsFeedPage from "./pages/IconsFeedPage";
-import ConceptsFeedPage from "./pages/ConceptsFeedPage";
-import ClassicsFeedPage from "./pages/ClassicsFeedPage";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const ReaderWrapper = () => {
+function App() {
+  const [isMounted, setIsMounted] = useState(false);
   const location = useLocation();
-  const slug = location.pathname.split('/read/')[1];
-  const state = location.state as { bookUrl: string; metadata: { Cover_super: string | null } };
-  
-  const { data: book, isLoading } = useBook(slug);
 
-  const bookUrl = state?.bookUrl || book?.epub_file_url;
-  const coverSuper = state?.metadata?.Cover_super || book?.Cover_super;
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
-    <Reader 
-      metadata={{ Cover_super: coverSuper }}
-      preloadedBookUrl={bookUrl}
-      isLoading={isLoading}
-    />
-  );
-};
+    <OutsetaProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Routes>
+          {/* Home page */}
+          <Route path="/" element={<Index />} />
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <ErrorBoundary>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/" element={<Navigate to="/dna" replace />} />
-                <Route path="/discover" element={<DiscoverLayout />} /> 
-                <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
-                <Route path="/discover/questions" element={<DiscoverLayout />} />
-                <Route path="/discover/questions/:index" element={<DiscoverLayout />} />
-                <Route path="/discover/search" element={<SearchPage />} /> 
-                <Route path="/discover/search/icons" element={<IconsFeedPage />} />
-                <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
-                <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
-                <Route path="/discover/search/questions" element={<GreatQuestions />} />
-                <Route path="/home-old" element={<Home />} /> 
-                <Route path="/bookshelf" element={<Bookshelf />} />
-                <Route path="/dna" element={<IntellectualDNA />} />
-                <Route path="/dna/priming" element={<DNAPriming />} />
-                <Route path="/dna/:category" element={<DNAAssessment />} />
-                <Route path="/dna/completion" element={<DNACompletionScreen />} />
-                <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
-                <Route path="/dna/welcome" element={<VirgilWelcome />} />
-                <Route path="/great-questions" element={<GreatQuestions />} />
-                <Route path="/read/:slug" element={<ReaderWrapper />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
-                <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
-                <Route path="/virgil" element={<VirgilOffice />} />
-                <Route path="/virgil-modes" element={<VirgilModes />} />
-                <Route path="/virgil-chat" element={<VirgilChat />} />
-                
-                {/* Redirects from old paths to new paths */}
-                <Route path="/search" element={<Navigate to="/discover/search" replace />} />
-                <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
-                <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
-                <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
-                <Route path="/search/questions" element={<Navigate to="/discover/search/questions" replace />} />
-              </Routes>
-            </ErrorBoundary>
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+          {/* DNA routes */}
+          <Route path="/dna" element={<IntellectualDNA />} />
+          <Route path="/dna/priming" element={<DNAPriming />} />
+          <Route path="/dna/assessment/:category?" element={<DNAAssessment />} />
+          <Route path="/dna/email-confirmation" element={<DNAEmailConfirmationScreen />} />
+          <Route path="/dna/complete" element={<DNACompletionScreen />} />
+
+          {/* Bookshelf routes */}
+          <Route path="/bookshelf" element={<Bookshelf />} />
+          <Route path="/read/:id" element={<Reader />} />
+
+          {/* Discover routes */}
+          <Route path="/discover" element={<DiscoverLayout initialTab="for-you" />} />
+          <Route path="/discover/classics/:index?" element={<DiscoverLayout initialTab="classics" />} />
+          <Route path="/discover/questions/:index?" element={<DiscoverLayout initialTab="questions" />} />
+          <Route path="/discover/concepts/:index?" element={<DiscoverLayout initialTab="concepts" />} />
+          <Route path="/discover/icons/:index?" element={<DiscoverLayout initialTab="icons" />} />
+
+          {/* Detailed view routes */}
+          <Route path="/view/:type/:slug" element={<DiscoverLayout initialTab="for-you" detailedView />} />
+          
+          {/* Great Questions page */}
+          <Route path="/great-questions" element={<GreatQuestions />} />
+          <Route path="/great-questions/:id" element={<GreatQuestions />} />
+
+          {/* Dashboard routes */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/domain/:id" element={<DomainDetail />} />
+          <Route path="/profile" element={<Profile />} />
+
+          {/* Feed pages */}
+          <Route path="/classics" element={<ClassicsFeedPage />} />
+          <Route path="/concepts" element={<ConceptsFeedPage />} />
+          <Route path="/icons" element={<IconsFeedPage />} />
+          <Route path="/all-books" element={<AllBooks />} />
+          <Route path="/all-icons" element={<AllIcons />} />
+
+          {/* Search page */}
+          <Route path="/search" element={<SearchPage />} />
+
+          {/* Virgil chat */}
+          <Route path="/virgil" element={<VirgilOffice />} />
+          <Route path="/virgil/welcome" element={<VirgilWelcome />} />
+          <Route path="/virgil/chat" element={<VirgilChat />} />
+          <Route path="/virgil/modes" element={<VirgilModes />} />
+          <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
+
+          {/* Catch all for unknown paths */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster />
+      </ThemeProvider>
+    </OutsetaProvider>
+  );
+}
 
 export default App;
