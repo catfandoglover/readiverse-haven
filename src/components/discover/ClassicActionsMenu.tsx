@@ -39,12 +39,15 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="bg-transparent border-none shadow-lg p-0"
+        className={cn(
+          "flex flex-col p-0 border-none shadow-lg",
+          shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : "backdrop-blur-md bg-black/30"
+        )}
       >
         <DropdownMenuItem 
           onClick={toggleFavorite} 
           className={cn(
-            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
             shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
           )}
         >
@@ -54,7 +57,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
         <DropdownMenuItem 
           onClick={handleOrder} 
           className={cn(
-            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
             shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
           )}
         >
@@ -64,7 +67,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
         <DropdownMenuItem 
           onClick={handleShare} 
           className={cn(
-            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors",
+            "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
             shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
           )}
         >
