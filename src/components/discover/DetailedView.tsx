@@ -589,10 +589,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderHorizontalSlider = (title: string, items: CarouselItem[], imageKey: string = 'illustration', textKey: string = 'title', itemType: "classic" | "concept" | "question" | "icon") => {
     if (!items || items.length === 0) return null;
     
-    const carouselType = itemType === "classic" ? "classics" : 
-                        itemType === "concept" ? "concepts" :
-                        itemType === "icon" ? "icons" : "questions";
-    
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
@@ -615,10 +611,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                     />
                   </div>
                 </div>
-                <h4 className={cn(
-                  "text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5]",
-                  itemType === "classic" && "text-white"
-                )}>
+                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5]">
                   {item[textKey]}
                 </h4>
               </div>
@@ -649,7 +642,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     </div>
   );
 
-  const renderReadersLeaderboard = () => {
+ /*
+const renderReadersLeaderboard = () => {
     return (
       <div className="mt-8">
         <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
@@ -709,6 +703,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       </div>
     );
   };
+*/
 
   const renderAnecdotes = () => {
     if (!combinedData.anecdotes) return null;
@@ -909,4 +904,3 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
-
