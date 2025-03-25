@@ -203,16 +203,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     if (type === 'classic') {
       const bookData = enhancedData as { 
-        icon_illustration?: string; 
         cover_url?: string; 
         Cover_super?: string;
+        icon_illustration?: string; 
       } | null;
       
       if (bookData) {
         imageProperty = { 
-          image: bookData.icon_illustration || 
-                bookData.cover_url || 
+          image: bookData.cover_url || 
                 bookData.Cover_super || 
+                bookData.icon_illustration || 
                 itemData.image || ''
         };
       }
@@ -677,7 +677,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
-  // Remove the classic buttons at the bottom since we moved them to the top
   const renderClassicButtons = () => null;
 
   const renderIconButtons = () => (
