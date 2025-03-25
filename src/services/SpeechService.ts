@@ -1,4 +1,3 @@
-
 import { 
   PollyClient, 
   SynthesizeSpeechCommand,
@@ -25,13 +24,11 @@ class SpeechService {
       const accessKeyId = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
       const secretAccessKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
       
-      // Check if we have the necessary credentials
       if (!region || !accessKeyId || !secretAccessKey) {
         console.warn('Missing AWS credentials for Polly service');
         return;
       }
       
-      // Initialize the Polly client
       this.pollyClient = new PollyClient({
         region,
         credentials: {
@@ -59,19 +56,17 @@ class SpeechService {
     }
 
     try {
-      // Use Arthur voice (British English male)
       const params = {
         OutputFormat: OutputFormat.MP3,
-        SampleRate: "16000", // Fixed: Using string instead of String object
+        SampleRate: "16000",
         Text: text,
         TextType: TextType.TEXT,
-        VoiceId: VoiceId.Arthur,  // Using Arthur voice
+        VoiceId: VoiceId.Arthur,
         Engine: Engine.NEURAL
       };
       
       console.info('Attempting to get Polly URL with params:', params);
       
-      // Get a presigned URL for the speech
       const url = await getSynthesizeSpeechUrl({
         client: this.pollyClient,
         params
@@ -93,12 +88,10 @@ class SpeechService {
         return;
       }
       
-      // Use the AudioContext helper from AudioContext.ts
       const audioContext = createAudioContext();
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
       
-      // Decode the audio data and play it
       audioContext.decodeAudioData(arrayBuffer, (buffer) => {
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
@@ -111,6 +104,5 @@ class SpeechService {
   }
 }
 
-// Create a singleton instance
 export const speechService = new SpeechService();
 export default speechService;

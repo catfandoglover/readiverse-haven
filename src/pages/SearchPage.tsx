@@ -14,14 +14,8 @@ const SearchPage = () => {
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       {/* Header */}
-      <header 
-        className="bg-[#2A282A]/40 backdrop-blur-sm"
-        style={{
-          aspectRatio: "1290/152",
-          maxHeight: "152px"
-        }}
-      >
-        <div className="flex items-center px-4 py-3 h-full w-full">
+      <header className="bg-[#2A282A]/80 backdrop-blur-sm border-b border-[#E9E7E2]/10 sticky top-0 z-10">
+        <div className="flex items-center justify-between px-4 py-4">
           <button
             onClick={() => navigate(-1)}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
@@ -29,8 +23,10 @@ const SearchPage = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex-1 flex items-center justify-center">
-            <h1 className="font-oxanium uppercase text-xs tracking-wider">DISCOVER</h1>
+          <div className="flex-1 text-center">
+            <h1 className="font-oxanium text-base uppercase tracking-wider font-bold drop-shadow-md">
+              DISCOVER
+            </h1>
           </div>
           <div className="w-10"></div> {/* Empty space to balance the layout */}
         </div>
