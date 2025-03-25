@@ -4,7 +4,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import AllBooks from "./pages/AllBooks";
-import Reader from "./components/Reader";
+import { Reader } from "./components/Reader";
 import VirgilChat from "./pages/VirgilChat";
 import DNAAssessment from "./pages/DNAAssessment";
 import DNAPriming from "./pages/DNAPriming";
@@ -22,7 +22,7 @@ import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const App = () => {
   return (

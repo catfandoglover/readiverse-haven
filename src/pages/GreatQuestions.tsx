@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -35,16 +35,14 @@ const getCategorySubheader = (category: string) => {
   return subheaders[category];
 };
 
-const CategoryQuestions = ({ category, questions }: { category: string, questions: Question[] }) => {
+const CategoryQuestions = ({ category, questions, onQuestionClick }: { 
+  category: string, 
+  questions: Question[],
+  onQuestionClick: (question: Question) => void
+}) => {
   const navigate = useNavigate();
   
   if (!questions.length) return null;
-
-  const handleQuestionClick = (question: Question) => {
-    navigate(`/great-questions/${question.id}`, { 
-      state: { fromSection: 'discover' }
-    });
-  };
 
   return (
     <div className="space-y-6 mb-12">
@@ -66,7 +64,7 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
               style={{
                 background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
               }}
-              onClick={() => handleQuestionClick(question)}
+              onClick={() => onQuestionClick(question)}
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex-1 mb-4">
@@ -96,8 +94,9 @@ const GreatQuestions = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
-  const [isInitialMount, setIsInitialMount] = React.useState(true);
-  const [selectedQuestion, setSelectedQuestion] = React.useState<Question | null>(null);
+  const [isInitialMount, setIsInitialMount] = useState(true);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const restoreScrollPosition = useCallback(() => {
     const savedPosition = getScrollPosition(location.pathname);
@@ -111,15 +110,30 @@ const GreatQuestions = () => {
     }
   }, [location.pathname]);
 
-  const { data: questionData, isLoading: isQuestionLoading } = useQuery({
-    queryKey: ['great-question', id],
+  const { data: questions, isLoading: areQuestionsLoading } = useQuery({
+    queryKey: ['all-questions'],
     queryFn: async () => {
-      if (!id) return null;
-      
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('great_questions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
+
+      return questionsData as Question[];
+    }
+  });
+
+  const fetchQuestionById = useCallback(async (questionId: string) => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('great_questions')
         .select('*')
-        .eq('id', id)
+        .eq('id', questionId)
         .single();
         
       if (error) {
@@ -128,15 +142,31 @@ const GreatQuestions = () => {
       }
       
       return data;
-    },
-    enabled: !!id
-  });
+    } catch (err) {
+      console.error('Error in question fetch:', err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (questionData) {
-      setSelectedQuestion(questionData);
-    }
-  }, [questionData]);
+    const loadQuestionDetails = async () => {
+      if (id) {
+        const question = await fetchQuestionById(id);
+        if (question) {
+          setSelectedQuestion(question);
+        } else {
+          // If question not found, redirect to questions list
+          navigate('/great-questions', { replace: true });
+        }
+      } else {
+        setSelectedQuestion(null);
+      }
+    };
+
+    loadQuestionDetails();
+  }, [id, fetchQuestionById, navigate]);
 
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
@@ -189,6 +219,12 @@ const GreatQuestions = () => {
     navigate('/great-questions');
   };
 
+  const handleQuestionClick = (question: Question) => {
+    navigate(`/great-questions/${question.id}`, { 
+      state: { fromSection: 'discover' }
+    });
+  };
+
   const isCurrentSection = (path: string) => {
     if (path === '/dna') {
       return location.pathname.startsWith('/dna');
@@ -202,28 +238,11 @@ const GreatQuestions = () => {
     return false;
   };
 
-  const { data: questions, isLoading } = useQuery({
-    queryKey: ['all-questions'],
-    queryFn: async () => {
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('great_questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        throw questionsError;
-      }
-
-      return questionsData as Question[];
-    }
-  });
-
   // Show individual question view
-  if (id && (selectedQuestion || isQuestionLoading)) {
+  if (id && (selectedQuestion || isLoading)) {
     return (
-      <div className="min-h-screen">
-        {isQuestionLoading ? (
+      <div className="min-h-screen bg-background">
+        {isLoading ? (
           <div className="flex items-center justify-center h-screen">
             <div className="text-white animate-pulse">Loading question details...</div>
           </div>
@@ -247,7 +266,7 @@ const GreatQuestions = () => {
     );
   }
 
-  if (isLoading) {
+  if (areQuestionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] bg-background">
         <div className="animate-pulse text-foreground">Loading questions...</div>
@@ -256,7 +275,7 @@ const GreatQuestions = () => {
   }
 
   const questionsByCategory = categories.reduce((acc, category) => {
-    acc[category] = questions?.filter(q => q.category === category) || [];
+    acc[category] = (questions || []).filter(q => q.category === category);
     return acc;
   }, {} as Record<string, Question[]>);
 
@@ -292,7 +311,8 @@ const GreatQuestions = () => {
           <CategoryQuestions 
             key={category} 
             category={category} 
-            questions={questionsByCategory[category]} 
+            questions={questionsByCategory[category] || []} 
+            onQuestionClick={handleQuestionClick}
           />
         ))}
       </div>
