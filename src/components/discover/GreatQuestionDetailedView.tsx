@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { saveLastVisited, getLastVisited, getPreviousPage, sections } from "@/utils/navigationHistory";
+import { useNavigate, useLocation } from "react-router-dom";
+import { saveLastVisited, getLastVisited, getPreviousPage } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +39,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [combinedData, setCombinedData] = useState<any>(itemData);
   const [shouldBlurHeader, setShouldBlurHeader] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -140,7 +139,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   });
 
   useEffect(() => {
-    console.log("Effect - updating combined data", enhancedData?.question);
     if (!enhancedData && !isEnhancedDataLoading) return;
     
     setCombinedData({ 
@@ -149,12 +147,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       image: enhancedData?.illustration || itemData?.illustration || ''
     });
   }, [itemData, enhancedData, isEnhancedDataLoading]);
-
-  useEffect(() => {
-    if (enhancedData || isEnhancedDataLoading === false) {
-      setIsDataLoaded(true);
-    }
-  }, [enhancedData, isEnhancedDataLoading]);
 
   useEffect(() => {
     const viewportMeta = document.createElement('meta');
@@ -234,7 +226,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       navigate(previousPage);
     } 
     else if (location.state?.fromSection) {
-      const fromSection = location.state.fromSection as keyof typeof sections;
+      const fromSection = location.state.fromSection as string;
       const lastVisitedPath = getLastVisited(fromSection);
       console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
       navigate(lastVisitedPath);
@@ -482,7 +474,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
         <div ref={imageRef} className="w-full">
           <img 
             src={combinedData?.image} 
-            alt={combinedData?.question} 
+            alt={combinedData?.question || "Great Question"} 
             className="w-full object-cover" 
             style={{ 
               aspectRatio: "1/1",
@@ -494,7 +486,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
         <div className="relative -mt-6">
           <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
             <h2 className="text-2xl font-baskerville mb-6 text-[#2A282A]">
-              {combinedData?.question}
+              {combinedData?.question || "Great Question"}
             </h2>
             
             {isEnhancedDataLoading ? (

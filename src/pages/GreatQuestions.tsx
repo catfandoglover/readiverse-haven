@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Compass, LibraryBig, Search, Dna } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
 import { NotionSyncButton } from "@/components/NotionSyncButton";
 import { AnalyzeDNAButton } from "@/components/AnalyzeDNAButton";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
+import GreatQuestionDetailedView from "@/components/discover/GreatQuestionDetailedView";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -40,7 +41,7 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
   if (!questions.length) return null;
 
   const handleQuestionClick = (question: Question) => {
-    navigate(`/view/question/${question.id}`, { 
+    navigate(`/great-questions/${question.id}`, { 
       state: { fromSection: 'discover' }
     });
   };
@@ -94,7 +95,9 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
 const GreatQuestions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams<{ id: string }>();
   const [isInitialMount, setIsInitialMount] = React.useState(true);
+  const [selectedQuestion, setSelectedQuestion] = React.useState<Question | null>(null);
 
   const restoreScrollPosition = useCallback(() => {
     const savedPosition = getScrollPosition(location.pathname);
@@ -107,6 +110,33 @@ const GreatQuestions = () => {
       });
     }
   }, [location.pathname]);
+
+  const { data: questionData, isLoading: isQuestionLoading } = useQuery({
+    queryKey: ['great-question', id],
+    queryFn: async () => {
+      if (!id) return null;
+      
+      const { data, error } = await supabase
+        .from('great_questions')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching question details:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!id
+  });
+
+  useEffect(() => {
+    if (questionData) {
+      setSelectedQuestion(questionData);
+    }
+  }, [questionData]);
 
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
@@ -154,6 +184,11 @@ const GreatQuestions = () => {
     }
   };
 
+  const handleCloseDetailView = () => {
+    setSelectedQuestion(null);
+    navigate('/great-questions');
+  };
+
   const isCurrentSection = (path: string) => {
     if (path === '/dna') {
       return location.pathname.startsWith('/dna');
@@ -183,6 +218,34 @@ const GreatQuestions = () => {
       return questionsData as Question[];
     }
   });
+
+  // Show individual question view
+  if (id && (selectedQuestion || isQuestionLoading)) {
+    return (
+      <div className="min-h-screen">
+        {isQuestionLoading ? (
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-white animate-pulse">Loading question details...</div>
+          </div>
+        ) : selectedQuestion ? (
+          <GreatQuestionDetailedView 
+            data={selectedQuestion} 
+            onBack={handleCloseDetailView} 
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-screen">
+            <div className="text-white mb-4">Question not found</div>
+            <button 
+              onClick={() => navigate('/great-questions')}
+              className="px-4 py-2 bg-[#2A282A] text-white rounded-md hover:bg-[#2A282A]/80"
+            >
+              Back to Questions
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
