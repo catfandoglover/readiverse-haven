@@ -40,6 +40,7 @@ export const useBook = (slug: string | undefined) => {
               hasEpubUrl: idData?.epub_file_url ? 'yes' : 'no',
               hasAuthor: idData?.author ? 'yes' : 'no',
               hasAuthorId: idData?.author_id ? 'yes' : 'no',
+              hasCoverUrl: idData?.cover_url ? 'yes' : 'no',
               introduction: idData?.introduction ? 'yes' : 'no'
             });
             return idData as Book;
@@ -63,6 +64,7 @@ export const useBook = (slug: string | undefined) => {
             hasEpubUrl: result?.epub_file_url ? 'yes' : 'no',
             hasAuthor: result?.author ? 'yes' : 'no',
             hasAuthorId: result?.author_id ? 'yes' : 'no',
+            hasCoverUrl: result?.cover_url ? 'yes' : 'no',
             introduction: result?.introduction ? 'yes' : 'no'
           });
           return result as Book;
@@ -73,6 +75,7 @@ export const useBook = (slug: string | undefined) => {
           hasEpubUrl: data?.epub_file_url ? 'yes' : 'no',
           hasAuthor: data?.author ? 'yes' : 'no',
           hasAuthorId: data?.author_id ? 'yes' : 'no',
+          hasCoverUrl: data?.cover_url ? 'yes' : 'no',
           introduction: data?.introduction ? 'yes' : 'no'
         });
         return data as Book;

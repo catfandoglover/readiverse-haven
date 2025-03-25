@@ -1186,10 +1186,12 @@ export type Database = {
           category: string
           category_number: string | null
           created_at: string
+          great_conversation: string | null
           id: string
           illustration: string | null
           notion_id: string
           question: string
+          randomizer: number | null
           related_classics: string[] | null
         }
         Insert: {
@@ -1198,10 +1200,12 @@ export type Database = {
           category: string
           category_number?: string | null
           created_at?: string
+          great_conversation?: string | null
           id?: string
           illustration?: string | null
           notion_id: string
           question: string
+          randomizer?: number | null
           related_classics?: string[] | null
         }
         Update: {
@@ -1210,10 +1214,12 @@ export type Database = {
           category?: string
           category_number?: string | null
           created_at?: string
+          great_conversation?: string | null
           id?: string
           illustration?: string | null
           notion_id?: string
           question?: string
+          randomizer?: number | null
           related_classics?: string[] | null
         }
         Relationships: []

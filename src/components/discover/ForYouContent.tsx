@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,8 @@ import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { useBookshelfManager } from "@/hooks/useBookshelfManager";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 interface ForYouContentItem {
   id: string;
@@ -28,6 +31,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { addToBookshelf } = useBookshelfManager();
+  const { user } = useAuth();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -181,6 +186,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           image={itemToShow.image}
           title={itemToShow.title}
           about={itemToShow.about}
+          itemId={itemToShow.id}
+          itemType={itemToShow.type}
           onLearnMore={() => handleLearnMore(itemToShow)}
           onImageClick={() => handleLearnMore(itemToShow)}
           onPrevious={handlePrevious}

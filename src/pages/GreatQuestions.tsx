@@ -1,15 +1,16 @@
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Compass, LibraryBig, Search, Dna } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import { QuestionImage } from "@/components/QuestionsCards";
 import { NotionSyncButton } from "@/components/NotionSyncButton";
 import { AnalyzeDNAButton } from "@/components/AnalyzeDNAButton";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
+import GreatQuestionDetailedView from "@/components/discover/GreatQuestionDetailedView";
 
 type Question = Database['public']['Tables']['great_questions']['Row'];
 
@@ -34,7 +35,11 @@ const getCategorySubheader = (category: string) => {
   return subheaders[category];
 };
 
-const CategoryQuestions = ({ category, questions }: { category: string, questions: Question[] }) => {
+const CategoryQuestions = ({ category, questions, onQuestionClick }: { 
+  category: string, 
+  questions: Question[],
+  onQuestionClick: (question: Question) => void
+}) => {
   if (!questions.length) return null;
 
   return (
@@ -53,10 +58,11 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
           {questions.map((question) => (
             <Card 
               key={question.id}
-              className="flex-none w-[85vw] md:w-[400px] overflow-hidden border-0"
+              className="flex-none w-[85vw] md:w-[400px] overflow-hidden border-0 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #1A1F2C 0%, #7E69AB 100%)'
               }}
+              onClick={() => onQuestionClick(question)}
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex-1 mb-4">
@@ -85,7 +91,60 @@ const CategoryQuestions = ({ category, questions }: { category: string, question
 const GreatQuestions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id: questionId } = useParams<{ id: string }>();
   const [isInitialMount, setIsInitialMount] = React.useState(true);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [detailViewVisible, setDetailViewVisible] = useState(false);
+
+  // Fetch all questions
+  const { data: questions, isLoading } = useQuery({
+    queryKey: ['all-questions'],
+    queryFn: async () => {
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('great_questions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
+
+      return questionsData as Question[];
+    }
+  });
+
+  // Fetch single question if questionId is provided
+  const { data: singleQuestion, isLoading: isLoadingSingleQuestion } = useQuery({
+    queryKey: ['question-detail', questionId],
+    queryFn: async () => {
+      if (!questionId) return null;
+      
+      const { data, error } = await supabase
+        .from('great_questions')
+        .select('*')
+        .eq('id', questionId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching question details:', error);
+        throw error;
+      }
+      
+      return data as Question;
+    },
+    enabled: !!questionId
+  });
+
+  useEffect(() => {
+    // Check if we're viewing a specific question
+    if (questionId && singleQuestion) {
+      setSelectedQuestion(singleQuestion);
+      setDetailViewVisible(true);
+    } else {
+      setDetailViewVisible(false);
+    }
+  }, [questionId, singleQuestion]);
 
   const restoreScrollPosition = useCallback(() => {
     const savedPosition = getScrollPosition(location.pathname);
@@ -102,13 +161,13 @@ const GreatQuestions = () => {
   useEffect(() => {
     saveLastVisited('discover', location.pathname);
 
-    if (isInitialMount) {
+    if (isInitialMount && !questionId) {
       restoreScrollPosition();
       setIsInitialMount(false);
     }
 
     const handleScroll = () => {
-      if (!isInitialMount) {
+      if (!isInitialMount && !detailViewVisible) {
         const currentPosition = window.scrollY;
         if (currentPosition > 0) {
           saveScrollPosition(location.pathname, currentPosition);
@@ -126,12 +185,14 @@ const GreatQuestions = () => {
       handleScroll();
       window.removeEventListener('scroll', debouncedHandleScroll);
     };
-  }, [location.pathname, isInitialMount, restoreScrollPosition]);
+  }, [location.pathname, isInitialMount, restoreScrollPosition, questionId, detailViewVisible]);
 
   const handleNavigation = (path: string) => {
-    const currentPosition = window.scrollY;
-    if (currentPosition > 0) {
-      saveScrollPosition(location.pathname, currentPosition);
+    if (!detailViewVisible) {
+      const currentPosition = window.scrollY;
+      if (currentPosition > 0) {
+        saveScrollPosition(location.pathname, currentPosition);
+      }
     }
 
     if (path === '/' && location.pathname !== '/') {
@@ -158,28 +219,34 @@ const GreatQuestions = () => {
     return false;
   };
 
-  const { data: questions, isLoading } = useQuery({
-    queryKey: ['all-questions'],
-    queryFn: async () => {
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('great_questions')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const handleQuestionClick = (question: Question) => {
+    setSelectedQuestion(question);
+    navigate(`/great-questions/${question.id}`, { 
+      state: { fromSection: 'discover' }
+    });
+  };
 
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        throw questionsError;
-      }
+  const handleCloseDetailView = () => {
+    setSelectedQuestion(null);
+    setDetailViewVisible(false);
+    navigate('/great-questions');
+  };
 
-      return questionsData as Question[];
-    }
-  });
-
-  if (isLoading) {
+  if (isLoading && !detailViewVisible) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] bg-background">
         <div className="animate-pulse text-foreground">Loading questions...</div>
       </div>
+    );
+  }
+
+  // Show detail view if we have a selected question
+  if (detailViewVisible && selectedQuestion) {
+    return (
+      <GreatQuestionDetailedView
+        data={selectedQuestion}
+        onBack={handleCloseDetailView}
+      />
     );
   }
 
@@ -220,7 +287,8 @@ const GreatQuestions = () => {
           <CategoryQuestions 
             key={category} 
             category={category} 
-            questions={questionsByCategory[category]} 
+            questions={questionsByCategory[category]}
+            onQuestionClick={handleQuestionClick}
           />
         ))}
       </div>

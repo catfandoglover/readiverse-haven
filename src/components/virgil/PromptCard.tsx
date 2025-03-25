@@ -119,7 +119,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
         {prompt.user_title}
       </h3>
       {prompt.user_subtitle && (
-        <p className="text-sm text-[#E9E7E2]/70">
+        <p className="font-oxanium text-sm text-[#E9E7E2]/70">
           {prompt.user_subtitle}
         </p>
       )}

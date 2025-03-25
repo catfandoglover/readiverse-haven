@@ -5,10 +5,11 @@ import ForYouContent from "./ForYouContent";
 import ClassicsContent from "./ClassicsContent";
 import IconsContent from "./IconsContent";
 import ConceptsContent from "./ConceptsContent";
+import QuestionsContent from "./QuestionsContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 
-type TabType = "for-you" | "classics" | "icons" | "concepts";
+type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
 const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
@@ -36,6 +37,10 @@ const DiscoverLayout = () => {
       setActiveTab("icons");
     } else if (location.pathname.includes('/view/concept/')) {
       setActiveTab("concepts");
+    } else if (location.pathname.includes('/view/question/')) {
+      setActiveTab("questions");
+    } else if (location.pathname.includes('/discover/questions')) {
+      setActiveTab("questions");
     }
     
     // Force remount of content components when route type changes
@@ -72,6 +77,13 @@ const DiscoverLayout = () => {
                  onDetailedViewShow={() => setDetailedViewVisible(true)} 
                  onDetailedViewHide={() => setDetailedViewVisible(false)} 
                />;
+      case "questions":
+        return <QuestionsContent 
+                 key={`questions-${routeKey}`}
+                 currentIndex={index} 
+                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
+                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
+               />;
     }
   };
 
@@ -87,68 +99,23 @@ const DiscoverLayout = () => {
         ref={contentRef}
       >
         {!detailedViewVisible && (
-          <header 
-            className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
-            style={{
-              aspectRatio: "1290/152",
-              boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-              maxHeight: "152px"
-            }}
-          >
-            <div className="flex items-center px-4 py-3 h-full w-full">
-              <div className="flex-none">
-                <MainMenu />
-              </div>
-              <div className="flex-1 flex items-center justify-between pl-2">
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "for-you" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("for-you")}
-                >
-                  FOR YOU
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "classics" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("classics")}
-                >
-                  CLASSICS
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "icons" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("icons")}
-                >
-                  ICONS
-                </button>
-                <button
-                  className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-                    activeTab === "concepts" 
-                      ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                      : "text-[#E9E7E2]/60"
-                  }`}
-                  onClick={() => handleTabChange("concepts")}
-                >
-                  CONCEPTS
-                </button>
-                <button 
-                  className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-                  aria-label="Search"
-                >
-                  <Search className="h-2 w-2" />
-                </button>
-              </div>
-            </div>
-          </header>
+          <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
+            <MainMenu />
+            <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+              {activeTab === "for-you" ? "FOR YOU" : 
+               activeTab === "classics" ? "CLASSICS" : 
+               activeTab === "icons" ? "ICONS" : 
+               activeTab === "concepts" ? "CONCEPTS" :
+               "QUESTIONS"}
+            </h2>
+            <button 
+              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"
+              aria-label="Search"
+              onClick={() => navigate('/discover/search')}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
         )}
         
         <div className="w-full h-full relative bg-[#E9E7E2]">
