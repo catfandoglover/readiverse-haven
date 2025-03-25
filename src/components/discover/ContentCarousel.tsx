@@ -3,6 +3,7 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Item {
   id: string;
@@ -51,7 +52,12 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <h4 className="text-sm font-oxanium uppercase line-clamp-2 text-[#2A282A] group-hover:text-[#9b87f5] transition-colors">
+              <h4 
+                className={cn(
+                  "text-sm font-oxanium uppercase line-clamp-2 group-hover:text-[#9b87f5] transition-colors",
+                  type === "classics" ? "text-white" : "text-[#2A282A]"
+                )}
+              >
                 {item.title}
               </h4>
             </div>
