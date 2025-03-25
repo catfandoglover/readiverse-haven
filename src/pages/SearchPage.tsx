@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ArrowLeft, Search, User2, BookText, Network, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -173,7 +172,6 @@ const SearchPage = () => {
   );
 };
 
-// Trending Section Component
 const TrendingSection = () => {
   const { data: trendingItems, isLoading } = useQuery({
     queryKey: ['trending-items'],
@@ -234,7 +232,6 @@ const TrendingSection = () => {
   );
 };
 
-// Helper function to fetch trending items
 const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   let column = 'title';
   let imageColumn = 'icon_illustration';
@@ -276,7 +273,6 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   }));
 };
 
-// Trending Carousel Component
 interface TrendingItem {
   id: string;
   title: string;
@@ -328,7 +324,7 @@ const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type 
               onClick={() => handleItemClick(item)}
             >
               <div className="w-32 mb-2">
-                <AspectRatio ratio={1} className="rounded-2xl overflow-hidden">
+                <AspectRatio ratio={1} className="rounded-2xl overflow-hidden shadow-[0_4px_12px_-1px_rgba(0,0,0,0.3)]">
                   <img
                     src={item.image}
                     alt={item.title}
