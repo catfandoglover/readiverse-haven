@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpen, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
@@ -51,6 +50,9 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [combinedData, setCombinedData] = useState<any>(itemData);
+  const [shouldBlurHeader, setShouldBlurHeader] = useState(false);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
     queryKey: ["item-details", type, itemData.id],
@@ -248,6 +250,31 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     return () => {
       document.body.style.overflow = originalStyle;
       document.head.removeChild(viewportMeta);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!imageRef.current || !scrollContainerRef.current) return;
+      
+      const imageBottom = imageRef.current.getBoundingClientRect().bottom;
+      
+      const headerBottom = 60;
+      
+      setShouldBlurHeader(imageBottom <= headerBottom);
+    };
+
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      
+      handleScroll();
+    }
+    
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
     };
   }, []);
 
@@ -506,7 +533,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const renderHeader = () => (
-    <header className="bg-transparent backdrop-blur fixed top-0 left-0 right-0 z-10">
+    <header className={cn(
+      "bg-transparent fixed top-0 left-0 right-0 z-10 transition-all duration-200",
+      shouldBlurHeader && "backdrop-blur-md bg-[#E9E7E2]/80"
+    )}>
       <div className="flex items-center justify-between px-4 py-4">
         <button
           onClick={handleBack}
@@ -776,13 +806,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       {renderHeader()}
       
       <div 
+        ref={scrollContainerRef}
         className="h-full w-full overflow-y-auto" 
         style={{ 
           paddingTop: "env(safe-area-inset-top, 0px)",
           paddingBottom: type === "classic" ? "calc(80px + env(safe-area-inset-bottom, 20px))" : "0" 
         }}
       >
-        <div className="w-full">
+        <div ref={imageRef} className="w-full">
           <img 
             src={combinedData?.image} 
             alt={combinedData?.title || combinedData?.name} 
