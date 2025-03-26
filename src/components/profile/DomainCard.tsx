@@ -54,7 +54,8 @@ const DomainCard: React.FC<DomainCardProps> = ({
     fetchDomainData();
   }, []);
   
-  /* Calculate the highest progress level across both kindred and challenging resources
+  /* SCORING SYSTEM - COMMENTED OUT
+  // Calculate the highest progress level across both kindred and challenging resources
   const getHighestProgressLevel = (): number => {
     if (isLoading || !domainAnalysis) {
       // Fall back to the passed progress prop if data isn't loaded yet
@@ -112,7 +113,9 @@ const DomainCard: React.FC<DomainCardProps> = ({
             {description}
           </p>
           
+          {/* SCORING SYSTEM - COMMENTED OUT
           <MasteryScore progress={progress} />
+          */}
         </div>
         
         <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
