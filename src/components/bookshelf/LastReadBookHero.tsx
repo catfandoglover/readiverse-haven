@@ -53,7 +53,7 @@ const LastReadBookHero = () => {
         
         {/* "RESUME" Button Text Overlay - Top Left */}
         <div className="absolute top-6 left-6">
-          <p className="font-oxanium uppercase text-[E9E7E2]/50 text-xs font-bold">
+          <p className="font-oxanium uppercase text-[E9E7E2]/80 text-xs font-bold">
             {buttonText}
           </p>
         </div>
