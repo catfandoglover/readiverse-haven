@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -166,8 +167,8 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div className="absolute bottom-0 left-0 w-full px-6 pb-6 text-[#E9E7E2]">
-        <div className="flex items-center space-x-4">
-          <div className="relative h-20 w-20">
+        <div className="flex flex-col items-start">
+          <div className="relative h-20 w-20 mb-2">
             <svg 
               viewBox="0 0 100 100" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -203,7 +204,7 @@ const ProfileHeader: React.FC = () => {
             </button>
           </div>
           
-          <div>
+          <div className="text-left">
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
               {isLoadingAnalysis ? 'Loading...' : archetype}
