@@ -18,7 +18,7 @@ const CreateYourOwnCourseCard: React.FC = () => {
         </h3>
       </div>
       <div className="flex items-left justify-left mt-2">
-        <Plus className="h-3 w-3 text-[#CCFF23]" />
+        <Plus className="h-4 w-4 text-[#CCFF23]" />
       </div>
     </div>
   );
