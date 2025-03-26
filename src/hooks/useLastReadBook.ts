@@ -19,7 +19,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          books:book_id (
+          book:book_id (
             id,
             title,
             author,
@@ -39,10 +39,10 @@ export const useLastReadBook = () => {
       }
 
       // If there's a last read book, return it
-      if (lastReadBook?.books) {
+      if (lastReadBook?.book) {
         return {
           ...lastReadBook,
-          book: lastReadBook.books
+          book: lastReadBook.book
         };
       }
 
@@ -51,7 +51,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          books:book_id (
+          book:book_id (
             id,
             title,
             author,
@@ -70,10 +70,10 @@ export const useLastReadBook = () => {
         console.error('Error fetching last added book:', lastAddedError);
       }
 
-      if (lastAddedBook?.books) {
+      if (lastAddedBook?.book) {
         return {
           ...lastAddedBook,
-          book: lastAddedBook.books
+          book: lastAddedBook.book
         };
       }
 
