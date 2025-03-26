@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -146,6 +145,12 @@
   /* Ensure transparent elements remain transparent */
   .bg-transparent {
     background-color: transparent !important;
+  }
+
+  /* Add new stacking context rule */
+  .stacking-context {
+    isolation: isolate;
+    position: relative;
   }
 }
 

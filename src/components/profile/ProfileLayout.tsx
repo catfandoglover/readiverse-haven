@@ -75,15 +75,15 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden relative">
       <main className="flex-1 relative overflow-y-auto">
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-4 left-4 z-40">
           <MainMenu />
         </div>
         
         <ProfileHeader />
         
-        <div className="px-6 mt-12 mb-6 relative z-10">
+        <div className="px-6 mt-16 mb-6 relative z-1 pt-4">
           <div className="flex items-center space-x-4 mb-6">
             <Button
               variant="ghost"
