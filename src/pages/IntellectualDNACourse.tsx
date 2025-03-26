@@ -305,15 +305,15 @@ const IntellectualDNACourse: React.FC = () => {
           <ArrowLeft className="h-6 w-6 text-white" />
         </Button>
         
-        <h1 className="text-sm font-oxanium uppercase font-bold text-white">Intellectual DNA</h1>
+        <h1 className="text-sm font-oxanium uppercase font-bold text-[#E9E7E2]">Intellectual DNA</h1>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
-              <SlidersHorizontal className="h-6 w-6 text-white" />
+              <SlidersHorizontal className="h-6 w-6 text-[#E9E7E2]" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-white">
+          <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
               className="flex items-center cursor-pointer"
