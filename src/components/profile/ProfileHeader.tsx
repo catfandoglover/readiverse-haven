@@ -202,7 +202,7 @@ const ProfileHeader: React.FC = () => {
               </button>
             </div>
             
-            <div className="text-left flex items-center gap-4">
+            <div className="flex items-center justify-between w-full">
               <div>
                 <h1 
                   className="text-2xl font-serif" 
@@ -223,18 +223,18 @@ const ProfileHeader: React.FC = () => {
                   {isLoadingAnalysis ? 'Loading...' : archetype}
                 </p>
               </div>
-              
-              <Button 
-                variant="ghost" 
-                onClick={handleShareClick}
-                className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2 z-10"
-                aria-label="Share profile"
-              >
-                SHARE PROFILE
-                <Share className="h-4 w-4" />
-              </Button>
             </div>
           </div>
+          
+          <Button 
+            variant="ghost" 
+            onClick={handleShareClick}
+            className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 self-start mt-2"
+            aria-label="Share profile"
+          >
+            SHARE PROFILE
+            <Share className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>
