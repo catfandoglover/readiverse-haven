@@ -7,12 +7,12 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 
 const ConceptsFeedPage = () => {
   const navigate = useNavigate();
-  const { getLastContentPath, saveSourcePath } = useNavigationState();
+  const { saveSourcePath } = useNavigationState();
   const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
   
   React.useEffect(() => {
-    // Save the search page as the source path for proper back navigation
-    saveSourcePath('/discover/search');
+    // Save the current page path (not search page) as the source path for proper back navigation
+    saveSourcePath(window.location.pathname);
   }, [saveSourcePath]);
   
   const handleBack = () => {

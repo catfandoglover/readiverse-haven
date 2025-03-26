@@ -26,11 +26,12 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const { saveSourcePath, getSourcePath } = useNavigationState();
 
-  // Save current path for proper back navigation
+  // Save current path for proper back navigation - this is critical
   useEffect(() => {
     const currentPath = location.pathname;
     
     if (!currentPath.includes('/view/')) {
+      // This will store the current feed page as the source path
       saveSourcePath(currentPath);
       console.log('[QuestionsContent] Saved source path:', currentPath);
     }
@@ -98,11 +99,16 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     setSelectedQuestion(question);
     setDetailViewVisible(true);
     onDetailedViewShow();
+    
+    // Get the current path before navigation to use it as the source path
+    const sourcePath = location.pathname;
+    console.log("[QuestionsContent] Setting source path for detail view:", sourcePath);
+    
     navigate(`/view/question/${question.id}`, { 
       replace: true,
       state: { 
         fromSection: 'discover',
-        sourcePath: getSourcePath()
+        sourcePath: sourcePath // Pass the exact current path
       }
     });
   };

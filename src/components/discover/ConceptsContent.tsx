@@ -86,11 +86,12 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     }
   }, [location.pathname, concepts, onDetailedViewShow]);
 
-  // Save the current path for proper back navigation
+  // Save the current path for proper back navigation - this is critical
   useEffect(() => {
     const currentPath = location.pathname;
     
     if (!currentPath.includes('/view/')) {
+      // This will store the current feed page as the source path
       saveSourcePath(currentPath);
       console.log('[ConceptsContent] Saved source path:', currentPath);
     }
@@ -110,11 +111,16 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
+    
+    // Get the current path before navigation to use it as the source path
+    const sourcePath = location.pathname;
+    console.log("[ConceptsContent] Setting source path for detail view:", sourcePath);
+    
     navigate(`/view/concept/${concept.id}`, { 
       replace: true,
       state: { 
         fromSection: 'discover',
-        sourcePath: getSourcePath()
+        sourcePath: sourcePath // Pass the exact current path
       }
     });
     

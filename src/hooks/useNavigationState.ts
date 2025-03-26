@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { saveLastVisited, sections, getOriginPath } from '@/utils/navigationHistory';
 
@@ -10,6 +10,7 @@ type ContentType = 'classic' | 'icon' | 'concept' | 'question' | 'for-you';
  */
 export const useNavigationState = () => {
   const location = useLocation();
+  const [currentSourcePath, setCurrentSourcePath] = useState<string | null>(null);
   
   useEffect(() => {
     // Store the current path in session storage when it changes
@@ -53,24 +54,49 @@ export const useNavigationState = () => {
     return 'for-you';
   };
 
+  /**
+   * Saves the source path to session storage for back navigation
+   * This is critically important for proper back navigation
+   */
   const saveSourcePath = (path: string) => {
-    sessionStorage.setItem('sourcePath', path);
-    console.log('[NavigationState] Saved source path:', path);
+    // Only save non-detail view paths
+    if (!path.includes('/view/')) {
+      sessionStorage.setItem('sourcePath', path);
+      setCurrentSourcePath(path);
+      console.log('[NavigationState] Saved source path:', path);
+    }
   };
 
+  /**
+   * Gets the source path from which the user navigated
+   * Prioritizes the current component state over session storage
+   */
   const getSourcePath = () => {
+    // First check component state for the most up-to-date value
+    if (currentSourcePath) {
+      console.log('[NavigationState] Retrieved source path from state:', currentSourcePath);
+      return currentSourcePath;
+    }
+    
+    // Then check session storage
     const sourcePath = sessionStorage.getItem('sourcePath');
     if (sourcePath) {
-      console.log('[NavigationState] Retrieved source path:', sourcePath);
+      console.log('[NavigationState] Retrieved source path from session:', sourcePath);
+      setCurrentSourcePath(sourcePath);
       return sourcePath;
     }
-    return getOriginPath();
+    
+    // Fall back to navigation history
+    const originPath = getOriginPath();
+    console.log('[NavigationState] Falling back to origin path:', originPath);
+    return originPath;
   };
   
   return { 
     getLastContentPath, 
     getContentType,
     saveSourcePath,
-    getSourcePath
+    getSourcePath,
+    currentSourcePath
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -308,7 +307,11 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   }, [user, itemData.id, type]);
 
   const handleBack = () => {
-    console.log("[DetailedView] Back button clicked, location state:", location.state);
+    console.log("[DetailedView] Back button clicked", {
+      onBack: !!onBack,
+      locationState: location.state,
+      pathname: location.pathname
+    });
     
     // Priority 1: Use provided onBack callback if available
     if (onBack) {
@@ -317,7 +320,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Priority 2: Use sourcePath from location state
+    // Priority 2: Get source path from location state
     if (location.state?.sourcePath) {
       const sourcePath = location.state.sourcePath;
       console.log("[DetailedView] Navigating to source path from location state:", sourcePath);
@@ -325,7 +328,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Priority 3: Use sourcePath from navigation state hook
+    // Priority 3: Use getSourcePath() from navigation state hook
     const sourcePath = getSourcePath();
     if (sourcePath && sourcePath !== location.pathname) {
       console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
@@ -333,26 +336,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Priority 4: Use fromSection from location state
-    if (location.state?.fromSection) {
-      const fromSection = location.state.fromSection as keyof typeof sections;
-      const lastVisitedPath = getLastVisited(fromSection);
-      console.log("[DetailedView] Navigating to source section:", fromSection, "path:", lastVisitedPath);
-      navigate(lastVisitedPath);
+    // Priority 4: Use general back navigation as last resort
+    if (window.history.length > 1) {
+      console.log("[DetailedView] Using window.history.back()");
+      window.history.back();
       return;
     }
     
-    // Priority 5: Use previous page from history
-    const previousPage = getPreviousPage();
-    console.log("[DetailedView] Previous page from history:", previousPage);
-    
-    if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
-      console.log("[DetailedView] Navigating to previous page:", previousPage);
-      navigate(previousPage);
-      return;
-    }
-    
-    // Fallback to For You feed
+    // Ultimate fallback to For You feed
     console.log("[DetailedView] Fallback to For You feed");
     navigate('/discover');
   };
@@ -951,7 +942,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <OrderDialog 
           bookId={combinedData?.id} 
           title={combinedData?.title}
-          coverUrl={combinedData?.cover_url || combinedData?.Cover_super}
+          cover_url={combinedData?.cover_url || combinedData?.Cover_super}
           amazonUrl={combinedData?.amazon_link}
           bookshopUrl={combinedData?.bookshop_link}
           onClose={() => setIsOrderDialogOpen(false)}
