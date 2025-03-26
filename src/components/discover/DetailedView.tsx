@@ -54,7 +54,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, openLogin } = useAuth();
-  const { getSourcePath } = useNavigationState();
+  const { getSourcePath, getFeedSourcePath } = useNavigationState();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
     type === "icon" ? "SEEKERS" : "READERS"
@@ -338,7 +338,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Priority 3: Use getSourcePath() from navigation state hook
+    // Priority 3: Use getFeedSourcePath for content viewed from feeds
+    // This is CRITICAL to ensure we go back to FOR YOU feed if that's where we came from
+    const contentType = location.pathname.split('/view/')[1]?.split('/')[0];
+    if (contentType && ['icon', 'classic', 'concept', 'question'].includes(contentType)) {
+      const feedPath = getFeedSourcePath();
+      if (feedPath) {
+        console.log("[DetailedView] Navigating to feed source path:", feedPath);
+        navigate(feedPath);
+        return;
+      }
+    }
+    
+    // Priority 4: Fall back to getSourcePath from navigation state hook
     const sourcePath = getSourcePath();
     if (sourcePath && sourcePath !== location.pathname) {
       console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
@@ -346,7 +358,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Priority 4: Use general back navigation as last resort
+    // Priority 5: Use general back navigation as last resort
     if (window.history.length > 1) {
       console.log("[DetailedView] Using window.history.back()");
       window.history.back();

@@ -11,6 +11,7 @@ type ContentType = 'classic' | 'icon' | 'concept' | 'question' | 'for-you';
 export const useNavigationState = () => {
   const location = useLocation();
   const [currentSourcePath, setCurrentSourcePath] = useState<string | null>(null);
+  const [feedSourcePath, setFeedSourcePath] = useState<string | null>(null);
   
   // Store the current path in session storage when it changes
   useEffect(() => {
@@ -19,6 +20,14 @@ export const useNavigationState = () => {
       const currentPath = location.pathname;
       sessionStorage.setItem('lastContentPath', currentPath);
       console.log('[NavigationState] Saved last content path:', currentPath);
+      
+      // Save feed path specifically - this is critical for proper back navigation
+      if (location.pathname.includes('/discover')) {
+        const feedPath = location.pathname;
+        sessionStorage.setItem('feedSourcePath', feedPath);
+        setFeedSourcePath(feedPath);
+        console.log('[NavigationState] Saved feed source path:', feedPath);
+      }
       
       // Also save to the standard navigation history
       const section = location.pathname.includes('/discover') ? 'discover' : 
@@ -67,6 +76,28 @@ export const useNavigationState = () => {
   }, []);
 
   /**
+   * Gets the feed source path specifically for returning from detail views
+   * This ensures we return to the correct feed (FOR YOU vs ICONS, etc.)
+   */
+  const getFeedSourcePath = useCallback(() => {
+    // First check component state
+    if (feedSourcePath) {
+      console.log('[NavigationState] Using feed source path from state:', feedSourcePath);
+      return feedSourcePath;
+    }
+    
+    // Then check session storage
+    const storedFeedPath = sessionStorage.getItem('feedSourcePath');
+    if (storedFeedPath) {
+      console.log('[NavigationState] Using feed source path from session:', storedFeedPath);
+      return storedFeedPath;
+    }
+    
+    // Fall back to regular source path
+    return getSourcePath();
+  }, [feedSourcePath]);
+
+  /**
    * Gets the source path from which the user navigated
    * Uses a consistent priority order for reliable back navigation
    */
@@ -96,6 +127,7 @@ export const useNavigationState = () => {
     getContentType,
     saveSourcePath,
     getSourcePath,
+    getFeedSourcePath,
     currentSourcePath
   };
 };

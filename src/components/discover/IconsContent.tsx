@@ -52,11 +52,18 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-  useNavigationState();
-
+  const { saveSourcePath } = useNavigationState();
+  
   useEffect(() => {
     setDisplayIndex(currentIndex);
   }, [currentIndex]);
+
+  useEffect(() => {
+    if (!location.pathname.includes('/view/')) {
+      saveSourcePath(location.pathname);
+      console.log('[IconsContent] Saved source path:', location.pathname);
+    }
+  }, [location.pathname, saveSourcePath]);
 
   const { data: icons = [], isLoading, refetch } = useQuery({
     queryKey: ["icons", loadedCount],
@@ -183,7 +190,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     setSelectedIcon(icon);
     navigate(`/view/icon/${icon.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: location.pathname
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
