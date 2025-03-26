@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +30,7 @@ import SearchPage from "./pages/SearchPage";
 import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
+import FavoritesShelf from "./pages/FavoritesShelf";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +60,6 @@ const ReaderWrapper = () => {
   );
 };
 
-// Make sure we're using only modules we've modified above
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
@@ -100,6 +99,7 @@ const App = () => (
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />
                 <Route path="/virgil-chat" element={<VirgilChat />} />
+                <Route path="/favorites-shelf" element={<FavoritesShelf />} />
                 
                 {/* Redirects from old paths to new paths */}
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />

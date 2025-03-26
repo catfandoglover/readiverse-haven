@@ -15,12 +15,18 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 interface BookshelfCarouselProps {
   queryKey: string;
+  books?: any[];
+  isLoading?: boolean;
 }
 
-const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({ queryKey }) => {
+const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({ 
+  queryKey, 
+  books: providedBooks,
+  isLoading: providedLoading
+}) => {
   const { user } = useAuth();
   
-  const { data: books, isLoading } = useQuery({
+  const { data: fetchedBooks, isLoading: fetchLoading } = useQuery({
     queryKey: [queryKey, user?.Account?.Uid],
     queryFn: async () => {
       if (!user?.Account?.Uid) return [];
@@ -70,8 +76,11 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({ queryKey }) => {
         return [];
       }
     },
-    enabled: !!user?.Account?.Uid,
+    enabled: !providedBooks && !!user?.Account?.Uid,
   });
+
+  const books = providedBooks || fetchedBooks;
+  const isLoading = providedLoading || fetchLoading;
 
   if (isLoading) {
     return (

@@ -1,8 +1,7 @@
 
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import EthicsContent from "@/components/bookshelf/domains/EthicsContent";
 import EpistemologyContent from "@/components/bookshelf/domains/EpistemologyContent";
@@ -19,6 +18,10 @@ const IntellectualDNAShelf: React.FC = () => {
     navigate("/bookshelf");
   };
 
+  const handleFavoritesClick = () => {
+    navigate("/favorites-shelf");
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - fixed at top */}
@@ -32,8 +35,12 @@ const IntellectualDNAShelf: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           INTELLECTUAL DNA SHELF
         </h2>
-        {/* Empty div to balance the layout */}
-        <div className="w-10"></div>
+        <button 
+          onClick={handleFavoritesClick}
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
+        >
+          <Heart className="h-5 w-5" />
+        </button>
       </div>
       
       {/* Main Content - using overflow-auto directly */}
