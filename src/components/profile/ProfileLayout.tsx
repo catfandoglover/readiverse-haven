@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
@@ -206,119 +207,109 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </button>
               </div>
               
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_1 || 
-                      "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_2 || 
-                      "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.key_tension_3 || 
-                      "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_1 || 
-                      "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_2 || 
-                      "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.natural_strength_3 || 
-                      "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
-                <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80">
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_1 || 
-                      "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_2 || 
-                      "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
-                    )}
-                  </li>
-                  <li>
-                    {isLoadingIntroduction ? (
-                      <span className="inline-block">Loading...</span>
-                    ) : (
-                      analysisResult?.growth_edges_3 || 
-                      "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
-                    )}
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
+              <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
+              <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
+                <li>
                   {isLoadingIntroduction ? (
                     <span className="inline-block">Loading...</span>
                   ) : (
-                    analysisResult?.conclusion || 
-                    "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
+                    analysisResult?.key_tension_1 || 
+                    "Navigates between empirical evidence and subjective experience, seeking to honor both without reducing either to the other"
                   )}
-                </p>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-[#383741] shadow-inner">
-                <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80">
+                </li>
+                <li>
                   {isLoadingIntroduction ? (
                     <span className="inline-block">Loading...</span>
                   ) : (
-                    analysisResult?.next_steps || 
-                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
+                    analysisResult?.key_tension_2 || 
+                    "Balances individual expression with communal values, searching for ways personal autonomy can enrich rather than threaten collective flourishing"
                   )}
-                </p>
-              </div>
+                </li>
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.key_tension_3 || 
+                    "Wrestles with tradition and innovation, drawing wisdom from historical insights while remaining open to emergent understanding"
+                  )}
+                </li>
+              </ul>
+              
+              <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
+              <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.natural_strength_1 || 
+                    "Excels at finding practical synthesis between competing philosophical frameworks without oversimplifying their distinctions"
+                  )}
+                </li>
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.natural_strength_2 || 
+                    "Maintains intellectual humility while pursuing rigorous understanding, recognizing the limitations of human comprehension"
+                  )}
+                </li>
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.natural_strength_3 || 
+                    "Integrates diverse cultural and historical perspectives into a coherent worldview that respects pluralism"
+                  )}
+                </li>
+              </ul>
+              
+              <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
+              <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.growth_edges_1 || 
+                    "Accept the inherent uncertainty in complex philosophical questions without retreating to premature resolution"
+                  )}
+                </li>
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.growth_edges_2 || 
+                    "Develop more comfort with productive tension as a source of creativity rather than a problem to be solved"
+                  )}
+                </li>
+                <li>
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.growth_edges_3 || 
+                    "Expand your engagement with philosophical traditions that challenge your preference for practical reconciliation"
+                  )}
+                </li>
+              </ul>
+              
+              <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
+              <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
+                {isLoadingIntroduction ? (
+                  <span className="inline-block">Loading...</span>
+                ) : (
+                  analysisResult?.conclusion || 
+                  "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
+                )}
+              </p>
+              
+              <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
+              <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
+                {isLoadingIntroduction ? (
+                  <span className="inline-block">Loading...</span>
+                ) : (
+                  analysisResult?.next_steps || 
+                  "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
+                )}
+              </p>
             </div>
           )}
         </div>
