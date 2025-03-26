@@ -10,7 +10,7 @@ const BookshelfContent: React.FC = () => {
       <div className="mb-4">
         <div className="border-b border-[#2A282A]/10 mb-2"></div>
         <h2 className="uppercase font-baskerville text-lg font-bold text-[#E9E7E2] px-1">
-          ALL BOOKS
+          All Books
         </h2>
       </div>
 
