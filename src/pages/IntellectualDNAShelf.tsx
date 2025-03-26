@@ -41,10 +41,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Ethics */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               ETHICS
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on the good
             </p>
           </div>
@@ -54,10 +54,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Epistemology */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               EPISTEMOLOGY
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on knowledge
             </p>
           </div>
@@ -67,10 +67,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Politics */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               POLITICS
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on power
             </p>
           </div>
@@ -80,10 +80,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Theology */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               THEOLOGY
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on the divine
             </p>
           </div>
@@ -93,10 +93,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Ontology */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               ONTOLOGY
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on reality
             </p>
           </div>
@@ -106,10 +106,10 @@ const IntellectualDNAShelf: React.FC = () => {
         {/* Aesthetics */}
         <div className="mb-10">
           <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+            <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
               AESTHETICS
             </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
               Your view on beauty
             </p>
           </div>
