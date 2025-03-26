@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ScrollArea } from "../ui/scroll-area";
-import AllBooksContent from "./domains/AllBooksContent";
+import CarouselBooksContent from "./domains/CarouselBooksContent";
 
 const BookshelfContent: React.FC = () => {
   return (
@@ -13,9 +13,9 @@ const BookshelfContent: React.FC = () => {
         </h2>
       </div>
 
-      <ScrollArea className="flex-1">
-        <AllBooksContent />
-      </ScrollArea>
+      <div className="flex-1 overflow-hidden">
+        <CarouselBooksContent />
+      </div>
     </div>
   );
 };
