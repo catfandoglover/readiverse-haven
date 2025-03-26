@@ -1,164 +1,156 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import ContentCard from "./ContentCard";
-import GreatQuestionDetailedView from "./GreatQuestionDetailedView";
-import { useNavigationState } from "@/hooks/useNavigationState";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Carousel } from "keen-slider/react";
+import { useKeenSlider } from "keen-slider/react";
+import "keen-slider/keen-slider.min.css";
+import { useNavigate } from "react-router-dom";
 
-interface QuestionsContentProps {
-  currentIndex: number;
-  onDetailedViewShow: () => void;
-  onDetailedViewHide: () => void;
+interface Question {
+  id: string;
+  question: string;
+  illustration: string;
 }
 
-const QuestionsContent: React.FC<QuestionsContentProps> = ({
-  currentIndex,
-  onDetailedViewShow,
-  onDetailedViewHide,
-}) => {
+const QuestionsContent = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { type, slug } = useParams();
-  const [detailViewVisible, setDetailViewVisible] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
-  const { saveSourcePath, getSourcePath } = useNavigationState();
-
-  // Save current path for proper back navigation - this is critical
-  useEffect(() => {
-    const currentPath = location.pathname;
-    
-    if (!currentPath.includes('/view/')) {
-      // This will store the current feed page as the source path
-      saveSourcePath(currentPath);
-      console.log('[QuestionsContent] Saved source path:', currentPath);
-    }
-  }, [location.pathname, saveSourcePath]);
-
-  const { data: questions = [], isLoading } = useQuery({
-    queryKey: ["discover-questions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("great_questions")
-        .select("*")
-        .order("randomizer", { ascending: true })
-        .limit(20);
-
-      if (error) {
-        console.error("Error fetching questions:", error);
-        throw error;
-      }
-
-      return data || [];
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
+    initial: 0,
+    slideChanged(slider) {
+      setCurrentSlide(slider.track.details.rel);
     },
-    staleTime: 60000,
+    created() {
+      setLoaded(true);
+    },
   });
 
   useEffect(() => {
-    if (type === "question" && slug) {
-      const loadQuestionDetails = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("great_questions")
-            .select("*")
-            .eq("id", slug)
-            .single();
+    const fetchQuestions = async () => {
+      const { data, error } = await supabase
+        .from("great_questions")
+        .select("*");
 
-          if (error) throw error;
-
-          if (data) {
-            setSelectedQuestion(data);
-            setDetailViewVisible(true);
-            onDetailedViewShow();
-          }
-        } catch (err) {
-          console.error("Error loading question details:", err);
-          navigate("/discover", { replace: true });
-        }
-      };
-
-      loadQuestionDetails();
-    } else {
-      setDetailViewVisible(false);
-    }
-  }, [type, slug, navigate, onDetailedViewShow]);
-
-  const handleCloseDetailView = () => {
-    setDetailViewVisible(false);
-    onDetailedViewHide();
-    
-    const sourcePath = getSourcePath();
-    console.log("[QuestionsContent] Navigating back to:", sourcePath);
-    
-    navigate(sourcePath, { replace: true });
-  };
-
-  const handleQuestionSelect = (question: any) => {
-    setSelectedQuestion(question);
-    setDetailViewVisible(true);
-    onDetailedViewShow();
-    
-    // Get the current path before navigation to use it as the source path
-    const sourcePath = location.pathname;
-    console.log("[QuestionsContent] Setting source path for detail view:", sourcePath);
-    
-    navigate(`/view/question/${question.id}`, { 
-      replace: true,
-      state: { 
-        fromSection: 'discover',
-        sourcePath: sourcePath // Pass the exact current path
+      if (error) {
+        console.error("Error fetching questions:", error);
       }
-    });
+
+      if (data) {
+        setQuestions(data as Question[]);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  const handleQuestionClick = (question: Question) => {
+    navigate(`/view/question/${question.id}`);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full justify-center items-center">
-        <Skeleton className="h-64 w-full mb-4" />
-        <Skeleton className="h-8 w-2/3 mb-2" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-[#E9E7E2]">No questions found</div>
-      </div>
-    );
-  }
-
-  const currentQuestion = currentIndex < questions.length ? questions[currentIndex] : questions[0];
 
   return (
-    <div className="flex flex-col h-full relative">
-      {detailViewVisible && selectedQuestion ? (
-        <GreatQuestionDetailedView 
-          data={selectedQuestion} 
-          onBack={handleCloseDetailView} 
-        />
-      ) : (
-        <ContentCard
-          image={currentQuestion.illustration || ''}
-          title={currentQuestion.question || 'Great Question'}
-          about={currentQuestion.great_conversation || 'Explore this great question...'}
-          itemId={currentQuestion.id}
-          itemType="question"
-          onImageClick={() => handleQuestionSelect(currentQuestion)}
-          onLearnMore={() => handleQuestionSelect(currentQuestion)}
-          onNext={() => navigate(`/discover/questions/${Math.min(currentIndex + 1, questions.length - 1)}`)}
-          onPrevious={() => navigate(`/discover/questions/${Math.max(currentIndex - 1, 0)}`)}
-          hasNext={currentIndex < questions.length - 1}
-          hasPrevious={currentIndex > 0}
-        />
+    <div className="keen-slider h-full w-full relative" ref={sliderRef}>
+      {questions.map((question, index) => (
+        <div
+          key={question.id}
+          className="keen-slider__slide number-slide h-full w-full flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => handleQuestionClick(question)}
+        >
+          <div className="flex flex-col items-center justify-center h-full w-full">
+            <div className="w-full h-64 rounded-2xl overflow-hidden shadow-md">
+              <img
+                src={question.illustration}
+                alt={question.question}
+                className="object-cover w-full h-full"
+              />
+            </div>
+            <div className="mt-4 text-center">
+              <h2 className="text-xl font-bold text-white">{question.question}</h2>
+            </div>
+          </div>
+        </div>
+      ))}
+      {loaded && instanceRef.current && (
+        <>
+          <ArrowLeft
+            onClick={(e: any) => {
+              e.stopPropagation();
+              instanceRef.current?.prev();
+            }}
+            disabled={currentSlide === 0}
+          />
+
+          <ArrowRight
+            onClick={(e: any) => {
+              e.stopPropagation();
+              instanceRef.current?.next();
+            }}
+            disabled={
+              currentSlide ===
+              instanceRef.current.track.details.slides.length - 1
+            }
+          />
+        </>
       )}
     </div>
   );
 };
+
+function ArrowLeft(props: {
+  disabled: boolean;
+  onClick: (e: any) => void;
+}) {
+  const disabled = props.disabled ? "opacity-50 pointer-events-none" : "";
+  return (
+    <button
+      onClick={props.onClick}
+      className={`arrow arrow-left ${disabled}`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M5 12l14 0"></path>
+        <path d="M5 12l6 6"></path>
+        <path d="M5 12l6 -6"></path>
+      </svg>
+    </button>
+  );
+}
+
+function ArrowRight(props: {
+  disabled: boolean;
+  onClick: (e: any) => void;
+}) {
+  const disabled = props.disabled ? "opacity-50 pointer-events-none" : "";
+  return (
+    <button
+      onClick={props.onClick}
+      className={`arrow arrow-right ${disabled}`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M5 12l14 0"></path>
+        <path d="M13 18l6 -6"></path>
+        <path d="M13 6l6 6"></path>
+      </svg>
+    </button>
+  );
+}
 
 export default QuestionsContent;

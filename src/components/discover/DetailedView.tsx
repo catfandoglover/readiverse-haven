@@ -962,13 +962,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       
       {isOrderDialogOpen && (
         <OrderDialog
-          bookId={combinedData?.id}
           title={combinedData?.title}
-          coverUrl={combinedData?.Cover_super}
-          amazonUrl={combinedData?.amazon_link}
-          bookshopUrl={combinedData?.bookshop_link}
-          onClose={() => setIsOrderDialogOpen(false)}
+          amazonLink={combinedData?.amazon_link}
           open={isOrderDialogOpen}
+          onOpenChange={(open) => setIsOrderDialogOpen(open)}
         />
       )}
     </div>
