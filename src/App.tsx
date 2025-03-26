@@ -19,7 +19,6 @@ import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
 import Profile from "./pages/Profile";
 import ShareableProfile from "./pages/ShareableProfile";
-import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
@@ -31,7 +30,6 @@ import SearchPage from "./pages/SearchPage";
 import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
-import GreatQuestionDetailView from "./components/discover/GreatQuestionDetailedView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +59,7 @@ const ReaderWrapper = () => {
   );
 };
 
+// Make sure we're using only modules we've modified above
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
@@ -95,7 +94,6 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />

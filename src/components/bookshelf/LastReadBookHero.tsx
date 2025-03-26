@@ -60,7 +60,7 @@ const LastReadBookHero = () => {
         
         {/* "RESUME" Button Text Overlay - Top Left */}
         <div className="absolute top-6 left-6">
-          <p className="font-oxanium uppercase text-[#E9E7E2]/50 text-xs font-bold tracking-wider drop-shadow-lg shadow-white">
+          <p className="font-oxanium uppercase text-[#E9E7E2]/50 text-xs font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
             {buttonText}
           </p>
         </div>
@@ -69,10 +69,10 @@ const LastReadBookHero = () => {
         <div className="absolute inset-0 p-6 flex flex-col justify-end">
           {/* Text Content - Bottom Left */}
           <div className="flex flex-col">
-            <h2 className="text-[#E9E7E2] font-baskerville font-bold text-lg line-clamp-2 drop-shadow-lg shadow-white">
+            <h2 className="text-[#E9E7E2] font-baskerville font-bold text-lg line-clamp-2 drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]">
               {lastReadBook.book.title}
             </h2>
-            <p className="text-[#E9E7E2]/80 font-baskerville text-lg mt-1 drop-shadow-lg shadow-white">
+            <p className="text-[#E9E7E2]/80 font-baskerville text-lg mt-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]">
               {lastReadBook.book.author}
             </p>
           </div>
