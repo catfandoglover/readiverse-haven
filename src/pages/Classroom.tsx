@@ -29,7 +29,7 @@ const Classroom: React.FC = () => {
         {user && <LastCourseHero />}
         
         {/* Course cards section */}
-        <div className="px-4 pt-2 grid grid-cols-2 gap-4">
+        <div className="px-4 pt-2 pb-2 grid grid-cols-2 gap-4">
           <IntellectualDNACourseCard />
           <CreateYourOwnCourseCard />
         </div>
