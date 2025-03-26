@@ -30,7 +30,7 @@ const LastReadBookHero = () => {
   if (isLoading) {
     return (
       <div className="px-4 mb-4">
-        <Skeleton className="h-36 w-full rounded-2xl" />
+        <Skeleton className="h-54 w-full rounded-2xl" />
       </div>
     );
   }
