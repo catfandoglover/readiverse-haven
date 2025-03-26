@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MainMenu from "@/components/navigation/MainMenu";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Loader2, MessageCircleMore } from "lucide-react";
+import { LayoutGrid, Loader2, MessageCircleMore, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import WelcomeContainer from "@/components/virgil/WelcomeContainer";
