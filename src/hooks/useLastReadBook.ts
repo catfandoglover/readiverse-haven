@@ -1,0 +1,99 @@
+
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/OutsetaAuthContext';
+
+export const useLastReadBook = () => {
+  const { user } = useAuth();
+  const userId = user?.Uid;
+
+  return useQuery({
+    queryKey: ['lastReadBook', userId],
+    queryFn: async () => {
+      if (!userId) {
+        return null;
+      }
+
+      // First try to get the last read book
+      const { data: lastReadBook, error: lastReadError } = await supabase
+        .from('user_books')
+        .select(`
+          *,
+          books:book_id (
+            id,
+            title,
+            author,
+            cover_url,
+            epub_file_url,
+            slug,
+            Cover_super
+          )
+        `)
+        .eq('outseta_user_id', userId)
+        .order('last_read_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastReadError) {
+        console.error('Error fetching last read book:', lastReadError);
+      }
+
+      // If there's a last read book, return it
+      if (lastReadBook?.books) {
+        return {
+          ...lastReadBook,
+          book: lastReadBook.books
+        };
+      }
+
+      // If no last read book, try to get most recently added book
+      const { data: lastAddedBook, error: lastAddedError } = await supabase
+        .from('user_books')
+        .select(`
+          *,
+          books:book_id (
+            id,
+            title,
+            author,
+            cover_url,
+            epub_file_url,
+            slug,
+            Cover_super
+          )
+        `)
+        .eq('outseta_user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastAddedError) {
+        console.error('Error fetching last added book:', lastAddedError);
+      }
+
+      if (lastAddedBook?.books) {
+        return {
+          ...lastAddedBook,
+          book: lastAddedBook.books
+        };
+      }
+
+      // If no books found at all, fetch the default book
+      const { data: defaultBook, error: defaultBookError } = await supabase
+        .from('books')
+        .select('*')
+        .eq('id', '079580a7-bf82-438e-9ff5-6c10a02e1ed1')
+        .single();
+
+      if (defaultBookError) {
+        console.error('Error fetching default book:', defaultBookError);
+        return null;
+      }
+
+      return {
+        book: defaultBook,
+        isDefaultBook: true
+      };
+    },
+    enabled: !!userId,
+  });
+};
