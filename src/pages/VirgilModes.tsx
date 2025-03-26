@@ -5,13 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MainMenu from "@/components/navigation/MainMenu";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Loader2, MessageCircleMore, X } from "lucide-react";
+import { Loader2, MessageCircleMore } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import WelcomeContainer from "@/components/virgil/WelcomeContainer";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
 interface DbPrompt {
@@ -213,27 +212,10 @@ const VirgilModes: React.FC = () => {
         )}
       </main>
       
-      <Sheet open={showHistory} onOpenChange={setShowHistory}>
-        <SheetContent 
-          side="right" 
-          className="p-0 w-[320px] max-w-full border-0 bg-[#2A282A] text-[#E9E7E2] rounded-l-2xl"
-        >
-          <div className="flex justify-end items-center pt-4 px-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setShowHistory(false)}
-              className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
-            >
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
-          <div className="overflow-y-auto h-[calc(100vh-60px)]">
-            <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ConversationHistorySidebar 
+        open={showHistory} 
+        onOpenChange={setShowHistory} 
+      />
     </div>
   );
 };
