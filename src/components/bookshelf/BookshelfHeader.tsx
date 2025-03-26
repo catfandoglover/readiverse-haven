@@ -2,7 +2,6 @@
 import React from "react";
 import { Heart } from "lucide-react";
 import MainMenu from "../navigation/MainMenu";
-import { LoginButtons } from "@/components/auth/LoginButtons";
 import { Toggle } from "@/components/ui/toggle";
 
 interface BookshelfHeaderProps {
