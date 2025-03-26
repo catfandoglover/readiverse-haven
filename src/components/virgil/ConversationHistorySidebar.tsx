@@ -112,7 +112,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
 
   return (
     <div className="p-6 h-full flex flex-col bg-[#332E38] text-[#E9E7E2]">
-      <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mb-6">
+      <h2 className="font-baskerville text-[#E9E7E2] tracking-wider text-lg font-bold mb-6">
         Conversation History
       </h2>
       
@@ -127,7 +127,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
             <Button 
               variant="outline" 
               onClick={onClose}
-              className="border-[#4A4351] text-[#E9E7E2] hover:bg-[#4A4351]/30"
+              className="border-[#4A4351] text-[#E9E7E2] hover:bg-[#4A4351]/30 rounded-2xl"
             >
               Start a new conversation
             </Button>
