@@ -59,13 +59,13 @@ const LastReadBookHero = () => {
         </div>
         
         {/* Content Overlay */}
-        <div className="absolute inset-0 p-3 flex flex-col justify-end">
+        <div className="absolute inset-0 p-6 flex flex-col justify-end">
           {/* Text Content - Bottom Left */}
           <div className="flex flex-col">
-            <h2 className="text-white font-baskerville font-bold text-lg line-clamp-2">
+            <h2 className="text-[E9E7E2] font-baskerville font-bold text-lg line-clamp-2">
               {lastReadBook.book.title}
             </h2>
-            <p className="text-white/80 font-baskerville text-lg mt-1">
+            <p className="text-[E9E7E2]/50 font-baskerville text-lg mt-1">
               {lastReadBook.book.author}
             </p>
           </div>
