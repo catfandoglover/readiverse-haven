@@ -317,7 +317,7 @@ const IntellectualDNACourse: React.FC = () => {
               </div>
             </SelectTrigger>
             <SelectContent className="bg-[#19352F] border-[#2A3A35] text-white">
-              <SelectItem value="">All Domains</SelectItem>
+              <SelectItem value="all">All Domains</SelectItem>
               {domains.map(domain => (
                 <SelectItem key={domain.id} value={domain.id}>
                   {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
