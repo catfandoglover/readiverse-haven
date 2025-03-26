@@ -243,7 +243,7 @@ const ShareableProfile: React.FC = () => {
       <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
         <a 
           href="/dna" 
-          className="text-xl font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
+          className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
         >
           DISCOVER YOUR INTELLECTUAL DNA
         </a>
@@ -251,7 +251,7 @@ const ShareableProfile: React.FC = () => {
           href="https://www.lightninginspiration.com" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          className="justify-center font-oxanium uppercase text-sm text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
         >
           www.lightninginspiration.com
         </a>
