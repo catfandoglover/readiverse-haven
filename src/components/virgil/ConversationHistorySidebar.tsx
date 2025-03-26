@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Trash2, earth } from "lucide-react";
+import { MessageCircle, Trash2, Earth } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -163,7 +163,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
         promptData: {
           id: 2, // GROW MY MIND mode ID
           user_title: "Chat with Virgil",
-          icon_display: "earth"
+          icon_display: "Earth"
         }
       }
     });
