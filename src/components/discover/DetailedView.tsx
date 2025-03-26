@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -933,4 +934,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       </div>
 
       <OrderDialog 
-        title={combined
+        title={combinedData?.title || combinedData?.name || ""}
+        isOpen={isOrderDialogOpen}
+        onClose={() => setIsOrderDialogOpen(false)}
+        bookId={combinedData?.id || ""}
+      />
+    </div>
+  );
+};
+
+export default DetailedView;
