@@ -38,7 +38,6 @@ const ProfileHeader: React.FC = () => {
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
-  const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   const archetype = analysisResult?.archetype || "Twilight Navigator";
@@ -167,7 +166,7 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
-        <div className="flex items-end space-x-4">
+        <div className="flex flex-col items-center space-y-2">
           <div className="relative h-20 w-20">
             <svg 
               viewBox="0 0 100 100" 
@@ -204,13 +203,10 @@ const ProfileHeader: React.FC = () => {
             </button>
           </div>
           
-          <div>
+          <div className="text-center">
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
               {isLoadingAnalysis ? 'Loading...' : archetype}
-            </p>
-            <p className="text-xs text-[#E9E7E2]/60">
-              {email}
             </p>
           </div>
         </div>
