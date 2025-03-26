@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
@@ -97,6 +98,16 @@ const ShareableProfile: React.FC = () => {
 
   const handleCloseClick = () => {
     navigate('/dna');
+  };
+  
+  const handleIconClick = (iconId: string) => {
+    // Navigate programmatically to the icon detail view
+    navigate(`/view/icon/${iconId}`, { 
+      state: { 
+        fromSection: 'profile',
+        sourcePath: '/dna'
+      }
+    });
   };
   
   if (isLoading) {
@@ -208,12 +219,12 @@ const ShareableProfile: React.FC = () => {
               <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
             </div>
           </div>
-          <a 
-            href="/view/icon/294e44ae-5b7b-4651-bb22-16e90bcbd886" 
+          <button 
+            onClick={() => handleIconClick("294e44ae-5b7b-4651-bb22-16e90bcbd886")}
             className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
           >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-          </a>
+          </button>
         </div>
         
         <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-8">
@@ -238,22 +249,22 @@ const ShareableProfile: React.FC = () => {
               <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
             </div>
           </div>
-          <a 
-            href="/view/icon/73dd6940-6384-4f90-b9de-26334252ebee" 
+          <button 
+            onClick={() => handleIconClick("73dd6940-6384-4f90-b9de-26334252ebee")}
             className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
           >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-          </a>
+          </button>
         </div>
       </div>
       
       <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
-        <a 
-          href="/dna" 
+        <button 
+          onClick={() => navigate("/dna")}
           className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
         >
           DISCOVER YOUR INTELLECTUAL DNA
-        </a>
+        </button>
         <a 
           href="https://www.lightninginspiration.com" 
           target="_blank" 
