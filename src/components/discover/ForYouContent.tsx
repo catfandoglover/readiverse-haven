@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface ForYouContentItem {
   id: string;
@@ -33,6 +33,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const location = useLocation();
   const { addToBookshelf } = useBookshelfManager();
   const { user } = useAuth();
+  useNavigationState();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -128,8 +129,6 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
-    saveLastVisited('discover', location.pathname);
-    
     setSelectedItem(item);
     navigate(`/view/${item.type}/${item.id}`, { 
       replace: true,

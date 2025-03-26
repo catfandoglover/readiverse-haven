@@ -62,7 +62,23 @@ export const saveLastVisited = (section: keyof typeof sections, path: string) =>
  * Gets the last visited path for a specific section or returns the default path
  */
 export const getLastVisited = (section: keyof typeof sections): string => {
-  return localStorage.getItem(`${LAST_VISITED_KEY_PREFIX}${section}`) || sections[section];
+  const path = localStorage.getItem(`${LAST_VISITED_KEY_PREFIX}${section}`);
+  console.log(`Retrieved last visited for ${section}:`, path);
+  return path || sections[section];
+};
+
+/**
+ * Returns the original content path the user was viewing before entering a detail view
+ */
+export const getOriginPath = (): string => {
+  const sessionPath = sessionStorage.getItem('lastContentPath');
+  if (sessionPath) {
+    console.log("Found origin path in session:", sessionPath);
+    return sessionPath;
+  }
+  
+  // Fall back to previous page from history
+  return getPreviousPage();
 };
 
 /**

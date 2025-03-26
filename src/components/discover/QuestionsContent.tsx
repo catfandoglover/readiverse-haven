@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ContentCard from "./ContentCard";
 import GreatQuestionDetailedView from "./GreatQuestionDetailedView";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface QuestionsContentProps {
   currentIndex: number;
@@ -22,6 +22,8 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   const { type, slug } = useParams();
   const [detailViewVisible, setDetailViewVisible] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+
+  useNavigationState();
 
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ["discover-questions"],
@@ -43,7 +45,6 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   });
 
   useEffect(() => {
-    // Check if we're on a question detail route
     if (type === "question" && slug) {
       const loadQuestionDetails = async () => {
         try {
@@ -72,14 +73,18 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     }
   }, [type, slug, navigate, onDetailedViewShow]);
 
-  // Handle navigation back from detailed view
   const handleCloseDetailView = () => {
     setDetailViewVisible(false);
     onDetailedViewHide();
-    navigate("/discover", { replace: true });
+    
+    const originPath = sessionStorage.getItem('lastContentPath');
+    if (originPath) {
+      navigate(originPath, { replace: true });
+    } else {
+      navigate("/discover", { replace: true });
+    }
   };
 
-  // Navigate to question detail
   const handleQuestionSelect = (question: any) => {
     setSelectedQuestion(question);
     setDetailViewVisible(true);
@@ -106,7 +111,6 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     );
   }
 
-  // Select the current question based on currentIndex
   const currentQuestion = currentIndex < questions.length ? questions[currentIndex] : questions[0];
 
   return (

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory, getOriginPath } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -312,7 +312,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // First check if we have a fromSection in the location state
+    // Try to get the original content path from session storage first
+    const originPath = getOriginPath();
+    if (originPath && originPath !== location.pathname) {
+      console.log("Navigating to origin path:", originPath);
+      navigate(originPath);
+      return;
+    }
+    
+    // Fallback to fromSection in location state
     if (location.state?.fromSection) {
       const fromSection = location.state.fromSection as keyof typeof sections;
       const lastVisitedPath = getLastVisited(fromSection);
@@ -321,7 +329,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Then try to get the previous page from navigation history
+    // As a last resort, use navigation history
     const previousPage = getPreviousPage();
     console.log("Previous page from history:", previousPage);
     
@@ -331,14 +339,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Use window history if available
-    if (window.history.length > 1) {
-      console.log("Using browser history navigation");
-      navigate(-1);
-      return;
-    }
-    
-    // Default fallback to the For You feed
+    // If nothing else works, go to discover feed
     console.log("Fallback to For You feed");
     navigate('/discover');
   };
@@ -932,14 +933,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       </div>
 
       <OrderDialog 
-        title={combinedData?.title || combinedData?.name || ""} 
-        amazonLink={combinedData?.amazon_link}
-        open={isOrderDialogOpen}
-        onOpenChange={setIsOrderDialogOpen}
-      />
-    </div>
-  );
-};
-
-export default DetailedView;
-
+        title={combined

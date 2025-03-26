@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { getPreviousPage } from "@/utils/navigationHistory";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface Concept {
   id: string;
@@ -33,6 +34,8 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useNavigationState();
 
   const { data: concepts = [], isLoading } = useQuery({
     queryKey: ["concepts"],
@@ -79,9 +82,6 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
   
   const handleLearnMore = (concept: Concept) => {
-    saveLastVisited('discover', location.pathname);
-    console.log("Saving current location before viewing concept:", location.pathname);
-    
     setSelectedConcept(concept);
     navigate(`/view/concept/${concept.id}`, { 
       replace: true,

@@ -3,9 +3,11 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ClassicsContent from "@/components/discover/ClassicsContent";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 const ClassicsFeedPage = () => {
   const navigate = useNavigate();
+  useNavigationState(); // Add this to track navigation
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
