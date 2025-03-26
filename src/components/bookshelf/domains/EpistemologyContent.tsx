@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import BookCard from "../BookCard";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Carousel,
   CarouselContent,
@@ -12,25 +11,65 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 const EpistemologyContent: React.FC = () => {
-  const isMobile = useIsMobile();
+  const { user } = useAuth();
   
   const { data: books, isLoading } = useQuery({
-    queryKey: ["epistemology-books"],
+    queryKey: ["epistemology-user-books", user?.Account?.Uid],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("books")
-        .select("id, title, author, cover_url, slug, epub_file_url")
-        .ilike('category', '%epistemology%');
-      
-      if (error) {
-        console.error("Error fetching epistemology books:", error);
+      if (!user?.Account?.Uid) return [];
+
+      try {
+        console.log("Fetching epistemology books for user:", user.Account.Uid);
+        
+        // First get the user books entries
+        const { data: userBooks, error: userBooksError } = await supabase
+          .from("user_books")
+          .select("*")
+          .eq("outseta_user_id", user.Account.Uid);
+        
+        if (userBooksError) {
+          console.error("Error fetching user books:", userBooksError);
+          return [];
+        }
+        
+        if (!userBooks?.length) {
+          console.log("No user books found for user");
+          return [];
+        }
+        
+        // Then fetch the book details for each book ID
+        const bookIds = userBooks.map(ub => ub.book_id);
+        
+        const { data: booksData, error: booksError } = await supabase
+          .from("books")
+          .select("id, title, author, cover_url, slug, epub_file_url")
+          .in("id", bookIds)
+          .ilike('categories', '%epistemology%');
+          
+        if (booksError) {
+          console.error("Error fetching epistemology books:", booksError);
+          return [];
+        }
+        
+        // Combine the data
+        return userBooks
+          .filter(ub => booksData.some(b => b.id === ub.book_id))
+          .map(ub => {
+            const bookData = booksData.find(b => b.id === ub.book_id);
+            return {
+              ...ub,
+              ...bookData
+            };
+          });
+      } catch (err) {
+        console.error("Exception fetching epistemology books:", err);
         return [];
       }
-      
-      return data || [];
     },
+    enabled: !!user?.Account?.Uid,
   });
 
   if (isLoading) {
