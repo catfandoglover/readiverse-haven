@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -223,6 +224,13 @@ const IntellectualDNACourse: React.FC = () => {
               <StatusIcon />
             </button>
           </div>
+          
+          {/* Added progress bar */}
+          <ProgressDisplay 
+            progress={resource.progress || 0} 
+            showLabel={false} 
+            className="mb-3" 
+          />
         </div>
         
         <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
