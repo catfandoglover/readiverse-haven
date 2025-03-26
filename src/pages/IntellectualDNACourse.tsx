@@ -305,7 +305,7 @@ const IntellectualDNACourse: React.FC = () => {
           <ArrowLeft className="h-6 w-6 text-white" />
         </Button>
         
-        <h1 className="text-lg font-oxanium uppercase font-bold text-white">Intellectual DNA</h1>
+        <h1 className="text-sm font-oxanium uppercase font-bold text-white">Intellectual DNA</h1>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
