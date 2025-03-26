@@ -26,7 +26,7 @@ const LastReadBookHero = () => {
   if (isLoading) {
     return (
       <div className="px-4 mb-4">
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     );
   }
@@ -40,7 +40,7 @@ const LastReadBookHero = () => {
 
   return (
     <div className="px-4 mb-4">
-      <div className="relative h-64 w-full rounded-xl overflow-hidden">
+      <div className="relative h-64 w-full rounded-2xl overflow-hidden">
         {/* Background Image with Blur and Dark Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -52,7 +52,7 @@ const LastReadBookHero = () => {
         <div className="absolute inset-0 p-6 flex flex-col justify-end">
           <div className="flex flex-row items-end space-x-4">
             {/* Cover Image */}
-            <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+            <div className="w-24 h-36 flex-shrink-0 rounded-2xl overflow-hidden shadow-lg">
               <img 
                 src={coverUrl} 
                 alt={lastReadBook.book.title || "Book cover"} 
