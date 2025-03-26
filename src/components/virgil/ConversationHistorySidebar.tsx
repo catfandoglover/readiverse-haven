@@ -152,7 +152,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                   </div>
                   <div className="flex-1">
                     <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                      Start a new conversations
+                      Start a conversation
                     </h3>
                   </div>
                 </div>
