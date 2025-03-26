@@ -43,7 +43,7 @@ const LastReadBookHero = () => {
   const coverUrl = lastReadBook.book.Cover_super || lastReadBook.book.cover_url || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
   const buttonText = lastReadBook.isDefaultBook ? "RESUME" : "RESUME";
   
-  console.log('LastReadBookHero - Using cover URL:', coverUrl);
+  console.log('LastReadBookHero - Using cover URL:', cover_url);
 
   return (
     <div className="px-4 mb-6">
@@ -54,7 +54,7 @@ const LastReadBookHero = () => {
         {/* Background Image with Blur and Dark Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${coverUrl})` }}
+          style={{ backgroundImage: `url(${cover_url})` }}
         />
         <div className="absolute inset-0 backdrop-blur-sm bg-black/60" />
         
