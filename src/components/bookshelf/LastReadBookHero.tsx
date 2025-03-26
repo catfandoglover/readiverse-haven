@@ -48,7 +48,7 @@ const LastReadBookHero = () => {
   return (
     <div className="px-4 mb-6">
       <div 
-        className="relative h-36 w-full rounded-2xl overflow-hidden cursor-pointer"
+        className="relative h-54 w-full rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleResumeReading}
       >
         {/* Background Image with Blur and Dark Overlay */}
