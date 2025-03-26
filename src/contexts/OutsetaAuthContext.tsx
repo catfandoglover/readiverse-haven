@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createSupabaseClient } from '@/integrations/supabase/client';
@@ -7,7 +8,8 @@ import type { Database } from '@/integrations/supabase/types';
 
 interface OutsetaUser {
   email: string;
-  Uid: string;  // Added this line
+  Uid: string;
+  ProfileImageS3Url?: string;  // Added this to fix the TypeScript error
   Account: {
     Uid: string;
     Name: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -64,15 +63,9 @@ const ProfileHeader: React.FC = () => {
               setLandscapeImage(profileData.landscape_image);
             }
             
-            // Check for Outseta ProfileImageS3Url first
             if (user.ProfileImageS3Url) {
               setProfileImage(user.ProfileImageS3Url);
             } 
-            // Fall back to profile_image from database if present
-            else if (profileData.profile_image) {
-              setProfileImage(profileData.profile_image);
-            }
-            // Finally use default Lightning logo
             else {
               setProfileImage(DEFAULT_LIGHTNING_LOGO);
             }
@@ -119,11 +112,7 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
-      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-      // ---------------------------------------------------------------------------------
-      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
       const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -141,12 +130,6 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-        // ---------------------------------------------------------------------------------
-        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
-        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-        // ---------------------------------------------------------------------------------
-        
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
