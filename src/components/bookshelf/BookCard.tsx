@@ -43,7 +43,7 @@ const BookCard: React.FC<BookCardProps> = ({
       className="w-full h-full cursor-pointer group"
       onClick={handleClick}
     >
-      <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden">
+      <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
         <img
           src={cover_url || fallbackCoverUrl}
           alt={title}
