@@ -157,12 +157,12 @@ const ProfileHeader: React.FC = () => {
         
         <Button 
           variant="ghost" 
-          size="icon" 
-          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1 hover:bg-white/10"
           onClick={handleShareClick}
+          className="absolute top-4 right-4 bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2"
           aria-label="Share profile"
         >
-          <Share className="h-7.5 w-7.5" />
+          SHARE PROFILE
+          <Share className="h-4 w-4" />
         </Button>
       </div>
       
