@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +33,7 @@ import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 import FavoritesShelf from "./pages/FavoritesShelf";
 import Classroom from "./pages/Classroom";
+import IntellectualDNACourse from "./pages/IntellectualDNACourse";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,8 +105,8 @@ const App = () => (
                 <Route path="/virgil-chat" element={<VirgilChat />} />
                 <Route path="/favorites-shelf" element={<FavoritesShelf />} />
                 <Route path="/classroom" element={<Classroom />} />
+                <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
                 
-                {/* Redirects from old paths to new paths */}
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
                 <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />

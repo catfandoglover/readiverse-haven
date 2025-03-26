@@ -1,9 +1,12 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const IntellectualDNACourseCard: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleClick = () => {
-    console.log("Intellectual DNA course card clicked");
+    navigate("/intellectual-dna-course");
   };
 
   return (
