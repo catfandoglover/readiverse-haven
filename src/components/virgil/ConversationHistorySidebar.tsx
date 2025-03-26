@@ -132,7 +132,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                   onClick={() => onOpenChange(false)}
                 >
                   <div className="flex-shrink-0 rounded-full p-3">
-                    <div className="h-6 w-6 flex items-center justify-center">
+                    <div className="h-6 w-6 flex items-left justify-left">
                       <span className="text-lg">💬</span>
                     </div>
                   </div>
