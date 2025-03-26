@@ -25,15 +25,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id(
-            id,
-            title,
-            author,
-            cover_url,
-            epub_file_url,
-            slug,
-            Cover_super
-          )
+          book:book_id(*)
         `)
         .eq('outseta_user_id', userId)
         .order('last_read_at', { ascending: false })
@@ -61,15 +53,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id(
-            id,
-            title,
-            author,
-            cover_url,
-            epub_file_url,
-            slug,
-            Cover_super
-          )
+          book:book_id(*)
         `)
         .eq('outseta_user_id', userId)
         .order('created_at', { ascending: false })
