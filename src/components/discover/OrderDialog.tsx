@@ -1,91 +1,77 @@
 
 import React from "react";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Amazon, BookOpenText, Store } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-interface OrderDialogProps {
-  bookId: string;
+export interface OrderDialogProps {
   title: string;
-  coverUrl: string;
-  amazonUrl: string;
-  bookshopUrl: string;
-  onClose: () => void;
   open: boolean;
+  onClose: () => void;
+  bookId: string;
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({
-  bookId,
-  title,
-  coverUrl,
-  amazonUrl,
-  bookshopUrl,
-  onClose,
-  open
-}) => {
-  const visitAmazon = () => {
-    // Open Amazon link in a new tab
-    if (amazonUrl) {
-      window.open(amazonUrl, '_blank');
-    }
+const OrderDialog: React.FC<OrderDialogProps> = ({ title, open, onClose, bookId }) => {
+  const handleOrderAmazon = () => {
+    window.open(
+      `https://www.amazon.com/s?k=${encodeURIComponent(title)}`,
+      "_blank"
+    );
     onClose();
   };
 
-  const visitBookshop = () => {
-    // Open Bookshop link in a new tab
-    if (bookshopUrl) {
-      window.open(bookshopUrl, '_blank');
-    }
+  const handleOrderBarnes = () => {
+    window.open(
+      `https://www.barnesandnoble.com/s/${encodeURIComponent(title)}`,
+      "_blank"
+    );
     onClose();
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-white">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-center text-xl">Order "{title}"</AlertDialogTitle>
-          <AlertDialogDescription className="text-center">
-            <div className="flex justify-center mb-4">
-              {coverUrl && (
-                <img 
-                  src={coverUrl} 
-                  alt={title} 
-                  className="h-40 w-auto object-contain rounded shadow-md"
-                />
-              )}
-            </div>
-            <p className="text-sm text-gray-600">
-              Choose where you'd like to order this book from
-            </p>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex flex-col space-y-2 sm:space-y-0">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="bg-[#E9E7E2] border-none">
+        <DialogHeader>
+          <DialogTitle className="text-[#2A282A] font-serif text-xl">
+            Order Physical Copy
+          </DialogTitle>
+          <DialogDescription className="text-[#2A282A]/70">
+            Choose where you would like to order a physical copy of {title}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col space-y-4 pt-2">
           <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 border-yellow-500 hover:bg-yellow-50"
-            onClick={visitAmazon}
+            onClick={handleOrderAmazon}
+            className="bg-[#2A282A] hover:bg-[#2A282A]/80 text-white"
           >
-            <Amazon className="h-4 w-4" />
-            <span>Amazon</span>
+            Order from Amazon
           </Button>
           <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 border-teal-600 hover:bg-teal-50"
-            onClick={visitBookshop}
+            onClick={handleOrderBarnes}
+            className="bg-[#2A282A] hover:bg-[#2A282A]/80 text-white"
           >
-            <Store className="h-4 w-4" />
-            <span>Bookshop.org</span>
+            Order from Barnes & Noble
           </Button>
+        </div>
+
+        <DialogFooter>
           <Button
-            variant="ghost"
             onClick={onClose}
-            className="mt-2"
+            variant="outline"
+            className="border-[#2A282A] text-[#2A282A]"
           >
             Cancel
           </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
