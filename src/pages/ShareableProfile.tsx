@@ -206,7 +206,7 @@ const ShareableProfile: React.FC = () => {
       <div className="w-full px-6 py-8 flex flex-col items-center">
         {/* Introduction text */}
         <div className="max-w-lg mb-8">
-          <p className="text-sm font-oxanium text-[#E9E7E2]/80 text-center">
+          <p className="text-sm font-oxanium text-[#E9E7E2]/50">
             {introduction}
           </p>
         </div>
