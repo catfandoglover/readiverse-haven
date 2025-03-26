@@ -165,8 +165,8 @@ const ProfileHeader: React.FC = () => {
         </Button>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
-        <div className="flex flex-col items-center space-y-2">
+      <div className="absolute bottom-0 left-0 w-full px-6 pb-6 text-[#E9E7E2]">
+        <div className="flex items-center space-x-4">
           <div className="relative h-20 w-20">
             <svg 
               viewBox="0 0 100 100" 
@@ -203,7 +203,7 @@ const ProfileHeader: React.FC = () => {
             </button>
           </div>
           
-          <div className="text-center">
+          <div>
             <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
             <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
               {isLoadingAnalysis ? 'Loading...' : archetype}
