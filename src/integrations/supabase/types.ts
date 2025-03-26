@@ -1702,6 +1702,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_files_batch: {
+        Args: {
+          last_id: string
+          page_size: number
+        }
+        Returns: {
+          id: string
+          folder: string
+          name: string
+          url: string
+        }[]
+      }
     }
     Enums: {
       dna_category:

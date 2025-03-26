@@ -312,27 +312,35 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
+    // First check if we have a fromSection in the location state
+    if (location.state?.fromSection) {
+      const fromSection = location.state.fromSection as keyof typeof sections;
+      const lastVisitedPath = getLastVisited(fromSection);
+      console.log("Navigating to source section:", fromSection, "path:", lastVisitedPath);
+      navigate(lastVisitedPath);
+      return;
+    }
+    
+    // Then try to get the previous page from navigation history
     const previousPage = getPreviousPage();
     console.log("Previous page from history:", previousPage);
     
     if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
       console.log("Navigating to previous page:", previousPage);
       navigate(previousPage);
-    } 
-    else if (location.state?.fromSection) {
-      const fromSection = location.state.fromSection as keyof typeof sections;
-      const lastVisitedPath = getLastVisited(fromSection);
-      console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
-      navigate(lastVisitedPath);
+      return;
     }
-    else if (window.history.length > 1) {
+    
+    // Use window history if available
+    if (window.history.length > 1) {
       console.log("Using browser history navigation");
       navigate(-1);
-    } 
-    else {
-      console.log("Fallback to discover page");
-      navigate('/discover');
+      return;
     }
+    
+    // Default fallback to the For You feed
+    console.log("Fallback to For You feed");
+    navigate('/discover');
   };
 
   const handleReadNow = async () => {
@@ -934,3 +942,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 };
 
 export default DetailedView;
+
