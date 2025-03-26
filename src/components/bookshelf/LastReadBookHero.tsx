@@ -20,7 +20,7 @@ const LastReadBookHero = () => {
       state: { 
         bookUrl: lastReadBook.book.epub_file_url,
         metadata: {
-          Cover_super: lastReadBook.book.Cover_super || lastReadBook.book.cover_url,
+          Cover_super: lastReadBook.book.cover_url || lastReadBook.book.Cover_super,
           id: lastReadBook.book.id
         }
       } 
@@ -40,7 +40,7 @@ const LastReadBookHero = () => {
     return null;
   }
 
-  const coverUrl = lastReadBook.book.Cover_super || lastReadBook.book.cover_url || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
+  const coverUrl = lastReadBook.book.cover_url || lastReadBook.book.Cover_super || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
   const buttonText = lastReadBook.isDefaultBook ? "RESUME" : "RESUME";
   
   console.log('LastReadBookHero - Using cover URL:', coverUrl);
