@@ -9,6 +9,7 @@ interface BookCardProps {
   cover_url?: string;
   slug?: string;
   epub_file_url?: string;
+  useCarouselLayout?: boolean;
 }
 
 const BookCard: React.FC<BookCardProps> = ({ 
@@ -17,7 +18,8 @@ const BookCard: React.FC<BookCardProps> = ({
   author, 
   cover_url, 
   slug,
-  epub_file_url 
+  epub_file_url,
+  useCarouselLayout = false
 }) => {
   const navigate = useNavigate();
   const fallbackCoverUrl = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png";
@@ -36,6 +38,30 @@ const BookCard: React.FC<BookCardProps> = ({
       });
     }
   };
+
+  if (useCarouselLayout) {
+    return (
+      <div 
+        className="flex flex-col items-center cursor-pointer group h-full"
+        onClick={handleClick}
+      >
+        <div className="relative h-44 w-32 rounded-xl overflow-hidden shadow-md">
+          <img
+            src={cover_url || fallbackCoverUrl}
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.src = fallbackCoverUrl;
+            }}
+          />
+        </div>
+        <div className="mt-2 text-center w-full">
+          <h3 className="text-sm font-medium line-clamp-1">{title}</h3>
+          {author && <p className="text-xs text-[#2A282A]/70 line-clamp-1">{author}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

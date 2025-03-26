@@ -203,6 +203,7 @@ export type Database = {
       custom_domain_books: {
         Row: {
           author: string | null
+          book_id: string | null
           cover_url: string | null
           created_at: string
           domain_id: string
@@ -212,6 +213,7 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          book_id?: string | null
           cover_url?: string | null
           created_at?: string
           domain_id: string
@@ -221,6 +223,7 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          book_id?: string | null
           cover_url?: string | null
           created_at?: string
           domain_id?: string
@@ -229,6 +232,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "custom_domain_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "custom_domain_books_domain_id_fkey"
             columns: ["domain_id"]
