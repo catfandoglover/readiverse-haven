@@ -115,7 +115,16 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
   };
 
   const handleStartNewConversation = () => {
-    navigate('/virgil-modes');
+    // Navigate directly to the GROW MY MIND mode (prompt ID 2)
+    navigate('/virgil-chat', { 
+      state: { 
+        promptData: {
+          id: 2, // GROW MY MIND mode ID
+          user_title: "Grow My Mind",
+          icon_display: "🧠"
+        }
+      }
+    });
     onOpenChange(false);
   };
 
@@ -138,12 +147,12 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                 >
                   <div className="flex-shrink-0 rounded-full p-3">
                     <div className="h-6 w-6 flex items-center justify-center">
-                      <span className="text-lg">💬</span>
+                      <span className="text-lg">🧠</span>
                     </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                      Start a new conversation
+                      Grow My Mind
                     </h3>
                   </div>
                 </div>
