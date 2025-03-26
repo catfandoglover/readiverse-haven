@@ -482,6 +482,7 @@ const DomainDetail: React.FC = () => {
           <X className="h-8 w-8 text-white" />
         </Button>
         
+        {/* SCORING SYSTEM - COMMENTED OUT
         <div className="flex flex-col items-center">
           <div className="relative">
             <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
@@ -500,6 +501,7 @@ const DomainDetail: React.FC = () => {
             {highestStageName}
           </span>
         </div>
+        */}
       </header>
       
       <main className="px-6 pb-6">
