@@ -240,7 +240,7 @@ const IntellectualDNACourse: React.FC = () => {
     return (
       <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
-          <h1 className="font-baskerville uppercase text-[#E9E7E2] text-2xl mb-1">{domain.title}</h1>
+          <h1 className="font-baskerville uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
           <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domain.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5] mb-10">
             {getDomainIntroduction(domain.id)}
