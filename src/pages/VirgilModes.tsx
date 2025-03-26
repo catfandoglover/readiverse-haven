@@ -217,15 +217,14 @@ const VirgilModes: React.FC = () => {
           side="right" 
           className="p-0 w-[320px] max-w-full border-0 bg-[#2A282A] text-[#E9E7E2] rounded-l-2xl"
         >
-          <div className="flex justify-between items-center p-4 border-b border-[#E9E7E2]/10">
-            <h2 className="text-lg font-serif">Conversation History</h2>
+          <div className="flex justify-end items-center pt-4 px-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setShowHistory(false)}
-              className="h-8 w-8 rounded-full text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
+              className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </Button>
           </div>

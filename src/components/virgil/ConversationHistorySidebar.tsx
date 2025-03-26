@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,7 +111,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
 
   return (
     <>
-      <div className="flex flex-col gap-8 mt-10">
+      <nav className="flex flex-col gap-8 mt-10">
         <div className="px-2">
           <h2 className="text-xl font-serif mb-8">Lightning</h2>
           {loading ? (
@@ -178,7 +178,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </nav>
       
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
         <AlertDialogContent className="bg-[#332E38] text-[#E9E7E2] border-[#4A4351]">
