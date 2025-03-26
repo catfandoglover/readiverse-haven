@@ -6,9 +6,10 @@ import CarouselBooksContent from "./domains/CarouselBooksContent";
 const BookshelfContent: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
-      {/* Simple header for the All Books section */}
-      <div className="mb-4 pb-2 px-1 border-b border-[#2A282A]/10">
-        <h2 className="uppercase font-oxanium text-xs font-bold text-[#2A282A]">
+      {/* Header with border above the heading */}
+      <div className="mb-4">
+        <div className="border-b border-[#2A282A]/10 mb-2"></div>
+        <h2 className="uppercase font-baskerville text-lg font-bold text-[#E9E7E2] px-1">
           ALL BOOKS
         </h2>
       </div>
