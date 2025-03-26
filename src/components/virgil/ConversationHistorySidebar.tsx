@@ -111,10 +111,10 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
   };
 
   return (
-    <div className="p-0 h-full flex flex-col bg-[#332E38] text-[#E9E7E2]">
-      <nav className="flex flex-col gap-8 mt-10">
+    <div className="p-0 h-full flex flex-col bg-[#332E38] text-[#E9E7E2] rounded-l-2xl">
+      <nav className="flex flex-col gap-8 mt-4">
         <div className="px-6">
-          <h2 className="text-xl font-serif mb-8">Conversations</h2>
+          <h2 className="text-xl font-serif mb-4">Conversations</h2>
           
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
@@ -125,11 +125,11 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
               <div className="text-center">
                 <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={onClose}
-                  className="border-[#4A4351] text-[#E9E7E2] hover:bg-[#4A4351]/30 rounded-2xl"
+                  className="text-[#E9E7E2] hover:bg-[#4A4351]/30 rounded-xl h-12 flex items-center justify-start w-full"
                 >
-                  Start a new conversation
+                  <span className="ml-2">Start a new conversation</span>
                 </Button>
               </div>
             </div>

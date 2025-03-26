@@ -215,7 +215,7 @@ const VirgilModes: React.FC = () => {
       <Sheet open={showHistory} onOpenChange={setShowHistory}>
         <SheetContent 
           side="right" 
-          className="p-0 w-[350px] sm:w-[400px] max-w-full border-0 bg-[#332E38]"
+          className="p-0 w-[350px] sm:w-[400px] max-w-full border-0 bg-[#332E38] rounded-l-2xl"
         >
           <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
         </SheetContent>
