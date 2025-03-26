@@ -24,24 +24,31 @@ const NewBookshelf: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#332E38] text-[#E9E7E2]">
+    <div className="flex flex-col min-h-screen h-full bg-[#332E38] text-[#E9E7E2]">
       {/* Header */}
       <BookshelfHeader 
         showFavorites={showFavorites} 
         onToggleFavorites={handleToggleFavorites} 
+        className="sticky top-0 z-10"
       />
       
-      {/* Hero section */}
-      {user && <LastReadBookHero />}
-      
-      {/* Intellectual DNA Card */}
-      <div className="px-4 pt-4">
-        <IntellectualDNACard />
-      </div>
-      
-      {/* Main Content */}
-      <div className="flex-1 p-4 overflow-hidden">
-        {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
+      {/* Scrollable container for the rest of the content */}
+      <div className="flex-1 flex flex-col overflow-auto">
+        {/* Hero section */}
+        {user && <LastReadBookHero />}
+        
+        {/* Intellectual DNA Card */}
+        <div className="px-4 pt-4">
+          <IntellectualDNACard />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 p-4 overflow-visible">
+          {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
+        </div>
+        
+        {/* Extra padding at the bottom for safe area */}
+        <div className="h-20"></div>
       </div>
     </div>
   );

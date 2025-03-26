@@ -1,6 +1,5 @@
 
 import React from "react";
-import { ScrollArea } from "../ui/scroll-area";
 import CarouselBooksContent from "./domains/CarouselBooksContent";
 
 const BookshelfContent: React.FC = () => {
@@ -14,7 +13,8 @@ const BookshelfContent: React.FC = () => {
         </h2>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      {/* Better overflow handling for mobile */}
+      <div className="flex-1 overflow-visible">
         <CarouselBooksContent />
       </div>
     </div>

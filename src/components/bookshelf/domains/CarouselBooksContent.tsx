@@ -73,7 +73,7 @@ const CarouselBooksContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex space-x-4 px-4">
+      <div className="flex space-x-4 px-4 overflow-visible">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-52 w-36 rounded-2xl flex-shrink-0" />
         ))}
@@ -90,18 +90,19 @@ const CarouselBooksContent: React.FC = () => {
     );
   }
 
-  // Set options to make approximately 1.75 books visible on mobile
+  // Set options for better mobile display
   const carouselOptions = {
     align: "start" as const,
-    loop: false
+    loop: false,
+    dragFree: true
   };
 
   return (
     <Carousel 
       opts={carouselOptions} 
-      className="w-full"
+      className="w-full pb-10 overflow-visible"
     >
-      <CarouselContent className="-ml-2 md:-ml-4">
+      <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
         {books.map((book) => (
           <CarouselItem 
             key={book.id} 
