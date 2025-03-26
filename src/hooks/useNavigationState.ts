@@ -21,7 +21,9 @@ export const useNavigationState = () => {
       // Also save to the standard navigation history
       const section = location.pathname.includes('/discover') ? 'discover' : 
                       location.pathname.includes('/bookshelf') ? 'bookshelf' : 
-                      location.pathname.includes('/profile') ? 'profile' : 'discover';
+                      location.pathname.includes('/profile') ? 'profile' : 
+                      location.pathname.includes('/dna') ? 'dna' :
+                      location.pathname.includes('/dashboard') ? 'dashboard' : 'discover';
                       
       saveLastVisited(section as any, currentPath);
     }

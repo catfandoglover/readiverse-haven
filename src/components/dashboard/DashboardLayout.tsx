@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -18,7 +19,7 @@ interface NavigationTabProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,8 +27,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   useEffect(() => {
     const currentPath = location.pathname;
     for (const key in sections) {
-      if (sections.hasOwnProperty(key) && sections[key] === currentPath) {
-        saveLastVisited(key as "profile" | "dna" | "discover" | "bookshelf" | "dashboard");
+      if (sections.hasOwnProperty(key) && currentPath.startsWith(sections[key as keyof typeof sections])) {
+        saveLastVisited(key as keyof typeof sections, currentPath);
         break;
       }
     }
@@ -40,12 +41,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
     
     // For all other tabs, use the existing logic
-    saveLastVisited(tab as "profile" | "dna" | "discover" | "bookshelf" | "dashboard");
-    navigate(getLastVisited(tab as "profile" | "dna" | "discover" | "bookshelf" | "dashboard"));
+    saveLastVisited(tab, getLastVisited(tab));
+    navigate(getLastVisited(tab));
   };
 
   const renderNavigationTab = ({ tab }: NavigationTabProps) => {
-    let IconComponent: React.ComponentType;
+    let IconComponent: React.ComponentType<{ className?: string }>;
     let label: string;
 
     switch (tab) {
@@ -127,15 +128,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="p-4 flex items-center justify-between border-b">
               <div className="flex items-center gap-2">
                 <Avatar>
-                  <AvatarImage src={user?.ProfilePictureUrl} />
-                  <AvatarFallback>{user?.FirstName?.[0]}{user?.LastName?.[0]}</AvatarFallback>
+                  <AvatarImage src={user?.avatar_url} />
+                  <AvatarFallback>{user?.email ? user.email[0].toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">{user?.FirstName} {user?.LastName}</div>
-                  <div className="text-sm text-muted-foreground">{user?.Email}</div>
+                  <div className="font-semibold">{user?.user_metadata?.full_name || user?.email}</div>
+                  <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
-              <Button variant="destructive" size="sm" onClick={() => signOut()}>Sign Out</Button>
+              <Button variant="destructive" size="sm" onClick={() => logout && logout()}>Sign Out</Button>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-4">

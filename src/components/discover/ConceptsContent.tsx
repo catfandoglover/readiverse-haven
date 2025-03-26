@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ interface ConceptsContentProps {
 
 const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
+  const [conceptIndex, setConceptIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,7 +48,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         .from("concepts")
         .select("*")
         .order("randomizer");
-
+      
       if (error) {
         toast({
           variant: "destructive",
@@ -58,6 +60,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
       if (data && data.length > 0) {
         console.log("First concept data:", data[0]);
+        console.log(`Loaded ${data.length} concepts total`);
       }
 
       return data.map((concept: any) => ({
@@ -70,6 +73,12 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   });
 
   useEffect(() => {
+    // Update conceptIndex when props change
+    setConceptIndex(currentIndex);
+  }, [currentIndex]);
+
+  // Handle URL-based navigation
+  useEffect(() => {
     if (location.pathname.includes('/view/concept/')) {
       const conceptId = location.pathname.split('/view/concept/')[1];
       const concept = concepts.find(c => c.id === conceptId);
@@ -81,8 +90,18 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     }
   }, [location.pathname, concepts, onDetailedViewShow]);
 
-  const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
-  
+  const handleNextConcept = () => {
+    if (concepts.length === 0) return;
+    const newIndex = (conceptIndex + 1) % concepts.length;
+    setConceptIndex(newIndex);
+  };
+
+  const handlePrevConcept = () => {
+    if (concepts.length === 0) return;
+    const newIndex = (conceptIndex - 1 + concepts.length) % concepts.length;
+    setConceptIndex(newIndex);
+  };
+
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
     navigate(`/view/concept/${concept.id}`, { 
@@ -103,6 +122,38 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
+  };
+
+  // Get the current concept to display
+  const conceptToShow = concepts.length > 0 
+    ? concepts[conceptIndex % concepts.length]
+    : null;
+
+  // Add swipe event handlers
+  const handleTouchStart = React.useRef<number | null>(null);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (handleTouchStart.current === null) {
+      handleTouchStart.current = e.touches[0].clientX;
+      return;
+    }
+    
+    const diff = handleTouchStart.current - e.touches[0].clientX;
+    
+    // Check if swipe is significant
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        // Swipe left, go to next
+        handleNextConcept();
+      } else {
+        // Swipe right, go to previous
+        handlePrevConcept();
+      }
+      handleTouchStart.current = null;
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    handleTouchStart.current = null;
   };
 
   const mockRelatedData = {
@@ -139,7 +190,24 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   return (
     <>
-      <div className="h-full">
+      <div 
+        className="h-full"
+        onTouchStart={() => handleTouchStart.current = null}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-10">
+          <button 
+            onClick={handlePrevConcept}
+            className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center text-[#E9E7E2]"
+            aria-label="Previous concept"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+        
         <ContentCard
           image={conceptToShow.illustration}
           title={conceptToShow.title}
@@ -147,6 +215,31 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           onLearnMore={() => handleLearnMore(conceptToShow)}
           onImageClick={() => handleLearnMore(conceptToShow)}
         />
+        
+        <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-10">
+          <button 
+            onClick={handleNextConcept}
+            className="h-10 w-10 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center text-[#E9E7E2]"
+            aria-label="Next concept"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+          <div className="flex space-x-1">
+            {concepts.slice(0, Math.min(concepts.length, 5)).map((_, i) => (
+              <div 
+                key={i} 
+                className={`w-2 h-2 rounded-full ${
+                  i === conceptIndex % Math.min(concepts.length, 5) ? 'bg-[#E9E7E2]' : 'bg-[#E9E7E2]/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {selectedConcept && (
