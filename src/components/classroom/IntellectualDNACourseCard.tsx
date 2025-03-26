@@ -12,7 +12,7 @@ const IntellectualDNACourseCard: React.FC = () => {
       onClick={handleClick}
     >
       <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold">
-        Intellectual DNA
+        Intellectual DNA course
       </h3>
       <p className="font-oxanium text-[#E9E7E2]/50 text-xs">
         Uncover your worldview.
