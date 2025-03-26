@@ -202,33 +202,24 @@ export type Database = {
       }
       custom_domain_books: {
         Row: {
-          author: string | null
           book_id: string | null
-          cover_url: string | null
           created_at: string
           domain_id: string
           id: string
-          title: string
           user_id: string
         }
         Insert: {
-          author?: string | null
           book_id?: string | null
-          cover_url?: string | null
           created_at?: string
           domain_id: string
           id?: string
-          title: string
           user_id: string
         }
         Update: {
-          author?: string | null
           book_id?: string | null
-          cover_url?: string | null
           created_at?: string
           domain_id?: string
           id?: string
-          title?: string
           user_id?: string
         }
         Relationships: [

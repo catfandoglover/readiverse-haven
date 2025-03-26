@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import BookshelfHeader from "./bookshelf/BookshelfHeader";
 import BookshelfContent from "./bookshelf/BookshelfContent";
 import FavoritesContent from "./bookshelf/FavoritesContent";
 import LastReadBookHero from "./bookshelf/LastReadBookHero";
+import IntellectualDNACard from "./bookshelf/IntellectualDNACard";
 import { useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -31,6 +33,11 @@ const NewBookshelf: React.FC = () => {
       
       {/* Hero section */}
       {user && <LastReadBookHero />}
+      
+      {/* Intellectual DNA Card */}
+      <div className="px-4 pt-4">
+        <IntellectualDNACard />
+      </div>
       
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-hidden">

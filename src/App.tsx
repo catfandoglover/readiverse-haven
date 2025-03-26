@@ -11,6 +11,7 @@ import DiscoverLayout from "@/components/discover/DiscoverLayout";
 import Home from "@/components/Home";
 import NewBookshelf from "@/components/NewBookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
+import IntellectualDNAShelf from "./pages/IntellectualDNAShelf";
 import DNAAssessment from "./pages/DNAAssessment";
 import DNACompletionScreen from "./pages/DNACompletionScreen";
 import DNAEmailConfirmationScreen from "./pages/DNAEmailConfirmationScreen";
@@ -82,6 +83,7 @@ const App = () => (
                 <Route path="/discover/search/questions" element={<GreatQuestions />} />
                 <Route path="/home-old" element={<Home />} /> 
                 <Route path="/bookshelf" element={<NewBookshelf />} />
+                <Route path="/intellectual-dna" element={<IntellectualDNAShelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
                 <Route path="/dna/priming" element={<DNAPriming />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
