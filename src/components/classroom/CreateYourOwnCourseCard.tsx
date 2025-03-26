@@ -17,8 +17,8 @@ const CreateYourOwnCourseCard: React.FC = () => {
           Create Your Own Course
         </h3>
       </div>
-      <div className="flex items-center justify-center mt-2">
-        <Plus className="h-6 w-6 text-[#CCFF23]" />
+      <div className="flex items-left justify-left mt-2">
+        <Plus className="h-3 w-3 text-[#CCFF23]" />
       </div>
     </div>
   );
