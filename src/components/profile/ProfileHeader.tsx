@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -25,7 +26,6 @@ interface DNAAnalysisResult {
 }
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
-const DEFAULT_LIGHTNING_LOGO = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzMDA1NzQxLCJleHAiOjEwMzgyOTE5MzQxfQ.MxDU8M7wnkxtqnr0u2p8iQ3bYB0ie6JLZFnpkGapJHo";
 
 const ProfileHeader: React.FC = () => {
   const { user, openProfile } = useAuth();
@@ -63,11 +63,8 @@ const ProfileHeader: React.FC = () => {
               setLandscapeImage(profileData.landscape_image);
             }
             
-            if (user.ProfileImageS3Url) {
-              setProfileImage(user.ProfileImageS3Url);
-            } 
-            else {
-              setProfileImage(DEFAULT_LIGHTNING_LOGO);
+            if (profileData.profile_image) {
+              setProfileImage(profileData.profile_image);
             }
           } else {
             console.error("Error fetching profile data:", error);
@@ -112,7 +109,11 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
+      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+      // ---------------------------------------------------------------------------------
+      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
       const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -130,6 +131,12 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
+        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+        // ---------------------------------------------------------------------------------
+        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+        // ---------------------------------------------------------------------------------
+        
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
