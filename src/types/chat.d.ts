@@ -1,5 +1,5 @@
 
-export type ChatVariant = 'virgilchat' | 'virgildna' | 'default';
+export type ChatVariant = 'virgilchat' | 'virgildna' | 'default' | 'classroom';
 
 export interface ChatMessage {
   id: string;

@@ -1,7 +1,10 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const CoursesList: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Sample course data - would normally come from an API
   const courses = [
     {
@@ -23,6 +26,17 @@ const CoursesList: React.FC = () => {
       progress: 50
     }
   ];
+  
+  const handleCourseClick = (course: any) => {
+    navigate('/classroom-virgil-chat', { 
+      state: { 
+        courseData: {
+          ...course,
+          isDNA: false // These are regular courses, not DNA courses
+        } 
+      } 
+    });
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -40,6 +54,7 @@ const CoursesList: React.FC = () => {
           <button
             key={course.id}
             className="w-full rounded-xl overflow-hidden bg-[#19352F]/70 shadow-md hover:bg-[#19352F] transition-colors p-4 text-left"
+            onClick={() => handleCourseClick(course)}
           >
             <h3 className="text-lg font-baskerville font-bold text-[#E9E7E2] mb-2">
               {course.title}
