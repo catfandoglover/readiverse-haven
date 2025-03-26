@@ -1,68 +1,100 @@
 
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
-/**
- * Hook to update the reading status of a book in the user's library
- * Updates the last_read_at timestamp and current_cfi position
- */
-export const useUpdateReadingStatus = (
-  bookId: string | null | undefined,
-  currentLocation: string | null
-) => {
+export const useUpdateReadingStatus = (bookId: string | null, currentLocation: string | null) => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const userId = user?.Uid;
-
+  
   useEffect(() => {
-    // Only update if we have all necessary data
-    if (!userId || !bookId || !currentLocation) return;
+    // Create a variable to track if the component is mounted
+    let isMounted = true;
+    
+    const updateStatus = async () => {
+      if (!bookId || !currentLocation || !user?.Account?.Uid) {
+        console.log('useUpdateReadingStatus - Missing required data:', { 
+          bookId, 
+          currentLocation: currentLocation ? 'exists' : 'missing', 
+          userId: user?.Account?.Uid 
+        });
+        return;
+      }
 
-    const updateReadingStatus = async () => {
+      console.log('useUpdateReadingStatus - Updating reading status:', {
+        bookId,
+        userId: user.Account.Uid,
+        currentCfi: currentLocation
+      });
+
       try {
-        // Check if book exists in user's library
-        const { data: existingBook } = await supabase
+        // Check if a record already exists for this user and book
+        const { data: existingRecord, error: queryError } = await supabase
           .from('user_books')
           .select('id')
-          .eq('outseta_user_id', userId)
+          .eq('outseta_user_id', user.Account.Uid)
           .eq('book_id', bookId)
           .maybeSingle();
 
-        if (existingBook) {
+        if (queryError) {
+          console.error('Error checking for existing user_books record:', queryError);
+          return;
+        }
+
+        // Log the result of our check
+        console.log('useUpdateReadingStatus - Existing record check:', existingRecord);
+
+        if (existingRecord) {
           // Update existing record
-          await supabase
+          const { error: updateError } = await supabase
             .from('user_books')
             .update({
-              last_read_at: new Date().toISOString(),
               current_cfi: currentLocation,
+              last_read_at: new Date().toISOString(),
               status: 'reading'
             })
-            .eq('outseta_user_id', userId)
-            .eq('book_id', bookId);
+            .eq('id', existingRecord.id);
+
+          if (updateError) {
+            console.error('Error updating user_books record:', updateError);
+          } else {
+            console.log('useUpdateReadingStatus - Successfully updated reading status');
+          }
         } else {
-          // Insert new record
-          await supabase
+          // Create new record
+          const { error: insertError } = await supabase
             .from('user_books')
-            .insert({
-              outseta_user_id: userId,
-              book_id: bookId,
-              current_cfi: currentLocation,
-              last_read_at: new Date().toISOString(),
-              status: 'reading'
-            });
+            .insert([
+              {
+                outseta_user_id: user.Account.Uid,
+                book_id: bookId,
+                current_cfi: currentLocation,
+                last_read_at: new Date().toISOString(),
+                status: 'reading'
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Error creating user_books record:', insertError);
+          } else {
+            console.log('useUpdateReadingStatus - Successfully created new reading status');
+          }
         }
       } catch (error) {
-        console.error('Error updating reading status:', error);
+        console.error('Unexpected error in useUpdateReadingStatus:', error);
       }
     };
 
-    // Set a timeout to avoid too many rapid updates
+    // Debounce the update to avoid too many database calls
     const timeoutId = setTimeout(() => {
-      updateReadingStatus();
-    }, 5000); // Update every 5 seconds when location changes
+      if (isMounted) {
+        updateStatus();
+      }
+    }, 3000); // Reduced from 5000ms to 3000ms to make updates more responsive
 
-    return () => clearTimeout(timeoutId);
-  }, [userId, bookId, currentLocation]);
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [bookId, currentLocation, user]);
 };
