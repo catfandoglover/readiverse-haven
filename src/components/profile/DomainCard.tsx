@@ -54,7 +54,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
     fetchDomainData();
   }, []);
   
-  /* // Calculate the highest progress level across both kindred and challenging resources
+  /* Calculate the highest progress level across both kindred and challenging resources
   const getHighestProgressLevel = (): number => {
     if (isLoading || !domainAnalysis) {
       // Fall back to the passed progress prop if data isn't loaded yet
@@ -97,6 +97,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
   
   // Generate array of 6 levels for display
   const levels = [1, 2, 3, 4, 5, 6];
+  */
 
   return (
     <div 
@@ -120,6 +121,6 @@ const DomainCard: React.FC<DomainCardProps> = ({
       </div>
     </div>
   );
-}; /*
+};
 
 export default DomainCard;
