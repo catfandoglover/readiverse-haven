@@ -36,6 +36,16 @@ interface DetailedViewProps {
   onBack?: () => void;
 }
 
+interface OrderDialogProps {
+  bookId: string;
+  title: string;
+  coverUrl: string;
+  amazonUrl: string;
+  bookshopUrl: string;
+  onClose: () => void;
+  open: boolean;
+}
+
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
   data: itemData,
@@ -939,10 +949,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       </div>
       
       {isOrderDialogOpen && (
-        <OrderDialog 
-          bookId={combinedData?.id} 
+        <OrderDialog
+          bookId={combinedData?.id}
           title={combinedData?.title}
-          cover_url={combinedData?.cover_url || combinedData?.Cover_super}
+          coverUrl={combinedData?.Cover_super}
           amazonUrl={combinedData?.amazon_link}
           bookshopUrl={combinedData?.bookshop_link}
           onClose={() => setIsOrderDialogOpen(false)}

@@ -241,6 +241,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             image={iconToShow.illustration}
             title={iconToShow.name}
             about={iconToShow.about || ""}
+            itemId={iconToShow.id}
+            itemType="icon"
             onLearnMore={() => handleLearnMore(iconToShow)}
             onImageClick={() => handleLearnMore(iconToShow)}
             onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
