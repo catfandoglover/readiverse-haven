@@ -18,9 +18,9 @@ const CreateYourOwnCourseCard: React.FC = () => {
         </h3>
         <Plus className="h-4 w-4 text-[#CCFF23]" />
       </div>
-      <p className="font-oxanium text-[#E9E7E2]/50 text-xs">
-        Design a personalized learning journey with Virgil as your guide
-      </p>
+      <div className="flex items-center justify-center mt-2">
+        <Plus className="h-6 w-6 text-[#CCFF23]" />
+      </div>
     </div>
   );
 };
