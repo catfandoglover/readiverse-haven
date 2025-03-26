@@ -19,7 +19,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id (
+          book:book_id(
             id,
             title,
             author,
@@ -51,7 +51,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id (
+          book:book_id(
             id,
             title,
             author,
