@@ -83,7 +83,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
         
         <ProfileHeader />
         
-        <div className="px-6 mt-16 mb-6">
+        <div className="px-6 mt-8 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <Button
               variant="ghost"
