@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
-import { MessageCircle } from "lucide-react";
+import { MessageCircleMore } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
@@ -31,7 +32,7 @@ const VirgilOffice: React.FC = () => {
           aria-label="Chat History"
           onClick={() => setIsHistorySidebarOpen(true)}
         >
-          <MessageCircle className="h-5 w-5" />
+          <MessageCircleMore className="h-5 w-5" />
         </Button>
       </div>
       
