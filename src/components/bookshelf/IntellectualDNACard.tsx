@@ -11,14 +11,14 @@ const IntellectualDNACard: React.FC = () => {
 
   return (
     <div 
-      className="w-full bg-[#4A4351]/50 rounded-xl cursor-pointer hover:bg-[#4A4351] transition-colors p-6 mb-4"
+      className="w-full bg-[#4A4351]/50 rounded-2xl cursor-pointer hover:bg-[#4A4351] transition-colors p-6 mb-4"
       onClick={handleClick}
     >
-      <h3 className="font-oxanium text-base text-[#E9E7E2] uppercase tracking-wider font-bold">
-        INTELLECTUAL DNA
+      <h3 className="font-oxanium uppercase text-base text-[#E9E7E2] uppercase tracking-wider font-bold">
+        Intellectual DNA
       </h3>
       <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-        Domains of knowledge
+        60 texts from iconic thinkers that align and challenge your worldview, organized by field. If you need help with a difficulty passage or text, Virgil is always there as your guide.
       </p>
     </div>
   );
