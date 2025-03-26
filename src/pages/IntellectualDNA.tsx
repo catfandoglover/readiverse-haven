@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import MainMenu from "@/components/navigation/MainMenu";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -91,7 +92,11 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      <header className="w-full p-4 flex justify-end">
+      <header className="w-full p-4 flex justify-between items-center">
+        <div className="flex-none">
+          <MainMenu />
+        </div>
+        <div className="flex-1"></div>
         <div className="flex space-x-2">
           {isLoading ? (
             <Button disabled variant="outline" size="sm" className="text-[#373763]/70">

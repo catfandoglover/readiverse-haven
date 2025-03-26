@@ -33,6 +33,7 @@ import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
 import TidyCalDialog from "@/components/booking/TidyCalDialog";
 import { useTidyCalBooking } from "@/components/booking/useTidyCalBooking";
+import MainMenu from "@/components/navigation/MainMenu";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -806,13 +807,9 @@ const DNAAssessment = () => {
     <>
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-          <button 
-            onClick={handleExit}
-            className="text-[#332E38]/25 font-oxanium text-sm uppercase tracking-wider font-bold"
-            type="button"
-          >
-            BACK
-          </button>
+          <div className="flex items-center">
+            <MainMenu />
+          </div>
           <div className="flex items-center gap-1 text-sm font-oxanium text-[#332E38]/25 uppercase tracking-wider font-bold">
             <span>{currentQuestionNumber}</span>
             <span>/</span>
@@ -895,49 +892,4 @@ const DNAAssessment = () => {
             <AlertDialogHeader className="tidycal-header">
               <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
-                These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            
-            <AlertDialogFooter className="tidycal-footer">
-              <AlertDialogAction 
-                className="bg-[#373763] text-white font-oxanium"
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default to keep dialog open
-                  openBookingDialog();
-                }}
-              >
-                BOOK A COUNSELOR
-              </AlertDialogAction>
-              <AlertDialogCancel 
-                onClick={confirmExit}
-                className="bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20"
-              >
-                EXIT ASSESSMENT
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        
-      </div>
-
-      <TidyCalDialog
-        open={showBookingDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeBookingDialog();
-          }
-        }}
-      />
-
-      <AIChatDialog 
-        open={showAIChat}
-        onOpenChange={setShowAIChat}
-        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
-        currentQuestion={currentQuestion?.question?.question || ''}
-      />
-    </>
-  );
-};
-
-export default DNAAssessment;
+                These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of
