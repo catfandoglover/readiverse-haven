@@ -90,7 +90,7 @@ const CarouselBooksContent: React.FC = () => {
     );
   }
 
-  // Set options to make approximately 2.2 books visible on mobile
+  // Set options to make approximately 1.75 books visible on mobile
   const carouselOptions = {
     align: "start" as const,
     loop: false
@@ -105,7 +105,7 @@ const CarouselBooksContent: React.FC = () => {
         {books.map((book) => (
           <CarouselItem 
             key={book.id} 
-            className="pl-2 md:pl-4 basis-[45%] md:basis-1/4 lg:basis-1/5"
+            className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"
           >
             <BookCard
               id={book.id}
