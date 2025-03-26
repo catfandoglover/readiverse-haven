@@ -1,17 +1,18 @@
 
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import { BookOpenText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import ClassicsFavoritesContent from "@/components/bookshelf/favorites/ClassicsFavoritesContent";
 import IconsFavoritesContent from "@/components/bookshelf/favorites/IconsFavoritesContent";
 import ConceptsFavoritesContent from "@/components/bookshelf/favorites/ConceptsFavoritesContent";
+import MainMenu from "@/components/navigation/MainMenu";
 
 const FavoritesShelf: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleBack = () => {
+  const handleStudyClick = () => {
     navigate("/bookshelf");
   };
 
@@ -19,17 +20,16 @@ const FavoritesShelf: React.FC = () => {
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - fixed at top */}
       <div className="flex items-center pt-4 pb-12 px-8 bg-[#332E38] text-[#E9E7E2] flex-shrink-0 sticky top-0 z-10">
-        <button 
-          onClick={handleBack}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           FAVORITES
         </h2>
-        {/* Empty div to balance the layout */}
-        <div className="w-10"></div>
+        <button 
+          onClick={handleStudyClick}
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
+        >
+          <BookOpenText className="h-5 w-5" />
+        </button>
       </div>
       
       {/* Main Content - using overflow-auto directly */}
