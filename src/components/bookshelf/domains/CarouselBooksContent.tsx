@@ -92,7 +92,7 @@ const CarouselBooksContent: React.FC = () => {
 
   // Set options to make approximately 2.2 books visible on mobile
   const carouselOptions = {
-    align: "start",
+    align: "start" as const,
     loop: false
   };
 

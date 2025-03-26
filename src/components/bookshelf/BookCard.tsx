@@ -52,11 +52,7 @@ const BookCard: React.FC<BookCardProps> = ({
             e.currentTarget.src = fallbackCoverUrl;
           }}
         />
-        {/* Add title overlay for visibility on hover */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-          <h3 className="text-white font-semibold truncate">{title}</h3>
-          {author && <p className="text-white/80 text-sm truncate">{author}</p>}
-        </div>
+        {/* Remove the text overlay */}
       </div>
     </div>
   );
