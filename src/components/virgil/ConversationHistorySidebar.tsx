@@ -114,6 +114,11 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
     }
   };
 
+  const handleStartNewConversation = () => {
+    navigate('/virgil-modes');
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
@@ -129,15 +134,15 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                 <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
                 <div 
                   className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleStartNewConversation}
                 >
                   <div className="flex-shrink-0 rounded-full p-3">
-                    <div className="h-6 w-6 flex items-left justify-left">
+                    <div className="h-6 w-6 flex items-center justify-center">
                       <span className="text-lg">💬</span>
                     </div>
                   </div>
-                  <div className="flex flex-col">
-                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                  <div className="flex-1">
+                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
                       Start a new conversation
                     </h3>
                   </div>
@@ -157,13 +162,13 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                       </div>
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                      <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
                         {conversation.mode_title}
                       </h3>
-                      <p className="text-[#E9E7E2]/60 text-xs truncate mt-1">
+                      <p className="text-[#E9E7E2]/60 text-xs truncate mt-1 text-left">
                         {conversation.last_message || "Start of conversation"}
                       </p>
-                      <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1">
+                      <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1 text-left">
                         {formatDate(conversation.created_at)}
                       </p>
                     </div>
