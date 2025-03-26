@@ -20,9 +20,9 @@ const IntellectualDNAShelf: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#332E38] text-[#E9E7E2]">
+    <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - updated to match BookshelfHeader */}
-      <div className="flex items-center pt-4 pb-4 px-8 bg-[#332E38] text-[#E9E7E2]">
+      <div className="flex items-center pt-4 pb-4 px-8 bg-[#332E38] text-[#E9E7E2] flex-shrink-0">
         <button 
           onClick={handleBack}
           className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
@@ -36,86 +36,91 @@ const IntellectualDNAShelf: React.FC = () => {
         <div className="w-10"></div>
       </div>
       
-      {/* Main Content */}
-      <ScrollArea className="flex-1 px-4 pb-20">
-        {/* Ethics */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              ETHICS
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on the good
-            </p>
+      {/* Main Content - changed to use ScrollArea with configuration for full height */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full px-4 pb-20">
+          {/* Ethics */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                ETHICS
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on the good
+              </p>
+            </div>
+            <EthicsContent />
           </div>
-          <EthicsContent />
-        </div>
-        
-        {/* Epistemology */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              EPISTEMOLOGY
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on knowledge
-            </p>
+          
+          {/* Epistemology */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                EPISTEMOLOGY
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on knowledge
+              </p>
+            </div>
+            <EpistemologyContent />
           </div>
-          <EpistemologyContent />
-        </div>
-        
-        {/* Politics */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              POLITICS
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on power
-            </p>
+          
+          {/* Politics */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                POLITICS
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on power
+              </p>
+            </div>
+            <PoliticsContent />
           </div>
-          <PoliticsContent />
-        </div>
-        
-        {/* Theology */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              THEOLOGY
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on the divine
-            </p>
+          
+          {/* Theology */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                THEOLOGY
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on the divine
+              </p>
+            </div>
+            <TheologyContent />
           </div>
-          <TheologyContent />
-        </div>
-        
-        {/* Ontology */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              ONTOLOGY
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on reality
-            </p>
+          
+          {/* Ontology */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                ONTOLOGY
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on reality
+              </p>
+            </div>
+            <OntologyContent />
           </div>
-          <OntologyContent />
-        </div>
-        
-        {/* Aesthetics */}
-        <div className="mb-10">
-          <div className="mb-4">
-            <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
-              AESTHETICS
-            </h2>
-            <p className="font-oxanium text-[#E9E7E2]/50 text-base">
-              Your view on beauty
-            </p>
+          
+          {/* Aesthetics */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2]">
+                AESTHETICS
+              </h2>
+              <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+                Your view on beauty
+              </p>
+            </div>
+            <AestheticsContent />
           </div>
-          <AestheticsContent />
-        </div>
-      </ScrollArea>
+          
+          {/* Added extra padding at the bottom for safe area */}
+          <div className="h-16"></div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };
