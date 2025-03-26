@@ -142,7 +142,7 @@ const ProfileHeader: React.FC = () => {
   };
 
   return (
-    <div className="relative overflow-hidden z-50 isolation-isolate">
+    <div className="relative z-10 stacking-context">
       <div className="w-full h-64 bg-[#2A282A] relative">
         <div 
           className="absolute inset-0"
@@ -158,7 +158,7 @@ const ProfileHeader: React.FC = () => {
         <Button 
           variant="ghost" 
           onClick={handleShareClick}
-          className="absolute top-4 right-4 bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2 z-30"
+          className="absolute top-4 right-4 bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2 z-10"
           aria-label="Share profile"
         >
           SHARE PROFILE
@@ -166,12 +166,19 @@ const ProfileHeader: React.FC = () => {
         </Button>
       </div>
       
-      <div className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2] z-[9999]" style={{ bottom: "-32px" }}>
+      <div 
+        className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
+        style={{ 
+          bottom: "-32px",
+          zIndex: 30,
+          transform: "translateZ(0)"
+        }}
+      >
         <div className="flex flex-col items-start">
-          <div className="relative h-20 w-20 mb-2 z-20">
+          <div className="relative h-20 w-20 mb-2">
             <svg 
               viewBox="0 0 100 100" 
-              className="absolute inset-0 h-full w-full text-[#CCFF23] z-20"
+              className="absolute inset-0 h-full w-full text-[#CCFF23]"
             >
               <polygon 
                 points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
@@ -182,7 +189,7 @@ const ProfileHeader: React.FC = () => {
             </svg>
             
             <div 
-              className="absolute inset-0 flex items-center justify-center z-10"
+              className="absolute inset-0 flex items-center justify-center"
               style={{ 
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
@@ -197,16 +204,30 @@ const ProfileHeader: React.FC = () => {
             
             <button 
               onClick={handleProfileEditClick}
-              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors z-30"
+              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
               aria-label="Edit profile picture"
             >
               <Pen size={12} className="text-gray-700" />
             </button>
           </div>
           
-          <div className="text-left relative z-[9999]">
-            <h1 className="text-2xl font-serif relative z-[999]">{firstName} {lastName}</h1>
-            <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic relative z-[999]">
+          <div className="text-left">
+            <h1 
+              className="text-2xl font-serif" 
+              style={{ 
+                position: "relative",
+                zIndex: 50
+              }}
+            >
+              {firstName} {lastName}
+            </h1>
+            <p 
+              className="text-sm font-oxanium text-[#E9E7E2]/70 italic"
+              style={{ 
+                position: "relative",
+                zIndex: 50
+              }}
+            >
               {isLoadingAnalysis ? 'Loading...' : archetype}
             </p>
           </div>
