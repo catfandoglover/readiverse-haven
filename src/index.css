@@ -147,6 +147,17 @@
   .bg-transparent {
     background-color: transparent !important;
   }
+
+  /* Stacking context utility */
+  .stacking-context {
+    isolation: isolate;
+    position: relative;
+  }
+  
+  /* 3D transform to force a new stacking context */
+  .force-layer {
+    transform: translateZ(0);
+  }
 }
 
 /* Global fixes for iOS Safari */

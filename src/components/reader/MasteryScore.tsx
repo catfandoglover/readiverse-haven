@@ -25,6 +25,7 @@ const MasteryScore = ({ progress, compact = false, showText = true }: MasterySco
   
   return (
     <div>
+      {/* SCORING SYSTEM - COMMENTED OUT
       <div className="flex space-x-1">
         {levels.map(level => (
           <div key={level} className={`relative ${compact ? 'w-5 h-6' : 'w-7 h-8'} pb-2`}>
@@ -46,6 +47,7 @@ const MasteryScore = ({ progress, compact = false, showText = true }: MasterySco
           {stageName}
         </span>
       )}
+      */}
     </div>
   );
 };

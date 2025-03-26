@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -38,7 +39,6 @@ const ProfileHeader: React.FC = () => {
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
-  const email = profileData?.email || user?.email || "alex@midwestlfg.com";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   const archetype = analysisResult?.archetype || "Twilight Navigator";
@@ -109,14 +109,20 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
+      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+      // ---------------------------------------------------------------------------------
+      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+      const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+      // ---------------------------------------------------------------------------------
+      
       if (navigator.share) {
         await navigator.share({
           title: `${firstName}'s Profile`,
           text: `Check out ${firstName}'s reading profile!`,
-          url: window.location.href,
+          url: shareUrl,
         });
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
           description: "Profile link copied to clipboard",
@@ -125,7 +131,13 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+        // ---------------------------------------------------------------------------------
+        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+        // ---------------------------------------------------------------------------------
+        
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
           description: "Profile link copied to clipboard",
@@ -142,7 +154,7 @@ const ProfileHeader: React.FC = () => {
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative z-10 stacking-context">
       <div className="w-full h-64 bg-[#2A282A] relative">
         <div 
           className="absolute inset-0"
@@ -154,64 +166,88 @@ const ProfileHeader: React.FC = () => {
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute top-4 right-4 text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1 hover:bg-white/10"
-          onClick={handleShareClick}
-          aria-label="Share profile"
-        >
-          <Share className="h-7.5 w-7.5" />
-        </Button>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full p-6 text-[#E9E7E2]">
-        <div className="flex items-end space-x-4">
-          <div className="relative h-20 w-20">
-            <svg 
-              viewBox="0 0 100 100" 
-              className="absolute inset-0 h-full w-full text-[#CCFF23]"
-            >
-              <polygon 
-                points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3"
-              />
-            </svg>
-            
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ 
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-              }}
-            >
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+      <div 
+        className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
+        style={{ 
+          bottom: "-32px",
+          zIndex: 30,
+          transform: "translateZ(0)"
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start">
+            <div className="relative h-20 w-20 mb-2">
+              <svg 
+                viewBox="0 0 100 100" 
+                className="absolute inset-0 h-full w-full text-[#CCFF23]"
+              >
+                <polygon 
+                  points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="3"
+                />
+              </svg>
+              
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ 
+                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                }}
+              >
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              <button 
+                onClick={handleProfileEditClick}
+                className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                aria-label="Edit profile picture"
+              >
+                <Pen size={12} className="text-gray-700" />
+              </button>
             </div>
             
-            <button 
-              onClick={handleProfileEditClick}
-              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
-              aria-label="Edit profile picture"
-            >
-              <Pen size={12} className="text-gray-700" />
-            </button>
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <h1 
+                  className="text-2xl font-serif" 
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {firstName} {lastName}
+                </h1>
+                <p 
+                  className="text-sm font-oxanium text-[#E9E7E2]/70 italic"
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {isLoadingAnalysis ? 'Loading...' : archetype}
+                </p>
+              </div>
+            </div>
           </div>
           
-          <div>
-            <h1 className="text-2xl font-serif">{firstName} {lastName}</h1>
-            <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic">
-              {isLoadingAnalysis ? 'Loading...' : archetype}
-            </p>
-            <p className="text-xs text-[#E9E7E2]/60">
-              {email}
-            </p>
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              onClick={handleShareClick}
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4"
+              aria-label="Share profile"
+            >
+              SHARE PROFILE
+              <Share className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
