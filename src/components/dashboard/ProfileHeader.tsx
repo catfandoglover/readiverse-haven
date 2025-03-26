@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -109,14 +110,17 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
+      // Create the shareable URL with the encoded user's full name
+      const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+      
       if (navigator.share) {
         await navigator.share({
           title: `${firstName}'s Profile`,
           text: `Check out ${firstName}'s reading profile!`,
-          url: window.location.href,
+          url: shareUrl,
         });
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
           description: "Profile link copied to clipboard",
@@ -125,7 +129,8 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
           description: "Profile link copied to clipboard",

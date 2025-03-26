@@ -18,6 +18,7 @@ import GreatQuestions from "@/pages/GreatQuestions";
 import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
 import Profile from "./pages/Profile";
+import ShareableProfile from "./pages/ShareableProfile";
 import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
@@ -92,6 +93,7 @@ const App = () => (
                 <Route path="/great-questions/:id" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
