@@ -109,8 +109,11 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
-      // Create the shareable URL with the encoded user's full name
-      const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+      // ---------------------------------------------------------------------------------
+      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+      const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -128,7 +131,12 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+        // ---------------------------------------------------------------------------------
+        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
+        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+        // ---------------------------------------------------------------------------------
+        
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",

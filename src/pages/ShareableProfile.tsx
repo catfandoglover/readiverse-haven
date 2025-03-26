@@ -27,6 +27,28 @@ interface DNAAnalysisResult {
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
+// FUTURE EDIT POINT: Remove this default profile when the real profile fetching is fixed
+// ---------------------------------------------------------------------------------
+const DEFAULT_PROFILE: ProfileData = {
+  id: "default-id",
+  outseta_user_id: "default-outseta-id",
+  email: "alex@midwestlfg.com",
+  full_name: "Alex Jakubowski",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  profile_image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png",
+  landscape_image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png"
+};
+
+const DEFAULT_ANALYSIS: DNAAnalysisResult = {
+  id: "default-analysis-id",
+  assessment_id: FIXED_ASSESSMENT_ID,
+  archetype: "Twilight Navigator",
+  introduction: "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.",
+  created_at: new Date().toISOString()
+};
+// ---------------------------------------------------------------------------------
+
 const ShareableProfile: React.FC = () => {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
@@ -42,10 +64,18 @@ const ShareableProfile: React.FC = () => {
       if (name) {
         try {
           setIsLoading(true);
+          console.log("Fetching profile for name:", name);
+          
+          // FUTURE EDIT POINT: Fix the profile fetching logic here
+          // ---------------------------------------------------------------------------------
           // Decode the name from URL format to handle spaces
           const decodedName = decodeURIComponent(name);
+          console.log("Decoded name:", decodedName);
           
-          // Fetch profile by full_name
+          // TODO: Fix the profile lookup
+          // Currently using a fixed profile (Alex Jakubowski) instead of looking up in the database
+          // Original code:
+          /*
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -79,9 +109,27 @@ const ShareableProfile: React.FC = () => {
             // Navigate to DNA if profile not found
             navigate('/dna');
           }
+          */
+          
+          // Using default profile data instead of database lookup for now
+          console.log("Using default profile data");
+          setProfileData(DEFAULT_PROFILE);
+          setLandscapeImage(DEFAULT_PROFILE.landscape_image || null);
+          setProfileImage(DEFAULT_PROFILE.profile_image || null);
+          setAnalysisResult(DEFAULT_ANALYSIS);
+          // ---------------------------------------------------------------------------------
+          
         } catch (e) {
           console.error("Exception fetching profile:", e);
-          navigate('/dna');
+          // FUTURE EDIT POINT: Don't navigate to /dna on error, just use default profile
+          // ---------------------------------------------------------------------------------
+          // Original code: navigate('/dna');
+          console.log("Error occurred, using default profile data");
+          setProfileData(DEFAULT_PROFILE);
+          setLandscapeImage(DEFAULT_PROFILE.landscape_image || null);
+          setProfileImage(DEFAULT_PROFILE.profile_image || null);
+          setAnalysisResult(DEFAULT_ANALYSIS);
+          // ---------------------------------------------------------------------------------
         } finally {
           setIsLoading(false);
         }
@@ -137,6 +185,10 @@ const ShareableProfile: React.FC = () => {
     );
   }
   
+  // FUTURE EDIT POINT: Re-enable this check when using real profiles
+  // ---------------------------------------------------------------------------------
+  // Original code:
+  /*
   if (!profileData) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#2A282A] text-[#E9E7E2]">
@@ -150,10 +202,12 @@ const ShareableProfile: React.FC = () => {
       </div>
     );
   }
+  */
+  // ---------------------------------------------------------------------------------
   
-  const fullName = profileData.full_name || "Explorer";
-  const firstName = fullName.split(' ')[0] || "Explorer";
-  const lastName = fullName.split(' ').slice(1).join(' ') || "";
+  const fullName = profileData?.full_name || "Alex Jakubowski";
+  const firstName = fullName.split(' ')[0] || "Alex";
+  const lastName = fullName.split(' ').slice(1).join(' ') || "Jakubowski";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   const archetype = analysisResult?.archetype || "Twilight Navigator";
   const introduction = analysisResult?.introduction || 
