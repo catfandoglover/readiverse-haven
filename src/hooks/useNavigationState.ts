@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { saveLastVisited, sections, getOriginPath } from '@/utils/navigationHistory';
 
@@ -12,9 +12,8 @@ export const useNavigationState = () => {
   const location = useLocation();
   const [currentSourcePath, setCurrentSourcePath] = useState<string | null>(null);
   
+  // Store the current path in session storage when it changes
   useEffect(() => {
-    // Store the current path in session storage when it changes
-    // This helps us track where the user navigated from
     if (!location.pathname.includes('/view/')) {
       // Track the exact path for better navigation
       const currentPath = location.pathname;
@@ -32,14 +31,14 @@ export const useNavigationState = () => {
     }
   }, [location.pathname]);
   
-  const getLastContentPath = () => {
+  const getLastContentPath = useCallback(() => {
     return sessionStorage.getItem('lastContentPath') || '/discover';
-  };
+  }, []);
 
   /**
    * Determines the content type from the current URL
    */
-  const getContentType = (): ContentType => {
+  const getContentType = useCallback((): ContentType => {
     const pathname = location.pathname;
     
     if (pathname.includes('/view/classic/')) return 'classic';
@@ -52,26 +51,26 @@ export const useNavigationState = () => {
     if (pathname.includes('/discover/search/questions')) return 'question';
     
     return 'for-you';
-  };
+  }, [location.pathname]);
 
   /**
    * Saves the source path to session storage for back navigation
    * This is critically important for proper back navigation
    */
-  const saveSourcePath = (path: string) => {
+  const saveSourcePath = useCallback((path: string) => {
     // Only save non-detail view paths
     if (!path.includes('/view/')) {
       sessionStorage.setItem('sourcePath', path);
       setCurrentSourcePath(path);
       console.log('[NavigationState] Saved source path:', path);
     }
-  };
+  }, []);
 
   /**
    * Gets the source path from which the user navigated
-   * Prioritizes the current component state over session storage
+   * Uses a consistent priority order for reliable back navigation
    */
-  const getSourcePath = () => {
+  const getSourcePath = useCallback(() => {
     // First check component state for the most up-to-date value
     if (currentSourcePath) {
       console.log('[NavigationState] Retrieved source path from state:', currentSourcePath);
@@ -90,7 +89,7 @@ export const useNavigationState = () => {
     const originPath = getOriginPath();
     console.log('[NavigationState] Falling back to origin path:', originPath);
     return originPath;
-  };
+  }, [currentSourcePath]);
   
   return { 
     getLastContentPath, 
