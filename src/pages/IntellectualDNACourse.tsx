@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Filter, Check, Lock, ArrowRight, Hexagon } from "lucide-react";
@@ -25,7 +25,6 @@ const IntellectualDNACourse: React.FC = () => {
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
   
   // All domains in order
   const domains = [
