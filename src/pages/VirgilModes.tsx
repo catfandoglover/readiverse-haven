@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -215,7 +216,7 @@ const VirgilModes: React.FC = () => {
       <Sheet open={showHistory} onOpenChange={setShowHistory}>
         <SheetContent 
           side="right" 
-          className="p-0 w-[350px] sm:w-[400px] max-w-full border-0 bg-[#332E38] rounded-l-2xl"
+          className="p-0 w-[320px] max-w-full border-0 bg-[#332E38] rounded-l-2xl"
         >
           <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
         </SheetContent>

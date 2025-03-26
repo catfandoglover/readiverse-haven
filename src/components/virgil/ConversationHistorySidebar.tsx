@@ -111,10 +111,10 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
   };
 
   return (
-    <div className="p-0 h-full flex flex-col bg-[#332E38] text-[#E9E7E2] rounded-l-2xl">
-      <nav className="flex flex-col gap-8 mt-4">
-        <div className="px-6">
-          <h2 className="text-xl font-serif mb-4">Conversations</h2>
+    <div className="p-0 h-full flex flex-col bg-[#332E38] text-[#E9E7E2]">
+      <nav className="flex flex-col gap-8 mt-10">
+        <div className="px-2">
+          <h2 className="text-xl font-serif mb-8">Lightning</h2>
           
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
@@ -124,13 +124,21 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
             <div className="text-center py-8">
               <div className="text-center">
                 <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
-                <Button 
-                  variant="ghost" 
+                <div 
+                  className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
                   onClick={onClose}
-                  className="text-[#E9E7E2] hover:bg-[#4A4351]/30 rounded-xl h-12 flex items-center justify-start w-full"
                 >
-                  <span className="ml-2">Start a new conversation</span>
-                </Button>
+                  <div className="flex-shrink-0 rounded-full p-3">
+                    <div className="h-6 w-6 flex items-center justify-center">
+                      <span className="text-lg">💬</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                      Start a new conversation
+                    </h3>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
