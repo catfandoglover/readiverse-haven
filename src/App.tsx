@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,8 +8,9 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/OutsetaAuthContext";
 import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
-import Bookshelf from "@/components/Bookshelf";
+import NewBookshelf from "@/components/NewBookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
+import IntellectualDNAShelf from "./pages/IntellectualDNAShelf";
 import DNAAssessment from "./pages/DNAAssessment";
 import DNACompletionScreen from "./pages/DNACompletionScreen";
 import DNAEmailConfirmationScreen from "./pages/DNAEmailConfirmationScreen";
@@ -19,7 +19,6 @@ import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
 import Profile from "./pages/Profile";
 import ShareableProfile from "./pages/ShareableProfile";
-import DomainDetail from "./pages/DomainDetail";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
@@ -31,7 +30,7 @@ import SearchPage from "./pages/SearchPage";
 import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
-import GreatQuestionDetailView from "./components/discover/GreatQuestionDetailedView";
+import FavoritesShelf from "./pages/FavoritesShelf";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,7 +81,8 @@ const App = () => (
                 <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/discover/search/questions" element={<GreatQuestions />} />
                 <Route path="/home-old" element={<Home />} /> 
-                <Route path="/bookshelf" element={<Bookshelf />} />
+                <Route path="/bookshelf" element={<NewBookshelf />} />
+                <Route path="/intellectual-dna" element={<IntellectualDNAShelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
                 <Route path="/dna/priming" element={<DNAPriming />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />
@@ -95,11 +95,11 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />
                 <Route path="/virgil-chat" element={<VirgilChat />} />
+                <Route path="/favorites-shelf" element={<FavoritesShelf />} />
                 
                 {/* Redirects from old paths to new paths */}
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
