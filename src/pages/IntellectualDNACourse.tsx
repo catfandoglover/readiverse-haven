@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Filter, Check, Lock, ArrowRight, Hexagon } from "lucide-react";
+import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 // Use the same fixed assessment ID as in DomainDetail
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
@@ -73,7 +72,7 @@ const IntellectualDNACourse: React.FC = () => {
   ];
   
   // Filtered domains based on the selected filter
-  const filteredDomains = domainFilter 
+  const filteredDomains = domainFilter && domainFilter !== "all" 
     ? domains.filter(domain => domain.id === domainFilter)
     : domains;
   
@@ -308,30 +307,53 @@ const IntellectualDNACourse: React.FC = () => {
         
         <h1 className="text-lg font-oxanium uppercase font-bold text-white">Intellectual DNA</h1>
         
-        <div className="w-28">
-          <Select onValueChange={(value) => setDomainFilter(value || undefined)}>
-            <SelectTrigger className="bg-[#19352F] border-none text-white h-9">
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="bg-[#19352F] border-[#2A3A35] text-white">
-              <SelectItem value="all">All Domains</SelectItem>
-              {domains.map(domain => (
-                <SelectItem key={domain.id} value={domain.id}>
-                  {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
+              <SlidersHorizontal className="h-6 w-6 text-white" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-white">
+            <DropdownMenuItem 
+              onClick={() => setDomainFilter("all")}
+              className="flex items-center cursor-pointer"
+            >
+              {!domainFilter || domainFilter === "all" ? (
+                <Check className="h-4 w-4 mr-2" />
+              ) : (
+                <div className="w-4 mr-2" />
+              )}
+              All Domains
+            </DropdownMenuItem>
+            
+            {domains.map(domain => (
+              <DropdownMenuItem 
+                key={domain.id} 
+                onClick={() => setDomainFilter(domain.id)}
+                className="flex items-center cursor-pointer"
+              >
+                {domainFilter === domain.id ? (
+                  <Check className="h-4 w-4 mr-2" />
+                ) : (
+                  <div className="w-4 mr-2" />
+                )}
+                {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
       
       <main>
-        {filteredDomains.map(domain => (
-          <DomainSection key={domain.id} domain={domain} />
-        ))}
+        {filteredDomains.length > 0 ? (
+          filteredDomains.map(domain => (
+            <DomainSection key={domain.id} domain={domain} />
+          ))
+        ) : (
+          <div className="p-6 text-center">
+            <p>No domains match your filter criteria.</p>
+          </div>
+        )}
       </main>
     </div>
   );
