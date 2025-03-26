@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -166,7 +165,7 @@ const ProfileHeader: React.FC = () => {
         </Button>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full px-6 pb-6 text-[#E9E7E2]">
+      <div className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" style={{ bottom: "-32px" }}>
         <div className="flex flex-col items-start">
           <div className="relative h-20 w-20 mb-2">
             <svg 
