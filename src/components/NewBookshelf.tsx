@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import BookshelfHeader from "./bookshelf/BookshelfHeader";
 import BookshelfContent from "./bookshelf/BookshelfContent";
@@ -30,14 +29,12 @@ const NewBookshelf: React.FC = () => {
         onToggleFavorites={handleToggleFavorites} 
       />
       
-      {/* Hero section - placed directly below header */}
+      {/* Hero section */}
       {user && <LastReadBookHero />}
       
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-hidden">
-        <div className="bg-white rounded-xl p-4 h-full overflow-hidden text-[#2A282A]">
-          {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
-        </div>
+        {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
       </div>
     </div>
   );
