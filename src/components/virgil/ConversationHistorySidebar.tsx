@@ -120,7 +120,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
       state: { 
         promptData: {
           id: 2, // GROW MY MIND mode ID
-          user_title: "Start a new conversation",
+          user_title: "Start a conversation",
           icon_display: "earth"
         }
       }
