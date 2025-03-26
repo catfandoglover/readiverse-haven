@@ -4,15 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MainMenu from "@/components/navigation/MainMenu";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Loader2, MessageCircleMore } from "lucide-react";
+import { LayoutGrid, Loader2, MessageCircleMore, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import WelcomeContainer from "@/components/virgil/WelcomeContainer";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface DbPrompt {
   id: number;
@@ -216,11 +215,23 @@ const VirgilModes: React.FC = () => {
       <Sheet open={showHistory} onOpenChange={setShowHistory}>
         <SheetContent 
           side="right" 
-          className="p-0 w-[320px] max-w-full border-0 bg-[#332E38] rounded-l-2xl"
+          className="p-0 w-[320px] max-w-full border-0 bg-[#2A282A] text-[#E9E7E2] rounded-l-2xl"
         >
-          <SidebarProvider defaultOpen={true}>
+          <div className="flex justify-between items-center p-4 border-b border-[#E9E7E2]/10">
+            <h2 className="text-lg font-serif">Conversation History</h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowHistory(false)}
+              className="h-8 w-8 rounded-full text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          <div className="overflow-y-auto h-[calc(100vh-60px)]">
             <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
-          </SidebarProvider>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
