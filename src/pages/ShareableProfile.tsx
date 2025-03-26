@@ -1,10 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { X, Share, Hexagon } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { useFormatText } from "@/hooks/useFormatText";
 
 interface ProfileData {
   id: string;
@@ -22,6 +25,8 @@ interface DNAAnalysisResult {
   assessment_id: string;
   archetype: string | null;
   introduction: string | null;
+  most_kindred_spirit: string | null;
+  most_challenging_voice: string | null;
   created_at: string;
 }
 
@@ -45,6 +50,8 @@ const DEFAULT_ANALYSIS: DNAAnalysisResult = {
   assessment_id: FIXED_ASSESSMENT_ID,
   archetype: "Twilight Navigator",
   introduction: "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.",
+  most_kindred_spirit: "Simone Weil - You share her gift of holding paradoxes in creative tension, finding meaning in the difficult spaces between competing worldviews.",
+  most_challenging_voice: "Friedrich Nietzsche - His ruthless naturalism and rejection of transcendent meaning challenges your tendency to find pattern and purpose in complex systems.",
   created_at: new Date().toISOString()
 };
 // ---------------------------------------------------------------------------------
@@ -53,6 +60,7 @@ const ShareableProfile: React.FC = () => {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { formatText } = useFormatText();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -74,42 +82,6 @@ const ShareableProfile: React.FC = () => {
           
           // TODO: Fix the profile lookup
           // Currently using a fixed profile (Alex Jakubowski) instead of looking up in the database
-          // Original code:
-          /*
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .ilike('full_name', decodedName)
-            .maybeSingle();
-            
-          if (data && !error) {
-            const profileData = data as ProfileData;
-            setProfileData(profileData);
-            
-            if (profileData.landscape_image) {
-              setLandscapeImage(profileData.landscape_image);
-            }
-            
-            if (profileData.profile_image) {
-              setProfileImage(profileData.profile_image);
-            }
-            
-            // Now fetch the DNA analysis for this user
-            const { data: analysisData, error: analysisError } = await supabase
-              .from('dna_analysis_results')
-              .select('id, assessment_id, archetype, introduction, created_at')
-              .eq('assessment_id', FIXED_ASSESSMENT_ID)
-              .maybeSingle();
-              
-            if (analysisData && !analysisError) {
-              setAnalysisResult(analysisData as DNAAnalysisResult);
-            }
-          } else {
-            console.error("Error fetching profile data:", error);
-            // Navigate to DNA if profile not found
-            navigate('/dna');
-          }
-          */
           
           // Using default profile data instead of database lookup for now
           console.log("Using default profile data");
@@ -123,7 +95,6 @@ const ShareableProfile: React.FC = () => {
           console.error("Exception fetching profile:", e);
           // FUTURE EDIT POINT: Don't navigate to /dna on error, just use default profile
           // ---------------------------------------------------------------------------------
-          // Original code: navigate('/dna');
           console.log("Error occurred, using default profile data");
           setProfileData(DEFAULT_PROFILE);
           setLandscapeImage(DEFAULT_PROFILE.landscape_image || null);
@@ -143,40 +114,6 @@ const ShareableProfile: React.FC = () => {
     navigate('/dna');
   };
   
-  const handleShareClick = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${profileData?.full_name}'s Profile`,
-          text: `Check out ${profileData?.full_name}'s reading profile!`,
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        toast({
-          title: "Link copied!",
-          description: "Profile link copied to clipboard",
-        });
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        toast({
-          title: "Link copied!",
-          description: "Profile link copied to clipboard",
-        });
-      } catch (clipboardError) {
-        console.error('Error copying to clipboard:', clipboardError);
-        toast({
-          title: "Share failed",
-          description: "Unable to share or copy link",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-  
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#2A282A] text-[#E9E7E2]">
@@ -185,26 +122,6 @@ const ShareableProfile: React.FC = () => {
     );
   }
   
-  // FUTURE EDIT POINT: Re-enable this check when using real profiles
-  // ---------------------------------------------------------------------------------
-  // Original code:
-  /*
-  if (!profileData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#2A282A] text-[#E9E7E2]">
-        <p>Profile not found</p>
-        <Button 
-          onClick={() => navigate('/dna')} 
-          className="mt-4 bg-[#373763] text-[#E9E7E2]"
-        >
-          Return Home
-        </Button>
-      </div>
-    );
-  }
-  */
-  // ---------------------------------------------------------------------------------
-  
   const fullName = profileData?.full_name || "Alex Jakubowski";
   const firstName = fullName.split(' ')[0] || "Alex";
   const lastName = fullName.split(' ').slice(1).join(' ') || "Jakubowski";
@@ -212,10 +129,19 @@ const ShareableProfile: React.FC = () => {
   const archetype = analysisResult?.archetype || "Twilight Navigator";
   const introduction = analysisResult?.introduction || 
     "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.";
+  
+  // FUTURE EDIT POINT: Make sure these match the real user data when implemented
+  // ---------------------------------------------------------------------------------
+  const mostKindredSpirit = analysisResult?.most_kindred_spirit || 
+    "Simone Weil - You share her gift of holding paradoxes in creative tension, finding meaning in the difficult spaces between competing worldviews.";
+  
+  const mostChallengingVoice = analysisResult?.most_challenging_voice || 
+    "Friedrich Nietzsche - His ruthless naturalism and rejection of transcendent meaning challenges your tendency to find pattern and purpose in complex systems.";
+  // ---------------------------------------------------------------------------------
 
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
-      <div className="relative w-full h-80 bg-[#2A282A]">
+      <div className="relative w-full h-64 bg-[#2A282A]">
         {/* Close button */}
         <Button 
           onClick={handleCloseClick}
@@ -239,8 +165,8 @@ const ShareableProfile: React.FC = () => {
         
         {/* Profile content centered */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 pt-10">
-          {/* Profile image in hexagon */}
-          <div className="relative h-24 w-24 mb-4">
+          {/* Profile image in hexagon - Using the same styling as the profile page */}
+          <div className="relative h-20 w-20 mb-3">
             <svg 
               viewBox="0 0 100 100" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -259,56 +185,76 @@ const ShareableProfile: React.FC = () => {
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
             >
-              {profileImage ? (
-                <img 
-                  src={profileImage} 
-                  alt={fullName} 
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
-                  <span className="text-2xl font-semibold">{initials}</span>
-                </div>
-              )}
+              <Avatar className="h-full w-full overflow-hidden rounded-none">
+                <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
+                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
           
           {/* Name and archetype */}
           <h1 className="text-2xl font-serif text-center">{fullName}</h1>
-          <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic text-center mb-4">
+          <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic text-center">
             {archetype}
-          </p>
-          
-          {/* Introduction text */}
-          <p className="text-sm font-oxanium text-[#E9E7E2]/80 text-center max-w-md">
-            {introduction}
           </p>
         </div>
       </div>
       
-      {/* Action buttons section at bottom */}
-      <div className="w-full px-6 py-4 flex justify-center mt-auto">
-        <div className="flex gap-4">
-          <Button 
-            variant="ghost" 
-            onClick={handleShareClick}
-            className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-6 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2"
-            aria-label="Share profile"
-          >
-            SHARE PROFILE
-            <Share className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            onClick={handleCloseClick}
-            className="bg-[#383741] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-6 py-2 hover:bg-[#383741]/90 transition-colors flex items-center justify-center gap-2"
-            aria-label="View full profile"
-          >
-            VIEW FULL PROFILE
-            <Hexagon className="h-4 w-4" />
-          </Button>
+      {/* Content area below the landscape image */}
+      <div className="w-full px-6 py-8 flex flex-col items-center">
+        {/* Introduction text */}
+        <div className="max-w-lg mb-8">
+          <p className="text-sm font-oxanium text-[#E9E7E2]/80 text-center">
+            {introduction}
+          </p>
         </div>
+        
+        {/* FUTURE EDIT POINT: Update these sections with real data */}
+        {/* ------------------------------------------------------------------- */}
+        {/* Most Kindred Spirit section */}
+        <Card className="w-full max-w-lg mb-6 bg-[#373763]/20 border-[#373763] text-[#E9E7E2]">
+          <CardContent className="py-4">
+            <div className="flex flex-col space-y-2">
+              <h3 className="text-lg font-oxanium uppercase tracking-wide text-[#CCFF23]">Most Kindred Spirit</h3>
+              <p className="text-sm font-oxanium text-[#E9E7E2]/90">
+                {formatText(mostKindredSpirit)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Most Challenging Voice section */}
+        <Card className="w-full max-w-lg mb-8 bg-[#373763]/20 border-[#373763] text-[#E9E7E2]">
+          <CardContent className="py-4">
+            <div className="flex flex-col space-y-2">
+              <h3 className="text-lg font-oxanium uppercase tracking-wide text-[#CCFF23]">Most Challenging Voice</h3>
+              <p className="text-sm font-oxanium text-[#E9E7E2]/90">
+                {formatText(mostChallengingVoice)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        {/* ------------------------------------------------------------------- */}
+      </div>
+      
+      {/* Footer links */}
+      <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
+        <a 
+          href="/dna" 
+          className="text-xl font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
+        >
+          DISCOVER YOUR INTELLECTUAL DNA
+        </a>
+        <a 
+          href="https://www.lightninginspiration.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+        >
+          www.lightninginspiration.com
+        </a>
       </div>
     </div>
   );
