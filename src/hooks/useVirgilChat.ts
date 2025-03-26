@@ -7,16 +7,61 @@ import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
 import conversationManager from '@/services/ConversationManager';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
-export const useVirgilChat = (initialMessage?: string) => {
+export const useVirgilChat = (initialMessage?: string, sessionIdProp?: string, promptData?: any) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const sessionId = useRef(uuidv4()).current;
+  const sessionId = useRef(sessionIdProp || uuidv4()).current;
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (messages.length === 0 && initialMessage) {
+    // If we have a session ID from props, try to load existing messages
+    if (sessionIdProp) {
+      const loadExistingMessages = async () => {
+        try {
+          // Load messages from conversationManager first
+          const existingMessages = conversationManager.getHistory(sessionIdProp);
+          
+          if (existingMessages && existingMessages.length > 0) {
+            // Convert to ChatMessage format
+            const chatMessages: ChatMessage[] = existingMessages.map(msg => ({
+              id: uuidv4(),
+              content: msg.content,
+              role: msg.role,
+              audioUrl: msg.audioUrl,
+            }));
+            
+            setMessages(chatMessages);
+            return;
+          } 
+          
+          // If we don't have messages locally, check if we need to add initial message
+          if (messages.length === 0 && initialMessage) {
+            setMessages([
+              {
+                id: uuidv4(),
+                content: initialMessage,
+                role: 'assistant',
+                isNew: true
+              }
+            ]);
+            
+            setTimeout(() => {
+              generateAudioForText(initialMessage);
+            }, 100);
+          }
+        } catch (error) {
+          console.error('Error loading existing messages:', error);
+        }
+      };
+      
+      loadExistingMessages();
+    } else if (messages.length === 0 && initialMessage) {
+      // Just add initial message if we don't have a session ID
       setMessages([
         {
           id: uuidv4(),
@@ -30,7 +75,45 @@ export const useVirgilChat = (initialMessage?: string) => {
         generateAudioForText(initialMessage);
       }, 100);
     }
-  }, [initialMessage]);
+  }, [initialMessage, sessionIdProp]);
+
+  // Save conversation to history when messages change
+  useEffect(() => {
+    if (messages.length > 0 && promptData) {
+      const saveConversation = async () => {
+        try {
+          // Get the last message for preview
+          const lastMessage = [...messages]
+            .reverse()
+            .find(msg => msg.role === 'user')?.content;
+            
+          const userId = user?.id;
+          
+          const { error } = await supabase
+            .from('virgil_conversations')
+            .upsert({
+              user_id: userId,
+              session_id: sessionId,
+              mode_id: promptData.id,
+              mode_title: promptData.user_title,
+              mode_icon: promptData.icon_display || '💭',
+              last_message: lastMessage,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'session_id'
+            });
+            
+          if (error) {
+            console.error('Error saving conversation:', error);
+          }
+        } catch (err) {
+          console.error('Error in saveConversation:', err);
+        }
+      };
+      
+      saveConversation();
+    }
+  }, [messages, promptData, sessionId, user]);
 
   const generateAudioForText = async (text: string) => {
     try {
@@ -65,7 +148,10 @@ export const useVirgilChat = (initialMessage?: string) => {
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
     generateAudioForText(content);
-  }, []);
+    
+    // Add to conversation manager
+    conversationManager.addMessage(sessionId, 'assistant', content);
+  }, [sessionId]);
 
   const processMessage = async (userMessage: string) => {
     setIsProcessing(true);
@@ -87,6 +173,9 @@ export const useVirgilChat = (initialMessage?: string) => {
             : msg
         )
       );
+      
+      // Add to conversation manager
+      conversationManager.addMessage(sessionId, 'assistant', response.text);
       
       generateAudioForText(response.text);
     } catch (error) {
@@ -132,6 +221,9 @@ export const useVirgilChat = (initialMessage?: string) => {
       };
       setMessages(prevMessages => [...prevMessages, newUserMessage]);
       
+      // Add to conversation manager
+      conversationManager.addMessage(sessionId, 'user', displayContent, tempAudioUrl);
+      
       const loadingId = uuidv4();
       setMessages(prevMessages => [
         ...prevMessages, 
@@ -145,6 +237,9 @@ export const useVirgilChat = (initialMessage?: string) => {
             : msg
         )
       );
+      
+      // Add to conversation manager
+      conversationManager.addMessage(sessionId, 'assistant', response.text);
       
       generateAudioForText(response.text);
     } catch (error) {
@@ -214,6 +309,9 @@ export const useVirgilChat = (initialMessage?: string) => {
       role: 'user'
     };
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
+    
+    // Add to conversation manager
+    conversationManager.addMessage(sessionId, 'user', userMessage);
     
     await processMessage(userMessage);
   };

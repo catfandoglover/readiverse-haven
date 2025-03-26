@@ -13,11 +13,13 @@ interface PromptData {
   section?: string;
   icon_display?: string;
   context?: string;
-  initial_message: string;
+  initial_message?: string;
+  session_id?: string;
 }
 
 interface LocationState {
   promptData?: PromptData;
+  isExistingConversation?: boolean;
 }
 
 const VirgilChat: React.FC = () => {
@@ -30,9 +32,17 @@ const VirgilChat: React.FC = () => {
   const promptData = locationState?.promptData;
   const initialMessage = promptData?.initial_message || 
     "I'm Virgil, your philosophical guide to humanity's great conversation. How can I help you explore ideas today?";
+  
+  const isExistingConversation = locationState?.isExistingConversation || false;
+  const sessionId = promptData?.session_id;
 
-  // Initial animation timing
+  // Initial animation timing - skip for existing conversations
   useEffect(() => {
+    if (isExistingConversation) {
+      setState('chat');
+      return;
+    }
+    
     const timer = setTimeout(() => {
       setState('transitioning');
       
@@ -47,7 +57,7 @@ const VirgilChat: React.FC = () => {
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  }, [isExistingConversation]);
 
   const handleBack = () => {
     navigate('/virgil-modes');
@@ -84,7 +94,7 @@ const VirgilChat: React.FC = () => {
         <div 
           className={cn(
             "flex flex-col items-center justify-center text-center transition-all duration-500 px-6",
-            state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
+            (state === 'initial' && !isExistingConversation) ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
           <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">
@@ -96,12 +106,14 @@ const VirgilChat: React.FC = () => {
         </div>
         
         {/* Chat interface - only shows after transition */}
-        {state === 'chat' && (
+        {(state === 'chat' || isExistingConversation) && (
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
               variant="virgilchat"
               initialMessage={initialMessage}
               resultsReady={false}
+              sessionIdProp={sessionId}
+              promptData={promptData}
             />
           </div>
         )}

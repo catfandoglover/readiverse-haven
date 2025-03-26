@@ -1676,6 +1676,42 @@ export type Database = {
         }
         Relationships: []
       }
+      virgil_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message: string | null
+          mode_icon: string
+          mode_id: string
+          mode_title: string
+          session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          mode_icon: string
+          mode_id: string
+          mode_title: string
+          session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          mode_icon?: string
+          mode_id?: string
+          mode_title?: string
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       decision_tree_view: {

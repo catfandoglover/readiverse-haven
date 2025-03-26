@@ -7,7 +7,6 @@ import { useVirgilChat } from '@/hooks/useVirgilChat';
 import MessageBubble from './MessageBubble';
 import ChatInputForm from './ChatInputForm';
 import { ChatVariant } from '@/types/chat';
-import { Button } from "@/components/ui/button";
 
 interface VirgilFullScreenChatProps {
   variant?: ChatVariant;
@@ -15,6 +14,8 @@ interface VirgilFullScreenChatProps {
   resultsReady?: boolean;
   onViewResults?: () => void;
   disableChat?: boolean;
+  sessionIdProp?: string;
+  promptData?: any;
 }
 
 const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({ 
@@ -22,7 +23,9 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   initialMessage,
   resultsReady = false,
   onViewResults,
-  disableChat = false
+  disableChat = false,
+  sessionIdProp,
+  promptData
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
@@ -34,7 +37,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     toggleRecording,
     handleSubmitMessage,
     addAssistantMessage
-  } = useVirgilChat(initialMessage);
+  } = useVirgilChat(initialMessage, sessionIdProp, promptData);
 
   const themeColors = chatThemes[variant];
 
