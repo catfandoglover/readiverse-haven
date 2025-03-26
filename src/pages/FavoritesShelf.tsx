@@ -26,7 +26,7 @@ const FavoritesShelf: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
-          FAVORITES SHELF
+          FAVORITES
         </h2>
         {/* Empty div to balance the layout */}
         <div className="w-10"></div>
