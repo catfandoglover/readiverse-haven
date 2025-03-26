@@ -175,7 +175,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
       <SheetContent side="right" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
         <nav className="flex flex-col gap-8 mt-10">
           <div className="px-2">
-            <h2 className="text-xl font-baskerville mb-8 font-bold font-[#E9E7E2]">Conversations</h2>
+            <h2 className="text-xl font-baskerville mb-8 font-[#E9E7E2]">Conversations</h2>
             {loading ? (
               <div className="flex-1 flex items-center justify-center p-4">
                 <p className="text-[#E9E7E2]/70">Loading conversations...</p>
