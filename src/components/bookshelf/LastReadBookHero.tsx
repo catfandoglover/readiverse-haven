@@ -30,7 +30,7 @@ const LastReadBookHero = () => {
   if (isLoading) {
     return (
       <div className="px-4 mb-4">
-        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-44 w-full rounded-2xl" />
       </div>
     );
   }
@@ -48,7 +48,7 @@ const LastReadBookHero = () => {
   return (
     <div className="px-4 mb-6">
       <div 
-        className="relative h-40 w-full rounded-2xl overflow-hidden cursor-pointer"
+        className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleResumeReading}
       >
         {/* Background Image with Blur and Dark Overlay */}
