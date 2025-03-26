@@ -1,62 +1,36 @@
+
 import React from "react";
-import { Search } from "lucide-react";
+import { Heart } from "lucide-react";
 import MainMenu from "../navigation/MainMenu";
 import { LoginButtons } from "@/components/auth/LoginButtons";
-
-type TabType = "bookshelf" | "favorites";
+import { Toggle } from "@/components/ui/toggle";
 
 interface BookshelfHeaderProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
+  showFavorites: boolean;
+  onToggleFavorites: () => void;
 }
 
-const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ activeTab, onTabChange }) => {
+const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({ 
+  showFavorites, 
+  onToggleFavorites 
+}) => {
   return (
-    <header 
-      className="absolute top-0 left-0 right-0 z-10 bg-[#2A282A]/40 backdrop-blur-sm"
-      style={{
-        aspectRatio: "1290/152",
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-        maxHeight: "152px"
-      }}
-    >
-      <div className="flex items-center px-4 py-3 h-full w-full">
-        <div className="flex-none">
-          <MainMenu />
-        </div>
-        <div className="flex-1 flex items-center space-x-8 pl-5">
-          <button
-            className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-              activeTab === "bookshelf" 
-                ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                : "text-[#E9E7E2]/60"
-            }`}
-            onClick={() => onTabChange("bookshelf")}
-          >
-            BOOKSHELF
-          </button>
-          <button
-            className={`py-2 relative whitespace-nowrap uppercase font-oxanium text-xs ${
-              activeTab === "favorites" 
-                ? "text-[#E9E7E2] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#D5B8FF]" 
-                : "text-[#E9E7E2]/60"
-            }`}
-            onClick={() => onTabChange("favorites")}
-          >
-            FAVORITES
-          </button>
-          <div className="flex-1 flex justify-end items-center gap-4">
-            <button 
-              className="h-4 w-4 inline-flex items-center justify-center rounded-full bg-[#E9E7E2]/90 text-[#2A282A]"
-              aria-label="Search"
-            >
-              <Search className="h-2 w-2" />
-            </button>
-            <LoginButtons />
-          </div>
-        </div>
+    <div className="flex items-center pt-4 px-8 bg-[#332E38] text-[#E9E7E2]">
+      <MainMenu />
+      <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+        STUDY
+      </h2>
+      <div>
+        <Toggle 
+          pressed={showFavorites}
+          onPressedChange={onToggleFavorites}
+          aria-label="Toggle Favorites"
+          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50 data-[state=on]:text-[#E9E7E2] data-[state=on]:bg-[#4A4351]/50"
+        >
+          <Heart className={`h-5 w-5 ${showFavorites ? 'fill-current' : ''}`} />
+        </Toggle>
       </div>
-    </header>
+    </div>
   );
 };
 

@@ -7,10 +7,8 @@ import { useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 
-type TabType = "bookshelf" | "favorites";
-
 const NewBookshelf: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("bookshelf");
+  const [showFavorites, setShowFavorites] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
 
@@ -19,19 +17,22 @@ const NewBookshelf: React.FC = () => {
     saveLastVisited('bookshelf', location.pathname);
   }, [location.pathname]);
 
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
+  const handleToggleFavorites = () => {
+    setShowFavorites(!showFavorites);
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#E9E7E2] text-[#2A282A]">
+    <div className="h-screen flex flex-col bg-[#332E38] text-[#E9E7E2]">
       {/* Header */}
-      <BookshelfHeader activeTab={activeTab} onTabChange={handleTabChange} />
+      <BookshelfHeader 
+        showFavorites={showFavorites} 
+        onToggleFavorites={handleToggleFavorites} 
+      />
       
       {/* Main Content */}
-      <div className="flex-1 p-4 pt-32 overflow-hidden">
-        <div className="bg-white rounded-xl p-4 h-full overflow-hidden">
-          {activeTab === "bookshelf" ? <BookshelfContent /> : <FavoritesContent />}
+      <div className="flex-1 p-4 pt-16 overflow-hidden">
+        <div className="bg-white rounded-xl p-4 h-full overflow-hidden text-[#2A282A]">
+          {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
         </div>
       </div>
     </div>
