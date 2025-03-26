@@ -8,10 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface OrderDialogProps {
   title: string;
@@ -66,11 +65,6 @@ const OrderDialog: React.FC<OrderDialogProps> = ({
             <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
         </div>
-        
-        <DialogClose className="absolute right-4 top-4 rounded-full h-8 w-8 flex items-center justify-center opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4 text-black" />
-          <span className="sr-only">Close</span>
-        </DialogClose>
       </DialogContent>
     </Dialog>
   );

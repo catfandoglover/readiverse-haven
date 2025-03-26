@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -127,12 +128,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="p-4 flex items-center justify-between border-b">
               <div className="flex items-center gap-2">
                 <Avatar>
-                  <AvatarImage src={(user as any)?.avatar_url || "/default-avatar.png"} />
-                  <AvatarFallback>{(user as any)?.email ? (user as any).email[0].toUpperCase() : 'U'}</AvatarFallback>
+                  <AvatarImage src={user?.avatar_url} />
+                  <AvatarFallback>{user?.email ? user.email[0].toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">{(user as any)?.user_metadata?.full_name || (user as any)?.email}</div>
-                  <div className="text-sm text-muted-foreground">{(user as any)?.email}</div>
+                  <div className="font-semibold">{user?.user_metadata?.full_name || user?.email}</div>
+                  <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
               <Button variant="destructive" size="sm" onClick={() => logout && logout()}>Sign Out</Button>
