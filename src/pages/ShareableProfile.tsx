@@ -212,8 +212,6 @@ const ShareableProfile: React.FC = () => {
           </p>
         </div>
         
-        {/* FUTURE EDIT POINT: Update these sections with real data */}
-        {/* ------------------------------------------------------------------- */}
         {/* Most Kindred Spirit section - Exactly matching main profile styling */}
         <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-6">
           <div className="flex items-center">
@@ -237,9 +235,12 @@ const ShareableProfile: React.FC = () => {
               <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
             </div>
           </div>
-          <div className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+          <a 
+            href="/icons/detail/294e44ae-5b7b-4651-bb22-16e90bcbd886" 
+            className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
+          >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-          </div>
+          </a>
         </div>
         
         {/* Most Challenging Voice section - Exactly matching main profile styling */}
@@ -265,11 +266,13 @@ const ShareableProfile: React.FC = () => {
               <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
             </div>
           </div>
-          <div className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+          <a 
+            href="/icons/detail/73dd6940-6384-4f90-b9de-26334252ebee" 
+            className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
+          >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-          </div>
+          </a>
         </div>
-        {/* ------------------------------------------------------------------- */}
       </div>
       
       {/* Footer links */}
