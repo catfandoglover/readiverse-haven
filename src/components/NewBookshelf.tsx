@@ -30,10 +30,12 @@ const NewBookshelf: React.FC = () => {
         onToggleFavorites={handleToggleFavorites} 
       />
       
+      {/* Hero section - placed directly below header */}
+      {user && <LastReadBookHero />}
+      
       {/* Main Content */}
-      <div className="flex-1 p-4 pt-16 overflow-hidden">
+      <div className="flex-1 p-4 overflow-hidden">
         <div className="bg-white rounded-xl p-4 h-full overflow-hidden text-[#2A282A]">
-          {user && <LastReadBookHero />}
           {showFavorites ? <FavoritesContent /> : <BookshelfContent />}
         </div>
       </div>

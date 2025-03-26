@@ -25,8 +25,8 @@ const LastReadBookHero = () => {
 
   if (isLoading) {
     return (
-      <div className="mb-4 rounded-2xl overflow-hidden">
-        <Skeleton className="h-64 w-full" />
+      <div className="px-4 mb-4">
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
@@ -39,9 +39,9 @@ const LastReadBookHero = () => {
   const buttonText = lastReadBook.isDefaultBook ? "GET STARTED" : "RESUME";
 
   return (
-    <div className="mb-4 relative rounded-2xl overflow-hidden">
-      {/* Background Image with Blur and Dark Overlay */}
-      <div className="relative h-64 w-full">
+    <div className="px-4 mb-4">
+      <div className="relative h-64 w-full rounded-xl overflow-hidden">
+        {/* Background Image with Blur and Dark Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${coverUrl})` }}
