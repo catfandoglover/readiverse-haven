@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,9 +6,11 @@ import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
 import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   
@@ -28,6 +29,7 @@ const VirgilOffice: React.FC = () => {
           size="icon"
           className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
           aria-label="Chat History"
+          onClick={() => setIsHistorySidebarOpen(true)}
         >
           <MessageCircle className="h-5 w-5" />
         </Button>
@@ -82,6 +84,11 @@ const VirgilOffice: React.FC = () => {
         isOpen={isChatOpen} 
         onClose={() => setIsChatOpen(false)}
         variant="virgilchat"
+      />
+      
+      <ConversationHistorySidebar 
+        open={isHistorySidebarOpen} 
+        onOpenChange={setIsHistorySidebarOpen} 
       />
     </div>
   );
