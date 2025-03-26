@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -213,7 +212,6 @@ const VirgilModes: React.FC = () => {
         )}
       </main>
       
-      {/* Conversation History Sheet */}
       <Sheet open={showHistory} onOpenChange={setShowHistory}>
         <SheetContent 
           side="right" 
