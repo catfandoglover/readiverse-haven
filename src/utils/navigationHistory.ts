@@ -1,4 +1,3 @@
-
 const LAST_VISITED_KEY_PREFIX = 'last-visited-';
 const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 const PREVIOUS_PAGE_KEY = 'previous-page';
@@ -82,8 +81,7 @@ export const getOriginPath = (): string => {
 };
 
 /**
- * Returns the previous page the user visited, excluding the DNA path 
- * to avoid navigation loops caused by the root redirect
+ * Returns the previous page the user visited
  */
 export const getPreviousPage = (): string => {
   // First check navigation history
@@ -95,7 +93,6 @@ export const getPreviousPage = (): string => {
       // Find the last valid page in history (not a detail view)
       for (let i = history.length - 1; i >= 0; i--) {
         const page = history[i];
-        // Don't check if it's /dna anymore, we want to go back to the actual previous page
         if (!page.includes('/view/')) {
           return page;
         }

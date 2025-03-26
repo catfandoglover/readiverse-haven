@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -313,7 +312,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Try to get the original content path from session storage first
+    if (location.state?.sourcePath) {
+      const sourcePath = location.state.sourcePath;
+      console.log("Navigating to source path from location state:", sourcePath);
+      navigate(sourcePath);
+      return;
+    }
+    
     const originPath = getOriginPath();
     if (originPath && originPath !== location.pathname) {
       console.log("Navigating to origin path:", originPath);
@@ -321,7 +326,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // Fallback to fromSection in location state
     if (location.state?.fromSection) {
       const fromSection = location.state.fromSection as keyof typeof sections;
       const lastVisitedPath = getLastVisited(fromSection);
@@ -330,7 +334,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // As a last resort, use navigation history
     const previousPage = getPreviousPage();
     console.log("Previous page from history:", previousPage);
     
@@ -340,7 +343,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
     
-    // If nothing else works, go to discover feed
     console.log("Fallback to For You feed");
     navigate('/discover');
   };
@@ -935,7 +937,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
       <OrderDialog 
         title={combinedData?.title || combinedData?.name || ""}
-        isOpen={isOrderDialogOpen}
+        open={isOrderDialogOpen}
         onClose={() => setIsOrderDialogOpen(false)}
         bookId={combinedData?.id || ""}
       />

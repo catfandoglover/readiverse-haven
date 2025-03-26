@@ -34,7 +34,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const location = useLocation();
   const { addToBookshelf } = useBookshelfManager();
   const { user } = useAuth();
-  useNavigationState();
+  const { getLastContentPath } = useNavigationState();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -118,7 +118,10 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     setSelectedItem(item);
     navigate(`/view/${item.type}/${item.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: getLastContentPath()
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();

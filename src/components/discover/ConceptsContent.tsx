@@ -35,6 +35,8 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { getLastContentPath } = useNavigationState();
+
   useNavigationState();
 
   const { data: concepts = [], isLoading } = useQuery({
@@ -85,7 +87,10 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     setSelectedConcept(concept);
     navigate(`/view/concept/${concept.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: getLastContentPath()
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();

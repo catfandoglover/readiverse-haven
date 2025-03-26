@@ -13,15 +13,17 @@ export const useNavigationState = () => {
     // Store the current path in session storage when it changes
     // This helps us track where the user navigated from
     if (!location.pathname.includes('/view/')) {
-      sessionStorage.setItem('lastContentPath', location.pathname);
-      console.log('Saved last content path:', location.pathname);
+      // Track the exact path for better navigation
+      const currentPath = location.pathname;
+      sessionStorage.setItem('lastContentPath', currentPath);
+      console.log('Saved last content path:', currentPath);
       
       // Also save to the standard navigation history
       const section = location.pathname.includes('/discover') ? 'discover' : 
                       location.pathname.includes('/bookshelf') ? 'bookshelf' : 
                       location.pathname.includes('/profile') ? 'profile' : 'discover';
                       
-      saveLastVisited(section as any, location.pathname);
+      saveLastVisited(section as any, currentPath);
     }
   }, [location.pathname]);
   

@@ -7,7 +7,7 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 
 const IconsFeedPage = () => {
   const navigate = useNavigate();
-  useNavigationState(); // Add this hook to track navigation
+  const { getLastContentPath } = useNavigationState(); // Use the hook and expose getLastContentPath
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
