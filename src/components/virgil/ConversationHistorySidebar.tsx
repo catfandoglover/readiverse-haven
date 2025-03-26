@@ -133,7 +133,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
       <SheetContent side="right" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
         <nav className="flex flex-col gap-8 mt-10">
           <div className="px-2">
-            <h2 className="text-xl font-baskerville mb-8">Conversations</h2>
+            <h2 className="text-xl font-baskerville mb-8 font-bold font-[#E9E7E2]">Conversations</h2>
             {loading ? (
               <div className="flex-1 flex items-center justify-center p-4">
                 <p className="text-[#E9E7E2]/70">Loading conversations...</p>
@@ -147,12 +147,12 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                 >
                   <div className="flex-shrink-0 rounded-full p-3">
                     <div className="h-6 w-6 flex items-center justify-center">
-                      <span className="text-lg">🧠</span>
+                      <span className="text-lg">earth</span>
                     </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                      Grow My Mind
+                      Start a new conversations
                     </h3>
                   </div>
                 </div>
