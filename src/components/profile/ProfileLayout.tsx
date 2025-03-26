@@ -207,7 +207,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </button>
               </div>
               
-              <h2 className="text-lg font-oxanium uppercase mb-3">Key Tensions</h2>
+              <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Key Tensions</h2>
               <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                 <li>
                   {isLoadingIntroduction ? (
@@ -235,7 +235,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </li>
               </ul>
               
-              <h2 className="text-lg font-oxanium uppercase mb-3">Natural Strengths</h2>
+              <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Natural Strengths</h2>
               <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                 <li>
                   {isLoadingIntroduction ? (
@@ -263,7 +263,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </li>
               </ul>
               
-              <h2 className="text-lg font-oxanium uppercase mb-3">Growth Edges</h2>
+              <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Growth Edges</h2>
               <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                 <li>
                   {isLoadingIntroduction ? (
@@ -291,7 +291,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </li>
               </ul>
               
-              <h2 className="text-lg font-oxanium uppercase mb-3">Conclusion</h2>
+              <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Conclusion</h2>
               <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
                 {isLoadingIntroduction ? (
                   <span className="inline-block">Loading...</span>
@@ -301,7 +301,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 )}
               </p>
               
-              <h2 className="text-lg font-oxanium uppercase mb-3">Next Steps</h2>
+              <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Next Steps</h2>
               <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
                 {isLoadingIntroduction ? (
                   <span className="inline-block">Loading...</span>
