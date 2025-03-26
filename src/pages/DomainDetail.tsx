@@ -479,7 +479,7 @@ const DomainDetail: React.FC = () => {
           onClick={() => navigate("/profile")}
           className="p-0 h-auto w-auto hover:bg-transparent"
         >
-          <X className="h-8 w-8 text-white" />
+          <X className="h-8 w-8 text-[#E9E7E2]" />
         </Button>
         
         {/* SCORING SYSTEM - COMMENTED OUT
