@@ -1,9 +1,9 @@
 
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import BookCard from "../BookCard";
 
 const AestheticsContent: React.FC = () => {
   const { data: books, isLoading } = useQuery({
@@ -11,7 +11,7 @@ const AestheticsContent: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("books")
-        .select("id, title, author, cover_url")
+        .select("id, title, author, cover_url, slug, epub_file_url")
         .ilike('category', '%aesthetics%');
       
       if (error) {
@@ -58,15 +58,15 @@ const AestheticsContent: React.FC = () => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {displayBooks.map((book) => (
-        <div key={book.id} className="w-full cursor-pointer group">
-          <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
-            <img
-              src={book.cover_url || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png"}
-              alt={book.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-        </div>
+        <BookCard
+          key={book.id}
+          id={book.id}
+          title={book.title}
+          author={book.author}
+          cover_url={book.cover_url}
+          slug={book.slug}
+          epub_file_url={book.epub_file_url}
+        />
       ))}
     </div>
   );

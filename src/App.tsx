@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/OutsetaAuthContext";
 import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
-import Bookshelf from "@/components/Bookshelf";
+import NewBookshelf from "@/components/NewBookshelf";
 import IntellectualDNA from "./pages/IntellectualDNA";
 import DNAAssessment from "./pages/DNAAssessment";
 import DNACompletionScreen from "./pages/DNACompletionScreen";
@@ -82,7 +82,7 @@ const App = () => (
                 <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/discover/search/questions" element={<GreatQuestions />} />
                 <Route path="/home-old" element={<Home />} /> 
-                <Route path="/bookshelf" element={<Bookshelf />} />
+                <Route path="/bookshelf" element={<NewBookshelf />} />
                 <Route path="/dna" element={<IntellectualDNA />} />
                 <Route path="/dna/priming" element={<DNAPriming />} />
                 <Route path="/dna/:category" element={<DNAAssessment />} />

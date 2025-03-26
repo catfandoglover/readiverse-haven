@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import BookCard from "../BookCard";
 
 interface CustomDomainContentProps {
   domainId: string;
@@ -53,13 +53,11 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
     },
   });
 
-  // Fetch books for this custom domain
   const { data: books, refetch } = useQuery({
     queryKey: ["custom-domain-books", domainId],
     queryFn: async () => {
       if (!user) return [];
 
-      // Get the current authenticated user's UUID from Supabase
       const { data: { user: supabaseUser } } = await supabase.auth.getUser();
       
       if (!supabaseUser) {
@@ -95,7 +93,6 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
 
     setIsSubmitting(true);
     try {
-      // Use outseta_user_id directly from the user context
       const outsetaUserId = user.Account.Uid;
       
       const { error } = await (supabase as any)
@@ -149,15 +146,13 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map((book) => (
-            <div key={book.id} className="w-full cursor-pointer group">
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
-                <img
-                  src={book.cover_url}
-                  alt={book.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-            </div>
+            <BookCard
+              key={book.id}
+              id={book.id}
+              title={book.title}
+              author={book.author}
+              cover_url={book.cover_url}
+            />
           ))}
         </div>
       )}
