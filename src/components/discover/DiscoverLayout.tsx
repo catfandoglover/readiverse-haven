@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -8,6 +7,7 @@ import ConceptsContent from "./ConceptsContent";
 import QuestionsContent from "./QuestionsContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
@@ -15,37 +15,81 @@ const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [detailedViewVisible, setDetailedViewVisible] = useState(false);
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
   const [routeKey, setRouteKey] = useState<string>("route-key-0");
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { getContentType, saveSourcePath } = useNavigationState();
+
+  // Set up source path tracking and initialize route tracking
+  useEffect(() => {
+    // Only track when we enter the discover layout initially
+    if (!initialRoute) {
+      setInitialRoute(location.pathname);
+      console.log("[DiscoverLayout] Initial route set to:", location.pathname);
+      
+      // Set initial tab based on the initial route
+      if (location.pathname.includes('/discover/classics')) {
+        setActiveTab("classics");
+      } else if (location.pathname.includes('/discover/icons')) {
+        setActiveTab("icons");
+      } else if (location.pathname.includes('/discover/concepts')) {
+        setActiveTab("concepts");
+      } else if (location.pathname.includes('/discover/questions')) {
+        setActiveTab("questions");
+      } else {
+        setActiveTab("for-you");
+      }
+    }
+    
+    // Only save non-detail view paths to avoid circular navigation
+    if (!location.pathname.includes('/view/')) {
+      saveSourcePath(location.pathname);
+      console.log("[DiscoverLayout] Saved source path:", location.pathname);
+      
+      // Force remount of content components when route changes
+      if (location.pathname !== initialRoute) {
+        setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
+      }
+    }
+  }, [location.pathname, saveSourcePath, initialRoute]);
+
+  // Update active tab based on the path for non-detail views only
+  useEffect(() => {
+    const showDetailedView = location.pathname.includes('/view/');
+    setDetailedViewVisible(showDetailedView);
+    
+    // Don't change the active tab for detail views - this is key to fixing the issue
+    if (showDetailedView) {
+      console.log("[DiscoverLayout] Detail view detected, preserving current tab:", activeTab);
+      return;
+    }
+    
+    // Otherwise, determine what tab should be active based on the route
+    if (location.pathname.includes('/discover/classics')) {
+      setActiveTab("classics");
+      console.log("[DiscoverLayout] Set active tab to classics from discover route");
+    } else if (location.pathname.includes('/discover/icons')) {
+      setActiveTab("icons");
+      console.log("[DiscoverLayout] Set active tab to icons from discover route");
+    } else if (location.pathname.includes('/discover/concepts')) {
+      setActiveTab("concepts");
+      console.log("[DiscoverLayout] Set active tab to concepts from discover route");
+    } else if (location.pathname.includes('/discover/questions')) {
+      setActiveTab("questions");
+      console.log("[DiscoverLayout] Set active tab to questions from discover route");
+    } else if (location.pathname === '/discover') {
+      setActiveTab("for-you");
+      console.log("[DiscoverLayout] Set active tab to for-you from discover route");
+    }
+  }, [location.pathname, activeTab]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setCurrentIndex(0);
   };
-
-  useEffect(() => {
-    const showDetailedView = location.pathname.includes('/view/');
-    setDetailedViewVisible(showDetailedView);
-    
-    // Determine what tab should be active based on the route
-    if (location.pathname.includes('/view/classic/')) {
-      setActiveTab("classics");
-    } else if (location.pathname.includes('/view/icon/')) {
-      setActiveTab("icons");
-    } else if (location.pathname.includes('/view/concept/')) {
-      setActiveTab("concepts");
-    } else if (location.pathname.includes('/view/question/')) {
-      setActiveTab("questions");
-    } else if (location.pathname.includes('/discover/questions')) {
-      setActiveTab("questions");
-    }
-    
-    // Force remount of content components when route type changes
-    setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
-  }, [location.pathname]);
 
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {

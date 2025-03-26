@@ -54,6 +54,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
     fetchDomainData();
   }, []);
   
+  /* SCORING SYSTEM - COMMENTED OUT
   // Calculate the highest progress level across both kindred and challenging resources
   const getHighestProgressLevel = (): number => {
     if (isLoading || !domainAnalysis) {
@@ -97,6 +98,7 @@ const DomainCard: React.FC<DomainCardProps> = ({
   
   // Generate array of 6 levels for display
   const levels = [1, 2, 3, 4, 5, 6];
+  */
 
   return (
     <div 
@@ -111,7 +113,9 @@ const DomainCard: React.FC<DomainCardProps> = ({
             {description}
           </p>
           
+          {/* SCORING SYSTEM - COMMENTED OUT
           <MasteryScore progress={progress} />
+          */}
         </div>
         
         <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">

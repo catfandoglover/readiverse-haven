@@ -1190,6 +1190,7 @@ export type Database = {
           id: string
           illustration: string | null
           notion_id: string
+          Notion_URL: string | null
           question: string
           randomizer: number | null
           related_classics: string[] | null
@@ -1204,6 +1205,7 @@ export type Database = {
           id?: string
           illustration?: string | null
           notion_id: string
+          Notion_URL?: string | null
           question: string
           randomizer?: number | null
           related_classics?: string[] | null
@@ -1218,6 +1220,7 @@ export type Database = {
           id?: string
           illustration?: string | null
           notion_id?: string
+          Notion_URL?: string | null
           question?: string
           randomizer?: number | null
           related_classics?: string[] | null
@@ -1698,6 +1701,18 @@ export type Database = {
       debug_jwt: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_files_batch: {
+        Args: {
+          last_id: string
+          page_size: number
+        }
+        Returns: {
+          id: string
+          folder: string
+          name: string
+          url: string
+        }[]
       }
     }
     Enums: {

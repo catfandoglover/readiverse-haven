@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory } from "@/utils/navigationHistory";
+import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory, getOriginPath } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,9 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
 import OrderDialog from "./OrderDialog";
+import VirgilChatButton from "./VirgilChatButton";
+import ClassicActionsMenu from "./ClassicActionsMenu";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface CarouselItem {
   id: string;
@@ -33,6 +36,16 @@ interface DetailedViewProps {
   onBack?: () => void;
 }
 
+interface OrderDialogProps {
+  bookId: string;
+  title: string;
+  coverUrl: string;
+  amazonUrl: string;
+  bookshopUrl: string;
+  onClose: () => void;
+  open: boolean;
+}
+
 const DetailedView: React.FC<DetailedViewProps> = ({
   type,
   data: itemData,
@@ -41,6 +54,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, openLogin } = useAuth();
+  const { getSourcePath, getFeedSourcePath } = useNavigationState();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
     type === "icon" ? "SEEKERS" : "READERS"
@@ -303,34 +317,57 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   }, [user, itemData.id, type]);
 
   const handleBack = () => {
-    console.log("Back button clicked, location state:", location.state);
+    console.log("[DetailedView] Back button clicked", {
+      onBack: !!onBack,
+      locationState: location.state,
+      pathname: location.pathname
+    });
     
+    // Priority 1: Use provided onBack callback if available
     if (onBack) {
+      console.log("[DetailedView] Using onBack callback");
       onBack();
       return;
     }
     
-    const previousPage = getPreviousPage();
-    console.log("Previous page from history:", previousPage);
+    // Priority 2: Get source path from location state
+    if (location.state?.sourcePath) {
+      const sourcePath = location.state.sourcePath;
+      console.log("[DetailedView] Navigating to source path from location state:", sourcePath);
+      navigate(sourcePath);
+      return;
+    }
     
-    if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
-      console.log("Navigating to previous page:", previousPage);
-      navigate(previousPage);
-    } 
-    else if (location.state?.fromSection) {
-      const fromSection = location.state.fromSection as keyof typeof sections;
-      const lastVisitedPath = getLastVisited(fromSection);
-      console.log("Navigating to section:", fromSection, "path:", lastVisitedPath);
-      navigate(lastVisitedPath);
+    // Priority 3: Use getFeedSourcePath for content viewed from feeds
+    // This is CRITICAL to ensure we go back to FOR YOU feed if that's where we came from
+    const contentType = location.pathname.split('/view/')[1]?.split('/')[0];
+    if (contentType && ['icon', 'classic', 'concept', 'question'].includes(contentType)) {
+      const feedPath = getFeedSourcePath();
+      if (feedPath) {
+        console.log("[DetailedView] Navigating to feed source path:", feedPath);
+        navigate(feedPath);
+        return;
+      }
     }
-    else if (window.history.length > 1) {
-      console.log("Using browser history navigation");
-      navigate(-1);
-    } 
-    else {
-      console.log("Fallback to discover page");
-      navigate('/discover');
+    
+    // Priority 4: Fall back to getSourcePath from navigation state hook
+    const sourcePath = getSourcePath();
+    if (sourcePath && sourcePath !== location.pathname) {
+      console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
+      navigate(sourcePath);
+      return;
     }
+    
+    // Priority 5: Use general back navigation as last resort
+    if (window.history.length > 1) {
+      console.log("[DetailedView] Using window.history.back()");
+      window.history.back();
+      return;
+    }
+    
+    // Ultimate fallback to For You feed
+    console.log("[DetailedView] Fallback to For You feed");
+    navigate('/discover');
   };
 
   const handleReadNow = async () => {
@@ -623,6 +660,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
+          <VirgilChatButton
+            contentTitle={combinedData?.title || combinedData?.name || type}
+            contentId={combinedData?.id || ""}
+            contentType={type}
+            className={cn(
+              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            )}
+            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
+          />
+          
           {type === "classic" ? (
             <>
               <button
@@ -635,43 +683,42 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               >
                 <BookOpenText className="h-5 w-5" />
               </button>
+              <ClassicActionsMenu
+                isFavorite={isFavorite}
+                toggleFavorite={toggleFavorite}
+                handleOrder={handleOrder}
+                handleShare={handleShare}
+                shouldBlurHeader={shouldBlurHeader}
+              />
+            </>
+          ) : (
+            <>
               <button
                 className={cn(
                   "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
                   shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
                 )}
-                aria-label="Order"
-                onClick={handleOrder}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                onClick={toggleFavorite}
               >
-                <ShoppingCart className="h-5 w-5" />
+                <Star 
+                  className="h-5 w-5" 
+                  fill={isFavorite ? "#EFFE91" : "none"} 
+                  stroke={shouldBlurHeader ? "#2A282A" : "white"}
+                />
+              </button>
+              <button
+                className={cn(
+                  "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                )}
+                aria-label="Share"
+                onClick={handleShare}
+              >
+                <Share className="h-5 w-5" />
               </button>
             </>
-          ) : (
-            <button
-              className={cn(
-                "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-              )}
-              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-              onClick={toggleFavorite}
-            >
-              <Star 
-                className="h-5 w-5" 
-                fill={isFavorite ? "#EFFE91" : "none"} 
-                stroke={shouldBlurHeader ? "#2A282A" : "white"}
-              />
-            </button>
           )}
-          <button
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            aria-label="Share"
-            onClick={handleShare}
-          >
-            <Share className="h-5 w-5" />
-          </button>
         </div>
       </div>
     </header>
@@ -704,7 +751,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                 <h4 className={cn(
                   "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
                   "w-36 break-words line-clamp-2",
-                  type === "classics" ? "text-white" : "text-[#2A282A]"
+                  type === "classic" ? "text-white" : "text-[#2A282A]"
                 )}>
                   {item[textKey]}
                 </h4>
@@ -894,32 +941,35 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
                 <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
-                <p className="text-gray-800 font-baskerville text-lg">{formatText(combinedData.great_question_connection)}</p>
+                <p className="text-gray-800 font-baskerville text-lg">
+                  {formatText(combinedData.great_question_connection)}
+                </p>
               </div>
             ) : null}
 
             {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question", "question")}
-
+            
             {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
-
-            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
-
+            
             {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
+            
+            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
             
             <div className="h-32"></div>
           </div>
         </div>
       </div>
-
-      <OrderDialog 
-        title={combinedData?.title || combinedData?.name || ""} 
-        amazonLink={combinedData?.amazon_link}
-        open={isOrderDialogOpen}
-        onOpenChange={setIsOrderDialogOpen}
-      />
+      
+      {isOrderDialogOpen && (
+        <OrderDialog
+          title={combinedData?.title}
+          amazonLink={combinedData?.amazon_link}
+          open={isOrderDialogOpen}
+          onOpenChange={() => setIsOrderDialogOpen(false)}
+        />
+      )}
     </div>
   );
 };
 
 export default DetailedView;
-

@@ -8,6 +8,11 @@ interface MasteryScoreProps {
   showText?: boolean;
 }
 
+/* SCORING SYSTEM - COMMENTED OUT BUT PRESERVED FOR FUTURE USE
+ * This component displays a visual representation of mastery levels based on progress
+ * It shows a series of hexagons that fill based on the current mastery level
+ * Each level corresponds to a different stage name (from SCRIBE to CREATOR)
+ */
 const MasteryScore = ({ progress, compact = false, showText = true }: MasteryScoreProps) => {
   // Convert progress percentage to level (1-6)
   const currentLevel = getProgressLevel(progress);

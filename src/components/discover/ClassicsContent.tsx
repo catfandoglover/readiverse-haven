@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface ForYouContentItem {
   id: string;
@@ -34,6 +34,8 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const location = useLocation();
   const { addToBookshelf } = useBookshelfManager();
   const { user } = useAuth();
+  const { getLastContentPath, saveSourcePath, getSourcePath } = useNavigationState();
+  const params = useParams();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -89,8 +91,8 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       const type = parts[2];
       const id = parts[3];
       
-      if (type && id) {
-        const item = classicsItems.find(item => item.id === id && item.type === type);
+      if (type === 'classic' && id) {
+        const item = classicsItems.find(item => item.id === id);
         if (item) {
           setSelectedItem(item);
           if (onDetailedViewShow) onDetailedViewShow();
@@ -98,6 +100,15 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       }
     }
   }, [location.pathname, classicsItems, onDetailedViewShow]);
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    if (!currentPath.includes('/view/')) {
+      saveSourcePath(currentPath);
+      console.log('[ClassicsContent] Saved source path:', currentPath);
+    }
+  }, [location.pathname, saveSourcePath]);
 
   const handlePrevious = () => {
     if (displayIndex > 0) {
@@ -114,12 +125,13 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const itemToShow = classicsItems[displayIndex % Math.max(1, classicsItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
-    saveLastVisited('discover', location.pathname);
-    
     setSelectedItem(item);
     navigate(`/view/${item.type}/${item.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: getSourcePath()
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -127,9 +139,11 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
-    const previousPath = getPreviousPage();
-    console.log("Navigating back to previous page:", previousPath);
-    navigate(previousPath, { replace: true });
+    
+    const sourcePath = getSourcePath();
+    console.log("[ClassicsContent] Navigating back to:", sourcePath);
+    
+    navigate(sourcePath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
   };
@@ -190,10 +204,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       {selectedItem && (
         <DetailedView
           type={selectedItem.type}
-          data={{
-            ...selectedItem,
-            ...mockRelatedData
-          }}
+          data={selectedItem}
           onBack={handleCloseDetailedView}
         />
       )}

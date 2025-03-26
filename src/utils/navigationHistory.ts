@@ -1,4 +1,3 @@
-
 const LAST_VISITED_KEY_PREFIX = 'last-visited-';
 const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 const PREVIOUS_PAGE_KEY = 'previous-page';
@@ -62,12 +61,27 @@ export const saveLastVisited = (section: keyof typeof sections, path: string) =>
  * Gets the last visited path for a specific section or returns the default path
  */
 export const getLastVisited = (section: keyof typeof sections): string => {
-  return localStorage.getItem(`${LAST_VISITED_KEY_PREFIX}${section}`) || sections[section];
+  const path = localStorage.getItem(`${LAST_VISITED_KEY_PREFIX}${section}`);
+  console.log(`Retrieved last visited for ${section}:`, path);
+  return path || sections[section];
 };
 
 /**
- * Returns the previous page the user visited, excluding the DNA path 
- * to avoid navigation loops caused by the root redirect
+ * Returns the original content path the user was viewing before entering a detail view
+ */
+export const getOriginPath = (): string => {
+  const sessionPath = sessionStorage.getItem('lastContentPath');
+  if (sessionPath) {
+    console.log("Found origin path in session:", sessionPath);
+    return sessionPath;
+  }
+  
+  // Fall back to previous page from history
+  return getPreviousPage();
+};
+
+/**
+ * Returns the previous page the user visited
  */
 export const getPreviousPage = (): string => {
   // First check navigation history
@@ -79,7 +93,6 @@ export const getPreviousPage = (): string => {
       // Find the last valid page in history (not a detail view)
       for (let i = history.length - 1; i >= 0; i--) {
         const page = history[i];
-        // Don't check if it's /dna anymore, we want to go back to the actual previous page
         if (!page.includes('/view/')) {
           return page;
         }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { getPreviousPage } from "@/utils/navigationHistory";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface Icon {
   id: string;
@@ -52,10 +52,18 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-
+  const { saveSourcePath } = useNavigationState();
+  
   useEffect(() => {
     setDisplayIndex(currentIndex);
   }, [currentIndex]);
+
+  useEffect(() => {
+    if (!location.pathname.includes('/view/')) {
+      saveSourcePath(location.pathname);
+      console.log('[IconsContent] Saved source path:', location.pathname);
+    }
+  }, [location.pathname, saveSourcePath]);
 
   const { data: icons = [], isLoading, refetch } = useQuery({
     queryKey: ["icons", loadedCount],
@@ -179,13 +187,13 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handleLearnMore = (icon: Icon) => {
-    saveLastVisited('discover', location.pathname);
-    console.log("Saving current location before viewing icon:", location.pathname);
-    
     setSelectedIcon(icon);
     navigate(`/view/icon/${icon.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: location.pathname
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -243,6 +251,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             image={iconToShow.illustration}
             title={iconToShow.name}
             about={iconToShow.about || ""}
+            itemId={iconToShow.id}
+            itemType="icon"
             onLearnMore={() => handleLearnMore(iconToShow)}
             onImageClick={() => handleLearnMore(iconToShow)}
             onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}

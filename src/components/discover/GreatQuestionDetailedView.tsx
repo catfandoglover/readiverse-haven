@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
+import VirgilChatButton from "./VirgilChatButton";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface CarouselItem {
   id: string;
@@ -36,6 +38,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const location = useLocation();
   const { user, openLogin } = useAuth();
   const { toast } = useToast();
+  const { getSourcePath } = useNavigationState();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -199,36 +202,46 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   }, [user, itemData.id]);
 
   const handleBack = () => {
-    console.log("Back button clicked, location state:", location.state);
+    console.log("[GreatQuestionDetailedView] Back button clicked", {
+      onBack: !!onBack,
+      locationState: location.state,
+      pathname: location.pathname
+    });
     
     if (onBack) {
+      console.log("[GreatQuestionDetailedView] Using onBack callback");
       onBack();
       return;
     }
     
+    if (location.state?.sourcePath) {
+      const sourcePath = location.state.sourcePath;
+      console.log("[GreatQuestionDetailedView] Navigating to source path from location state:", sourcePath);
+      navigate(sourcePath);
+      return;
+    }
+    
+    const sourcePath = getSourcePath();
+    if (sourcePath && sourcePath !== location.pathname) {
+      console.log("[GreatQuestionDetailedView] Navigating to source path from hook:", sourcePath);
+      navigate(sourcePath);
+      return;
+    }
+    
     if (window.history.length > 1) {
-      console.log("Using browser history navigation");
+      console.log("[GreatQuestionDetailedView] Using window.history.back()");
       window.history.back();
       return;
     }
     
-    const previousPage = getPreviousPage();
-    console.log("Previous page from history:", previousPage);
-    
-    if (previousPage && previousPage !== location.pathname) {
-      console.log("Navigating to previous page:", previousPage);
-      navigate(previousPage);
-      return;
-    }
-    
-    console.log("Fallback to discover/search page");
-    navigate('/discover/search');
+    console.log("[GreatQuestionDetailedView] Fallback to For You feed");
+    navigate('/discover');
   };
 
   const handleShare = async () => {
     try {
       const shareUrl = `${window.location.origin}/view/question/${combinedData.id}`;
-      const shareTitle = combinedData.question || "Great Question";
+      const shareTitle = combinedData?.question || "Great Question";
       const shareText = combinedData.great_conversation || `Check out this great question!`;
       
       if (navigator.share) {
@@ -371,6 +384,16 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
+          <VirgilChatButton
+            contentTitle={combinedData?.question || "Great Question"}
+            contentId={combinedData?.id || ""}
+            contentType="question"
+            className={cn(
+              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            )}
+            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
+          />
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",

@@ -1,11 +1,14 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation } from "react-router-dom";
-import { saveLastVisited, getPreviousPage } from "@/utils/navigationHistory";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { getPreviousPage } from "@/utils/navigationHistory";
+import { useNavigationState } from "@/hooks/useNavigationState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Concept {
   id: string;
@@ -30,9 +33,12 @@ interface ConceptsContentProps {
 
 const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
+  const [conceptIndex, setConceptIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
+  const { saveSourcePath, getSourcePath } = useNavigationState();
 
   const { data: concepts = [], isLoading } = useQuery({
     queryKey: ["concepts"],
@@ -41,7 +47,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         .from("concepts")
         .select("*")
         .order("randomizer");
-
+      
       if (error) {
         toast({
           variant: "destructive",
@@ -51,19 +57,23 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         return [];
       }
 
-      if (data && data.length > 0) {
-        console.log("First concept data:", data[0]);
-      }
-
       return data.map((concept: any) => ({
         ...concept,
+        type: "concept",
         about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
+        image: concept.illustration,
       }));
     },
   });
 
+  // Update conceptIndex when props change
+  useEffect(() => {
+    setConceptIndex(currentIndex);
+  }, [currentIndex]);
+
+  // Handle URL-based navigation and detailed view visibility
   useEffect(() => {
     if (location.pathname.includes('/view/concept/')) {
       const conceptId = location.pathname.split('/view/concept/')[1];
@@ -76,16 +86,42 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     }
   }, [location.pathname, concepts, onDetailedViewShow]);
 
-  const conceptToShow = concepts[currentIndex % Math.max(1, concepts.length)] || null;
-  
-  const handleLearnMore = (concept: Concept) => {
-    saveLastVisited('discover', location.pathname);
-    console.log("Saving current location before viewing concept:", location.pathname);
+  // Save the current path for proper back navigation - this is critical
+  useEffect(() => {
+    const currentPath = location.pathname;
     
+    if (!currentPath.includes('/view/')) {
+      // This will store the current feed page as the source path
+      saveSourcePath(currentPath);
+      console.log('[ConceptsContent] Saved source path:', currentPath);
+    }
+  }, [location.pathname, saveSourcePath]);
+
+  const handleNextConcept = () => {
+    if (concepts.length === 0) return;
+    const newIndex = (conceptIndex + 1) % concepts.length;
+    setConceptIndex(newIndex);
+  };
+
+  const handlePrevConcept = () => {
+    if (concepts.length === 0) return;
+    const newIndex = (conceptIndex - 1 + concepts.length) % concepts.length;
+    setConceptIndex(newIndex);
+  };
+
+  const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
+    
+    // Get the current path before navigation to use it as the source path
+    const sourcePath = location.pathname;
+    console.log("[ConceptsContent] Setting source path for detail view:", sourcePath);
+    
     navigate(`/view/concept/${concept.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: sourcePath // Pass the exact current path
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -93,54 +129,44 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   const handleCloseDetailedView = () => {
     setSelectedConcept(null);
-    const previousPath = getPreviousPage();
-    console.log("Navigating back to previous page:", previousPath);
-    navigate(previousPath, { replace: true });
+    
+    const sourcePath = getSourcePath();
+    console.log("[ConceptsContent] Navigating back to:", sourcePath);
+    
+    navigate(sourcePath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  const mockRelatedData = {
-    related_questions: [
-      { id: '1', title: 'What is virtue?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'How do we live virtuously?', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'What is the good life?', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-      { id: '4', title: 'How do virtues relate to happiness?', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-    ],
-    related_classics: [
-      { id: '1', title: 'Nicomachean Ethics', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'The Republic', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'Ethics', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_icons: [
-      { id: '1', title: 'Aristotle', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '2', title: 'Plato', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-      { id: '3', title: 'Confucius', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-    ],
-    related_concepts: [
-      { id: '1', title: 'Eudaimonia', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '2', title: 'Justice', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-      { id: '3', title: 'The Golden Mean', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-    ],
-  };
-
-  if (isLoading || !conceptToShow) {
+  if (isLoading || concepts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="flex flex-col h-full justify-center items-center">
+        <Skeleton className="h-64 w-full mb-4" />
+        <Skeleton className="h-8 w-2/3 mb-2" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
   }
+
+  const currentConcept = concepts[conceptIndex % concepts.length];
 
   return (
     <>
       <div className="h-full">
         <ContentCard
-          image={conceptToShow.illustration}
-          title={conceptToShow.title}
-          about={conceptToShow.about || ""}
-          onLearnMore={() => handleLearnMore(conceptToShow)}
-          onImageClick={() => handleLearnMore(conceptToShow)}
+          image={currentConcept.illustration}
+          title={currentConcept.title}
+          about={currentConcept.about || ""}
+          itemId={currentConcept.id}
+          itemType="concept"
+          onLearnMore={() => handleLearnMore(currentConcept)}
+          onImageClick={() => handleLearnMore(currentConcept)}
+          onPrevious={handlePrevConcept}
+          onNext={handleNextConcept}
+          hasPrevious={concepts.length > 1}
+          hasNext={concepts.length > 1}
         />
       </div>
 
@@ -149,8 +175,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           type="concept"
           data={{
             ...selectedConcept,
-            image: selectedConcept.illustration,
-            ...mockRelatedData
+            image: selectedConcept.illustration
           }}
           onBack={handleCloseDetailedView}
         />
