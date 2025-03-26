@@ -583,7 +583,9 @@ const DomainDetail: React.FC = () => {
                   </div>
                   
                   <div className="ml-2 mb-3">
+                    {/* SCORING SYSTEM - COMMENTED OUT
                     <MasteryScore progress={resource.progress} />
+                    */}
                   </div>
                 </div>
                 
