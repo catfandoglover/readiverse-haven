@@ -1,23 +1,13 @@
+
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation } from "react-router-dom";
-import { getPreviousPage } from "@/utils/navigationHistory";
-import { useBookshelfManager } from "@/hooks/useBookshelfManager";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import GreatQuestionDetailedView from "./GreatQuestionDetailedView";
 import { useNavigationState } from "@/hooks/useNavigationState";
-
-interface ForYouContentItem {
-  id: string;
-  title: string;
-  type: "classic" | "icon" | "concept";
-  image: string;
-  about: string;
-  [key: string]: any;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { useContentData, ContentItem } from "@/hooks/useContentData";
 
 interface ForYouContentProps {
   currentIndex: number;
@@ -25,114 +15,89 @@ interface ForYouContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
-  const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
-  const { toast } = useToast();
+const ForYouLoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4 p-4 pt-16">
+    <div className="rounded-lg bg-gray-700 h-64 w-full"></div>
+    <div className="h-8 bg-gray-700 rounded w-2/3 mt-4"></div>
+    <div className="h-4 bg-gray-700 rounded w-full mt-2"></div>
+    <div className="h-4 bg-gray-700 rounded w-11/12 mt-1"></div>
+    <div className="h-4 bg-gray-700 rounded w-4/5 mt-1"></div>
+  </div>
+);
+
+const ForYouContent: React.FC<ForYouContentProps> = ({ 
+  currentIndex: initialIndex, 
+  onDetailedViewShow, 
+  onDetailedViewHide 
+}) => {
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToBookshelf } = useBookshelfManager();
-  const { user } = useAuth();
-  useNavigationState();
+  const { toast } = useToast();
+  const { saveSourcePath, getSourcePath } = useNavigationState();
 
+  // Use our custom hook for data loading
+  const { 
+    currentItem: itemToShow,
+    currentIndex,
+    setCurrentIndex,
+    items: forYouItems,
+    isLoading,
+    handleNext,
+    handlePrevious,
+    hasNext,
+    hasPrevious
+  } = useContentData({ contentType: 'for-you' });
+
+  // Update index from props if needed
   useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
+    if (initialIndex !== currentIndex) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex, setCurrentIndex, currentIndex]);
 
-  const { data: forYouItems = [], isLoading } = useQuery({
-    queryKey: ["for-you-content"],
-    queryFn: async () => {
-      try {
-        const [booksResponse, iconsResponse, conceptsResponse] = await Promise.all([
-          supabase.from("books").select("*").order("randomizer").limit(5),
-          supabase.from("icons").select("*").order("randomizer").limit(5),
-          supabase.from("concepts").select("*").order("randomizer").limit(5),
-        ]);
+  // Save current path for proper back navigation
+  useEffect(() => {
+    const currentPath = location.pathname;
+    if (!currentPath.includes('/view/')) {
+      saveSourcePath(currentPath);
+      console.log('[ForYouContent] Saved source path:', currentPath);
+    }
+  }, [location.pathname, saveSourcePath]);
 
-        const books = booksResponse.data || [];
-        const icons = iconsResponse.data || [];
-        const concepts = conceptsResponse.data || [];
-
-        const forYouItems: ForYouContentItem[] = [
-          ...books.map((book: any) => ({
-            id: book.id,
-            title: book.title,
-            type: "classic" as const,
-            image: book.icon_illustration || book.Cover_super || "",
-            about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
-            author: book.author,
-            great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
-            Cover_super: book.Cover_super,
-            epub_file_url: book.epub_file_url,
-          })),
-          ...icons.map((icon: any) => ({
-            id: icon.id,
-            title: icon.name,
-            type: "icon" as const,
-            image: icon.illustration,
-            about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-            great_conversation: `${icon.name}'s contributions to philosophical discourse were substantial.`,
-            anecdotes: `Various interesting stories surround ${icon.name}'s life and work.`,
-          })),
-          ...concepts.map((concept: any) => ({
-            id: concept.id,
-            title: concept.title,
-            type: "concept" as const,
-            image: concept.illustration,
-            about: concept.about || `${concept.title} is a significant philosophical concept.`,
-            genealogy: `The historical development of ${concept.title} spans multiple philosophical traditions.`,
-            great_conversation: `${concept.title} has been debated throughout philosophical history.`,
-          })),
-        ];
-
-        return forYouItems.sort(() => Math.random() - 0.5);
-      } catch (error) {
-        console.error("Error fetching For You content:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load personalized content",
-        });
-        return [];
-      }
-    },
-  });
-
+  // Handle URL-based navigation to detailed view
   useEffect(() => {
     if (location.pathname.includes('/view/')) {
       const parts = location.pathname.split('/');
-      const type = parts[2];
+      const type = parts[2] as 'classic' | 'icon' | 'concept' | 'question';
       const id = parts[3];
       
-      if (type && id) {
+      if (id && (!selectedItem || selectedItem.id !== id)) {
         const item = forYouItems.find(item => item.id === id && item.type === type);
         if (item) {
+          console.log(`Found matching ${type} in for-you list:`, item.title || item.name || item.question);
           setSelectedItem(item);
           if (onDetailedViewShow) onDetailedViewShow();
         }
       }
+    } else if (selectedItem) {
+      setSelectedItem(null);
     }
-  }, [location.pathname, forYouItems, onDetailedViewShow]);
+  }, [location.pathname, forYouItems, selectedItem, onDetailedViewShow]);
 
-  const handlePrevious = () => {
-    if (displayIndex > 0) {
-      setDisplayIndex(displayIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (forYouItems.length > 0 && displayIndex < forYouItems.length - 1) {
-      setDisplayIndex(displayIndex + 1);
-    }
-  };
-
-  const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
-
-  const handleLearnMore = (item: ForYouContentItem) => {
+  const handleLearnMore = (item: ContentItem) => {
     setSelectedItem(item);
+    
+    // Get the current path before navigation to use it as the source path
+    const sourcePath = location.pathname;
+    console.log("[ForYouContent] Setting source path for detail view:", sourcePath);
+    
     navigate(`/view/${item.type}/${item.id}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: sourcePath
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -140,40 +105,19 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
-    const previousPath = getPreviousPage();
-    console.log("Navigating back to previous page:", previousPath);
-    navigate(previousPath, { replace: true });
+    
+    const sourcePath = getSourcePath();
+    console.log("[ForYouContent] Navigating back to:", sourcePath);
+    
+    navigate(sourcePath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  const mockRelatedData = {
-    related_questions: [
-      { id: '1', title: 'What is consciousness?', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'How do we know what we know?', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'What is the nature of reality?', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_classics: [
-      { id: '1', title: 'The Republic', image: '/lovable-uploads/c265bc08-f3fa-4292-94ac-9135ec55364a.png' },
-      { id: '2', title: 'Meditations', image: '/lovable-uploads/0b3ab30b-7102-49e1-8698-2332e9765300.png' },
-      { id: '3', title: 'Critique of Pure Reason', image: '/lovable-uploads/687a593e-2e79-454c-ba48-a44b8a6e5483.png' },
-    ],
-    related_icons: [
-      { id: '1', title: 'Plato', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-      { id: '2', title: 'Marcus Aurelius', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '3', title: 'Immanuel Kant', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-    ],
-    related_concepts: [
-      { id: '1', title: 'Epistemology', image: '/lovable-uploads/02bbd817-3b47-48d6-8a12-5b733c564bdc.png' },
-      { id: '2', title: 'Metaphysics', image: '/lovable-uploads/f93bfdea-b6f7-46c0-a96d-c5e2a3b040f1.png' },
-      { id: '3', title: 'Ethics', image: '/lovable-uploads/86219f31-2fab-4998-b68d-a7171a40b345.png' },
-    ],
-  };
-
   if (isLoading || !itemToShow) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="h-full">
+        <ForYouLoadingSkeleton />
       </div>
     );
   }
@@ -181,30 +125,37 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   return (
     <>
       <div className="h-full">
-        <ContentCard
-          image={itemToShow.image}
-          title={itemToShow.title}
-          about={itemToShow.about}
-          itemId={itemToShow.id}
-          itemType={itemToShow.type}
-          onLearnMore={() => handleLearnMore(itemToShow)}
-          onImageClick={() => handleLearnMore(itemToShow)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          hasPrevious={displayIndex > 0}
-          hasNext={displayIndex < forYouItems.length - 1}
-        />
+        {itemToShow && (
+          <ContentCard
+            image={itemToShow.image || itemToShow.illustration || itemToShow.Cover_super || itemToShow.cover_url || ''}
+            title={itemToShow.title || itemToShow.name || itemToShow.question || ''}
+            about={itemToShow.about || ""}
+            itemId={itemToShow.id}
+            itemType={itemToShow.type || 'concept'}
+            onLearnMore={() => handleLearnMore(itemToShow)}
+            onImageClick={() => handleLearnMore(itemToShow)}
+            onPrevious={hasPrevious ? handlePrevious : undefined}
+            onNext={hasNext ? handleNext : undefined}
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+          />
+        )}
       </div>
 
       {selectedItem && (
-        <DetailedView
-          type={selectedItem.type}
-          data={{
-            ...selectedItem,
-            ...mockRelatedData
-          }}
-          onBack={handleCloseDetailedView}
-        />
+        selectedItem.type === 'question' ? (
+          <GreatQuestionDetailedView
+            data={selectedItem}
+            onBack={handleCloseDetailedView}
+          />
+        ) : (
+          <DetailedView
+            key={`${selectedItem.type}-detail-${selectedItem.id}`}
+            type={selectedItem.type as "classic" | "icon" | "concept"}
+            data={selectedItem}
+            onBack={handleCloseDetailedView}
+          />
+        )
       )}
     </>
   );

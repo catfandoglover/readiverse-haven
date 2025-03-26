@@ -1,29 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { getPreviousPage } from "@/utils/navigationHistory";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Concept {
-  id: string;
-  title: string;
-  illustration: string;
-  description?: string;
-  about?: string;
-  genealogy?: string;
-  great_conversation?: string;
-  category?: string;
-  type?: string;
-  randomizer?: number;
-  created_at?: string;
-  introduction?: string;
-}
+import { useContentData, ContentItem } from "@/hooks/useContentData";
 
 interface ConceptsContentProps {
   currentIndex: number;
@@ -31,85 +14,76 @@ interface ConceptsContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
-  const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
-  const [conceptIndex, setConceptIndex] = useState(currentIndex);
-  const { toast } = useToast();
+const ConceptLoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4 p-4 pt-16">
+    <div className="rounded-lg bg-gray-700 h-64 w-full"></div>
+    <div className="h-8 bg-gray-700 rounded w-2/3 mt-4"></div>
+    <div className="h-4 bg-gray-700 rounded w-full mt-2"></div>
+    <div className="h-4 bg-gray-700 rounded w-11/12 mt-1"></div>
+    <div className="h-4 bg-gray-700 rounded w-4/5 mt-1"></div>
+  </div>
+);
+
+const ConceptsContent: React.FC<ConceptsContentProps> = ({ 
+  currentIndex: initialIndex, 
+  onDetailedViewShow, 
+  onDetailedViewHide 
+}) => {
+  const [selectedConcept, setSelectedConcept] = useState<ContentItem | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
+  const { toast } = useToast();
   const { saveSourcePath, getSourcePath } = useNavigationState();
 
-  const { data: concepts = [], isLoading } = useQuery({
-    queryKey: ["concepts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("concepts")
-        .select("*")
-        .order("randomizer");
-      
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load concepts",
-        });
-        return [];
-      }
+  // Use our custom hook for data loading
+  const { 
+    currentItem: conceptToShow,
+    currentIndex,
+    setCurrentIndex,
+    items: concepts,
+    isLoading,
+    handleNext,
+    handlePrevious,
+    hasNext,
+    hasPrevious
+  } = useContentData({ contentType: 'concept' });
 
-      return data.map((concept: any) => ({
-        ...concept,
-        type: "concept",
-        about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
-        genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
-        great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
-        image: concept.illustration,
-      }));
-    },
-  });
-
-  // Update conceptIndex when props change
+  // Update index from props if needed
   useEffect(() => {
-    setConceptIndex(currentIndex);
-  }, [currentIndex]);
-
-  // Handle URL-based navigation and detailed view visibility
-  useEffect(() => {
-    if (location.pathname.includes('/view/concept/')) {
-      const conceptId = location.pathname.split('/view/concept/')[1];
-      const concept = concepts.find(c => c.id === conceptId);
-      
-      if (concept) {
-        setSelectedConcept(concept);
-        if (onDetailedViewShow) onDetailedViewShow();
-      }
+    if (initialIndex !== currentIndex) {
+      setCurrentIndex(initialIndex);
     }
-  }, [location.pathname, concepts, onDetailedViewShow]);
+  }, [initialIndex, setCurrentIndex, currentIndex]);
 
-  // Save the current path for proper back navigation - this is critical
+  // Save the current path for proper back navigation
   useEffect(() => {
     const currentPath = location.pathname;
-    
     if (!currentPath.includes('/view/')) {
-      // This will store the current feed page as the source path
       saveSourcePath(currentPath);
       console.log('[ConceptsContent] Saved source path:', currentPath);
     }
   }, [location.pathname, saveSourcePath]);
 
-  const handleNextConcept = () => {
-    if (concepts.length === 0) return;
-    const newIndex = (conceptIndex + 1) % concepts.length;
-    setConceptIndex(newIndex);
-  };
+  // Handle URL-based navigation to detailed view
+  useEffect(() => {
+    if (location.pathname.includes('/view/concept/')) {
+      const conceptId = location.pathname.split('/view/concept/')[1];
+      
+      if (selectedConcept?.id !== conceptId) {
+        const concept = concepts.find(c => c.id === conceptId || c.slug === conceptId);
+        
+        if (concept) {
+          console.log("Found matching concept in list:", concept.title);
+          setSelectedConcept(concept);
+          if (onDetailedViewShow) onDetailedViewShow();
+        }
+      }
+    } else if (selectedConcept) {
+      setSelectedConcept(null);
+    }
+  }, [location.pathname, concepts, selectedConcept, onDetailedViewShow]);
 
-  const handlePrevConcept = () => {
-    if (concepts.length === 0) return;
-    const newIndex = (conceptIndex - 1 + concepts.length) % concepts.length;
-    setConceptIndex(newIndex);
-  };
-
-  const handleLearnMore = (concept: Concept) => {
+  const handleLearnMore = (concept: ContentItem) => {
     setSelectedConcept(concept);
     
     // Get the current path before navigation to use it as the source path
@@ -120,7 +94,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
       replace: true,
       state: { 
         fromSection: 'discover',
-        sourcePath: sourcePath // Pass the exact current path
+        sourcePath: sourcePath
       }
     });
     
@@ -138,45 +112,39 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  if (isLoading || concepts.length === 0) {
+  if (isLoading || !conceptToShow) {
     return (
-      <div className="flex flex-col h-full justify-center items-center">
-        <Skeleton className="h-64 w-full mb-4" />
-        <Skeleton className="h-8 w-2/3 mb-2" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-3/4" />
+      <div className="h-full">
+        <ConceptLoadingSkeleton />
       </div>
     );
   }
 
-  const currentConcept = concepts[conceptIndex % concepts.length];
-
   return (
     <>
       <div className="h-full">
-        <ContentCard
-          image={currentConcept.illustration}
-          title={currentConcept.title}
-          about={currentConcept.about || ""}
-          itemId={currentConcept.id}
-          itemType="concept"
-          onLearnMore={() => handleLearnMore(currentConcept)}
-          onImageClick={() => handleLearnMore(currentConcept)}
-          onPrevious={handlePrevConcept}
-          onNext={handleNextConcept}
-          hasPrevious={concepts.length > 1}
-          hasNext={concepts.length > 1}
-        />
+        {conceptToShow && (
+          <ContentCard
+            image={conceptToShow.image || conceptToShow.illustration || ''}
+            title={conceptToShow.title || ''}
+            about={conceptToShow.about || ""}
+            itemId={conceptToShow.id}
+            itemType="concept"
+            onLearnMore={() => handleLearnMore(conceptToShow)}
+            onImageClick={() => handleLearnMore(conceptToShow)}
+            onPrevious={hasPrevious ? handlePrevious : undefined}
+            onNext={hasNext ? handleNext : undefined}
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+          />
+        )}
       </div>
 
       {selectedConcept && (
         <DetailedView
+          key={`concept-detail-${selectedConcept.id}`}
           type="concept"
-          data={{
-            ...selectedConcept,
-            image: selectedConcept.illustration
-          }}
+          data={selectedConcept}
           onBack={handleCloseDetailedView}
         />
       )}

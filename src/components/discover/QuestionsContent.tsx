@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import GreatQuestionDetailedView from "./GreatQuestionDetailedView";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useContentData, ContentItem } from "@/hooks/useContentData";
 
 interface QuestionsContentProps {
   currentIndex: number;
@@ -14,19 +14,48 @@ interface QuestionsContentProps {
   onDetailedViewHide: () => void;
 }
 
-const QuestionsContent: React.FC<QuestionsContentProps> = ({
-  currentIndex,
-  onDetailedViewShow,
-  onDetailedViewHide,
+const QuestionLoadingSkeleton = () => (
+  <div className="animate-pulse space-y-4 p-4 pt-16">
+    <div className="rounded-lg bg-gray-700 h-64 w-full"></div>
+    <div className="h-8 bg-gray-700 rounded w-2/3 mt-4"></div>
+    <div className="h-4 bg-gray-700 rounded w-full mt-2"></div>
+    <div className="h-4 bg-gray-700 rounded w-11/12 mt-1"></div>
+    <div className="h-4 bg-gray-700 rounded w-4/5 mt-1"></div>
+  </div>
+);
+
+const QuestionsContent: React.FC<QuestionsContentProps> = ({ 
+  currentIndex: initialIndex, 
+  onDetailedViewShow, 
+  onDetailedViewHide 
 }) => {
+  const [selectedQuestion, setSelectedQuestion] = useState<ContentItem | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { type, slug } = useParams();
-  const [detailViewVisible, setDetailViewVisible] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+  const { toast } = useToast();
   const { saveSourcePath, getSourcePath } = useNavigationState();
 
-  // Save current path for proper back navigation - this is critical
+  // Use our custom hook for data loading
+  const { 
+    currentItem: questionToShow,
+    currentIndex,
+    setCurrentIndex,
+    items: questions,
+    isLoading,
+    handleNext,
+    handlePrevious,
+    hasNext,
+    hasPrevious
+  } = useContentData({ contentType: 'question' });
+
+  // Update index from props if needed
+  useEffect(() => {
+    if (initialIndex !== currentIndex) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex, setCurrentIndex, currentIndex]);
+
+  // Save current path for proper back navigation
   useEffect(() => {
     const currentPath = location.pathname;
     
@@ -37,68 +66,27 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     }
   }, [location.pathname, saveSourcePath]);
 
-  const { data: questions = [], isLoading } = useQuery({
-    queryKey: ["discover-questions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("great_questions")
-        .select("*")
-        .order("randomizer", { ascending: true })
-        .limit(20);
-
-      if (error) {
-        console.error("Error fetching questions:", error);
-        throw error;
-      }
-
-      return data || [];
-    },
-    staleTime: 60000,
-  });
-
+  // Handle URL-based navigation to detailed view
   useEffect(() => {
-    if (type === "question" && slug) {
-      const loadQuestionDetails = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("great_questions")
-            .select("*")
-            .eq("id", slug)
-            .single();
-
-          if (error) throw error;
-
-          if (data) {
-            setSelectedQuestion(data);
-            setDetailViewVisible(true);
-            onDetailedViewShow();
-          }
-        } catch (err) {
-          console.error("Error loading question details:", err);
-          navigate("/discover", { replace: true });
+    if (location.pathname.includes('/view/question/')) {
+      const questionId = location.pathname.split('/view/question/')[1];
+      
+      if (selectedQuestion?.id !== questionId) {
+        const question = questions.find(q => q.id === questionId || q.slug === questionId);
+        
+        if (question) {
+          console.log("Found matching question in list:", question.title || question.question);
+          setSelectedQuestion(question);
+          if (onDetailedViewShow) onDetailedViewShow();
         }
-      };
-
-      loadQuestionDetails();
-    } else {
-      setDetailViewVisible(false);
+      }
+    } else if (selectedQuestion) {
+      setSelectedQuestion(null);
     }
-  }, [type, slug, navigate, onDetailedViewShow]);
+  }, [location.pathname, questions, selectedQuestion, onDetailedViewShow]);
 
-  const handleCloseDetailView = () => {
-    setDetailViewVisible(false);
-    onDetailedViewHide();
-    
-    const sourcePath = getSourcePath();
-    console.log("[QuestionsContent] Navigating back to:", sourcePath);
-    
-    navigate(sourcePath, { replace: true });
-  };
-
-  const handleQuestionSelect = (question: any) => {
+  const handleQuestionSelect = (question: ContentItem) => {
     setSelectedQuestion(question);
-    setDetailViewVisible(true);
-    onDetailedViewShow();
     
     // Get the current path before navigation to use it as the source path
     const sourcePath = location.pathname;
@@ -108,54 +96,55 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
       replace: true,
       state: { 
         fromSection: 'discover',
-        sourcePath: sourcePath // Pass the exact current path
+        sourcePath: sourcePath
       }
     });
+    
+    if (onDetailedViewShow) onDetailedViewShow();
   };
 
-  if (isLoading) {
+  const handleCloseDetailedView = () => {
+    setSelectedQuestion(null);
+    
+    const sourcePath = getSourcePath();
+    console.log("[QuestionsContent] Navigating back to:", sourcePath);
+    
+    navigate(sourcePath, { replace: true });
+    
+    if (onDetailedViewHide) onDetailedViewHide();
+  };
+
+  if (isLoading || !questionToShow) {
     return (
-      <div className="flex flex-col h-full justify-center items-center">
-        <Skeleton className="h-64 w-full mb-4" />
-        <Skeleton className="h-8 w-2/3 mb-2" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-3/4" />
+      <div className="h-full">
+        <QuestionLoadingSkeleton />
       </div>
     );
   }
-
-  if (questions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-[#E9E7E2]">No questions found</div>
-      </div>
-    );
-  }
-
-  const currentQuestion = currentIndex < questions.length ? questions[currentIndex] : questions[0];
 
   return (
     <div className="flex flex-col h-full relative">
-      {detailViewVisible && selectedQuestion ? (
+      {selectedQuestion ? (
         <GreatQuestionDetailedView 
           data={selectedQuestion} 
-          onBack={handleCloseDetailView} 
+          onBack={handleCloseDetailedView} 
         />
       ) : (
-        <ContentCard
-          image={currentQuestion.illustration || ''}
-          title={currentQuestion.question || 'Great Question'}
-          about={currentQuestion.great_conversation || 'Explore this great question...'}
-          itemId={currentQuestion.id}
-          itemType="question"
-          onImageClick={() => handleQuestionSelect(currentQuestion)}
-          onLearnMore={() => handleQuestionSelect(currentQuestion)}
-          onNext={() => navigate(`/discover/questions/${Math.min(currentIndex + 1, questions.length - 1)}`)}
-          onPrevious={() => navigate(`/discover/questions/${Math.max(currentIndex - 1, 0)}`)}
-          hasNext={currentIndex < questions.length - 1}
-          hasPrevious={currentIndex > 0}
-        />
+        questionToShow && (
+          <ContentCard
+            image={questionToShow.image || questionToShow.illustration || ''}
+            title={questionToShow.title || questionToShow.question || 'Great Question'}
+            about={questionToShow.about || questionToShow.great_conversation || 'Explore this great question...'}
+            itemId={questionToShow.id}
+            itemType="question"
+            onImageClick={() => handleQuestionSelect(questionToShow)}
+            onLearnMore={() => handleQuestionSelect(questionToShow)}
+            onNext={hasNext ? handleNext : undefined}
+            onPrevious={hasPrevious ? handlePrevious : undefined}
+            hasNext={hasNext}
+            hasPrevious={hasPrevious}
+          />
+        )
       )}
     </div>
   );
