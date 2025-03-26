@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +12,7 @@ import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface DbPrompt {
   id: number;
@@ -106,24 +106,6 @@ const VirgilModes: React.FC = () => {
     }
   });
 
-  const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
-  
-  const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
-  const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
-  const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
-  const otherPrompts = formattedPrompts.filter(p => 
-    !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
-  );
-
-  const sortAlphabetically = (prompts: Prompt[]) => {
-    return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
-  };
-
-  const sortedIntellectualPrompts = sortAlphabetically(intellectualPrompts);
-  const sortedEmotionalPrompts = sortAlphabetically(emotionalPrompts);
-  const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
-  const sortedOtherPrompts = sortAlphabetically(otherPrompts);
-
   const handlePromptSelect = (prompt: Prompt) => {
     console.log("Prompt selected:", prompt);
     navigate('/virgil-chat', { 
@@ -156,6 +138,24 @@ const VirgilModes: React.FC = () => {
       </div>
     );
   };
+
+  const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
+  
+  const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
+  const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
+  const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
+  const otherPrompts = formattedPrompts.filter(p => 
+    !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
+  );
+
+  const sortAlphabetically = (prompts: Prompt[]) => {
+    return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
+  };
+
+  const sortedIntellectualPrompts = sortAlphabetically(intellectualPrompts);
+  const sortedEmotionalPrompts = sortAlphabetically(emotionalPrompts);
+  const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
+  const sortedOtherPrompts = sortAlphabetically(otherPrompts);
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
@@ -218,7 +218,9 @@ const VirgilModes: React.FC = () => {
           side="right" 
           className="p-0 w-[320px] max-w-full border-0 bg-[#332E38] rounded-l-2xl"
         >
-          <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
+          <SidebarProvider defaultOpen={true}>
+            <ConversationHistorySidebar onClose={() => setShowHistory(false)} />
+          </SidebarProvider>
         </SheetContent>
       </Sheet>
     </div>

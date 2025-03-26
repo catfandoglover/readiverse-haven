@@ -1,10 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   AlertDialog,
@@ -18,6 +17,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuAction,
+} from "@/components/ui/sidebar";
 
 interface Conversation {
   id: string;
@@ -42,7 +53,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchConversations = async () => {
       try {
         const { data, error } = await supabase
@@ -110,78 +121,92 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
     }
   };
 
-  return (
-    <div className="p-0 h-full flex flex-col bg-[#332E38] text-[#E9E7E2]">
-      <nav className="flex flex-col gap-8 mt-10">
-        <div className="px-2">
-          <h2 className="text-xl font-serif mb-8">Lightning</h2>
-          
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-[#E9E7E2]/70">Loading conversations...</p>
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-center">
-                <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
-                <div 
-                  className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
-                  onClick={onClose}
-                >
-                  <div className="flex-shrink-0 rounded-full p-3">
-                    <div className="h-6 w-6 flex items-center justify-center">
-                      <span className="text-lg">💬</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
-                      Start a new conversation
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors relative group"
-                  onClick={() => handleSelectConversation(conversation)}
-                >
-                  <div className="flex-shrink-0 rounded-full p-2">
-                    <div className="h-8 w-8 flex items-center justify-center">
-                      <span className="text-xl">{conversation.mode_icon}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
-                      {conversation.mode_title}
-                    </h3>
-                    <p className="text-[#E9E7E2]/60 text-xs truncate mt-1">
-                      {conversation.last_message || "Start of conversation"}
-                    </p>
-                    <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1">
-                      {formatDate(conversation.created_at)}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 absolute top-2 right-2 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDelete(conversation.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+  // Helper component for empty state
+  const EmptyState = () => (
+    <div className="text-center py-6">
+      <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
+      <div 
+        className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
+        onClick={onClose}
+      >
+        <div className="flex-shrink-0 rounded-full p-3">
+          <div className="h-6 w-6 flex items-center justify-center">
+            <span className="text-lg">💬</span>
+          </div>
         </div>
-      </nav>
+        <div className="flex flex-col">
+          <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+            Start a new conversation
+          </h3>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <Sidebar 
+        className="bg-[#332E38] text-[#E9E7E2]"
+        variant="floating"
+        collapsible="none"
+      >
+        <SidebarHeader className="py-4">
+          <h2 className="text-xl font-serif px-2">Lightning</h2>
+        </SidebarHeader>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center p-4">
+                <p className="text-[#E9E7E2]/70">Loading conversations...</p>
+              </div>
+            ) : conversations.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {conversations.map((conversation) => (
+                    <SidebarMenuItem key={conversation.id} className="group/menu-item">
+                      <SidebarMenuButton
+                        tooltip={conversation.mode_title}
+                        isActive={false}
+                        className="flex items-center h-auto p-3 rounded-2xl bg-[#E3E0D9]/10 hover:bg-[#E3E0D9]/20 transition-colors space-x-3"
+                        onClick={() => handleSelectConversation(conversation)}
+                      >
+                        <div className="flex-shrink-0 rounded-full p-2">
+                          <div className="h-8 w-8 flex items-center justify-center">
+                            <span className="text-xl">{conversation.mode_icon}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                            {conversation.mode_title}
+                          </h3>
+                          <p className="text-[#E9E7E2]/60 text-xs truncate mt-1">
+                            {conversation.last_message || "Start of conversation"}
+                          </p>
+                          <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1">
+                            {formatDate(conversation.created_at)}
+                          </p>
+                        </div>
+                      </SidebarMenuButton>
+                      <SidebarMenuAction
+                        className="opacity-0 group-hover/menu-item:opacity-100 transition-opacity h-7 w-7 absolute top-2 right-2 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDelete(conversation.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </SidebarMenuAction>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            )}
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
       
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
         <AlertDialogContent className="bg-[#332E38] text-[#E9E7E2] border-[#4A4351]">
@@ -204,7 +229,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 
