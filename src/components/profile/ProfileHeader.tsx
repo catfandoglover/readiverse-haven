@@ -154,16 +154,6 @@ const ProfileHeader: React.FC = () => {
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
-        
-        <Button 
-          variant="ghost" 
-          onClick={handleShareClick}
-          className="absolute top-4 right-4 bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2 z-10"
-          aria-label="Share profile"
-        >
-          SHARE PROFILE
-          <Share className="h-4 w-4" />
-        </Button>
       </div>
       
       <div 
@@ -174,62 +164,76 @@ const ProfileHeader: React.FC = () => {
           transform: "translateZ(0)"
         }}
       >
-        <div className="flex flex-col items-start">
-          <div className="relative h-20 w-20 mb-2">
-            <svg 
-              viewBox="0 0 100 100" 
-              className="absolute inset-0 h-full w-full text-[#CCFF23]"
-            >
-              <polygon 
-                points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3"
-              />
-            </svg>
-            
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ 
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-              }}
-            >
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start">
+            <div className="relative h-20 w-20 mb-2">
+              <svg 
+                viewBox="0 0 100 100" 
+                className="absolute inset-0 h-full w-full text-[#CCFF23]"
+              >
+                <polygon 
+                  points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="3"
+                />
+              </svg>
+              
+              <div 
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ 
+                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                }}
+              >
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              <button 
+                onClick={handleProfileEditClick}
+                className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                aria-label="Edit profile picture"
+              >
+                <Pen size={12} className="text-gray-700" />
+              </button>
             </div>
             
-            <button 
-              onClick={handleProfileEditClick}
-              className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
-              aria-label="Edit profile picture"
-            >
-              <Pen size={12} className="text-gray-700" />
-            </button>
-          </div>
-          
-          <div className="text-left">
-            <h1 
-              className="text-2xl font-serif" 
-              style={{ 
-                position: "relative",
-                zIndex: 50
-              }}
-            >
-              {firstName} {lastName}
-            </h1>
-            <p 
-              className="text-sm font-oxanium text-[#E9E7E2]/70 italic"
-              style={{ 
-                position: "relative",
-                zIndex: 50
-              }}
-            >
-              {isLoadingAnalysis ? 'Loading...' : archetype}
-            </p>
+            <div className="text-left flex items-center gap-4">
+              <div>
+                <h1 
+                  className="text-2xl font-serif" 
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {firstName} {lastName}
+                </h1>
+                <p 
+                  className="text-sm font-oxanium text-[#E9E7E2]/70 italic"
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {isLoadingAnalysis ? 'Loading...' : archetype}
+                </p>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                onClick={handleShareClick}
+                className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center gap-2 z-10"
+                aria-label="Share profile"
+              >
+                SHARE PROFILE
+                <Share className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
