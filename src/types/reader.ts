@@ -1,4 +1,3 @@
-
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from './highlight';
 
@@ -6,6 +5,7 @@ export interface BookMetadata {
   Cover_super?: string;
   title?: string;
   author?: string;
+  id?: string;
 }
 
 export interface ReaderProps {

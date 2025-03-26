@@ -81,7 +81,7 @@ export const useLastReadBook = () => {
       const { data: defaultBook, error: defaultBookError } = await supabase
         .from('books')
         .select('*')
-        .eq('id', '079580a7-bf82-438e-9ff5-6c10a02e1ed1')
+        .eq('id', '4e06e362-b1ba-4825-a153-d7f0170dd9d6')
         .single();
 
       if (defaultBookError) {

@@ -17,7 +17,8 @@ const LastReadBookHero = () => {
       state: { 
         bookUrl: lastReadBook.book.epub_file_url,
         metadata: {
-          Cover_super: lastReadBook.book.Cover_super || lastReadBook.book.cover_url
+          Cover_super: lastReadBook.book.Cover_super || lastReadBook.book.cover_url,
+          id: lastReadBook.book.id
         }
       } 
     });

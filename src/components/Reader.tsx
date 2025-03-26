@@ -19,6 +19,7 @@ import { useLocationPersistence } from "@/hooks/useLocationPersistence";
 import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
+import { useUpdateReadingStatus } from "@/hooks/useUpdateReadingStatus";
 
 interface SpineItem {
   href: string;
@@ -56,6 +57,15 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
     loadProgress,
     setPageInfo
   );
+
+  const bookId = React.useMemo(() => {
+    if (metadata && 'id' in metadata) {
+      return metadata.id as string;
+    }
+    return null;
+  }, [metadata]);
+
+  useUpdateReadingStatus(bookId, currentLocation);
 
   const handleFileUpload = async (file: File) => {
     try {
