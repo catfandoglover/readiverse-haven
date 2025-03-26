@@ -1,75 +1,70 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 
-export interface OrderDialogProps {
+interface OrderDialogProps {
   title: string;
-  open: boolean;
-  onClose: () => void;
-  bookId: string;
+  amazonLink?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({ title, open, onClose, bookId }) => {
-  const handleOrderAmazon = () => {
-    window.open(
-      `https://www.amazon.com/s?k=${encodeURIComponent(title)}`,
-      "_blank"
-    );
-    onClose();
+const OrderDialog: React.FC<OrderDialogProps> = ({ 
+  title, 
+  amazonLink,
+  open,
+  onOpenChange
+}) => {
+  const handleAmazonOrder = () => {
+    if (amazonLink) {
+      window.open(amazonLink, '_blank');
+    } else {
+      window.open(`https://www.amazon.com/s?k=${encodeURIComponent(title)}`, '_blank');
+    }
   };
 
-  const handleOrderBarnes = () => {
-    window.open(
-      `https://www.barnesandnoble.com/s/${encodeURIComponent(title)}`,
-      "_blank"
-    );
-    onClose();
+  const handleIndependentOrder = () => {
+    window.open(`https://bookshop.org/search?keywords=${encodeURIComponent(title)}`, '_blank');
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="bg-[#E9E7E2] border-none">
-        <DialogHeader>
-          <DialogTitle className="text-[#2A282A] font-serif text-xl">
-            Order Physical Copy
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[90%] sm:w-[80%] max-w-md bg-[#E9E7E2] p-6 rounded-2xl">
+        <DialogHeader className="flex flex-col space-y-1.5 text-left pt-10">
+          <DialogTitle className="text-3xl font-baskerville leading-none tracking-tight text-black font-bold">
+            Order "{title}"
           </DialogTitle>
-          <DialogDescription className="text-[#2A282A]/70">
-            Choose where you would like to order a physical copy of {title}.
+          <DialogDescription className="text-sm font-oxanium mt-3 text-muted-foreground">
+            Choose where to purchase this book.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="flex flex-col space-y-4 pt-2">
+        
+        <div className="flex flex-col space-y-4 mt-5 w-full overflow-hidden">
           <Button
-            onClick={handleOrderAmazon}
-            className="bg-[#2A282A] hover:bg-[#2A282A]/80 text-white"
+            onClick={handleAmazonOrder}
+            className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 w-full flex items-center justify-center px-4"
           >
-            Order from Amazon
+            <span className="truncate mr-1">Amazon</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
           <Button
-            onClick={handleOrderBarnes}
-            className="bg-[#2A282A] hover:bg-[#2A282A]/80 text-white"
+            onClick={handleIndependentOrder}
+            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20 w-full flex items-center justify-center px-4"
           >
-            Order from Barnes & Noble
+            <span className="truncate mr-1">Independent Booksellers</span>
+            <ExternalLink className="h-4 w-4 flex-shrink-0 ml-1 mb-0.5" />
           </Button>
         </div>
-
-        <DialogFooter>
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="border-[#2A282A] text-[#2A282A]"
-          >
-            Cancel
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
