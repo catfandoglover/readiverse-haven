@@ -3,12 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Trash2 } from "lucide-react";
+import { MessageCircle, Trash2, Globe } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import * as LucideIcons from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +36,46 @@ interface ConversationHistorySidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Helper function to convert database icon name to correct Lucide icon
+const getLucideIcon = (iconName: string): LucideIcon => {
+  // Default fallback icon
+  let Icon: LucideIcon = LucideIcons.FileText;
+  
+  if (!iconName) return Icon;
+  
+  try {
+    // Try direct access first (in case it's already correct case)
+    if (LucideIcons[iconName as keyof typeof LucideIcons]) {
+      return LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
+    }
+    
+    // Try converting first character to uppercase (for PascalCase)
+    const pascalCase = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+    if (LucideIcons[pascalCase as keyof typeof LucideIcons]) {
+      return LucideIcons[pascalCase as keyof typeof LucideIcons] as LucideIcon;
+    }
+    
+    // Try kebab-case to PascalCase conversion (e.g., "file-text" to "FileText")
+    if (iconName.includes('-')) {
+      const pascalFromKebab = iconName
+        .split('-')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join('');
+      
+      if (LucideIcons[pascalFromKebab as keyof typeof LucideIcons]) {
+        return LucideIcons[pascalFromKebab as keyof typeof LucideIcons] as LucideIcon;
+      }
+    }
+    
+    console.log(`Icon not found: ${iconName}, using default FileText icon`);
+  } catch (error) {
+    console.error(`Error processing icon: ${iconName}`, error);
+  }
+  
+  // Fallback to FileText if no match or error
+  return Icon;
+};
 
 const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({ 
   open, 
@@ -147,7 +189,7 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
                 >
                   <div className="flex-shrink-0 rounded-full p-3">
                     <div className="h-6 w-6 flex items-center justify-center">
-                      <span className="text-lg">earth</span>
+                      <Globe className="h-6 w-6" />
                     </div>
                   </div>
                   <div className="flex-1">
@@ -159,42 +201,45 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
               </div>
             ) : (
               <div className="space-y-6">
-                {conversations.map((conversation) => (
-                  <div 
-                    key={conversation.id} 
-                    className="group relative flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                    onClick={() => handleSelectConversation(conversation)}
-                  >
-                    <div className="flex-shrink-0 rounded-full p-2">
-                      <div className="h-8 w-8 flex items-center justify-center">
-                        <span className="text-xl">{conversation.mode_icon}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                        {conversation.mode_title}
-                      </h3>
-                      <p className="text-[#E9E7E2]/60 text-xs truncate mt-1 text-left">
-                        {conversation.last_message || "Start of conversation"}
-                      </p>
-                      <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1 text-left">
-                        {formatDate(conversation.created_at)}
-                      </p>
-                    </div>
-                    <Button 
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 h-7 w-7 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmDelete(conversation.id);
-                      }}
+                {conversations.map((conversation) => {
+                  const IconComponent = getLucideIcon(conversation.mode_icon || "");
+                  return (
+                    <div 
+                      key={conversation.id} 
+                      className="group relative flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                      onClick={() => handleSelectConversation(conversation)}
                     >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex-shrink-0 rounded-full p-2">
+                        <div className="h-8 w-8 flex items-center justify-center">
+                          <IconComponent className="h-8 w-8" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
+                          {conversation.mode_title}
+                        </h3>
+                        <p className="text-[#E9E7E2]/60 text-xs truncate mt-1 text-left">
+                          {conversation.last_message || "Start of conversation"}
+                        </p>
+                        <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1 text-left">
+                          {formatDate(conversation.created_at)}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 h-7 w-7 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDelete(conversation.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
