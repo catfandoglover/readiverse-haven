@@ -25,7 +25,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id(*)
+          book:books!book_id(*)
         `)
         .eq('outseta_user_id', userId)
         .order('last_read_at', { ascending: false })
@@ -53,7 +53,7 @@ export const useLastReadBook = () => {
         .from('user_books')
         .select(`
           *,
-          book:book_id(*)
+          book:books!book_id(*)
         `)
         .eq('outseta_user_id', userId)
         .order('created_at', { ascending: false })
