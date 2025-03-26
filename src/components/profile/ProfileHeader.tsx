@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -141,7 +142,7 @@ const ProfileHeader: React.FC = () => {
   };
 
   return (
-    <div className="relative overflow-hidden z-10">
+    <div className="relative overflow-hidden z-50">
       <div className="w-full h-64 bg-[#2A282A] relative">
         <div 
           className="absolute inset-0"
