@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
@@ -33,8 +32,6 @@ interface DNAAnalysisResult {
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
-// FUTURE EDIT POINT: Remove this default profile when the real profile fetching is fixed
-// ---------------------------------------------------------------------------------
 const DEFAULT_PROFILE: ProfileData = {
   id: "default-id",
   outseta_user_id: "default-outseta-id",
@@ -55,7 +52,6 @@ const DEFAULT_ANALYSIS: DNAAnalysisResult = {
   most_challenging_voice: "Friedrich Nietzsche - His ruthless naturalism and rejection of transcendent meaning challenges your tendency to find pattern and purpose in complex systems.",
   created_at: new Date().toISOString()
 };
-// ---------------------------------------------------------------------------------
 
 const ShareableProfile: React.FC = () => {
   const { name } = useParams<{ name: string }>();
@@ -75,33 +71,21 @@ const ShareableProfile: React.FC = () => {
           setIsLoading(true);
           console.log("Fetching profile for name:", name);
           
-          // FUTURE EDIT POINT: Fix the profile fetching logic here
-          // ---------------------------------------------------------------------------------
-          // Decode the name from URL format to handle spaces
           const decodedName = decodeURIComponent(name);
           console.log("Decoded name:", decodedName);
           
-          // TODO: Fix the profile lookup
-          // Currently using a fixed profile (Alex Jakubowski) instead of looking up in the database
-          
-          // Using default profile data instead of database lookup for now
           console.log("Using default profile data");
           setProfileData(DEFAULT_PROFILE);
           setLandscapeImage(DEFAULT_PROFILE.landscape_image || null);
           setProfileImage(DEFAULT_PROFILE.profile_image || null);
           setAnalysisResult(DEFAULT_ANALYSIS);
-          // ---------------------------------------------------------------------------------
-          
         } catch (e) {
           console.error("Exception fetching profile:", e);
-          // FUTURE EDIT POINT: Don't navigate to /dna on error, just use default profile
-          // ---------------------------------------------------------------------------------
           console.log("Error occurred, using default profile data");
           setProfileData(DEFAULT_PROFILE);
           setLandscapeImage(DEFAULT_PROFILE.landscape_image || null);
           setProfileImage(DEFAULT_PROFILE.profile_image || null);
           setAnalysisResult(DEFAULT_ANALYSIS);
-          // ---------------------------------------------------------------------------------
         } finally {
           setIsLoading(false);
         }
@@ -131,19 +115,15 @@ const ShareableProfile: React.FC = () => {
   const introduction = analysisResult?.introduction || 
     "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.";
   
-  // FUTURE EDIT POINT: Make sure these match the real user data when implemented
-  // ---------------------------------------------------------------------------------
   const mostKindredSpirit = analysisResult?.most_kindred_spirit || 
     "Simone Weil - You share her gift of holding paradoxes in creative tension, finding meaning in the difficult spaces between competing worldviews.";
   
   const mostChallengingVoice = analysisResult?.most_challenging_voice || 
     "Friedrich Nietzsche - His ruthless naturalism and rejection of transcendent meaning challenges your tendency to find pattern and purpose in complex systems.";
-  // ---------------------------------------------------------------------------------
-
+  
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       <div className="relative w-full h-64 bg-[#2A282A]">
-        {/* Close button */}
         <Button 
           onClick={handleCloseClick}
           className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
@@ -152,7 +132,6 @@ const ShareableProfile: React.FC = () => {
           <X className="h-6 w-6 text-[#E9E7E2]" />
         </Button>
         
-        {/* Background image with overlay */}
         <div 
           className="absolute inset-0"
           style={{
@@ -164,9 +143,7 @@ const ShareableProfile: React.FC = () => {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
-        {/* Profile content centered */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 pt-10">
-          {/* Profile image in hexagon - Using the same styling as the profile page */}
           <div className="relative h-20 w-20 mb-3">
             <svg 
               viewBox="0 0 100 100" 
@@ -195,7 +172,6 @@ const ShareableProfile: React.FC = () => {
             </div>
           </div>
           
-          {/* Name and archetype */}
           <h1 className="text-2xl font-serif text-center">{fullName}</h1>
           <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic text-center">
             {archetype}
@@ -203,16 +179,13 @@ const ShareableProfile: React.FC = () => {
         </div>
       </div>
       
-      {/* Content area below the landscape image */}
       <div className="w-full px-6 py-8 flex flex-col items-center">
-        {/* Introduction text */}
         <div className="max-w-lg mb-8">
           <p className="text-sm font-oxanium text-[#E9E7E2]/50">
             {introduction}
           </p>
         </div>
         
-        {/* Most Kindred Spirit section - Exactly matching main profile styling */}
         <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-6">
           <div className="flex items-center">
             <div className="relative mr-4">
@@ -236,14 +209,13 @@ const ShareableProfile: React.FC = () => {
             </div>
           </div>
           <a 
-            href="/icons/detail/294e44ae-5b7b-4651-bb22-16e90bcbd886" 
+            href="/view/icon/294e44ae-5b7b-4651-bb22-16e90bcbd886" 
             className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
           >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
           </a>
         </div>
         
-        {/* Most Challenging Voice section - Exactly matching main profile styling */}
         <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-8">
           <div className="flex items-center">
             <div className="relative mr-4">
@@ -267,7 +239,7 @@ const ShareableProfile: React.FC = () => {
             </div>
           </div>
           <a 
-            href="/icons/detail/73dd6940-6384-4f90-b9de-26334252ebee" 
+            href="/view/icon/73dd6940-6384-4f90-b9de-26334252ebee" 
             className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center"
           >
             <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
@@ -275,7 +247,6 @@ const ShareableProfile: React.FC = () => {
         </div>
       </div>
       
-      {/* Footer links */}
       <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
         <a 
           href="/dna" 
