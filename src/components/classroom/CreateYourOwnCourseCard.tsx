@@ -13,12 +13,12 @@ const CreateYourOwnCourseCard: React.FC = () => {
       onClick={handleClick}
     >
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-oxanium uppercase text-base text-[#E9E7E2] uppercase tracking-wider font-bold">
+        <h3 className="font-oxanium uppercase text-sm text-[#E9E7E2] tracking-wider font-bold">
           Create Your Own
         </h3>
         <Plus className="h-4 w-4 text-[#CCFF23]" />
       </div>
-      <p className="font-oxanium text-[#E9E7E2]/50 text-base">
+      <p className="font-oxanium text-[#E9E7E2]/50 text-sm">
         Design a personalized learning journey with Virgil as your guide
       </p>
     </div>
