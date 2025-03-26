@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ContentCard from "./ContentCard";
 import GreatQuestionDetailedView from "./GreatQuestionDetailedView";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface QuestionsContentProps {
   currentIndex: number;
@@ -22,8 +24,17 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   const { type, slug } = useParams();
   const [detailViewVisible, setDetailViewVisible] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+  const { saveSourcePath, getSourcePath } = useNavigationState();
 
-  useNavigationState();
+  // Save current path for proper back navigation
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    if (!currentPath.includes('/view/')) {
+      saveSourcePath(currentPath);
+      console.log('[QuestionsContent] Saved source path:', currentPath);
+    }
+  }, [location.pathname, saveSourcePath]);
 
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ["discover-questions"],
@@ -77,12 +88,10 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     setDetailViewVisible(false);
     onDetailedViewHide();
     
-    const originPath = sessionStorage.getItem('lastContentPath');
-    if (originPath) {
-      navigate(originPath, { replace: true });
-    } else {
-      navigate("/discover", { replace: true });
-    }
+    const sourcePath = getSourcePath();
+    console.log("[QuestionsContent] Navigating back to:", sourcePath);
+    
+    navigate(sourcePath, { replace: true });
   };
 
   const handleQuestionSelect = (question: any) => {
@@ -91,14 +100,21 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
     onDetailedViewShow();
     navigate(`/view/question/${question.id}`, { 
       replace: true,
-      state: { fromDiscover: true } 
+      state: { 
+        fromSection: 'discover',
+        sourcePath: getSourcePath()
+      }
     });
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-[#E9E7E2] animate-pulse">Loading questions...</div>
+      <div className="flex flex-col h-full justify-center items-center">
+        <Skeleton className="h-64 w-full mb-4" />
+        <Skeleton className="h-8 w-2/3 mb-2" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-full mb-1" />
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
   }
@@ -125,6 +141,8 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
           image={currentQuestion.illustration || ''}
           title={currentQuestion.question || 'Great Question'}
           about={currentQuestion.great_conversation || 'Explore this great question...'}
+          itemId={currentQuestion.id}
+          itemType="question"
           onImageClick={() => handleQuestionSelect(currentQuestion)}
           onLearnMore={() => handleQuestionSelect(currentQuestion)}
           onNext={() => navigate(`/discover/questions/${Math.min(currentIndex + 1, questions.length - 1)}`)}

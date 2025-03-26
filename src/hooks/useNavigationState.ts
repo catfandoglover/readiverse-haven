@@ -1,7 +1,9 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { saveLastVisited } from '@/utils/navigationHistory';
+import { saveLastVisited, sections, getOriginPath } from '@/utils/navigationHistory';
+
+type ContentType = 'classic' | 'icon' | 'concept' | 'question' | 'for-you';
 
 /**
  * Hook to manage navigation state and track where the user came from
@@ -16,7 +18,7 @@ export const useNavigationState = () => {
       // Track the exact path for better navigation
       const currentPath = location.pathname;
       sessionStorage.setItem('lastContentPath', currentPath);
-      console.log('Saved last content path:', currentPath);
+      console.log('[NavigationState] Saved last content path:', currentPath);
       
       // Also save to the standard navigation history
       const section = location.pathname.includes('/discover') ? 'discover' : 
@@ -32,6 +34,43 @@ export const useNavigationState = () => {
   const getLastContentPath = () => {
     return sessionStorage.getItem('lastContentPath') || '/discover';
   };
+
+  /**
+   * Determines the content type from the current URL
+   */
+  const getContentType = (): ContentType => {
+    const pathname = location.pathname;
+    
+    if (pathname.includes('/view/classic/')) return 'classic';
+    if (pathname.includes('/view/icon/')) return 'icon';
+    if (pathname.includes('/view/concept/')) return 'concept';
+    if (pathname.includes('/view/question/')) return 'question';
+    if (pathname.includes('/discover/search/classics')) return 'classic';
+    if (pathname.includes('/discover/search/icons')) return 'icon';
+    if (pathname.includes('/discover/search/concepts')) return 'concept';
+    if (pathname.includes('/discover/search/questions')) return 'question';
+    
+    return 'for-you';
+  };
+
+  const saveSourcePath = (path: string) => {
+    sessionStorage.setItem('sourcePath', path);
+    console.log('[NavigationState] Saved source path:', path);
+  };
+
+  const getSourcePath = () => {
+    const sourcePath = sessionStorage.getItem('sourcePath');
+    if (sourcePath) {
+      console.log('[NavigationState] Retrieved source path:', sourcePath);
+      return sourcePath;
+    }
+    return getOriginPath();
+  };
   
-  return { getLastContentPath };
+  return { 
+    getLastContentPath, 
+    getContentType,
+    saveSourcePath,
+    getSourcePath
+  };
 };

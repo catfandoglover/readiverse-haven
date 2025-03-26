@@ -8,6 +8,7 @@ import ConceptsContent from "./ConceptsContent";
 import QuestionsContent from "./QuestionsContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
@@ -20,12 +21,17 @@ const DiscoverLayout = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { getContentType, saveSourcePath } = useNavigationState();
 
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    setCurrentIndex(0);
-  };
+  // Set up source path tracking
+  useEffect(() => {
+    if (!location.pathname.includes('/view/')) {
+      saveSourcePath(location.pathname);
+      console.log("[DiscoverLayout] Saved source path:", location.pathname);
+    }
+  }, [location.pathname, saveSourcePath]);
 
+  // Update active tab based on the path
   useEffect(() => {
     const showDetailedView = location.pathname.includes('/view/');
     setDetailedViewVisible(showDetailedView);
@@ -33,19 +39,29 @@ const DiscoverLayout = () => {
     // Determine what tab should be active based on the route
     if (location.pathname.includes('/view/classic/')) {
       setActiveTab("classics");
+      console.log("[DiscoverLayout] Set active tab to classics from view route");
     } else if (location.pathname.includes('/view/icon/')) {
       setActiveTab("icons");
+      console.log("[DiscoverLayout] Set active tab to icons from view route");
     } else if (location.pathname.includes('/view/concept/')) {
       setActiveTab("concepts");
+      console.log("[DiscoverLayout] Set active tab to concepts from view route");
     } else if (location.pathname.includes('/view/question/')) {
       setActiveTab("questions");
+      console.log("[DiscoverLayout] Set active tab to questions from view route");
     } else if (location.pathname.includes('/discover/questions')) {
       setActiveTab("questions");
+      console.log("[DiscoverLayout] Set active tab to questions from discover route");
     }
     
     // Force remount of content components when route type changes
     setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
   }, [location.pathname]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setCurrentIndex(0);
+  };
 
   const getContentComponent = (tab: TabType, index: number) => {
     switch (tab) {

@@ -7,15 +7,24 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 
 const ConceptsFeedPage = () => {
   const navigate = useNavigate();
-  const { getLastContentPath } = useNavigationState();
+  const { getLastContentPath, saveSourcePath } = useNavigationState();
   const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Save the search page as the source path for proper back navigation
+    saveSourcePath('/discover/search');
+  }, [saveSourcePath]);
+  
+  const handleBack = () => {
+    navigate('/discover/search');
+  };
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
       {!detailedViewVisible && (
         <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
           <button
-            onClick={() => navigate('/discover/search')}
+            onClick={handleBack}
             className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"
             aria-label="Back"
           >

@@ -15,6 +15,7 @@ import { useFormatText } from "@/hooks/useFormatText";
 import OrderDialog from "./OrderDialog";
 import VirgilChatButton from "./VirgilChatButton";
 import ClassicActionsMenu from "./ClassicActionsMenu";
+import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface CarouselItem {
   id: string;
@@ -43,6 +44,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, openLogin } = useAuth();
+  const { getSourcePath } = useNavigationState();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
     type === "icon" ? "SEEKERS" : "READERS"
@@ -305,45 +307,52 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   }, [user, itemData.id, type]);
 
   const handleBack = () => {
-    console.log("Back button clicked, location state:", location.state);
+    console.log("[DetailedView] Back button clicked, location state:", location.state);
     
+    // Priority 1: Use provided onBack callback if available
     if (onBack) {
+      console.log("[DetailedView] Using onBack callback");
       onBack();
       return;
     }
     
+    // Priority 2: Use sourcePath from location state
     if (location.state?.sourcePath) {
       const sourcePath = location.state.sourcePath;
-      console.log("Navigating to source path from location state:", sourcePath);
+      console.log("[DetailedView] Navigating to source path from location state:", sourcePath);
       navigate(sourcePath);
       return;
     }
     
-    const originPath = getOriginPath();
-    if (originPath && originPath !== location.pathname) {
-      console.log("Navigating to origin path:", originPath);
-      navigate(originPath);
+    // Priority 3: Use sourcePath from navigation state hook
+    const sourcePath = getSourcePath();
+    if (sourcePath && sourcePath !== location.pathname) {
+      console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
+      navigate(sourcePath);
       return;
     }
     
+    // Priority 4: Use fromSection from location state
     if (location.state?.fromSection) {
       const fromSection = location.state.fromSection as keyof typeof sections;
       const lastVisitedPath = getLastVisited(fromSection);
-      console.log("Navigating to source section:", fromSection, "path:", lastVisitedPath);
+      console.log("[DetailedView] Navigating to source section:", fromSection, "path:", lastVisitedPath);
       navigate(lastVisitedPath);
       return;
     }
     
+    // Priority 5: Use previous page from history
     const previousPage = getPreviousPage();
-    console.log("Previous page from history:", previousPage);
+    console.log("[DetailedView] Previous page from history:", previousPage);
     
     if (previousPage && previousPage !== location.pathname && previousPage !== '/dna') {
-      console.log("Navigating to previous page:", previousPage);
+      console.log("[DetailedView] Navigating to previous page:", previousPage);
       navigate(previousPage);
       return;
     }
     
-    console.log("Fallback to For You feed");
+    // Fallback to For You feed
+    console.log("[DetailedView] Fallback to For You feed");
     navigate('/discover');
   };
 
@@ -918,31 +927,4 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
                 <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
-                <p className="text-gray-800 font-baskerville text-lg">{formatText(combinedData.great_question_connection)}</p>
-              </div>
-            ) : null}
-
-            {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question", "question")}
-
-            {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
-
-            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
-
-            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
-            
-            <div className="h-32"></div>
-          </div>
-        </div>
-      </div>
-
-      <OrderDialog 
-        title={combinedData?.title || combinedData?.name || ""}
-        open={isOrderDialogOpen}
-        onClose={() => setIsOrderDialogOpen(false)}
-        bookId={combinedData?.id || ""}
-      />
-    </div>
-  );
-};
-
-export default DetailedView;
+                <p className="text-gray-800 font-baskerville text-lg">{formatText
