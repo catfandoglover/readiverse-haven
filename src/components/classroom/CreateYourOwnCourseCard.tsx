@@ -14,7 +14,7 @@ const CreateYourOwnCourseCard: React.FC = () => {
     >
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold">
-          Create Your Own
+          Create Your Own Course
         </h3>
         <Plus className="h-4 w-4 text-[#CCFF23]" />
       </div>
