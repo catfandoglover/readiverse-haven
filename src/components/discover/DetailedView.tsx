@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -927,4 +928,38 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
                 <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
-                <p className="text-gray-800 font-baskerville text-lg">{formatText
+                <p className="text-gray-800 font-baskerville text-lg">
+                  {formatText(combinedData.great_question_connection)}
+                </p>
+              </div>
+            ) : null}
+
+            {renderHorizontalSlider("GREAT QUESTIONS", greatQuestions, "illustration", "question", "question")}
+            
+            {renderHorizontalSlider("MAJOR THEMES", concepts, "illustration", "title", "concept")}
+            
+            {renderHorizontalSlider("CONNECTED ICONS", connectedIcons, "illustration", "name", "icon")}
+            
+            {renderHorizontalSlider("RELATED CLASSICS", relatedClassics, "cover_url", "title", "classic")}
+            
+            <div className="h-32"></div>
+          </div>
+        </div>
+      </div>
+      
+      {isOrderDialogOpen && (
+        <OrderDialog 
+          bookId={combinedData?.id} 
+          title={combinedData?.title}
+          coverUrl={combinedData?.cover_url || combinedData?.Cover_super}
+          amazonUrl={combinedData?.amazon_link}
+          bookshopUrl={combinedData?.bookshop_link}
+          onClose={() => setIsOrderDialogOpen(false)}
+          open={isOrderDialogOpen}
+        />
+      )}
+    </div>
+  );
+};
+
+export default DetailedView;
