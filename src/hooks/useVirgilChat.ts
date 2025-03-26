@@ -1,184 +1,222 @@
-import { useState, useCallback, useEffect } from 'react';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
-import { toast } from 'sonner';
+import { ChatMessage } from '@/types/chat';
+import aiService from '@/services/AIService';
+import speechService from '@/services/SpeechService';
+import audioRecordingService from '@/services/AudioRecordingService';
+import { stopAllAudio } from '@/services/AudioContext';
+import conversationManager from '@/services/ConversationManager';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-}
-
-export const useVirgilChat = (
-  initialMessage?: string,
-  sessionIdProp?: string,
-  promptData?: any
-) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+export const useVirgilChat = (initialMessage?: string) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [sessionId, setSessionId] = useState<string>(sessionIdProp || uuidv4());
-  const { user } = useAuth();
+  const sessionId = useRef(uuidv4()).current;
 
-  // Initialize chat with assistant's greeting
   useEffect(() => {
-    if (initialMessage) {
+    if (messages.length === 0 && initialMessage) {
       setMessages([
         {
           id: uuidv4(),
-          role: 'assistant',
           content: initialMessage,
-          timestamp: Date.now(),
-        },
+          role: 'assistant',
+          isNew: true
+        }
       ]);
+      
+      setTimeout(() => {
+        generateAudioForText(initialMessage);
+      }, 100);
     }
   }, [initialMessage]);
 
-  // Load existing conversation if session ID is provided
-  useEffect(() => {
-    const loadExistingConversation = async () => {
-      if (!sessionIdProp) return;
+  const generateAudioForText = async (text: string) => {
+    try {
+      stopAllAudio();
       
-      try {
-        setIsProcessing(true);
-        const { data, error } = await supabase
-          .from('virgil_messages')
-          .select('*')
-          .eq('session_id', sessionIdProp)
-          .order('timestamp', { ascending: true });
-          
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const formattedMessages = data.map(msg => ({
-            id: msg.id,
-            role: msg.role as 'user' | 'assistant',
-            content: msg.content,
-            timestamp: msg.timestamp,
-          }));
-          
-          setMessages(formattedMessages);
+      const audioUrl = await speechService.synthesizeSpeech(text);
+      
+      setMessages(prevMessages => {
+        const lastAssistantIndex = [...prevMessages].reverse().findIndex(m => m.role === 'assistant');
+        if (lastAssistantIndex !== -1) {
+          const actualIndex = prevMessages.length - 1 - lastAssistantIndex;
+          const updatedMessages = [...prevMessages];
+          updatedMessages[actualIndex] = {
+            ...updatedMessages[actualIndex],
+            audioUrl
+          };
+          return updatedMessages;
         }
-      } catch (error) {
-        console.error('Error loading conversation:', error);
-        toast.error('Failed to load conversation history');
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-    
-    loadExistingConversation();
-  }, [sessionIdProp]);
-
-  // Save conversation to database
-  const saveConversation = useCallback(async (newMessage: Message) => {
-    if (!user) return;
-    
-    try {
-      // Save message
-      await supabase.from('virgil_messages').insert({
-        id: newMessage.id,
-        session_id: sessionId,
-        role: newMessage.role,
-        content: newMessage.content,
-        timestamp: newMessage.timestamp,
-        user_id: user.Uid || user.id, // Handle different user ID formats
+        return prevMessages;
       });
-      
-      // Update or create conversation record
-      const lastMessage = newMessage.content.substring(0, 100) + (newMessage.content.length > 100 ? '...' : '');
-      
-      const { data: existingConversation } = await supabase
-        .from('virgil_conversations')
-        .select('id')
-        .eq('session_id', sessionId)
-        .single();
-        
-      if (existingConversation) {
-        await supabase
-          .from('virgil_conversations')
-          .update({ 
-            last_message: lastMessage,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingConversation.id);
-      } else if (promptData) {
-        await supabase.from('virgil_conversations').insert({
-          session_id: sessionId,
-          user_id: user.Uid || user.id, // Handle different user ID formats
-          mode_id: promptData.id,
-          mode_title: promptData.user_title,
-          mode_icon: promptData.icon_display || '💬',
-          last_message: lastMessage,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      }
     } catch (error) {
-      console.error('Error saving message:', error);
+      console.error('Error generating audio:', error);
     }
-  }, [sessionId, user, promptData]);
+  };
 
-  // Add a user message
-  const addUserMessage = useCallback((content: string) => {
-    const newMessage: Message = {
-      id: uuidv4(),
-      role: 'user',
-      content,
-      timestamp: Date.now(),
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    saveConversation(newMessage);
-    return newMessage;
-  }, [saveConversation]);
-
-  // Add an assistant message
   const addAssistantMessage = useCallback((content: string) => {
-    const newMessage: Message = {
+    const newMessage: ChatMessage = {
       id: uuidv4(),
-      role: 'assistant',
       content,
-      timestamp: Date.now(),
+      role: 'assistant',
+      isNew: true
     };
-    
-    setMessages(prev => [...prev, newMessage]);
-    saveConversation(newMessage);
-    return newMessage;
-  }, [saveConversation]);
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    generateAudioForText(content);
+  }, []);
 
-  // Handle submitting a message
-  const handleSubmitMessage = useCallback(async () => {
-    if (!inputMessage.trim()) return;
-    
-    const userMessageContent = inputMessage;
-    setInputMessage('');
+  const processMessage = async (userMessage: string) => {
     setIsProcessing(true);
-    
-    // Add user message to chat
-    addUserMessage(userMessageContent);
-    
     try {
-      // Simulate AI response (replace with actual API call)
-      setTimeout(() => {
-        const aiResponse = `I received your message: "${userMessageContent}". This is a simulated response.`;
-        addAssistantMessage(aiResponse);
-        setIsProcessing(false);
-      }, 1500);
+      stopAllAudio();
+      
+      const loadingId = uuidv4();
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { id: loadingId, content: 'Thinking...', role: 'assistant' }
+      ]);
+      
+      const response = await aiService.generateResponse(sessionId, userMessage);
+      
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === loadingId 
+            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            : msg
+        )
+      );
+      
+      generateAudioForText(response.text);
     } catch (error) {
       console.error('Error processing message:', error);
-      toast.error('Failed to process your message');
+      setMessages(prevMessages => 
+        prevMessages.filter(msg => msg.content !== 'Thinking...')
+      );
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { id: uuidv4(), content: 'Sorry, I encountered an error while processing your message.', role: 'assistant' }
+      ]);
+    } finally {
       setIsProcessing(false);
     }
-  }, [inputMessage, addUserMessage, addAssistantMessage]);
+  };
 
-  // Toggle recording state
-  const toggleRecording = useCallback(() => {
-    setIsRecording(prev => !prev);
-  }, []);
+  const processAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+    try {
+      stopAllAudio();
+      
+      const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
+      
+      const transcriptionLoadingId = uuidv4();
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
+      ]);
+      
+      const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
+      
+      setMessages(prevMessages => 
+        prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
+      );
+      
+      let displayContent = response.transcribedText || "Voice message";
+      
+      const newUserMessage: ChatMessage = {
+        id: uuidv4(),
+        content: displayContent,
+        role: 'user',
+        audioUrl: tempAudioUrl
+      };
+      setMessages(prevMessages => [...prevMessages, newUserMessage]);
+      
+      const loadingId = uuidv4();
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { id: loadingId, content: 'Processing your message...', role: 'assistant' }
+      ]);
+      
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === loadingId 
+            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            : msg
+        )
+      );
+      
+      generateAudioForText(response.text);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      setMessages(prevMessages => 
+        prevMessages.filter(msg => 
+          msg.content !== 'Transcribing your voice message...' && 
+          msg.content !== 'Processing your message...'
+        )
+      );
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { 
+          id: uuidv4(), 
+          content: 'I encountered an issue processing your voice message. Please try sending a text message instead.', 
+          role: 'assistant' 
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      setIsRecording(false);
+      try {
+        const audioBlob = await audioRecordingService.stopRecording();
+        await processAudio(audioBlob);
+      } catch (error) {
+        console.error('Error stopping recording:', error);
+      }
+    } else {
+      stopAllAudio();
+      
+      try {
+        await audioRecordingService.startRecording();
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Error starting recording:', error);
+      }
+    }
+  };
+
+  const handleSubmitMessage = async () => {
+    if (isRecording) {
+      setIsRecording(false);
+      try {
+        const audioBlob = await audioRecordingService.stopRecording();
+        await processAudio(audioBlob);
+      } catch (error) {
+        console.error('Error stopping recording:', error);
+      }
+      return;
+    }
+    
+    if (!inputMessage.trim() || isProcessing) return;
+    
+    stopAllAudio();
+    
+    const userMessage = inputMessage.trim();
+    setInputMessage('');
+    
+    const newUserMessage: ChatMessage = {
+      id: uuidv4(),
+      content: userMessage,
+      role: 'user'
+    };
+    setMessages(prevMessages => [...prevMessages, newUserMessage]);
+    
+    await processMessage(userMessage);
+  };
 
   return {
     messages,
@@ -188,7 +226,6 @@ export const useVirgilChat = (
     isProcessing,
     toggleRecording,
     handleSubmitMessage,
-    addUserMessage,
     addAssistantMessage,
     sessionId
   };
