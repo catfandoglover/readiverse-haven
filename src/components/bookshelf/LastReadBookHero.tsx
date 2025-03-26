@@ -56,7 +56,7 @@ const LastReadBookHero = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${coverUrl})` }}
         />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/30" />
         
         {/* "RESUME" Button Text Overlay - Top Left */}
         <div className="absolute top-6 left-6">
