@@ -10,6 +10,7 @@ interface ExamItem {
   description: string;
   score: number;
   image: string;
+  subtitle?: string;
 }
 
 // Helper function to get hex color based on score level
@@ -28,28 +29,28 @@ const getHexagonColor = (level: number): string => {
 const ExamsList: React.FC = () => {
   const navigate = useNavigate();
   
-  // Sample data - in a real application, this would come from a database or API
+  // Updated exam data with the requested information
   const exams: ExamItem[] = [
     {
-      id: "exam1",
-      title: "Ethics & Morality",
-      description: "Test your knowledge of ethical frameworks",
+      id: "maimonides",
+      title: "Maimonides",
+      description: "Solid grasp, room for creative depth",
       score: 3,
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Maimonides.png"
     },
     {
-      id: "exam2",
-      title: "Critical Thinking",
-      description: "Evaluate your analytical skills",
+      id: "art-of-war",
+      title: "The Art of War",
+      description: "Masterfully evaluates strategic principles across contexts",
       score: 5,
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Sun%20Tzu.png"
     },
     {
-      id: "exam3",
-      title: "Political Philosophy",
-      description: "Test your understanding of political systems",
+      id: "teleological-judgment",
+      title: "Teleological judgment",
+      description: "Recalls teleological concepts but without personal insight",
       score: 2,
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Concept_Images/Teleological%20judgment.png"
     }
   ];
   
