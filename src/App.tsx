@@ -35,6 +35,9 @@ import FavoritesShelf from "./pages/FavoritesShelf";
 import Classroom from "./pages/Classroom";
 import IntellectualDNACourse from "./pages/IntellectualDNACourse";
 import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
+import ExamRoom from "./pages/ExamRoom";
+import ExamWelcome from "./pages/ExamWelcome";
+import ExamVirgilChat from "./pages/ExamVirgilChat";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,6 +111,9 @@ const App = () => (
                 <Route path="/classroom" element={<Classroom />} />
                 <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
                 <Route path="/classroom-virgil-chat" element={<ClassroomVirgilChat />} />
+                <Route path="/exam-room" element={<ExamRoom />} />
+                <Route path="/exam-welcome" element={<ExamWelcome />} />
+                <Route path="/exam-virgil-chat" element={<ExamVirgilChat />} />
                 
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
