@@ -1,21 +1,29 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { Search, Hexagon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface ExamOption {
+interface ContentItem {
   id: string;
   title: string;
-  description: string;
-  category: "philosophical" | "literary" | "historical" | "custom";
-  image?: string;
+  author?: string; // For classics
+  name?: string; // For icons
+  cover_url?: string;
+  illustration?: string;
+  about?: string | null;
 }
 
 interface CreateExamDialogProps {
@@ -23,194 +31,238 @@ interface CreateExamDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const CreateExamDialog: React.FC<CreateExamDialogProps> = ({ open, onOpenChange }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("philosophical");
+const CreateExamDialog: React.FC<CreateExamDialogProps> = ({ 
+  open, 
+  onOpenChange 
+}) => {
   const navigate = useNavigate();
-
-  // Sample exam options
-  const examOptions: ExamOption[] = [
-    {
-      id: "ethics-morality",
-      title: "Ethics & Morality",
-      description: "Test your knowledge of ethical frameworks and moral reasoning",
-      category: "philosophical",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "critical-thinking",
-      title: "Critical Thinking",
-      description: "Evaluate your analytical skills and logical reasoning",
-      category: "philosophical",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "existentialism",
-      title: "Existentialism",
-      description: "Explore your understanding of existence, meaning, and choice",
-      category: "philosophical",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "literary-theory",
-      title: "Literary Theory",
-      description: "Test your understanding of literary analysis and criticism",
-      category: "literary",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "narrative-structures",
-      title: "Narrative Structures",
-      description: "Evaluate your knowledge of storytelling patterns and techniques",
-      category: "literary",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "ancient-philosophy",
-      title: "Ancient Philosophy",
-      description: "Test your knowledge of ancient philosophical traditions",
-      category: "historical",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "enlightenment",
-      title: "The Enlightenment",
-      description: "Explore your understanding of Enlightenment thinkers and ideas",
-      category: "historical",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
-    },
-    {
-      id: "custom-exam",
-      title: "Create From Scratch",
-      description: "Design your own custom philosophical examination",
-      category: "custom",
-      image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
+  const [activeTab, setActiveTab] = useState<"classics" | "icons" | "concepts">("classics");
+  const [classics, setClassics] = useState<ContentItem[]>([]);
+  const [icons, setIcons] = useState<ContentItem[]>([]);
+  const [concepts, setConcepts] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  useEffect(() => {
+    if (open) {
+      fetchData();
     }
-  ];
-
-  // Filter exams based on search query and active tab
-  const filteredExams = examOptions.filter(exam => {
-    const matchesSearch = exam.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          exam.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === "all" || exam.category === activeTab;
-    return matchesSearch && matchesTab;
-  });
-
-  const handleSelectExam = (exam: ExamOption) => {
-    // Close the dialog
-    onOpenChange(false);
+  }, [open]);
+  
+  const fetchData = async () => {
+    setLoading(true);
     
-    // Show toast notification
-    toast.success(`${exam.title} exam selected`, {
-      description: "Starting your examination session...",
-      duration: 3000,
-    });
-    
-    // Navigate to the exam with the selected option
-    navigate('/exam-virgil-chat', { 
-      state: { 
-        examData: {
-          id: exam.id,
-          title: exam.title,
-          description: exam.description,
-          image: exam.image
-        }
+    try {
+      const { data: classicsData, error: classicsError } = await supabase
+        .from('books')
+        .select('id, title, author, cover_url, about')
+        .order('randomizer', { ascending: false })
+        .limit(20);
+      
+      if (classicsError) throw classicsError;
+      if (classicsData) setClassics(classicsData);
+      
+      const { data: iconsData, error: iconsError } = await supabase
+        .from('icons')
+        .select('id, name, illustration, about')
+        .order('randomizer', { ascending: false })
+        .limit(20);
+      
+      if (iconsError) throw iconsError;
+      if (iconsData) {
+        const transformedIcons = iconsData.map(icon => ({
+          id: icon.id,
+          title: icon.name,
+          illustration: icon.illustration,
+          about: icon.about
+        }));
+        setIcons(transformedIcons);
       }
-    });
+      
+      const { data: conceptsData, error: conceptsError } = await supabase
+        .from('concepts')
+        .select('id, title, illustration, about')
+        .order('randomizer', { ascending: false })
+        .limit(20);
+      
+      if (conceptsError) throw conceptsError;
+      if (conceptsData) setConcepts(conceptsData);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      toast.error("Failed to load content");
+    } finally {
+      setLoading(false);
+    }
   };
-
+  
+  const handleSelectItem = async (item: ContentItem, type: "book" | "icon" | "concept") => {
+    try {
+      setLoading(true);
+      onOpenChange(false);
+      
+      toast.success(`${item.title || item.name} exam selected`, {
+        description: "Starting your examination session...",
+      });
+      
+      navigate("/exam-virgil-chat", { 
+        state: { 
+          examData: {
+            id: item.id,
+            title: item.title || item.name,
+            description: item.about || "A custom exam based on your selection.",
+            entryId: item.id,
+            entryType: type
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error creating exam:", error);
+      toast.error("Failed to create exam");
+      setLoading(false);
+    }
+  };
+  
+  const filterContent = (items: ContentItem[]) => {
+    if (!searchQuery) return items;
+    return items.filter(item => 
+      (item.title || item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.author || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.about || "").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+  
+  const ContentCard = ({ item, type }: { item: ContentItem, type: "book" | "icon" | "concept" }) => {
+    const title = item.title || item.name || "Unknown";
+    const imageUrl = item.cover_url || item.illustration || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+    
+    return (
+      <div 
+        className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
+        style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
+        onClick={() => handleSelectItem(item, type)}
+      >
+        <div className="flex items-center mb-3">
+          <div className="flex items-center flex-1">
+            <div className="relative mr-4">
+              <Hexagon className="h-10 w-10 text-[#373763]" strokeWidth={3} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img 
+                  src={imageUrl} 
+                  alt={title}
+                  className="h-9 w-9 object-cover rounded-2xl"
+                  style={{ 
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{title}</h3>
+              <p className="text-xs text-[#E9E7E2]/70 font-oxanium">
+                {type === "book" && item.author ? item.author : 
+                 type === "concept" ? "Philosophical Concept" : 
+                 "Historical Figure"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#3D3D6F] border-[#4D4D8F] text-[#E9E7E2] p-0 overflow-hidden sm:max-w-[600px] max-h-[85vh]">
-        <DialogHeader className="flex flex-row items-center justify-between p-6 pb-2">
-          <DialogTitle className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-lg">
-            Select an Exam
+      <DialogContent className="bg-[#3D3D6F] text-[#E9E7E2] border-[#4D4D8F] p-0 max-w-2xl w-[90vw]">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle className="text-xl font-baskerville text-[#E9E7E2]">
+            Create Your Own Exam
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#373763]"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <DialogDescription className="text-[#E9E7E2]/70 font-oxanium">
+            Select a classic, icon, or concept to create your personalized exam.
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="p-6 pt-2">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#E9E7E2]/50" />
+        <div className="px-6 mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-[#E9E7E2]/50" />
             <Input
-              placeholder="Search exams..."
+              placeholder="Search for inspiration..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[#373763]/50 border-[#4D4D8F] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 focus-visible:ring-[#CCFF23]/30"
+              className="w-full pl-10 bg-[#373763]/70 border-[#4D4D8F] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl"
             />
           </div>
-          
-          <Tabs defaultValue="philosophical" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-4 bg-[#373763]/30 p-0.5">
-              <TabsTrigger 
-                value="philosophical" 
-                className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2] text-[#E9E7E2]/70 text-xs"
-              >
-                Philosophical
-              </TabsTrigger>
-              <TabsTrigger 
-                value="literary" 
-                className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2] text-[#E9E7E2]/70 text-xs"
-              >
-                Literary
-              </TabsTrigger>
-              <TabsTrigger 
-                value="historical" 
-                className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2] text-[#E9E7E2]/70 text-xs"
-              >
-                Historical
-              </TabsTrigger>
-              <TabsTrigger 
-                value="custom" 
-                className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2] text-[#E9E7E2]/70 text-xs"
-              >
-                Custom
-              </TabsTrigger>
-            </TabsList>
-            
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-3">
-                {filteredExams.map((exam) => (
-                  <div
-                    key={exam.id}
-                    className="rounded-lg p-4 cursor-pointer hover:bg-[#373763] transition-colors"
-                    style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.05), rgba(77, 77, 143, 0.1))' }}
-                    onClick={() => handleSelectExam(exam)}
-                  >
-                    <div className="flex items-center">
-                      {exam.image && (
-                        <div className="w-12 h-12 rounded-md overflow-hidden mr-4 flex-shrink-0">
-                          <img 
-                            src={exam.image} 
-                            alt={exam.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold">{exam.title}</h3>
-                        <p className="text-xs text-[#E9E7E2]/70">{exam.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {filteredExams.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-[#E9E7E2]/70 text-sm">No exams found matching your search.</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </Tabs>
         </div>
+        
+        <Tabs 
+          defaultValue="classics" 
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as any)}
+          className="w-full"
+        >
+          <div className="px-6">
+            <TabsList className="grid grid-cols-3 mb-4 p-0 bg-transparent">
+              {(['classics', 'icons', 'concepts'] as const).map(tab => (
+                <TabsTrigger 
+                  key={tab} 
+                  value={tab}
+                  className="relative flex items-center justify-center text-[#E9E7E2]/80 py-2 transition-all
+                    data-[state=active]:text-[#E9E7E2] data-[state=active]:font-semibold
+                    border-0 bg-transparent"
+                >
+                  <span className="font-oxanium uppercase text-xs">
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </span>
+                  <span className="absolute bottom-0 left-1/2 w-16 h-0.5 -translate-x-1/2 transform scale-x-0 bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200 data-[state=active]:scale-x-100"></span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          
+          <ScrollArea className="h-[60vh] px-6">
+            <TabsContent value="classics" className="space-y-4 mt-0">
+              {loading ? (
+                <div className="p-6 text-center">Loading classics...</div>
+              ) : filterContent(classics).length > 0 ? (
+                filterContent(classics).map(classic => (
+                  <ContentCard key={classic.id} item={classic} type="book" />
+                ))
+              ) : searchQuery ? (
+                <div className="p-6 text-center">No classics found matching your search.</div>
+              ) : (
+                <div className="p-6 text-center">No classics found.</div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="icons" className="space-y-4 mt-0">
+              {loading ? (
+                <div className="p-6 text-center">Loading icons...</div>
+              ) : filterContent(icons).length > 0 ? (
+                filterContent(icons).map(icon => (
+                  <ContentCard key={icon.id} item={icon} type="icon" />
+                ))
+              ) : searchQuery ? (
+                <div className="p-6 text-center">No icons found matching your search.</div>
+              ) : (
+                <div className="p-6 text-center">No icons found.</div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="concepts" className="space-y-4 mt-0">
+              {loading ? (
+                <div className="p-6 text-center">Loading concepts...</div>
+              ) : filterContent(concepts).length > 0 ? (
+                filterContent(concepts).map(concept => (
+                  <ContentCard key={concept.id} item={concept} type="concept" />
+                ))
+              ) : searchQuery ? (
+                <div className="p-6 text-center">No concepts found matching your search.</div>
+              ) : (
+                <div className="p-6 text-center">No concepts found.</div>
+              )}
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
