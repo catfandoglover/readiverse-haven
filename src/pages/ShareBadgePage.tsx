@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Hexagon } from "lucide-react";
@@ -170,9 +170,9 @@ const ShareBadgePage: React.FC = () => {
   const domainColor = domainColors[domainId || "default"];
   
   return (
-    <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
-      {/* Hero section with badge image as background */}
-      <div className="relative w-full h-[70vh]">
+    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+      {/* Hero section with badge image as background - reduced height */}
+      <div className="relative w-full h-[50vh]">
         {/* Background image */}
         <div className="absolute inset-0 overflow-hidden">
           <img 
@@ -200,22 +200,20 @@ const ShareBadgePage: React.FC = () => {
           className="absolute top-4 left-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
           aria-label="Share"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37069L8.08261 9.13789C7.54305 8.43882 6.7672 8 5.9 8C4.2431 8 3 9.34315 3 11C3 12.6569 4.2431 14 5.9 14C6.7672 14 7.54305 13.5612 8.08261 12.8621L15.0227 16.6293C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.1328 14 16.357 14.4388 15.8174 15.1379L8.87733 11.3707C8.89227 11.2492 8.9 11.1255 8.9 11C8.9 10.8745 8.89227 10.7508 8.87733 10.6293L15.8174 6.86211C16.357 7.56118 17.1328 8 18 8Z" fill="#E9E7E2"/>
-          </svg>
+          <Share2 className="h-5 w-5 text-[#E9E7E2]" />
         </Button>
         
         {/* Title */}
-        <div className="absolute bottom-0 left-0 w-full px-6 pb-32 z-10">
-          <h1 className="text-4xl font-serif text-[#E9E7E2] mb-4">{badgeData.title}</h1>
+        <div className="absolute bottom-0 left-0 w-full px-6 pb-16 z-10">
+          <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
       
-      {/* User badge section */}
-      <div className="w-full px-6 py-8 flex flex-col items-center -mt-16 relative z-10">
-        <div className="relative h-24 w-24 mb-4">
+      {/* User badge section - reduced spacing */}
+      <div className="w-full px-6 py-4 flex flex-col items-center -mt-10 relative z-10">
+        <div className="relative h-20 w-20 mb-2">
           <Hexagon 
-            className="h-24 w-24" 
+            className="h-20 w-20" 
             fill="black"
             stroke="#CCFF23"
             strokeWidth={1}
@@ -233,25 +231,25 @@ const ShareBadgePage: React.FC = () => {
           </div>
         </div>
         
-        <h2 className="text-2xl font-serif text-center">{fullName}</h2>
-        <p className="text-xl font-oxanium text-[#E9E7E2] uppercase mt-2">
+        <h2 className="text-xl font-serif text-center">{fullName}</h2>
+        <p className="text-md font-oxanium text-[#E9E7E2] uppercase mt-1">
           {getStageName(badgeData.score || 6)}
         </p>
         
-        {/* Badge summary */}
-        <div className="max-w-lg mt-8 text-center px-4">
-          <p className="text-base font-oxanium text-[#E9E7E2]/80 leading-relaxed">
+        {/* Badge summary - reduced margins */}
+        <div className="max-w-lg mt-3 text-center px-4">
+          <p className="text-sm font-oxanium text-[#E9E7E2]/80 leading-relaxed">
             {badgeData.summary ? `"${badgeData.summary}"` : 
-              `"Created novel framework for modern problems. Extended concepts into unexplored domains. Synthesized with contemporary critique. Reimagined authenticity through original metaphorical language. Constructed a unique methodology bridging traditions."`}
+              `"Created novel framework for modern problems. Extended concepts into unexplored domains. Synthesized with contemporary critique."`}
           </p>
         </div>
       </div>
       
-      {/* Footer section */}
-      <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
+      {/* Footer section - moved up */}
+      <div className="mt-auto w-full px-6 py-4 flex flex-col items-center">
         <a 
           href="/intellectual-dna-exam" 
-          className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
+          className="font-oxanium uppercase text-sm font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
         >
           DISCOVER YOUR INTELLECTUAL DNA
         </a>
@@ -259,7 +257,7 @@ const ShareBadgePage: React.FC = () => {
           href="https://www.lightninginspiration.com" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="justify-center font-oxanium uppercase text-sm text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          className="justify-center font-oxanium uppercase text-xs text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
         >
           WWW.LIGHTNINGINSPIRATION.COM
         </a>
