@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +35,7 @@ import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 import FavoritesShelf from "./pages/FavoritesShelf";
 import Classroom from "./pages/Classroom";
 import IntellectualDNACourse from "./pages/IntellectualDNACourse";
+import IntellectualDNAExam from "./pages/IntellectualDNAExam";
 import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
 import ExamRoom from "./pages/ExamRoom";
 import ExamWelcome from "./pages/ExamWelcome";
@@ -110,6 +112,7 @@ const App = () => (
                 <Route path="/favorites-shelf" element={<FavoritesShelf />} />
                 <Route path="/classroom" element={<Classroom />} />
                 <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
+                <Route path="/intellectual-dna-exam" element={<IntellectualDNAExam />} />
                 <Route path="/classroom-virgil-chat" element={<ClassroomVirgilChat />} />
                 <Route path="/exam-room" element={<ExamRoom />} />
                 <Route path="/exam-welcome" element={<ExamWelcome />} />
