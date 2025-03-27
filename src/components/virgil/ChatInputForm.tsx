@@ -40,7 +40,7 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
     <form 
       onSubmit={handleSubmit} 
       className={cn(
-        "flex items-center gap-2 p-4 border-t rounded-2xl",
+        "flex items-center gap-2 p-4 border-t rounded-t-2xl",
         themeColors.border,
         themeColors.inputBackground
       )}
