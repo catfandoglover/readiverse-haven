@@ -11,6 +11,7 @@ interface ExamItem {
   score: number;
   image: string;
   subtitle?: string;
+  domainId?: string; // Added domainId property
 }
 
 // Helper function to get hex color based on score level
@@ -29,37 +30,57 @@ const getHexagonColor = (level: number): string => {
 const ExamsList: React.FC = () => {
   const navigate = useNavigate();
   
-  // Updated exam data with the requested information
+  // Updated exam data with domain IDs
   const exams: ExamItem[] = [
     {
       id: "maimonides",
       title: "Maimonides",
       description: "Solid grasp, room for creative depth",
       score: 3,
-      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Maimonides.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Maimonides.png",
+      domainId: "theology" // Added domain ID
     },
     {
       id: "art-of-war",
       title: "The Art of War",
       description: "Masterfully evaluates strategic principles across contexts",
       score: 5,
-      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Sun%20Tzu.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Sun%20Tzu.png",
+      domainId: "politics" // Added domain ID
     },
     {
       id: "teleological-judgment",
       title: "Teleological judgment",
       description: "Recalls teleological concepts but without personal insight",
       score: 2,
-      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Concept_Images/Teleological%20judgment.png"
+      image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Concept_Images/Teleological%20judgment.png",
+      domainId: "ethics" // Added domain ID
     }
   ];
   
   const handleSelectExam = (exam: ExamItem) => {
-    navigate('/exam-virgil-chat', { 
-      state: { 
-        examData: exam
-      }
-    });
+    // For exams with badges (that have a score and domainId), go directly to share badge page
+    if (exam.score && exam.domainId) {
+      navigate(`/share-badge/${exam.domainId}/${exam.id}`, { 
+        state: { 
+          resource: {
+            id: exam.id,
+            title: exam.title,
+            subtitle: exam.description,
+            score: exam.score,
+            domainId: exam.domainId,
+            image: exam.image
+          }
+        }
+      });
+    } else {
+      // For exams without badges, continue to exam-virgil-chat
+      navigate('/exam-virgil-chat', { 
+        state: { 
+          examData: exam
+        }
+      });
+    }
   };
   
   return (
