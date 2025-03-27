@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -214,15 +215,14 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                 <TabsTrigger 
                   key={tab} 
                   value={tab}
-                  className="relative flex items-center justify-center text-[#E9E7E2] py-2 transition-all
+                  className="relative flex items-center justify-center text-[#E9E7E2]/80 py-2 transition-all
                     data-[state=active]:text-[#E9E7E2] data-[state=active]:font-semibold
-                    after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
-                    after:bg-transparent after:transition-all
-                    data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-[#19352F] data-[state=active]:after:to-[#2a453f]"
+                    border-0 bg-transparent"
                 >
                   <span className="font-oxanium uppercase text-xs">
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </span>
+                  <span className="absolute bottom-0 left-1/2 w-12 h-0.5 -translate-x-1/2 transform scale-x-0 bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200 data-[state=active]:scale-x-100"></span>
                 </TabsTrigger>
               ))}
             </TabsList>
