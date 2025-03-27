@@ -93,7 +93,7 @@ const ExamVirgilChat: React.FC = () => {
         {state === 'chat' && (
           <div className="absolute inset-0 flex flex-col">
             <VirgilFullScreenChat 
-              variant="classroom"
+              variant="examroom"
               initialMessage={initialMessage}
             />
           </div>
