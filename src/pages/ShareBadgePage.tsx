@@ -69,11 +69,11 @@ const ShareBadgePage: React.FC = () => {
         if (data) {
           setBadgeData({
             id: resourceId,
-            title: data.title || "Philosophy Badge",
+            title: data.one_sentence || "Philosophy Badge",
             subtitle: data.one_sentence || "Knowledge Mastery",
             summary: data.summary || "",
             score: parseInt(data.score) || 6,
-            image: data.image_url || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+            image: data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
             domainId: domainId
           });
         } else {
@@ -160,8 +160,8 @@ const ShareBadgePage: React.FC = () => {
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      {/* Hero section with badge image as background - reduced height */}
-      <div className="relative w-full h-[50vh]">
+      {/* Hero section with badge image as background - slightly reduced height */}
+      <div className="relative w-full h-[45vh]">
         {/* Background image */}
         <div className="absolute inset-0 overflow-hidden">
           <img 
@@ -193,14 +193,14 @@ const ShareBadgePage: React.FC = () => {
         </Button>
         
         {/* Title */}
-        <div className="absolute bottom-0 left-0 w-full px-6 pb-16 z-10">
+        <div className="absolute bottom-0 left-0 w-full px-6 pb-12 z-10">
           <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
       
-      {/* User badge section - reduced spacing */}
-      <div className="w-full px-6 py-4 flex flex-col items-center -mt-10 relative z-10">
-        <div className="relative h-20 w-20 mb-2">
+      {/* User badge section - moved up to overlap with hero */}
+      <div className="w-full px-6 py-4 flex flex-col items-center -mt-20 relative z-10">
+        <div className="relative h-24 w-24 mb-2">
           {/* Colored hexagon instead of avatar */}
           <svg 
             viewBox="0 0 24 24" 
@@ -217,28 +217,19 @@ const ShareBadgePage: React.FC = () => {
           </svg>
           
           {/* Badge level number */}
-          <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-black">
+          <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-black">
             {badgeData.score}
           </span>
-          
-          {/* User avatar below the badge level */}
-          <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 h-10 w-10 rounded-full overflow-hidden border border-[#CCFF23]">
-            <img 
-              src={user?.Account?.ProfilePic || "/lovable-uploads/4471ea2d-9220-4c72-b8a0-893f88abb6a5.png"} 
-              alt="User"
-              className="h-full w-full object-cover"
-            />
-          </div>
         </div>
         
-        <h2 className="text-xl font-serif text-center mt-8">{fullName}</h2>
-        <p className="text-md font-oxanium text-[#E9E7E2] uppercase mt-1">
+        <h2 className="text-2xl font-serif text-center mt-4">{fullName}</h2>
+        <p className="text-lg font-oxanium text-[#E9E7E2] uppercase mt-1">
           {getStageName(badgeData.score || 6)}
         </p>
         
-        {/* Badge summary - reduced margins */}
-        <div className="max-w-lg mt-3 text-center px-4">
-          <p className="text-sm font-oxanium text-[#E9E7E2]/80 leading-relaxed">
+        {/* Badge summary - increased text size */}
+        <div className="max-w-lg mt-5 text-center px-4">
+          <p className="text-base font-oxanium text-[#E9E7E2]/90 leading-relaxed">
             {badgeData.summary ? `"${badgeData.summary}"` : 
               `"Created novel framework for modern problems. Extended concepts into unexplored domains."`}
           </p>
@@ -246,10 +237,10 @@ const ShareBadgePage: React.FC = () => {
       </div>
       
       {/* Footer section - moved up */}
-      <div className="mt-auto w-full px-6 py-4 flex flex-col items-center">
+      <div className="mt-auto w-full px-6 py-6 flex flex-col items-center">
         <a 
           href="/intellectual-dna-exam" 
-          className="font-oxanium uppercase text-sm font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
+          className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
         >
           DISCOVER YOUR INTELLECTUAL DNA
         </a>
@@ -257,7 +248,7 @@ const ShareBadgePage: React.FC = () => {
           href="https://www.lightninginspiration.com" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="justify-center font-oxanium uppercase text-xs text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          className="justify-center font-oxanium uppercase text-sm text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
         >
           WWW.LIGHTNINGINSPIRATION.COM
         </a>
