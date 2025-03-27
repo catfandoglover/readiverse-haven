@@ -245,7 +245,7 @@ const ShareBadgePage: React.FC = () => {
         
         {/* Title - moved up to overlap with the hero image */}
         <div className="absolute bottom-[67%] left-0 w-full px-6 z-10">
-          <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
+          <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2 pt-8">{badgeData.title}</h1>
         </div>
       </div>
       
