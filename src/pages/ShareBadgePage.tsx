@@ -193,7 +193,7 @@ const ShareBadgePage: React.FC = () => {
         </Button>
         
         {/* Title */}
-        <div className="absolute bottom-0 left-0 w-full px-6 pb-0 z-10">
+        <div className="absolute bottom-0 left-0 w-full px-6 pb-12 z-10">
           <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
