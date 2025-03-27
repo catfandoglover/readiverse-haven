@@ -15,7 +15,8 @@ const ExamRoom: React.FC = () => {
 
   // Save current path to navigation history
   React.useEffect(() => {
-    saveLastVisited('exam', location.pathname);
+    // Updated the first parameter to match one of the expected values from the type definition
+    saveLastVisited('bookshelf', location.pathname);
   }, [location.pathname]);
 
   return (

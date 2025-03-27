@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom";
 const LastExamHero: React.FC = () => {
   const navigate = useNavigate();
   
-  // Sample data - in a real application, this would come from a database or API
+  // Updated exam data with new content
   const lastExam = {
     id: "exam1",
-    title: "Philosophy Foundations",
-    description: "Test your knowledge on the foundations of philosophy",
+    title: "First Principles",
+    description: "Stripping away assumptions to reach bedrock truth",
     score: 4,
-    image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
+    image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Concept_Images/First%20principles.png"
   };
   
   const handleContinueExam = () => {
@@ -35,10 +35,10 @@ const LastExamHero: React.FC = () => {
         />
         <div className="absolute inset-0 bg-black/45" />
         
-        {/* "RESUME" Button Text Overlay - Top Left */}
+        {/* "SUGGESTED" Button Text Overlay - Top Left */}
         <div className="absolute top-6 left-6">
           <p className="font-oxanium uppercase text-[#E9E7E2]/50 text-xs font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
-            RESUME
+            SUGGESTED
           </p>
         </div>
         
