@@ -107,17 +107,20 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
       setLoading(true);
       onOpenChange(false); // Close dialog immediately to show intent
 
+      console.log("Creating course with:", { item, type });
+
       // Create new course
       const result = await createCourse(item.id, type);
+      console.log("Create course result:", result);
       
-      if (result.success) {
+      if (result.success && result.data) {
         toast.success("Course created successfully");
         
         // Navigate to classroom chat with the course data
         navigate("/classroom-chat", { 
           state: { 
             courseData: {
-              id: result.data?.id,
+              id: result.data.id,
               title: item.title || item.name,
               description: item.about || "A custom course based on your selection.",
               entryId: item.id,
@@ -126,7 +129,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
           }
         });
       } else {
-        throw new Error("Failed to create course");
+        throw new Error(result.error?.message || "Failed to create course");
       }
     } catch (error) {
       console.error("Error creating course:", error);
@@ -219,9 +222,16 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                   value={tab}
                   className="flex items-center justify-center data-[state=active]:bg-[#19352F] data-[state=active]:text-[#E9E7E2]"
                 >
-                  <span className="font-oxanium uppercase text-xs">
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </span>
+                  <div className="flex items-center">
+                    <div className="h-6 w-6 bg-[#CCFF23] flex items-center justify-center mr-2 rounded-lg">
+                      <span className="font-bold text-[#1D3A35] text-xs">
+                        {tab === 'classics' ? 'C' : tab === 'icons' ? 'I' : 'Ph'}
+                      </span>
+                    </div>
+                    <span className="font-oxanium uppercase text-xs">
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </span>
+                  </div>
                 </TabsTrigger>
               ))}
             </TabsList>

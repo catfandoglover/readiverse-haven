@@ -44,20 +44,45 @@ export const useCourses = () => {
       
       // If user has existing courses, use those
       if (userCoursesData && userCoursesData.length > 0) {
-        // Fetch entry details for each course
+        // Get all unique entry types
+        const entryTypes = [...new Set(userCoursesData.map(course => course.entry_type))];
         const entryIds = userCoursesData.map(course => course.entry_id);
         
-        // Get book, icon, or concept details based on entry_type
-        const { data: entriesData, error: entriesError } = await supabase
-          .from('books')
-          .select('id, title, about, cover_url')
-          .in('id', entryIds);
-          
-        if (entriesError) throw entriesError;
+        // Fetch entry details for each entry type
+        const entriesData = await Promise.all(
+          entryTypes.map(async (type) => {
+            // Filter entry IDs for current type
+            const typeEntryIds = userCoursesData
+              .filter(course => course.entry_type === type)
+              .map(course => course.entry_id);
+            
+            // Skip if no entries of this type
+            if (!typeEntryIds.length) return { type, data: [] };
+            
+            // Determine table name based on entry type
+            const tableName = type === 'book' ? 'books' : 
+                              type === 'icon' ? 'icons' : 'concepts';
+            
+            // Select appropriate fields based on entry type
+            const selectFields = type === 'book' ? 'id, title, about, cover_url' :
+                                 type === 'icon' ? 'id, name as title, about, illustration as cover_url' :
+                                 'id, title, about, illustration as cover_url';
+            
+            const { data, error } = await supabase
+              .from(tableName)
+              .select(selectFields)
+              .in('id', typeEntryIds);
+              
+            if (error) throw error;
+            return { type, data: data || [] };
+          })
+        );
         
         // Map user courses with their corresponding entry details
         coursesList = userCoursesData.map(userCourse => {
-          const entry = entriesData?.find(e => e.id === userCourse.entry_id);
+          // Find entry data matching this course's type and ID
+          const entriesForType = entriesData.find(e => e.type === userCourse.entry_type)?.data || [];
+          const entry = entriesForType.find(e => e.id === userCourse.entry_id);
           
           return {
             id: userCourse.id,
@@ -151,9 +176,16 @@ export const useCourses = () => {
   // Create a new course for a user
   const createCourse = async (entryId: string, entryType: string) => {
     try {
+      console.log("Creating course with entryId:", entryId, "entryType:", entryType);
+      
       // Get current user
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("User not authenticated");
+      if (!session) {
+        console.error("User not authenticated");
+        throw new Error("User not authenticated");
+      }
+      
+      console.log("User session:", session.user.id);
       
       // Get user profile
       const { data: profileData, error: profileError } = await supabase
@@ -162,7 +194,12 @@ export const useCourses = () => {
         .eq('id', session.user.id)
         .single();
         
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        throw profileError;
+      }
+      
+      console.log("Profile data:", profileData);
       
       // Create new course
       const { data, error } = await supabase
@@ -178,15 +215,20 @@ export const useCourses = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Insert error:", error);
+        throw error;
+      }
+      
+      console.log("Course created:", data);
       
       // Refresh courses
       await fetchCourses();
       
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating course:", error);
-      toast.error("Failed to create course");
+      toast.error(`Failed to create course: ${error.message || "Unknown error"}`);
       return { success: false, error };
     }
   };
