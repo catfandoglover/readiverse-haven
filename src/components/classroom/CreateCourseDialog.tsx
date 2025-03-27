@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -45,6 +46,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
   const { createCourse } = useCourses();
   
   useEffect(() => {
+    // Fetch data when the dialog opens
     if (open) {
       fetchData();
     }
@@ -54,6 +56,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
     setLoading(true);
     
     try {
+      // Fetch classics (books)
       const { data: classicsData, error: classicsError } = await supabase
         .from('books')
         .select('id, title, author, cover_url, about')
@@ -63,6 +66,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
       if (classicsError) throw classicsError;
       if (classicsData) setClassics(classicsData);
       
+      // Fetch icons
       const { data: iconsData, error: iconsError } = await supabase
         .from('icons')
         .select('id, name, illustration, about')
@@ -71,6 +75,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
       
       if (iconsError) throw iconsError;
       if (iconsData) {
+        // Transform icons data to match ContentItem interface
         const transformedIcons = iconsData.map(icon => ({
           id: icon.id,
           title: icon.name,
@@ -80,6 +85,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
         setIcons(transformedIcons);
       }
       
+      // Fetch concepts
       const { data: conceptsData, error: conceptsError } = await supabase
         .from('concepts')
         .select('id, title, illustration, about')
@@ -99,16 +105,18 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
   const handleSelectItem = async (item: ContentItem, type: "book" | "icon" | "concept") => {
     try {
       setLoading(true);
-      onOpenChange(false);
-      
+      onOpenChange(false); // Close dialog immediately to show intent
+
       console.log("Creating course with:", { item, type });
 
+      // Create new course
       const result = await createCourse(item.id, type);
       console.log("Create course result:", result);
       
       if (result.success && result.data) {
         toast.success("Course created successfully");
         
+        // Navigate to classroom chat with the course data
         navigate("/classroom-chat", { 
           state: { 
             courseData: {
@@ -130,6 +138,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
     }
   };
   
+  // Filter content based on search query
   const filterContent = (items: ContentItem[]) => {
     if (!searchQuery) return items;
     return items.filter(item => 
@@ -139,6 +148,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
     );
   };
   
+  // Render content item 
   const ContentCard = ({ item, type }: { item: ContentItem, type: "book" | "icon" | "concept" }) => {
     const title = item.title || item.name || "Unknown";
     const imageUrl = item.cover_url || item.illustration || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
@@ -185,7 +195,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
           <DialogTitle className="text-xl font-baskerville text-[#E9E7E2]">
             Create Your Own Course
           </DialogTitle>
-          <DialogDescription className="text-[#E9E7E2]/70 font-oxanium">
+          <DialogDescription className="text-[#E9E7E2]/70 font-baskerville">
             Select a classic, icon, or concept to create your personalized learning journey.
           </DialogDescription>
         </DialogHeader>
@@ -209,19 +219,16 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
           className="w-full"
         >
           <div className="px-6">
-            <TabsList className="grid grid-cols-3 mb-4 p-0 bg-transparent">
+            <TabsList className="bg-[#19352F]/70 grid grid-cols-3 mb-4">
               {(['classics', 'icons', 'concepts'] as const).map(tab => (
                 <TabsTrigger 
                   key={tab} 
                   value={tab}
-                  className="relative flex items-center justify-center text-[#E9E7E2]/80 py-2 transition-all
-                    data-[state=active]:text-[#E9E7E2] data-[state=active]:font-semibold
-                    border-0 bg-transparent"
+                  className="flex items-center justify-center data-[state=active]:bg-[#19352F] data-[state=active]:text-[#E9E7E2]"
                 >
                   <span className="font-oxanium uppercase text-xs">
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </span>
-                  <span className="absolute bottom-0 left-1/2 w-16 h-0.5 -translate-x-1/2 transform scale-x-0 bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200 data-[state=active]:scale-x-100"></span>
                 </TabsTrigger>
               ))}
             </TabsList>
