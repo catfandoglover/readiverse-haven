@@ -89,6 +89,11 @@ screens:
         state: "visible"
       - type: "progress_bar"
         state: "visible"
+      - type: "outseta_profile_settings_button"
+        state: "visible"
+        actions:
+          - action: "click"
+            next_state: "outseta_settings"
       - type: "navigation_buttons"
         state: "visible"
         actions:
@@ -101,6 +106,8 @@ screens:
     transitions:
       - to: "dna_results"
         condition: "assessment_completed"
+      - to: "outseta_settings"
+        condition: "settings_clicked"
 
   dna_results:
     path: "/dna/results"
@@ -775,6 +782,22 @@ screens:
       - to: "virgil"
         condition: "continue_clicked"
 
+  outseta_settings:
+    path: "/settings"
+    auth_required: true
+    components:
+      - type: "settings_header"
+        state: "visible"
+      - type: "outseta_profile_form"
+        state: "visible"
+      - type: "back_button"
+        state: "visible"
+    transitions:
+      - to: "dna_assessment"
+        condition: "back_clicked && !has_assessment_id"
+      - to: "profile"
+        condition: "back_clicked && has_assessment_id"
+
 # 2. COMPONENT SPECIFICATIONS
 components:
   user_authentication:
@@ -789,12 +812,16 @@ components:
         actions:
           - action: "start_dna"
             next_state: "dna_assessment"
+          - action: "access_settings"
+            next_state: "outseta_settings"
           - action: "logout"
             next_state: "unauthenticated"
       - name: "authenticated_with_dna"
         actions:
           - action: "view_profile"
             next_state: "profile"
+          - action: "access_settings"
+            next_state: "outseta_settings"
           - action: "logout"
             next_state: "unauthenticated"
     data_requirements:
@@ -975,15 +1002,16 @@ navigation:
     - name: "Profile"
       path: "/profile"
       auth_required: true
-      visible_condition: "authenticated"
+      visible_condition: "authenticated && has_assessment_id"
     - name: "DNA"
       path: "/dna"
-      auth_required: false
-      default_for: ["new_users"]
+      auth_required: true
+      visible_condition: "authenticated"
+      default_for: ["new_users", "users_without_assessment"]
     - name: "Virgil"
       path: "/virgil"
       auth_required: true
-      visible_condition: "authenticated"
+      visible_condition: "authenticated && has_assessment_id"
     - name: "Discover"
       path: "/discover"
       auth_required: false
@@ -991,13 +1019,13 @@ navigation:
     - name: "Study"
       path: "/bookshelf"
       auth_required: true
-      visible_condition: "authenticated"
+      visible_condition: "authenticated && has_assessment_id"
 
   conditional_navigation:
     - condition: "!authenticated"
       available_paths: ["/discover", "/login", "/register", "/share-badge/*", "/profile/share/*", "/badge/*", "/"]
     - condition: "authenticated && !has_assessment_id"
-      available_paths: ["/discover", "/dna/*", "/bookshelf", "/read/*", "/profile", "/virgil", "/dashboard"]
+      available_paths: ["/discover", "/dna/*", "/read/*", "/settings", "/"]
     - condition: "authenticated && has_assessment_id"
       available_paths: ["*"]
 
@@ -1079,6 +1107,17 @@ error_states:
       - type: "login_button"
         state: "visible"
   
+  dna_required:
+    components:
+      - type: "modal"
+        state: "visible"
+        message: "Please complete your Intellectual DNA Assessment to access this feature"
+      - type: "take_dna_button"
+        state: "visible"
+    transitions:
+      - to: "dna_assessment"
+        condition: "take_dna_clicked"
+  
   content_not_found:
     components:
       - type: "error_message"
@@ -1095,6 +1134,28 @@ error_states:
       - type: "retry_button"
         state: "visible"
 
+# Global Redirects
+global_redirects:
+  - from: "/profile"
+    to: "/dna/priming"
+    condition: "authenticated && !has_assessment_id"
+  
+  - from: "/virgil"
+    to: "/dna/priming"
+    condition: "authenticated && !has_assessment_id"
+  
+  - from: "/bookshelf"
+    to: "/dna/priming"
+    condition: "authenticated && !has_assessment_id"
+  
+  - from: "/classroom"
+    to: "/dna/priming"
+    condition: "authenticated && !has_assessment_id"
+  
+  - from: "/exam-room"
+    to: "/dna/priming"
+    condition: "authenticated && !has_assessment_id"
+
 # 5. BUSINESS RULES
 business_rules:
   - rule: "Authentication required for reading full content"
@@ -1102,6 +1163,15 @@ business_rules:
   
   - rule: "DNA assessment required for personalized recommendations"
     implementation: "Check assessment_id field in profile before showing personalized content"
+  
+  - rule: "DNA assessment required for profile access"
+    implementation: "Redirect users without assessment_id to DNA assessment page"
+  
+  - rule: "DNA assessment required for classroom access"
+    implementation: "Prevent access to classroom features until DNA assessment is completed"
+  
+  - rule: "DNA assessment required for exam room access"
+    implementation: "Prevent access to exam room and badge earning until DNA assessment is completed"
   
   - rule: "Annotation persistence"
     implementation: "Save highlights and notes to user's account"
@@ -1116,7 +1186,7 @@ business_rules:
     implementation: "Allow filtering content by intellectual domains using custom_domains"
   
   - rule: "Badge earning requirements"
-    implementation: "Award badges based on exam completion and performance"
+    implementation: "Award badges based on exam completion and performance, only for users with completed DNA assessment"
   
   - rule: "Course progress tracking"
     implementation: "Track and display user progress in courses"
