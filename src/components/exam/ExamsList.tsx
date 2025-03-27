@@ -101,9 +101,8 @@ const ExamsList: React.FC = () => {
               </div>
               <div className="relative flex flex-col items-center min-w-[80px]">
                 <div className="relative flex flex-col items-center justify-center">
-                  {/* Hexagon background with gradient fill */}
+                  {/* Hexagon with solid fill */}
                   <div 
-                    className="shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
                     style={{ 
                       height: '2rem', 
                       width: '2rem', 
@@ -116,18 +115,18 @@ const ExamsList: React.FC = () => {
                       width="100%" 
                       xmlns="http://www.w3.org/2000/svg" 
                       fill={getHexagonColor(exam.score)}
-                      stroke="currentColor" 
+                      stroke="#000000" 
                       strokeWidth="1.5" 
                       strokeLinecap="round" 
                       strokeLinejoin="round"
                     >
                       <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#CCFF23]">
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#000000]">
                       {exam.score}
                     </span>
                   </div>
-                  <span className="text-xs text-[#CCFF23] font-oxanium mt-1 whitespace-nowrap">
+                  <span className="text-xs font-oxanium mt-1 whitespace-nowrap" style={{ color: getHexagonColor(exam.score) }}>
                     {getStageName(exam.score)}
                   </span>
                 </div>

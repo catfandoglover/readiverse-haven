@@ -1536,6 +1536,7 @@ export type Database = {
           entry_icon: string | null
           entry_text: string | null
           id: number
+          one_sentence: string | null
           score: string | null
           session_duration: number | null
           summary: string | null
@@ -1547,6 +1548,7 @@ export type Database = {
           entry_icon?: string | null
           entry_text?: string | null
           id?: number
+          one_sentence?: string | null
           score?: string | null
           session_duration?: number | null
           summary?: string | null
@@ -1558,6 +1560,7 @@ export type Database = {
           entry_icon?: string | null
           entry_text?: string | null
           id?: number
+          one_sentence?: string | null
           score?: string | null
           session_duration?: number | null
           summary?: string | null
