@@ -1652,6 +1652,56 @@ export type Database = {
           },
         ]
       }
+      user_courses: {
+        Row: {
+          completed: boolean
+          conversation_id: string | null
+          created_at: string
+          entry_id: string
+          entry_type: string
+          id: string
+          last_message: string | null
+          profile_id: string | null
+          progress: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          entry_id: string
+          entry_type: string
+          id?: string
+          last_message?: string | null
+          profile_id?: string | null
+          progress?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          entry_id?: string
+          entry_type?: string
+          id?: string
+          last_message?: string | null
+          profile_id?: string | null
+          progress?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_courses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["outseta_user_id"]
+          },
+        ]
+      }
       user_favorites: {
         Row: {
           added_at: string
