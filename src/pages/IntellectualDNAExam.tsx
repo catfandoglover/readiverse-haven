@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import { getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
 import {
   DropdownMenu,
@@ -14,14 +12,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-// Use the same fixed assessment ID as in DomainDetail
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface DNAAnalysisResult {
   [key: string]: string | null;
 }
 
-// Helper function to get hex color based on score level
 const getHexagonColor = (level: number): string => {
   switch(level) {
     case 1: return "#F9F9F9"; // Scribe
@@ -40,7 +36,6 @@ const IntellectualDNAExam: React.FC = () => {
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // All domains in order
   const domains = [
     {
       id: "ethics",
@@ -86,7 +81,6 @@ const IntellectualDNAExam: React.FC = () => {
     }
   ];
   
-  // Filtered domains based on the selected filter
   const filteredDomains = domainFilter && domainFilter !== "all" 
     ? domains.filter(domain => domain.id === domainFilter)
     : domains;
@@ -151,15 +145,14 @@ const IntellectualDNAExam: React.FC = () => {
         title: "ORIGIN",
         subtitle: "DE PRINCIPIIS (230)",
         progress: 0,
-        status: "locked" // Default status
+        status: "locked"
       });
     }
     
     const resources = [];
     
-    // Mock progress values for visualization - some with scores, some without
     const dummyProgressValues = [85, 65, 0, 0, 0];
-    const dummyScores = [5, 3, 0, 0, 0]; // 0 means no score yet (show grayed out badge)
+    const dummyScores = [5, 3, 0, 0, 0];
     
     for (let i = 1; i <= 5; i++) {
       let resourceKey = '';
@@ -176,7 +169,6 @@ const IntellectualDNAExam: React.FC = () => {
       const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
       const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       
-      // Add status for visual distinction
       let status = "locked";
       if (i === 1) status = "completed";
       else if (i === 2) status = "active";
@@ -196,7 +188,6 @@ const IntellectualDNAExam: React.FC = () => {
     return resources;
   };
   
-  // Render a resource item with its status icon, matching the ExamsList style
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
     let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
     
@@ -206,7 +197,6 @@ const IntellectualDNAExam: React.FC = () => {
       StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
     }
     
-    // Apply the ExamsList card styling
     return (
       <div 
         className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
@@ -233,16 +223,14 @@ const IntellectualDNAExam: React.FC = () => {
             </div>
           </div>
           
-          {/* Badge display with score, gray out if no score */}
           <div className="relative flex flex-col items-center min-w-[80px]">
             <div className="relative flex flex-col items-center justify-center">
-              {/* Hexagon with solid fill */}
               <div 
                 style={{ 
                   height: '2rem', 
                   width: '2rem', 
                   position: 'relative',
-                  opacity: resource.score > 0 ? 1 : 0.1 // Gray out badges if no score
+                  opacity: resource.score > 0 ? 1 : 0.1
                 }}
               >
                 <svg 
@@ -266,7 +254,7 @@ const IntellectualDNAExam: React.FC = () => {
                 className="text-xs font-oxanium mt-1 whitespace-nowrap" 
                 style={{ 
                   color: getHexagonColor(resource.score > 0 ? resource.score : 1),
-                  opacity: resource.score > 0 ? 1 : 0.1 // Gray out stage name if no score
+                  opacity: resource.score > 0 ? 1 : 0.1
                 }}
               >
                 {getStageName(resource.score > 0 ? resource.score : 1)}
@@ -274,17 +262,10 @@ const IntellectualDNAExam: React.FC = () => {
             </div>
           </div>
         </div>
-        
-        <ProgressDisplay 
-          progress={resource.progress || 0} 
-          showLabel={false} 
-          className="mb-3" 
-        />
       </div>
     );
   };
   
-  // Render a domain section
   const DomainSection = ({ domain }: { domain: any }) => {
     const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
     const kindredResources = getResourcesForTab(domain.id, "kindred");
