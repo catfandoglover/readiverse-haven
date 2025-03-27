@@ -214,7 +214,11 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                 <TabsTrigger 
                   key={tab} 
                   value={tab}
-                  className="flex items-center justify-center data-[state=active]:bg-[#19352F] data-[state=active]:text-[#E9E7E2] rounded-xl"
+                  className="relative flex items-center justify-center text-[#E9E7E2] py-2 transition-all
+                    data-[state=active]:text-[#E9E7E2] data-[state=active]:font-semibold
+                    after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-transparent after:transition-all
+                    data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-[#19352F] data-[state=active]:after:to-[#2a453f]"
                 >
                   <span className="font-oxanium uppercase text-xs">
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
