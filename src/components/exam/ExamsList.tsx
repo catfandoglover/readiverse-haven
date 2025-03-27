@@ -115,8 +115,8 @@ const ExamsList: React.FC = () => {
                       width="100%" 
                       xmlns="http://www.w3.org/2000/svg" 
                       fill={getHexagonColor(exam.score)}
-                      stroke="#000000" 
-                      strokeWidth="1.5" 
+                      stroke="none" 
+                      strokeWidth="0" 
                       strokeLinecap="round" 
                       strokeLinejoin="round"
                     >
