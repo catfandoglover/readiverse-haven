@@ -62,6 +62,19 @@ const getProgressLevel = (progress: number): number => {
   return 6;
 };
 
+// Get color for badge hexagon based on level
+const getHexagonColor = (level: number): string => {
+  const colors = {
+    1: "#E9E7E2", // Light gray for SCRIBE
+    2: "#D5EAF7", // Light blue for MESSENGER
+    3: "#DAFFB5", // Light green for ALCHEMIST
+    4: "#FFE68C", // Light yellow for CARTOGRAPHER
+    5: "#FFD0D0", // Light pink for JUDGE
+    6: "#CCFF23"  // Bright green for CREATOR
+  };
+  return colors[level as keyof typeof colors] || "#E9E7E2";
+};
+
 const getStageName = (level: number): string => {
   const stageNames = {
     1: "SCRIBE",
@@ -74,4 +87,4 @@ const getStageName = (level: number): string => {
   return stageNames[level as keyof typeof stageNames] || "SCRIBE";
 };
 
-export { MasteryScore, getProgressLevel, getStageName };
+export { MasteryScore, getProgressLevel, getStageName, getHexagonColor };

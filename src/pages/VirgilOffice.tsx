@@ -72,7 +72,7 @@ const VirgilOffice: React.FC = () => {
               
               <Button
                 className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
-                onClick={() => console.log("Test my knowledge clicked")}
+                onClick={() => navigate("/exam-room")}
               >
                 TEST MY KNOWLEDGE
               </Button>

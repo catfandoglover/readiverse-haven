@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,7 @@ import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
 import Profile from "./pages/Profile";
 import ShareableProfile from "./pages/ShareableProfile";
+import ShareBadgePage from "./pages/ShareBadgePage";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
@@ -34,7 +36,11 @@ import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 import FavoritesShelf from "./pages/FavoritesShelf";
 import Classroom from "./pages/Classroom";
 import IntellectualDNACourse from "./pages/IntellectualDNACourse";
+import IntellectualDNAExam from "./pages/IntellectualDNAExam";
 import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
+import ExamRoom from "./pages/ExamRoom";
+import ExamWelcome from "./pages/ExamWelcome";
+import ExamVirgilChat from "./pages/ExamVirgilChat";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,6 +104,10 @@ const App = () => (
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
+                <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
+                <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
+                <Route path="/badge/:domainId/:resourceId" element={<ShareBadgePage />} />
+                <Route path="/badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
@@ -107,7 +117,11 @@ const App = () => (
                 <Route path="/favorites-shelf" element={<FavoritesShelf />} />
                 <Route path="/classroom" element={<Classroom />} />
                 <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
+                <Route path="/intellectual-dna-exam" element={<IntellectualDNAExam />} />
                 <Route path="/classroom-virgil-chat" element={<ClassroomVirgilChat />} />
+                <Route path="/exam-room" element={<ExamRoom />} />
+                <Route path="/exam-welcome" element={<ExamWelcome />} />
+                <Route path="/exam-virgil-chat" element={<ExamVirgilChat />} />
                 
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />

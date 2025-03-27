@@ -43,6 +43,16 @@ export const chatThemes: Record<ChatVariant, ThemeColors> = {
     inputPlaceholder: 'placeholder:text-[#E9E7E2]/50',
     border: 'border-[#2A3A35]'
   },
+  examroom: {
+    background: 'bg-[#3D3D6F]',
+    inputBackground: 'bg-[#373763]',
+    text: 'text-[#E9E7E2]',
+    userMessageBg: 'bg-[#4D4D8F]',
+    assistantMessageBg: 'bg-[#373763]',
+    inputText: 'text-[#E9E7E2]',
+    inputPlaceholder: 'placeholder:text-[#E9E7E2]/50',
+    border: 'border-[#4D4D8F]'
+  },
   default: {
     background: 'bg-[#E7E4DB]',
     inputBackground: 'bg-[#E7E4DB]',
