@@ -17,6 +17,7 @@ interface BadgeData {
   score: number;
   image: string;
   domainId?: string;
+  resourceType?: "icon" | "concept" | "classic";
 }
 
 interface ShareBadgeParams {
@@ -26,7 +27,8 @@ interface ShareBadgeParams {
 }
 
 const ShareBadgePage: React.FC = () => {
-  const { domainId, resourceId, userName } = useParams<ShareBadgeParams>();
+  const params = useParams<Record<string, string>>();
+  const { domainId, resourceId, userName } = params;
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,6 +36,7 @@ const ShareBadgePage: React.FC = () => {
   const [shareUrl, setShareUrl] = useState<string>("");
   const [badgeData, setBadgeData] = useState<BadgeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [resourceType, setResourceType] = useState<"icon" | "concept" | "classic" | null>(null);
   
   // Use resource from location state if available, otherwise fetch it
   const initialResource = location.state?.resource;
@@ -43,6 +46,7 @@ const ShareBadgePage: React.FC = () => {
       if (initialResource) {
         // Use the data passed from navigation
         setBadgeData(initialResource);
+        setResourceType(initialResource.resourceType || null);
         setIsLoading(false);
         return;
       }
@@ -72,6 +76,34 @@ const ShareBadgePage: React.FC = () => {
         }
         
         if (data) {
+          // Determine resource type based on badge data
+          let type: "icon" | "concept" | "classic" | null = null;
+          
+          if (data.entry_icon) {
+            type = "icon";
+          } else if (data.entry_concepts) {
+            type = "concept";
+          } else {
+            // Try to determine type by checking different tables
+            const promises = [
+              supabase.from('icons').select('id').eq('id', resourceId).maybeSingle(),
+              supabase.from('concepts').select('id').eq('id', resourceId).maybeSingle(),
+              supabase.from('books').select('id').eq('id', resourceId).maybeSingle()
+            ];
+            
+            const [iconResult, conceptResult, classicResult] = await Promise.all(promises);
+            
+            if (iconResult.data) {
+              type = "icon";
+            } else if (conceptResult.data) {
+              type = "concept";
+            } else if (classicResult.data) {
+              type = "classic";
+            }
+          }
+          
+          setResourceType(type);
+          
           setBadgeData({
             id: resourceId,
             title: data.one_sentence || "Philosophy Badge",
@@ -79,7 +111,8 @@ const ShareBadgePage: React.FC = () => {
             summary: data.summary || "",
             score: parseInt(data.score) || 6,
             image: data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-            domainId: domainId
+            domainId: domainId,
+            resourceType: type
           });
         } else {
           // Fallback to default data
@@ -113,7 +146,13 @@ const ShareBadgePage: React.FC = () => {
   const handleClose = () => {
     // If user is not authenticated, redirect to the discover detail view
     if (!user) {
-      navigate(`/view/concept/${resourceId}`);
+      // Determine the correct detail view URL based on the resource type
+      if (resourceType && resourceId) {
+        navigate(`/view/${resourceType}/${resourceId}`);
+      } else {
+        // Fallback to discover if we couldn't determine the type
+        navigate('/discover');
+      }
       return;
     }
     
