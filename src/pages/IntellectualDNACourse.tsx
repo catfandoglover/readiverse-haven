@@ -198,7 +198,10 @@ const IntellectualDNACourse: React.FC = () => {
     
     return (
       <div>
-        <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
+        <div 
+          className="rounded-xl p-4 pb-1.5 shadow-inner"
+          style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
+        >
           <div className="flex items-center mb-3">
             <div className="flex items-center flex-1">
               <div className="relative mr-4">
@@ -220,7 +223,7 @@ const IntellectualDNACourse: React.FC = () => {
               </div>
             </div>
             
-            <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
+            <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${resource.status === "completed" ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
               <StatusIcon />
             </button>
           </div>
