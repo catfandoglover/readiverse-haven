@@ -105,7 +105,9 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
+                <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
                 <Route path="/badge/:domainId/:resourceId" element={<ShareBadgePage />} />
+                <Route path="/badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />

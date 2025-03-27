@@ -19,8 +19,14 @@ interface BadgeData {
   domainId?: string;
 }
 
+interface ShareBadgeParams {
+  domainId: string;
+  resourceId: string;
+  userName?: string;
+}
+
 const ShareBadgePage: React.FC = () => {
-  const { domainId, resourceId } = useParams<{ domainId: string; resourceId: string }>();
+  const { domainId, resourceId, userName } = useParams<ShareBadgeParams>();
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -98,11 +104,19 @@ const ShareBadgePage: React.FC = () => {
   
   useEffect(() => {
     const currentUrl = window.location.origin;
-    const badgeShareUrl = `${currentUrl}/badge/${domainId}/${resourceId}`;
+    // Include the user's name in the share URL for uniqueness
+    const userNameSegment = userName ? `/${userName}` : '';
+    const badgeShareUrl = `${currentUrl}/badge/${domainId}/${resourceId}${userNameSegment}`;
     setShareUrl(badgeShareUrl);
-  }, [domainId, resourceId]);
+  }, [domainId, resourceId, userName]);
   
   const handleClose = () => {
+    // If user is not authenticated, redirect to the discover detail view
+    if (!user) {
+      navigate(`/view/concept/${resourceId}`);
+      return;
+    }
+    
     const previousPage = getPreviousPage();
     // Navigate back to the previous page or to index if there's no valid previous page
     navigate(previousPage || "/index");
@@ -191,14 +205,14 @@ const ShareBadgePage: React.FC = () => {
         </Button>
         
         {/* Title - moved up to overlap with the hero image */}
-        <div className="absolute bottom-[33%] left-0 w-full px-6 z-10">
+        <div className="absolute bottom-[67%] left-0 w-full px-6 z-10">
           <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
       
       {/* User badge section - moved up to overlap with hero */}
       <div className="w-full px-6 py-8 flex flex-col items-center -mt-32 relative z-10">
-        <div className="relative h-32 w-32 mb-2">
+        <div className="relative h-36 w-36 mb-2">
           {/* Colored hexagon with badge score */}
           <svg 
             viewBox="0 0 24 24" 
@@ -215,19 +229,19 @@ const ShareBadgePage: React.FC = () => {
           </svg>
           
           {/* Badge level number */}
-          <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">
+          <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-black">
             {badgeData.score}
           </span>
         </div>
         
-        <h2 className="text-3xl font-serif text-center mt-6">{fullName}</h2>
-        <p className="text-xl font-oxanium text-[#E9E7E2] uppercase mt-2">
+        <h2 className="text-4xl font-serif text-center mt-8">{fullName}</h2>
+        <p className="text-2xl font-oxanium text-[#E9E7E2] uppercase mt-2">
           {getStageName(badgeData.score || 6)}
         </p>
         
         {/* Badge summary - increased text size */}
-        <div className="max-w-lg mt-6 text-center px-4">
-          <p className="text-lg font-oxanium text-[#E9E7E2]/90 leading-relaxed">
+        <div className="max-w-lg mt-8 text-center px-4">
+          <p className="text-xl font-oxanium text-[#E9E7E2]/90 leading-relaxed">
             {badgeData.summary ? `"${badgeData.summary}"` : 
               `"Created novel framework for modern problems. Extended concepts into unexplored domains."`}
           </p>
@@ -238,7 +252,7 @@ const ShareBadgePage: React.FC = () => {
       <div className="mt-auto w-full px-6 py-6 flex flex-col items-center">
         <a 
           href="https://www.lightninginspiration.com" 
-          className="font-oxanium uppercase text-lg font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
+          className="font-oxanium uppercase text-xl font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
         >
           BECOME WHO YOU ARE
         </a>
@@ -246,7 +260,7 @@ const ShareBadgePage: React.FC = () => {
           href="https://www.lightninginspiration.com" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="justify-center font-oxanium uppercase text-base text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          className="justify-center font-oxanium uppercase text-lg text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
         >
           WWW.LIGHTNINGINSPIRATION.COM
         </a>
