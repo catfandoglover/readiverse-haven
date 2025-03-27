@@ -12,6 +12,19 @@ interface ExamItem {
   image: string;
 }
 
+// Helper function to get hex color based on score level
+const getHexagonColor = (level: number): string => {
+  switch(level) {
+    case 1: return "#F9F9F9"; // Scribe
+    case 2: return "#FFE0CA"; // Messenger
+    case 3: return "#EFFE91"; // Alchemist
+    case 4: return "#B8C8FF"; // Cartographer
+    case 5: return "#D5B8FF"; // Judge
+    case 6: return "#000000"; // Creator
+    default: return "#F9F9F9";
+  }
+};
+
 const ExamsList: React.FC = () => {
   const navigate = useNavigate();
   
@@ -86,16 +99,38 @@ const ExamsList: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="relative flex flex-col items-center">
-                <div className="relative">
-                  <Hexagon className="h-8 w-8 text-[#CCFF23]" strokeWidth={1.5} />
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#CCFF23]">
-                    {exam.score}
+              <div className="relative flex flex-col items-center min-w-[80px]">
+                <div className="relative flex flex-col items-center justify-center">
+                  {/* Hexagon background with gradient fill */}
+                  <div 
+                    className="shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                    style={{ 
+                      height: '2rem', 
+                      width: '2rem', 
+                      position: 'relative' 
+                    }}
+                  >
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      height="100%" 
+                      width="100%" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill={getHexagonColor(exam.score)}
+                      stroke="currentColor" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#CCFF23]">
+                      {exam.score}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#CCFF23] font-oxanium mt-1 whitespace-nowrap">
+                    {getStageName(exam.score)}
                   </span>
                 </div>
-                <span className="text-xs text-[#CCFF23] font-oxanium mt-1">
-                  {getStageName(exam.score)}
-                </span>
               </div>
             </div>
           </div>
