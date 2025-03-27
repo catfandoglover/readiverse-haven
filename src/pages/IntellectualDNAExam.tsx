@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import BadgeDialog from "@/components/exam/BadgeDialog";
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
@@ -35,6 +37,8 @@ const IntellectualDNAExam: React.FC = () => {
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const domains = [
     {
@@ -197,10 +201,22 @@ const IntellectualDNAExam: React.FC = () => {
       StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
     }
     
+    const handleClick = () => {
+      // Only enable badge dialog for resources with a score
+      if (resource.score > 0) {
+        setSelectedResource({...resource, domainId});
+        setIsDialogOpen(true);
+      }
+    };
+    
     return (
       <div 
-        className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
+        className={cn(
+          "rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors",
+          resource.score > 0 ? "cursor-pointer" : "cursor-default"
+        )}
         style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
+        onClick={handleClick}
       >
         <div className="flex items-center mb-3">
           <div className="flex items-center flex-1">
@@ -390,6 +406,13 @@ const IntellectualDNAExam: React.FC = () => {
           </div>
         )}
       </main>
+      
+      {/* Badge Dialog */}
+      <BadgeDialog 
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        resource={selectedResource}
+      />
     </div>
   );
 };

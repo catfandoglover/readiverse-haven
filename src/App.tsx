@@ -20,6 +20,7 @@ import { Reader } from "@/components/Reader";
 import { useBook } from '@/hooks/useBook';
 import Profile from "./pages/Profile";
 import ShareableProfile from "./pages/ShareableProfile";
+import ShareBadgePage from "./pages/ShareBadgePage";
 import BecomeWhoYouAre from "./pages/BecomeWhoYouAre";
 import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
@@ -103,6 +104,8 @@ const App = () => (
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
+                <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
+                <Route path="/badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />

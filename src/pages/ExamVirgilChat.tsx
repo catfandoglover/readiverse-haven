@@ -3,6 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 import { useAuth } from '@/contexts/OutsetaAuthContext';
 import { cn } from '@/lib/utils';
@@ -12,10 +22,12 @@ interface ExamData {
   title: string;
   description: string;
   score?: number;
+  isRetake?: boolean;
 }
 
 const ExamVirgilChat: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -23,7 +35,9 @@ const ExamVirgilChat: React.FC = () => {
   const examData = location.state?.examData as ExamData;
   
   // Initial message based on exam data
-  const initialMessage = `Welcome, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Ready to test your knowledge on ${examData?.title || 'philosophy'}?`;
+  const initialMessage = examData?.isRetake
+    ? `Welcome back, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Let's retake the ${examData?.title || 'philosophy'} exam.`
+    : `Welcome, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Ready to test your knowledge on ${examData?.title || 'philosophy'}?`;
 
   // Initial animation timing
   useEffect(() => {
@@ -44,7 +58,16 @@ const ExamVirgilChat: React.FC = () => {
   }, []);
 
   const handleBack = () => {
+    setShowExitDialog(true);
+  };
+  
+  const handleConfirmExit = () => {
+    setShowExitDialog(false);
     navigate('/exam-room');
+  };
+  
+  const handleCancelExit = () => {
+    setShowExitDialog(false);
   };
 
   return (
@@ -99,6 +122,26 @@ const ExamVirgilChat: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Exit Confirmation Dialog */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exit Exam?</AlertDialogTitle>
+            <AlertDialogDescription>
+              If you leave now, you'll need to start this exam over from the beginning next time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelExit}>
+              Stay Here
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmExit}>
+              Exit Exam
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
