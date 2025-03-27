@@ -33,6 +33,16 @@ export const chatThemes: Record<ChatVariant, ThemeColors> = {
     inputPlaceholder: 'placeholder:text-muted-foreground',
     border: 'border-[#D0CBBD]/25'
   },
+  classroom: {
+    background: 'bg-[#1D3A35]',
+    inputBackground: 'bg-[#19352F]',
+    text: 'text-[#E9E7E2]',
+    userMessageBg: 'bg-[#2A3A35]',
+    assistantMessageBg: 'bg-[#19352F]',
+    inputText: 'text-[#E9E7E2]',
+    inputPlaceholder: 'placeholder:text-[#E9E7E2]/50',
+    border: 'border-[#2A3A35]'
+  },
   default: {
     background: 'bg-[#E7E4DB]',
     inputBackground: 'bg-[#E7E4DB]',

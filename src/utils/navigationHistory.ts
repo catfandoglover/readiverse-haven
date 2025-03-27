@@ -1,3 +1,4 @@
+
 const LAST_VISITED_KEY_PREFIX = 'last-visited-';
 const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 const PREVIOUS_PAGE_KEY = 'previous-page';
@@ -8,7 +9,8 @@ export const sections = {
   discover: '/discover',
   bookshelf: '/bookshelf',
   profile: '/profile',
-  dashboard: '/dashboard'
+  dashboard: '/dashboard',
+  classroom: '/classroom'
 } as const;
 
 // Store a stack of the last 10 visited pages to provide better back navigation

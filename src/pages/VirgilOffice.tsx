@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
 import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
-import { MessageCircle } from "lucide-react";
+import { MessageCircleMore } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
 const VirgilOffice: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   
@@ -28,8 +30,9 @@ const VirgilOffice: React.FC = () => {
           size="icon"
           className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
           aria-label="Chat History"
+          onClick={() => setIsHistorySidebarOpen(true)}
         >
-          <MessageCircle className="h-5 w-5" />
+          <MessageCircleMore className="h-5 w-5" />
         </Button>
       </div>
       
@@ -62,7 +65,7 @@ const VirgilOffice: React.FC = () => {
               
               <Button
                 className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
-                onClick={() => console.log("Take a course clicked")}
+                onClick={() => navigate("/classroom")}
               >
                 TAKE A COURSE
               </Button>
@@ -82,6 +85,11 @@ const VirgilOffice: React.FC = () => {
         isOpen={isChatOpen} 
         onClose={() => setIsChatOpen(false)}
         variant="virgilchat"
+      />
+      
+      <ConversationHistorySidebar 
+        open={isHistorySidebarOpen} 
+        onOpenChange={setIsHistorySidebarOpen} 
       />
     </div>
   );

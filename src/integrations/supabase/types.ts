@@ -1652,6 +1652,56 @@ export type Database = {
           },
         ]
       }
+      user_courses: {
+        Row: {
+          completed: boolean
+          conversation_id: string | null
+          created_at: string
+          entry_id: string
+          entry_type: string
+          id: string
+          last_message: string | null
+          profile_id: string | null
+          progress: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          entry_id: string
+          entry_type: string
+          id?: string
+          last_message?: string | null
+          profile_id?: string | null
+          progress?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          entry_id?: string
+          entry_type?: string
+          id?: string
+          last_message?: string | null
+          profile_id?: string | null
+          progress?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_courses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["outseta_user_id"]
+          },
+        ]
+      }
       user_favorites: {
         Row: {
           added_at: string
@@ -1673,6 +1723,42 @@ export type Database = {
           item_id?: string
           item_type?: string
           outseta_user_id?: string
+        }
+        Relationships: []
+      }
+      virgil_conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message: string | null
+          mode_icon: string
+          mode_id: string
+          mode_title: string
+          session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          mode_icon: string
+          mode_id: string
+          mode_title: string
+          session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          mode_icon?: string
+          mode_id?: string
+          mode_title?: string
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

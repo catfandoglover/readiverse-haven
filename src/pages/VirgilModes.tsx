@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import MainMenu from "@/components/navigation/MainMenu";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, List, Loader2 } from "lucide-react";
+import { Loader2, MessageCircleMore } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import WelcomeContainer from "@/components/virgil/WelcomeContainer";
 import { toast } from "sonner";
-import { Toggle } from "@/components/ui/toggle";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
 interface DbPrompt {
   id: number;
@@ -50,9 +50,9 @@ const mapDbPromptToPromptCard = (dbPrompt: DbPrompt) => {
 };
 
 const VirgilModes: React.FC = () => {
-  // Changed default view mode from "list" to "grid"
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"grid">("grid");
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -69,10 +69,6 @@ const VirgilModes: React.FC = () => {
     if (user) {
       console.log("Would store welcome dismissed preference for user in database");
     }
-  };
-
-  const toggleViewMode = () => {
-    setViewMode(viewMode === "grid" ? "list" : "grid");
   };
 
   const { data: prompts, isLoading, error } = useQuery({
@@ -109,24 +105,6 @@ const VirgilModes: React.FC = () => {
     }
   });
 
-  const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
-  
-  const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
-  const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
-  const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
-  const otherPrompts = formattedPrompts.filter(p => 
-    !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
-  );
-
-  const sortAlphabetically = (prompts: Prompt[]) => {
-    return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
-  };
-
-  const sortedIntellectualPrompts = sortAlphabetically(intellectualPrompts);
-  const sortedEmotionalPrompts = sortAlphabetically(emotionalPrompts);
-  const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
-  const sortedOtherPrompts = sortAlphabetically(otherPrompts);
-
   const handlePromptSelect = (prompt: Prompt) => {
     console.log("Prompt selected:", prompt);
     navigate('/virgil-chat', { 
@@ -134,17 +112,6 @@ const VirgilModes: React.FC = () => {
         promptData: prompt 
       }
     });
-  };
-
-  const renderListView = () => {
-    return (
-      <>
-        {renderPromptSection("INTELLECTUAL", sortedIntellectualPrompts)}
-        {renderPromptSection("EMOTIONAL", sortedEmotionalPrompts)}
-        {renderPromptSection("PRACTICAL", sortedPracticalPrompts)}
-        {renderPromptSection("OTHER", sortedOtherPrompts)}
-      </>
-    );
   };
 
   const renderGridView = () => {
@@ -171,29 +138,23 @@ const VirgilModes: React.FC = () => {
     );
   };
 
-  const renderPromptSection = (title: string, sectionPrompts: Prompt[]) => {
-    if (sectionPrompts.length === 0) return null;
-    
-    const mobileSpacing = isMobile ? "gap-3 mb-6" : "gap-4 mb-8";
-    
-    return (
-      <div className={cn("mb-8", isMobile && "mb-6")}>
-        <h3 className={cn("text-[#9D9D9D] uppercase tracking-wider text-sm font-medium mb-4", isMobile && "mb-3")}>
-          {title}
-        </h3>
-        <div className="space-y-3">
-          {sectionPrompts.map((prompt) => (
-            <PromptCard 
-              key={prompt.id}
-              prompt={prompt}
-              viewMode="list"
-              onSelect={() => handlePromptSelect(prompt)}
-            />
-          ))}
-        </div>
-      </div>
-    );
+  const formattedPrompts = prompts ? prompts.map(mapDbPromptToPromptCard) : [];
+  
+  const intellectualPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'intellectual'));
+  const emotionalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'emotional'));
+  const practicalPrompts = formattedPrompts.filter(p => (p.section?.toLowerCase() === 'practical'));
+  const otherPrompts = formattedPrompts.filter(p => 
+    !['intellectual', 'emotional', 'practical'].includes(p.section?.toLowerCase() || '')
+  );
+
+  const sortAlphabetically = (prompts: Prompt[]) => {
+    return [...prompts].sort((a, b) => a.user_title.localeCompare(b.user_title));
   };
+
+  const sortedIntellectualPrompts = sortAlphabetically(intellectualPrompts);
+  const sortedEmotionalPrompts = sortAlphabetically(emotionalPrompts);
+  const sortedPracticalPrompts = sortAlphabetically(practicalPrompts);
+  const sortedOtherPrompts = sortAlphabetically(otherPrompts);
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
@@ -203,18 +164,15 @@ const VirgilModes: React.FC = () => {
           BOLTS
         </h2>
         <div>
-          <Toggle 
-            pressed={viewMode === "list"}
-            onPressedChange={toggleViewMode}
-            aria-label="Toggle View Mode"
-            className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50 data-[state=on]:text-[#E9E7E2] data-[state=on]:bg-[#4A4351]/50"
+          <Button 
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowHistory(true)}
+            className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
+            aria-label="Conversation History"
           >
-            {viewMode === "grid" ? (
-              <List className="h-5 w-5" />
-            ) : (
-              <LayoutGrid className="h-5 w-5" />
-            )}
-          </Toggle>
+            <MessageCircleMore className="h-5 w-5" />
+          </Button>
         </div>
       </div>
       
@@ -249,10 +207,15 @@ const VirgilModes: React.FC = () => {
         ) : (
           <>
             {showWelcome && <WelcomeContainer onDismiss={handleDismissWelcome} />}
-            {viewMode === "list" ? renderListView() : renderGridView()}
+            {renderGridView()}
           </>
         )}
       </main>
+      
+      <ConversationHistorySidebar 
+        open={showHistory} 
+        onOpenChange={setShowHistory} 
+      />
     </div>
   );
 };

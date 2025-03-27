@@ -1,8 +1,7 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root.light {
     --background: 0 0% 100%;      /* #ffffff */
@@ -172,6 +171,16 @@
 }
 
 @layer components {
+  /* Tab underline animation */
+  .tab-underline {
+    @apply absolute bottom-0 left-1/2 w-12 h-0.5 -translate-x-1/2 transform scale-x-0 
+           bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200;
+  }
+  
+  .tab-underline[data-state="active"] {
+    @apply scale-x-100;
+  }
+  
   /* DNA Continue Button shared class */
   .dna-continue-button {
     height: 60px;

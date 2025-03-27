@@ -24,6 +24,7 @@ import DNAPriming from "./pages/DNAPriming";
 import VirgilOffice from "./pages/VirgilOffice";
 import VirgilWelcome from "./pages/VirgilWelcome";
 import Dashboard from "./pages/Dashboard";
+import DomainDetail from "./pages/DomainDetail";
 import VirgilModes from "./pages/VirgilModes";
 import VirgilChat from "./pages/VirgilChat";
 import SearchPage from "./pages/SearchPage";
@@ -31,6 +32,9 @@ import IconsFeedPage from "./pages/IconsFeedPage";
 import ConceptsFeedPage from "./pages/ConceptsFeedPage";
 import ClassicsFeedPage from "./pages/ClassicsFeedPage";
 import FavoritesShelf from "./pages/FavoritesShelf";
+import Classroom from "./pages/Classroom";
+import IntellectualDNACourse from "./pages/IntellectualDNACourse";
+import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,13 +99,16 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
                 <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
                 <Route path="/virgil" element={<VirgilOffice />} />
                 <Route path="/virgil-modes" element={<VirgilModes />} />
                 <Route path="/virgil-chat" element={<VirgilChat />} />
                 <Route path="/favorites-shelf" element={<FavoritesShelf />} />
+                <Route path="/classroom" element={<Classroom />} />
+                <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
+                <Route path="/classroom-virgil-chat" element={<ClassroomVirgilChat />} />
                 
-                {/* Redirects from old paths to new paths */}
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
                 <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
