@@ -193,7 +193,7 @@ const ShareBadgePage: React.FC = () => {
         </Button>
         
         {/* Title */}
-        <div className="absolute bottom-0 left-0 w-full px-6 pb-12 z-10">
+        <div className="absolute bottom-0 left-0 w-full px-6 pb-18 z-10">
           <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
@@ -239,10 +239,10 @@ const ShareBadgePage: React.FC = () => {
       {/* Footer section - moved up */}
       <div className="mt-auto w-full px-6 py-6 flex flex-col items-center">
         <a 
-          href="/intellectual-dna-exam" 
+          href="/https://www.lightninginspiration.com" 
           className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
         >
-          DISCOVER YOUR INTELLECTUAL DNA
+          BECOME WHO YOU ARE
         </a>
         <a 
           href="https://www.lightninginspiration.com" 
