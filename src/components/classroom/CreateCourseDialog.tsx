@@ -155,7 +155,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
     
     return (
       <div 
-        className="rounded-xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#19352F]/70 transition-colors"
+        className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#19352F]/70 transition-colors"
         style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
         onClick={() => handleSelectItem(item, type)}
       >
@@ -167,7 +167,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                 <img 
                   src={imageUrl} 
                   alt={title}
-                  className="h-9 w-9 object-cover rounded-none"
+                  className="h-9 w-9 object-cover rounded-2xl"
                   style={{ 
                     clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
                   }}
@@ -207,7 +207,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
               placeholder="Search for inspiration..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 bg-[#19352F]/70 border-[#333] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounding-2xl"
+              className="w-full pl-10 bg-[#19352F]/70 border-[#333] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl"
             />
           </div>
         </div>
@@ -227,7 +227,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                   className="flex items-center justify-center data-[state=active]:bg-[#19352F] data-[state=active]:text-[#E9E7E2]"
                 >
                   <div className="flex items-center">
-                    <div className="h-6 w-6 bg-[#CCFF23] flex items-center justify-center mr-2 rounded-lg">
+                    <div className="h-6 w-6 bg-[#CCFF23] flex items-center justify-center mr-2 rounded-2xl">
                       <span className="font-bold text-[#1D3A35] text-xs">
                         {tab === 'classics' ? 'C' : tab === 'icons' ? 'I' : 'Ph'}
                       </span>
