@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { X, Share2 } from "lucide-react";
@@ -17,7 +16,6 @@ const ShareBadgePage: React.FC = () => {
   const { user } = useAuth();
   const [shareUrl, setShareUrl] = useState<string>("");
   
-  // Get the resource from the location state
   const resource = location.state?.resource || {
     id: resourceId,
     title: "Philosophy Badge",
@@ -26,7 +24,6 @@ const ShareBadgePage: React.FC = () => {
     image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"
   };
   
-  // Domains mapping for background colors
   const domainColors: {[key: string]: string} = {
     ethics: "#3D3D6F",
     theology: "#3D3D6F",
@@ -40,7 +37,6 @@ const ShareBadgePage: React.FC = () => {
   const domainColor = domainColors[domainId || "default"];
   
   useEffect(() => {
-    // Generate share URL when component mounts
     const currentUrl = window.location.origin;
     const badgeShareUrl = `${currentUrl}/badge/${domainId}/${resourceId}`;
     setShareUrl(badgeShareUrl);
@@ -75,7 +71,6 @@ const ShareBadgePage: React.FC = () => {
     }
   };
   
-  // Get user's name for display
   const fullName = user?.Account?.Name || "Philosophy Student";
   const firstName = fullName.split(' ')[0];
   const lastName = fullName.split(' ').slice(1).join(' ');
@@ -83,9 +78,7 @@ const ShareBadgePage: React.FC = () => {
   
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
-      {/* Header with background color based on domain */}
       <div className="relative w-full h-64" style={{ backgroundColor: domainColor }}>
-        {/* Close button */}
         <Button 
           onClick={handleClose}
           className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
@@ -94,7 +87,6 @@ const ShareBadgePage: React.FC = () => {
           <X className="h-6 w-6 text-[#E9E7E2]" />
         </Button>
         
-        {/* Share button */}
         <Button 
           onClick={handleShare}
           className="absolute top-4 left-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
@@ -103,12 +95,9 @@ const ShareBadgePage: React.FC = () => {
           <Share2 className="h-6 w-6 text-[#E9E7E2]" />
         </Button>
         
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
         
-        {/* Badge and user content centered */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 pt-10">
-          {/* Badge hexagon */}
           <div className="relative h-24 w-24 mb-5">
             <Hexagon 
               className="h-24 w-24" 
@@ -123,7 +112,6 @@ const ShareBadgePage: React.FC = () => {
             </div>
           </div>
           
-          {/* Badge name and stage */}
           <h1 className="text-2xl font-serif text-center mb-1">{resource.title}</h1>
           <p className="text-base font-oxanium text-[#E9E7E2]/70 text-center">
             {getStageName(resource.score || 1)}
@@ -131,9 +119,7 @@ const ShareBadgePage: React.FC = () => {
         </div>
       </div>
       
-      {/* User profile section */}
       <div className="w-full px-6 py-8 flex flex-col items-center">
-        {/* Profile image in hexagon */}
         <div className="relative h-16 w-16 mb-2">
           <svg 
             viewBox="0 0 100 100" 
@@ -154,7 +140,7 @@ const ShareBadgePage: React.FC = () => {
             }}
           >
             <Avatar className="h-full w-full overflow-hidden rounded-none">
-              <AvatarImage src={user?.profileImageUrl} />
+              <AvatarImage src={user?.Account?.ProfilePic} />
               <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                 {initials}
               </AvatarFallback>
@@ -162,10 +148,8 @@ const ShareBadgePage: React.FC = () => {
           </div>
         </div>
         
-        {/* User name */}
         <h2 className="text-xl font-serif text-center">{fullName}</h2>
         
-        {/* Badge description */}
         <div className="max-w-lg mt-8 text-center">
           <p className="text-sm font-oxanium text-[#E9E7E2]/70 mb-2">
             Earned this badge in
@@ -179,7 +163,6 @@ const ShareBadgePage: React.FC = () => {
         </div>
       </div>
       
-      {/* Footer links */}
       <div className="mt-auto w-full px-6 py-8 flex flex-col items-center">
         <a 
           href="/intellectual-dna-exam" 
