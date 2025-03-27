@@ -6,6 +6,7 @@ import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
+import { getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,19 @@ const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 interface DNAAnalysisResult {
   [key: string]: string | null;
 }
+
+// Helper function to get hex color based on score level
+const getHexagonColor = (level: number): string => {
+  switch(level) {
+    case 1: return "#F9F9F9"; // Scribe
+    case 2: return "#FFE0CA"; // Messenger
+    case 3: return "#EFFE91"; // Alchemist
+    case 4: return "#B8C8FF"; // Cartographer
+    case 5: return "#D5B8FF"; // Judge
+    case 6: return "#000000"; // Creator
+    default: return "#F9F9F9";
+  }
+};
 
 const IntellectualDNAExam: React.FC = () => {
   const navigate = useNavigate();
@@ -136,35 +150,31 @@ const IntellectualDNAExam: React.FC = () => {
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: "ORIGIN",
         subtitle: "DE PRINCIPIIS (230)",
-        description: "Divine truth requires both rational inquiry and mystical insight.",
-        progress: 50,
+        progress: 0,
         status: "locked" // Default status
       });
     }
     
     const resources = [];
     
-    // Mock progress values for visualization
-    const dummyProgressValues = [85, 65, 45, 25, 15];
+    // Mock progress values for visualization - some with scores, some without
+    const dummyProgressValues = [85, 65, 0, 0, 0];
+    const dummyScores = [5, 3, 0, 0, 0]; // 0 means no score yet (show grayed out badge)
     
     for (let i = 1; i <= 5; i++) {
       let resourceKey = '';
       let classicKey = '';
-      let rationaleKey = '';
       
       if (tab === "kindred") {
         resourceKey = `${domainId}_kindred_spirit_${i}`;
         classicKey = `${domainId}_kindred_spirit_${i}_classic`;
-        rationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
       } else {
         resourceKey = `${domainId}_challenging_voice_${i}`;
         classicKey = `${domainId}_challenging_voice_${i}_classic`;
-        rationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
       }
       
       const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
       const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
-      const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
       
       // Add status for visual distinction
       let status = "locked";
@@ -177,8 +187,8 @@ const IntellectualDNAExam: React.FC = () => {
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
-        description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
         progress: dummyProgressValues[i-1],
+        score: dummyScores[i-1],
         status
       });
     }
@@ -186,57 +196,90 @@ const IntellectualDNAExam: React.FC = () => {
     return resources;
   };
   
-  // Render a resource item with its status icon
+  // Render a resource item with its status icon, matching the ExamsList style
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
     let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
     
     if (resource.status === "completed") {
-      // Using dark text color to ensure visibility against yellow background
       StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
     } else if (resource.status === "locked") {
       StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
     }
     
+    // Apply the ExamsList card styling
     return (
-      <div>
-        <div 
-          className="rounded-xl p-4 pb-1.5 shadow-inner"
-          style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
-        >
-          <div className="flex items-center mb-3">
-            <div className="flex items-center flex-1">
-              <div className="relative mr-4">
-                <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img 
-                    src={resource.image} 
-                    alt={resource.title}
-                    className="h-9 w-9 object-cover rounded-none"
-                    style={{ 
-                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
-                <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+      <div 
+        className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
+        style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
+      >
+        <div className="flex items-center mb-3">
+          <div className="flex items-center flex-1">
+            <div className="relative mr-4">
+              <Hexagon className="h-10 w-10 text-[#3D3D6F]" strokeWidth={3} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img 
+                  src={resource.image} 
+                  alt={resource.title}
+                  className="h-9 w-9 object-cover rounded-2xl"
+                  style={{ 
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                  }}
+                />
               </div>
             </div>
-            
-            <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${resource.status === "completed" ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
-              <StatusIcon />
-            </button>
+            <div>
+              <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
+              <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+            </div>
           </div>
           
-          <ProgressDisplay 
-            progress={resource.progress || 0} 
-            showLabel={false} 
-            className="mb-3" 
-          />
+          {/* Badge display with score, gray out if no score */}
+          <div className="relative flex flex-col items-center min-w-[80px]">
+            <div className="relative flex flex-col items-center justify-center">
+              {/* Hexagon with solid fill */}
+              <div 
+                style={{ 
+                  height: '2rem', 
+                  width: '2rem', 
+                  position: 'relative',
+                  opacity: resource.score > 0 ? 1 : 0.1 // Gray out badges if no score
+                }}
+              >
+                <svg 
+                  viewBox="0 0 24 24" 
+                  height="100%" 
+                  width="100%" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill={getHexagonColor(resource.score > 0 ? resource.score : 1)} 
+                  stroke="none" 
+                  strokeWidth="0" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#000000]">
+                  {resource.score > 0 ? resource.score : 1}
+                </span>
+              </div>
+              <span 
+                className="text-xs font-oxanium mt-1 whitespace-nowrap" 
+                style={{ 
+                  color: getHexagonColor(resource.score > 0 ? resource.score : 1),
+                  opacity: resource.score > 0 ? 1 : 0.1 // Gray out stage name if no score
+                }}
+              >
+                {getStageName(resource.score > 0 ? resource.score : 1)}
+              </span>
+            </div>
+          </div>
         </div>
         
-        <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
+        <ProgressDisplay 
+          progress={resource.progress || 0} 
+          showLabel={false} 
+          className="mb-3" 
+        />
       </div>
     );
   };
