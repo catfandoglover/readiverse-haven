@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { X, ArrowRight, Hexagon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore } from "@/components/reader/MasteryScore";
+import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
@@ -557,7 +559,10 @@ const DomainDetail: React.FC = () => {
             const resourceLevel = getProgressLevel(resource.progress);
             return (
               <div key={idx}>
-                <div className="rounded-xl p-4 pb-1.5 bg-[#383741]/80 shadow-inner">
+                <div 
+                  className="rounded-xl p-4 pb-1.5 shadow-inner"
+                  style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
+                >
                   <div className="flex items-center mb-3">
                     <div className="flex items-center flex-1">
                       <div className="relative mr-4">
@@ -584,11 +589,12 @@ const DomainDetail: React.FC = () => {
                     </button>
                   </div>
                   
-                  <div className="ml-2 mb-3">
-                    {/* SCORING SYSTEM - COMMENTED OUT
-                    <MasteryScore progress={resource.progress} />
-                    */}
-                  </div>
+                  {/* Add progress bar here */}
+                  <ProgressDisplay 
+                    progress={resource.progress || 0} 
+                    showLabel={false} 
+                    className="mb-3" 
+                  />
                 </div>
                 
                 <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
