@@ -12,7 +12,7 @@ const IntellectualDNAExamCard: React.FC = () => {
           Intellectual DNA Exam
         </h3>
         <p className="font-oxanium text-[#E9E7E2]/50 text-xs mb-2">
-          Discover your intellectual strengths and philosophical alignments
+          How well do you know thyself?
         </p>
         <span className="inline-block bg-[#CCFF23]/20 text-[#CCFF23] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
           Coming Soon
