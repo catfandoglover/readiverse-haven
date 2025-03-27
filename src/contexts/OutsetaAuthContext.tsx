@@ -22,6 +22,10 @@ interface AuthContextType {
   openSignup: (options?: any) => void;
   openProfile: (options?: any) => void;
   supabase: SupabaseClient<Database> | null;
+  
+  // Add these properties
+  hasCompletedDNA: boolean;
+  checkDNAStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,8 +64,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [status, setStatus] = useState<'init' | 'ready'>('init');
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
+  // Add new state
+  const [hasCompletedDNA, setHasCompletedDNA] = useState<boolean>(false);
   
   const outsetaRef = useRef(getOutseta());
+  
+  // Add function to check DNA status
+  const checkDNAStatus = async (): Promise<boolean> => {
+    if (!user || !supabase) return false;
+    
+    try {
+      // Check pending assessment
+      const pendingId = localStorage.getItem('pending_dna_assessment_id');
+      if (pendingId) {
+        setHasCompletedDNA(true);
+        return true;
+      }
+      
+      // Check profile for assessment_id
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('assessment_id')
+        .eq('outseta_user_id', user.Uid)
+        .maybeSingle();
+        
+      if (error) throw error;
+      
+      const hasAssessment = !!profileData?.assessment_id;
+      setHasCompletedDNA(hasAssessment);
+      return hasAssessment;
+    } catch (error) {
+      console.error('Error checking DNA status:', error);
+      setHasCompletedDNA(false);
+      return false;
+    }
+  };
 
   const updateUser = async () => {
     try {
@@ -255,6 +292,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [searchParams, setSearchParams]);
 
+  // Call checkDNAStatus when user changes
+  useEffect(() => {
+    if (user) {
+      checkDNAStatus();
+    } else {
+      setHasCompletedDNA(false);
+    }
+  }, [user]);
+  
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'outseta_token') {
@@ -329,6 +375,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         openSignup,
         openProfile,
         supabase,
+        
+        // Add new values
+        hasCompletedDNA,
+        checkDNAStatus,
       }}
     >
       {children}
