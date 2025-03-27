@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X, ArrowRight, Hexagon } from "lucide-react";
+import { X, ArrowRight, Hexagon, Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore } from "@/components/reader/MasteryScore";
@@ -472,6 +471,18 @@ const DomainDetail: React.FC = () => {
   
   const levels = [1, 2, 3, 4, 5, 6];
   
+  const resourcesWithStatus = resources.map((resource, index) => {
+    let status = "locked";
+    if (index === 0) status = "completed";
+    else if (index === 1) status = "active";
+    else status = "locked";
+    
+    return {
+      ...resource,
+      status
+    };
+  });
+  
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
       <header className="px-6 py-6 flex justify-between items-center">
@@ -555,8 +566,16 @@ const DomainDetail: React.FC = () => {
         </div>
         
         <div className="space-y-6">
-          {resources.map((resource, idx) => {
+          {resourcesWithStatus.map((resource, idx) => {
             const resourceLevel = getProgressLevel(resource.progress);
+            let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
+            
+            if (resource.status === "completed") {
+              StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
+            } else if (resource.status === "locked") {
+              StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
+            }
+            
             return (
               <div key={idx}>
                 <div 
@@ -584,12 +603,11 @@ const DomainDetail: React.FC = () => {
                       </div>
                     </div>
                     
-                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center ml-4">
-                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                    <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${resource.status === "completed" ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
+                      <StatusIcon />
                     </button>
                   </div>
                   
-                  {/* Add progress bar here */}
                   <ProgressDisplay 
                     progress={resource.progress || 0} 
                     showLabel={false} 

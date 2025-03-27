@@ -191,7 +191,8 @@ const IntellectualDNACourse: React.FC = () => {
     let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
     
     if (resource.status === "completed") {
-      StatusIcon = () => <Check className="h-5 w-5 text-[#CCFF23]" />;
+      // Using dark text color to ensure visibility against yellow background
+      StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
     } else if (resource.status === "locked") {
       StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
     }
@@ -228,7 +229,6 @@ const IntellectualDNACourse: React.FC = () => {
             </button>
           </div>
           
-          {/* Added progress bar */}
           <ProgressDisplay 
             progress={resource.progress || 0} 
             showLabel={false} 
