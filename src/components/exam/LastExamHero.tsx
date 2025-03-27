@@ -1,8 +1,6 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Hexagon } from "lucide-react";
 
 const LastExamHero: React.FC = () => {
   const navigate = useNavigate();
@@ -23,47 +21,47 @@ const LastExamHero: React.FC = () => {
       }
     });
   };
-  
+
   return (
-    <div className="bg-[#373763] p-4 rounded-b-2xl shadow-md">
-      <div className="flex flex-col md:flex-row items-center mb-4">
-        <div className="relative w-16 h-16 md:mr-4">
-          <Hexagon className="h-16 w-16 text-[#E9E7E2]/10" strokeWidth={1} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img 
-              src={lastExam.image} 
-              alt={lastExam.title}
-              className="h-14 w-14 object-cover"
-              style={{ 
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-              }}
-            />
+    <div className="px-4 mb-6">
+      <div 
+        className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
+        onClick={handleContinueExam}
+      >
+        {/* Background Image with Blur and Dark Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${lastExam.image})` }}
+        />
+        <div className="absolute inset-0 bg-black/45" />
+        
+        {/* "RESUME" Button Text Overlay - Top Left */}
+        <div className="absolute top-6 left-6">
+          <p className="font-oxanium uppercase text-[#E9E7E2]/50 text-xs font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+            RESUME
+          </p>
+        </div>
+        
+        {/* Content Overlay */}
+        <div className="absolute inset-0 p-6 flex flex-col justify-end">
+          {/* Text Content - Bottom Left */}
+          <div className="flex flex-col">
+            <h2 className="text-[#E9E7E2] font-baskerville font-bold text-lg line-clamp-2 drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]">
+              {lastExam.title}
+            </h2>
+            <p className="text-[#E9E7E2]/80 font-baskerville text-lg mt-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]">
+              {lastExam.description}
+            </p>
           </div>
         </div>
         
-        <div className="flex-1 mt-3 md:mt-0 text-center md:text-left">
-          <h3 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-xs font-bold">
-            CONTINUE YOUR LAST EXAM
-          </h3>
-          <h2 className="text-xl font-baskerville text-[#E9E7E2] mb-1">{lastExam.title}</h2>
-          
-          <div className="flex items-center justify-center md:justify-start">
-            <div className="relative mr-2">
-              <Hexagon className="h-5 w-5 text-[#CCFF23]" strokeWidth={1.5} />
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#3D3D6F]">
-                {lastExam.score}
-              </span>
-            </div>
-            <span className="text-xs text-[#E9E7E2]/70">Current Score</span>
+        {/* Score display - Bottom Right */}
+        <div className="absolute bottom-6 right-6">
+          <div className="flex items-center bg-black/30 px-3 py-1 rounded-full">
+            <span className="text-[#CCFF23] font-oxanium font-bold text-sm mr-1">{lastExam.score}</span>
+            <span className="text-[#E9E7E2]/70 text-xs font-oxanium">Score</span>
           </div>
         </div>
-        
-        <Button
-          onClick={handleContinueExam}
-          className="mt-4 md:mt-0 w-full md:w-auto py-3 px-6 h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] border border-[#E9E7E2]/20"
-        >
-          CONTINUE
-        </Button>
       </div>
     </div>
   );
