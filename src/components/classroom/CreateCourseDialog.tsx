@@ -204,10 +204,10 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-[#E9E7E2]/50" />
             <Input
-              placeholder="Search classics, icons, or concepts..."
+              placeholder="Search for inspiration..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 bg-[#19352F]/70 border-[#333] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50"
+              className="w-full pl-10 bg-[#19352F]/70 border-[#333] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounding-2xl"
             />
           </div>
         </div>
