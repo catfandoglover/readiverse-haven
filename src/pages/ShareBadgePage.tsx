@@ -197,7 +197,7 @@ const ShareBadgePage: React.FC = () => {
       </div>
       
       {/* User badge section - moved up to overlap with hero */}
-      <div className="w-full px-6 py-4 flex flex-col items-center -mt-32 relative z-10">
+      <div className="w-full px-6 py-8 flex flex-col items-center -mt-32 relative z-10">
         <div className="relative h-32 w-32 mb-2">
           {/* Colored hexagon with badge score */}
           <svg 
