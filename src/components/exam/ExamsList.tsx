@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Hexagon } from "lucide-react";
+import { getProgressLevel, getStageName } from "../reader/MasteryScore";
 
 interface ExamItem {
   id: string;
@@ -85,10 +86,15 @@ const ExamsList: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="relative">
-                <Hexagon className="h-8 w-8 text-[#CCFF23]" strokeWidth={1.5} />
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#3D3D6F]">
-                  {exam.score}
+              <div className="relative flex flex-col items-center">
+                <div className="relative">
+                  <Hexagon className="h-8 w-8 text-[#CCFF23]" strokeWidth={1.5} />
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#CCFF23]">
+                    {exam.score}
+                  </span>
+                </div>
+                <span className="text-xs text-[#CCFF23] font-oxanium mt-1">
+                  {getStageName(exam.score)}
                 </span>
               </div>
             </div>
