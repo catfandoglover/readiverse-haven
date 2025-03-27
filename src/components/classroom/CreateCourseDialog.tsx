@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -222,7 +221,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                   <span className="font-oxanium uppercase text-xs">
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </span>
-                  <span className="absolute bottom-0 left-1/2 w-12 h-0.5 -translate-x-1/2 transform scale-x-0 bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200 data-[state=active]:scale-x-100"></span>
+                  <span className="absolute bottom-0 left-1/2 w-16 h-0.5 -translate-x-1/2 transform scale-x-0 bg-gradient-to-r from-[#CCFF23] to-[#7EB62E] transition-transform duration-200 data-[state=active]:scale-x-100"></span>
                 </TabsTrigger>
               ))}
             </TabsList>
