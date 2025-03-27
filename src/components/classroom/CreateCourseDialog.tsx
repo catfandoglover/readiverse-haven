@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Hexagon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourses } from "@/hooks/useCourses";
@@ -162,11 +162,15 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
         <div className="flex items-center mb-3">
           <div className="flex items-center flex-1">
             <div className="relative mr-4">
-              <div className="h-10 w-10 flex items-center justify-center bg-[#19352F] rounded-full">
+              <Hexagon className="h-10 w-10 text-[#19352F]" strokeWidth={3} />
+              <div className="absolute inset-0 flex items-center justify-center">
                 <img 
                   src={imageUrl} 
                   alt={title}
-                  className="h-9 w-9 object-cover rounded-full"
+                  className="h-9 w-9 object-cover rounded-none"
+                  style={{ 
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                  }}
                 />
               </div>
             </div>
