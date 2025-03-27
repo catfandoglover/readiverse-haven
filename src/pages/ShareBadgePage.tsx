@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { X, Share2 } from "lucide-react";
+import { X, Share2, Hexagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Hexagon } from "lucide-react";
-import { getStageName } from "@/components/reader/MasteryScore";
+import { getStageName, getHexagonColor } from "@/components/reader/MasteryScore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,18 +155,8 @@ const ShareBadgePage: React.FC = () => {
   const lastName = fullName.split(' ').slice(1).join(' ');
   const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`;
   
-  // Domain background colors
-  const domainColors: {[key: string]: string} = {
-    ethics: "#3D3D6F",
-    theology: "#3D3D6F",
-    epistemology: "#3D3D6F",
-    ontology: "#3D3D6F",
-    politics: "#3D3D6F",
-    aesthetics: "#3D3D6F",
-    default: "#3D3D6F"
-  };
-  
-  const domainColor = domainColors[domainId || "default"];
+  // Get the badge level color
+  const badgeColor = getHexagonColor(badgeData.score);
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
@@ -212,17 +201,28 @@ const ShareBadgePage: React.FC = () => {
       {/* User badge section - reduced spacing */}
       <div className="w-full px-6 py-4 flex flex-col items-center -mt-10 relative z-10">
         <div className="relative h-20 w-20 mb-2">
-          <Hexagon 
-            className="h-20 w-20" 
-            fill="black"
+          {/* Colored hexagon instead of avatar */}
+          <svg 
+            viewBox="0 0 24 24" 
+            height="100%" 
+            width="100%" 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill={badgeColor}
             stroke="#CCFF23"
-            strokeWidth={1}
-          />
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden"
-            style={{ 
-              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-            }}
+            strokeWidth="1"
+            strokeLinecap="round" 
+            strokeLinejoin="round"
           >
+            <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
+          </svg>
+          
+          {/* Badge level number */}
+          <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-black">
+            {badgeData.score}
+          </span>
+          
+          {/* User avatar below the badge level */}
+          <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 h-10 w-10 rounded-full overflow-hidden border border-[#CCFF23]">
             <img 
               src={user?.Account?.ProfilePic || "/lovable-uploads/4471ea2d-9220-4c72-b8a0-893f88abb6a5.png"} 
               alt="User"
@@ -231,7 +231,7 @@ const ShareBadgePage: React.FC = () => {
           </div>
         </div>
         
-        <h2 className="text-xl font-serif text-center">{fullName}</h2>
+        <h2 className="text-xl font-serif text-center mt-8">{fullName}</h2>
         <p className="text-md font-oxanium text-[#E9E7E2] uppercase mt-1">
           {getStageName(badgeData.score || 6)}
         </p>
@@ -240,7 +240,7 @@ const ShareBadgePage: React.FC = () => {
         <div className="max-w-lg mt-3 text-center px-4">
           <p className="text-sm font-oxanium text-[#E9E7E2]/80 leading-relaxed">
             {badgeData.summary ? `"${badgeData.summary}"` : 
-              `"Created novel framework for modern problems. Extended concepts into unexplored domains. Synthesized with contemporary critique."`}
+              `"Created novel framework for modern problems. Extended concepts into unexplored domains."`}
           </p>
         </div>
       </div>
