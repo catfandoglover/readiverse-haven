@@ -10,7 +10,6 @@ const LastExamHero: React.FC = () => {
     id: "exam1",
     title: "First Principles",
     description: "Stripping away assumptions to reach bedrock truth",
-    score: 4,
     image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Concept_Images/First%20principles.png"
   };
   
@@ -52,14 +51,6 @@ const LastExamHero: React.FC = () => {
             <p className="text-[#E9E7E2]/80 font-baskerville text-lg mt-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]">
               {lastExam.description}
             </p>
-          </div>
-        </div>
-        
-        {/* Score display - Bottom Right */}
-        <div className="absolute bottom-6 right-6">
-          <div className="flex items-center bg-black/30 px-3 py-1 rounded-full">
-            <span className="text-[#CCFF23] font-oxanium font-bold text-sm mr-1">{lastExam.score}</span>
-            <span className="text-[#E9E7E2]/70 text-xs font-oxanium">Score</span>
           </div>
         </div>
       </div>
