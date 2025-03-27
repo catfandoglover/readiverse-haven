@@ -226,16 +226,9 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
                   value={tab}
                   className="flex items-center justify-center data-[state=active]:bg-[#19352F] data-[state=active]:text-[#E9E7E2]"
                 >
-                  <div className="flex items-center">
-                    <div className="h-6 w-6 bg-[#CCFF23] flex items-center justify-center mr-2 rounded-2xl">
-                      <span className="font-bold text-[#1D3A35] text-xs">
-                        {tab === 'classics' ? 'C' : tab === 'icons' ? 'I' : 'Ph'}
-                      </span>
-                    </div>
-                    <span className="font-oxanium uppercase text-xs">
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </span>
-                  </div>
+                  <span className="font-oxanium uppercase text-xs">
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </span>
                 </TabsTrigger>
               ))}
             </TabsList>
