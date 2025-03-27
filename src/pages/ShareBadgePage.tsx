@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { X, Share2 } from "lucide-react";
@@ -140,7 +141,7 @@ const ShareBadgePage: React.FC = () => {
             }}
           >
             <Avatar className="h-full w-full overflow-hidden rounded-none">
-              <AvatarImage src={user?.Account?.ProfilePic} />
+              <AvatarImage src="" />
               <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                 {initials}
               </AvatarFallback>

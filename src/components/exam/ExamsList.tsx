@@ -1,8 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Hexagon } from "lucide-react";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
+import BadgeDialog from "./BadgeDialog";
 
 interface ExamItem {
   id: string;
@@ -29,6 +30,8 @@ const getHexagonColor = (level: number): string => {
 
 const ExamsList: React.FC = () => {
   const navigate = useNavigate();
+  const [selectedExam, setSelectedExam] = useState<ExamItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Updated exam data with domain IDs
   const exams: ExamItem[] = [
@@ -59,20 +62,10 @@ const ExamsList: React.FC = () => {
   ];
   
   const handleSelectExam = (exam: ExamItem) => {
-    // For exams with badges (that have a score and domainId), go directly to share badge page
+    // For exams with badges (that have a score and domainId), open the badge dialog
     if (exam.score && exam.domainId) {
-      navigate(`/share-badge/${exam.domainId}/${exam.id}`, { 
-        state: { 
-          resource: {
-            id: exam.id,
-            title: exam.title,
-            subtitle: exam.description,
-            score: exam.score,
-            domainId: exam.domainId,
-            image: exam.image
-          }
-        }
-      });
+      setSelectedExam(exam);
+      setIsDialogOpen(true);
     } else {
       // For exams without badges, continue to exam-virgil-chat
       navigate('/exam-virgil-chat', { 
@@ -81,6 +74,11 @@ const ExamsList: React.FC = () => {
         }
       });
     }
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedExam(null);
   };
   
   return (
@@ -157,6 +155,22 @@ const ExamsList: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Badge Dialog for exam options */}
+      {selectedExam && (
+        <BadgeDialog
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          resource={{
+            id: selectedExam.id,
+            title: selectedExam.title,
+            subtitle: selectedExam.description,
+            score: selectedExam.score,
+            domainId: selectedExam.domainId || "",
+            image: selectedExam.image
+          }}
+        />
+      )}
     </div>
   );
 };
