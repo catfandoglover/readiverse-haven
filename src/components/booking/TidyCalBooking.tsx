@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,10 +9,8 @@ import { format, addDays, startOfToday, isSameDay, isToday } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// You can replace this with environment variables or secure storage in a production app
 const TIDYCAL_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 
-// Default service - since we're skipping service selection
 const DEFAULT_SERVICE = {
   id: "1", 
   name: "DNA Assessment Discussion", 
@@ -21,10 +18,8 @@ const DEFAULT_SERVICE = {
   description: "Discuss your DNA assessment results with an intellectual genetic counselor"
 };
 
-// Generate time slots for a specific date
 const generateTimeSlots = (date: Date) => {
   const dateStr = format(date, "yyyy-MM-dd");
-  // In a real implementation, these would come from the API based on date selection
   return [
     { id: `${dateStr}-1`, date: dateStr, start_time: "09:00", end_time: "09:30", timezone: "America/New_York", available: true },
     { id: `${dateStr}-2`, date: dateStr, start_time: "10:00", end_time: "10:30", timezone: "America/New_York", available: true },
@@ -35,16 +30,13 @@ const generateTimeSlots = (date: Date) => {
   ];
 };
 
-// Generate available dates (mock data - in production, get from API)
 const generateAvailableDates = () => {
   const today = startOfToday();
   const availableDates: Date[] = [];
   
-  // Simulate some available dates in the next 60 days
   for (let i = 1; i <= 60; i++) {
     const date = addDays(today, i);
-    // Randomly mark some days as available (in production, get from API)
-    if (i % 3 !== 0) { // Skip every third day to simulate unavailability
+    if (i % 3 !== 0) {
       availableDates.push(date);
     }
   }
@@ -52,13 +44,27 @@ const generateAvailableDates = () => {
   return availableDates;
 };
 
+interface TidyCalTimeSlot {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  timezone: string;
+  available: boolean;
+}
+
 interface TidyCalBookingProps {
   onClose?: () => void;
   onSuccess?: (bookingData: TidyCalBookingResponse) => void;
 }
 
+interface TidyCalBookingResponse {
+  id: string;
+  status: string;
+  meeting_link: string;
+}
+
 const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) => {
-  // Skip service selection, start with date
   const [step, setStep] = useState<'date' | 'time' | 'details'>('date');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
@@ -68,18 +74,14 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [isLoading, setIsLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  
-  // Timezone handling
   const [timezone, setTimezone] = useState<string>("America/New_York");
-  
+
   useEffect(() => {
-    // In a real implementation, this would fetch available dates from the API
     setAvailableDates(generateAvailableDates());
   }, []);
 
   useEffect(() => {
     if (selectedDate) {
-      // In a real implementation, this would fetch time slots for the selected date
       setTimeSlots(generateTimeSlots(selectedDate));
     }
   }, [selectedDate]);
@@ -107,8 +109,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     setIsLoading(true);
 
     try {
-      // In a real implementation, this would be an API call to TidyCal
-      // Mocking successful booking
       setTimeout(() => {
         const mockBookingResponse: TidyCalBookingResponse = {
           id: `booking-${Date.now()}`,

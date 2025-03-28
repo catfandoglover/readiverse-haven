@@ -27,19 +27,18 @@ const BookCounselor = () => {
 
   return (
     <div className="min-h-[100dvh] bg-[#373763] text-[#E9E7E2]">
-      <header className="sticky top-0 px-6 py-4 flex items-center justify-between z-50 bg-[#373763]">
+      <header className="sticky top-0 px-6 py-4 flex items-center z-50 bg-[#373763]">
         <Button 
           variant="ghost" 
           onClick={goBack}
-          className="text-[#E9E7E2] hover:bg-[#373763]/50 hover:text-[#E9E7E2]"
+          className="text-[#E9E7E2] hover:bg-[#373763]/50 hover:text-[#E9E7E2] mr-auto"
+          size="icon"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          BACK
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="text-lg font-oxanium text-[#E9E7E2] uppercase tracking-wider font-bold">
+        <div className="text-lg font-oxanium text-[#E9E7E2] uppercase tracking-wider font-bold absolute left-1/2 transform -translate-x-1/2">
           BOOK A COUNSELOR
         </div>
-        <div className="w-10"></div> {/* Empty div for flex spacing */}
       </header>
       
       <div className="max-w-lg mx-auto p-6">
