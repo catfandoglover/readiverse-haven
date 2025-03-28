@@ -562,6 +562,11 @@ const DNAAssessment = () => {
     setShowExitAlert(false);
   };
 
+  const handleBookCounselor = () => {
+    setShowExitAlert(false);
+    navigate('/book-counselor');
+  };
+
   React.useEffect(() => {
     const ensureUserId = async () => {
       const existingUserId = sessionStorage.getItem('user_id');
@@ -904,7 +909,7 @@ const DNAAssessment = () => {
                 className="bg-[#373763] text-white font-oxanium"
                 onClick={(e) => {
                   e.preventDefault(); // Prevent default to keep dialog open
-                  openBookingDialog();
+                  handleBookCounselor();
                 }}
               >
                 BOOK A COUNSELOR

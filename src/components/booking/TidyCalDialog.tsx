@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +15,11 @@ interface TidyCalDialogProps {
 }
 
 const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => {
+  const navigate = useNavigate();
+
   const handleSuccess = (bookingData: TidyCalBookingResponse) => {
     console.log('Booking successful:', bookingData);
-    // You might want to dispatch a custom event for integration with the parent component
+    // Dispatch event for integration with the parent component
     window.dispatchEvent(new CustomEvent('tidycal:booking-completed', { detail: bookingData }));
     
     // Close the dialog after a short delay to show the success message
@@ -25,6 +28,15 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
     }, 2000);
   };
 
+  // When the dialog opens, navigate to the full page instead
+  React.useEffect(() => {
+    if (open) {
+      onOpenChange(false); // Close this dialog
+      navigate('/book-counselor'); // Navigate to the full page
+    }
+  }, [open, navigate, onOpenChange]);
+
+  // We still render the dialog for cases where we might want to use it directly
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[90%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">

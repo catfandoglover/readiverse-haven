@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,6 +40,7 @@ import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
 import ExamRoom from "./pages/ExamRoom";
 import ExamWelcome from "./pages/ExamWelcome";
 import ExamVirgilChat from "./pages/ExamVirgilChat";
+import BookCounselor from "./pages/BookCounselor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,6 +99,7 @@ const App = () => (
                 <Route path="/dna/completion" element={<DNACompletionScreen />} />
                 <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
                 <Route path="/dna/welcome" element={<VirgilWelcome />} />
+                <Route path="/book-counselor" element={<BookCounselor />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/great-questions/:id" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
