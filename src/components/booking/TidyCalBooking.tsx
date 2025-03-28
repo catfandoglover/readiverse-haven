@@ -68,26 +68,19 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     fetchBookingTypes();
   }, [retryAttempt]);
 
-  // Fetch booking type details if we're not showing the booking types list
-  useEffect(() => {
-    if (step !== 'types' && !selectedBookingType) {
-      fetchBookingType();
-    }
-  }, [step, retryAttempt]);
-
   // Load available dates when current month changes
   useEffect(() => {
-    if ((selectedBookingType || bookingType) && step === 'date') {
-      fetchAvailableDates(currentMonth);
+    if (selectedBookingType && step === 'date') {
+      fetchAvailableDates(currentMonth, selectedBookingType.id);
     }
-  }, [currentMonth, step, selectedBookingType, bookingType, retryAttempt]);
+  }, [currentMonth, step, selectedBookingType, retryAttempt]);
 
   // Load time slots when a date is selected
   useEffect(() => {
-    if (selectedDate && step === 'time') {
-      fetchTimeSlots(selectedDate);
+    if (selectedDate && selectedBookingType && step === 'time') {
+      fetchTimeSlots(selectedDate, selectedBookingType.id);
     }
-  }, [selectedDate, step, retryAttempt]);
+  }, [selectedDate, step, selectedBookingType, retryAttempt]);
 
   const handleBookingTypeSelection = (type: BookingType) => {
     setSelectedBookingType(type);
@@ -114,7 +107,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedTimeSlot || !name || !email) {
+    if (!selectedTimeSlot || !name || !email || !selectedBookingType) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -123,7 +116,8 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       name,
       email,
       time_slot_id: selectedTimeSlot,
-      timezone
+      timezone,
+      bookingTypeId: selectedBookingType.id
     });
     
     if (response) {
@@ -149,16 +143,15 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
 
   const getSelectedTimeSlotDetails = () => {
     const timeSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
-    const activeBookingType = selectedBookingType || bookingType;
-    if (!timeSlot || !activeBookingType) return null;
+    if (!timeSlot || !selectedBookingType) return null;
     
     return {
       date: selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
-      service: activeBookingType.name,
-      duration: activeBookingType.duration,
-      price: activeBookingType.price,
-      currency: activeBookingType.currency || "USD"
+      service: selectedBookingType.name,
+      duration: selectedBookingType.duration,
+      price: selectedBookingType.price,
+      currency: selectedBookingType.currency || "USD"
     };
   };
 
@@ -228,8 +221,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               <Button 
                 variant="ghost"
                 size="sm"
-                onClick={() => selectedBookingType ? setStep('types') : null}
-                disabled={!selectedBookingType}
+                onClick={() => setStep('types')}
                 className="mr-2"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />

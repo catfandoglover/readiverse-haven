@@ -5,7 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 // Using the token provided
 const TIDYCAL_API_KEY = Deno.env.get("TIDYCAL_API_KEY") || "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 // We'll find the correct booking type ID from the list
-let TIDYCAL_BOOKING_TYPE_ID = "team/intellectual-genetic-counselors/intake";
+let TIDYCAL_BOOKING_TYPE_ID = ""; // Keep empty initially to be populated from the list
 const TIDYCAL_BASE_URL = "https://api.tidycal.com/v1";
 
 // Handle CORS preflight requests
@@ -30,11 +30,29 @@ serve(async (req) => {
       case "list-booking-types":
         return await listBookingTypes();
       case "booking-type":
-        return await getBookingType();
+        if (body.bookingTypeId) {
+          return await getBookingType(body.bookingTypeId);
+        }
+        return new Response(JSON.stringify({ error: "Booking type ID required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       case "available-dates":
-        return await getAvailableDates(body.month);
+        if (!body.bookingTypeId) {
+          return new Response(JSON.stringify({ error: "Booking type ID required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return await getAvailableDates(body.month, body.bookingTypeId);
       case "time-slots":
-        return await getTimeSlots(body.date);
+        if (!body.bookingTypeId) {
+          return new Response(JSON.stringify({ error: "Booking type ID required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return await getTimeSlots(body.date, body.bookingTypeId);
       case "create-booking":
         return await createBooking(body);
       default:
@@ -100,10 +118,14 @@ async function listBookingTypes() {
 }
 
 // Get booking type details
-async function getBookingType() {
+async function getBookingType(bookingTypeId) {
   try {
-    console.log(`Fetching booking type: ${TIDYCAL_BOOKING_TYPE_ID}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}`;
+    if (!bookingTypeId) {
+      throw new Error("Booking type ID is required");
+    }
+    
+    console.log(`Fetching booking type: ${bookingTypeId}`);
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}`;
     console.log(`Making request to: ${url}`);
     
     const response = await fetch(url, {
@@ -147,14 +169,18 @@ async function getBookingType() {
 }
 
 // Get available dates for a month
-async function getAvailableDates(month) {
+async function getAvailableDates(month, bookingTypeId) {
   try {
     if (!month) {
       throw new Error("Month parameter is required");
     }
+    
+    if (!bookingTypeId) {
+      throw new Error("Booking type ID is required");
+    }
 
-    console.log(`Fetching available dates for month: ${month}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}/available-dates?month=${month}`;
+    console.log(`Fetching available dates for month: ${month} and booking type: ${bookingTypeId}`);
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/available-dates?month=${month}`;
     console.log(`Making request to: ${url}`);
     
     const response = await fetch(url, {
@@ -198,14 +224,18 @@ async function getAvailableDates(month) {
 }
 
 // Get time slots for a specific date
-async function getTimeSlots(date) {
+async function getTimeSlots(date, bookingTypeId) {
   try {
     if (!date) {
       throw new Error("Date is required");
     }
+    
+    if (!bookingTypeId) {
+      throw new Error("Booking type ID is required");
+    }
 
-    console.log(`Fetching time slots for date: ${date}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}/time-slots?date=${date}`;
+    console.log(`Fetching time slots for date: ${date} and booking type: ${bookingTypeId}`);
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/time-slots?date=${date}`;
     console.log(`Making request to: ${url}`);
     
     const response = await fetch(url, {
@@ -251,7 +281,7 @@ async function getTimeSlots(date) {
 // Create a booking
 async function createBooking(bookingData) {
   try {
-    if (!bookingData.name || !bookingData.email || !bookingData.time_slot_id || !bookingData.timezone) {
+    if (!bookingData.name || !bookingData.email || !bookingData.time_slot_id || !bookingData.timezone || !bookingData.bookingTypeId) {
       throw new Error("Missing required booking information");
     }
 
@@ -260,7 +290,7 @@ async function createBooking(bookingData) {
     console.log(`Making request to: ${url}`);
     
     const requestBody = JSON.stringify({
-      booking_type_id: TIDYCAL_BOOKING_TYPE_ID,
+      booking_type_id: bookingData.bookingTypeId,
       name: bookingData.name,
       email: bookingData.email,
       time_slot_id: bookingData.time_slot_id,

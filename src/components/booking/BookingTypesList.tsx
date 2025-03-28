@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useTidyCalAPI, BookingType } from '@/hooks/useTidyCalAPI';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 interface BookingTypesListProps {
@@ -54,7 +54,11 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
   if (!bookingTypes || bookingTypes.length === 0) {
     return (
       <div className="w-full flex flex-col items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">No booking types available.</p>
+        <Info className="h-8 w-8 text-[#373763] mb-2" />
+        <p className="text-sm text-muted-foreground mb-4">No booking types available.</p>
+        <p className="text-sm text-center max-w-md">
+          It appears that there are no booking types configured. Please contact support for assistance.
+        </p>
       </div>
     );
   }

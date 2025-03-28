@@ -86,13 +86,16 @@ export function useTidyCalAPI() {
   };
 
   // Fetch booking type details
-  const fetchBookingType = async () => {
+  const fetchBookingType = async (bookingTypeId: string) => {
     setBookingTypeLoading(true);
     setBookingTypeError(null);
     try {
-      console.log("Fetching booking type");
+      console.log("Fetching booking type", bookingTypeId);
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
-        body: { path: 'booking-type' },
+        body: { 
+          path: 'booking-type',
+          bookingTypeId
+        },
       });
 
       if (error) {
@@ -115,17 +118,18 @@ export function useTidyCalAPI() {
   };
 
   // Fetch available dates for a month
-  const fetchAvailableDates = async (month: Date) => {
+  const fetchAvailableDates = async (month: Date, bookingTypeId: string) => {
     setDatesLoading(true);
     setDatesError(null);
     try {
       const monthString = format(month, "yyyy-MM");
-      console.log("Fetching available dates for month:", monthString);
+      console.log("Fetching available dates for month:", monthString, "and booking type:", bookingTypeId);
       
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
         body: { 
           path: 'available-dates',
-          month: monthString
+          month: monthString,
+          bookingTypeId
         },
       });
 
@@ -154,17 +158,18 @@ export function useTidyCalAPI() {
   };
 
   // Fetch time slots for a specific date
-  const fetchTimeSlots = async (date: Date) => {
+  const fetchTimeSlots = async (date: Date, bookingTypeId: string) => {
     setTimeSlotsLoading(true);
     setTimeSlotsError(null);
     try {
       const dateString = format(date, "yyyy-MM-dd");
-      console.log("Fetching time slots for date:", dateString);
+      console.log("Fetching time slots for date:", dateString, "and booking type:", bookingTypeId);
       
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
         body: { 
           path: 'time-slots',
-          date: dateString
+          date: dateString,
+          bookingTypeId
         },
       });
 
@@ -196,6 +201,7 @@ export function useTidyCalAPI() {
     email: string;
     time_slot_id: string;
     timezone: string;
+    bookingTypeId: string;
   }): Promise<BookingResponse | null> => {
     setBookingLoading(true);
     setBookingError(null);
