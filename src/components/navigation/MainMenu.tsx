@@ -88,6 +88,23 @@ const MainMenu: React.FC = () => {
                 </div>
               </div>
             
+              {/* Study Navigation Item */}
+              <div 
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                onClick={() => handleNavigation("/bookshelf")}
+              >
+                <div className="flex-shrink-0 rounded-full p-3">
+                  <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                    Study
+                  </h3>
+                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
+                    Curate your collection
+                  </p>
+                </div>
+              </div>
               
               {/* Discover Navigation Item */}
               <div 
@@ -103,24 +120,6 @@ const MainMenu: React.FC = () => {
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
                     Find inspiration in Alexandria
-                  </p>
-                </div>
-              </div>
-              
-              {/* Study Navigation Item */}
-              <div 
-                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/bookshelf")}
-              >
-                <div className="flex-shrink-0 rounded-full p-3">
-                  <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
-                    Study
-                  </h3>
-                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
-                    Curate your collection
                   </p>
                 </div>
               </div>
