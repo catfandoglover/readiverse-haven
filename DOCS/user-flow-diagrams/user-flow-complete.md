@@ -999,31 +999,29 @@ components:
 # 3. NAVIGATION ARCHITECTURE
 navigation:
   primary_menu:
-    - name: "Profile"
-      path: "/profile"
-      auth_required: true
-      visible_condition: "authenticated && has_assessment_id"
-    - name: "DNA"
+    - name: "Intellectual DNA"
       path: "/dna"
-      auth_required: true
-      visible_condition: "authenticated"
-      default_for: ["new_users", "users_without_assessment"]
-    - name: "Virgil"
-      path: "/virgil"
-      auth_required: true
-      visible_condition: "authenticated && has_assessment_id"
+      auth_required: false
+      default_for: ["all_users", "unauthenticated"]
     - name: "Discover"
       path: "/discover"
       auth_required: false
-      default_for: ["all_users", "unauthenticated"]
+    - name: "Virgil"
+      path: "/virgil"
+      auth_required: false
+      auth_action: "show_auth_modal"
     - name: "Study"
       path: "/bookshelf"
-      auth_required: true
-      visible_condition: "authenticated && has_assessment_id"
+      auth_required: false
+      auth_action: "show_auth_modal"
 
   conditional_navigation:
     - condition: "!authenticated"
-      available_paths: ["/discover", "/login", "/register", "/share-badge/*", "/profile/share/*", "/badge/*", "/"]
+      available_paths: ["/discover", "/dna", "/login", "/register", "/share-badge/*", "/profile/share/*", "/badge/*", "/"]
+      auth_modal:
+        trigger_paths: ["/virgil", "/bookshelf"]
+        type: "outseta_modal"
+        actions: ["login", "create_account"]
     - condition: "authenticated && !has_assessment_id"
       available_paths: ["/discover", "/dna/*", "/read/*", "/settings", "/"]
     - condition: "authenticated && has_assessment_id"

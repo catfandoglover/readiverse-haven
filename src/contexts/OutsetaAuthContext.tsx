@@ -23,8 +23,9 @@ interface AuthContextType {
   openProfile: (options?: any) => void;
   supabase: SupabaseClient<Database> | null;
   
-  // Add these properties
+  // DNA properties
   hasCompletedDNA: boolean;
+  hasDNA: boolean; // Alias for hasCompletedDNA for compatibility
   checkDNAStatus: () => Promise<boolean>;
 }
 
@@ -376,8 +377,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         openProfile,
         supabase,
         
-        // Add new values
+        // DNA values
         hasCompletedDNA,
+        hasDNA: hasCompletedDNA, // Alias for compatibility with ProtectedRoute
         checkDNAStatus,
       }}
     >

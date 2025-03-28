@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Navigate, useLocation } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,24 +13,35 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   requireDNA = false,
 }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, openLogin, hasCompletedDNA } = useAuth();
   const location = useLocation();
-  
-  // Check if user has completed DNA assessment
-  const hasCompletedDNA = user?.assessment_id || localStorage.getItem('pending_dna_assessment_id');
   
   // Show loading state while checking auth
   if (isLoading) {
     return <div>Loading...</div>; // Consider replacing with a proper loading component
   }
   
-  // Authentication check
+  // Paths that should show the auth modal instead of redirecting
+  const modalTriggerPaths = ['/virgil', '/bookshelf'];
+  const currentPath = location.pathname;
+  const shouldShowAuthModal = modalTriggerPaths.some(path => currentPath.startsWith(path));
+  
+  // Only authenticate paths that actually require authentication
   if (requireAuth && !user) {
-    // Redirect to login and save intended destination
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // If this is a path that should trigger the auth modal
+    if (shouldShowAuthModal) {
+      // Open the Outseta auth modal and render nothing (will be caught by routes that don't require auth)
+      useEffect(() => {
+        openLogin({ authenticationCallbackUrl: window.location.href });
+      }, []);
+      return null;
+    } else {
+      // For all other auth-required routes, redirect to login and save intended destination
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
   }
   
-  // DNA assessment check
+  // DNA assessment check - only if user is logged in and DNA is required
   if (requireDNA && !hasCompletedDNA && user) {
     // User is logged in but needs DNA assessment
     return <Navigate to="/dna/priming" replace />;

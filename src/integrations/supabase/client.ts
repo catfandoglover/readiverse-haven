@@ -14,13 +14,13 @@ if (!SUPABASE_ANON_KEY) {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Function to create a Supabase client with a custom JWT token
 export const createSupabaseClient = (jwt?: string) => {
   if (jwt) {
     // Create a new client with the custom JWT
-    return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       global: {
         headers: {
           Authorization: `Bearer ${jwt}`,
