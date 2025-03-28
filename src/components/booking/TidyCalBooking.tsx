@@ -110,10 +110,19 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       return;
     }
 
+    // Find the selected time slot to get the original starts_at value if available
+    const selectedSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
+    let timeSlotValue = selectedTimeSlot;
+    
+    // If we have the original timestamp from the API, use that instead of our ID
+    if (selectedSlot && selectedSlot.original_starts_at) {
+      timeSlotValue = selectedSlot.original_starts_at;
+    }
+
     console.log("Attempting to create booking with data:", {
       name,
       email,
-      time_slot_id: selectedTimeSlot,
+      time_slot_id: timeSlotValue,
       timezone,
       bookingTypeId: selectedBookingType.id
     });
@@ -121,19 +130,13 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     const response = await createBooking({
       name,
       email,
-      time_slot_id: selectedTimeSlot,
+      time_slot_id: timeSlotValue,
       timezone,
       bookingTypeId: selectedBookingType.id
     });
     
     if (response) {
-      // Check for error in response
-      if (response.error) {
-        toast.error(`Booking failed: ${response.message || "Unknown error"}`);
-        return;
-      }
-      
-      // Handle payment if needed
+      // Handle successful booking
       if (response.status === 'pending_payment' && response.payment_link) {
         toast.success("Booking created! Redirecting to payment page...");
         

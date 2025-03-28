@@ -282,6 +282,7 @@ export function useTidyCalAPI() {
       
       console.log("Booking response:", data);
       
+      // Check for error in the response data
       if (data && data.error === true) {
         const errorMessage = data.message || "Failed to create booking.";
         console.error("Booking error from API:", errorMessage);
@@ -292,10 +293,11 @@ export function useTidyCalAPI() {
       
       toast.success("Booking created successfully!");
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking error:', error);
-      setBookingError("Error creating booking. Please try again later.");
-      toast.error("Error creating booking. Please try again later.");
+      const errorMessage = error?.message || "Error creating booking. Please try again later.";
+      setBookingError(errorMessage);
+      toast.error(errorMessage);
       return null;
     } finally {
       setBookingLoading(false);
