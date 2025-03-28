@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format, addDays, startOfToday, isSameDay, isToday } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarIcon, Clock } from "lucide-react";
@@ -156,25 +156,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       </div>
       
       <Tabs value={step} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6 bg-[#E9E7E2]/50 p-1 rounded-xl">
-          <TabsTrigger value="date" disabled={step !== 'date'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Date
-          </TabsTrigger>
-          <TabsTrigger value="time" disabled={step !== 'time' && step !== 'date'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Time
-          </TabsTrigger>
-          <TabsTrigger value="details" disabled={step !== 'details' && step !== 'time' && step !== 'date'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Details
-          </TabsTrigger>
-        </TabsList>
-
         <TabsContent value="date" className="space-y-4">
           <div className="text-center mb-4">
             <h3 className="text-xl font-semibold mb-2">{DEFAULT_SERVICE.name}</h3>
-            <div className="flex items-center justify-center text-sm text-muted-foreground mb-4">
+            <div className="flex items-center text-sm text-muted-foreground mb-4">
               <Clock className="h-4 w-4 mr-1" />
               <span>{DEFAULT_SERVICE.duration} minutes</span>
             </div>
