@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import MainMenu from "@/components/navigation/MainMenu";
 import TidyCalBooking from '@/components/booking/TidyCalBooking';
 import { toast } from "sonner";
 
@@ -20,31 +20,23 @@ const BookCounselor = () => {
       navigate(-1);
     }, 3000);
   };
-  
-  const goBack = () => {
-    navigate(-1);
-  };
 
   return (
     <div className="min-h-[100dvh] bg-[#373763] text-[#E9E7E2]">
-      <header className="sticky top-0 px-6 py-4 flex items-center z-50 bg-[#373763]">
-        <Button 
-          variant="ghost" 
-          onClick={goBack}
-          className="text-[#E9E7E2] hover:bg-[#373763]/50 hover:text-[#E9E7E2] mr-auto"
-          size="icon"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="text-lg font-oxanium text-[#E9E7E2] uppercase tracking-wider font-bold absolute left-1/2 transform -translate-x-1/2">
+      <div className="flex items-center pt-4 pb-4 px-8 bg-[#3D3D6F] text-[#E9E7E2]">
+        <MainMenu />
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOOK A COUNSELOR
+        </h2>
+        <div className="w-10 h-10">
+          {/* Empty div to balance the layout */}
         </div>
-      </header>
+      </div>
       
       <div className="max-w-lg mx-auto p-6">
         <div className="bg-[#E9E7E2] rounded-2xl p-6">
           <TidyCalBooking 
-            onClose={goBack} 
+            onClose={() => navigate(-1)} 
             onSuccess={handleSuccess}
           />
         </div>
