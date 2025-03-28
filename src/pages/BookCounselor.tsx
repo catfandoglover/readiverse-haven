@@ -26,6 +26,16 @@ const BookCounselor = () => {
           {/* Empty div to balance the layout */}
         </div>
       </div>
+      
+      <div className="px-4 py-2 pb-16">
+        <h1 className="text-2xl font-baskerville leading-none tracking-tight text-[#E9E7E2] font-bold pt-2 pb-2 text-center">
+          Book a DNA Assessment Discussion
+        </h1>
+        
+        <p className="text-sm text-[#E9E7E2]/80 mb-6 text-center max-w-xl mx-auto">
+          Schedule a session with one of our expert counselors to discuss your intellectual DNA results
+          and get personalized guidance on your philosophical journey.
+        </p>
         
         <div className="w-full" style={{ height: '800px' }}>
           <TidyCalEmbed 
