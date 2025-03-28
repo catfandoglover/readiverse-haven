@@ -1463,6 +1463,27 @@ export type Database = {
           },
         ]
       }
+      revenue_items: {
+        Row: {
+          cost: number | null
+          created_at: string
+          id: string
+          purpose: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          id?: string
+          purpose?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          id?: string
+          purpose?: string | null
+        }
+        Relationships: []
+      }
       share_messages: {
         Row: {
           created_at: string

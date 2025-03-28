@@ -225,12 +225,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   return (
     <div className="w-full">
       <Tabs value={step} onValueChange={(value) => setStep(value as 'date' | 'time' | 'details')}>
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="date">Date</TabsTrigger>
-          <TabsTrigger value="time" disabled={!selectedDate}>Time</TabsTrigger>
-          <TabsTrigger value="details" disabled={!selectedTimeSlot}>Details</TabsTrigger>
-        </TabsList>
-        
         <TabsContent value="date">
           <div className="flex flex-col items-center">
             {selectedBookingType && (
