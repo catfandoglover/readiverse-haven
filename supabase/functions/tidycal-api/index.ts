@@ -558,16 +558,27 @@ async function createBooking(bookingData: {
 
     console.log("Creating booking with data:", bookingData);
     
-    // Get the details of the selected time slot to extract the starts_at value
+    // Extract date and time from the time_slot_id
+    // Format: slot-YYYY-MM-DD-HH:MM
     const timeSlotIdParts = bookingData.time_slot_id.split('-');
-    const timeSlotDate = timeSlotIdParts[1];
-    const timeSlotTime = timeSlotIdParts[2] + ":" + timeSlotIdParts[3] || "00";
     
-    // Convert to ISO format with UTC timezone
-    const startsAt = `${timeSlotDate}T${timeSlotTime}:00.000000Z`;
+    if (timeSlotIdParts.length < 5) {
+      throw new Error("Invalid time slot ID format");
+    }
+    
+    // Extract date components
+    const dateStr = `${timeSlotIdParts[1]}-${timeSlotIdParts[2]}-${timeSlotIdParts[3]}`;
+    
+    // Extract time components
+    const timeStr = `${timeSlotIdParts[4]}`;
+    
+    // Create the ISO format string with UTC timezone
+    const startsAt = `${dateStr}T${timeStr}:00.000000Z`;
+    
     console.log("Constructed starts_at:", startsAt);
     
     // Format the request body according to TidyCal API requirements
+    // This exactly matches the format in the Python example
     const requestBody = {
       starts_at: startsAt,
       name: bookingData.name,
@@ -578,6 +589,7 @@ async function createBooking(bookingData: {
     console.log("Request body:", requestBody);
     
     // Use the correct endpoint for booking creation
+    // This is the same endpoint used in the Python example
     const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingData.bookingTypeId}/bookings`;
     
     const result = await fetchWithErrorHandling(url, {
@@ -590,18 +602,22 @@ async function createBooking(bookingData: {
       body: JSON.stringify(requestBody)
     });
     
-    // Improved error handling to return detailed error information to the frontend
-    if (result.success) {
+    if (result.success && result.data) {
       console.log("Booking response:", result.data);
       
-      // Transform the response to match our expected format
+      // Extract and return the relevant booking data
+      // Make sure we're accessing the correct path in the response
+      const bookingData = result.data.data || result.data;
+      
       const transformedData = {
-        id: result.data.data?.id?.toString() || "booking-id",
-        status: result.data.data?.status || "confirmed",
-        meeting_link: result.data.data?.meeting_url,
-        payment_link: result.data.data?.payment_link,
-        price: result.data.data?.price,
-        currency: result.data.data?.currency
+        id: bookingData.id?.toString() || "booking-id",
+        status: bookingData.status || "confirmed",
+        meeting_link: bookingData.meeting_url,
+        payment_link: bookingData.payment_link,
+        price: bookingData.price,
+        currency: bookingData.currency,
+        starts_at: bookingData.starts_at,
+        ends_at: bookingData.ends_at
       };
       
       return new Response(JSON.stringify(transformedData), {
@@ -609,9 +625,8 @@ async function createBooking(bookingData: {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
+      // Return error information
       console.error("Booking creation failed:", result.error);
-      
-      // Return error information instead of test data
       return new Response(JSON.stringify({ 
         error: true,
         message: `Booking creation failed: ${result.error}`,

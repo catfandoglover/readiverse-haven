@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, isValid } from "date-fns";
@@ -30,6 +31,8 @@ export interface BookingResponse {
   payment_link?: string;
   price?: number;
   currency?: string;
+  starts_at?: string;
+  ends_at?: string;
   error?: boolean;
   message?: string;
 }
@@ -279,9 +282,11 @@ export function useTidyCalAPI() {
       
       console.log("Booking response:", data);
       
-      if (data && data.error) {
-        setBookingError(data.message || "Failed to create booking.");
-        toast.error(data.message || "Failed to create booking.");
+      if (data && data.error === true) {
+        const errorMessage = data.message || "Failed to create booking.";
+        console.error("Booking error from API:", errorMessage);
+        setBookingError(errorMessage);
+        toast.error(errorMessage);
         return null;
       }
       

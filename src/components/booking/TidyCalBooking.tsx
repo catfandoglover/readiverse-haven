@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -126,11 +127,13 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     });
     
     if (response) {
+      // Check for error in response
       if (response.error) {
         toast.error(`Booking failed: ${response.message || "Unknown error"}`);
         return;
       }
       
+      // Handle payment if needed
       if (response.status === 'pending_payment' && response.payment_link) {
         toast.success("Booking created! Redirecting to payment page...");
         
