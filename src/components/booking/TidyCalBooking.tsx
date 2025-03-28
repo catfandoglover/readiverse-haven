@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -150,6 +151,15 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   };
 
   return (
+    <div className="w-full">
+      <Tabs value={step} onValueChange={(value) => setStep(value as 'date' | 'time' | 'details')}>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="date" disabled={step !== 'date'}>Date</TabsTrigger>
+          <TabsTrigger value="time" disabled={!selectedDate || step === 'date'}>Time</TabsTrigger>
+          <TabsTrigger value="details" disabled={!selectedTimeSlot || step === 'date' || step === 'time'}>Details</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="date">
           <div className="flex flex-col items-center">
             <div className="mb-4 w-full flex items-center justify-between">
               <Button 
