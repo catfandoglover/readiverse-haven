@@ -5,7 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 // TidyCal API token and configuration
 const TIDYCAL_API_KEY = Deno.env.get("TIDYCAL_API_KEY") || "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 
-// Correct TidyCal's API base URL based on the working Python script
+// Correct TidyCal's API base URL
 const TIDYCAL_BASE_URL = "https://tidycal.com/api";
 
 // Default booking type ID (if available)
@@ -363,7 +363,7 @@ async function getAvailableDates(month, bookingTypeId) {
     }
 
     console.log(`Fetching available dates for month: ${month} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/dates?month=${month}`;
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots?month=${month}`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
@@ -375,14 +375,29 @@ async function getAvailableDates(month, bookingTypeId) {
     });
     
     if (result.success) {
-      console.log("Available dates:", result.data);
+      console.log("Available dates response:", result.data);
       
-      // Handle different API response formats
+      // Extract unique dates from the timeslots response
       let availableDates = [];
-      if (result.data && Array.isArray(result.data.dates)) {
-        availableDates = result.data.dates;
+      
+      if (result.data && Array.isArray(result.data.data)) {
+        // Extract unique dates from timeslots
+        const dateSet = new Set();
+        result.data.data.forEach(slot => {
+          if (slot.date) {
+            dateSet.add(slot.date);
+          }
+        });
+        availableDates = Array.from(dateSet);
       } else if (result.data && Array.isArray(result.data)) {
-        availableDates = result.data;
+        // Extract unique dates directly from array
+        const dateSet = new Set();
+        result.data.forEach(slot => {
+          if (slot.date) {
+            dateSet.add(slot.date);
+          }
+        });
+        availableDates = Array.from(dateSet);
       }
       
       return new Response(JSON.stringify({ available_dates: availableDates }), {
@@ -424,7 +439,7 @@ async function getTimeSlots(date, bookingTypeId) {
     }
 
     console.log(`Fetching time slots for date: ${date} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/slots?date=${date}`;
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots?date=${date}`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
@@ -436,10 +451,11 @@ async function getTimeSlots(date, bookingTypeId) {
     });
     
     if (result.success) {
-      console.log("Time slots:", result.data);
+      console.log("Time slots response:", result.data);
       
-      // Handle different API response formats and transform slots to our format
+      // Transform slots to match our expected format
       let timeSlots = [];
+      
       if (result.data && Array.isArray(result.data.data)) {
         timeSlots = result.data.data.map(slot => ({
           id: slot.id.toString(),
