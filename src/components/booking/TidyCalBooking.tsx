@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -91,9 +90,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     }
   };
 
-  const handleTimeSelection = (timeSlotId: string) => {
-    console.log("Selected time slot:", timeSlotId);
-    setSelectedTimeSlot(timeSlotId);
+  const handleTimeSelection = (timeSlot: TimeSlot) => {
+    console.log("Selected time slot:", timeSlot);
+    const timeSlotValue = timeSlot.original_starts_at || timeSlot.id;
+    setSelectedTimeSlot(timeSlotValue);
     setStep('details');
   };
 
@@ -110,19 +110,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       return;
     }
 
-    // Find the selected time slot to get the original starts_at value if available
-    const selectedSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
-    let timeSlotValue = selectedTimeSlot;
-    
-    // If we have the original timestamp from the API, use that instead of our ID
-    if (selectedSlot && selectedSlot.original_starts_at) {
-      timeSlotValue = selectedSlot.original_starts_at;
-    }
-
     console.log("Attempting to create booking with data:", {
       name,
       email,
-      time_slot_id: timeSlotValue,
+      time_slot_id: selectedTimeSlot,
       timezone,
       bookingTypeId: selectedBookingType.id
     });
@@ -130,13 +121,12 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     const response = await createBooking({
       name,
       email,
-      time_slot_id: timeSlotValue,
+      time_slot_id: selectedTimeSlot,
       timezone,
       bookingTypeId: selectedBookingType.id
     });
     
     if (response) {
-      // Handle successful booking
       if (response.status === 'pending_payment' && response.payment_link) {
         toast.success("Booking created! Redirecting to payment page...");
         
@@ -339,9 +329,9 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                       className={cn(
                         "justify-center text-center h-12",
                         slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
-                        selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
+                        selectedTimeSlot === (slot.original_starts_at || slot.id) ? "border-[#373763] bg-[#373763]/5" : ""
                       )}
-                      onClick={() => slot.available && handleTimeSelection(slot.id)}
+                      onClick={() => slot.available && handleTimeSelection(slot)}
                       disabled={!slot.available}
                     >
                       {slot.start_time}

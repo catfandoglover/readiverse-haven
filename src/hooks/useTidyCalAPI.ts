@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, isValid } from "date-fns";
@@ -266,6 +265,14 @@ export function useTidyCalAPI() {
     setBookingError(null);
     try {
       console.log("Creating booking with data:", bookingData);
+      
+      if (!bookingData.time_slot_id) {
+        const errorMessage = "Missing time slot selection";
+        setBookingError(errorMessage);
+        toast.error(errorMessage);
+        return null;
+      }
+      
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
         body: { 
           path: 'create-booking',
@@ -275,17 +282,25 @@ export function useTidyCalAPI() {
 
       if (error) {
         console.error("Supabase function error:", error);
-        setBookingError("Failed to create booking. Please try again later.");
-        toast.error("Failed to create booking. Please try again later.");
+        const errorMessage = "Failed to create booking. Please try again later.";
+        setBookingError(errorMessage);
+        toast.error(errorMessage);
         return null;
       }
       
       console.log("Booking response:", data);
       
-      // Check for error in the response data
       if (data && data.error === true) {
         const errorMessage = data.message || "Failed to create booking.";
         console.error("Booking error from API:", errorMessage);
+        setBookingError(errorMessage);
+        toast.error(errorMessage);
+        return null;
+      }
+      
+      if (!data || !data.id) {
+        const errorMessage = "Invalid response from booking service. Your booking may not have been created.";
+        console.error("Invalid booking response:", data);
         setBookingError(errorMessage);
         toast.error(errorMessage);
         return null;

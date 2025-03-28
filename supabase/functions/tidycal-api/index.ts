@@ -558,34 +558,28 @@ async function createBooking(bookingData: {
 
     console.log("Creating booking with data:", bookingData);
     
-    // CRITICAL FIX: Use the correct API endpoint structure based on the Python script
+    // CRITICAL FIX: Use the correct API endpoint structure - Endpoint must be booking-types/{id}/bookings
     const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingData.bookingTypeId}/bookings`;
     
-    // Get the timestamp from the time slot ID
-    let startsAt = "";
+    // Process the time slot ID
+    // If it's already an ISO timestamp (from the TidyCal API), use it directly
+    let startsAt = bookingData.time_slot_id;
     
-    // If it's a real time slot ID from the TidyCal API
-    if (bookingData.time_slot_id.includes('T')) {
-      startsAt = bookingData.time_slot_id;
-    } 
-    // If it's our generated test time slot ID 
-    else {
-      const timeSlotIdParts = bookingData.time_slot_id.split('-');
-      if (timeSlotIdParts.length < 4) {
-        throw new Error(`Invalid time slot ID format: ${bookingData.time_slot_id}`);
-      }
-      
-      // Extract date and time components - handle both real and test IDs
-      const dateStr = timeSlotIdParts[1] || "2025-04-01";
-      const timeStr = timeSlotIdParts[2] || "09:00";
-      
-      // Create the ISO format string
-      startsAt = `${dateStr}T${timeStr}:00.000000Z`;
+    // If it doesn't look like an ISO timestamp, it might be our internal ID format
+    if (!startsAt.includes('T') && !startsAt.includes('Z')) {
+      console.error(`Invalid time slot format received: ${startsAt}. Must be an ISO timestamp.`);
+      return new Response(JSON.stringify({ 
+        error: true,
+        message: "Invalid time slot format. Expected ISO timestamp."
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
     
-    console.log("Using starts_at:", startsAt);
+    console.log(`Using starts_at (booking timestamp): ${startsAt}`);
     
-    // CRITICAL FIX: Format the request body exactly as needed by TidyCal API
+    // CRITICAL FIX: Format the request body EXACTLY as required by TidyCal API - simplified, correct structure
     const requestBody = {
       starts_at: startsAt,
       name: bookingData.name,
@@ -593,7 +587,7 @@ async function createBooking(bookingData: {
       timezone: bookingData.timezone
     };
     
-    console.log("Request body:", requestBody);
+    console.log("Request body:", JSON.stringify(requestBody, null, 2));
     
     const result = await fetchWithErrorHandling(url, {
       method: "POST",
@@ -605,43 +599,53 @@ async function createBooking(bookingData: {
       body: JSON.stringify(requestBody)
     });
     
-    if (result.success && result.data) {
-      console.log("Booking response:", result.data);
-      
-      // Extract the response data properly
-      const responseData = result.data.data || result.data;
-      
-      const transformedData = {
-        id: responseData.id?.toString() || "booking-id",
-        status: responseData.status || "confirmed",
-        meeting_link: responseData.meeting_url,
-        payment_link: responseData.payment_link,
-        price: responseData.price,
-        currency: responseData.currency,
-        starts_at: responseData.starts_at,
-        ends_at: responseData.ends_at
-      };
-      
-      return new Response(JSON.stringify(transformedData), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } else {
-      // Return detailed error information
-      console.error("Booking creation failed:", result.error);
+    if (!result.success) {
+      console.error("Booking creation failed with error:", result.error);
       return new Response(JSON.stringify({ 
         error: true,
         message: `Booking creation failed: ${result.error || "Unknown error"}`,
-        details: result.data || {}
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    // If we reach here, we got a response but need to check its contents
+    console.log("Booking response:", JSON.stringify(result.data, null, 2));
+    
+    // Extract the response data properly - the actual booking should be in result.data.data
+    const responseData = result.data.data || result.data;
+    
+    if (!responseData || !responseData.id) {
+      console.error("Invalid booking response structure:", result.data);
+      return new Response(JSON.stringify({ 
+        error: true,
+        message: "Invalid response from booking API. The booking might not have been created.",
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    const transformedData = {
+      id: responseData.id?.toString() || "booking-id",
+      status: responseData.status || "confirmed",
+      meeting_link: responseData.meeting_url,
+      payment_link: responseData.payment_link,
+      price: responseData.price,
+      currency: responseData.currency,
+      starts_at: responseData.starts_at,
+      ends_at: responseData.ends_at
+    };
+    
+    return new Response(JSON.stringify(transformedData), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
     
-    // Return error information
+    // Return detailed error information
     return new Response(JSON.stringify({ 
       error: true,
       message: `Error creating booking: ${error.message}`
