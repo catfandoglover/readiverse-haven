@@ -9,7 +9,7 @@ supabase function secrets
 vercel project settings
 vercel env ls (the view in vercel CLI)
 
-#3 and #4 are supposed to match but do not 😳
+#3 and #4 now match after a manual override. 
 
 use "vercel env ls" in the vercel CLI to see what the environmental variables are. 
 
