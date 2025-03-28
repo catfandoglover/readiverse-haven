@@ -223,20 +223,32 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         <TabsContent value="date">
           <div className="flex flex-col items-center">
             {selectedBookingType && (
-              <div className="w-full mb-6 p-4 bg-[#373763]/10 rounded-md border border-[#E9E7E2]/10">
+              <>
                 <div className="flex items-center text-sm text-[#E9E7E2] mb-1">
                   <Clock className="h-4 w-4 mr-2" />
                   <span>{selectedBookingType.duration} minutes</span>
                 </div>
-                <div className="flex items-center text-sm text-[#E9E7E2]">
+                <div className="flex items-center text-sm text-[#E9E7E2] mb-6">
                   <DollarSign className="h-4 w-4 mr-2" />
                   <span>{costLoading ? "Loading price..." : costError ? "Price unavailable" : cost}</span>
                 </div>
-              </div>
+              </>
             )}
             
             {datesError ? (
-              renderError(datesError, datesLoading, handleRetry)
+              <div className="w-full flex flex-col items-center justify-center py-12">
+                <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+                <p className="text-sm text-[#E9E7E2] mb-4">{datesError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={datesLoading}
+                  className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
+                >
+                  {datesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Retry
+                </Button>
+              </div>
             ) : datesLoading ? (
               <div className="py-8 flex justify-center items-center">
                 <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
@@ -292,7 +304,19 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             </div>
             
             {timeSlotsError ? (
-              renderError(timeSlotsError, timeSlotsLoading, handleRetry)
+              <div className="w-full flex flex-col items-center justify-center py-12">
+                <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+                <p className="text-sm text-[#E9E7E2] mb-4">{timeSlotsError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={timeSlotsLoading}
+                  className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
+                >
+                  {timeSlotsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Retry
+                </Button>
+              </div>
             ) : timeSlotsLoading ? (
               <div className="py-8 flex justify-center items-center">
                 <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
