@@ -2,11 +2,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Token provided in the code
+// TidyCal API token and configuration
 const TIDYCAL_API_KEY = Deno.env.get("TIDYCAL_API_KEY") || "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 
-// Updated base URL from API documentation
-const TIDYCAL_BASE_URL = "https://api.tidycal.com/v1";
+// TidyCal's API base URL - corrected according to their API documentation
+const TIDYCAL_BASE_URL = "https://tidycal.com/api/v1";
 
 // Test data for fallback responses
 const TEST_BOOKING_TYPES = [
@@ -70,7 +70,17 @@ async function fetchWithErrorHandling(url, options) {
 
   try {
     const response = await fetch(url, options);
-    const responseText = await response.text();
+    let responseText;
+    
+    try {
+      responseText = await response.text();
+    } catch (error) {
+      console.error("Failed to get response text:", error);
+      return { 
+        success: false, 
+        error: "Failed to read response"
+      };
+    }
     
     console.log(`Response status: ${response.status}`);
     
@@ -323,7 +333,7 @@ async function getAvailableDates(month, bookingTypeId) {
     }
 
     console.log(`Fetching available dates for month: ${month} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/dates?month=${month}`;
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/availability?month=${month}`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
@@ -490,8 +500,8 @@ async function createBooking(bookingData) {
     };
     
     return new Response(JSON.stringify(testBookingResponse), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 }

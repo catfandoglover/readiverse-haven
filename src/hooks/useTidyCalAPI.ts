@@ -54,13 +54,15 @@ export function useTidyCalAPI() {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [healthCheck, setHealthCheck] = useState<boolean | null>(null);
   const [apiData, setApiData] = useState<any | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // Perform a health check when the component mounts
+  // Perform a health check when the component mounts or retry is attempted
   useEffect(() => {
     const checkHealth = async () => {
       try {
         console.log("Performing TidyCal API health check");
         setHealthCheck(null); // Reset to loading state
+        setConnectionError(null);
         
         const { data, error } = await supabase.functions.invoke('tidycal-api', {
           body: { path: 'health-check' },
@@ -69,6 +71,7 @@ export function useTidyCalAPI() {
         if (error) {
           console.error("Health check Supabase function error:", error);
           setHealthCheck(false);
+          setConnectionError(`Supabase function error: ${error.message}`);
           return;
         }
         
@@ -79,14 +82,16 @@ export function useTidyCalAPI() {
           setApiData(data.api_data);
           
           // Automatically fetch booking types if health check passes
-          fetchBookingTypes();
+          await fetchBookingTypes();
         } else {
           console.error("API connection failed:", data?.message || "Unknown error");
           setHealthCheck(false);
+          setConnectionError(data?.error || "Unknown connection error");
         }
       } catch (error) {
         console.error('Health check error:', error);
         setHealthCheck(false);
+        setConnectionError(`Health check exception: ${error.message}`);
       }
     };
     
@@ -304,6 +309,7 @@ export function useTidyCalAPI() {
     retryAttempt,
     setRetryAttempt,
     healthCheck,
-    apiData
+    apiData,
+    connectionError
   };
 }

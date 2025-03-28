@@ -19,6 +19,7 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
     setRetryAttempt,
     healthCheck,
     apiData,
+    connectionError,
     fetchBookingTypes
   } = useTidyCalAPI();
 
@@ -48,6 +49,12 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
         <p className="text-sm text-muted-foreground mb-4 text-center">
           Can't connect to the booking service right now. Using backup data.
         </p>
+        {connectionError && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
+            <p className="font-medium">Error details:</p>
+            <p className="break-words">{connectionError}</p>
+          </div>
+        )}
         <Button 
           variant="outline" 
           onClick={handleRetry}
