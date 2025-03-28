@@ -1,106 +1,63 @@
 
 import React from 'react';
-import { useTidyCalAPI, BookingType } from '@/hooks/useTidyCalAPI';
-import { AlertTriangle, Loader2, Info, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Clock, DollarSign, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useTidyCalAPI, BookingType } from '@/hooks/useTidyCalAPI';
 
 interface BookingTypesListProps {
-  onSelect?: (bookingType: BookingType) => void;
+  onSelect: (bookingType: BookingType) => void;
 }
 
 const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
-  const { 
-    bookingTypes, 
-    bookingTypesLoading, 
+  const {
+    bookingTypes,
+    bookingTypesLoading,
     bookingTypesError,
     retryAttempt,
-    setRetryAttempt,
-    healthCheck,
-    apiData,
-    connectionError,
-    fetchBookingTypes
+    setRetryAttempt
   } = useTidyCalAPI();
 
   const handleRetry = () => {
     setRetryAttempt(prev => prev + 1);
   };
 
-  if (bookingTypesLoading) {
+  if (bookingTypesError) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-[#373763]" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading booking types...</p>
-        <div className="w-full mt-6 space-y-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  if (healthCheck === false) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center py-8 px-4">
-        <WifiOff className="h-8 w-8 text-amber-500 mb-2" />
-        <p className="text-lg font-medium mb-2 text-center">Connection Issue</p>
-        <p className="text-sm text-muted-foreground mb-4 text-center">
-          Can't connect to the booking service right now. Using backup data.
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Connection Error</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          We're having trouble connecting to the booking service. Please try again later.
         </p>
-        {connectionError && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
-            <p className="font-medium">Error details:</p>
-            <p className="break-words">{connectionError}</p>
-          </div>
-        )}
         <Button 
-          variant="outline" 
-          onClick={handleRetry}
+          onClick={handleRetry} 
+          disabled={bookingTypesLoading}
+          variant="outline"
           className="flex items-center gap-2"
         >
-          <RefreshCw className="h-4 w-4" />
+          {bookingTypesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Retry Connection
         </Button>
       </div>
     );
   }
 
-  if (bookingTypesError) {
+  if (bookingTypesLoading) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-8 px-4">
-        <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
-        <p className="text-sm text-red-500 mb-2 text-center">{bookingTypesError}</p>
-        <p className="text-sm text-muted-foreground mb-4 text-center">
-          Could not connect to the booking service. We'll use backup data so you can still proceed.
-        </p>
-        <Button 
-          variant="outline" 
-          onClick={handleRetry}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Retry
-        </Button>
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-4" />
+        <p className="text-sm text-gray-600">Loading booking options...</p>
       </div>
     );
   }
 
   if (!bookingTypes || bookingTypes.length === 0) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-8 px-4">
-        <Info className="h-8 w-8 text-[#373763] mb-2" />
-        <p className="text-sm text-muted-foreground mb-2 text-center">No booking types available.</p>
-        <p className="text-sm text-center max-w-md">
-          It appears that there are no booking types configured. Please try refreshing or contact support.
+      <div className="text-center py-8">
+        <p className="text-gray-600 mb-4">
+          No booking types are currently available.
         </p>
-        <Button 
-          variant="outline" 
-          onClick={handleRetry}
-          className="flex items-center gap-2 mt-4"
-        >
-          <RefreshCw className="h-4 w-4" />
+        <Button onClick={handleRetry} variant="outline">
           Refresh
         </Button>
       </div>
@@ -108,48 +65,30 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
   }
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Available Booking Types</h3>
-        {healthCheck === true && (
-          <div className="flex items-center text-sm text-green-600">
-            <Wifi className="h-4 w-4 mr-1" />
-            <span>Online</span>
+    <div className="space-y-4">
+      {bookingTypes.map((type) => (
+        <div 
+          key={type.id}
+          className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
+          onClick={() => onSelect(type)}
+        >
+          <h3 className="font-semibold text-lg">{type.name}</h3>
+          <div className="flex items-center text-sm text-muted-foreground mt-2 mb-1">
+            <Clock className="h-4 w-4 mr-2" />
+            <span>{type.duration} minutes</span>
           </div>
-        )}
-      </div>
-      
-      <div className="grid gap-4">
-        {bookingTypes.map((bookingType) => (
-          <div 
-            key={bookingType.id} 
-            className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
-            onClick={() => onSelect && onSelect(bookingType)}
-          >
-            <h4 className="font-medium">{bookingType.name}</h4>
-            <p className="text-sm text-muted-foreground">{bookingType.duration} minutes</p>
-            {bookingType.description && (
-              <p className="text-sm mt-2">{bookingType.description}</p>
-            )}
-          </div>
-        ))}
-      </div>
-      
-      {/* Diagnostic information section */}
-      {apiData && (
-        <Accordion type="single" collapsible className="mt-8 border rounded-md">
-          <AccordionItem value="diagnostics">
-            <AccordionTrigger className="text-sm px-4">API Diagnostic Information</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="bg-gray-50 p-4 rounded-md">
-                <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-[200px]">
-                  {JSON.stringify(apiData, null, 2)}
-                </pre>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
+          {type.price && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <DollarSign className="h-4 w-4 mr-2" />
+              <span>${type.price} {type.currency}</span>
+            </div>
+          )}
+          {type.description && (
+            <p className="mt-3 text-sm text-gray-600" 
+               dangerouslySetInnerHTML={{ __html: type.description }} />
+          )}
+        </div>
+      ))}
     </div>
   );
 };

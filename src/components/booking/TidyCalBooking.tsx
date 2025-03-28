@@ -68,33 +68,36 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     fetchBookingTypes();
   }, [retryAttempt]);
 
-  // Load available dates when current month changes
+  // Load available dates when current month changes or booking type is selected
   useEffect(() => {
     if (selectedBookingType && step === 'date') {
       fetchAvailableDates(currentMonth, selectedBookingType.id);
     }
-  }, [currentMonth, step, selectedBookingType, retryAttempt]);
+  }, [currentMonth, selectedBookingType, step, retryAttempt]);
 
   // Load time slots when a date is selected
   useEffect(() => {
     if (selectedDate && selectedBookingType && step === 'time') {
       fetchTimeSlots(selectedDate, selectedBookingType.id);
     }
-  }, [selectedDate, step, selectedBookingType, retryAttempt]);
+  }, [selectedDate, selectedBookingType, step, retryAttempt]);
 
   const handleBookingTypeSelection = (type: BookingType) => {
+    console.log("Selected booking type:", type);
     setSelectedBookingType(type);
     setStep('date');
   };
 
   const handleDateSelection = (date: Date | undefined) => {
     if (date) {
+      console.log("Selected date:", date);
       setSelectedDate(date);
       setStep('time');
     }
   };
 
   const handleTimeSelection = (timeSlotId: string) => {
+    console.log("Selected time slot:", timeSlotId);
     setSelectedTimeSlot(timeSlotId);
     setStep('details');
   };
@@ -267,10 +270,14 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 }}
                 modifiersClassNames={{
                   selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
+                  today: "bg-muted text-muted-foreground",
+                  outside: "text-muted-foreground opacity-50",
+                  disabled: "text-muted-foreground opacity-50",
+                  available: "border-green-500 border",
+                  unavailable: "text-muted-foreground opacity-50"
                 }}
                 modifiers={{
-                  available: (date) => isDateAvailable(date),
-                  unavailable: (date) => !isDateAvailable(date) && !isToday(date)
+                  available: (date) => isDateAvailable(date)
                 }}
                 disabled={(date) => !isDateAvailable(date)}
                 className="rounded-md border p-3 pointer-events-auto bg-white"
@@ -314,23 +321,23 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               </div>
             ) : (
               <div className="flex flex-col space-y-2">
-                {timeSlots.map(slot => (
-                  <Button 
-                    key={slot.id} 
-                    variant="outline" 
-                    className={cn(
-                      "justify-center text-center h-12",
-                      slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
-                      selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
-                    )}
-                    onClick={() => slot.available && handleTimeSelection(slot.id)}
-                    disabled={!slot.available}
-                  >
-                    {slot.start_time}
-                  </Button>
-                ))}
-                
-                {timeSlots.length === 0 && (
+                {timeSlots.length > 0 ? (
+                  timeSlots.map(slot => (
+                    <Button 
+                      key={slot.id} 
+                      variant="outline" 
+                      className={cn(
+                        "justify-center text-center h-12",
+                        slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
+                        selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
+                      )}
+                      onClick={() => slot.available && handleTimeSelection(slot.id)}
+                      disabled={!slot.available}
+                    >
+                      {slot.start_time}
+                    </Button>
+                  ))
+                ) : (
                   <div className="text-center py-6 text-muted-foreground">
                     No available times for this date. Please select another date.
                   </div>

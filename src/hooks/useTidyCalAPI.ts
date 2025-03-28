@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { toast } from "sonner";
 
 export interface BookingType {
@@ -192,7 +192,14 @@ export function useTidyCalAPI() {
       console.log("Available dates response:", data);
       if (data && Array.isArray(data.available_dates)) {
         // Convert date strings to Date objects
-        const dates = data.available_dates.map((dateStr: string) => parseISO(dateStr));
+        const dates = data.available_dates
+          .map((dateStr: string) => {
+            const parsedDate = parseISO(dateStr);
+            return isValid(parsedDate) ? parsedDate : null;
+          })
+          .filter((date: Date | null): date is Date => date !== null);
+        
+        console.log("Parsed available dates:", dates);
         setAvailableDates(dates);
         return dates;
       } else {
