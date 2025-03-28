@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const DEFAULT_COST = "59.00";
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -35,21 +37,24 @@ serve(async (req) => {
     if (error) {
       console.error('Error fetching booking cost:', error);
       return new Response(
-        JSON.stringify({ error: 'Error fetching booking cost' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ cost: DEFAULT_COST, error_message: 'Using default cost' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Return the cost data
+    // Return the cost data or fallback to default
+    const cost = data?.cost || DEFAULT_COST;
+    
     return new Response(
-      JSON.stringify({ cost: data.cost }),
+      JSON.stringify({ cost }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Exception:', error);
+    // Return the default cost on any error
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ cost: DEFAULT_COST, error_message: 'Exception occurred, using default cost' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -254,23 +254,17 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                   modifiers={{
                     available: (date) => isDateAvailable(date)
                   }}
-                  modifiersStyles={{
-                    available: {
-                      fontWeight: 'bold'
-                    }
-                  }}
-                  modifiersClassNames={{
-                    available: "border-2 border-[#373763] text-[#E9E7E2] bg-[#373763]/20"
-                  }}
-                  disabled={(date) => !isDateAvailable(date)}
                   className="border-0 shadow-none bg-transparent"
+                  disabled={(date) => !isDateAvailable(date)}
                 />
               </div>
             )}
             
             <div className="flex items-center justify-center gap-8 mt-6 text-sm text-[#E9E7E2]">
               <div className="flex items-center">
-                <div className="h-4 w-4 rounded-full bg-[#373763]/70 border-2 border-[#373763] mr-2"></div>
+                <div className="h-4 w-4 rounded-full bg-transparent border border-[#E9E7E2]/30 mr-2 relative">
+                  <span className="absolute bottom-0.5 left-1.5 w-1.5 h-1.5 rounded-full bg-[#CCFF23]"></span>
+                </div>
                 <span>Available</span>
               </div>
               <div className="flex items-center">

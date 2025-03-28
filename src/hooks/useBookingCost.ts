@@ -6,6 +6,7 @@ export function useBookingCost() {
   const [cost, setCost] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fallbackCost = "$59 USD";
 
   useEffect(() => {
     const fetchBookingCost = async () => {
@@ -16,6 +17,7 @@ export function useBookingCost() {
         if (error) {
           console.error('Error fetching booking cost:', error);
           setError('Could not load booking price information');
+          setCost(fallbackCost);
           return;
         }
 
@@ -23,10 +25,12 @@ export function useBookingCost() {
           setCost(`${data.cost} USD`);
         } else {
           setError('No price information available');
+          setCost(fallbackCost);
         }
       } catch (err) {
         console.error('Exception:', err);
         setError('Error loading price information');
+        setCost(fallbackCost);
       } finally {
         setIsLoading(false);
       }

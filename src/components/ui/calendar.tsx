@@ -59,6 +59,22 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-5 w-5 text-[#E9E7E2]" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-5 w-5 text-[#E9E7E2]" />,
+        DayContent: ({ date, ...props }) => {
+          // Check if the day has the "available" modifier
+          const isAvailable = props.activeModifiers?.available;
+          
+          return (
+            <div className="relative flex flex-col items-center justify-center h-full">
+              <span>{date.getDate()}</span>
+              {isAvailable && (
+                <span 
+                  className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#CCFF23]" 
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+          );
+        }
       }}
       {...props}
     />
