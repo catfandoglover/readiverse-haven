@@ -34,10 +34,9 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error fetching booking cost:', error);
-      // Return a default fallback cost when the database query fails
       return new Response(
-        JSON.stringify({ cost: "59.00" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        JSON.stringify({ error: 'Error fetching booking cost' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
@@ -48,10 +47,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Exception:', error);
-    // Return a default fallback cost when an exception occurs
     return new Response(
-      JSON.stringify({ cost: "59.00" }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      JSON.stringify({ error: 'Internal Server Error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
