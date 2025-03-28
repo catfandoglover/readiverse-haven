@@ -32,17 +32,58 @@ export interface BookingResponse {
 }
 
 export function useTidyCalAPI() {
+  const [bookingTypes, setBookingTypes] = useState<BookingType[]>([]);
+  const [bookingTypesLoading, setBookingTypesLoading] = useState(false);
+  const [bookingTypesError, setBookingTypesError] = useState<string | null>(null);
+  
   const [bookingType, setBookingType] = useState<BookingType | null>(null);
   const [bookingTypeLoading, setBookingTypeLoading] = useState(true);
   const [bookingTypeError, setBookingTypeError] = useState<string | null>(null);
+  
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [datesLoading, setDatesLoading] = useState(false);
   const [datesError, setDatesError] = useState<string | null>(null);
+  
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
   const [timeSlotsError, setTimeSlotsError] = useState<string | null>(null);
+  
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  
+  const [retryAttempt, setRetryAttempt] = useState(0);
+
+  // Fetch all booking types
+  const fetchBookingTypes = async () => {
+    setBookingTypesLoading(true);
+    setBookingTypesError(null);
+    try {
+      console.log("Fetching all booking types");
+      const { data, error } = await supabase.functions.invoke('tidycal-api', {
+        body: { path: 'list-booking-types' },
+      });
+
+      if (error) {
+        console.error("Supabase function error:", error);
+        setBookingTypesError("Failed to connect to booking service. Please try again later.");
+        throw error;
+      }
+      
+      console.log("All booking types response:", data);
+      if (data && data.data) {
+        setBookingTypes(data.data);
+        return data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching booking types:', error);
+      setBookingTypesError("Could not load booking types. Please try again later.");
+      toast.error("Could not load booking types. Please try again later.");
+      return [];
+    } finally {
+      setBookingTypesLoading(false);
+    }
+  };
 
   // Fetch booking type details
   const fetchBookingType = async () => {
@@ -186,6 +227,10 @@ export function useTidyCalAPI() {
   };
 
   return {
+    bookingTypes,
+    bookingTypesLoading,
+    bookingTypesError,
+    fetchBookingTypes,
     bookingType,
     bookingTypeLoading,
     bookingTypeError,
@@ -200,6 +245,8 @@ export function useTidyCalAPI() {
     fetchTimeSlots,
     bookingLoading,
     bookingError,
-    createBooking
+    createBooking,
+    retryAttempt,
+    setRetryAttempt
   };
 }

@@ -10,6 +10,7 @@ import { format, addDays, startOfToday, isSameDay, isToday, parseISO } from "dat
 import { ArrowLeft, ArrowRight, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
+import BookingTypesList from './BookingTypesList';
 
 interface TidyCalBookingProps {
   onClose?: () => void;
@@ -17,17 +18,21 @@ interface TidyCalBookingProps {
 }
 
 const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) => {
-  const [step, setStep] = useState<'date' | 'time' | 'details'>('date');
+  const [step, setStep] = useState<'types' | 'date' | 'time' | 'details'>('types');
+  const [selectedBookingType, setSelectedBookingType] = useState<BookingType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [retryAttempt, setRetryAttempt] = useState(0);
   
   // Use the custom hook
   const {
+    bookingTypes,
+    bookingTypesLoading,
+    bookingTypesError,
+    fetchBookingTypes,
     bookingType,
     bookingTypeLoading,
     bookingTypeError,
@@ -42,7 +47,9 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     fetchTimeSlots,
     bookingLoading,
     bookingError,
-    createBooking
+    createBooking,
+    retryAttempt,
+    setRetryAttempt
   } = useTidyCalAPI();
 
   // Detect user's timezone on component mount
@@ -56,24 +63,36 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     }
   }, []);
 
-  // Fetch booking type details on mount
+  // For testing: List all booking types first
   useEffect(() => {
-    fetchBookingType();
+    fetchBookingTypes();
   }, [retryAttempt]);
+
+  // Fetch booking type details if we're not showing the booking types list
+  useEffect(() => {
+    if (step !== 'types' && !selectedBookingType) {
+      fetchBookingType();
+    }
+  }, [step, retryAttempt]);
 
   // Load available dates when current month changes
   useEffect(() => {
-    if (bookingType) {
+    if ((selectedBookingType || bookingType) && step === 'date') {
       fetchAvailableDates(currentMonth);
     }
-  }, [currentMonth, bookingType, retryAttempt]);
+  }, [currentMonth, step, selectedBookingType, bookingType, retryAttempt]);
 
   // Load time slots when a date is selected
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && step === 'time') {
       fetchTimeSlots(selectedDate);
     }
-  }, [selectedDate, retryAttempt]);
+  }, [selectedDate, step, retryAttempt]);
+
+  const handleBookingTypeSelection = (type: BookingType) => {
+    setSelectedBookingType(type);
+    setStep('date');
+  };
 
   const handleDateSelection = (date: Date | undefined) => {
     if (date) {
@@ -130,15 +149,16 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
 
   const getSelectedTimeSlotDetails = () => {
     const timeSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
-    if (!timeSlot || !bookingType) return null;
+    const activeBookingType = selectedBookingType || bookingType;
+    if (!timeSlot || !activeBookingType) return null;
     
     return {
       date: selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
-      service: bookingType.name,
-      duration: bookingType.duration,
-      price: bookingType.price,
-      currency: bookingType.currency || "USD"
+      service: activeBookingType.name,
+      duration: activeBookingType.duration,
+      price: activeBookingType.price,
+      currency: activeBookingType.currency || "USD"
     };
   };
 
@@ -169,84 +189,51 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     );
   };
 
-  // If loading booking type, show loading state
-  if (bookingTypeLoading) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[#373763]" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading booking information...</p>
-      </div>
-    );
-  }
-
-  // If booking type couldn't be loaded, show error
-  if (bookingTypeError) {
-    return renderError(bookingTypeError, bookingTypeLoading, handleRetry);
-  }
-
-  // If booking type is null, show error
-  if (!bookingType) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center py-12">
-        <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
-        <p className="text-sm text-red-500 mb-4">Could not load booking information. Please try again later.</p>
-        <Button 
-          variant="outline" 
-          onClick={handleRetry}
-          className="mr-2"
-        >
-          Retry
-        </Button>
-        {onClose && (
-          <Button 
-            variant="outline" 
-            onClick={onClose} 
-            className="mt-4"
-          >
-            Go Back
-          </Button>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="w-full">
-      <Tabs value={step} onValueChange={(value) => setStep(value as 'date' | 'time' | 'details')}>
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="date" disabled={step !== 'date'}>Date</TabsTrigger>
-          <TabsTrigger value="time" disabled={!selectedDate || step === 'date'}>Time</TabsTrigger>
-          <TabsTrigger value="details" disabled={!selectedTimeSlot || step === 'date' || step === 'time'}>Details</TabsTrigger>
+      <Tabs value={step} onValueChange={(value) => setStep(value as 'types' | 'date' | 'time' | 'details')}>
+        <TabsList className="grid grid-cols-4 mb-4">
+          <TabsTrigger value="types" disabled={step !== 'types'}>Types</TabsTrigger>
+          <TabsTrigger value="date" disabled={step === 'types'}>Date</TabsTrigger>
+          <TabsTrigger value="time" disabled={!selectedDate || step === 'types' || step === 'date'}>Time</TabsTrigger>
+          <TabsTrigger value="details" disabled={!selectedTimeSlot || step === 'types' || step === 'date' || step === 'time'}>Details</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="types">
+          <BookingTypesList onSelect={handleBookingTypeSelection} />
+        </TabsContent>
         
         <TabsContent value="date">
           <div className="flex flex-col items-center">
-            {/* Booking information */}
-            <div className="w-full mb-6 p-4 bg-[#373763]/5 rounded-md">
-              <h3 className="font-semibold text-lg mb-2">{bookingType.name}</h3>
-              <div className="flex items-center text-sm text-muted-foreground mb-1">
-                <Clock className="h-4 w-4 mr-2" />
-                <span>{bookingType.duration} minutes</span>
-              </div>
-              {bookingType.price && (
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  <span>${bookingType.price} {bookingType.currency}</span>
+            {selectedBookingType && (
+              <div className="w-full mb-6 p-4 bg-[#373763]/5 rounded-md">
+                <h3 className="font-semibold text-lg mb-2">{selectedBookingType.name}</h3>
+                <div className="flex items-center text-sm text-muted-foreground mb-1">
+                  <Clock className="h-4 w-4 mr-2" />
+                  <span>{selectedBookingType.duration} minutes</span>
                 </div>
-              )}
-              {bookingType.description && (
-                <p className="mt-3 text-sm">{bookingType.description}</p>
-              )}
-            </div>
+                {selectedBookingType.price && (
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    <span>${selectedBookingType.price} {selectedBookingType.currency}</span>
+                  </div>
+                )}
+                {selectedBookingType.description && (
+                  <p className="mt-3 text-sm">{selectedBookingType.description}</p>
+                )}
+              </div>
+            )}
             
             <div className="mb-4 w-full flex items-center justify-between">
               <Button 
                 variant="ghost"
                 size="sm"
-                onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                disabled={datesLoading}
+                onClick={() => selectedBookingType ? setStep('types') : null}
+                disabled={!selectedBookingType}
+                className="mr-2"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
               </Button>
               <h3 className="text-lg font-semibold">
                 {format(currentMonth, "MMMM yyyy")}
@@ -466,7 +453,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         </TabsContent>
       </Tabs>
       
-      {step === 'date' && onClose && (
+      {step === 'types' && onClose && (
         <div className="flex justify-center mt-4">
           <Button 
             variant="outline" 
