@@ -17,7 +17,7 @@ interface TidyCalDialogProps {
 const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
 
-  const handleSuccess = (bookingData: TidyCalBookingResponse) => {
+  const handleSuccess = (bookingData: any) => {
     console.log('Booking successful:', bookingData);
     // Dispatch event for integration with the parent component
     window.dispatchEvent(new CustomEvent('tidycal:booking-completed', { detail: bookingData }));

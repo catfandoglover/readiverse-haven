@@ -22,8 +22,8 @@ const BookCounselor = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#373763] text-[#E9E7E2]">
-      <div className="flex items-center pt-4 pb-4 px-8 bg-[#373763] text-[#E9E7E2]">
+    <div className="min-h-[100dvh] bg-[#D5B8FF] text-[#E9E7E2]">
+      <div className="flex items-center pt-4 pb-4 px-8 bg-[#D5B8FF] text-[#E9E7E2]">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOOK A COUNSELOR
