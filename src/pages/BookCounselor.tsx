@@ -1,27 +1,14 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
-import TidyCalBooking from '@/components/booking/TidyCalBooking';
-import { toast } from "sonner";
 import { ArrowLeft } from 'lucide-react';
+import TidyCalEmbed from '@/components/booking/TidyCalEmbed';
 
 const BookCounselor = () => {
   const navigate = useNavigate();
-  const [isCompleted, setIsCompleted] = useState(false);
   
-  const handleSuccess = (bookingData: any) => {
-    console.log('Booking successful:', bookingData);
-    toast.success('Booking confirmed! Check your email for details.');
-    setIsCompleted(true);
-    
-    // Navigate back after showing success message
-    setTimeout(() => {
-      navigate(-1);
-    }, 3000);
-  };
-
   return (
     <div className="min-h-[100dvh] bg-[#301630] text-[#E9E7E2]">
       <div className="flex items-center pt-4 pb-4 px-8 bg-[#301630] text-[#E9E7E2]">
@@ -52,9 +39,10 @@ const BookCounselor = () => {
             and get personalized guidance on your philosophical journey.
           </p>
           
-          <TidyCalBooking 
-            onClose={() => navigate(-1)} 
-            onSuccess={handleSuccess}
+          <TidyCalEmbed 
+            bookingPath="virgilai/dna-assessment-discussion" 
+            height="600px"
+            className="rounded-md overflow-hidden"
           />
         </div>
       </div>
