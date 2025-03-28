@@ -20,6 +20,8 @@ export interface TimeSlot {
   end_time: string;
   timezone: string;
   available: boolean;
+  original_starts_at?: string;
+  original_ends_at?: string;
 }
 
 export interface BookingResponse {

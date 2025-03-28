@@ -27,8 +27,33 @@ const TEST_BOOKING_TYPES = [
   }
 ];
 
+// Helper function to get date range for a month
+function getDateRangeForMonth(month: string): { starts_at: string, ends_at: string } {
+  const [year, monthNum] = month.split('-');
+  const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+  const endDate = new Date(parseInt(year), parseInt(monthNum), 0); // Last day of month
+  
+  // Format dates to ISO string and add Z for UTC
+  return {
+    starts_at: startDate.toISOString().split('.')[0] + "Z",
+    ends_at: endDate.toISOString().split('.')[0] + "Z"
+  };
+}
+
+// Helper function to get date range for a specific date (full day)
+function getDateRangeForDay(date: string): { starts_at: string, ends_at: string } {
+  const startDate = new Date(`${date}T00:00:00`);
+  const endDate = new Date(`${date}T23:59:59`);
+  
+  // Format dates to ISO string and add Z for UTC
+  return {
+    starts_at: startDate.toISOString().split('.')[0] + "Z",
+    ends_at: endDate.toISOString().split('.')[0] + "Z"
+  };
+}
+
 // Generate test dates for fallback
-function generateTestDates(month, count = 10) {
+function generateTestDates(month: string, count = 10) {
   const [year, monthStr] = month.split('-');
   const monthIndex = parseInt(monthStr, 10) - 1;
   const dates = [];
@@ -46,7 +71,7 @@ function generateTestDates(month, count = 10) {
 }
 
 // Generate test time slots for fallback
-function generateTestTimeSlots(date) {
+function generateTestTimeSlots(date: string) {
   const slots = [];
   
   for (let hour = 9; hour < 17; hour += 2) {
@@ -67,7 +92,7 @@ function generateTestTimeSlots(date) {
 }
 
 // Enhanced error handling wrapper for fetch calls
-async function fetchWithErrorHandling(url, options) {
+async function fetchWithErrorHandling(url: string, options: RequestInit) {
   console.log(`Making request to: ${url}`);
   console.log(`Request options:`, JSON.stringify(options));
 
@@ -294,7 +319,7 @@ async function listBookingTypes() {
 }
 
 // Get booking type details
-async function getBookingType(bookingTypeId) {
+async function getBookingType(bookingTypeId: string) {
   try {
     if (!bookingTypeId) {
       throw new Error("Booking type ID is required");
@@ -352,7 +377,7 @@ async function getBookingType(bookingTypeId) {
 }
 
 // Get available dates for a month
-async function getAvailableDates(month, bookingTypeId) {
+async function getAvailableDates(month: string, bookingTypeId: string) {
   try {
     if (!month) {
       throw new Error("Month parameter is required");
@@ -363,7 +388,12 @@ async function getAvailableDates(month, bookingTypeId) {
     }
 
     console.log(`Fetching available dates for month: ${month} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots?month=${month}`;
+    
+    // Calculate date range for the month
+    const { starts_at, ends_at } = getDateRangeForMonth(month);
+    console.log(`Date range for month ${month}: ${starts_at} to ${ends_at}`);
+    
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
@@ -371,7 +401,12 @@ async function getAvailableDates(month, bookingTypeId) {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
-      }
+      },
+      // Use query parameters
+      params: new URLSearchParams({
+        starts_at,
+        ends_at
+      }).toString()
     });
     
     if (result.success) {
@@ -384,8 +419,10 @@ async function getAvailableDates(month, bookingTypeId) {
         // Extract unique dates from timeslots
         const dateSet = new Set();
         result.data.data.forEach(slot => {
-          if (slot.date) {
-            dateSet.add(slot.date);
+          if (slot.starts_at) {
+            // Extract date part from the ISO timestamp
+            const date = slot.starts_at.split('T')[0];
+            dateSet.add(date);
           }
         });
         availableDates = Array.from(dateSet);
@@ -393,8 +430,10 @@ async function getAvailableDates(month, bookingTypeId) {
         // Extract unique dates directly from array
         const dateSet = new Set();
         result.data.forEach(slot => {
-          if (slot.date) {
-            dateSet.add(slot.date);
+          if (slot.starts_at) {
+            // Extract date part from the ISO timestamp
+            const date = slot.starts_at.split('T')[0];
+            dateSet.add(date);
           }
         });
         availableDates = Array.from(dateSet);
@@ -428,7 +467,7 @@ async function getAvailableDates(month, bookingTypeId) {
 }
 
 // Get time slots for a specific date
-async function getTimeSlots(date, bookingTypeId) {
+async function getTimeSlots(date: string, bookingTypeId: string) {
   try {
     if (!date) {
       throw new Error("Date is required");
@@ -439,9 +478,18 @@ async function getTimeSlots(date, bookingTypeId) {
     }
 
     console.log(`Fetching time slots for date: ${date} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots?date=${date}`;
     
-    const result = await fetchWithErrorHandling(url, {
+    // Calculate date range for the day
+    const { starts_at, ends_at } = getDateRangeForDay(date);
+    console.log(`Date range for day ${date}: ${starts_at} to ${ends_at}`);
+    
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots`;
+    const queryParams = new URLSearchParams({
+      starts_at,
+      ends_at
+    });
+    
+    const result = await fetchWithErrorHandling(`${url}?${queryParams}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -457,23 +505,41 @@ async function getTimeSlots(date, bookingTypeId) {
       let timeSlots = [];
       
       if (result.data && Array.isArray(result.data.data)) {
-        timeSlots = result.data.data.map(slot => ({
-          id: slot.id.toString(),
-          date: date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          timezone: slot.timezone || "UTC",
-          available: true
-        }));
+        timeSlots = result.data.data.map(slot => {
+          // Extract time parts from ISO strings
+          const startTime = slot.starts_at.split('T')[1].substring(0, 5);
+          const endTime = slot.ends_at.split('T')[1].substring(0, 5);
+          
+          return {
+            id: slot.id ? slot.id.toString() : `slot-${date}-${startTime}`,
+            date: date,
+            start_time: startTime,
+            end_time: endTime,
+            timezone: slot.timezone || "UTC",
+            available: true,
+            // Original data for debugging
+            original_starts_at: slot.starts_at,
+            original_ends_at: slot.ends_at
+          };
+        });
       } else if (result.data && Array.isArray(result.data)) {
-        timeSlots = result.data.map(slot => ({
-          id: slot.id.toString(),
-          date: date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          timezone: slot.timezone || "UTC",
-          available: true
-        }));
+        timeSlots = result.data.map(slot => {
+          // Extract time parts from ISO strings
+          const startTime = slot.starts_at.split('T')[1].substring(0, 5);
+          const endTime = slot.ends_at.split('T')[1].substring(0, 5);
+          
+          return {
+            id: slot.id ? slot.id.toString() : `slot-${date}-${startTime}`,
+            date: date,
+            start_time: startTime,
+            end_time: endTime,
+            timezone: slot.timezone || "UTC",
+            available: true,
+            // Original data for debugging
+            original_starts_at: slot.starts_at,
+            original_ends_at: slot.ends_at
+          };
+        });
       }
       
       return new Response(JSON.stringify({ time_slots: timeSlots }), {
@@ -504,7 +570,13 @@ async function getTimeSlots(date, bookingTypeId) {
 }
 
 // Create a booking
-async function createBooking(bookingData) {
+async function createBooking(bookingData: {
+  name: string;
+  email: string;
+  time_slot_id: string;
+  timezone: string;
+  bookingTypeId: string;
+}) {
   try {
     if (!bookingData.name || !bookingData.email || !bookingData.time_slot_id || !bookingData.timezone || !bookingData.bookingTypeId) {
       throw new Error("Missing required booking information");
