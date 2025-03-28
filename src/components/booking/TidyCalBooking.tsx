@@ -239,9 +239,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                     <span>${selectedBookingType.price} {selectedBookingType.currency}</span>
                   </div>
                 )}
-                {selectedBookingType.description && (
-                  <p className="mt-3 text-sm">{selectedBookingType.description}</p>
-                )}
               </div>
             )}
             
