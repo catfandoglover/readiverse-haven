@@ -4,6 +4,7 @@ import { useTidyCalAPI, BookingType } from '@/hooks/useTidyCalAPI';
 import { AlertTriangle, Loader2, Info, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface BookingTypesListProps {
   onSelect?: (bookingType: BookingType) => void;
@@ -17,6 +18,7 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
     retryAttempt,
     setRetryAttempt,
     healthCheck,
+    apiData,
     fetchBookingTypes
   } = useTidyCalAPI();
 
@@ -125,6 +127,22 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
           </div>
         ))}
       </div>
+      
+      {/* Diagnostic information section */}
+      {apiData && (
+        <Accordion type="single" collapsible className="mt-8 border rounded-md">
+          <AccordionItem value="diagnostics">
+            <AccordionTrigger className="text-sm px-4">API Diagnostic Information</AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="bg-gray-50 p-4 rounded-md">
+                <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-[200px]">
+                  {JSON.stringify(apiData, null, 2)}
+                </pre>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
     </div>
   );
 };
