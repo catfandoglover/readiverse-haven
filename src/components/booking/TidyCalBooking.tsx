@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -176,12 +177,12 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     return (
       <div className="w-full flex flex-col items-center justify-center py-12">
         <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
-        <p className="text-sm text-red-500 mb-4">{errorMessage}</p>
+        <p className="text-sm text-[#E9E7E2] mb-4">{errorMessage}</p>
         <Button 
           variant="outline" 
           onClick={retryFn}
           disabled={isLoading}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
         >
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Retry
@@ -193,7 +194,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   if (bookingTypesLoading && !selectedBookingType) {
     return (
       <div className="py-8 flex justify-center items-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
         <span className="ml-2 text-[#E9E7E2]">Loading booking options...</span>
       </div>
     );
@@ -209,7 +210,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         <p className="text-[#E9E7E2] mb-4">
           No booking types are currently available.
         </p>
-        <Button onClick={handleRetry} variant="outline">
+        <Button onClick={handleRetry} variant="outline" className="text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10">
           Refresh
         </Button>
       </div>
@@ -222,13 +223,13 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         <TabsContent value="date">
           <div className="flex flex-col items-center">
             {selectedBookingType && (
-              <div className="w-full mb-6 p-4 bg-[#373763]/5 rounded-md">
-                <div className="flex items-center text-sm text-muted-foreground mb-1">
+              <div className="w-full mb-6 p-4 bg-[#373763]/10 rounded-md border border-[#E9E7E2]/10">
+                <div className="flex items-center text-sm text-[#E9E7E2] mb-1">
                   <Clock className="h-4 w-4 mr-2" />
                   <span>{selectedBookingType.duration} minutes</span>
                 </div>
                 {selectedBookingType.price && (
-                  <div className="flex items-center text-sm text-muted-foreground">
+                  <div className="flex items-center text-sm text-[#E9E7E2]">
                     <DollarSign className="h-4 w-4 mr-2" />
                     <span>${selectedBookingType.price} {selectedBookingType.currency}</span>
                   </div>
@@ -240,10 +241,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               renderError(datesError, datesLoading, handleRetry)
             ) : datesLoading ? (
               <div className="py-8 flex justify-center items-center">
-                <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
               </div>
             ) : (
-              <div className="rounded-lg shadow-md bg-white overflow-hidden">
+              <div className="rounded-lg overflow-hidden bg-transparent">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -261,21 +262,21 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                     }
                   }}
                   modifiersClassNames={{
-                    available: "border-2 border-[#373763] text-[#373763]"
+                    available: "border-2 border-[#373763] text-[#E9E7E2] bg-[#373763]/20"
                   }}
                   disabled={(date) => !isDateAvailable(date)}
-                  className="border-0 shadow-none"
+                  className="border-0 shadow-none bg-transparent"
                 />
               </div>
             )}
             
             <div className="flex items-center justify-center gap-8 mt-6 text-sm text-[#E9E7E2]">
               <div className="flex items-center">
-                <div className="h-4 w-4 rounded-full bg-[#373763] border-2 border-[#373763] mr-2"></div>
+                <div className="h-4 w-4 rounded-full bg-[#373763]/70 border-2 border-[#373763] mr-2"></div>
                 <span>Available</span>
               </div>
               <div className="flex items-center">
-                <div className="h-4 w-4 rounded-full bg-gray-100 mr-2"></div>
+                <div className="h-4 w-4 rounded-full border border-[#E9E7E2]/30 mr-2"></div>
                 <span>Unavailable</span>
               </div>
             </div>
@@ -288,7 +289,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               <Button 
                 variant="ghost" 
                 onClick={() => setStep('date')}
-                className="mr-2 text-[#E9E7E2] hover:text-white hover:bg-[#373763]/20"
+                className="mr-2 text-[#E9E7E2] hover:text-[#E9E7E2] hover:bg-[#373763]/20"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
@@ -302,7 +303,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               renderError(timeSlotsError, timeSlotsLoading, handleRetry)
             ) : timeSlotsLoading ? (
               <div className="py-8 flex justify-center items-center">
-                <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -312,10 +313,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                       key={slot.id} 
                       variant="outline" 
                       className={cn(
-                        "flex h-12 w-full justify-center items-center rounded-md transition-colors",
-                        slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
+                        "flex h-12 w-full justify-center items-center rounded-full transition-colors text-[#E9E7E2] border-[#E9E7E2]/20",
+                        slot.available ? "hover:border-[#373763] hover:bg-[#373763]/20" : "opacity-50 cursor-not-allowed",
                         selectedTimeSlot === (slot.original_starts_at || slot.id) ? 
-                          "border-[#373763] bg-[#373763]/10 text-[#373763] font-medium" : ""
+                          "border-[#373763] bg-[#373763] text-[#E9E7E2] font-medium" : ""
                       )}
                       onClick={() => slot.available && handleTimeSelection(slot)}
                       disabled={!slot.available}
@@ -332,7 +333,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             )}
             
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-[#E9E7E2]">
+              <div className="text-sm text-[#E9E7E2]/70">
                 <span>Timezone: {timezone}</span>
               </div>
             </div>
@@ -345,7 +346,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               <Button 
                 variant="ghost" 
                 onClick={() => setStep('time')}
-                className="mr-2 text-[#E9E7E2] hover:text-white hover:bg-[#373763]/20"
+                className="mr-2 text-[#E9E7E2] hover:text-[#E9E7E2] hover:bg-[#373763]/20"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
@@ -354,7 +355,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             </div>
             
             {getSelectedTimeSlotDetails() && (
-              <div className="bg-[#373763]/5 p-4 rounded-md mb-4">
+              <div className="bg-[#373763]/10 p-4 rounded-md mb-4 border border-[#E9E7E2]/10">
                 <h3 className="font-semibold mb-2 text-[#E9E7E2]">Booking Summary</h3>
                 <div className="space-y-1 text-sm text-[#E9E7E2]">
                   <div className="flex">
@@ -368,7 +369,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                   <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time} ({timezone})</p>
                   
                   {getSelectedTimeSlotDetails()?.price && (
-                    <div className="flex mt-2 pt-2 border-t border-[#373763]/20">
+                    <div className="flex mt-2 pt-2 border-t border-[#E9E7E2]/20">
                       <DollarSign className="h-4 w-4 mr-2 mt-0.5" />
                       <div>
                         <p className="font-medium">Payment Required</p>
@@ -390,7 +391,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 onChange={(e) => setName(e.target.value)} 
                 placeholder="Enter your full name"
                 required
-                className="bg-[#E9E7E2]/50 border-[#373763]/20"
+                className="bg-transparent border-[#E9E7E2]/20 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 focus:border-[#E9E7E2]"
               />
             </div>
             
@@ -403,7 +404,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 onChange={(e) => setEmail(e.target.value)} 
                 placeholder="Enter your email address"
                 required
-                className="bg-[#E9E7E2]/50 border-[#373763]/20"
+                className="bg-transparent border-[#E9E7E2]/20 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 focus:border-[#E9E7E2]"
               />
             </div>
             
@@ -418,7 +419,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               <Button 
                 type="submit" 
                 disabled={bookingLoading}
-                className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12"
+                className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-full h-12"
               >
                 {bookingLoading ? (
                   <span className="flex items-center">
