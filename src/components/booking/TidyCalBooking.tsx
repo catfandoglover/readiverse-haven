@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format, addDays, startOfToday, isSameDay, isToday, parseISO } from "date-fns";
-import { ArrowLeft, ArrowRight, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
 import BookingTypesList from './BookingTypesList';
@@ -243,47 +243,39 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
               </div>
             ) : (
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelection}
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                fromDate={startOfToday()}
-                toDate={addDays(new Date(), 60)}
-                classNames={{
-                  day_today: "bg-muted text-muted-foreground",
-                  day_selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
-                  cell: cn(
-                    "relative p-0 focus-within:relative focus-within:z-20 [&:has(.day-outside)]:opacity-50"
-                  ),
-                  day: cn(
-                    "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted"
-                  ),
-                }}
-                modifiersClassNames={{
-                  selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
-                  today: "bg-muted text-muted-foreground",
-                  outside: "text-muted-foreground opacity-50",
-                  disabled: "text-muted-foreground opacity-50",
-                  available: "border-green-500 border",
-                  unavailable: "text-muted-foreground opacity-50"
-                }}
-                modifiers={{
-                  available: (date) => isDateAvailable(date)
-                }}
-                disabled={(date) => !isDateAvailable(date)}
-                className="rounded-md border p-3 pointer-events-auto bg-white"
-              />
+              <div className="rounded-lg shadow-md bg-white overflow-hidden">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelection}
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  fromDate={startOfToday()}
+                  toDate={addDays(new Date(), 60)}
+                  modifiers={{
+                    available: (date) => isDateAvailable(date)
+                  }}
+                  modifiersStyles={{
+                    available: {
+                      fontWeight: 'bold'
+                    }
+                  }}
+                  modifiersClassNames={{
+                    available: "border-2 border-[#373763] text-[#373763]"
+                  }}
+                  disabled={(date) => !isDateAvailable(date)}
+                  className="border-0 shadow-none"
+                />
+              </div>
             )}
             
-            <div className="flex items-center justify-center gap-4 mt-4 text-sm text-[#E9E7E2]">
+            <div className="flex items-center justify-center gap-8 mt-6 text-sm text-[#E9E7E2]">
               <div className="flex items-center">
-                <div className="h-3 w-3 rounded-full bg-[#373763] mr-2"></div>
+                <div className="h-4 w-4 rounded-full bg-[#373763] border-2 border-[#373763] mr-2"></div>
                 <span>Available</span>
               </div>
               <div className="flex items-center">
-                <div className="h-3 w-3 rounded-full bg-gray-200 mr-2"></div>
+                <div className="h-4 w-4 rounded-full bg-gray-100 mr-2"></div>
                 <span>Unavailable</span>
               </div>
             </div>
@@ -313,16 +305,17 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
               </div>
             ) : (
-              <div className="flex flex-col space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {timeSlots.length > 0 ? (
                   timeSlots.map(slot => (
                     <Button 
                       key={slot.id} 
                       variant="outline" 
                       className={cn(
-                        "justify-center text-center h-12",
+                        "flex h-12 w-full justify-center items-center rounded-md transition-colors",
                         slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
-                        selectedTimeSlot === (slot.original_starts_at || slot.id) ? "border-[#373763] bg-[#373763]/5" : ""
+                        selectedTimeSlot === (slot.original_starts_at || slot.id) ? 
+                          "border-[#373763] bg-[#373763]/10 text-[#373763] font-medium" : ""
                       )}
                       onClick={() => slot.available && handleTimeSelection(slot)}
                       disabled={!slot.available}
@@ -331,7 +324,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                     </Button>
                   ))
                 ) : (
-                  <div className="text-center py-6 text-[#E9E7E2]">
+                  <div className="text-center py-6 text-[#E9E7E2] col-span-3">
                     No available times for this date. Please select another date.
                   </div>
                 )}
