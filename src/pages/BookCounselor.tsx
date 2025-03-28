@@ -41,8 +41,8 @@ const BookCounselor = () => {
         </div>
       </div>
       
-      <div className="max-w-lg mx-auto p-6">
-        <div className="bg-[#E9E7E2] rounded-2xl p-6">
+      <div className="w-full px-4 md:px-6">
+        <div className="bg-[#E9E7E2] rounded-2xl p-4 md:p-6 mb-6">
           <h1 className="text-2xl font-baskerville leading-none tracking-tight text-black font-bold pt-2 pb-4">
             Book a DNA Assessment Discussion
           </h1>
@@ -52,10 +52,12 @@ const BookCounselor = () => {
             and get personalized guidance on your philosophical journey.
           </p>
           
-          <TidyCalBooking 
-            onClose={() => navigate(-1)} 
-            onSuccess={handleSuccess}
-          />
+          <div className="tidycal-embed-container w-full overflow-visible">
+            <TidyCalBooking 
+              onClose={() => navigate(-1)} 
+              onSuccess={handleSuccess}
+            />
+          </div>
         </div>
       </div>
     </div>
