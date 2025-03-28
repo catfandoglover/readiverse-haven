@@ -10,7 +10,7 @@ const BookCounselor = () => {
   const navigate = useNavigate();
   const [isCompleted, setIsCompleted] = useState(false);
   
-  const handleSuccess = (bookingData: TidyCalBookingResponse) => {
+  const handleSuccess = (bookingData: any) => {
     console.log('Booking successful:', bookingData);
     toast.success('Booking confirmed! Check your email for details.');
     setIsCompleted(true);
@@ -23,7 +23,7 @@ const BookCounselor = () => {
 
   return (
     <div className="min-h-[100dvh] bg-[#373763] text-[#E9E7E2]">
-      <div className="flex items-center pt-4 pb-4 px-8 bg-[#3D3D6F] text-[#E9E7E2]">
+      <div className="flex items-center pt-4 pb-4 px-8 bg-[#373763] text-[#E9E7E2]">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOOK A COUNSELOR
