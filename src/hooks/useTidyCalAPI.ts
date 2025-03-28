@@ -52,6 +52,36 @@ export function useTidyCalAPI() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [healthCheck, setHealthCheck] = useState<boolean | null>(null);
+
+  // Perform a health check when the component mounts
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        console.log("Performing TidyCal API health check");
+        const { data, error } = await supabase.functions.invoke('tidycal-api', {
+          body: { path: 'health-check' },
+        });
+
+        if (error) {
+          console.error("Health check failed:", error);
+          setHealthCheck(false);
+          return;
+        }
+        
+        console.log("Health check response:", data);
+        setHealthCheck(true);
+        
+        // Automatically fetch booking types if health check passes
+        fetchBookingTypes();
+      } catch (error) {
+        console.error('Health check error:', error);
+        setHealthCheck(false);
+      }
+    };
+    
+    checkHealth();
+  }, [retryAttempt]);
 
   // Fetch all booking types
   const fetchBookingTypes = async () => {
@@ -73,8 +103,11 @@ export function useTidyCalAPI() {
       if (data && data.data) {
         setBookingTypes(data.data);
         return data.data;
+      } else {
+        console.error("Invalid response format:", data);
+        setBookingTypesError("Received invalid data format from booking service");
+        return [];
       }
-      return [];
     } catch (error) {
       console.error('Error fetching booking types:', error);
       setBookingTypesError("Could not load booking types. Please try again later.");
@@ -140,13 +173,16 @@ export function useTidyCalAPI() {
       }
       
       console.log("Available dates response:", data);
-      if (data && data.available_dates) {
+      if (data && Array.isArray(data.available_dates)) {
         // Convert date strings to Date objects
         const dates = data.available_dates.map((dateStr: string) => parseISO(dateStr));
         setAvailableDates(dates);
         return dates;
+      } else {
+        console.error("Invalid dates response format:", data);
+        setDatesError("Received invalid data format for available dates");
+        return [];
       }
-      return [];
     } catch (error) {
       console.error('Error fetching available dates:', error);
       setDatesError("Could not load available dates. Please try again later.");
@@ -180,11 +216,14 @@ export function useTidyCalAPI() {
       }
       
       console.log("Time slots response:", data);
-      if (data && data.time_slots) {
+      if (data && Array.isArray(data.time_slots)) {
         setTimeSlots(data.time_slots);
         return data.time_slots;
+      } else {
+        console.error("Invalid time slots response format:", data);
+        setTimeSlotsError("Received invalid data format for time slots");
+        return [];
       }
-      return [];
     } catch (error) {
       console.error('Error fetching time slots:', error);
       setTimeSlotsError("Could not load available time slots. Please try again later.");
@@ -253,6 +292,7 @@ export function useTidyCalAPI() {
     bookingError,
     createBooking,
     retryAttempt,
-    setRetryAttempt
+    setRetryAttempt,
+    healthCheck
   };
 }
