@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,6 +10,7 @@ import { ArrowLeft, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } fr
 import { cn } from "@/lib/utils";
 import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
 import BookingTypesList from './BookingTypesList';
+import { useBookingCost } from '@/hooks/useBookingCost';
 
 interface TidyCalBookingProps {
   onClose?: () => void;
@@ -26,6 +26,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const { cost, isLoading: costLoading, error: costError } = useBookingCost();
   
   const {
     bookingTypes,
@@ -160,8 +161,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
       service: selectedBookingType.name,
       duration: selectedBookingType.duration,
-      price: selectedBookingType.price,
-      currency: selectedBookingType.currency || "USD"
+      price: cost || "Loading...",
     };
   };
 
@@ -228,12 +228,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                   <Clock className="h-4 w-4 mr-2" />
                   <span>{selectedBookingType.duration} minutes</span>
                 </div>
-                {selectedBookingType.price && (
-                  <div className="flex items-center text-sm text-[#E9E7E2]">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    <span>${selectedBookingType.price} {selectedBookingType.currency}</span>
-                  </div>
-                )}
+                <div className="flex items-center text-sm text-[#E9E7E2]">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  <span>{costLoading ? "Loading price..." : costError ? "Price unavailable" : cost}</span>
+                </div>
               </div>
             )}
             
@@ -368,17 +366,15 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                   <p><span className="font-medium">Date:</span> {getSelectedTimeSlotDetails()?.date}</p>
                   <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time} ({timezone})</p>
                   
-                  {getSelectedTimeSlotDetails()?.price && (
-                    <div className="flex mt-2 pt-2 border-t border-[#E9E7E2]/20">
-                      <DollarSign className="h-4 w-4 mr-2 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Payment Required</p>
-                        <p className="text-[#E9E7E2]/70">
-                          ${getSelectedTimeSlotDetails()?.price} {getSelectedTimeSlotDetails()?.currency}
-                        </p>
-                      </div>
+                  <div className="flex mt-2 pt-2 border-t border-[#E9E7E2]/20">
+                    <DollarSign className="h-4 w-4 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Payment Required</p>
+                      <p className="text-[#E9E7E2]/70">
+                        {getSelectedTimeSlotDetails()?.price}
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
