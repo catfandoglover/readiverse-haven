@@ -41,14 +41,30 @@ const TidyCalEmbed: React.FC<TidyCalEmbedProps> = ({
       if (onLoad) onLoad();
     }
     
+    // Add custom CSS to try to style the TidyCal embed
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Attempt to style TidyCal embed */
+      .tidycal-embed {
+        --tc-primary-color: #9b87f5 !important;
+        --tc-font-family: "Baskerville", serif !important;
+        --tc-background-color: transparent !important;
+        --tc-text-color: #000000 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
     // Clean up when component unmounts
     return () => {
       // Don't remove the script on unmount as it might be used by other instances
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
     };
   }, [onLoad]);
   
   return (
-    <div className={`relative w-full ${className}`} style={{ height }}>
+    <div className={`w-full ${className}`} style={{ height }}>
       {isLoading && (
         <div className="absolute inset-0 flex justify-center items-center bg-[#E9E7E2]/50 z-10">
           <div className="text-center">
