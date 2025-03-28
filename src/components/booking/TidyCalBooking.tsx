@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -61,7 +60,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     }
   }, []);
 
-  // Fetch booking types and automatically select the first one
   useEffect(() => {
     const loadBookingTypes = async () => {
       await fetchBookingTypes();
@@ -70,7 +68,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     loadBookingTypes();
   }, [retryAttempt]);
 
-  // Auto-select the first booking type when bookingTypes are loaded
   useEffect(() => {
     if (bookingTypes && bookingTypes.length > 0 && !selectedBookingType) {
       console.log("Auto-selecting first booking type:", bookingTypes[0]);
@@ -193,7 +190,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     );
   };
 
-  // Show loading state while fetching the booking types initially
   if (bookingTypesLoading && !selectedBookingType) {
     return (
       <div className="py-8 flex justify-center items-center">
@@ -203,12 +199,10 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     );
   }
 
-  // Show error if there was a problem fetching booking types
   if (bookingTypesError && !selectedBookingType) {
     return renderError(bookingTypesError, bookingTypesLoading, handleRetry);
   }
 
-  // If there are no booking types available
   if (!bookingTypesLoading && (!bookingTypes || bookingTypes.length === 0)) {
     return (
       <div className="text-center py-8">
@@ -241,32 +235,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 )}
               </div>
             )}
-            
-            <div className="mb-4 w-full flex items-center justify-between">
-              {onClose && (
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="mr-2 text-[#E9E7E2] hover:text-white hover:bg-[#373763]/20"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              )}
-              <h3 className="text-lg font-semibold text-[#E9E7E2]">
-                {format(currentMonth, "MMMM yyyy")}
-              </h3>
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                disabled={datesLoading}
-                className="text-[#E9E7E2] hover:text-white hover:bg-[#373763]/20"
-              >
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
             
             {datesError ? (
               renderError(datesError, datesLoading, handleRetry)
