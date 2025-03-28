@@ -15,7 +15,7 @@ const DEFAULT_SERVICE = {
   id: "1", 
   name: "DNA Assessment Discussion", 
   duration: 30, 
-  description: "Discuss your DNA assessment results with an intellectual genetic counselor"
+  description: "Conduct your intellectual DNA assessment and review the results with a Lightning intellectual genetic counselor. You will have the option of booking follow up appointments with your counselor if desired."
 };
 
 const generateTimeSlots = (date: Date) => {
