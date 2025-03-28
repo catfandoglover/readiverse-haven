@@ -38,11 +38,13 @@ const BookCounselor = () => {
             and get personalized guidance on your philosophical journey.
           </p>
           
-          <TidyCalEmbed 
-            bookingPath="virgilai/dna-assessment-discussion" 
-            height="600px"
-            className="rounded-md overflow-hidden"
-          />
+          <div className="rounded-md overflow-hidden" style={{ height: '600px' }}>
+            <TidyCalEmbed 
+              bookingPath="team/intellectual-genetic-counselors/intake" 
+              height="600px"
+              className="rounded-md overflow-hidden"
+            />
+          </div>
         </div>
       </div>
     </div>
