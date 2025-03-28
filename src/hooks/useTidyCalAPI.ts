@@ -273,7 +273,8 @@ export function useTidyCalAPI() {
       if (error) {
         console.error("Supabase function error:", error);
         setBookingError("Failed to create booking. Please try again later.");
-        throw error;
+        toast.error("Failed to create booking. Please try again later.");
+        return null;
       }
       
       console.log("Booking response:", data);
@@ -284,6 +285,7 @@ export function useTidyCalAPI() {
         return null;
       }
       
+      toast.success("Booking created successfully!");
       return data;
     } catch (error) {
       console.error('Booking error:', error);

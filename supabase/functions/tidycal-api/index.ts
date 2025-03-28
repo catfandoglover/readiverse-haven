@@ -558,18 +558,27 @@ async function createBooking(bookingData: {
 
     console.log("Creating booking with data:", bookingData);
     
-    // FIXED: Use the correct endpoint format for creating bookings
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingData.bookingTypeId}/bookings`;
+    // Get the details of the selected time slot to extract the starts_at value
+    const timeSlotIdParts = bookingData.time_slot_id.split('-');
+    const timeSlotDate = timeSlotIdParts[1];
+    const timeSlotTime = timeSlotIdParts[2] + ":" + timeSlotIdParts[3] || "00";
     
-    // FIXED: Format the request body correctly according to TidyCal API requirements
+    // Convert to ISO format with UTC timezone
+    const startsAt = `${timeSlotDate}T${timeSlotTime}:00.000000Z`;
+    console.log("Constructed starts_at:", startsAt);
+    
+    // Format the request body according to TidyCal API requirements
     const requestBody = {
-      time_slot_id: bookingData.time_slot_id,
+      starts_at: startsAt,
       name: bookingData.name,
       email: bookingData.email,
       timezone: bookingData.timezone
     };
     
     console.log("Request body:", requestBody);
+    
+    // Use the correct endpoint for booking creation
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingData.bookingTypeId}/bookings`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "POST",
