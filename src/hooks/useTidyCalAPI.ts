@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO, isValid } from "date-fns";
@@ -31,6 +30,8 @@ export interface BookingResponse {
   payment_link?: string;
   price?: number;
   currency?: string;
+  error?: boolean;
+  message?: string;
 }
 
 export function useTidyCalAPI() {
@@ -58,12 +59,11 @@ export function useTidyCalAPI() {
   const [apiData, setApiData] = useState<any | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // Perform a health check when the component mounts or retry is attempted
   useEffect(() => {
     const checkHealth = async () => {
       try {
         console.log("Performing TidyCal API health check");
-        setHealthCheck(null); // Reset to loading state
+        setHealthCheck(null);
         setConnectionError(null);
         
         const { data, error } = await supabase.functions.invoke('tidycal-api', {
@@ -83,7 +83,6 @@ export function useTidyCalAPI() {
           setHealthCheck(true);
           setApiData(data.api_data);
           
-          // Automatically fetch booking types if health check passes
           await fetchBookingTypes();
         } else {
           console.error("API connection failed:", data?.message || "Unknown error");
@@ -100,7 +99,6 @@ export function useTidyCalAPI() {
     checkHealth();
   }, [retryAttempt]);
 
-  // Fetch all booking types
   const fetchBookingTypes = async () => {
     setBookingTypesLoading(true);
     setBookingTypesError(null);
@@ -135,7 +133,6 @@ export function useTidyCalAPI() {
     }
   };
 
-  // Fetch booking type details
   const fetchBookingType = async (bookingTypeId: string) => {
     setBookingTypeLoading(true);
     setBookingTypeError(null);
@@ -167,7 +164,6 @@ export function useTidyCalAPI() {
     }
   };
 
-  // Fetch available dates for a month
   const fetchAvailableDates = async (month: Date, bookingTypeId: string) => {
     setDatesLoading(true);
     setDatesError(null);
@@ -191,7 +187,6 @@ export function useTidyCalAPI() {
       
       console.log("Available dates response:", data);
       if (data && Array.isArray(data.available_dates)) {
-        // Convert date strings to Date objects
         const dates = data.available_dates
           .map((dateStr: string) => {
             const parsedDate = parseISO(dateStr);
@@ -217,7 +212,6 @@ export function useTidyCalAPI() {
     }
   };
 
-  // Fetch time slots for a specific date
   const fetchTimeSlots = async (date: Date, bookingTypeId: string) => {
     setTimeSlotsLoading(true);
     setTimeSlotsError(null);
@@ -258,7 +252,6 @@ export function useTidyCalAPI() {
     }
   };
 
-  // Create a booking
   const createBooking = async (bookingData: {
     name: string;
     email: string;
@@ -284,6 +277,13 @@ export function useTidyCalAPI() {
       }
       
       console.log("Booking response:", data);
+      
+      if (data && data.error) {
+        setBookingError(data.message || "Failed to create booking.");
+        toast.error(data.message || "Failed to create booking.");
+        return null;
+      }
+      
       return data;
     } catch (error) {
       console.error('Booking error:', error);

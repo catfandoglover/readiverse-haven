@@ -9,12 +9,12 @@ const TIDYCAL_API_KEY = Deno.env.get("TIDYCAL_API_KEY") || "eyJ0eXAiOiJKV1QiLCJh
 const TIDYCAL_BASE_URL = "https://tidycal.com/api";
 
 // Default booking type ID (if available)
-const DEFAULT_BOOKING_TYPE_ID = "1114186";
+const DEFAULT_BOOKING_TYPE_ID = "1128016";
 
 // Test data for fallback responses
 const TEST_BOOKING_TYPES = [
   {
-    id: "1114186",
+    id: "1128016",
     name: "DNA Assessment Discussion",
     duration: 30,
     description: "Schedule a 30-minute discussion about your DNA assessment results."
@@ -557,13 +557,15 @@ async function createBooking(bookingData: {
     }
 
     console.log("Creating booking with data:", bookingData);
-    const url = `${TIDYCAL_BASE_URL}/bookings`;
     
+    // FIXED: Use the correct endpoint format for creating bookings
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingData.bookingTypeId}/bookings`;
+    
+    // FIXED: Format the request body correctly according to TidyCal API requirements
     const requestBody = {
-      booking_type_id: bookingData.bookingTypeId,
+      time_slot_id: bookingData.time_slot_id,
       name: bookingData.name,
       email: bookingData.email,
-      time_slot_id: bookingData.time_slot_id,
       timezone: bookingData.timezone
     };
     
@@ -579,17 +581,18 @@ async function createBooking(bookingData: {
       body: JSON.stringify(requestBody)
     });
     
+    // Improved error handling to return detailed error information to the frontend
     if (result.success) {
       console.log("Booking response:", result.data);
       
       // Transform the response to match our expected format
       const transformedData = {
-        id: result.data.id.toString(),
-        status: result.data.status || "confirmed",
-        meeting_link: result.data.meeting_link,
-        payment_link: result.data.payment_link,
-        price: result.data.price,
-        currency: result.data.currency
+        id: result.data.data?.id?.toString() || "booking-id",
+        status: result.data.data?.status || "confirmed",
+        meeting_link: result.data.data?.meeting_url,
+        payment_link: result.data.data?.payment_link,
+        price: result.data.data?.price,
+        currency: result.data.data?.currency
       };
       
       return new Response(JSON.stringify(transformedData), {
@@ -597,31 +600,28 @@ async function createBooking(bookingData: {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Return sample test booking response if API call fails
-      const testBookingResponse = {
-        id: "booking-12345",
-        status: "confirmed",
-        meeting_link: "https://example.com/meeting/12345"
-      };
+      console.error("Booking creation failed:", result.error);
       
-      return new Response(JSON.stringify(testBookingResponse), {
-        status: 200,
+      // Return error information instead of test data
+      return new Response(JSON.stringify({ 
+        error: true,
+        message: `Booking creation failed: ${result.error}`,
+        details: result.data || {}
+      }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   } catch (error) {
     console.error("Error creating booking:", error);
     
-    // Return a test booking response on error
-    const testBookingResponse = {
-      id: "booking-12345",
-      status: "confirmed",
-      meeting_link: "https://example.com/meeting/12345"
-    };
-    
-    return new Response(JSON.stringify(testBookingResponse), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Return error information
+    return new Response(JSON.stringify({ 
+      error: true,
+      message: `Error creating booking: ${error.message}`
+    }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 }

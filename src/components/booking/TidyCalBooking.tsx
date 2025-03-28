@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,7 +26,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [timezone, setTimezone] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   
-  // Use the custom hook
   const {
     bookingTypes,
     bookingTypesLoading,
@@ -52,7 +50,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     setRetryAttempt
   } = useTidyCalAPI();
 
-  // Detect user's timezone on component mount
   useEffect(() => {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -63,19 +60,16 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     }
   }, []);
 
-  // For testing: List all booking types first
   useEffect(() => {
     fetchBookingTypes();
   }, [retryAttempt]);
 
-  // Load available dates when current month changes or booking type is selected
   useEffect(() => {
     if (selectedBookingType && step === 'date') {
       fetchAvailableDates(currentMonth, selectedBookingType.id);
     }
   }, [currentMonth, selectedBookingType, step, retryAttempt]);
 
-  // Load time slots when a date is selected
   useEffect(() => {
     if (selectedDate && selectedBookingType && step === 'time') {
       fetchTimeSlots(selectedDate, selectedBookingType.id);
@@ -115,6 +109,14 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       return;
     }
 
+    console.log("Attempting to create booking with data:", {
+      name,
+      email,
+      time_slot_id: selectedTimeSlot,
+      timezone,
+      bookingTypeId: selectedBookingType.id
+    });
+
     const response = await createBooking({
       name,
       email,
@@ -124,15 +126,18 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     });
     
     if (response) {
+      if (response.error) {
+        toast.error(`Booking failed: ${response.message || "Unknown error"}`);
+        return;
+      }
+      
       if (response.status === 'pending_payment' && response.payment_link) {
         toast.success("Booking created! Redirecting to payment page...");
         
-        // Notify parent component
         if (onSuccess) {
           onSuccess(response);
         }
         
-        // Redirect to payment page
         window.location.href = response.payment_link;
       } else if (response.status === 'confirmed') {
         toast.success("Booking confirmed! Check your email for details.");
@@ -164,7 +169,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     );
   };
 
-  // Render error state
   const renderError = (errorMessage: string | null, isLoading: boolean, retryFn: () => void) => {
     if (!errorMessage) return null;
     
