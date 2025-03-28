@@ -1,8 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTidyCalAPI, BookingType } from '@/hooks/useTidyCalAPI';
 import { AlertTriangle, Loader2, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface BookingTypesListProps {
   onSelect?: (bookingType: BookingType) => void;
@@ -13,14 +14,9 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
     bookingTypes, 
     bookingTypesLoading, 
     bookingTypesError,
-    fetchBookingTypes,
     retryAttempt,
     setRetryAttempt
   } = useTidyCalAPI();
-
-  useEffect(() => {
-    fetchBookingTypes();
-  }, [retryAttempt]);
 
   const handleRetry = () => {
     setRetryAttempt(prev => prev + 1);
@@ -28,18 +24,26 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
 
   if (bookingTypesLoading) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-12">
+      <div className="w-full flex flex-col items-center justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-[#373763]" />
         <p className="mt-4 text-sm text-muted-foreground">Loading booking types...</p>
+        <div className="w-full mt-6 space-y-3">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
       </div>
     );
   }
 
   if (bookingTypesError) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-12">
+      <div className="w-full flex flex-col items-center justify-center py-8 px-4">
         <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
-        <p className="text-sm text-red-500 mb-4">{bookingTypesError}</p>
+        <p className="text-sm text-red-500 mb-2 text-center">{bookingTypesError}</p>
+        <p className="text-sm text-muted-foreground mb-4 text-center">
+          Could not connect to the booking service. Please try again.
+        </p>
         <Button 
           variant="outline" 
           onClick={handleRetry}
@@ -53,9 +57,9 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
 
   if (!bookingTypes || bookingTypes.length === 0) {
     return (
-      <div className="w-full flex flex-col items-center justify-center py-12">
+      <div className="w-full flex flex-col items-center justify-center py-8 px-4">
         <Info className="h-8 w-8 text-[#373763] mb-2" />
-        <p className="text-sm text-muted-foreground mb-4">No booking types available.</p>
+        <p className="text-sm text-muted-foreground mb-2 text-center">No booking types available.</p>
         <p className="text-sm text-center max-w-md">
           It appears that there are no booking types configured. Please contact support for assistance.
         </p>
@@ -70,7 +74,7 @@ const BookingTypesList: React.FC<BookingTypesListProps> = ({ onSelect }) => {
         {bookingTypes.map((bookingType) => (
           <div 
             key={bookingType.id} 
-            className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
+            className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
             onClick={() => onSelect && onSelect(bookingType)}
           >
             <h4 className="font-medium">{bookingType.name}</h4>
