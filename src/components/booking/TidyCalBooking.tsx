@@ -229,7 +229,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
           <div className="flex flex-col items-center">
             {selectedBookingType && (
               <div className="w-full mb-6 p-4 bg-[#373763]/5 rounded-md">
-                <h3 className="font-semibold text-lg mb-2">{selectedBookingType.name}</h3>
                 <div className="flex items-center text-sm text-muted-foreground mb-1">
                   <Clock className="h-4 w-4 mr-2" />
                   <span>{selectedBookingType.duration} minutes</span>
