@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format, addDays, startOfToday, isSameDay, isToday, parseISO } from "date-fns";
-import { ArrowLeft, ArrowRight, CalendarIcon, Clock, DollarSign, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
 
@@ -24,19 +24,24 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [retryAttempt, setRetryAttempt] = useState(0);
   
   // Use the custom hook
   const {
     bookingType,
     bookingTypeLoading,
+    bookingTypeError,
     fetchBookingType,
     availableDates,
     datesLoading,
+    datesError,
     fetchAvailableDates,
     timeSlots,
     timeSlotsLoading,
+    timeSlotsError,
     fetchTimeSlots,
     bookingLoading,
+    bookingError,
     createBooking
   } = useTidyCalAPI();
 
@@ -54,19 +59,21 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   // Fetch booking type details on mount
   useEffect(() => {
     fetchBookingType();
-  }, []);
+  }, [retryAttempt]);
 
   // Load available dates when current month changes
   useEffect(() => {
-    fetchAvailableDates(currentMonth);
-  }, [currentMonth]);
+    if (bookingType) {
+      fetchAvailableDates(currentMonth);
+    }
+  }, [currentMonth, bookingType, retryAttempt]);
 
   // Load time slots when a date is selected
   useEffect(() => {
     if (selectedDate) {
       fetchTimeSlots(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, retryAttempt]);
 
   const handleDateSelection = (date: Date | undefined) => {
     if (date) {
@@ -78,6 +85,11 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const handleTimeSelection = (timeSlotId: string) => {
     setSelectedTimeSlot(timeSlotId);
     setStep('details');
+  };
+
+  const handleRetry = () => {
+    setRetryAttempt(prev => prev + 1);
+    toast.info("Retrying connection to booking service...");
   };
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -136,6 +148,27 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     );
   };
 
+  // Render error state
+  const renderError = (errorMessage: string | null, isLoading: boolean, retryFn: () => void) => {
+    if (!errorMessage) return null;
+    
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-12">
+        <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+        <p className="text-sm text-red-500 mb-4">{errorMessage}</p>
+        <Button 
+          variant="outline" 
+          onClick={retryFn}
+          disabled={isLoading}
+          className="flex items-center gap-2"
+        >
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Retry
+        </Button>
+      </div>
+    );
+  };
+
   // If loading booking type, show loading state
   if (bookingTypeLoading) {
     return (
@@ -147,10 +180,23 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   }
 
   // If booking type couldn't be loaded, show error
+  if (bookingTypeError) {
+    return renderError(bookingTypeError, bookingTypeLoading, handleRetry);
+  }
+
+  // If booking type is null, show error
   if (!bookingType) {
     return (
       <div className="w-full flex flex-col items-center justify-center py-12">
-        <p className="text-sm text-red-500">Could not load booking information. Please try again later.</p>
+        <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+        <p className="text-sm text-red-500 mb-4">Could not load booking information. Please try again later.</p>
+        <Button 
+          variant="outline" 
+          onClick={handleRetry}
+          className="mr-2"
+        >
+          Retry
+        </Button>
         {onClose && (
           <Button 
             variant="outline" 
@@ -215,7 +261,9 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               </Button>
             </div>
             
-            {datesLoading ? (
+            {datesError ? (
+              renderError(datesError, datesLoading, handleRetry)
+            ) : datesLoading ? (
               <div className="py-8 flex justify-center items-center">
                 <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
               </div>
@@ -279,7 +327,9 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               </h3>
             </div>
             
-            {timeSlotsLoading ? (
+            {timeSlotsError ? (
+              renderError(timeSlotsError, timeSlotsLoading, handleRetry)
+            ) : timeSlotsLoading ? (
               <div className="py-8 flex justify-center items-center">
                 <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
               </div>
@@ -384,6 +434,13 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 className="bg-[#E9E7E2]/50 border-[#373763]/20"
               />
             </div>
+            
+            {bookingError && (
+              <div className="text-red-500 text-sm mt-2 flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {bookingError}
+              </div>
+            )}
             
             <div className="flex flex-col space-y-4 pt-4">
               <Button 

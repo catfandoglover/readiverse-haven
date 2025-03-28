@@ -34,15 +34,20 @@ export interface BookingResponse {
 export function useTidyCalAPI() {
   const [bookingType, setBookingType] = useState<BookingType | null>(null);
   const [bookingTypeLoading, setBookingTypeLoading] = useState(true);
+  const [bookingTypeError, setBookingTypeError] = useState<string | null>(null);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [datesLoading, setDatesLoading] = useState(false);
+  const [datesError, setDatesError] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
+  const [timeSlotsError, setTimeSlotsError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   // Fetch booking type details
   const fetchBookingType = async () => {
     setBookingTypeLoading(true);
+    setBookingTypeError(null);
     try {
       console.log("Fetching booking type");
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
@@ -51,6 +56,7 @@ export function useTidyCalAPI() {
 
       if (error) {
         console.error("Supabase function error:", error);
+        setBookingTypeError("Failed to connect to booking service. Please try again later.");
         throw error;
       }
       
@@ -59,6 +65,7 @@ export function useTidyCalAPI() {
       return data;
     } catch (error) {
       console.error('Error fetching booking type:', error);
+      setBookingTypeError("Could not load booking information. Please try again later.");
       toast.error("Could not load booking information. Please try again later.");
       return null;
     } finally {
@@ -69,6 +76,7 @@ export function useTidyCalAPI() {
   // Fetch available dates for a month
   const fetchAvailableDates = async (month: Date) => {
     setDatesLoading(true);
+    setDatesError(null);
     try {
       const monthString = format(month, "yyyy-MM");
       console.log("Fetching available dates for month:", monthString);
@@ -82,11 +90,12 @@ export function useTidyCalAPI() {
 
       if (error) {
         console.error("Supabase function error:", error);
+        setDatesError("Failed to fetch available dates. Please try again later.");
         throw error;
       }
       
       console.log("Available dates response:", data);
-      if (data.available_dates) {
+      if (data && data.available_dates) {
         // Convert date strings to Date objects
         const dates = data.available_dates.map((dateStr: string) => parseISO(dateStr));
         setAvailableDates(dates);
@@ -95,6 +104,7 @@ export function useTidyCalAPI() {
       return [];
     } catch (error) {
       console.error('Error fetching available dates:', error);
+      setDatesError("Could not load available dates. Please try again later.");
       toast.error("Could not load available dates. Please try again later.");
       return [];
     } finally {
@@ -105,6 +115,7 @@ export function useTidyCalAPI() {
   // Fetch time slots for a specific date
   const fetchTimeSlots = async (date: Date) => {
     setTimeSlotsLoading(true);
+    setTimeSlotsError(null);
     try {
       const dateString = format(date, "yyyy-MM-dd");
       console.log("Fetching time slots for date:", dateString);
@@ -118,17 +129,19 @@ export function useTidyCalAPI() {
 
       if (error) {
         console.error("Supabase function error:", error);
+        setTimeSlotsError("Failed to fetch time slots. Please try again later.");
         throw error;
       }
       
       console.log("Time slots response:", data);
-      if (data.time_slots) {
+      if (data && data.time_slots) {
         setTimeSlots(data.time_slots);
         return data.time_slots;
       }
       return [];
     } catch (error) {
       console.error('Error fetching time slots:', error);
+      setTimeSlotsError("Could not load available time slots. Please try again later.");
       toast.error("Could not load available time slots. Please try again later.");
       return [];
     } finally {
@@ -144,6 +157,7 @@ export function useTidyCalAPI() {
     timezone: string;
   }): Promise<BookingResponse | null> => {
     setBookingLoading(true);
+    setBookingError(null);
     try {
       console.log("Creating booking with data:", bookingData);
       const { data, error } = await supabase.functions.invoke('tidycal-api', {
@@ -155,6 +169,7 @@ export function useTidyCalAPI() {
 
       if (error) {
         console.error("Supabase function error:", error);
+        setBookingError("Failed to create booking. Please try again later.");
         throw error;
       }
       
@@ -162,6 +177,7 @@ export function useTidyCalAPI() {
       return data;
     } catch (error) {
       console.error('Booking error:', error);
+      setBookingError("Error creating booking. Please try again later.");
       toast.error("Error creating booking. Please try again later.");
       return null;
     } finally {
@@ -172,14 +188,18 @@ export function useTidyCalAPI() {
   return {
     bookingType,
     bookingTypeLoading,
+    bookingTypeError,
     fetchBookingType,
     availableDates,
     datesLoading,
+    datesError,
     fetchAvailableDates,
     timeSlots,
     timeSlotsLoading,
+    timeSlotsError,
     fetchTimeSlots,
     bookingLoading,
+    bookingError,
     createBooking
   };
 }
