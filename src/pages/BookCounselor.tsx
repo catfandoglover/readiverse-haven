@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import MainMenu from "@/components/navigation/MainMenu";
 import { ArrowLeft } from 'lucide-react';
 import TidyCalEmbed from '@/components/booking/TidyCalEmbed';
 
