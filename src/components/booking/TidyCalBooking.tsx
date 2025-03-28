@@ -6,29 +6,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { format, addDays, startOfToday } from "date-fns";
-import { ArrowRight, X } from "lucide-react";
+import { format, addDays, startOfToday, isSameDay, isToday } from "date-fns";
+import { ArrowLeft, ArrowRight, CalendarIcon, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // You can replace this with environment variables or secure storage in a production app
 const TIDYCAL_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 
-// Mock services - in production these would be fetched from the TidyCal API
-const SERVICES = [
-  { id: "1", name: "DNA Assessment Discussion", duration: 30, description: "Discuss your DNA assessment results with an intellectual genetic counselor" },
-  { id: "2", name: "Deep Dive Session", duration: 60, description: "An in-depth exploration of your intellectual DNA with personalized guidance" },
-];
+// Default service - since we're skipping service selection
+const DEFAULT_SERVICE = {
+  id: "1", 
+  name: "DNA Assessment Discussion", 
+  duration: 30, 
+  description: "Discuss your DNA assessment results with an intellectual genetic counselor"
+};
 
-// Mock time slots - in production these would be fetched from the TidyCal API based on selected date and service
-const generateMockTimeSlots = (date: Date) => {
+// Generate time slots for a specific date
+const generateTimeSlots = (date: Date) => {
   const dateStr = format(date, "yyyy-MM-dd");
+  // In a real implementation, these would come from the API based on date selection
   return [
-    { id: `${dateStr}-1`, date: dateStr, start_time: "09:00", end_time: "09:30", timezone: "America/New_York" },
-    { id: `${dateStr}-2`, date: dateStr, start_time: "10:00", end_time: "10:30", timezone: "America/New_York" },
-    { id: `${dateStr}-3`, date: dateStr, start_time: "11:00", end_time: "11:30", timezone: "America/New_York" },
-    { id: `${dateStr}-4`, date: dateStr, start_time: "13:00", end_time: "13:30", timezone: "America/New_York" },
-    { id: `${dateStr}-5`, date: dateStr, start_time: "14:00", end_time: "14:30", timezone: "America/New_York" },
-    { id: `${dateStr}-6`, date: dateStr, start_time: "15:00", end_time: "15:30", timezone: "America/New_York" },
+    { id: `${dateStr}-1`, date: dateStr, start_time: "09:00", end_time: "09:30", timezone: "America/New_York", available: true },
+    { id: `${dateStr}-2`, date: dateStr, start_time: "10:00", end_time: "10:30", timezone: "America/New_York", available: true },
+    { id: `${dateStr}-3`, date: dateStr, start_time: "11:00", end_time: "11:30", timezone: "America/New_York", available: true },
+    { id: `${dateStr}-4`, date: dateStr, start_time: "13:00", end_time: "13:30", timezone: "America/New_York", available: true },
+    { id: `${dateStr}-5`, date: dateStr, start_time: "14:00", end_time: "14:30", timezone: "America/New_York", available: true },
+    { id: `${dateStr}-6`, date: dateStr, start_time: "15:00", end_time: "15:30", timezone: "America/New_York", available: false },
   ];
+};
+
+// Generate available dates (mock data - in production, get from API)
+const generateAvailableDates = () => {
+  const today = startOfToday();
+  const availableDates: Date[] = [];
+  
+  // Simulate some available dates in the next 60 days
+  for (let i = 1; i <= 60; i++) {
+    const date = addDays(today, i);
+    // Randomly mark some days as available (in production, get from API)
+    if (i % 3 !== 0) { // Skip every third day to simulate unavailability
+      availableDates.push(date);
+    }
+  }
+  
+  return availableDates;
 };
 
 interface TidyCalBookingProps {
@@ -37,26 +58,31 @@ interface TidyCalBookingProps {
 }
 
 const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) => {
-  const [step, setStep] = useState<'service' | 'date' | 'time' | 'details'>('service');
-  const [selectedService, setSelectedService] = useState<string>("");
+  // Skip service selection, start with date
+  const [step, setStep] = useState<'date' | 'time' | 'details'>('date');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [timeSlots, setTimeSlots] = useState<TidyCalTimeSlot[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  
+  // Timezone handling
+  const [timezone, setTimezone] = useState<string>("America/New_York");
+  
+  useEffect(() => {
+    // In a real implementation, this would fetch available dates from the API
+    setAvailableDates(generateAvailableDates());
+  }, []);
 
   useEffect(() => {
     if (selectedDate) {
-      // In a real implementation, this would be an API call to TidyCal
-      setTimeSlots(generateMockTimeSlots(selectedDate));
+      // In a real implementation, this would fetch time slots for the selected date
+      setTimeSlots(generateTimeSlots(selectedDate));
     }
   }, [selectedDate]);
-
-  const handleServiceSelection = (serviceId: string) => {
-    setSelectedService(serviceId);
-    setStep('date');
-  };
 
   const handleDateSelection = (date: Date | undefined) => {
     if (date) {
@@ -73,7 +99,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedService || !selectedTimeSlot || !name || !email) {
+    if (!selectedTimeSlot || !name || !email) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -109,15 +135,18 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     const timeSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
     if (!timeSlot) return null;
     
-    const service = SERVICES.find(s => s.id === selectedService);
-    if (!service) return null;
-    
     return {
-      date: format(new Date(timeSlot.date), "MMMM d, yyyy"),
+      date: selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
-      service: service.name,
-      duration: service.duration
+      service: DEFAULT_SERVICE.name,
+      duration: DEFAULT_SERVICE.duration
     };
+  };
+
+  const isDateAvailable = (date: Date) => {
+    return availableDates.some(availableDate => 
+      isSameDay(availableDate, date)
+    );
   };
 
   return (
@@ -127,109 +156,174 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       </div>
       
       <Tabs value={step} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6 bg-[#E9E7E2]/50 p-1 rounded-xl">
-          <TabsTrigger value="service" disabled={step !== 'service'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Service
-          </TabsTrigger>
-          <TabsTrigger value="date" disabled={step !== 'date' && step !== 'service'} 
+        <TabsList className="grid grid-cols-3 mb-6 bg-[#E9E7E2]/50 p-1 rounded-xl">
+          <TabsTrigger value="date" disabled={step !== 'date'} 
             className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
             Date
           </TabsTrigger>
-          <TabsTrigger value="time" disabled={step !== 'time' && step !== 'date' && step !== 'service'} 
+          <TabsTrigger value="time" disabled={step !== 'time' && step !== 'date'} 
             className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
             Time
           </TabsTrigger>
-          <TabsTrigger value="details" disabled={step !== 'details' && step !== 'time' && step !== 'date' && step !== 'service'} 
+          <TabsTrigger value="details" disabled={step !== 'details' && step !== 'time' && step !== 'date'} 
             className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
             Details
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="service" className="space-y-4">
-          <div className="flex flex-col space-y-3">
-            {SERVICES.map(service => (
+        <TabsContent value="date" className="space-y-4">
+          <div className="text-center mb-4">
+            <h3 className="text-xl font-semibold mb-2">{DEFAULT_SERVICE.name}</h3>
+            <div className="flex items-center justify-center text-sm text-muted-foreground mb-4">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>{DEFAULT_SERVICE.duration} minutes</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{DEFAULT_SERVICE.description}</p>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <div className="mb-4 w-full flex items-center justify-between">
               <Button 
-                key={service.id} 
-                variant="outline" 
-                className={`flex justify-between items-center p-4 h-auto ${selectedService === service.id ? 'border-[#373763] bg-[#373763]/5' : ''}`}
-                onClick={() => handleServiceSelection(service.id)}
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
               >
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold">{service.name}</span>
-                  <span className="text-sm text-gray-500">{service.duration} minutes</span>
-                </div>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h3 className="text-lg font-semibold">
+                {format(currentMonth, "MMMM yyyy")}
+              </h3>
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+              >
                 <ArrowRight className="h-4 w-4" />
               </Button>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="date">
-          <div className="flex flex-col items-center space-y-4">
+            </div>
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={handleDateSelection}
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
               fromDate={startOfToday()}
               toDate={addDays(new Date(), 60)}
-              className="rounded-md border"
+              classNames={{
+                day_today: "bg-muted text-muted-foreground",
+                day_selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
+                cell: cn(
+                  "relative p-0 focus-within:relative focus-within:z-20 [&:has(.day-outside)]:opacity-50"
+                ),
+                day: cn(
+                  "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted"
+                ),
+              }}
+              modifiersClassNames={{
+                selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
+              }}
+              modifiers={{
+                available: (date) => isDateAvailable(date),
+                unavailable: (date) => !isDateAvailable(date) && !isToday(date)
+              }}
+              disabled={(date) => !isDateAvailable(date)}
+              className="rounded-md border p-3 pointer-events-auto bg-white"
             />
-            <Button 
-              variant="ghost" 
-              onClick={() => setStep('service')}
-              className="text-[#373763]"
-            >
-              Back to Services
-            </Button>
+            
+            <div className="flex items-center justify-center gap-4 mt-4 text-sm">
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-[#373763] mr-2"></div>
+                <span>Available</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-gray-200 mr-2"></div>
+                <span>Unavailable</span>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="time">
           <div className="flex flex-col space-y-4">
-            <div className="text-center mb-4">
-              <Label className="font-semibold">Select a time on {selectedDate && format(selectedDate, "MMMM d, yyyy")}</Label>
+            <div className="flex items-center mb-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setStep('date')}
+                className="mr-2"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+              <h3 className="text-lg font-semibold">
+                {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            
+            <div className="flex flex-col space-y-2">
               {timeSlots.map(slot => (
                 <Button 
                   key={slot.id} 
                   variant="outline" 
-                  className={`${selectedTimeSlot === slot.id ? 'border-[#373763] bg-[#373763]/5' : ''}`}
-                  onClick={() => handleTimeSelection(slot.id)}
+                  className={cn(
+                    "justify-center text-center h-12",
+                    slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
+                    selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
+                  )}
+                  onClick={() => slot.available && handleTimeSelection(slot.id)}
+                  disabled={!slot.available}
                 >
                   {slot.start_time}
                 </Button>
               ))}
+              
+              {timeSlots.length === 0 && (
+                <div className="text-center py-6 text-muted-foreground">
+                  No available times for this date. Please select another date.
+                </div>
+              )}
             </div>
-            <div className="flex justify-between pt-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => setStep('date')}
-                className="text-[#373763]"
-              >
-                Back to Date
-              </Button>
+            
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm">
+                <span>Timezone: {timezone}</span>
+              </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="details">
           <form onSubmit={handleBooking} className="space-y-4">
+            <div className="flex items-center mb-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setStep('time')}
+                className="mr-2"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+              <h3 className="text-lg font-semibold">Enter Details</h3>
+            </div>
+            
             {getSelectedTimeSlotDetails() && (
               <div className="bg-[#373763]/5 p-4 rounded-md mb-4">
                 <h3 className="font-semibold mb-2">Booking Summary</h3>
-                <div className="text-sm">
-                  <p><span className="font-medium">Service:</span> {getSelectedTimeSlotDetails()?.service}</p>
-                  <p><span className="font-medium">Duration:</span> {getSelectedTimeSlotDetails()?.duration} minutes</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex">
+                    <CalendarIcon className="h-4 w-4 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium">{getSelectedTimeSlotDetails()?.service}</p>
+                      <p className="text-muted-foreground">{getSelectedTimeSlotDetails()?.duration} minutes</p>
+                    </div>
+                  </div>
                   <p><span className="font-medium">Date:</span> {getSelectedTimeSlotDetails()?.date}</p>
-                  <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time}</p>
+                  <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time} ({timezone})</p>
                 </div>
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="name">Your Name</Label>
+              <Label htmlFor="name" className="required">Your Name</Label>
               <Input 
                 id="name" 
                 value={name} 
@@ -241,7 +335,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="required">Email Address</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -259,23 +353,14 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 disabled={isLoading}
                 className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12"
               >
-                {isLoading ? "Processing..." : "Confirm Booking"}
-              </Button>
-              
-              <Button 
-                type="button"
-                variant="outline" 
-                onClick={() => setStep('time')}
-                className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20"
-              >
-                Back to Time Selection
+                {isLoading ? "Processing..." : "Schedule Meeting"}
               </Button>
             </div>
           </form>
         </TabsContent>
       </Tabs>
       
-      {step === 'service' && onClose && (
+      {step === 'date' && onClose && (
         <div className="flex justify-center mt-4">
           <Button 
             variant="outline" 
