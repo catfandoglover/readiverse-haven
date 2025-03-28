@@ -5,13 +5,16 @@ import { corsHeaders } from "../_shared/cors.ts";
 // TidyCal API token and configuration
 const TIDYCAL_API_KEY = Deno.env.get("TIDYCAL_API_KEY") || "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
 
-// TidyCal's API base URL - corrected according to their API documentation
-const TIDYCAL_BASE_URL = "https://tidycal.com/api/v1";
+// Correct TidyCal's API base URL based on the working Python script
+const TIDYCAL_BASE_URL = "https://tidycal.com/api";
+
+// Default booking type ID (if available)
+const DEFAULT_BOOKING_TYPE_ID = "1114186";
 
 // Test data for fallback responses
 const TEST_BOOKING_TYPES = [
   {
-    id: "12345",
+    id: "1114186",
     name: "DNA Assessment Discussion",
     duration: 30,
     description: "Schedule a 30-minute discussion about your DNA assessment results."
@@ -139,11 +142,12 @@ serve(async (req) => {
     if (path === "health-check") {
       try {
         // Simple health check to verify our API connection
-        const healthCheckUrl = `${TIDYCAL_BASE_URL}/me`;
+        const healthCheckUrl = `${TIDYCAL_BASE_URL}/booking-types`;
         const result = await fetchWithErrorHandling(healthCheckUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "Accept": "application/json",
             "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
           }
         });
@@ -238,13 +242,27 @@ async function listBookingTypes() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
       }
     });
     
     if (result.success) {
       console.log("Successfully fetched booking types:", result.data);
-      return new Response(JSON.stringify(result.data), {
+      
+      // Transform the response to match our expected format
+      const transformedData = {
+        data: result.data.data.map(item => ({
+          id: item.id.toString(),
+          name: item.title || "Unnamed Booking Type",
+          duration: item.duration_minutes || 30,
+          description: item.description || "",
+          price: item.price,
+          currency: item.currency || "USD"
+        }))
+      };
+      
+      return new Response(JSON.stringify(transformedData), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -289,13 +307,25 @@ async function getBookingType(bookingTypeId) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
       }
     });
     
-    if (result.success) {
+    if (result.success && result.data) {
       console.log("Booking type data:", result.data);
-      return new Response(JSON.stringify(result.data), {
+      
+      // Transform the response to match our expected format
+      const transformedData = {
+        id: result.data.id.toString(),
+        name: result.data.title || "Unnamed Booking Type",
+        duration: result.data.duration_minutes || 30,
+        description: result.data.description || "",
+        price: result.data.price,
+        currency: result.data.currency || "USD"
+      };
+      
+      return new Response(JSON.stringify(transformedData), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -333,12 +363,13 @@ async function getAvailableDates(month, bookingTypeId) {
     }
 
     console.log(`Fetching available dates for month: ${month} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/availability?month=${month}`;
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/dates?month=${month}`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
       }
     });
@@ -393,12 +424,13 @@ async function getTimeSlots(date, bookingTypeId) {
     }
 
     console.log(`Fetching time slots for date: ${date} and booking type: ${bookingTypeId}`);
-    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/timeslots?date=${date}`;
+    const url = `${TIDYCAL_BASE_URL}/booking-types/${bookingTypeId}/slots?date=${date}`;
     
     const result = await fetchWithErrorHandling(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
       }
     });
@@ -406,12 +438,26 @@ async function getTimeSlots(date, bookingTypeId) {
     if (result.success) {
       console.log("Time slots:", result.data);
       
-      // Handle different API response formats
+      // Handle different API response formats and transform slots to our format
       let timeSlots = [];
-      if (result.data && Array.isArray(result.data.slots)) {
-        timeSlots = result.data.slots;
+      if (result.data && Array.isArray(result.data.data)) {
+        timeSlots = result.data.data.map(slot => ({
+          id: slot.id.toString(),
+          date: date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          timezone: slot.timezone || "UTC",
+          available: true
+        }));
       } else if (result.data && Array.isArray(result.data)) {
-        timeSlots = result.data;
+        timeSlots = result.data.map(slot => ({
+          id: slot.id.toString(),
+          date: date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          timezone: slot.timezone || "UTC",
+          available: true
+        }));
       }
       
       return new Response(JSON.stringify({ time_slots: timeSlots }), {
@@ -465,6 +511,7 @@ async function createBooking(bookingData) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
       },
       body: JSON.stringify(requestBody)
@@ -472,7 +519,18 @@ async function createBooking(bookingData) {
     
     if (result.success) {
       console.log("Booking response:", result.data);
-      return new Response(JSON.stringify(result.data), {
+      
+      // Transform the response to match our expected format
+      const transformedData = {
+        id: result.data.id.toString(),
+        status: result.data.status || "confirmed",
+        meeting_link: result.data.meeting_link,
+        payment_link: result.data.payment_link,
+        price: result.data.price,
+        currency: result.data.currency
+      };
+      
+      return new Response(JSON.stringify(transformedData), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
