@@ -6,44 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { format, addDays, startOfToday, isSameDay, isToday } from "date-fns";
-import { ArrowLeft, ArrowRight, CalendarIcon, Clock } from "lucide-react";
+import { format, addDays, startOfToday, isSameDay, isToday, parse, parseISO } from "date-fns";
+import { ArrowLeft, ArrowRight, CalendarIcon, Clock, DollarSign, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
-const TIDYCAL_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
-
-const DEFAULT_SERVICE = {
-  id: "1", 
-  name: "DNA Assessment Discussion", 
-  duration: 30, 
-  description: "Conduct your intellectual DNA assessment and review the results with a Lightning intellectual genetic counselor. You will have the option of booking follow up appointments with your counselor if desired."
-};
-
-const generateTimeSlots = (date: Date) => {
-  const dateStr = format(date, "yyyy-MM-dd");
-  return [
-    { id: `${dateStr}-1`, date: dateStr, start_time: "09:00", end_time: "09:30", timezone: "America/New_York", available: true },
-    { id: `${dateStr}-2`, date: dateStr, start_time: "10:00", end_time: "10:30", timezone: "America/New_York", available: true },
-    { id: `${dateStr}-3`, date: dateStr, start_time: "11:00", end_time: "11:30", timezone: "America/New_York", available: true },
-    { id: `${dateStr}-4`, date: dateStr, start_time: "13:00", end_time: "13:30", timezone: "America/New_York", available: true },
-    { id: `${dateStr}-5`, date: dateStr, start_time: "14:00", end_time: "14:30", timezone: "America/New_York", available: true },
-    { id: `${dateStr}-6`, date: dateStr, start_time: "15:00", end_time: "15:30", timezone: "America/New_York", available: false },
-  ];
-};
-
-const generateAvailableDates = () => {
-  const today = startOfToday();
-  const availableDates: Date[] = [];
-  
-  for (let i = 1; i <= 60; i++) {
-    const date = addDays(today, i);
-    if (i % 3 !== 0) {
-      availableDates.push(date);
-    }
-  }
-  
-  return availableDates;
-};
+interface BookingTypeResponse {
+  id: string;
+  name: string;
+  duration: number;
+  description: string;
+  price?: number;
+  currency?: string;
+}
 
 interface TidyCalTimeSlot {
   id: string;
@@ -62,7 +37,10 @@ interface TidyCalBookingProps {
 interface TidyCalBookingResponse {
   id: string;
   status: string;
-  meeting_link: string;
+  meeting_link?: string;
+  payment_link?: string;
+  price?: number;
+  currency?: string;
 }
 
 const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) => {
@@ -75,15 +53,107 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [isLoading, setIsLoading] = useState(false);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [timezone, setTimezone] = useState<string>("America/New_York");
+  const [timezone, setTimezone] = useState<string>("");
+  const [bookingType, setBookingType] = useState<BookingTypeResponse | null>(null);
+  const [bookingTypeLoading, setBookingTypeLoading] = useState(true);
+  const [datesLoading, setDatesLoading] = useState(false);
+  const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
 
+  // Detect user's timezone on component mount
   useEffect(() => {
-    setAvailableDates(generateAvailableDates());
+    try {
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setTimezone(detectedTimezone);
+    } catch (error) {
+      console.error("Could not detect timezone:", error);
+      setTimezone("America/New_York"); // Default fallback
+    }
   }, []);
 
+  // Fetch booking type details on mount
+  useEffect(() => {
+    const fetchBookingType = async () => {
+      setBookingTypeLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('tidycal-api', {
+          body: { path: 'booking-type' },
+        });
+
+        if (error) throw error;
+        
+        setBookingType(data);
+      } catch (error) {
+        console.error('Error fetching booking type:', error);
+        toast.error("Could not load booking information");
+      } finally {
+        setBookingTypeLoading(false);
+      }
+    };
+
+    fetchBookingType();
+  }, []);
+
+  // Load available dates when current month changes
+  useEffect(() => {
+    const fetchAvailableDates = async () => {
+      setDatesLoading(true);
+      try {
+        const monthString = format(currentMonth, "yyyy-MM");
+        
+        const { data, error } = await supabase.functions.invoke('tidycal-api', {
+          body: { 
+            path: 'available-dates',
+            month: monthString
+          },
+        });
+
+        if (error) throw error;
+        
+        if (data.available_dates) {
+          // Convert date strings to Date objects
+          const dates = data.available_dates.map((dateStr: string) => parseISO(dateStr));
+          setAvailableDates(dates);
+        }
+      } catch (error) {
+        console.error('Error fetching available dates:', error);
+        toast.error("Could not load available dates");
+      } finally {
+        setDatesLoading(false);
+      }
+    };
+
+    fetchAvailableDates();
+  }, [currentMonth]);
+
+  // Load time slots when a date is selected
   useEffect(() => {
     if (selectedDate) {
-      setTimeSlots(generateTimeSlots(selectedDate));
+      const fetchTimeSlots = async () => {
+        setTimeSlotsLoading(true);
+        try {
+          const dateString = format(selectedDate, "yyyy-MM-dd");
+          
+          const { data, error } = await supabase.functions.invoke('tidycal-api', {
+            body: { 
+              path: 'time-slots',
+              date: dateString
+            },
+          });
+
+          if (error) throw error;
+          
+          if (data.time_slots) {
+            setTimeSlots(data.time_slots);
+          }
+        } catch (error) {
+          console.error('Error fetching time slots:', error);
+          toast.error("Could not load available time slots");
+        } finally {
+          setTimeSlotsLoading(false);
+        }
+      };
+
+      fetchTimeSlots();
     }
   }, [selectedDate]);
 
@@ -110,37 +180,56 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     setIsLoading(true);
 
     try {
-      setTimeout(() => {
-        const mockBookingResponse: TidyCalBookingResponse = {
-          id: `booking-${Date.now()}`,
-          status: 'confirmed',
-          meeting_link: 'https://meet.google.com/mock-meeting-link'
-        };
+      const { data, error } = await supabase.functions.invoke('tidycal-api', {
+        body: { 
+          path: 'create-booking',
+          name,
+          email,
+          time_slot_id: selectedTimeSlot,
+          timezone
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data.status === 'pending_payment' && data.payment_link) {
+        toast.success("Booking created! Redirecting to payment page...");
         
+        // Notify parent component
+        if (onSuccess) {
+          onSuccess(data);
+        }
+        
+        // Redirect to payment page
+        window.location.href = data.payment_link;
+      } else if (data.status === 'confirmed') {
         toast.success("Booking confirmed! Check your email for details.");
         
         if (onSuccess) {
-          onSuccess(mockBookingResponse);
+          onSuccess(data);
         }
-        
-        setIsLoading(false);
-      }, 1500);
+      } else {
+        toast.error("Booking could not be completed. Please try again.");
+      }
     } catch (error) {
       console.error('Booking error:', error);
       toast.error("Error creating booking. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
 
   const getSelectedTimeSlotDetails = () => {
     const timeSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
-    if (!timeSlot) return null;
+    if (!timeSlot || !bookingType) return null;
     
     return {
       date: selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
-      service: DEFAULT_SERVICE.name,
-      duration: DEFAULT_SERVICE.duration
+      service: bookingType.name,
+      duration: bookingType.duration,
+      price: bookingType.price,
+      currency: bookingType.currency || "USD"
     };
   };
 
@@ -149,6 +238,34 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       isSameDay(availableDate, date)
     );
   };
+
+  // If loading booking type, show loading state
+  if (bookingTypeLoading) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#373763]" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading booking information...</p>
+      </div>
+    );
+  }
+
+  // If booking type couldn't be loaded, show error
+  if (!bookingType) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-12">
+        <p className="text-sm text-red-500">Could not load booking information. Please try again later.</p>
+        {onClose && (
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            className="mt-4"
+          >
+            Go Back
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -161,11 +278,30 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         
         <TabsContent value="date">
           <div className="flex flex-col items-center">
+            {/* Booking information */}
+            <div className="w-full mb-6 p-4 bg-[#373763]/5 rounded-md">
+              <h3 className="font-semibold text-lg mb-2">{bookingType.name}</h3>
+              <div className="flex items-center text-sm text-muted-foreground mb-1">
+                <Clock className="h-4 w-4 mr-2" />
+                <span>{bookingType.duration} minutes</span>
+              </div>
+              {bookingType.price && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  <span>${bookingType.price} {bookingType.currency}</span>
+                </div>
+              )}
+              {bookingType.description && (
+                <p className="mt-3 text-sm">{bookingType.description}</p>
+              )}
+            </div>
+            
             <div className="mb-4 w-full flex items-center justify-between">
               <Button 
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                disabled={datesLoading}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -176,38 +312,46 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                disabled={datesLoading}
               >
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelection}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              fromDate={startOfToday()}
-              toDate={addDays(new Date(), 60)}
-              classNames={{
-                day_today: "bg-muted text-muted-foreground",
-                day_selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
-                cell: cn(
-                  "relative p-0 focus-within:relative focus-within:z-20 [&:has(.day-outside)]:opacity-50"
-                ),
-                day: cn(
-                  "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted"
-                ),
-              }}
-              modifiersClassNames={{
-                selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
-              }}
-              modifiers={{
-                available: (date) => isDateAvailable(date),
-                unavailable: (date) => !isDateAvailable(date) && !isToday(date)
-              }}
-              disabled={(date) => !isDateAvailable(date)}
-              className="rounded-md border p-3 pointer-events-auto bg-white"
-            />
+            
+            {datesLoading ? (
+              <div className="py-8 flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
+              </div>
+            ) : (
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelection}
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
+                fromDate={startOfToday()}
+                toDate={addDays(new Date(), 60)}
+                classNames={{
+                  day_today: "bg-muted text-muted-foreground",
+                  day_selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
+                  cell: cn(
+                    "relative p-0 focus-within:relative focus-within:z-20 [&:has(.day-outside)]:opacity-50"
+                  ),
+                  day: cn(
+                    "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted"
+                  ),
+                }}
+                modifiersClassNames={{
+                  selected: "bg-[#373763] text-white hover:bg-[#373763] hover:text-white",
+                }}
+                modifiers={{
+                  available: (date) => isDateAvailable(date),
+                  unavailable: (date) => !isDateAvailable(date) && !isToday(date)
+                }}
+                disabled={(date) => !isDateAvailable(date)}
+                className="rounded-md border p-3 pointer-events-auto bg-white"
+              />
+            )}
             
             <div className="flex items-center justify-center gap-4 mt-4 text-sm">
               <div className="flex items-center">
@@ -238,29 +382,35 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
               </h3>
             </div>
             
-            <div className="flex flex-col space-y-2">
-              {timeSlots.map(slot => (
-                <Button 
-                  key={slot.id} 
-                  variant="outline" 
-                  className={cn(
-                    "justify-center text-center h-12",
-                    slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
-                    selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
-                  )}
-                  onClick={() => slot.available && handleTimeSelection(slot.id)}
-                  disabled={!slot.available}
-                >
-                  {slot.start_time}
-                </Button>
-              ))}
-              
-              {timeSlots.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
-                  No available times for this date. Please select another date.
-                </div>
-              )}
-            </div>
+            {timeSlotsLoading ? (
+              <div className="py-8 flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#373763]" />
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                {timeSlots.map(slot => (
+                  <Button 
+                    key={slot.id} 
+                    variant="outline" 
+                    className={cn(
+                      "justify-center text-center h-12",
+                      slot.available ? "hover:border-[#373763] hover:bg-[#373763]/5" : "opacity-50 cursor-not-allowed",
+                      selectedTimeSlot === slot.id ? "border-[#373763] bg-[#373763]/5" : ""
+                    )}
+                    onClick={() => slot.available && handleTimeSelection(slot.id)}
+                    disabled={!slot.available}
+                  >
+                    {slot.start_time}
+                  </Button>
+                ))}
+                
+                {timeSlots.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No available times for this date. Please select another date.
+                  </div>
+                )}
+              </div>
+            )}
             
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm">
@@ -297,6 +447,18 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                   </div>
                   <p><span className="font-medium">Date:</span> {getSelectedTimeSlotDetails()?.date}</p>
                   <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time} ({timezone})</p>
+                  
+                  {getSelectedTimeSlotDetails()?.price && (
+                    <div className="flex mt-2 pt-2 border-t">
+                      <DollarSign className="h-4 w-4 mr-2 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Payment Required</p>
+                        <p className="text-muted-foreground">
+                          ${getSelectedTimeSlotDetails()?.price} {getSelectedTimeSlotDetails()?.currency}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -332,8 +494,19 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 disabled={isLoading}
                 className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12"
               >
-                {isLoading ? "Processing..." : "Schedule Meeting"}
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  <>Schedule & Proceed to Payment</>
+                )}
               </Button>
+              
+              <p className="text-center text-xs text-muted-foreground">
+                After clicking, you'll be redirected to complete payment to confirm your booking.
+              </p>
             </div>
           </form>
         </TabsContent>
