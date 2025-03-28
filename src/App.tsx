@@ -112,7 +112,7 @@ const App = () => (
               <Sonner />
               <Routes>
                 {/* Public routes - no auth required */}
-                <Route path="/" element={<Navigate to="/discover" replace />} />
+                <Route path="/" element={<Navigate to="/dna" replace />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
                 <Route path="/discover/questions" element={<DiscoverLayout />} />
