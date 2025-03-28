@@ -17,14 +17,11 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const path = url.pathname.split("/").pop();
+    // Parse request path and body
+    const body = req.method === "POST" ? await req.json() : {};
+    const path = body.path || "";
 
-    // Get request body if present
-    let body = {};
-    if (req.method === "POST") {
-      body = await req.json();
-    }
+    console.log(`Processing request for path: ${path}`, body);
 
     // Handle each endpoint
     switch (path) {
@@ -54,6 +51,7 @@ serve(async (req) => {
 // Get booking type details
 async function getBookingType() {
   try {
+    console.log(`Fetching booking type: ${TIDYCAL_BOOKING_TYPE_ID}`);
     const response = await fetch(`${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}`, {
       method: "GET",
       headers: {
@@ -63,10 +61,13 @@ async function getBookingType() {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`TidyCal API error (${response.status}):`, errorText);
       throw new Error(`TidyCal API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log("Booking type data:", data);
     
     return new Response(JSON.stringify(data), {
       status: 200,
@@ -84,22 +85,29 @@ async function getBookingType() {
 // Get available dates for a month
 async function getAvailableDates(month) {
   try {
-    // For now, create mock available dates (this would be replaced with actual API call)
-    const today = new Date();
-    const year = month ? new Date(month).getFullYear() : today.getFullYear();
-    const monthIndex = month ? new Date(month).getMonth() : today.getMonth();
-    
-    const availableDates = [];
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      // Make every other day available
-      if (day % 2 === 0) {
-        availableDates.push(`${year}-${(monthIndex + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-      }
+    if (!month) {
+      throw new Error("Month parameter is required");
     }
+
+    console.log(`Fetching available dates for month: ${month}`);
+    const response = await fetch(`${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}/available-dates?month=${month}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`TidyCal API error (${response.status}):`, errorText);
+      throw new Error(`TidyCal API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Available dates:", data);
     
-    return new Response(JSON.stringify({ available_dates: availableDates }), {
+    return new Response(JSON.stringify({ available_dates: data.dates }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -119,17 +127,25 @@ async function getTimeSlots(date) {
       throw new Error("Date is required");
     }
 
-    // Generate mock time slots (would be replaced with actual API call)
-    const timeSlots = [
-      { id: `${date}-1`, date, start_time: "09:00", end_time: "09:30", timezone: "America/New_York", available: true },
-      { id: `${date}-2`, date, start_time: "10:00", end_time: "10:30", timezone: "America/New_York", available: true },
-      { id: `${date}-3`, date, start_time: "11:00", end_time: "11:30", timezone: "America/New_York", available: true },
-      { id: `${date}-4`, date, start_time: "13:00", end_time: "13:30", timezone: "America/New_York", available: true },
-      { id: `${date}-5`, date, start_time: "14:00", end_time: "14:30", timezone: "America/New_York", available: true },
-      { id: `${date}-6`, date, start_time: "15:00", end_time: "15:30", timezone: "America/New_York", available: false },
-    ];
+    console.log(`Fetching time slots for date: ${date}`);
+    const response = await fetch(`${TIDYCAL_BASE_URL}/booking-types/${TIDYCAL_BOOKING_TYPE_ID}/time-slots?date=${date}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`TidyCal API error (${response.status}):`, errorText);
+      throw new Error(`TidyCal API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Time slots:", data);
     
-    return new Response(JSON.stringify({ time_slots: timeSlots }), {
+    return new Response(JSON.stringify({ time_slots: data.slots }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -145,21 +161,37 @@ async function getTimeSlots(date) {
 // Create a booking
 async function createBooking(bookingData) {
   try {
-    if (!bookingData.name || !bookingData.email || !bookingData.time_slot_id) {
+    if (!bookingData.name || !bookingData.email || !bookingData.time_slot_id || !bookingData.timezone) {
       throw new Error("Missing required booking information");
     }
 
-    // This would be replaced with an actual API call to TidyCal to create the booking
-    const bookingResponse = {
-      id: `booking-${Date.now()}`,
-      status: 'pending_payment',
-      meeting_link: null,
-      payment_link: `https://tidycal.com/payment/${bookingData.time_slot_id}?email=${encodeURIComponent(bookingData.email)}&name=${encodeURIComponent(bookingData.name)}`,
-      price: 150.00,
-      currency: "USD"
-    };
+    console.log("Creating booking with data:", bookingData);
+    const response = await fetch(`${TIDYCAL_BASE_URL}/bookings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${TIDYCAL_API_KEY}`,
+      },
+      body: JSON.stringify({
+        booking_type_id: TIDYCAL_BOOKING_TYPE_ID,
+        name: bookingData.name,
+        email: bookingData.email,
+        time_slot_id: bookingData.time_slot_id,
+        timezone: bookingData.timezone,
+        // Add any additional fields if needed
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`TidyCal API error (${response.status}):`, errorText);
+      throw new Error(`TidyCal API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Booking response:", data);
     
-    return new Response(JSON.stringify(bookingResponse), {
+    return new Response(JSON.stringify(data), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
