@@ -27,8 +27,8 @@ const BookCounselor = () => {
         </div>
       </div>
       
-      <div className="max-w-lg mx-auto p-6">
-        <div className="bg-[#E9E7E2] rounded-2xl p-6">
+      <div className="max-w-4xl mx-auto p-4 pb-16">
+        <div className="bg-[#E9E7E2] rounded-2xl p-6 mb-4">
           <h1 className="text-2xl font-baskerville leading-none tracking-tight text-black font-bold pt-2 pb-4">
             Book a DNA Assessment Discussion
           </h1>
@@ -38,11 +38,11 @@ const BookCounselor = () => {
             and get personalized guidance on your philosophical journey.
           </p>
           
-          <div className="rounded-md overflow-hidden" style={{ height: '600px' }}>
+          {/* Increased height for more visibility, removed any potential interaction blockers */}
+          <div className="w-full" style={{ height: '700px' }}>
             <TidyCalEmbed 
               bookingPath="team/intellectual-genetic-counselors/intake" 
-              height="600px"
-              className="rounded-md overflow-hidden"
+              height="700px"
             />
           </div>
         </div>

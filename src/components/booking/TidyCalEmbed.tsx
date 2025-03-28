@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface TidyCalEmbedProps {
@@ -16,42 +16,39 @@ const TidyCalEmbed: React.FC<TidyCalEmbedProps> = ({
   onLoad
 }) => {
   const [isLoading, setIsLoading] = React.useState(true);
-  const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Create and append the script element
+    // Add the script directly in the DOM as per TidyCal's documentation
     const script = document.createElement('script');
     script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
     script.async = true;
     
-    // Set up a listener to detect when TidyCal has finished loading
-    const handleScriptLoad = () => {
+    // Handle script loading completion
+    script.onload = () => {
       console.log('TidyCal script loaded');
-      
-      // Set a timeout to allow TidyCal to render
-      const timeout = setTimeout(() => {
+      setTimeout(() => {
         setIsLoading(false);
         if (onLoad) onLoad();
-      }, 1500);
-      
-      return () => clearTimeout(timeout);
+      }, 1000);
     };
-    
-    script.onload = handleScriptLoad;
-    
-    // Append the script to the document
-    document.body.appendChild(script);
+
+    // Add the script to the document if it doesn't exist yet
+    if (!document.querySelector('script[src="https://asset-tidycal.b-cdn.net/js/embed.js"]')) {
+      document.body.appendChild(script);
+    } else {
+      // If script already exists, just mark as loaded
+      setIsLoading(false);
+      if (onLoad) onLoad();
+    }
     
     // Clean up when component unmounts
     return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+      // Don't remove the script on unmount as it might be used by other instances
     };
   }, [onLoad]);
   
   return (
-    <div className={`w-full ${className}`} style={{ height, position: 'relative' }}>
+    <div className={`relative w-full ${className}`} style={{ height }}>
       {isLoading && (
         <div className="absolute inset-0 flex justify-center items-center bg-[#E9E7E2]/50 z-10">
           <div className="text-center">
@@ -61,15 +58,15 @@ const TidyCalEmbed: React.FC<TidyCalEmbedProps> = ({
         </div>
       )}
       
-      {/* TidyCal embed div - exactly as per documentation */}
+      {/* This is the critical part - render the embed exactly as required by TidyCal */}
       <div 
-        ref={containerRef}
         className="tidycal-embed" 
         data-path={bookingPath}
         style={{ 
           width: '100%', 
           height: '100%',
-          overflow: 'hidden'
+          pointerEvents: 'auto',  // Ensure clicks are passed through
+          overflow: 'visible'     // Allow content to be visible and scrollable
         }}
       ></div>
     </div>
