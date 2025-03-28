@@ -11,6 +11,8 @@ vercel env ls (the view in vercel CLI)
 
 #3 and #4 are supposed to match but do not 😳
 
+use "vercel env ls" in the vercel CLI to see what the environmental variables are. 
+
 ## Overview
 
 The application relies on three different environments:
