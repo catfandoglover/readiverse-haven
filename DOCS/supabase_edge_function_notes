@@ -1,0 +1,22 @@
+# Notes on Supabase Edge Functions
+
+- **Local deployment crucial**: Must deploy using Supabase CLI with Docker locally
+- **Deployment verification issues**:
+  - Errors often go unreported
+  - Function may silently fail to update (using old versions)
+  
+- **Best practice**: Delete edge function completely before redeploying
+  - Example: Environmental variable issues may not trigger error flags
+
+- **Deployment location**: Always deploy from local computer using supabase CLI 
+
+- **Environmental variables**: Functions seem to pull from local `.env` files
+  - Exact mechanism unclear but confirmed they access local `.env` at times as well as supabase' edge functions secrets
+
+- **Critical deployment requirements**:
+  1. Must be publicly accessible (requires config file)
+  2. Must deploy with JWT verification disabled
+     - Use option: "jwt disabled" 
+     - Otherwise function can't check tokens (initially receives outseta, not valid Supabase JWT)
+
+     "supabase functions deploy exchange --no-verify-jwt"
