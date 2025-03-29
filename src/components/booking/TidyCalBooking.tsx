@@ -273,8 +273,8 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             )}
             
             <div className="flex items-center justify-center w-full mt-6 text-sm text-[#E9E7E2]">
-              <span className="inline-block h-4 w-4 mr-2 relative">
-                <span className="absolute bottom-0.5 left-1.5 w-1.5 h-1.5 rounded-full bg-[#CCFF23]"></span>
+              <span className="inline-flex items-center mr-2 relative">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF23]"></span>
               </span>
               <span>Available</span>
             </div>
