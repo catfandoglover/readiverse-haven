@@ -117,7 +117,7 @@ const BookingSuccess = () => {
         
         // Redirect to the home page after showing success for a few seconds
         const redirectTimer = setTimeout(() => {
-          navigate('/');
+          navigate('/discover');
         }, 10000);
         
         return () => clearTimeout(redirectTimer);
@@ -190,11 +190,11 @@ const BookingSuccess = () => {
               className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 mt-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Return to Home
+              Discover Alexandria
             </Button>
             
             <p className="text-sm text-gray-400 mt-8">
-              You will be redirected to the home page automatically in 10 seconds.
+              You will be redirected to the Library of Alexandria automatically in 10 seconds.
             </p>
           </div>
         )}
