@@ -182,17 +182,17 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/virgil" element={
-                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
                     <VirgilOffice />
                   </ProtectedRoute>
                 } />
                 <Route path="/virgil-modes" element={
-                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
                     <VirgilModes />
                   </ProtectedRoute>
                 } />
                 <Route path="/virgil-chat" element={
-                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
                     <VirgilChat />
                   </ProtectedRoute>
                 } />
@@ -237,7 +237,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/bookshelf" element={
-                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
                     <NewBookshelf />
                   </ProtectedRoute>
                 } />
