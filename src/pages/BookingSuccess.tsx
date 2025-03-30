@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import MainMenu from '@/components/navigation/MainMenu';
+import { supabase } from "@/integrations/supabase/client";
+
+interface BookingVerificationResponse {
+  found: boolean;
+  status: string;
+  tidycal_booking_id?: string | null;
+  error?: string;
+}
 
 const BookingSuccess = () => {
   const navigate = useNavigate();
@@ -13,15 +21,96 @@ const BookingSuccess = () => {
   const [loading, setLoading] = useState(true);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookingDetails, setBookingDetails] = useState<any>(null);
 
   useEffect(() => {
-    // The actual booking is created by the webhook
-    // Here we just show a success message and redirect after a delay
-    if (sessionId) {
-      console.log("Session ID detected:", sessionId);
+    const verifyBooking = async () => {
+      if (!sessionId) {
+        console.error("No session ID found in URL");
+        setLoading(false);
+        setError("Payment information missing. Please try booking again.");
+        return;
+      }
       
-      // Simulate verification process
-      const timer = setTimeout(() => {
+      console.log("Verifying booking with session ID:", sessionId);
+      
+      try {
+        // Check if a booking record exists with this session ID
+        const { data: bookings, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('stripe_session_id', sessionId)
+          .single();
+          
+        if (bookingsError) {
+          console.error("Error fetching booking:", bookingsError);
+          throw new Error("Unable to verify booking status. Please contact support.");
+        }
+        
+        if (!bookings) {
+          console.error("No booking found with session ID:", sessionId);
+          throw new Error("Booking not found. The payment may have been processed but the booking wasn't created.");
+        }
+        
+        setBookingDetails(bookings);
+        
+        if (bookings.status === 'pending') {
+          console.log("Booking is still pending, waiting for webhook processing...");
+          
+          // Wait a bit and check again
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          const { data: updatedBooking, error: refreshError } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('stripe_session_id', sessionId)
+            .single();
+            
+          if (!refreshError && updatedBooking && updatedBooking.status === 'completed') {
+            console.log("Booking is now confirmed!");
+            setBookingDetails(updatedBooking);
+          } else {
+            console.warn("Booking still pending after waiting, proceeding anyway");
+          }
+        }
+        
+        // Book directly if not already completed
+        if (bookings.status !== 'completed' && bookings.tidycal_booking_id === null) {
+          console.log("Booking not completed, attempting to create it now");
+          
+          const { data: createResponse, error: createError } = await supabase.functions.invoke('tidycal-api', {
+            body: { 
+              path: 'create-booking',
+              name: bookings.name,
+              email: bookings.email,
+              time_slot_id: bookings.time_slot_id,
+              timezone: bookings.timezone,
+              bookingTypeId: bookings.booking_type_id
+            }
+          });
+          
+          if (createError) {
+            console.error("Error creating booking directly:", createError);
+          } else if (createResponse) {
+            console.log("Booking created directly:", createResponse);
+            
+            // Update the booking record
+            await supabase
+              .from('bookings')
+              .update({
+                status: 'completed',
+                tidycal_booking_id: createResponse.id || null
+              })
+              .eq('stripe_session_id', sessionId);
+              
+            setBookingDetails({
+              ...bookings,
+              status: 'completed',
+              tidycal_booking_id: createResponse.id || null
+            });
+          }
+        }
+        
         setLoading(false);
         setVerificationComplete(true);
         toast.success('Your booking has been confirmed!');
@@ -29,18 +118,18 @@ const BookingSuccess = () => {
         // Redirect to the home page after showing success for a few seconds
         const redirectTimer = setTimeout(() => {
           navigate('/');
-        }, 5000);
+        }, 10000);
         
         return () => clearTimeout(redirectTimer);
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      // If no session ID, show error and add retry option
-      console.error("No session ID found in URL");
-      setLoading(false);
-      setError("Payment information missing. Please try booking again.");
-    }
+        
+      } catch (err: any) {
+        console.error("Error verifying booking:", err);
+        setLoading(false);
+        setError(err.message || "An error occurred while verifying your booking.");
+      }
+    };
+    
+    verifyBooking();
   }, [sessionId, navigate]);
 
   const handleRetry = () => {
@@ -103,6 +192,10 @@ const BookingSuccess = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Return to Home
             </Button>
+            
+            <p className="text-sm text-gray-400 mt-8">
+              You will be redirected to the home page automatically in 10 seconds.
+            </p>
           </div>
         )}
       </div>

@@ -50,6 +50,8 @@ serve(async (req) => {
             throw new Error("Invalid booking data in metadata");
           }
 
+          console.log("Extracted booking data:", JSON.stringify(bookingData));
+
           // Call the TidyCal API function to create the booking
           const { data: bookingResponse, error } = await supabaseClient.functions.invoke('tidycal-api', {
             body: { 
@@ -65,8 +67,28 @@ serve(async (req) => {
 
           console.log("TidyCal booking created successfully:", bookingResponse);
           
-          // Store record of successful booking in database if needed
-          // This could be done here or in another function
+          // Store the booking record in a new bookings table
+          try {
+            const { data: storedBooking, error: storageError } = await supabaseClient
+              .from('bookings')
+              .insert({
+                stripe_session_id: session.id,
+                booking_type_id: bookingData.bookingTypeId,
+                name: bookingData.name,
+                email: bookingData.email,
+                time_slot_id: bookingData.time_slot_id,
+                timezone: bookingData.timezone,
+                tidycal_booking_id: bookingResponse?.id || null,
+                status: 'completed',
+                created_at: new Date().toISOString()
+              });
+              
+            if (storageError) {
+              console.error("Error storing booking record:", storageError);
+            }
+          } catch (storageError) {
+            console.error("Exception storing booking record:", storageError);
+          }
         } catch (error) {
           console.error("Error processing successful payment:", error);
           // We still return 200 to Stripe so they don't retry the webhook

@@ -76,6 +76,28 @@ serve(async (req) => {
 
     console.log("Session created:", session.id);
     
+    // Record the pending booking in the database
+    try {
+      const { error: bookingError } = await supabaseClient
+        .from('bookings')
+        .insert({
+          stripe_session_id: session.id,
+          booking_type_id: bookingData.bookingTypeId,
+          name: bookingData.name,
+          email: bookingData.email,
+          time_slot_id: bookingData.time_slot_id,
+          timezone: bookingData.timezone,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        });
+        
+      if (bookingError) {
+        console.error("Error recording pending booking:", bookingError);
+      }
+    } catch (bookingStoreError) {
+      console.error("Exception recording pending booking:", bookingStoreError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         sessionId: session.id,

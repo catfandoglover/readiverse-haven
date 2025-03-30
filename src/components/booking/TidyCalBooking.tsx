@@ -144,7 +144,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
 
       if (error) {
         console.error("Error creating checkout session:", error);
-        toast.error("Failed to initiate payment. Please try again.");
+        toast.error(`Failed to initiate payment: ${error.message}`);
         setIsProcessingPayment(false);
         return;
       }
@@ -168,9 +168,9 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         toast.error("Failed to create payment session. Please try again.");
         setIsProcessingPayment(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment initiation error:", error);
-      toast.error("An error occurred. Please try again later.");
+      toast.error(`An error occurred: ${error.message}`);
       setIsProcessingPayment(false);
     }
   };
