@@ -80,7 +80,7 @@ const MainMenu: React.FC = () => {
                     Talk to a Human
                   </h3>
                   <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
-                    Book an intellectual genetic counseling session
+                    Intellectual genetic counseling sessions
                   </p>
                 </div>
               </div>
