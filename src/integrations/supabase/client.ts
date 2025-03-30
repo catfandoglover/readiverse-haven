@@ -5,7 +5,7 @@ import type { Database } from './types';
 
 const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
 // const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
+const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
