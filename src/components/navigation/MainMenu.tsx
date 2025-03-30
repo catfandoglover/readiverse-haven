@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, BookOpen, Compass, Dna, CircleUserRound, Headset } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 const MainMenu: React.FC = () => {
@@ -25,10 +26,13 @@ const MainMenu: React.FC = () => {
           <Menu className="h-7.5 w-7.5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
-        <nav className="flex flex-col gap-8 mt-10">
-          <div className="px-2">
-            <h2 className="text-xl font-baskerville mb-8">Lightning</h2>
+      <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10 p-0">
+        <div className="p-6 pt-10">
+          <h2 className="text-xl font-baskerville mb-8">Lightning</h2>
+        </div>
+        
+        <ScrollArea className="h-[calc(100vh-100px)]">
+          <nav className="flex flex-col gap-8 px-6 pb-10">
             <div className="space-y-6">
               
               {/* Profile Navigation Item */}
@@ -141,9 +145,12 @@ const MainMenu: React.FC = () => {
                 </div>
               </div>
               
+              {/* Additional space at the bottom for better scrolling experience */}
+              <div className="py-4"></div>
+              
             </div>
-          </div>
-        </nav>
+          </nav>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
