@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import TidyCalBooking from '@/components/booking/TidyCalBooking';
 import { toast } from "sonner";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
+import MainMenu from '@/components/navigation/MainMenu';
 
 const BookCounselor = () => {
   const navigate = useNavigate();
@@ -24,14 +25,7 @@ const BookCounselor = () => {
   return (
     <div className="min-h-[100dvh] bg-[#301630] text-[#E9E7E2]">
       <div className="flex items-center pt-4 pb-4 px-8 bg-[#301630] text-[#E9E7E2]">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => navigate(-1)}
-          className="p-0 h-auto w-auto hover:bg-transparent"
-        >
-          <ArrowLeft className="h-6 w-6 text-white" />
-        </Button>
+        <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOOK A COUNSELOR
         </h2>
