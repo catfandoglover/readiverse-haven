@@ -34,6 +34,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log("Fetching booking cost from database...");
+    
     // Get the booking cost from the revenue_items table
     const { data: costData, error: costError } = await supabaseClient
       .from('revenue_items')
@@ -44,7 +46,10 @@ serve(async (req) => {
     // Default to $59.00 if there's an error or no data
     const cost = costError || !costData ? 5900 : Math.round(parseFloat(costData.cost) * 100);
     
+    console.log("Using price:", cost, "cents", costError ? "(default - database error)" : "");
+    
     // Store the booking data in the metadata so we can retrieve it in the webhook
+    console.log("Creating Stripe checkout session...");
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -69,6 +74,8 @@ serve(async (req) => {
       customer_email: bookingData.email,
     });
 
+    console.log("Session created:", session.id);
+    
     return new Response(
       JSON.stringify({ 
         sessionId: session.id,

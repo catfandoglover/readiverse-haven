@@ -133,6 +133,8 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
 
       const origin = window.location.origin;
       
+      toast.info("Connecting to payment service...");
+      
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
         body: { 
           bookingData,
@@ -147,10 +149,22 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
         return;
       }
 
+      if (!data) {
+        console.error("No data returned from checkout function");
+        toast.error("Payment service unavailable. Please try again later.");
+        setIsProcessingPayment(false);
+        return;
+      }
+
       if (data?.url) {
         console.log("Redirecting to Stripe checkout:", data.url);
-        window.location.href = data.url;
+        toast.success("Redirecting to payment page...");
+        // Small timeout to allow toast to be displayed
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 1000);
       } else {
+        console.error("No checkout URL returned", data);
         toast.error("Failed to create payment session. Please try again.");
         setIsProcessingPayment(false);
       }
