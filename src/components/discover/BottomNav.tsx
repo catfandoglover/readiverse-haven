@@ -1,10 +1,10 @@
 
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart } from "lucide-react";
+import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart, HeadsetIcon } from "lucide-react";
 import { saveLastVisited, sections } from "@/utils/navigationHistory";
 
-type TabType = "discover" | "dna" | "dashboard" | "profile" | "bookshelf";
+type TabType = "discover" | "dna" | "dashboard" | "profile" | "bookshelf" | "counselor";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -31,6 +31,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
       currentSection = 'profile';
     } else if (currentPath.startsWith('/dashboard')) {
       currentSection = 'dashboard';
+    } else if (currentPath.startsWith('/book-counselor')) {
+      currentSection = 'counselor';
     }
     
     // Save the last visited path for this section
@@ -52,7 +54,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
         boxShadow: "0px -4px 4px rgba(0, 0, 0, 0.1)"
       }}
     >
-      <div className="flex justify-between items-center max-w-sm mx-auto px-6 h-full">
+      <div className="flex justify-between items-center max-w-sm mx-auto px-2 h-full">
         <button 
           className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
             activeTab === "discover" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
@@ -102,7 +104,23 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
           <BookOpen className="h-5 w-5" />
           <span className="text-xs font-oxanium">Study</span>
         </button>
+        
+        <button 
+          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
+            activeTab === "counselor" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
+          }`}
+          onClick={() => handleNavigation("counselor", "/book-counselor")}
+        >
+          <Headset className="h-5 w-5" />
+          <span className="text-xs font-oxanium">Talk to Human</span>
+        </button>
       </div>
+      
+      {activeTab === "counselor" && (
+        <div className="text-center mt-1">
+          <span className="text-[10px] text-[#E9E7E2]/70 italic">Book an intellectual genetic counseling session</span>
+        </div>
+      )}
     </div>
   );
 };

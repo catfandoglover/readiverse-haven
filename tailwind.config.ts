@@ -27,7 +27,8 @@ export default {
 				baskerville: ['Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
 				'baskerville-bold': ['"Baskerville Bold"', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
 				baskervville: ['Baskervville', 'Baskerville', 'Baskerville Old Face', 'Hoefler Text', 'Garamond', 'Times New Roman', 'serif'],
-				oxanium: ['Oxanium', 'cursive']
+				oxanium: ['Oxanium', 'cursive'],
+				'libre-baskerville': ['"Libre Baskerville"', 'serif']
 			},
 			colors: {
 				border: 'hsl(var(--border) / 0.1)',

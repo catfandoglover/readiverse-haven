@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -6,242 +5,406 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { format, addDays, startOfToday } from "date-fns";
-import { ArrowRight, X } from "lucide-react";
-
-// You can replace this with environment variables or secure storage in a production app
-const TIDYCAL_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMWU4NzkzZDRjMTZiYzM5ZWQ3NzAxNGIxMDQ0YThlNDJkOWJhY2E2OWNhZjFhYTBlOWY1N2ZiYmIwZDk3Mzc2MGFjMWViNGZlZjA2NGUzZTUiLCJpYXQiOjE3NDI1MzAyMDIuNjk0Nzk5LCJuYmYiOjE3NDI1MzAyMDIuNjk0OCwiZXhwIjo0ODk4MjAzODAyLjY4Nzg1NSwic3ViIjoiMjM3ODk0Iiwic2NvcGVzIjpbXX0.GHJxK5HXLOqAieHHpFh21AeRbO_4ZNoyPjfQ8sSQcGEgYk0OQsACvorEcgB-oUnUAKuvF69c1jthM9NAZoIklCg5t6nVcWm6YFZWNDXZ5OncjSl2zNF5EDMMvXttk2DkwzzcYFa4547FTqK-kY6V9s05hKPFFGV9Kfkdk5wmrAUyhgCH90iDUwK9cY8caryf2Y1lY-f0L2pHwCY-kfC1Csq9_OJ8-FcaC2Jn8BGtfttpMle2gylLxSCka-yVWEpwlB57YgeG7oPObl3qTUo4ZjB4y_lvqOrNRzfBSsFFUXy7tnD032umRseORfsft6WnPZ3W6bsvlxK6-PmyaBheIEO_BzLA0vZ8ZTUvdWU-q3dZ7PMOf-ZIH86bFsUHaixKcPc3b4Et2wkVQ9dNS6vXQxWDVjxuexddunbScYl-r73H0ieSBGpsic2ealds0_prkQBJGVj-K71EVM6H9bFv3BtZ16Po0ohbIi_V3QVV35lVy1kctDEbqSuQ3F1h68xINyLxDzO9n2T2MoLGtPUnes6R65cCvmTX9QufwaKNjEAwAbO6KsLvm4WqWNKIlzTUfNl1sidZ4oyzSYbtrRdKDiJddd7y_5Q1b4C9-aAwUd4eqsoisAsXJwjVkuDN6J2mvjCHFihX-lmJwAElEPfuFpwM1GdNT_pWeIPeCikgA9s";
-
-// Mock services - in production these would be fetched from the TidyCal API
-const SERVICES = [
-  { id: "1", name: "DNA Assessment Discussion", duration: 30, description: "Discuss your DNA assessment results with an intellectual genetic counselor" },
-  { id: "2", name: "Deep Dive Session", duration: 60, description: "An in-depth exploration of your intellectual DNA with personalized guidance" },
-];
-
-// Mock time slots - in production these would be fetched from the TidyCal API based on selected date and service
-const generateMockTimeSlots = (date: Date) => {
-  const dateStr = format(date, "yyyy-MM-dd");
-  return [
-    { id: `${dateStr}-1`, date: dateStr, start_time: "09:00", end_time: "09:30", timezone: "America/New_York" },
-    { id: `${dateStr}-2`, date: dateStr, start_time: "10:00", end_time: "10:30", timezone: "America/New_York" },
-    { id: `${dateStr}-3`, date: dateStr, start_time: "11:00", end_time: "11:30", timezone: "America/New_York" },
-    { id: `${dateStr}-4`, date: dateStr, start_time: "13:00", end_time: "13:30", timezone: "America/New_York" },
-    { id: `${dateStr}-5`, date: dateStr, start_time: "14:00", end_time: "14:30", timezone: "America/New_York" },
-    { id: `${dateStr}-6`, date: dateStr, start_time: "15:00", end_time: "15:30", timezone: "America/New_York" },
-  ];
-};
+import { format, addDays, startOfToday, isSameDay, isToday, parseISO } from "date-fns";
+import { ArrowLeft, CalendarIcon, Clock, DollarSign, Loader2, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
+import BookingTypesList from './BookingTypesList';
+import { useBookingCost } from '@/hooks/useBookingCost';
 
 interface TidyCalBookingProps {
   onClose?: () => void;
-  onSuccess?: (bookingData: TidyCalBookingResponse) => void;
+  onSuccess?: (bookingData: any) => void;
 }
 
 const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) => {
-  const [step, setStep] = useState<'service' | 'date' | 'time' | 'details'>('service');
-  const [selectedService, setSelectedService] = useState<string>("");
+  const [step, setStep] = useState<'date' | 'time' | 'details'>('date');
+  const [selectedBookingType, setSelectedBookingType] = useState<BookingType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
-  const [timeSlots, setTimeSlots] = useState<TidyCalTimeSlot[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [timezone, setTimezone] = useState<string>("");
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const { cost, isLoading: costLoading, error: costError } = useBookingCost();
+  
+  const {
+    bookingTypes,
+    bookingTypesLoading,
+    bookingTypesError,
+    fetchBookingTypes,
+    bookingType,
+    bookingTypeLoading,
+    bookingTypeError,
+    fetchBookingType,
+    availableDates,
+    datesLoading,
+    datesError,
+    fetchAvailableDates,
+    timeSlots,
+    timeSlotsLoading,
+    timeSlotsError,
+    fetchTimeSlots,
+    bookingLoading,
+    bookingError,
+    createBooking,
+    retryAttempt,
+    setRetryAttempt
+  } = useTidyCalAPI();
 
   useEffect(() => {
-    if (selectedDate) {
-      // In a real implementation, this would be an API call to TidyCal
-      setTimeSlots(generateMockTimeSlots(selectedDate));
+    try {
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setTimezone(detectedTimezone);
+    } catch (error) {
+      console.error("Could not detect timezone:", error);
+      setTimezone("America/New_York"); // Default fallback
     }
-  }, [selectedDate]);
+  }, []);
 
-  const handleServiceSelection = (serviceId: string) => {
-    setSelectedService(serviceId);
-    setStep('date');
-  };
+  useEffect(() => {
+    const loadBookingTypes = async () => {
+      await fetchBookingTypes();
+    };
+    
+    loadBookingTypes();
+  }, [retryAttempt]);
+
+  useEffect(() => {
+    if (bookingTypes && bookingTypes.length > 0 && !selectedBookingType) {
+      console.log("Auto-selecting first booking type:", bookingTypes[0]);
+      setSelectedBookingType(bookingTypes[0]);
+    }
+  }, [bookingTypes, selectedBookingType]);
+
+  useEffect(() => {
+    if (selectedBookingType && step === 'date') {
+      fetchAvailableDates(currentMonth, selectedBookingType.id);
+    }
+  }, [currentMonth, selectedBookingType, step, retryAttempt]);
+
+  useEffect(() => {
+    if (selectedDate && selectedBookingType && step === 'time') {
+      fetchTimeSlots(selectedDate, selectedBookingType.id);
+    }
+  }, [selectedDate, selectedBookingType, step, retryAttempt]);
 
   const handleDateSelection = (date: Date | undefined) => {
     if (date) {
+      console.log("Selected date:", date);
       setSelectedDate(date);
       setStep('time');
     }
   };
 
-  const handleTimeSelection = (timeSlotId: string) => {
-    setSelectedTimeSlot(timeSlotId);
+  const handleTimeSelection = (timeSlot: TimeSlot) => {
+    console.log("Selected time slot:", timeSlot);
+    const timeSlotValue = timeSlot.original_starts_at || timeSlot.id;
+    setSelectedTimeSlot(timeSlotValue);
     setStep('details');
+  };
+
+  const handleRetry = () => {
+    setRetryAttempt(prev => prev + 1);
+    toast.info("Retrying connection to booking service...");
   };
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedService || !selectedTimeSlot || !name || !email) {
+    if (!selectedTimeSlot || !name || !email || !selectedBookingType) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    setIsLoading(true);
+    console.log("Attempting to create booking with data:", {
+      name,
+      email,
+      time_slot_id: selectedTimeSlot,
+      timezone,
+      bookingTypeId: selectedBookingType.id
+    });
 
-    try {
-      // In a real implementation, this would be an API call to TidyCal
-      // Mocking successful booking
-      setTimeout(() => {
-        const mockBookingResponse: TidyCalBookingResponse = {
-          id: `booking-${Date.now()}`,
-          status: 'confirmed',
-          meeting_link: 'https://meet.google.com/mock-meeting-link'
-        };
+    const response = await createBooking({
+      name,
+      email,
+      time_slot_id: selectedTimeSlot,
+      timezone,
+      bookingTypeId: selectedBookingType.id
+    });
+    
+    if (response) {
+      if (response.status === 'pending_payment' && response.payment_link) {
+        toast.success("Booking created! Redirecting to payment page...");
         
+        if (onSuccess) {
+          onSuccess(response);
+        }
+        
+        window.location.href = response.payment_link;
+      } else if (response.status === 'confirmed') {
         toast.success("Booking confirmed! Check your email for details.");
         
         if (onSuccess) {
-          onSuccess(mockBookingResponse);
+          onSuccess(response);
         }
-        
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      console.error('Booking error:', error);
-      toast.error("Error creating booking. Please try again.");
-      setIsLoading(false);
+      }
     }
   };
 
   const getSelectedTimeSlotDetails = () => {
     const timeSlot = timeSlots.find(ts => ts.id === selectedTimeSlot);
-    if (!timeSlot) return null;
-    
-    const service = SERVICES.find(s => s.id === selectedService);
-    if (!service) return null;
+    if (!timeSlot || !selectedBookingType) return null;
     
     return {
-      date: format(new Date(timeSlot.date), "MMMM d, yyyy"),
+      date: selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "",
       time: `${timeSlot.start_time} - ${timeSlot.end_time}`,
-      service: service.name,
-      duration: service.duration
+      service: selectedBookingType.name,
+      duration: selectedBookingType.duration,
+      price: cost || "Loading...",
     };
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="text-sm font-oxanium mt-3 text-muted-foreground">
-        Schedule time with an intellectual genetic counselor
+  const isDateAvailable = (date: Date) => {
+    return availableDates.some(availableDate => 
+      isSameDay(availableDate, date)
+    );
+  };
+
+  const renderError = (errorMessage: string | null, isLoading: boolean, retryFn: () => void) => {
+    if (!errorMessage) return null;
+    
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-12">
+        <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+        <p className="text-sm text-[#E9E7E2] mb-4">{errorMessage}</p>
+        <Button 
+          variant="outline" 
+          onClick={retryFn}
+          disabled={isLoading}
+          className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
+        >
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Retry
+        </Button>
       </div>
-      
-      <Tabs value={step} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6 bg-[#E9E7E2]/50 p-1 rounded-xl">
-          <TabsTrigger value="service" disabled={step !== 'service'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Service
-          </TabsTrigger>
-          <TabsTrigger value="date" disabled={step !== 'date' && step !== 'service'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Date
-          </TabsTrigger>
-          <TabsTrigger value="time" disabled={step !== 'time' && step !== 'date' && step !== 'service'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Time
-          </TabsTrigger>
-          <TabsTrigger value="details" disabled={step !== 'details' && step !== 'time' && step !== 'date' && step !== 'service'} 
-            className="data-[state=active]:bg-[#373763] data-[state=active]:text-[#E9E7E2]">
-            Details
-          </TabsTrigger>
-        </TabsList>
+    );
+  };
 
-        <TabsContent value="service" className="space-y-4">
-          <div className="flex flex-col space-y-3">
-            {SERVICES.map(service => (
-              <Button 
-                key={service.id} 
-                variant="outline" 
-                className={`flex justify-between items-center p-4 h-auto ${selectedService === service.id ? 'border-[#373763] bg-[#373763]/5' : ''}`}
-                onClick={() => handleServiceSelection(service.id)}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold">{service.name}</span>
-                  <span className="text-sm text-gray-500">{service.duration} minutes</span>
-                </div>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            ))}
-          </div>
-        </TabsContent>
+  if (bookingTypesLoading && !selectedBookingType) {
+    return (
+      <div className="py-8 flex justify-center items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
+        <span className="ml-2 text-[#E9E7E2]">Loading booking options...</span>
+      </div>
+    );
+  }
 
+  if (bookingTypesError && !selectedBookingType) {
+    return renderError(bookingTypesError, bookingTypesLoading, handleRetry);
+  }
+
+  if (!bookingTypesLoading && (!bookingTypes || bookingTypes.length === 0)) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-[#E9E7E2] mb-4">
+          No booking types are currently available.
+        </p>
+        <Button onClick={handleRetry} variant="outline" className="text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10">
+          Refresh
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <Tabs value={step} onValueChange={(value) => setStep(value as 'date' | 'time' | 'details')}>
         <TabsContent value="date">
-          <div className="flex flex-col items-center space-y-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelection}
-              fromDate={startOfToday()}
-              toDate={addDays(new Date(), 60)}
-              className="rounded-md border"
-            />
-            <Button 
-              variant="ghost" 
-              onClick={() => setStep('service')}
-              className="text-[#373763]"
-            >
-              Back to Services
-            </Button>
+          <div className="flex flex-col items-center">
+            {selectedBookingType && (
+              <div className="w-full mb-6">
+                <div className="flex items-center text-sm text-[#E9E7E2] mb-1">
+                  <Clock className="h-4 w-4 mr-2" />
+                  <span>{selectedBookingType.duration} minutes</span>
+                </div>
+                <div className="flex items-center text-sm text-[#E9E7E2]">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  <span>{costLoading ? "Loading price..." : costError ? "Price unavailable" : cost}</span>
+                </div>
+              </div>
+            )}
+            
+            {datesError ? (
+              <div className="w-full flex flex-col items-center justify-center py-12">
+                <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+                <p className="text-sm text-[#E9E7E2] mb-4">{datesError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={datesLoading}
+                  className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
+                >
+                  {datesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Retry
+                </Button>
+              </div>
+            ) : datesLoading ? (
+              <div className="py-8 flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
+              </div>
+            ) : (
+              <div className="rounded-lg overflow-hidden bg-transparent">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelection}
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  fromDate={startOfToday()}
+                  toDate={addDays(new Date(), 60)}
+                  modifiers={{
+                    available: (date) => isDateAvailable(date)
+                  }}
+                  className="border-0 shadow-none bg-transparent"
+                  disabled={(date) => !isDateAvailable(date)}
+                />
+              </div>
+            )}
+            
+            <div className="flex items-center justify-center w-full mt-6 text-sm text-[#E9E7E2]">
+              <span className="inline-flex items-center mr-2 relative">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF23]"></span>
+              </span>
+              <span>Available</span>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="time">
           <div className="flex flex-col space-y-4">
-            <div className="text-center mb-4">
-              <Label className="font-semibold">Select a time on {selectedDate && format(selectedDate, "MMMM d, yyyy")}</Label>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {timeSlots.map(slot => (
-                <Button 
-                  key={slot.id} 
-                  variant="outline" 
-                  className={`${selectedTimeSlot === slot.id ? 'border-[#373763] bg-[#373763]/5' : ''}`}
-                  onClick={() => handleTimeSelection(slot.id)}
-                >
-                  {slot.start_time}
-                </Button>
-              ))}
-            </div>
-            <div className="flex justify-between pt-4">
+            <div className="flex items-center mb-4">
               <Button 
                 variant="ghost" 
                 onClick={() => setStep('date')}
-                className="text-[#373763]"
+                className="mr-2 text-[#E9E7E2] hover:text-[#E9E7E2] hover:bg-[#373763]/20"
               >
-                Back to Date
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
               </Button>
+              <h3 className="text-lg font-semibold text-[#E9E7E2]">
+                {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </h3>
+            </div>
+            
+            {timeSlotsError ? (
+              <div className="w-full flex flex-col items-center justify-center py-12">
+                <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+                <p className="text-sm text-[#E9E7E2] mb-4">{timeSlotsError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={timeSlotsLoading}
+                  className="flex items-center gap-2 text-[#E9E7E2] border-[#E9E7E2]/30 hover:bg-[#E9E7E2]/10"
+                >
+                  {timeSlotsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Retry
+                </Button>
+              </div>
+            ) : timeSlotsLoading ? (
+              <div className="py-8 flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {timeSlots.length > 0 ? (
+                  timeSlots.map(slot => (
+                    <Button 
+                      key={slot.id} 
+                      variant="outline" 
+                      className={cn(
+                        "flex h-12 w-full justify-center items-center rounded-full transition-colors text-[#E9E7E2] border-[#E9E7E2]/20",
+                        slot.available ? "hover:border-[#373763] hover:bg-[#373763]/20" : "opacity-50 cursor-not-allowed",
+                        selectedTimeSlot === (slot.original_starts_at || slot.id) ? 
+                          "border-[#373763] bg-[#373763] text-[#E9E7E2] font-medium" : ""
+                      )}
+                      onClick={() => slot.available && handleTimeSelection(slot)}
+                      disabled={!slot.available}
+                    >
+                      {slot.start_time}
+                    </Button>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-[#E9E7E2] col-span-3">
+                    No available times for this date. Please select another date.
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-[#E9E7E2]/70">
+                <span>Timezone: {timezone}</span>
+              </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="details">
           <form onSubmit={handleBooking} className="space-y-4">
+            <div className="flex items-center mb-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setStep('time')}
+                className="mr-2 text-[#E9E7E2] hover:text-[#E9E7E2] hover:bg-[#373763]/20"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+              <h3 className="text-lg font-semibold text-[#E9E7E2]">Enter Details</h3>
+            </div>
+            
             {getSelectedTimeSlotDetails() && (
-              <div className="bg-[#373763]/5 p-4 rounded-md mb-4">
-                <h3 className="font-semibold mb-2">Booking Summary</h3>
-                <div className="text-sm">
-                  <p><span className="font-medium">Service:</span> {getSelectedTimeSlotDetails()?.service}</p>
-                  <p><span className="font-medium">Duration:</span> {getSelectedTimeSlotDetails()?.duration} minutes</p>
+              <div className="bg-[#373763]/10 p-4 rounded-md mb-4 border border-[#E9E7E2]/10">
+                <h3 className="font-semibold mb-2 text-[#E9E7E2]">Booking Summary</h3>
+                <div className="space-y-1 text-sm text-[#E9E7E2]">
+                  <div className="flex">
+                    <CalendarIcon className="h-4 w-4 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium">{getSelectedTimeSlotDetails()?.service}</p>
+                      <p className="text-[#E9E7E2]/70">{getSelectedTimeSlotDetails()?.duration} minutes</p>
+                    </div>
+                  </div>
                   <p><span className="font-medium">Date:</span> {getSelectedTimeSlotDetails()?.date}</p>
-                  <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time}</p>
+                  <p><span className="font-medium">Time:</span> {getSelectedTimeSlotDetails()?.time} ({timezone})</p>
+                  
+                  <div className="flex mt-2 pt-2 border-t border-[#E9E7E2]/20">
+                    <DollarSign className="h-4 w-4 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Payment Required</p>
+                      <p className="text-[#E9E7E2]/70">
+                        {getSelectedTimeSlotDetails()?.price}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="name">Your Name</Label>
+              <Label htmlFor="name" className="required text-[#E9E7E2]">Your Name</Label>
               <Input 
                 id="name" 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
                 placeholder="Enter your full name"
                 required
-                className="bg-[#E9E7E2]/50 border-[#373763]/20"
+                className="bg-transparent border-[#E9E7E2]/20 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 focus:border-[#E9E7E2]"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="required text-[#E9E7E2]">Email Address</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -249,43 +412,40 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                 onChange={(e) => setEmail(e.target.value)} 
                 placeholder="Enter your email address"
                 required
-                className="bg-[#E9E7E2]/50 border-[#373763]/20"
+                className="bg-transparent border-[#E9E7E2]/20 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 focus:border-[#E9E7E2]"
               />
             </div>
+            
+            {bookingError && (
+              <div className="text-red-500 text-sm mt-2 flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {bookingError}
+              </div>
+            )}
             
             <div className="flex flex-col space-y-4 pt-4">
               <Button 
                 type="submit" 
-                disabled={isLoading}
-                className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12"
+                disabled={bookingLoading}
+                className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-full h-12"
               >
-                {isLoading ? "Processing..." : "Confirm Booking"}
+                {bookingLoading ? (
+                  <span className="flex items-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  <>Schedule & Proceed to Payment</>
+                )}
               </Button>
               
-              <Button 
-                type="button"
-                variant="outline" 
-                onClick={() => setStep('time')}
-                className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20"
-              >
-                Back to Time Selection
-              </Button>
+              <p className="text-center text-xs text-[#E9E7E2]/70">
+                After clicking, you'll be redirected to complete payment to confirm your booking.
+              </p>
             </div>
           </form>
         </TabsContent>
       </Tabs>
-      
-      {step === 'service' && onClose && (
-        <div className="flex justify-center mt-4">
-          <Button 
-            variant="outline" 
-            onClick={onClose} 
-            className="bg-[#E9E7E2]/50 text-[#373763] hover:bg-[#E9E7E2] hover:text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider rounded-2xl h-12 border border-[#373763]/20"
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
