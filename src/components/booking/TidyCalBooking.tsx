@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useTidyCalAPI, BookingType, TimeSlot } from '@/hooks/useTidyCalAPI';
 import BookingTypesList from './BookingTypesList';
 import { useBookingCost } from '@/hooks/useBookingCost';
+import { supabase } from "@/integrations/supabase/client";
 
 interface TidyCalBookingProps {
   onClose?: () => void;
@@ -26,6 +27,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { cost, isLoading: costLoading, error: costError } = useBookingCost();
   
   const {
@@ -47,7 +49,6 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
     fetchTimeSlots,
     bookingLoading,
     bookingError,
-    createBooking,
     retryAttempt,
     setRetryAttempt
   } = useTidyCalAPI();
@@ -117,38 +118,60 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
       return;
     }
 
-    console.log("Attempting to create booking with data:", {
-      name,
-      email,
-      time_slot_id: selectedTimeSlot,
-      timezone,
-      bookingTypeId: selectedBookingType.id
-    });
+    try {
+      setIsProcessingPayment(true);
+      
+      const bookingData = {
+        name,
+        email,
+        time_slot_id: selectedTimeSlot,
+        timezone,
+        bookingTypeId: selectedBookingType.id
+      };
+      
+      console.log("Initiating payment process for booking:", bookingData);
 
-    const response = await createBooking({
-      name,
-      email,
-      time_slot_id: selectedTimeSlot,
-      timezone,
-      bookingTypeId: selectedBookingType.id
-    });
-    
-    if (response) {
-      if (response.status === 'pending_payment' && response.payment_link) {
-        toast.success("Booking created! Redirecting to payment page...");
-        
-        if (onSuccess) {
-          onSuccess(response);
+      const origin = window.location.origin;
+      
+      toast.info("Connecting to payment service...");
+      
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: { 
+          bookingData,
+          returnUrl: origin
         }
-        
-        window.location.href = response.payment_link;
-      } else if (response.status === 'confirmed') {
-        toast.success("Booking confirmed! Check your email for details.");
-        
-        if (onSuccess) {
-          onSuccess(response);
-        }
+      });
+
+      if (error) {
+        console.error("Error creating checkout session:", error);
+        toast.error(`Failed to initiate payment: ${error.message}`);
+        setIsProcessingPayment(false);
+        return;
       }
+
+      if (!data) {
+        console.error("No data returned from checkout function");
+        toast.error("Payment service unavailable. Please try again later.");
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      if (data?.url) {
+        console.log("Redirecting to Stripe checkout:", data.url);
+        toast.success("Redirecting to payment page...");
+        // Small timeout to allow toast to be displayed
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 1000);
+      } else {
+        console.error("No checkout URL returned", data);
+        toast.error("Failed to create payment session. Please try again.");
+        setIsProcessingPayment(false);
+      }
+    } catch (error: any) {
+      console.error("Payment initiation error:", error);
+      toast.error(`An error occurred: ${error.message}`);
+      setIsProcessingPayment(false);
     }
   };
 
@@ -426,21 +449,21 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
             <div className="flex flex-col space-y-4 pt-4">
               <Button 
                 type="submit" 
-                disabled={bookingLoading}
+                disabled={isProcessingPayment}
                 className="bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 font-oxanium text-sm font-bold uppercase tracking-wider rounded-full h-12"
               >
-                {bookingLoading ? (
+                {isProcessingPayment ? (
                   <span className="flex items-center">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
                   </span>
                 ) : (
-                  <>Schedule & Proceed to Payment</>
+                  <>Proceed to Payment ({costLoading ? "Loading..." : cost})</>
                 )}
               </Button>
               
               <p className="text-center text-xs text-[#E9E7E2]/70">
-                After clicking, you'll be redirected to complete payment to confirm your booking.
+                After clicking, you'll be redirected to our secure payment page to complete your booking.
               </p>
             </div>
           </form>

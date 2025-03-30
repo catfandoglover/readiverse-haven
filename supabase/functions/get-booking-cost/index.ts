@@ -1,33 +1,22 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const DEFAULT_COST = "59.00";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.37.0";
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Create a Supabase client with the Auth context of the logged in user
+    // Create a Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the booking cost from the revenue_items table
+    // Get the booking cost from revenue_items table
     const { data, error } = await supabaseClient
       .from('revenue_items')
       .select('cost')
@@ -35,26 +24,49 @@ serve(async (req) => {
       .single();
 
     if (error) {
-      console.error('Error fetching booking cost:', error);
+      console.error("Error fetching booking cost:", error);
+      throw error;
+    }
+
+    // If no data found, return default cost
+    if (!data) {
       return new Response(
-        JSON.stringify({ cost: DEFAULT_COST, error_message: 'Using default cost' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          cost: "59.00",
+          source: "default" 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
       );
     }
 
-    // Return the cost data or fallback to default
-    const cost = data?.cost || DEFAULT_COST;
-    
+    // Return the cost from the database
     return new Response(
-      JSON.stringify({ cost }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        cost: data.cost,
+        source: "database" 
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
     );
   } catch (error) {
-    console.error('Exception:', error);
-    // Return the default cost on any error
+    console.error("Error in get-booking-cost:", error);
+    
+    // Return default cost when there's an error
     return new Response(
-      JSON.stringify({ cost: DEFAULT_COST, error_message: 'Exception occurred, using default cost' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        cost: "59.00", 
+        source: "default",
+        error: error.message 
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, // Still return 200 to avoid breaking the client
+      }
     );
   }
 });

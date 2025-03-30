@@ -41,6 +41,7 @@ import ExamRoom from "./pages/ExamRoom";
 import ExamWelcome from "./pages/ExamWelcome";
 import ExamVirgilChat from "./pages/ExamVirgilChat";
 import BookCounselor from "./pages/BookCounselor";
+import BookingSuccess from "./pages/BookingSuccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,6 +101,7 @@ const App = () => (
                 <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
                 <Route path="/dna/welcome" element={<VirgilWelcome />} />
                 <Route path="/book-counselor" element={<BookCounselor />} />
+                <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/great-questions" element={<GreatQuestions />} />
                 <Route path="/great-questions/:id" element={<GreatQuestions />} />
                 <Route path="/read/:slug" element={<ReaderWrapper />} />
