@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.37.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -27,6 +28,22 @@ serve(async (req) => {
       timeSlot: bookingData.time_slot_id,
     });
 
+    // Create a Supabase client to fetch the cost
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get the booking cost from the revenue_items table
+    const { data: costData, error: costError } = await supabaseClient
+      .from('revenue_items')
+      .select('cost')
+      .eq('id', '50041043-d04b-4826-97bd-83bd3e6bf34e')
+      .single();
+
+    // Default to $59.00 if there's an error or no data
+    const cost = costError || !costData ? 5900 : Math.round(parseFloat(costData.cost) * 100);
+    
     // Store the booking data in the metadata so we can retrieve it in the webhook
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -38,7 +55,7 @@ serve(async (req) => {
               name: "DNA Assessment Discussion",
               description: "30-minute session with an intellectual genetic counselor",
             },
-            unit_amount: 9900, // $99.00 in cents
+            unit_amount: cost, // Use the dynamic cost
           },
           quantity: 1,
         },

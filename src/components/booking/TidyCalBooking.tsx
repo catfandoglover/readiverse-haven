@@ -444,7 +444,7 @@ const TidyCalBooking: React.FC<TidyCalBookingProps> = ({ onClose, onSuccess }) =
                     Processing...
                   </span>
                 ) : (
-                  <>Proceed to Payment ($99.00)</>
+                  <>Proceed to Payment ({costLoading ? "Loading..." : cost})</>
                 )}
               </Button>
               
