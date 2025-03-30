@@ -87,6 +87,48 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          booking_type_id: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          stripe_session_id: string
+          tidycal_booking_id: string | null
+          time_slot_id: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          booking_type_id: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          status?: string
+          stripe_session_id: string
+          tidycal_booking_id?: string | null
+          time_slot_id: string
+          timezone: string
+          updated_at?: string
+        }
+        Update: {
+          booking_type_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          stripe_session_id?: string
+          tidycal_booking_id?: string | null
+          time_slot_id?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           about: string | null
