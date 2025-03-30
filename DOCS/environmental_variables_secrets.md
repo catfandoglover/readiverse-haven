@@ -1,6 +1,9 @@
 Environment Variables Management in Lovable
 Lovable uses a multi-layered approach for handling environment variables and secrets:
 
+note vercel only updates environmental variables when a new deployment happens. also it seems that what we see in vercel env ls (via vercel CLI) is what actually matters.
+
+
 1. Frontend Environment Variables
 Vite Environment Variables: Lovable uses Vite's standard mechanism via import.meta.env.VARIABLE_NAME
 Type Definitions: These are defined in src/vite-env.d.ts to provide type safety
