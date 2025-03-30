@@ -1,4 +1,80 @@
-# Environment Variables Configuration
+Environment Variables Management in Lovable
+Lovable uses a multi-layered approach for handling environment variables and secrets:
+
+1. Frontend Environment Variables
+Vite Environment Variables: Lovable uses Vite's standard mechanism via import.meta.env.VARIABLE_NAME
+Type Definitions: These are defined in src/vite-env.d.ts to provide type safety
+Usage Example: import.meta.env.VITE_GOOGLE_GEMINI_API_KEY
+2. Backend Secrets (Supabase Edge Functions)
+Supabase Secrets: Stored as Supabase Edge Function secrets
+Access Method: Inside Edge Functions using Deno.env.get('SECRET_NAME')
+Setting Secrets: Via Supabase CLI with supabase secrets set NAME=value
+3. Environment Variables Storage Locations
+As documented in your project, environment variables are stored in four places:
+
+Local Development: .env file in your project root
+Supabase Function Secrets: Set via Supabase CLI
+Vercel Project Settings: For production deployments
+Vercel CLI View: Accessible via vercel env ls
+4. Secure Secret Access Pattern
+Your project uses a secure pattern to access sensitive keys:
+
+First try to access directly from environment variables
+If not available, fetch via a secure Edge Function
+Fall back to development defaults only in DEV mode
+
+For example, in AIService.ts:
+// Try 1: Direct environment variable
+const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+if (apiKey) { use it... }
+
+// Try 2: Edge function fallback
+const secretKey = await this.fetchSecretFromEdgeFunction();
+if (secretKey) { use it... }
+
+// Try 3: Development fallback (DEV only)
+if (import.meta.env.DEV) { 
+  const devKey = '...';
+  // Use development key
+}
+
+5. Environment Variables Consistency
+It's crucial to maintain consistency across environments. As your documentation mentions:
+
+Environment variables must be identical across local, Vercel, and Supabase environments
+JWT secrets especially must match across all environments
+No quotes should be used when setting these variables
+6. Edge Function Deployment Notes
+When deploying Edge Functions with secrets:
+
+Local deployment using Supabase CLI is recommended
+Functions must be publicly accessible with JWT verification disabled
+Edge Functions may pull from local .env files in addition to Supabase secrets
+7. Handling Process.env
+Your project's Vite config provides a fallback for process.env to ensure compatibility
+
+define: {
+  'process.env': {}
+}
+
+This is important for libraries that expect process.env to be defined.
+
+The way your project handles environment variables and secrets follows best practices by:
+
+Not hardcoding sensitive values
+Providing multiple fallback mechanisms
+Handling secrets securely through backend services
+Offering development convenience while maintaining production security
+
+
+
+
+
+
+
+
+
+#OLD UNDERSTANDING Environment Variables Configuration
 
 This document outlines all environment variables required for Readiverse Haven to function properly across different environments.
 
