@@ -1139,6 +1139,27 @@ export type Database = {
             referencedRelation: "great_questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_next_question_a"
+            columns: ["next_question_a_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_next_question_b"
+            columns: ["next_question_b_id"]
+            isOneToOne: false
+            referencedRelation: "dna_tree_structure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_question"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       external_links: {
@@ -1463,27 +1484,6 @@ export type Database = {
           },
         ]
       }
-      revenue_items: {
-        Row: {
-          cost: number | null
-          created_at: string
-          id: string
-          purpose: string | null
-        }
-        Insert: {
-          cost?: number | null
-          created_at?: string
-          id?: string
-          purpose?: string | null
-        }
-        Update: {
-          cost?: number | null
-          created_at?: string
-          id?: string
-          purpose?: string | null
-        }
-        Relationships: []
-      }
       share_messages: {
         Row: {
           created_at: string
@@ -1625,6 +1625,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_user_books_book"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_user_books_book_id"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_books_book_id_fkey"
             columns: ["book_id"]
