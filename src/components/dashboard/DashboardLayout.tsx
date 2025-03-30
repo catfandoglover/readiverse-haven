@@ -4,7 +4,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Header } from "@/components/ui/header";
 import { saveLastVisited, getLastVisited, sections } from "@/utils/navigationHistory";
-import { Home, User, Compass, BookOpenCheck, LayoutDashboard, GraduationCap } from "lucide-react";
+import { Home, User, Compass, BookOpenCheck, LayoutDashboard, GraduationCap, Headset } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,7 +15,7 @@ interface DashboardLayoutProps {
 }
 
 interface NavigationTabProps {
-  tab: "profile" | "dna" | "discover" | "bookshelf" | "dashboard" | "virgil";
+  tab: "profile" | "dna" | "discover" | "bookshelf" | "dashboard" | "virgil" | "counselor";
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
@@ -34,9 +34,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
   }, [location.pathname]);
 
-  const handleTabChange = (tab: "profile" | "dna" | "discover" | "bookshelf" | "dashboard" | "virgil") => {
+  const handleTabChange = (tab: "profile" | "dna" | "discover" | "bookshelf" | "dashboard" | "virgil" | "counselor") => {
     if (tab === "virgil") {
       navigate("/virgil");
+      return;
+    }
+    
+    if (tab === "counselor") {
+      navigate("/book-counselor");
       return;
     }
     
@@ -69,6 +74,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       case "dashboard":
         IconComponent = LayoutDashboard;
         label = "Dashboard";
+        break;
+      case "counselor":
+        IconComponent = Headset;
+        label = "Talk to a Human";
         break;
       default:
         IconComponent = Home;
@@ -110,6 +119,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               {renderNavigationTab({ tab: "discover" })}
               {renderNavigationTab({ tab: "bookshelf" })}
               {renderNavigationTab({ tab: "dashboard" })}
+              {renderNavigationTab({ tab: "counselor" })}
             </ScrollArea>
           </div>
         </aside>
@@ -128,11 +138,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="p-4 flex items-center justify-between border-b">
               <div className="flex items-center gap-2">
                 <Avatar>
-                  <AvatarImage src={user?.avatar_url} />
+                  <AvatarImage src={user?.Account?.ProfilePictureUrl} />
                   <AvatarFallback>{user?.email ? user.email[0].toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">{user?.user_metadata?.full_name || user?.email}</div>
+                  <div className="font-semibold">{user?.Account?.Name || user?.email}</div>
                   <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
@@ -153,6 +163,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {renderNavigationTab({ tab: "discover" })}
                 {renderNavigationTab({ tab: "bookshelf" })}
                 {renderNavigationTab({ tab: "dashboard" })}
+                {renderNavigationTab({ tab: "counselor" })}
               </div>
             </ScrollArea>
           </div>
