@@ -19,6 +19,18 @@ Vercel CLI View: Accessible via vercel env ls
 4. Secure Secret Access Pattern
 Your project uses a secure pattern to access sensitive keys:
 
+
+commands
+
+ vercel env ls
+ vercel env pull
+
+update a variable....
+
+   vercel env rm VARIABLE_NAME 
+   vercel env add VARIABLE_NAME
+
+
 First try to access directly from environment variables
 If not available, fetch via a secure Edge Function
 Fall back to development defaults only in DEV mode
