@@ -115,7 +115,7 @@ const BookingSuccess = () => {
         setVerificationComplete(true);
         toast.success('Your booking has been confirmed!');
         
-        // Redirect to the home page after showing success for a few seconds
+        // Redirect to the discover page after showing success for a few seconds
         const redirectTimer = setTimeout(() => {
           navigate('/discover');
         }, 10000);
