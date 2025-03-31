@@ -7,10 +7,12 @@ import IntellectualDNACard from "./bookshelf/IntellectualDNACard";
 import { useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const NewBookshelf: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Save current path to navigation history
   React.useEffect(() => {
@@ -24,13 +26,28 @@ const NewBookshelf: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Hero section */}
-        {user && <LastReadBookHero />}
-        
-        {/* Intellectual DNA Card */}
-        <div className="px-4 pt-4">
-          <IntellectualDNACard />
-        </div>
+        {/* Top section - responsive layout */}
+        {user && (
+          isMobile ? (
+            // Mobile layout - stacked
+            <div className="w-full">
+              <LastReadBookHero />
+              <div className="px-4">
+                <IntellectualDNACard />
+              </div>
+            </div>
+          ) : (
+            // Desktop layout - side by side
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+              <div className="w-full">
+                <LastReadBookHero />
+              </div>
+              <div className="w-full">
+                <IntellectualDNACard />
+              </div>
+            </div>
+          )
+        )}
         
         {/* Main Content */}
         <div className="flex-1 p-4 overflow-visible">

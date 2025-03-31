@@ -5,13 +5,16 @@ import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import ExamHeader from "@/components/exam/ExamHeader";
 import LastExamHero from "@/components/exam/LastExamHero";
+import SuggestedExamHero from "@/components/exam/SuggestedExamHero";
 import ExamsList from "@/components/exam/ExamsList";
 import IntellectualDNAExamCard from "@/components/exam/IntellectualDNAExamCard";
 import CreateYourOwnExamCard from "@/components/exam/CreateYourOwnExamCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ExamRoom: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Save current path to navigation history
   React.useEffect(() => {
@@ -26,18 +29,34 @@ const ExamRoom: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Hero section */}
-        {user && <LastExamHero />}
-        
-        {/* Exam cards section */}
-        <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
-          <IntellectualDNAExamCard />
-          <CreateYourOwnExamCard />
-        </div>
-        
-        {/* Main Content */}
-        <div className="flex-1 p-4 overflow-visible">
-          <ExamsList />
+        {/* Main content area with consistent padding */}
+        <div className="px-4 flex flex-col gap-4">
+          {/* Hero section - responsive layout */}
+          {user && (
+            isMobile ? (
+              // Mobile layout - only show last exam
+              <div className="w-full">
+                <LastExamHero />
+              </div>
+            ) : (
+              // Desktop layout - side by side heroes
+              <div className="grid grid-cols-2 gap-4">
+                <LastExamHero />
+                <SuggestedExamHero />
+              </div>
+            )
+          )}
+          
+          {/* Exam cards section */}
+          <div className="grid grid-cols-2 gap-4">
+            <IntellectualDNAExamCard />
+            <CreateYourOwnExamCard />
+          </div>
+          
+          {/* Main Content */}
+          <div className="flex-1 overflow-visible">
+            <ExamsList />
+          </div>
         </div>
         
         {/* Extra padding at the bottom for safe area */}

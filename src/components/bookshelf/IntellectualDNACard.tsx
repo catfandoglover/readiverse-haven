@@ -11,7 +11,7 @@ const IntellectualDNACard: React.FC = () => {
 
   return (
     <div 
-      className="w-full bg-[#4A4351]/50 rounded-2xl cursor-pointer hover:bg-[#4A4351] transition-colors p-6 mb-4"
+      className="w-full h-full bg-[#4A4351]/50 rounded-2xl cursor-pointer hover:bg-[#4A4351] transition-colors p-6"
       onClick={handleClick}
     >
       <h3 className="font-oxanium uppercase text-base text-[#E9E7E2] uppercase tracking-wider font-bold">
