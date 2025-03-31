@@ -28,6 +28,7 @@ const Classroom: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
+        {/* Hero section - responsive layout */}
         {user && (
           isMobile ? (
             // Mobile layout - stacked
@@ -35,31 +36,23 @@ const Classroom: React.FC = () => {
               <LastCourseHero />
             </div>
           ) : (
-            // Desktop layout - grid with consistent heights
-            <div className="px-4 pt-4 grid grid-cols-2 gap-4">
-              <div className="h-36">
+            // Desktop layout - side by side
+            <div className="grid grid-cols-2 gap-4">
+              <div className="w-full">
                 <LastCourseHero />
               </div>
-              <div className="h-36">
+              <div className="w-full">
                 <SuggestedCourseHero />
-              </div>
-              <div className="h-36">
-                <IntellectualDNACourseCard />
-              </div>
-              <div className="h-36">
-                <CreateYourOwnCourseCard />
               </div>
             </div>
           )
         )}
         
-        {/* On mobile, show the course cards in a separate section */}
-        {user && isMobile && (
-          <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
-            <IntellectualDNACourseCard />
-            <CreateYourOwnCourseCard />
-          </div>
-        )}
+        {/* Course cards section */}
+        <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
+          <IntellectualDNACourseCard />
+          <CreateYourOwnCourseCard />
+        </div>
         
         {/* Main Content */}
         <div className="flex-1 p-4 overflow-visible">
