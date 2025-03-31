@@ -20,7 +20,7 @@ const LastCourseHero = () => {
   return (
     <div className="px-4 mb-6 h-full">
       <div 
-        className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
+        className="relative h-full w-full rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleResumeCourse}
       >
         {/* Background Image with Blur and Dark Overlay */}
