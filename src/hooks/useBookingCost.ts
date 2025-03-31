@@ -24,7 +24,7 @@ export function useBookingCost() {
 
         // Format the cost with a dollar sign
         if (data?.cost) {
-          setCost(`$${data.cost}`);
+          setCost(`${data.cost}`);
         }
       } catch (err) {
         console.error("Exception fetching booking cost:", err);
