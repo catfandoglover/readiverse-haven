@@ -9,15 +9,15 @@ const CreateYourOwnCourseCard: React.FC = () => {
   return (
     <>
       <div 
-        className="w-full bg-[#19352F]/80 rounded-2xl cursor-pointer hover:bg-[#19352F] transition-colors p-6 flex flex-col"
+        className="w-full h-full bg-[#19352F]/80 rounded-2xl cursor-pointer hover:bg-[#19352F] transition-colors p-6 flex flex-col"
         onClick={() => setIsDialogOpen(true)}
       >
         <div>
-          <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold">
+          <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold mb-1">
             Create Your Own Course
           </h3>
         </div>
-        <div className="flex-grow flex items-end mt-2">
+        <div className="flex-grow flex items-end">
           <Plus className="h-4 w-4 text-[#CCFF23]" />
         </div>
       </div>

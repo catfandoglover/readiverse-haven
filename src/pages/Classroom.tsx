@@ -31,34 +31,33 @@ const Classroom: React.FC = () => {
         {user && (
           isMobile ? (
             // Mobile layout - stacked
-            <div className="w-full">
-              <LastCourseHero />
-            </div>
-          ) : (
-            // Desktop layout - grid with consistent heights
-            <div className="px-4 pt-4 grid grid-cols-2 gap-4">
-              <div className="h-36">
+            <>
+              <div className="w-full">
                 <LastCourseHero />
               </div>
-              <div className="h-36">
+              
+              <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
+                <IntellectualDNACourseCard />
+                <CreateYourOwnCourseCard />
+              </div>
+            </>
+          ) : (
+            // Desktop layout - grid with consistent heights and spacing
+            <div className="px-4 pt-4 grid grid-cols-2 gap-4">
+              <div className="h-48">
+                <LastCourseHero />
+              </div>
+              <div className="h-48">
                 <SuggestedCourseHero />
               </div>
-              <div className="h-36">
+              <div className="h-48">
                 <IntellectualDNACourseCard />
               </div>
-              <div className="h-36">
+              <div className="h-48">
                 <CreateYourOwnCourseCard />
               </div>
             </div>
           )
-        )}
-        
-        {/* On mobile, show the course cards in a separate section */}
-        {user && isMobile && (
-          <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
-            <IntellectualDNACourseCard />
-            <CreateYourOwnCourseCard />
-          </div>
         )}
         
         {/* Main Content */}
