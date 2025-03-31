@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -8,6 +9,7 @@ import QuestionsContent from "./QuestionsContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
@@ -22,6 +24,7 @@ const DiscoverLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { getContentType, saveSourcePath } = useNavigationState();
+  const isMobile = useIsMobile();
 
   // Set up source path tracking and initialize route tracking
   useEffect(() => {
@@ -145,7 +148,7 @@ const DiscoverLayout = () => {
         {!detailedViewVisible && (
           <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
             <MainMenu />
-            <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+            <h2 className={`font-oxanium uppercase text-[#E9E7E2] tracking-wider ${isMobile ? 'text-sm' : 'text-base'} font-bold mx-auto drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`}>
               {activeTab === "for-you" ? "FOR YOU" : 
                activeTab === "classics" ? "CLASSICS" : 
                activeTab === "icons" ? "ICONS" : 

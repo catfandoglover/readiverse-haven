@@ -4,11 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ClassicsContent from "@/components/discover/ClassicsContent";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ClassicsFeedPage = () => {
   const navigate = useNavigate();
   const { saveSourcePath } = useNavigationState();
   const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
+  const isMobile = useIsMobile();
   
   React.useEffect(() => {
     // Save the current page path (not search page) as the source path for proper back navigation
@@ -31,7 +33,7 @@ const ClassicsFeedPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 flex items-center justify-center">
-            <h1 className="font-oxanium uppercase text-sm font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+            <h1 className={`font-oxanium uppercase ${isMobile ? 'text-sm' : 'text-base'} font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`}>
               CLASSICS
             </h1>
           </div>
