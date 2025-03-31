@@ -15,16 +15,16 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
   const screens = [
     {
-      subtitle: "BEFORE WE GET STARTED",
       title: "Take a couple breaths.",
     },
     {
-      subtitle: "THESE AREN'T YOUR NORMAL QUESTIONS",
-      title: "There are no wrong answers.",
+      title: "First thought, best thought.",
     },
     {
-      subtitle: "BECOME WHO YOU ARE",
-      title: "Let's get started.",
+      title: "Interpret as you wish.",
+    },
+    {
+      title: "Let's begin.",
     },
   ];
 
