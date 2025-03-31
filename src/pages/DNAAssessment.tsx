@@ -898,7 +898,7 @@ const DNAAssessment = () => {
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
             <AlertDialogHeader className="tidycal-header">
-              <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
+              <AlertDialogTitle className="font-libre-baskerville font-bold">Need some time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>
