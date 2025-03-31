@@ -4,14 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
-
-// Get the anon key from the environment or use a hardcoded key for development
-// The hardcoded key is the public anon key, which is safe to include in client-side code
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwNjU0MDcsImV4cCI6MjA1NzY0MTQwN30.frfQqNY04nat_y-EDk9uz3zeWoQuFfwfCbOSWbpyXSA";
-
-// If debugging is needed, you can uncomment this:
-console.log("Supabase initialization with key:", SUPABASE_ANON_KEY ? "Key present" : "No key");
+// const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
+const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
