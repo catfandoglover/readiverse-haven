@@ -13,7 +13,7 @@ const IntellectualDNAExamCard: React.FC = () => {
 
   return (
     <div 
-      className="w-full h-full bg-[#E9E7E2]/10 rounded-2xl cursor-pointer hover:opacity-90 transition-opacity p-6"
+      className="w-full bg-[#E9E7E2]/10 rounded-2xl cursor-pointer hover:opacity-90 transition-opacity p-6"
       style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
       onClick={handleClick}
     >

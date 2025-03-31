@@ -22,7 +22,7 @@ const LastExamHero: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="px-4 mb-6">
       <div 
         className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleContinueExam}
