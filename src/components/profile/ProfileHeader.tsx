@@ -219,7 +219,7 @@ const ProfileHeader: React.FC = () => {
             <div className="flex items-center justify-between w-full">
               <div>
                 <h1 
-                  className="text-2xl font-serif" 
+                  className="text-xl font-serif" 
                   style={{ 
                     position: "relative",
                     zIndex: 50
