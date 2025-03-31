@@ -8,10 +8,12 @@ import LastExamHero from "@/components/exam/LastExamHero";
 import ExamsList from "@/components/exam/ExamsList";
 import IntellectualDNAExamCard from "@/components/exam/IntellectualDNAExamCard";
 import CreateYourOwnExamCard from "@/components/exam/CreateYourOwnExamCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ExamRoom: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Save current path to navigation history
   React.useEffect(() => {
@@ -26,14 +28,32 @@ const ExamRoom: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Hero section */}
-        {user && <LastExamHero />}
-        
-        {/* Exam cards section */}
-        <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
-          <IntellectualDNAExamCard />
-          <CreateYourOwnExamCard />
-        </div>
+        {/* Hero section and Exam cards - responsive layout */}
+        {user && (
+          isMobile ? (
+            // Mobile layout (stacked)
+            <>
+              <LastExamHero />
+              <div className="px-4 pt-2 pb-4">
+                <IntellectualDNAExamCard />
+              </div>
+              <div className="px-4 pb-4">
+                <CreateYourOwnExamCard />
+              </div>
+            </>
+          ) : (
+            // Desktop layout (two columns for hero and DNA exam, full width for create your own)
+            <>
+              <div className="grid grid-cols-2 gap-6 px-6 pt-6 pb-3">
+                <LastExamHero />
+                <IntellectualDNAExamCard />
+              </div>
+              <div className="px-6 pb-6">
+                <CreateYourOwnExamCard />
+              </div>
+            </>
+          )
+        )}
         
         {/* Main Content */}
         <div className="flex-1 p-4 overflow-visible">
