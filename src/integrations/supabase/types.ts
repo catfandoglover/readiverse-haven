@@ -495,6 +495,7 @@ export type Database = {
           politics_kindred_spirit_5_rationale: string | null
           profile_image_url: string | null
           raw_response: Json | null
+          share_summary: string | null
           theology_challenging_voice_1: string | null
           theology_challenging_voice_1_classic: string | null
           theology_challenging_voice_1_rationale: string | null
@@ -708,6 +709,7 @@ export type Database = {
           politics_kindred_spirit_5_rationale?: string | null
           profile_image_url?: string | null
           raw_response?: Json | null
+          share_summary?: string | null
           theology_challenging_voice_1?: string | null
           theology_challenging_voice_1_classic?: string | null
           theology_challenging_voice_1_rationale?: string | null
@@ -921,6 +923,7 @@ export type Database = {
           politics_kindred_spirit_5_rationale?: string | null
           profile_image_url?: string | null
           raw_response?: Json | null
+          share_summary?: string | null
           theology_challenging_voice_1?: string | null
           theology_challenging_voice_1_classic?: string | null
           theology_challenging_voice_1_rationale?: string | null

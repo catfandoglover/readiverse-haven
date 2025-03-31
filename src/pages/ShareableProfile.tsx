@@ -28,6 +28,7 @@ interface DNAAnalysisResult {
   introduction: string | null;
   most_kindred_spirit: string | null;
   most_challenging_voice: string | null;
+  share_summary: string | null;
   created_at: string;
 }
 
@@ -53,6 +54,7 @@ const DEFAULT_ANALYSIS: DNAAnalysisResult = {
   introduction: "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.",
   most_kindred_spirit: "Simone Weil - You share her gift of holding paradoxes in creative tension, finding meaning in the difficult spaces between competing worldviews.",
   most_challenging_voice: "Friedrich Nietzsche - His ruthless naturalism and rejection of transcendent meaning challenges your tendency to find pattern and purpose in complex systems.",
+  share_summary: "Alex is a philosophical bridge-builder who synthesizes different viewpoints with both analytical precision and openness to paradox. He finds kinship with thinkers who embrace complexity, while being challenged by those who reject transcendent meaning.",
   created_at: new Date().toISOString()
 };
 // ---------------------------------------------------------------------------------
@@ -130,6 +132,8 @@ const ShareableProfile: React.FC = () => {
   const archetype = analysisResult?.archetype || "Twilight Navigator";
   const introduction = analysisResult?.introduction || 
     "You are a philosophical bridge-builder who approaches meaning through careful synthesis of multiple viewpoints. Your approach combines analytical precision with an openness to paradox, allowing you to hold seemingly contradictory truths in productive tension.";
+  const shareSummary = analysisResult?.share_summary || 
+    "Alex is a philosophical bridge-builder who synthesizes different viewpoints with both analytical precision and openness to paradox. He finds kinship with thinkers who embrace complexity, while being challenged by those who reject transcendent meaning.";
   
   // FUTURE EDIT POINT: Make sure these match the real user data when implemented
   // ---------------------------------------------------------------------------------
@@ -205,10 +209,10 @@ const ShareableProfile: React.FC = () => {
       
       {/* Content area below the landscape image */}
       <div className="w-full px-6 py-8 flex flex-col items-center">
-        {/* Introduction text */}
+        {/* Share Summary text - Updated to use the share_summary field */}
         <div className="max-w-lg mb-8">
           <p className="text-sm font-oxanium text-[#E9E7E2]/50">
-            {introduction}
+            {shareSummary}
           </p>
         </div>
         
