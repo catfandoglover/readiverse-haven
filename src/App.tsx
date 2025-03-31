@@ -82,6 +82,32 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
+// New component to handle conditional root redirection
+const RootRedirect: React.FC = () => {
+  const { user, hasDNA } = useAuth();
+  
+  // For logged-in users with DNA assessment completed, redirect to Virgil
+  if (user && hasDNA) {
+    return <Navigate to="/virgil" replace />;
+  }
+  
+  // For all other users (unauthenticated or without DNA), redirect to DNA assessment
+  return <Navigate to="/dna" replace />;
+};
+
+// Also add a handler for the DNA route to prevent users with completed assessments from accessing it
+const DnaRouteHandler: React.FC = () => {
+  const { user, hasDNA } = useAuth();
+  
+  // If the user is logged in and has completed their DNA assessment, redirect them to Virgil
+  if (user && hasDNA) {
+    return <Navigate to="/virgil" replace />;
+  }
+  
+  // Otherwise, show the DNA assessment intro
+  return <IntellectualDNA />;
+};
+
 const ReaderWrapper = () => {
   const location = useLocation();
   const slug = location.pathname.split('/read/')[1];
@@ -112,7 +138,7 @@ const App = () => (
               <Sonner />
               <Routes>
                 {/* Public routes - no auth required */}
-                <Route path="/" element={<Navigate to="/dna" replace />} />
+                <Route path="/" element={<RootRedirect />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
                 <Route path="/discover/questions" element={<DiscoverLayout />} />
@@ -128,7 +154,7 @@ const App = () => (
                 <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
                 <Route path="/badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                 <Route path="/badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
-                <Route path="/dna" element={<IntellectualDNA />} />
+                <Route path="/dna" element={<DnaRouteHandler />} />
                 <Route path="/dna/completion" element={<DNACompletionScreen />} />
                 <Route path="/book-counselor" element={<BookCounselor />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
