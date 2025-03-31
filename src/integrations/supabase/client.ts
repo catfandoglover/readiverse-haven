@@ -3,24 +3,24 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
-// Read from environment variable - must be in .env.local as VITE_SUPABASE_ANON_KEY
+// Read from environment variable - must be in .env.local as VITE_SUPABASE_ANON_KEY. that's how it is in "vercel env ls"
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Sanity check to ensure the key is available at runtime
 if (!SUPABASE_ANON_KEY) {
-  console.error('VITE_SUPABASE_ANON_KEY is not defined in your .env.local file');
+  console.error('VITE_SUPABASE_ANON_KEY is not defined in your .env.local file or in vercel env');
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Function to create a Supabase client with a custom JWT token
 export const createSupabaseClient = (jwt?: string) => {
   if (jwt) {
     // Create a new client with the custom JWT
-    return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: {
         headers: {
           Authorization: `Bearer ${jwt}`,
