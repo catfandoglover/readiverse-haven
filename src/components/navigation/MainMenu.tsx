@@ -56,15 +56,6 @@ const MainMenu: React.FC = () => {
           <nav className="flex flex-col gap-8 px-6 pb-10">
             <div className="space-y-6">
               
-<<<<<<< HEAD
-              {/* Profile Navigation Item */}
-              <div 
-                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/profile")}
-              >
-                <div className="flex-shrink-0 rounded-full p-3">
-                  <CircleUserRound className="h-6 w-6 text-[#E9E7E2]" />
-=======
               {/* Profile Navigation Item - Only show for authenticated users with DNA */}
               {user && hasCompletedDNA && (
                 <div 
@@ -82,7 +73,6 @@ const MainMenu: React.FC = () => {
                       Become who you are
                     </p>
                   </div>
->>>>>>> 8f9e2ddd (fixed what unauth user sees)
                 </div>
               )}
 
@@ -129,7 +119,7 @@ const MainMenu: React.FC = () => {
               {/* Study Navigation Item */}
               <div 
                 className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                onClick={() => handleNavigation("/bookshelf")}
+                onClick={handleStudyNavigation}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
@@ -165,11 +155,7 @@ const MainMenu: React.FC = () => {
               {/* Talk to a Human Navigation Item */}
               <div 
                 className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-<<<<<<< HEAD
                 onClick={() => handleNavigation("/book-counselor")}
-=======
-                onClick={handleStudyNavigation}
->>>>>>> 8f9e2ddd (fixed what unauth user sees)
               >
                 <div className="flex-shrink-0 rounded-full p-3">
                   <Headset className="h-6 w-6 text-[#E9E7E2]" />
