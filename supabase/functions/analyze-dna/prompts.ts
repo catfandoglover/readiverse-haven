@@ -808,6 +808,7 @@ patterns while remaining accessible and
 "evocative.\u0060\u0060\u0060",
   "archetype_definition": "Brief poetic subtitle capturing essence",
   "introduction": "Opening paragraph describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: "You are..." "Your approach...",
+  "share_summary": "Opening paragraph describing philosophical approach and how the individual moves through philosophical space - focus on how the user reconciles contradictions and approaches meaning-making - Written in 3rd person singular."
   "key_tension_1": "First key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...".",
   "key_tension_2": "Second key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1".",
   "key_tension_3": "Third key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1" or "key_tension_2".",
