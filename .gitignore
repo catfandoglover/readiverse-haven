@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 .env
+.env*
+.env.OLD
+.env.local
+.env.development
+.env.production
+
+# Vercel build output
+.vercel/
 
 # Editor directories and files
 .vscode/*

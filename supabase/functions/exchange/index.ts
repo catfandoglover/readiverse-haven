@@ -1,5 +1,8 @@
-
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
+import { load } from "https://deno.land/std/dotenv/mod.ts";
+
+// Load variables from .env.local
+await load({ envPath: "./.env.local" });
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
