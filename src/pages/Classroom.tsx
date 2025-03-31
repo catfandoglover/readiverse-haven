@@ -28,35 +28,34 @@ const Classroom: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Hero section - responsive layout */}
-        {user && (
-          isMobile ? (
-            // Mobile layout - stacked
-            <div className="w-full">
-              <LastCourseHero />
-            </div>
-          ) : (
-            // Desktop layout - side by side
-            <div className="grid grid-cols-2 gap-4">
+        {/* Main content area with consistent padding */}
+        <div className="px-4 flex flex-col gap-4">
+          {/* Hero section - responsive layout */}
+          {user && (
+            isMobile ? (
+              // Mobile layout - stacked
               <div className="w-full">
                 <LastCourseHero />
               </div>
-              <div className="w-full">
+            ) : (
+              // Desktop layout - side by side
+              <div className="grid grid-cols-2 gap-4">
+                <LastCourseHero />
                 <SuggestedCourseHero />
               </div>
-            </div>
-          )
-        )}
-        
-        {/* Course cards section */}
-        <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
-          <IntellectualDNACourseCard />
-          <CreateYourOwnCourseCard />
-        </div>
-        
-        {/* Main Content */}
-        <div className="flex-1 p-4 overflow-visible">
-          <CoursesList />
+            )
+          )}
+          
+          {/* Course cards section */}
+          <div className="grid grid-cols-2 gap-4">
+            <IntellectualDNACourseCard />
+            <CreateYourOwnCourseCard />
+          </div>
+          
+          {/* Main Content */}
+          <div className="flex-1 overflow-visible">
+            <CoursesList />
+          </div>
         </div>
         
         {/* Extra padding at the bottom for safe area */}
