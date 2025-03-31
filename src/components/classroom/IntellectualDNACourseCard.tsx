@@ -19,7 +19,7 @@ const IntellectualDNACourseCard: React.FC = () => {
       <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold mb-1">
         Intellectual DNA course
       </h3>
-      <p className="font-oxanium text-[#E9E7E2]/50 text-xs mb-3">
+      <p className="font-oxanium text-[#E9E7E2]/50 text-xs mb-3 mt-2">
         Uncover your worldview.
       </p>
     </div>
