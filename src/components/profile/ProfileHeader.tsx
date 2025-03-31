@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -111,11 +110,7 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
-      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-      // ---------------------------------------------------------------------------------
-      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
       const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -133,11 +128,7 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-        // ---------------------------------------------------------------------------------
-        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
         const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-        // ---------------------------------------------------------------------------------
         
         await navigator.clipboard.writeText(shareUrl);
         toast({
@@ -173,13 +164,13 @@ const ProfileHeader: React.FC = () => {
       <div 
         className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
         style={{ 
-          bottom: "-32px",
+          bottom: "-52px",
           zIndex: 30,
           transform: "translateZ(0)"
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start mt-6">
             <div className="relative h-20 w-20 mb-2">
               <svg 
                 viewBox="0 0 100 100" 
