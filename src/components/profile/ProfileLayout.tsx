@@ -26,7 +26,6 @@ interface DNAAnalysisResult {
   growth_edges_3: string | null;
   become_who_you_are: string | null;
   conclusion: string | null;
-  next_steps: string | null;
   created_at: string;
 }
 
@@ -305,16 +304,6 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                   ) : (
                     analysisResult?.conclusion || 
                     "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
-                  )}
-                </p>
-                
-                <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Next Steps</h2>
-                <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
-                  {isLoadingIntroduction ? (
-                    <span className="inline-block">Loading...</span>
-                  ) : (
-                    analysisResult?.next_steps || 
-                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
                   )}
                 </p>
               </div>
