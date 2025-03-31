@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -226,7 +227,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     );
   }
 
-  // Desktop layout - horizontal card
+  // Desktop layout - horizontal card with content moved down 30% of viewport height
   return (
     <div className="flex h-full relative bg-[#2A282A] overflow-hidden">
       {/* Left side - Image (clickable) */}
@@ -242,9 +243,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
         />
       </div>
       
-      {/* Right side - Content */}
+      {/* Right side - Content with padding top to move content down 30% of viewport */}
       <div className="w-1/2 p-8 bg-[#E9E7E2] text-[#2A282A] flex flex-col">
-        <div className="flex-1">
+        <div className="flex-1 pt-[30vh]">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-3xl font-serif max-w-[70%]">{title}</h2>
             <div className="flex gap-3 items-center shrink-0">
