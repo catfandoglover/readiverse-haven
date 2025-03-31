@@ -12,7 +12,7 @@ const IntellectualDNACourseCard: React.FC = () => {
 
   return (
     <div 
-      className="w-full h-full bg-[#E9E7E2]/10 rounded-2xl cursor-pointer hover:opacity-90 transition-opacity p-6 flex flex-col"
+      className="w-full bg-[#E9E7E2]/10 rounded-2xl cursor-pointer hover:opacity-90 transition-opacity p-6 flex flex-col"
       style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
       onClick={handleClick}
     >
@@ -24,7 +24,6 @@ const IntellectualDNACourseCard: React.FC = () => {
           Uncover your worldview.
         </p>
       </div>
-      <div className="flex-grow"></div>
     </div>
   );
 };
