@@ -75,7 +75,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-4xl md:text-5xl leading-tight">
+        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight">
           {screens[currentScreen].title}
         </h1>
       </div>
