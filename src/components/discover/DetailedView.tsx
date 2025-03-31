@@ -16,6 +16,7 @@ import OrderDialog from "./OrderDialog";
 import VirgilChatButton from "./VirgilChatButton";
 import ClassicActionsMenu from "./ClassicActionsMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CarouselItem {
   id: string;
@@ -67,6 +68,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const [shouldBlurHeader, setShouldBlurHeader] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
     queryKey: ["item-details", type, itemData.id],
@@ -882,6 +884,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     );
   };
 
+  useEffect(() => {
+    if (!isMobile && imageRef.current && scrollContainerRef.current && isDataLoaded) {
+      const imageHeight = imageRef.current.clientHeight;
+      const scrollTarget = imageHeight * 0.6; // 60% of the header image height
+
+      // Small timeout to ensure the image is fully loaded
+      const timer = setTimeout(() => {
+        scrollContainerRef.current?.scrollTo({
+          top: scrollTarget,
+          behavior: 'auto'
+        });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, isDataLoaded]);
+
   return (
     <div className="fixed inset-0 z-50 bg-[#E9E7E2] text-[#2A282A] overflow-hidden">
       {renderHeader()}
@@ -910,7 +929,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
 
         <div className="relative -mt-6">
-          <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
+          <div 
+            className={cn(
+              "bg-[#E9E7E2] rounded-t-2xl",
+              isMobile ? "p-6" : "px-[18%] py-8"
+            )}
+          >
             {type !== "classic" && renderIconButtons()}
             
             {renderAuthorField()}
@@ -918,11 +942,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
             ) : combinedData?.introduction ? (
-              <p className="text-gray-800 font-baskerville text-lg mb-8">
+              <p className={cn(
+                "text-gray-800 font-baskerville mb-8",
+                isMobile ? "text-lg" : "text-xl leading-relaxed"
+              )}>
                 {formatText(combinedData.introduction)}
               </p>
             ) : (
-              <p className="text-gray-800 font-baskerville text-lg mb-8 italic">
+              <p className={cn(
+                "text-gray-800 font-baskerville mb-8 italic",
+                isMobile ? "text-lg" : "text-xl leading-relaxed"
+              )}>
                 Introduction content will appear here when available.
               </p>
             )}
