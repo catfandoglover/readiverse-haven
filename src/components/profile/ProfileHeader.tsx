@@ -244,7 +244,7 @@ const ProfileHeader: React.FC = () => {
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4 w-full"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4 w-full"
               aria-label="Share profile"
             >
               SHARE PROFILE
@@ -254,10 +254,10 @@ const ProfileHeader: React.FC = () => {
             <Button 
               variant="ghost" 
               onClick={() => navigate('/book-counselor')}
-              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full"
-              aria-label="Book a counselor"
+              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full"
+              aria-label="Book a human"
             >
-              BOOK A COUNSELOR
+              BOOK A HUMAN
               <Calendar className="h-4 w-4" />
             </Button>
           </div>
