@@ -5,13 +5,16 @@ import { saveLastVisited } from "@/utils/navigationHistory";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import ClassroomHeader from "@/components/classroom/ClassroomHeader";
 import LastCourseHero from "@/components/classroom/LastCourseHero";
+import SuggestedCourseHero from "@/components/classroom/SuggestedCourseHero";
 import CoursesList from "@/components/classroom/CoursesList";
 import IntellectualDNACourseCard from "@/components/classroom/IntellectualDNACourseCard";
 import CreateYourOwnCourseCard from "@/components/classroom/CreateYourOwnCourseCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Classroom: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Save current path to navigation history
   React.useEffect(() => {
@@ -25,8 +28,25 @@ const Classroom: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Hero section */}
-        {user && <LastCourseHero />}
+        {/* Hero section - responsive layout */}
+        {user && (
+          isMobile ? (
+            // Mobile layout - stacked
+            <div className="w-full">
+              <LastCourseHero />
+            </div>
+          ) : (
+            // Desktop layout - side by side
+            <div className="grid grid-cols-2 gap-4">
+              <div className="w-full">
+                <LastCourseHero />
+              </div>
+              <div className="w-full">
+                <SuggestedCourseHero />
+              </div>
+            </div>
+          )
+        )}
         
         {/* Course cards section */}
         <div className="px-4 pt-2 pb-4 grid grid-cols-2 gap-4">
