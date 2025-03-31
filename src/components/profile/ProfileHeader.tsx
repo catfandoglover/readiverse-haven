@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share, Pen } from "lucide-react";
+import { Share, Pen, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ const ProfileHeader: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
@@ -217,7 +219,7 @@ const ProfileHeader: React.FC = () => {
             <div className="flex items-center justify-between w-full">
               <div>
                 <h1 
-                  className="text-xl font-serif" 
+                  className="text-2xl font-serif" 
                   style={{ 
                     position: "relative",
                     zIndex: 50
@@ -238,15 +240,25 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex flex-col items-end">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4 w-full"
               aria-label="Share profile"
             >
               SHARE PROFILE
               <Share className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/book-counselor')}
+              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full"
+              aria-label="Book a human"
+            >
+              BOOK A HUMAN
+              <Calendar className="h-4 w-4" />
             </Button>
           </div>
         </div>
