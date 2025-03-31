@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, BookOpen, Compass, Dna, CircleUserRound, Headset } from "lucide-react";
+import { Menu, BookOpen, Compass, Dna, CircleUserRound, Calendar } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -133,7 +133,7 @@ const MainMenu: React.FC = () => {
                 onClick={() => handleNavigation("/book-counselor")}
               >
                 <div className="flex-shrink-0 rounded-full p-3">
-                  <Headset className="h-6 w-6 text-[#E9E7E2]" />
+                  <Calendar className="h-6 w-6 text-[#E9E7E2]" />
                 </div>
                 <div className="flex flex-col">
                   <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
