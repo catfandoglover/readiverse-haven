@@ -84,8 +84,10 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
       </div>
 
       <div className={cn(
-        "transition-transform duration-500 ease-in-out",
-        resultsReady ? "transform translate-y-full" : ""
+        "transition-all duration-500 ease-in-out",
+        resultsReady 
+          ? "transform translate-y-full opacity-0 pointer-events-none" 
+          : "opacity-100"
       )}>
         <ChatInputForm
           inputMessage={inputMessage}
