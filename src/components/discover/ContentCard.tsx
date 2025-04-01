@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -39,6 +40,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   const { addToBookshelf } = useBookshelfManager();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   React.useEffect(() => {
     if (user && itemId && itemType) {
@@ -137,6 +139,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     );
   };
 
+  // Mobile View
   if (isMobile) {
     return (
       <div className="flex flex-col h-full relative">
@@ -144,11 +147,19 @@ const ContentCard: React.FC<ContentCardProps> = ({
           className="relative aspect-square w-full" 
           onClick={onImageClick}
         >
+          {!imageLoaded && (
+            <div className="w-full h-full bg-[#3A3834] animate-pulse"></div>
+          )}
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={(e) => {
+              console.error("Image failed to load:", image);
+              setImageLoaded(true); // Show alt text at least
+            }}
           />
         </div>
         <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
@@ -227,17 +238,28 @@ const ContentCard: React.FC<ContentCardProps> = ({
     );
   }
 
+  // Desktop View - Horizontal Layout
   return (
     <div className="flex h-full relative bg-[#2A282A] overflow-hidden">
       <div 
-        className="w-1/2 h-full cursor-pointer" 
+        className="w-1/2 h-full cursor-pointer relative" 
         onClick={onImageClick}
       >
+        {!imageLoaded && (
+          <div className="w-full h-full bg-[#3A3834] animate-pulse flex items-center justify-center">
+            <p className="text-[#E9E7E2]/50 text-lg">Loading image...</p>
+          </div>
+        )}
         <img
           src={image}
           alt={title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            console.error("Image failed to load:", image);
+            setImageLoaded(true); // Show alt text at least
+          }}
         />
       </div>
       

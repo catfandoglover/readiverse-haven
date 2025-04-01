@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IconsContent from "@/components/discover/IconsContent";
@@ -9,10 +9,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const IconsFeedPage = () => {
   const navigate = useNavigate();
   const { saveSourcePath } = useNavigationState();
-  const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
+  const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const isMobile = useIsMobile();
   
-  React.useEffect(() => {
+  // Force check mobile detection on mount
+  useEffect(() => {
+    console.log("[IconsFeedPage] Mobile detection:", isMobile);
+  }, [isMobile]);
+  
+  useEffect(() => {
     // Save the current page path as the source path for proper back navigation
     saveSourcePath(window.location.pathname);
   }, [saveSourcePath]);

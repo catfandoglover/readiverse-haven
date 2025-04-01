@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ClassicsContent from "@/components/discover/ClassicsContent";
@@ -9,13 +9,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const ClassicsFeedPage = () => {
   const navigate = useNavigate();
   const { saveSourcePath } = useNavigationState();
-  const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
+  const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const isMobile = useIsMobile();
   
   // Force immediate mobile detection check on mount
   useEffect(() => {
     console.log("[ClassicsFeedPage] Mobile detection:", isMobile);
-  }, []);
+  }, [isMobile]);
   
   useEffect(() => {
     // Save the current page path (not search page) as the source path for proper back navigation

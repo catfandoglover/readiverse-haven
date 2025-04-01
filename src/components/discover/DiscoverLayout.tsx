@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -18,12 +19,18 @@ const DiscoverLayout = () => {
   const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
   const [routeKey, setRouteKey] = useState<string>("route-key-0");
+  const [contentReady, setContentReady] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { getContentType, saveSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
+
+  // Log mobile detection
+  useEffect(() => {
+    console.log("[DiscoverLayout] Mobile detection status:", isMobile);
+  }, [isMobile]);
 
   // Set up source path tracking and initialize route tracking
   useEffect(() => {
@@ -45,6 +52,11 @@ const DiscoverLayout = () => {
       } else {
         setActiveTab("for-you");
       }
+
+      // Short delay to ensure content is initialized
+      setTimeout(() => {
+        setContentReady(true);
+      }, 100);
     }
     
     // Only save non-detail view paths to avoid circular navigation
@@ -57,6 +69,11 @@ const DiscoverLayout = () => {
         const newRouteKey = `route-key-${location.pathname}`;
         if (!routeKey.startsWith(newRouteKey)) {
           setRouteKey(newRouteKey);
+          // Reset content ready state and set it after a short delay
+          setContentReady(false);
+          setTimeout(() => {
+            setContentReady(true);
+          }, 100);
         }
       }
     }
@@ -98,6 +115,12 @@ const DiscoverLayout = () => {
       setActiveTab(newTab);
       setCurrentIndex(0); // Reset index when changing tabs
       console.log(`[DiscoverLayout] Set active tab to ${newTab} from discover route`);
+      
+      // Reset content ready state and set it after a short delay
+      setContentReady(false);
+      setTimeout(() => {
+        setContentReady(true);
+      }, 100);
     }
   }, [location.pathname, activeTab, detailedViewVisible]);
 
@@ -165,9 +188,15 @@ const DiscoverLayout = () => {
         )}
         
         <div className="w-full h-full relative bg-[#E9E7E2]">
-          <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
-            {currentContent}
-          </div>
+          {!contentReady ? (
+            <div className="w-full h-full absolute inset-0 bg-[#2A282A] flex items-center justify-center">
+              <div className="animate-pulse text-[#E9E7E2]/60">Loading content...</div>
+            </div>
+          ) : (
+            <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
+              {currentContent}
+            </div>
+          )}
         </div>
       </main>
     </div>
