@@ -137,6 +137,8 @@ export type Database = {
           author_id: string | null
           bookshop_link: string | null
           categories: string[] | null
+          city_published: string | null
+          country_published: string | null
           Cover_super: string | null
           cover_url: string | null
           created_at: string
@@ -157,6 +159,8 @@ export type Database = {
           author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
+          city_published?: string | null
+          country_published?: string | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
@@ -177,6 +181,8 @@ export type Database = {
           author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
+          city_published?: string | null
+          country_published?: string | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
