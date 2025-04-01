@@ -1213,6 +1213,44 @@ export type Database = {
           },
         ]
       }
+      dna_unmatched_entities: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          status: string
+          unmatched_classics: Json | null
+          unmatched_thinkers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_unmatched_entities_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "dna_analysis_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_links: {
         Row: {
           created_at: string
