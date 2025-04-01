@@ -156,7 +156,7 @@ const IntellectualDNA = () => {
               UNCOVER YOUR WORLDVIEW
             </h2>
             
-            <h1 className="font-baskerville text-[#373763] text-3xl md:text-4xl leading-tight">
+            <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-4xl leading-tight">
               Trace your<br />Intellectual DNA
             </h1>
             

@@ -22,7 +22,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, themeColors }) =
             themeColors.text
           )}
         >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm whitespace-pre-wrap font-libre-baskerville">{message.content}</p>
         </div>
       ) : (
         <div
@@ -37,7 +37,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, themeColors }) =
             aria-hidden="true" 
             alt="Virgil" 
           />
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm whitespace-pre-wrap font-libre-baskerville">{message.content}</p>
         </div>
       )}
     </>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-// Use the same fixed assessment ID as in DomainDetail
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface DNAAnalysisResult {
@@ -26,7 +24,6 @@ const IntellectualDNACourse: React.FC = () => {
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // All domains in order
   const domains = [
     {
       id: "ethics",
@@ -72,7 +69,6 @@ const IntellectualDNACourse: React.FC = () => {
     }
   ];
   
-  // Filtered domains based on the selected filter
   const filteredDomains = domainFilter && domainFilter !== "all" 
     ? domains.filter(domain => domain.id === domainFilter)
     : domains;
@@ -138,13 +134,12 @@ const IntellectualDNACourse: React.FC = () => {
         subtitle: "DE PRINCIPIIS (230)",
         description: "Divine truth requires both rational inquiry and mystical insight.",
         progress: 50,
-        status: "locked" // Default status
+        status: "locked"
       });
     }
     
     const resources = [];
     
-    // Mock progress values for visualization
     const dummyProgressValues = [85, 65, 45, 25, 15];
     
     for (let i = 1; i <= 5; i++) {
@@ -166,7 +161,6 @@ const IntellectualDNACourse: React.FC = () => {
       const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
       
-      // Add status for visual distinction
       let status = "locked";
       if (i === 1) status = "completed";
       else if (i === 2) status = "active";
@@ -186,12 +180,10 @@ const IntellectualDNACourse: React.FC = () => {
     return resources;
   };
   
-  // Render a resource item with its status icon
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
     let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
     
     if (resource.status === "completed") {
-      // Using dark text color to ensure visibility against yellow background
       StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
     } else if (resource.status === "locked") {
       StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
@@ -241,7 +233,6 @@ const IntellectualDNACourse: React.FC = () => {
     );
   };
   
-  // Render a domain section
   const DomainSection = ({ domain }: { domain: any }) => {
     const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
     const kindredResources = getResourcesForTab(domain.id, "kindred");
@@ -251,7 +242,7 @@ const IntellectualDNACourse: React.FC = () => {
     return (
       <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
-          <h1 className="font-baskerville uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
+          <h1 className="font-libre-baskerville font-bold uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
           <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domain.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5] mb-10">
             {getDomainIntroduction(domain.id)}
@@ -306,7 +297,7 @@ const IntellectualDNACourse: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
-      <header className="sticky top-0 z-10 px-6 py-4 flex justify-between items-center bg-[#1D3A35]">
+      <header className="flex items-center pt-4 pb-4 px-8 bg-[#1D3A35] text-[#E9E7E2] sticky top-0 z-10">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -316,7 +307,9 @@ const IntellectualDNACourse: React.FC = () => {
           <ArrowLeft className="h-6 w-6 text-white" />
         </Button>
         
-        <h1 className="text-sm font-oxanium uppercase font-bold text-[#E9E7E2]">Intellectual DNA</h1>
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+          Intellectual DNA
+        </h2>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -327,7 +320,7 @@ const IntellectualDNACourse: React.FC = () => {
           <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer"
+              className="flex items-center cursor-pointer font-libre-baskerville"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
@@ -341,7 +334,7 @@ const IntellectualDNACourse: React.FC = () => {
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer"
+                className="flex items-center cursor-pointer font-libre-baskerville"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />

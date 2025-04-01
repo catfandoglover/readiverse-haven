@@ -32,7 +32,7 @@ const WelcomeContainer: React.FC<WelcomeContainerProps> = ({ onDismiss }) => {
         isMobile ? "px-4 pb-4" : "px-8 pb-6"
       )}>
         <h1 className={cn(
-          "font-baskerville text-[#E9E7E2] leading-tight mb-3",
+          "font-libre-baskerville font-bold text-[#E9E7E2] leading-tight mb-3",
           isMobile ? "text-xl" : "text-2xl"
         )}>
           Discover, awaken, and direct a love of learning.

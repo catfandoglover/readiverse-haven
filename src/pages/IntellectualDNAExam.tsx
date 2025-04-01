@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -202,7 +201,6 @@ const IntellectualDNAExam: React.FC = () => {
     }
     
     const handleClick = () => {
-      // Only enable badge dialog for resources with a score
       if (resource.score > 0) {
         setSelectedResource({...resource, domainId});
         setIsDialogOpen(true);
@@ -367,7 +365,7 @@ const IntellectualDNAExam: React.FC = () => {
           <DropdownMenuContent align="end" className="bg-[#373763] border-[#4D4D8F] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer"
+              className="flex items-center cursor-pointer font-libre-baskerville"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
@@ -381,7 +379,7 @@ const IntellectualDNAExam: React.FC = () => {
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer"
+                className="flex items-center cursor-pointer font-libre-baskerville"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />

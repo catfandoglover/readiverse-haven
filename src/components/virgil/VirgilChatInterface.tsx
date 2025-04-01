@@ -77,7 +77,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           <div className="w-6" />
         </div>
 
-        <div className="flex-1 p-4 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)]">
+        <div className="flex-1 p-4 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)] font-libre-baskerville">
           {messages.map((message) => (
             <MessageBubble 
               key={message.id} 
