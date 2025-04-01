@@ -893,8 +893,25 @@ const DNAAssessment = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        
       </div>
 
       <TidyCalDialog
-        open={
+        open={showBookingDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeBookingDialog();
+          }
+        }}
+      />
+
+      <AIChatDialog 
+        open={showAIChat}
+        onOpenChange={setShowAIChat}
+        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+        currentQuestion={currentQuestion?.question?.question || ''}
+      />
+    </>
+  );
+};
+
+export default DNAAssessment;
