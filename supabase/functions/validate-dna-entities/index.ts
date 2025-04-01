@@ -87,42 +87,74 @@ function extractClassicsFromAnalysis(analysisData: Record<string, string>): stri
   return [...new Set(classics)]; // Remove duplicates
 }
 
+// Fetch all items from DB with pagination support
+async function fetchAllItems(type: 'thinker' | 'classic'): Promise<any[]> {
+  const pageSize = 1000;
+  let allItems: any[] = [];
+  let page = 0;
+  let hasMoreData = true;
+  
+  try {
+    while (hasMoreData) {
+      const query = type === 'thinker' 
+        ? supabase.from('icons').select('id, name').range(page * pageSize, (page + 1) * pageSize - 1)
+        : supabase.from('books').select('id, title, author').range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error(`Error fetching ${type}s (page ${page}):`, error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        allItems = [...allItems, ...data];
+        page++;
+        
+        // Check if we likely have more data
+        if (data.length < pageSize) {
+          hasMoreData = false;
+        }
+      } else {
+        hasMoreData = false;
+      }
+    }
+    
+    console.log(`Successfully fetched ${allItems.length} ${type}s from database`);
+    return allItems;
+  } catch (error) {
+    console.error(`Error in fetchAllItems for ${type}:`, error);
+    return [];
+  }
+}
+
 async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', analysisId: string | null) {
   if (items.length === 0) return { matched: [], unmatched: [] };
 
   try {
-    let dbItems: any[] = [];
-    let itemsToLookup: string[];
+    // Fetch all items from database with pagination
+    const dbItems = await fetchAllItems(type);
+    const itemsToLookup = items;
     
-    // Fetch all items from database at once to minimize queries
-    if (type === 'thinker') {
-      const { data, error } = await supabase
-        .from('icons')
-        .select('id, name');
-      
-      if (error) throw error;
-      dbItems = data || [];
-      itemsToLookup = items;
-    } else { // classic texts
-      const { data, error } = await supabase
-        .from('books')
-        .select('id, title, author');
-      
-      if (error) throw error;
-      dbItems = data || [];
-      itemsToLookup = items;
-    }
-
     // If we have a reasonable amount of items to check, use Gemini for semantic matching
     if (items.length > 0 && dbItems.length > 0) {
       console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
 
-      const prompt = `
+      // Process in batches if we have too many items to match
+      const batchSize = 50; // Adjust based on what the LLM can handle
+      let matched: { item: string, db_id: string, confidence: number }[] = [];
+      let unmatched: string[] = [];
+      
+      // Process items in batches
+      for (let i = 0; i < itemsToLookup.length; i += batchSize) {
+        const itemsBatch = itemsToLookup.slice(i, i + batchSize);
+        
+        const prompt = `
 I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries. 
 For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
 
 List A (from analysis):
-${itemsToLookup.map((item, i) => `${i+1}. "${item}"`).join('\n')}
+${itemsBatch.map((item, i) => `${i+1}. "${item}"`).join('\n')}
 
 List B (from database):
 ${dbItems.map((item, i) => {
@@ -142,58 +174,65 @@ Format your response as a JSON array of objects with properties: "item", "match_
 Provide the raw JSON array only, with no additional explanation or text.
 `;
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://lovable.dev',
-          'X-Title': 'Lovable.dev'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
-          messages: [
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          response_format: { type: "json_object" }
-        })
-      });
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterApiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://lovable.dev',
+            'X-Title': 'Lovable.dev'
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.0-flash-001',
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API responded with status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`OpenRouter API responded with status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        let batchResults: { item: string, match_id: string, confidence: number }[] = [];
+        
+        try {
+          const content = responseData.choices[0].message.content;
+          // Parse the JSON content
+          batchResults = JSON.parse(content);
+        } catch (parseError) {
+          console.error("Error parsing LLM response:", parseError);
+          console.log("Raw response:", responseData.choices[0].message.content);
+          // Fallback to empty results
+          batchResults = [];
+        }
+
+        console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
+
+        // Filter batch results into matched and unmatched
+        const batchMatched = batchResults
+          .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
+          .map(result => ({
+            item: result.item,
+            db_id: result.match_id,
+            confidence: result.confidence
+          }));
+
+        const batchUnmatched = batchResults
+          .filter(result => result.match_id === "no_match" || result.confidence < 70)
+          .map(result => result.item);
+
+        // Append batch results to overall results
+        matched = [...matched, ...batchMatched];
+        unmatched = [...unmatched, ...batchUnmatched];
       }
 
-      const responseData = await response.json();
-      let matchResults: { item: string, match_id: string, confidence: number }[] = [];
-      
-      try {
-        const content = responseData.choices[0].message.content;
-        // Parse the JSON content
-        matchResults = JSON.parse(content);
-      } catch (parseError) {
-        console.error("Error parsing LLM response:", parseError);
-        console.log("Raw response:", responseData.choices[0].message.content);
-        // Fallback to empty results
-        matchResults = [];
-      }
-
-      console.log(`Got ${matchResults.length} match results`);
-
-      // Filter results into matched and unmatched
-      const matched = matchResults
-        .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
-        .map(result => ({
-          item: result.item,
-          db_id: result.match_id,
-          confidence: result.confidence
-        }));
-
-      const unmatched = matchResults
-        .filter(result => result.match_id === "no_match" || result.confidence < 70)
-        .map(result => result.item);
+      console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
       // Record unmatched entities in the database if we have an analysis ID
       if (unmatched.length > 0 && analysisId) {
