@@ -212,7 +212,7 @@ const ProfileHeader: React.FC = () => {
               </button>
             </div>
             
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full mt-2">
               <div className="w-full">
                 <h1 
                   className="text-sm font-libre-baskerville text-[#E9E7E2]/70 italic" 
