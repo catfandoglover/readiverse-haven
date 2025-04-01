@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ClassicsContent from "@/components/discover/ClassicsContent";
@@ -9,13 +9,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const ClassicsFeedPage = () => {
   const navigate = useNavigate();
   const { saveSourcePath } = useNavigationState();
-  const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
+  const [detailedViewVisible, setDetailedViewVisible] = useState(false);
   const isMobile = useIsMobile();
   
   // Force immediate mobile detection check on mount
   useEffect(() => {
     console.log("[ClassicsFeedPage] Mobile detection:", isMobile);
-  }, []);
+  }, [isMobile]);
   
   useEffect(() => {
     // Save the current page path (not search page) as the source path for proper back navigation
@@ -27,7 +27,7 @@ const ClassicsFeedPage = () => {
   };
   
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-[#2A282A]">
       {!detailedViewVisible && (
         <div className="flex items-center pt-4 px-4 absolute top-0 left-0 right-0 z-10">
           <button
@@ -38,7 +38,7 @@ const ClassicsFeedPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 flex items-center justify-center">
-            <h1 className={`font-oxanium uppercase ${isMobile ? 'text-sm' : 'text-base'} font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`}>
+            <h1 className={`font-oxanium uppercase ${isMobile ? 'text-sm' : 'text-base'} font-bold tracking-wider drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] text-[#E9E7E2]`}>
               CLASSICS
             </h1>
           </div>
@@ -46,15 +46,13 @@ const ClassicsFeedPage = () => {
         </div>
       )}
       
-      <main className="flex-1 relative overflow-hidden">
-        <div className="w-full h-full relative">
-          <div className="w-full h-full absolute inset-0">
-            <ClassicsContent 
-              currentIndex={0}
-              onDetailedViewShow={() => setDetailedViewVisible(true)}
-              onDetailedViewHide={() => setDetailedViewVisible(false)}
-            />
-          </div>
+      <main className="flex-1 relative">
+        <div className="w-full h-full absolute inset-0">
+          <ClassicsContent 
+            currentIndex={0}
+            onDetailedViewShow={() => setDetailedViewVisible(true)}
+            onDetailedViewHide={() => setDetailedViewVisible(false)}
+          />
         </div>
       </main>
     </div>

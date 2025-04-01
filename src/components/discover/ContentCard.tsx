@@ -39,6 +39,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   const { addToBookshelf } = useBookshelfManager();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   React.useEffect(() => {
     if (user && itemId && itemType) {
@@ -124,7 +125,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
   const formatText = (text: string) => {
     if (!text) return "";
-    // Use span instead of div to avoid nesting issues with p tags
     return (
       <span className="formatted-text">
         {text.split("\\n").map((line, i) => (
@@ -144,14 +144,22 @@ const ContentCard: React.FC<ContentCardProps> = ({
           className="relative aspect-square w-full" 
           onClick={onImageClick}
         >
+          {!imageLoaded && (
+            <div className="w-full h-full bg-[#3A3834] animate-pulse"></div>
+          )}
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover object-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={(e) => {
+              console.error("Image failed to load:", image);
+              setImageLoaded(true); // Show alt text at least
+            }}
           />
         </div>
-        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
+        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[32%] relative z-10 min-h-[52vh]">
           <div className="mb-4">
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
@@ -230,14 +238,24 @@ const ContentCard: React.FC<ContentCardProps> = ({
   return (
     <div className="flex h-full relative bg-[#2A282A] overflow-hidden">
       <div 
-        className="w-1/2 h-full cursor-pointer" 
+        className="w-1/2 h-full cursor-pointer relative" 
         onClick={onImageClick}
       >
+        {!imageLoaded && (
+          <div className="w-full h-full bg-[#3A3834] animate-pulse flex items-center justify-center">
+            <p className="text-[#E9E7E2]/50 text-lg">Loading image...</p>
+          </div>
+        )}
         <img
           src={image}
           alt={title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover object-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            console.error("Image failed to load:", image);
+            setImageLoaded(true); // Show alt text at least
+          }}
         />
       </div>
       
