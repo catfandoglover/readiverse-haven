@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -894,14 +893,8 @@ const DNAAssessment = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        
       </div>
 
       <TidyCalDialog
-        open={showBookingDialog}
-        onOpenChange={closeBookingDialog}
-      />
-    </>
-  );
-};
-
-export default DNAAssessment;
+        open={
