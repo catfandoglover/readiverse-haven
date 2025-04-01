@@ -37,6 +37,15 @@ function extractThinkersFromAnalysis(analysisData: Record<string, string>): stri
     }
   });
   
+  // Also add most_kindred_spirit and most_challenging_voice if they exist
+  if (analysisData.most_kindred_spirit) {
+    thinkers.push(analysisData.most_kindred_spirit);
+  }
+  
+  if (analysisData.most_challenging_voice) {
+    thinkers.push(analysisData.most_challenging_voice);
+  }
+  
   return [...new Set(thinkers)]; // Remove duplicates
 }
 
@@ -78,7 +87,7 @@ function extractClassicsFromAnalysis(analysisData: Record<string, string>): stri
   return [...new Set(classics)]; // Remove duplicates
 }
 
-async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', analysisId: string) {
+async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', analysisId: string | null) {
   if (items.length === 0) return { matched: [], unmatched: [] };
 
   try {
@@ -186,8 +195,8 @@ Provide the raw JSON array only, with no additional explanation or text.
         .filter(result => result.match_id === "no_match" || result.confidence < 70)
         .map(result => result.item);
 
-      // Record unmatched entities in the database
-      if (unmatched.length > 0) {
+      // Record unmatched entities in the database if we have an analysis ID
+      if (unmatched.length > 0 && analysisId) {
         try {
           const unmatchedData = type === 'thinker' ? 
             { analysis_id: analysisId, unmatched_thinkers: unmatched } : 
@@ -226,6 +235,7 @@ serve(async (req) => {
   try {
     const { analysisData, analysisId } = await req.json();
     
+    // Enhanced validation to ensure at least one parameter is provided
     if (!analysisData && !analysisId) {
       throw new Error('Either analysisData or analysisId must be provided');
     }
@@ -238,22 +248,24 @@ serve(async (req) => {
         .from('dna_analysis_results')
         .select('*')
         .eq('id', analysisId)
-        .single();
+        .maybeSingle();
         
       if (error) throw error;
       if (!data) throw new Error(`No analysis found with id: ${analysisId}`);
       
       dataToValidate = data;
-    } else {
+    } else if (analysisData) {
+      // Use the provided analysis data directly
       dataToValidate = analysisData;
+    } else {
+      // This should never happen due to earlier validation, but just in case
+      throw new Error('No valid data source provided for validation');
     }
     
-    const actualAnalysisId = analysisId || dataToValidate.id;
-    if (!actualAnalysisId) {
-      throw new Error('Analysis ID could not be determined');
-    }
+    // The actual analysis ID to use for storage, or null if we're validating pre-storage data
+    const actualAnalysisId = analysisId || null;
     
-    console.log(`Validating entities for analysis ID: ${actualAnalysisId}`);
+    console.log(`Validating entities ${actualAnalysisId ? 'for analysis ID: ' + actualAnalysisId : 'for pre-storage data'}`);
     
     // Extract thinkers and classics from the analysis
     const thinkers = extractThinkersFromAnalysis(dataToValidate);

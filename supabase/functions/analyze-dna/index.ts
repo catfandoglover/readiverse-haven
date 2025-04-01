@@ -530,7 +530,13 @@ async function validateDNAEntities(analysisData: Record<string, string>): Promis
     return { 
       error: error.message, 
       thinkers: { matched: [], unmatched: [] }, 
-      classics: { matched: [], unmatched: [] } 
+      classics: { matched: [], unmatched: [] },
+      summary: {
+        totalEntities: 0,
+        totalMatched: 0,
+        totalUnmatched: 0,
+        matchRate: '0%'
+      }
     };
   }
 }
@@ -614,8 +620,8 @@ serve(async (req) => {
       console.log('Validating entities before storing analysis...');
       const validationResults = await validateDNAEntities(combinedAnalysis);
       
-      // Include validation metrics in the analysis record
-      combinedAnalysis['validation_summary'] = JSON.stringify(validationResults.summary || {});
+      // Store the validation summary as a JSONB field
+      combinedAnalysis['validation_summary'] = validationResults.summary || {};
       
       // Proceed to store the analysis results with validation data
       const analysisRecord = {
@@ -624,16 +630,10 @@ serve(async (req) => {
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
+        validation_summary: validationResults.summary,
         ...combinedAnalysis
       };
 
-      // Debug logging to see the full objects before saving
-      console.log('===== DEBUG: combinedAnalysis keys =====');
-      console.log(Object.keys(combinedAnalysis));
-      
-      console.log('===== DEBUG: Validation Summary =====');
-      console.log(combinedAnalysis['validation_summary']);
-      
       console.log('Storing combined analysis in database...');
       const { data: analysisData, error: storeError } = await supabase
         .from('dna_analysis_results')
@@ -648,12 +648,37 @@ serve(async (req) => {
       
       console.log('Combined analysis stored successfully');
       
+      // If we have an analysis ID now, store the unmatched entities for later review
+      if (analysisData?.id && 
+          (validationResults.thinkers?.unmatched?.length > 0 || 
+           validationResults.classics?.unmatched?.length > 0)) {
+        
+        try {
+          const unmatchedData = {
+            analysis_id: analysisData.id,
+            unmatched_thinkers: validationResults.thinkers?.unmatched || [],
+            unmatched_classics: validationResults.classics?.unmatched || [],
+            status: 'pending'
+          };
+          
+          const { error: unmatchedError } = await supabase
+            .from('dna_unmatched_entities')
+            .upsert([unmatchedData], { onConflict: 'analysis_id' });
+            
+          if (unmatchedError) {
+            console.error('Error storing unmatched entities:', unmatchedError);
+          }
+        } catch (unmatchedErr) {
+          console.error('Exception storing unmatched entities:', unmatchedErr);
+        }
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
           message: 'Combined analysis stored successfully',
           analysis_id: analysisData?.id,
-          validation_summary: JSON.parse(combinedAnalysis['validation_summary'] || '{}')
+          validation_summary: validationResults.summary
         }),
         { 
           headers: {
