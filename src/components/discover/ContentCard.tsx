@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -149,7 +150,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
           <div className="mb-4">
             <div className="flex justify-between items-start mb-2">
-              <h2 className="text-2xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
+              <h2 className="text-xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
               <div className="flex gap-2 items-center shrink-0">
                 {itemId && (
                   <VirgilChatButton
@@ -239,7 +240,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       <div className="w-1/2 p-8 bg-[#E9E7E2] text-[#2A282A] flex flex-col">
         <div className="flex-1 pt-[18vh]">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-3xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
+            <h2 className="text-2xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
             <div className="flex gap-3 items-center shrink-0">
               {itemId && (
                 <VirgilChatButton
