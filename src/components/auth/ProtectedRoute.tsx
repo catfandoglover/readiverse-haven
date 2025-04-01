@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Navigate, useLocation } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -26,8 +27,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const currentPath = location.pathname;
   const shouldShowAuthModal = modalTriggerPaths.some(path => currentPath.startsWith(path));
   
+  // DNA assessment paths that should be accessible without authentication
+  const dnaAssessmentPaths = ['/dna', '/dna/priming', '/dna/ethics', '/dna/epistemology', 
+    '/dna/politics', '/dna/theology', '/dna/ontology', '/dna/aesthetics', '/dna/completion'];
+  const isDNAAssessmentPath = dnaAssessmentPaths.some(path => currentPath === path);
+  
   // Only authenticate paths that actually require authentication
-  if (requireAuth && !user) {
+  // Allow DNA assessment paths to proceed without authentication
+  if (requireAuth && !user && !isDNAAssessmentPath) {
     // If this is a path that should trigger the auth modal
     if (shouldShowAuthModal) {
       // Open the Outseta auth modal and render nothing (will be caught by routes that don't require auth)

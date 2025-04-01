@@ -7,7 +7,14 @@ import { Check } from "lucide-react";
 
 const DNACompletionScreen = () => {
   const navigate = useNavigate();
-  const { openLogin } = useAuth();
+  const { openLogin, user } = useAuth();
+
+  // If user is already logged in, redirect to results
+  React.useEffect(() => {
+    if (user) {
+      navigate('/intellectual-dna');
+    }
+  }, [user, navigate]);
 
   const handleLoginClick = () => {
     // Open the Outseta login/register modal

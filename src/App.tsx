@@ -43,6 +43,7 @@ import ExamVirgilChat from "./pages/ExamVirgilChat";
 import BookCounselor from "./pages/BookCounselor";
 import BookingSuccess from "./pages/BookingSuccess";
 import { LoginButtons } from "@/components/auth/LoginButtons";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,41 +54,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// ProtectedRoute component to handle authentication and DNA requirements
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireAuth: boolean;
-  requireDNA: boolean;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requireAuth, 
-  requireDNA 
-}) => {
-  const { user, hasDNA } = useAuth();
-  const location = useLocation();
-
-  // Not authenticated but authentication required
-  if (requireAuth && !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Authenticated, DNA is required, but user doesn't have DNA
-  if (requireAuth && requireDNA && user && !hasDNA) {
-    return <Navigate to="/dna" state={{ from: location }} replace />;
-  }
-
-  // Requirements are satisfied, render the children
-  return <>{children}</>;
-};
-
 // New component to handle conditional root redirection
 const RootRedirect: React.FC = () => {
-  const { user, hasDNA } = useAuth();
+  const { user, hasCompletedDNA } = useAuth();
   
   // For logged-in users with DNA assessment completed, redirect to Virgil
-  if (user && hasDNA) {
+  if (user && hasCompletedDNA) {
     return <Navigate to="/virgil" replace />;
   }
   
@@ -97,10 +69,10 @@ const RootRedirect: React.FC = () => {
 
 // Also add a handler for the DNA route to prevent users with completed assessments from accessing it
 const DnaRouteHandler: React.FC = () => {
-  const { user, hasDNA } = useAuth();
+  const { user, hasCompletedDNA } = useAuth();
   
   // If the user is logged in and has completed their DNA assessment, redirect them to Virgil
-  if (user && hasDNA) {
+  if (user && hasCompletedDNA) {
     return <Navigate to="/virgil" replace />;
   }
   
