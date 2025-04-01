@@ -7,6 +7,7 @@ import { Share, Pen, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProfileData {
   id: string;
@@ -37,6 +38,7 @@ const ProfileHeader: React.FC = () => {
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
@@ -173,12 +175,12 @@ const ProfileHeader: React.FC = () => {
       <div 
         className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
         style={{ 
-          bottom: "-32px",
+          bottom: "-40px", // Adjusted from -32px to -40px to position container higher
           zIndex: 30,
           transform: "translateZ(0)"
         }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
@@ -240,11 +242,11 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-end">
+          <div className={`flex flex-col items-end self-start`}>
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4 w-full"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 w-full"
               aria-label="Share profile"
             >
               SHARE PROFILE
