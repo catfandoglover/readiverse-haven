@@ -61,13 +61,11 @@ const DNAAssessment = () => {
   
   const { showBookingDialog, openBookingDialog, closeBookingDialog } = useTidyCalBooking();
 
-  // Memoize the upper category to prevent unnecessary re-renders
   const upperCategory = React.useMemo(() => 
     category?.toUpperCase() as DNACategory, 
     [category]
   );
 
-  // Memoize the current category index to prevent unnecessary re-renders
   const currentCategoryIndex = React.useMemo(() => 
     categoryOrder.findIndex(cat => cat === upperCategory), 
     [upperCategory]
@@ -82,7 +80,6 @@ const DNAAssessment = () => {
 
   const progressPercentage = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
 
-  // Initialize assessment
   const initializeAssessment = useCallback(async () => {
     if (assessmentId || currentCategoryIndex !== 0) {
       setIsInitializing(false);
@@ -102,7 +99,6 @@ const DNAAssessment = () => {
         return;
       }
       
-      // Handle authentication
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser();
         
@@ -156,7 +152,6 @@ const DNAAssessment = () => {
         sessionStorage.setItem('user_id', tempId);
       }
       
-      // Create assessment record
       try {
         const assessmentData = { 
           name,
@@ -192,7 +187,6 @@ const DNAAssessment = () => {
         console.log('Created new assessment with ID:', newAssessment.id);
         sessionStorage.setItem('dna_assessment_id', newAssessment.id);
         
-        // Verify assessment was created
         const { data: verifyData, error: verifyError } = await supabase
           .from('dna_assessment_results')
           .select('id')
@@ -217,12 +211,10 @@ const DNAAssessment = () => {
     }
   }, [assessmentId, currentCategoryIndex]);
 
-  // Use effect for initialization
   useEffect(() => {
     initializeAssessment();
   }, [initializeAssessment]);
 
-  // Optimized question fetching with error handling
   const { data: currentQuestion, isLoading: questionLoading, error: questionError } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
     queryFn: async () => {
@@ -271,7 +263,6 @@ const DNAAssessment = () => {
     retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 5000),
   });
 
-  // Prefetch next questions
   useEffect(() => {
     const prefetchNextQuestions = async () => {
       if (!currentQuestion) return;
@@ -283,7 +274,6 @@ const DNAAssessment = () => {
 
       for (const nextId of nextQuestionIds) {
         try {
-          // Find the next question position first without triggering a full query
           const { data: nextQuestion } = await supabase
             .from('dna_tree_structure')
             .select('tree_position, category')
@@ -291,7 +281,6 @@ const DNAAssessment = () => {
             .maybeSingle();
 
           if (nextQuestion) {
-            // Then prefetch the full data
             await queryClient.prefetchQuery({
               queryKey: ['dna-question', nextQuestion.category, nextQuestion.tree_position],
               queryFn: async () => {
@@ -318,7 +307,6 @@ const DNAAssessment = () => {
           }
         } catch (error) {
           console.error('Error prefetching next question:', error);
-          // Don't block the UI for prefetch errors
         }
       }
     };
@@ -328,7 +316,6 @@ const DNAAssessment = () => {
     }
   }, [currentQuestion, queryClient]);
 
-  // If the next category is available, prefetch its first question
   useEffect(() => {
     if (nextCategory && currentPosition === 'Q5') {
       queryClient.prefetchQuery({
@@ -357,7 +344,6 @@ const DNAAssessment = () => {
     }
   }, [nextCategory, currentPosition, queryClient]);
 
-  // Handle answer selection
   const handleAnswerSelection = (answer: "A" | "B") => {
     setSelectedAnswer(answer);
     
@@ -366,7 +352,6 @@ const DNAAssessment = () => {
     }
   };
 
-  // Handle analysis initiation
   const initAnalysis = useCallback(async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
 
@@ -392,7 +377,6 @@ const DNAAssessment = () => {
     }
   }, [profileId]);
 
-  // Handle continue button
   const handleContinue = async () => {
     if (!selectedAnswer || !currentQuestion || !assessmentId) return;
     
@@ -408,7 +392,6 @@ const DNAAssessment = () => {
         ? (currentQuestion.question?.answer_a || "Yes") 
         : (currentQuestion.question?.answer_b || "No");
       
-      // Save conversation context
       conversationManager.addQuestionToPath(
         sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
         currentPosition,
@@ -428,10 +411,8 @@ const DNAAssessment = () => {
         );
       } catch (error) {
         console.error('Error saving conversation:', error);
-        // Don't block progress for conversation errors
       }
   
-      // Store question response
       const { error: responseError } = await supabase
         .from('dna_question_responses')
         .insert({
@@ -450,7 +431,6 @@ const DNAAssessment = () => {
         : currentQuestion.next_question_b_id;
   
       if (!nextQuestionId) {
-        // End of this category
         try {
           const { data: currentData, error: fetchError } = await supabase
             .from('dna_assessment_results')
@@ -484,7 +464,6 @@ const DNAAssessment = () => {
           }
   
           if (!nextCategory) {
-            // Assessment complete
             setCompletedAssessmentId(assessmentId);
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
@@ -518,7 +497,6 @@ const DNAAssessment = () => {
             navigate('/dna/completion');
             return;
           } else {
-            // Move to next category
             navigate(`/dna/${nextCategory.toLowerCase()}`);
             setCurrentPosition("Q1");
             setCurrentQuestionNumber(prev => prev + 1);
@@ -533,7 +511,6 @@ const DNAAssessment = () => {
           }
         }
       } else {
-        // Move to next question in current category
         try {
           const { data: nextQuestion, error: nextQuestionError } = await supabase
             .from('dna_tree_structure')
@@ -561,18 +538,15 @@ const DNAAssessment = () => {
     }
   };
 
-  // Handle exit button
   const handleExit = () => {
     setShowExitAlert(true);
   };
 
-  // Confirm exit
   const confirmExit = () => {
     navigate('/dna');
     setShowExitAlert(false);
   };
 
-  // Ensure user ID is set
   useEffect(() => {
     const ensureUserId = async () => {
       const existingUserId = sessionStorage.getItem('user_id');
@@ -616,7 +590,6 @@ const DNAAssessment = () => {
     ensureUserId();
   }, [profileId]);
 
-  // Add debugging tools
   useEffect(() => {
     (window as any).debugDNAConversation = () => {
       console.log('Debug info:');
@@ -662,7 +635,6 @@ const DNAAssessment = () => {
     navigate('/dna');
   }
 
-  // Save assessment ID in local storage when login prompt is shown
   useEffect(() => {
     const saveAssessmentId = async () => {
       if (!showLoginPrompt) return;
@@ -702,7 +674,6 @@ const DNAAssessment = () => {
     navigate('/book-counselor');
   };
 
-  // Enhanced loading state handling
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
@@ -730,7 +701,6 @@ const DNAAssessment = () => {
     );
   }
 
-  // Handle initialization errors
   if (initializationError) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
@@ -767,7 +737,6 @@ const DNAAssessment = () => {
     );
   }
 
-  // Handle question not found
   if (!currentQuestion && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763]">
@@ -872,4 +841,54 @@ const DNAAssessment = () => {
             </div>
           </div>
           
-          <div className="w-full max-w-md mx-auto mb-16
+          <div className="w-full max-w-md mx-auto mb-16">
+            <Button
+              onClick={handleContinue}
+              disabled={!selectedAnswer}
+              className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider ${
+                selectedAnswer 
+                  ? "bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2]" 
+                  : "bg-[#373763]/50 text-[#E9E7E2]/70"
+              }`}
+            >
+              CONTINUE
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {showAIChat && (
+        <AIChatDialog
+          isOpen={showAIChat}
+          onClose={() => setShowAIChat(false)}
+          sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
+          currentQuestion={currentQuestion?.question?.question || ''}
+          questionPosition={currentPosition}
+        />
+      )}
+
+      <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exit Assessment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress will be saved. You can return to complete the assessment later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit}>Exit</AlertDialogAction>
+            <AlertDialogAction onClick={handleBookCounselor}>Book a Counselor</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TidyCalDialog 
+        isOpen={showBookingDialog} 
+        onClose={closeBookingDialog} 
+      />
+    </>
+  );
+};
+
+export default DNAAssessment;
