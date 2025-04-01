@@ -6,9 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { getPreviousPage } from "@/utils/navigationHistory";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Concept {
   id: string;
@@ -39,6 +39,11 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const location = useLocation();
   const params = useParams();
   const { saveSourcePath, getSourcePath } = useNavigationState();
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    console.log("[ConceptsContent] Mobile detection:", isMobile);
+  }, [isMobile]);
 
   const { data: concepts = [], isLoading } = useQuery({
     queryKey: ["concepts"],

@@ -26,9 +26,16 @@ const DiscoverLayout = () => {
   const { getContentType, saveSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
 
-  // Force recalculation of isMobile on mount
+  // Force immediate mobile detection check on mount and log result
   useEffect(() => {
-    console.log("[DiscoverLayout] Initial mobile detection:", isMobile);
+    // This forcibly triggers a re-render with the correct mobile state
+    const checkInitialMobileState = () => {
+      const width = window.innerWidth;
+      const mobileState = width < 768;
+      console.log("[DiscoverLayout] Initial render - Screen width:", width, "Mobile state:", mobileState);
+    };
+    
+    checkInitialMobileState();
   }, []);
 
   // Set up source path tracking and initialize route tracking
