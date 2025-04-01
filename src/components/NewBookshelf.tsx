@@ -26,32 +26,31 @@ const NewBookshelf: React.FC = () => {
       
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        {/* Top section - responsive layout */}
-        {user && (
-          isMobile ? (
-            // Mobile layout - stacked
-            <div className="w-full">
-              <LastReadBookHero />
-              <div className="px-4">
-                <IntellectualDNACard />
-              </div>
-            </div>
-          ) : (
-            // Desktop layout - side by side
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        {/* Main content area with consistent padding */}
+        <div className="px-4 flex flex-col gap-4">
+          {/* Hero section - responsive layout */}
+          {user && (
+            isMobile ? (
+              // Mobile layout - stacked
               <div className="w-full">
                 <LastReadBookHero />
+                <div className="mt-4">
+                  <IntellectualDNACard />
+                </div>
               </div>
-              <div className="w-full">
+            ) : (
+              // Desktop layout - side by side with consistent gap
+              <div className="grid grid-cols-2 gap-4">
+                <LastReadBookHero />
                 <IntellectualDNACard />
               </div>
-            </div>
-          )
-        )}
-        
-        {/* Main Content */}
-        <div className="flex-1 p-4 overflow-visible">
-          <BookshelfContent />
+            )
+          )}
+          
+          {/* Main Content */}
+          <div className="flex-1 overflow-visible">
+            <BookshelfContent />
+          </div>
         </div>
         
         {/* Extra padding at the bottom for safe area */}

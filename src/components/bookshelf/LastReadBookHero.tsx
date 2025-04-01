@@ -44,7 +44,7 @@ const LastReadBookHero = () => {
   console.log('LastReadBookHero - Using cover URL:', coverUrl);
 
   return (
-    <div className="h-44 w-full rounded-2xl overflow-hidden cursor-pointer relative" onClick={handleResumeReading}>
+    <div className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer" onClick={handleResumeReading}>
       {/* Background Image with Blur and Dark Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
