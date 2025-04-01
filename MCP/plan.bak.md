@@ -1,15 +1,3 @@
-I’m currently using Outseta for auth. I have an edge function called /Users/philip.galebach/coding-projects/alexandria/readiverse-haven/supabase/functions/exchange that does an exchange of JWT for a supabase JWT.  
-
-I'd like to move things to only use supabase and no longer use outseta at all. what would that involve? Create a detailed PRD by looking at my codebase. Just plan. no Code yet. 
-
-you can see all my supabase tables here: /Users/philip.galebach/coding-projects/alexandria/readiverse-haven/DOCS/Supabase/supabase_db_diagram.mmd
-
-add that to this file. /Users/philip.galebach/coding-projects/alexandria/readiverse-haven/MCP/plan.md
-
-Clarifications:
-- i don't care about migrating existing data. 
-- I dont care about social providers for sign up. just email/password. 
-
 # Implementation Plan for Supabase Auth Migration
 
 This document outlines the detailed implementation tasks required to migrate from Outseta authentication to Supabase authentication, as specified in the PRD.
@@ -28,7 +16,7 @@ Currently, the application uses Outseta for authentication with a token exchange
 
 ## Implementation Tasks
 
-### Task 1: Create Supabase Auth Context Provider (completed)
+### Task 1: Create Supabase Auth Context Provider
 **Files to create/update:**
 - Create new file: `/src/contexts/SupabaseAuthContext.tsx`
 
