@@ -12,7 +12,7 @@ const DNACompletionScreen = () => {
   // If user is already logged in, redirect to results
   React.useEffect(() => {
     if (user) {
-      navigate('/intellectual-dna');
+      navigate('/dna/welcome');
     }
   }, [user, navigate]);
 
@@ -41,7 +41,7 @@ const DNACompletionScreen = () => {
           ASSESSMENT COMPLETED
         </h2>
         <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight mb-8">
-          Create an account to view your results
+          Create an account or login to view your results
         </h1>
       </div>
 
