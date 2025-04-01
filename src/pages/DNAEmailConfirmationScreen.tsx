@@ -31,7 +31,7 @@ const DNAEmailConfirmationScreen = () => {
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
           CHECK YOUR EMAIL
         </h2>
-        <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight mb-8">
+        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight mb-8">
           Confirm your email to view your results
         </h1>
       </div>

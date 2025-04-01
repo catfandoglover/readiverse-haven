@@ -731,7 +731,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
+        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
         <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
             {items.map((item) => (
@@ -792,7 +792,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
+        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
         <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
           {anecdotesArray.map((anecdote, index) => (
             <li key={index}>{formatText(anecdote)}</li>
@@ -807,7 +807,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
         <p className="text-gray-800 font-baskerville text-lg">
           {formatText(combinedData.great_conversation)}
         </p>
@@ -819,7 +819,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (type !== "classic") return null;
     
     return (
-      <h2 className="text-xl font-baskerville mb-6 text-[#2A282A]/70">
+      <h2 className="text-xl font-libre-baskerville font-bold mb-6 text-[#2A282A]/70">
         by {combinedData?.author_id ? (
           <button 
             onClick={handleAuthorClick}
@@ -851,7 +851,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">
+        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">
           CLASSICS FROM {combinedData.name?.toUpperCase()}
         </h3>
         <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
@@ -965,12 +965,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
                 <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
               </div>
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
                 <p className="text-gray-800 font-baskerville text-lg">
                   {formatText(combinedData.great_question_connection)}
                 </p>

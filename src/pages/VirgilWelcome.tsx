@@ -20,7 +20,7 @@ const VirgilWelcome: React.FC = () => {
         setState('chat');
       }, 500); // 500ms for the header transition
 
-      return () => clearTimeout(chatTimer);
+      return () => clearTimeout(timer);
     }, 2500); // 2.5 seconds for initial display
 
     return () => {
@@ -85,7 +85,7 @@ const VirgilWelcome: React.FC = () => {
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-baskerville text-4xl md:text-5xl text-[#E9E7E2] mb-3">Meet Virgil.</h1>
+          <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl text-[#E9E7E2] mb-3">Meet Virgil.</h1>
           <p className="font-inter text-lg text-[#E9E7E2]/70">Your Philosophical Guide</p>
         </div>
         

@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { X } from "lucide-react"
@@ -85,7 +86,7 @@ const AlertDialogTitle = React.forwardRef<
   <AlertDialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-3xl font-baskerville leading-none tracking-tight text-black font-bold",
+      "text-2xl font-libre-baskerville leading-none tracking-tight text-[#282828] font-bold",
       className
     )}
     {...props}
@@ -99,7 +100,7 @@ const AlertDialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm font-oxanium mt-3 text-muted-foreground", className)}
+    className={cn("text-sm font-oxanium mt-3 text-[#282828]", className)}
     {...props}
   />
 ))
