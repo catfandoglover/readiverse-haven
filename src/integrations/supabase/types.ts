@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      archetypes: {
+        Row: {
+          archetype: string | null
+          created_at: string
+          id: number
+          landscape_image: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Relationships: []
+      }
       art: {
         Row: {
           about: string | null
@@ -1188,6 +1209,44 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "great_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_unmatched_entities: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          status: string
+          unmatched_classics: Json | null
+          unmatched_thinkers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_unmatched_entities_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "dna_analysis_results"
             referencedColumns: ["id"]
           },
         ]
