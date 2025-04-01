@@ -318,7 +318,7 @@ const IntellectualDNACourse: React.FC = () => {
           <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer"
+              className="flex items-center cursor-pointer font-libre-baskerville"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
@@ -332,7 +332,7 @@ const IntellectualDNACourse: React.FC = () => {
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer"
+                className="flex items-center cursor-pointer font-libre-baskerville"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />
