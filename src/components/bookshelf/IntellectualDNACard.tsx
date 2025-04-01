@@ -19,10 +19,10 @@ const IntellectualDNACard: React.FC = () => {
       </h3>
       <div>
         <h2 className="font-libre-baskerville font-bold text-lg text-[#E9E7E2]">
-          Intellectual DNA
+          Trace Your Intellectual DNA
         </h2>
-        <p className="font-libre-baskerville text-[#E9E7E2]/80 text-lg mt-1">
-          Uncover your worldview
+        <p className="font-libre-baskerville text-[#E9E7E2]/80 text-base mt-1">
+          Read the 60 classic texts from your kindred spirits and challenging voices
         </p>
       </div>
     </div>
