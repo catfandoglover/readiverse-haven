@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -164,19 +163,17 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div 
-        className="absolute left-0 w-full text-[#E9E7E2]" 
+        className="absolute left-0 w-full text-[#E9E7E2] px-4 md:px-6" 
         style={{ 
           bottom: "-40px", 
           zIndex: 30,
           transform: "translateZ(0)",
-          paddingBottom: "2rem",
-          paddingLeft: "1.5rem",
-          paddingRight: "1.5rem"
+          paddingBottom: "2rem"
         }}
       >
-        <div className="flex items-start justify-between w-full">
-          <div className="flex flex-col items-start max-w-[60%]">
-            <div className="relative h-20 w-20 mb-2">
+        <div className="flex flex-wrap items-start justify-between w-full">
+          <div className="flex flex-col md:flex-1 pr-2">
+            <div className="relative h-20 w-20 mb-4">
               <svg 
                 viewBox="0 0 100 100" 
                 className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -212,32 +209,30 @@ const ProfileHeader: React.FC = () => {
               </button>
             </div>
             
-            <div className="flex items-center justify-between w-full">
-              <div className="w-full">
-                <h1 
-                  className="text-sm font-libre-baskerville text-[#E9E7E2]/70 italic" 
-                  style={{ 
-                    position: "relative",
-                    zIndex: 50
-                  }}
-                >
-                  {firstName} {lastName}
-                </h1>
-                <p 
-                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap overflow-hidden text-ellipsis"
-                  style={{ 
-                    position: "relative",
-                    zIndex: 50,
-                    maxWidth: "100%"
-                  }}
-                >
-                  {isLoadingAnalysis ? 'Loading...' : archetype}
-                </p>
-              </div>
+            <div className="mt-2">
+              <h1 
+                className="text-sm font-libre-baskerville text-[#E9E7E2]/70 italic" 
+                style={{ 
+                  position: "relative",
+                  zIndex: 50
+                }}
+              >
+                {firstName} {lastName}
+              </h1>
+              <p 
+                className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] truncate"
+                style={{ 
+                  position: "relative",
+                  zIndex: 50,
+                  width: "100%"
+                }}
+              >
+                {isLoadingAnalysis ? 'Loading...' : archetype}
+              </p>
             </div>
           </div>
           
-          <div className="flex flex-col items-end self-start">
+          <div className="flex flex-col items-end self-start mt-2 md:mt-0">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
