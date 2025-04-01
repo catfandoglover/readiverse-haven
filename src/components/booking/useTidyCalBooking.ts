@@ -14,17 +14,17 @@ export const useTidyCalBooking = () => {
 
   // Listen for window messages from TidyCal
   useEffect(() => {
-    const handleBookingCompleted = (event: Event) => {
-      console.log('Booking completed event received:', (event as CustomEvent).detail);
+    const handleBookingCompleted = (event: CustomEvent) => {
+      console.log('Booking completed event received:', event.detail);
       // Handle any additional actions here
     };
     
     // Add event listener
-    window.addEventListener('tidycal:booking-completed', handleBookingCompleted);
+    window.addEventListener('tidycal:booking-completed', handleBookingCompleted as EventListener);
     
     // Clean up
     return () => {
-      window.removeEventListener('tidycal:booking-completed', handleBookingCompleted);
+      window.removeEventListener('tidycal:booking-completed', handleBookingCompleted as EventListener);
     };
   }, []);
 

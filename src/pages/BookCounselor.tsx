@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import TidyCalBooking from '@/components/booking/TidyCalBooking';
 import { toast } from "sonner";
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import MainMenu from '@/components/navigation/MainMenu';
 
 const BookCounselor = () => {
