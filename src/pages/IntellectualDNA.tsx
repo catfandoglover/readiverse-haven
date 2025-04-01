@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
+import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition 
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import MainMenu from "@/components/navigation/MainMenu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -25,39 +28,55 @@ const IntellectualDNA = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { user, logout, openLogin, openSignup, openProfile } = useAuth();
+  const [isPageReady, setIsPageReady] = useState(false);
 
   useEffect(() => {
+    // Save last visited page and restore scroll position
     saveLastVisited('dna', location.pathname);
-
-    // Restore scroll position when component mounts
     const savedPosition = getScrollPosition(location.pathname);
+    
     if (savedPosition) {
       window.scrollTo(0, savedPosition);
     }
 
-    // Save scroll position when component unmounts or location changes
+    // Setup scroll position tracking
     const handleScroll = () => {
       saveScrollPosition(location.pathname, window.scrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
+    
+    // Set page as ready after a short delay to ensure smooth rendering
+    const readyTimer = setTimeout(() => {
+      setIsPageReady(true);
+    }, 100);
+    
     return () => {
-      handleScroll(); // Save final position before unmounting
+      handleScroll(); // Save position before unmounting
       window.removeEventListener('scroll', handleScroll);
+      clearTimeout(readyTimer);
     };
   }, [location.pathname]);
 
+  // Optimized data fetching - don't block rendering for non-essential data
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['dna-progress'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('dna_assessment_progress')
-        .select('*')
-        .order('created_at');
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('dna_assessment_progress')
+          .select('*')
+          .order('created_at');
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching DNA progress:', error);
+        return null; // Return null instead of throwing to prevent UI errors
+      }
     },
+    staleTime: 60000, // Cache for 1 minute
+    retry: 1,
   });
 
   const handleNavigation = (path: string) => {
@@ -73,7 +92,32 @@ const IntellectualDNA = () => {
   };
 
   const handleStartAssessment = () => {
-    navigate('/dna/priming');
+    try {
+      // Prefetch initial data for the assessment to improve loading time
+      queryClient.prefetchQuery({
+        queryKey: ['dna-question', 'ETHICS', 'Q1'],
+        queryFn: async () => {
+          const { data } = await supabase
+            .from('dna_tree_structure')
+            .select(`
+              *,
+              question:great_questions!dna_tree_structure_question_id_fkey (
+                question,
+                category_number
+              )
+            `)
+            .eq('category', 'ETHICS')
+            .eq('tree_position', 'Q1')
+            .maybeSingle();
+          return data;
+        },
+      });
+      
+      navigate('/dna/priming');
+    } catch (error) {
+      console.error('Error navigating to assessment:', error);
+      toast.error('Unable to start assessment. Please try again.');
+    }
   };
 
   const isCurrentSection = (path: string) => {
@@ -89,6 +133,32 @@ const IntellectualDNA = () => {
     return false;
   };
 
+  // Content loaded state - show skeleton during initial load
+  if (!isPageReady) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
+        <header className="w-full p-4 flex justify-between items-center">
+          <div><Skeleton className="h-10 w-10" /></div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </header>
+        <main className="flex-1 flex flex-col items-center justify-between px-4 py-4 w-full">
+          <div className="flex-1 flex flex-col items-center justify-center w-full space-y-8 py-8 max-w-xl mx-auto">
+            <div className="space-y-6 text-center w-full">
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <Skeleton className="h-12 w-64 mx-auto" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-4 w-32 mx-auto" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-24 mx-auto" />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
       <header className="w-full p-4 flex justify-between items-center">
@@ -96,11 +166,7 @@ const IntellectualDNA = () => {
           <MainMenu />
         </div>
         <div className="flex space-x-2">
-          {false ? (
-            <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
-              Loading...
-            </Button>
-          ) : user ? (
+          {user ? (
             <>
               <Button 
                 onClick={openProfile} 

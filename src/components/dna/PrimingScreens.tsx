@@ -1,93 +1,141 @@
-
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 
 interface PrimingScreensProps {
   onComplete: (name: string) => void;
-  defaultName?: string;
+  isPrefetching?: boolean;
+  prefetchProgress?: number;
 }
 
-const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) => {
+const PrimingScreens: React.FC<PrimingScreensProps> = ({ 
+  onComplete,
+  isPrefetching = false,
+  prefetchProgress = 0
+}) => {
   const [currentScreen, setCurrentScreen] = useState(0);
-  const [name, setName] = useState(defaultName);
-  const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
 
   const screens = [
     {
-      title: "Take a couple breaths.",
+      title: "Welcome!",
+      content: (
+        <p className="font-libre-baskerville text-xl md:text-2xl text-center text-[#373763]">
+          Before we dive in, let's get acquainted. What name would you like to use for this assessment?
+        </p>
+      ),
+      input: (
+        <Input 
+          type="text" 
+          placeholder="Enter your name" 
+          className="w-full rounded-2xl py-6 bg-[#E9E7E2] text-[#373763] font-oxanium text-sm font-bold uppercase tracking-wider"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+        />
+      ),
     },
     {
-      title: "First thought, best thought.",
+      title: "Instructions",
+      content: (
+        <>
+          <p className="font-libre-baskerville text-xl md:text-2xl text-center text-[#373763] mb-4">
+            This assessment consists of a series of questions designed to help you understand your intellectual DNA.
+          </p>
+          <ul className="list-disc pl-5 text-[#373763]">
+            <li>Read each question carefully.</li>
+            <li>Answer honestly based on your beliefs.</li>
+            <li>There are no right or wrong answers.</li>
+          </ul>
+        </>
+      ),
     },
     {
-      title: "Interpret as you wish.",
-    },
-    {
-      title: "Let's begin.",
+      title: "Privacy",
+      content: (
+        <>
+          <p className="font-libre-baskerville text-xl md:text-2xl text-center text-[#373763] mb-4">
+            Your responses will be kept confidential and used only to generate your personal intellectual DNA profile.
+          </p>
+          <p className="text-[#373763]">
+            We do not share your data with third parties.
+          </p>
+        </>
+      ),
     },
   ];
 
-  const handleContinue = () => {
-    if (currentScreen < screens.length - 1) {
-      setCurrentScreen(prev => prev + 1);
-    } else {
-      // When we reach the last screen, complete the priming process
-      onComplete(name);
-    }
+  const handleNextScreen = () => {
+    setCurrentScreen((prev) => Math.min(prev + 1, screens.length - 1));
   };
 
-  const handleExit = () => {
-    // Navigate directly to the DNA start page
-    navigate('/dna');
+  const renderContinueButton = () => {
+    // When prefetching is happening on the final screen
+    if (currentScreen === screens.length - 1 && isPrefetching) {
+      return (
+        <div className="w-full">
+          <div className="mb-2 flex justify-between items-center text-xs text-[#373763]/60 font-oxanium">
+            <span>Loading questions...</span>
+            <span>{Math.round(prefetchProgress)}%</span>
+          </div>
+          <Progress 
+            value={prefetchProgress}
+            className="h-2 bg-[#373763]/20"
+          />
+          <Button 
+            disabled
+            className="w-full mt-4 py-6 rounded-2xl bg-[#373763]/70 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          >
+            PLEASE WAIT
+          </Button>
+        </div>
+      );
+    }
+  
+    // On the final screen, we show the complete button
+    if (currentScreen === screens.length - 1) {
+      return (
+        <Button 
+          onClick={() => onComplete(userName)}
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+        >
+          START ASSESSMENT
+        </Button>
+      );
+    }
+  
+    // For other screens, show the next button
+    return (
+      <Button 
+        onClick={handleNextScreen}
+        className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+      >
+        CONTINUE
+      </Button>
+    );
   };
 
   return (
     <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
+      {/* No back button in header */}
       <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-        <button 
-          onClick={handleExit}
-          className="text-[#332E38]/25 hover:text-[#332E38]/50 font-oxanium text-sm uppercase tracking-wider font-bold transition-colors"
-          type="button"
-          aria-label="Go back to DNA start page"
-        >
-          BACK
-        </button>
         <div className="flex-1"></div> {/* Spacer */}
       </header>
-
-      {/* Progress indicator */}
-      <div className="w-full max-w-md flex justify-center pt-4 px-6">
-        <div className="flex space-x-2">
-          {screens.map((_, index) => (
-            <div 
-              key={index}
-              className={`h-1 w-8 rounded-full ${
-                index <= currentScreen ? "bg-[#373763]" : "bg-[#373763]/20"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          {screens[currentScreen].subtitle}
-        </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight">
           {screens[currentScreen].title}
-        </h1>
+        </h2>
+        <div className="mb-8">
+          {screens[currentScreen].content}
+        </div>
+        {screens[currentScreen].input}
       </div>
 
       {/* Continue button */}
       <div className="w-full max-w-md mb-16 px-6">
-        <Button 
-          onClick={handleContinue}
-          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
-        >
-          CONTINUE
-        </Button>
+        {renderContinueButton()}
       </div>
     </div>
   );
