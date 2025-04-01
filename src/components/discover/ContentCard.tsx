@@ -150,7 +150,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <img
             src={image}
             alt={title}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`w-full h-full object-cover object-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             loading="lazy"
             onLoad={() => setImageLoaded(true)}
             onError={(e) => {
@@ -159,7 +159,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             }}
           />
         </div>
-        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[35%] relative z-10 min-h-[55vh]">
+        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[32%] relative z-10 min-h-[52vh]">
           <div className="mb-4">
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
@@ -249,7 +249,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <img
           src={image}
           alt={title}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-full object-cover object-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
