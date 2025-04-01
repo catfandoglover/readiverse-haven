@@ -67,7 +67,7 @@ const DNAAssessment = () => {
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   
-  const { showBookingDialog, openBookingDialog, closeBookingDialog, handleBookingCompletedEvents } = useTidyCalBooking();
+  const { showBookingDialog, openBookingDialog, closeBookingDialog } = useTidyCalBooking();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');

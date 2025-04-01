@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TidyCalBooking from './TidyCalBooking';
 
 interface TidyCalDialogProps {
   open: boolean;
@@ -16,17 +15,6 @@ interface TidyCalDialogProps {
 
 const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
-
-  const handleSuccess = (bookingData: any) => {
-    console.log('Booking successful:', bookingData);
-    // Dispatch event for integration with the parent component
-    window.dispatchEvent(new CustomEvent('tidycal:booking-completed', { detail: bookingData }));
-    
-    // Close the dialog after a short delay to show the success message
-    setTimeout(() => {
-      onOpenChange(false);
-    }, 2000);
-  };
 
   // When the dialog opens, navigate to the full page instead
   React.useEffect(() => {
