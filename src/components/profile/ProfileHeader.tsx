@@ -170,7 +170,7 @@ const ProfileHeader: React.FC = () => {
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex flex-col items-start mt-6">
+          <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
                 viewBox="0 0 100 100" 
@@ -235,7 +235,7 @@ const ProfileHeader: React.FC = () => {
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4 w-full"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 w-full"
               aria-label="Share profile"
             >
               SHARE PROFILE
