@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -210,7 +211,7 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-end mt-4 md:mt-0 w-full md:w-auto">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
