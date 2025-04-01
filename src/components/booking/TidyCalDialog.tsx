@@ -36,7 +36,8 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
     }
   }, [open, navigate, onOpenChange]);
 
-  // We still render the dialog for cases where we might want to use it directly
+  // We don't render the actual TidyCalBooking component in the dialog anymore,
+  // as we redirect to the full page immediately
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[90%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
@@ -45,10 +46,9 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
             Book a DNA Assessment Discussion
           </DialogTitle>
         </DialogHeader>
-        <TidyCalBooking 
-          onClose={() => onOpenChange(false)} 
-          onSuccess={handleSuccess}
-        />
+        <div className="py-8 flex justify-center items-center">
+          <p>Redirecting to booking page...</p>
+        </div>
       </DialogContent>
     </Dialog>
   );

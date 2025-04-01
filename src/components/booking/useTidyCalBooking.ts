@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useTidyCalBooking = () => {
   const [showBookingDialog, setShowBookingDialog] = useState(false);
@@ -12,19 +12,26 @@ export const useTidyCalBooking = () => {
     setShowBookingDialog(false);
   };
 
-  // Listen for window messages in a real implementation
-  const handleBookingCompletedEvents = () => {
-    window.addEventListener('tidycal:booking-completed', (event) => {
+  // Listen for window messages from TidyCal
+  useEffect(() => {
+    const handleBookingCompleted = (event: Event) => {
       console.log('Booking completed event received:', (event as CustomEvent).detail);
       // Handle any additional actions here
-    });
-  };
+    };
+    
+    // Add event listener
+    window.addEventListener('tidycal:booking-completed', handleBookingCompleted);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('tidycal:booking-completed', handleBookingCompleted);
+    };
+  }, []);
 
   return {
     showBookingDialog,
     openBookingDialog,
-    closeBookingDialog,
-    handleBookingCompletedEvents
+    closeBookingDialog
   };
 };
 

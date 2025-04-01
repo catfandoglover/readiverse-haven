@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import TidyCalBooking from '@/components/booking/TidyCalBooking';
@@ -29,9 +29,14 @@ const BookCounselor = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           BOOK A COUNSELOR
         </h2>
-        <div className="w-10 h-10">
-          {/* Empty div to balance the layout */}
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-[#E9E7E2] hover:bg-[#E9E7E2]/10"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
       </div>
       
       <div className="max-w-lg mx-auto p-6">
