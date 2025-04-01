@@ -8,17 +8,11 @@ import { Check } from "lucide-react";
 const DNACompletionScreen = () => {
   const navigate = useNavigate();
   const { openLogin, user } = useAuth();
-  const [isRedirecting, setIsRedirecting] = React.useState(false);
 
   // If user is already logged in, redirect to results
   React.useEffect(() => {
     if (user) {
-      setIsRedirecting(true);
-      // Short delay before redirecting to ensure smooth transition
-      const timer = setTimeout(() => {
-        navigate('/dna/welcome');
-      }, 500);
-      return () => clearTimeout(timer);
+      navigate('/dna/welcome');
     }
   }, [user, navigate]);
 
@@ -47,27 +41,19 @@ const DNACompletionScreen = () => {
           ASSESSMENT COMPLETED
         </h2>
         <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight mb-8">
-          {isRedirecting 
-            ? "Redirecting to your results..." 
-            : "Create an account or login to view your results"}
+          Create an account or login to view your results
         </h1>
-        
-        {isRedirecting && (
-          <div className="animate-spin h-8 w-8 border-2 border-[#373763]/50 border-t-[#373763] rounded-full"></div>
-        )}
       </div>
 
-      {/* Continue button - only show if not redirecting */}
-      {!isRedirecting && (
-        <div className="w-full max-w-md mb-16 px-6">
-          <Button 
-            onClick={handleLoginClick}
-            className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
-          >
-            LOGIN / REGISTER
-          </Button>
-        </div>
-      )}
+      {/* Continue button */}
+      <div className="w-full max-w-md mb-16 px-6">
+        <Button 
+          onClick={handleLoginClick}
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
+        >
+          LOGIN / REGISTER
+        </Button>
+      </div>
     </div>
   );
 };
