@@ -161,15 +161,8 @@ const ProfileHeader: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
       </div>
       
-      <div 
-        className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
-        style={{ 
-          bottom: "-42px",
-          zIndex: 30,
-          transform: "translateZ(0)"
-        }}
-      >
-        <div className="flex items-center justify-between">
+      <div className="w-full px-6 pb-6 text-[#E9E7E2] transform -translate-y-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
@@ -207,31 +200,17 @@ const ProfileHeader: React.FC = () => {
               </button>
             </div>
             
-            <div className="flex items-center justify-between w-full">
-              <div>
-                <h1 
-                  className="text-sm font-libre-baskerville italic" 
-                  style={{ 
-                    position: "relative",
-                    zIndex: 50
-                  }}
-                >
-                  {firstName} {lastName}
-                </h1>
-                <p 
-                  className="text-2xl font-libre-baskerville font-bold text-[#E9E7E2]"
-                  style={{ 
-                    position: "relative",
-                    zIndex: 50
-                  }}
-                >
-                  {isLoadingAnalysis ? 'Loading...' : archetype}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-sm font-libre-baskerville italic">
+                {firstName} {lastName}
+              </h1>
+              <p className="text-2xl font-libre-baskerville font-bold text-[#E9E7E2]">
+                {isLoadingAnalysis ? 'Loading...' : archetype}
+              </p>
             </div>
           </div>
           
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-start md:items-end self-start md:self-center mt-2 md:mt-0">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
