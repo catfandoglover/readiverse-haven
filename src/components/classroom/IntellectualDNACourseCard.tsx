@@ -16,7 +16,7 @@ const IntellectualDNACourseCard: React.FC = () => {
       style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
       onClick={handleClick}
     >
-      <h3 className="font-libre-baskerville font-bold uppercase text-xs text-[#E9E7E2] tracking-wider mb-1">
+      <h3 className="font-oxanium font-bold uppercase text-xs text-[#E9E7E2] tracking-wider mb-1">
         Intellectual DNA course
       </h3>
       <p className="font-oxanium text-[#E9E7E2]/50 text-xs mb-3 mt-2">
