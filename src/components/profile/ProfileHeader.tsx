@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -113,11 +112,7 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
-      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-      // ---------------------------------------------------------------------------------
-      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
       const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -135,12 +130,6 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
-        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
-        // ---------------------------------------------------------------------------------
-        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
-        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-        // ---------------------------------------------------------------------------------
-        
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
@@ -173,11 +162,12 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div 
-        className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
+        className="absolute left-0 w-full px-6 text-[#E9E7E2]" 
         style={{ 
-          bottom: "-40px", // Adjusted from -32px to -40px to position container higher
+          bottom: "-40px", 
           zIndex: 30,
-          transform: "translateZ(0)"
+          transform: "translateZ(0)",
+          paddingBottom: "2rem"
         }}
       >
         <div className="flex items-start justify-between">
@@ -219,7 +209,7 @@ const ProfileHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between w-full">
-              <div>
+              <div className="w-full">
                 <h1 
                   className="text-sm font-libre-baskerville text-[#E9E7E2]/70 italic" 
                   style={{ 
@@ -242,7 +232,7 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className={`flex flex-col items-end self-start`}>
+          <div className="flex flex-col items-end self-start">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
