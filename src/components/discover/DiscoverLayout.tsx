@@ -26,6 +26,11 @@ const DiscoverLayout = () => {
   const { getContentType, saveSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
 
+  // Force recalculation of isMobile on mount
+  useEffect(() => {
+    console.log("[DiscoverLayout] Initial mobile detection:", isMobile);
+  }, []);
+
   // Set up source path tracking and initialize route tracking
   useEffect(() => {
     // Only track when we enter the discover layout initially
