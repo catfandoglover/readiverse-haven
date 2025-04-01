@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -468,6 +469,31 @@ async function generateCompleteAnalysis(answers_json: string): Promise<{ section
   }
 }
 
+// New function to validate analysis against database entities
+async function validateAnalysisResults(combinedAnalysis: Record<string, string>, analysisId: string): Promise<Record<string, string>> {
+  try {
+    console.log('Validating analysis results against database entities...');
+    const response = await supabase.functions.invoke('validate-dna-entities', {
+      body: { analysisResults: combinedAnalysis, analysisId }
+    });
+    
+    if (response.error) {
+      console.error('Error validating entities:', response.error);
+      return combinedAnalysis; // Return original if validation fails
+    }
+    
+    console.log(`Validation complete. Stats: ${JSON.stringify(response.data.stats)}`);
+    if (response.data.unmatchedEntitiesCount > 0) {
+      console.log(`Found ${response.data.unmatchedEntitiesCount} unmatched entities that need review`);
+    }
+    
+    return response.data.validatedResults;
+  } catch (error) {
+    console.error('Error in validateAnalysisResults:', error);
+    return combinedAnalysis; // Return original if validation fails
+  }
+}
+
 async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   try {
     console.log(`Checking if analysis already exists for assessment ${assessment_id}`);
@@ -570,23 +596,24 @@ serve(async (req) => {
         combinedAnalysisTexts.push(section.analysis);
       }
       
+      // New step: Validate analysis results against database entities
+      console.log('Validating analysis results against database entities...');
+      const validatedAnalysis = await validateAnalysisResults(combinedAnalysis, assessment_id);
+      
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
-        ...combinedAnalysis
+        ...validatedAnalysis
       };
 
       // Debug logging to see the full objects before saving
       console.log('===== DEBUG: combinedAnalysis keys =====');
-      console.log(Object.keys(combinedAnalysis));
+      console.log(Object.keys(validatedAnalysis));
       
-      console.log('===== DEBUG: Full analysisRecord =====');
-      console.log(JSON.stringify(analysisRecord, null, 2));
-      
-      console.log('Storing combined analysis in database...');
+      console.log('Storing validated analysis in database...');
       const { error: storeError } = await supabase
         .from('dna_analysis_results')
         .insert(analysisRecord);
@@ -596,12 +623,12 @@ serve(async (req) => {
         throw storeError;
       }
       
-      console.log('Combined analysis stored successfully');
+      console.log('Analysis stored successfully with validation applied');
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Combined analysis stored successfully'
+          message: 'Analysis stored successfully with validation applied'
         }),
         { 
           headers: {

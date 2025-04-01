@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      archetypes: {
+        Row: {
+          archetype: string | null
+          created_at: string
+          id: number
+          landscape_image: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Relationships: []
+      }
       art: {
         Row: {
           about: string | null
