@@ -825,8 +825,6 @@ patterns while remaining accessible and
   "ethics_introduction": "Ethics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
   "politics_introduction": "Politics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
   "aesthetics_introduction": "Aesthetics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices"
-  "most_kindred_spirit": "The thinker, drawn from the examples given above in this profile, who most closely aligns with the overall philosophical profile",
-  "most_challenging_voice": "The thinker, drawn from the examples given above in this profile, who most directly and forcefully challenges the overall philosophical profile",
 }`;
 
     case 2:

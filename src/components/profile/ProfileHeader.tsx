@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share, Pen, Calendar } from "lucide-react";
+import { Share, Pen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +35,6 @@ const ProfileHeader: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
@@ -111,7 +109,11 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
+      // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+      // ---------------------------------------------------------------------------------
+      // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
       const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+      // ---------------------------------------------------------------------------------
       
       if (navigator.share) {
         await navigator.share({
@@ -129,7 +131,11 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
+        // FUTURE EDIT POINT: Replace this hardcoded URL with a dynamic one based on user profile
+        // ---------------------------------------------------------------------------------
+        // Original code: const shareUrl = window.location.origin + `/profile/share/${encodeURIComponent(fullName)}`;
         const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
+        // ---------------------------------------------------------------------------------
         
         await navigator.clipboard.writeText(shareUrl);
         toast({
@@ -162,8 +168,15 @@ const ProfileHeader: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
       </div>
       
-      <div className="w-full px-6 pb-6 text-[#E9E7E2] transform -translate-y-10">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+      <div 
+        className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
+        style={{ 
+          bottom: "-32px",
+          zIndex: 30,
+          transform: "translateZ(0)"
+        }}
+      >
+        <div className="flex items-center justify-between">
           <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
@@ -201,35 +214,39 @@ const ProfileHeader: React.FC = () => {
               </button>
             </div>
             
-            <div>
-              <h1 className="text-sm font-libre-baskerville italic">
-                {firstName} {lastName}
-              </h1>
-              <p className="text-2xl font-libre-baskerville font-bold text-[#E9E7E2]">
-                {isLoadingAnalysis ? 'Loading...' : archetype}
-              </p>
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <h1 
+                  className="text-2xl font-libre baskerville font-italics" 
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {firstName} {lastName}
+                </h1>
+                <p 
+                  className="text-sm font-libre baskerville text-[#E9E7E2]/70 italic"
+                  style={{ 
+                    position: "relative",
+                    zIndex: 50
+                  }}
+                >
+                  {isLoadingAnalysis ? 'Loading...' : archetype}
+                </p>
+              </div>
             </div>
           </div>
           
-          <div className="flex flex-col items-end mt-4 md:mt-0 w-full md:w-auto">
+          <div className="flex items-center">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 w-full md:w-auto"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-sm rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-4"
               aria-label="Share profile"
             >
               SHARE PROFILE
               <Share className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/book-counselor')}
-              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full md:w-auto"
-              aria-label="Book a human"
-            >
-              BOOK A HUMAN
-              <Calendar className="h-4 w-4" />
             </Button>
           </div>
         </div>
