@@ -55,6 +55,7 @@ export function useIsMobile() {
       setTimeout(checkMobile, 150);
     }
     
+    // Add resize and orientation change event listeners
     window.addEventListener("orientationchange", handleOrientationChange);
     window.addEventListener("resize", checkMobile);
     
