@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -162,7 +163,7 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div className="w-full px-6 pb-6 text-[#E9E7E2] transform -translate-y-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
           <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
@@ -210,11 +211,11 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-start md:items-end self-start md:self-center mt-2 md:mt-0">
+          <div className="flex flex-col items-end md:flex-shrink-0">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
-              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 w-full"
+              className="bg-[#263934] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#263934]/90 transition-colors flex items-center justify-center gap-2 z-10 w-full md:w-auto"
               aria-label="Share profile"
             >
               SHARE PROFILE
@@ -224,7 +225,7 @@ const ProfileHeader: React.FC = () => {
             <Button 
               variant="ghost" 
               onClick={() => navigate('/book-counselor')}
-              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full"
+              className="bg-[#373763] text-[#E9E7E2] uppercase font-oxanium text-xs rounded-2xl px-4 py-2 hover:bg-[#373763]/90 transition-colors flex items-center justify-center gap-2 z-10 mt-2 w-full md:w-auto"
               aria-label="Book a human"
             >
               BOOK A HUMAN
