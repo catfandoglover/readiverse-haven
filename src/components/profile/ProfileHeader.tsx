@@ -163,7 +163,7 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div className="w-full px-6 pb-6 text-[#E9E7E2] transform -translate-y-10">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex flex-col items-start">
             <div className="relative h-20 w-20 mb-2">
               <svg 
@@ -211,7 +211,7 @@ const ProfileHeader: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex flex-col items-end md:flex-shrink-0">
+          <div className="flex flex-col items-end md:self-center md:mt-5">
             <Button 
               variant="ghost" 
               onClick={handleShareClick}
