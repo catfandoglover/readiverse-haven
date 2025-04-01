@@ -164,7 +164,7 @@ const ProfileHeader: React.FC = () => {
       <div 
         className="absolute left-0 w-full px-6 pb-6 text-[#E9E7E2]" 
         style={{ 
-          bottom: "42px",
+          bottom: "-42px",
           zIndex: 30,
           transform: "translateZ(0)"
         }}
