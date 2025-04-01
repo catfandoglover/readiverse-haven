@@ -38,7 +38,12 @@ const LastReadBookHero = () => {
     return null;
   }
 
-  const coverUrl = lastReadBook.book.cover_url || lastReadBook.book.Cover_super || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
+  // Prioritize icon_illustration if available, then cover_url, then Cover_super, then default image
+  const coverUrl = lastReadBook.book.icon_illustration || 
+                  lastReadBook.book.cover_url || 
+                  lastReadBook.book.Cover_super || 
+                  'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
+  
   const buttonText = lastReadBook.isDefaultBook ? "RESUME" : "RESUME";
   
   console.log('LastReadBookHero - Using cover URL:', coverUrl);
