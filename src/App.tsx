@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AuthProvider, useAuth } from "@/contexts/OutsetaAuthContext";
+import { AuthProvider, useAuth } from "@/contexts/SupabaseAuthContext";
 import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
 import NewBookshelf from "@/components/NewBookshelf";
@@ -42,6 +42,8 @@ import ExamWelcome from "./pages/ExamWelcome";
 import ExamVirgilChat from "./pages/ExamVirgilChat";
 import BookCounselor from "./pages/BookCounselor";
 import BookingSuccess from "./pages/BookingSuccess";
+import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
@@ -120,7 +122,9 @@ const App = () => (
                 <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
                 <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/discover/search/questions" element={<GreatQuestions />} />
-                <Route path="/login" element={<LoginButtons />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Login />} /> {/* Reuse Login component with signup tab */}
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                 <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
