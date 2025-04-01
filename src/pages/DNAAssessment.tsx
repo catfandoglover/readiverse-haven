@@ -832,7 +832,7 @@ const DNAAssessment = () => {
         </div>
         <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
           <div className={`flex-1 flex items-center justify-center py-8 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
-            <h1 className="text-3xl md:text-4xl font-libre-baskerville font-bold text-center mx-auto max-w-md px-6 text-[#373763]">
+            <h1 className="text-3xl md:text-4xl font-baskerville text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion?.question?.question}
             </h1>
           </div>
@@ -898,7 +898,7 @@ const DNAAssessment = () => {
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
             <AlertDialogHeader className="tidycal-header">
-              <AlertDialogTitle className="font-libre-baskerville font-bold">Need some time to think?</AlertDialogTitle>
+              <AlertDialogTitle className="font-baskerville">Need some time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>

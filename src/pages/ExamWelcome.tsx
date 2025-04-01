@@ -29,7 +29,7 @@ const ExamWelcome: React.FC = () => {
           isAnimationDone ? "opacity-0" : "opacity-100"
         )}
       >
-        <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl mb-4">
+        <h1 className="font-baskerville text-4xl md:text-5xl mb-4">
           Welcome, {userName}.
         </h1>
         <p className="text-xl font-inter">

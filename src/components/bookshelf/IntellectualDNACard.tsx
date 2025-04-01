@@ -17,7 +17,7 @@ const IntellectualDNACard: React.FC = () => {
       <h3 className="font-oxanium uppercase text-base text-[#E9E7E2] uppercase tracking-wider font-bold">
         Intellectual DNA
       </h3>
-      <p className="font-oxanium text-[#E9E7E2]/50 text-base mt-4">
+      <p className="font-oxanium text-[#E9E7E2]/50 text-base">
         60 texts from iconic thinkers that align and challenge your worldview, organized by field. If you need help with a difficult passage or text, Virgil is always there as your guide.
       </p>
     </div>

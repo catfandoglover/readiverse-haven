@@ -52,7 +52,7 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
         onKeyDown={handleKeyDown}
         placeholder={isRecording ? "Recording..." : disabled ? "Chat is disabled while your results are ready" : "Message Virgil..."}
         className={cn(
-          "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] font-libre-baskerville",
+          "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px]",
           themeColors.inputBackground,
           themeColors.inputText,
           themeColors.inputPlaceholder

@@ -137,12 +137,10 @@ export type Database = {
           author_id: string | null
           bookshop_link: string | null
           categories: string[] | null
-          city_published: string | null
-          country_published: string | null
           Cover_super: string | null
           cover_url: string | null
           created_at: string
-          epub_file_url: string | null
+          epub_file_url: string
           great_question_connection: string | null
           icon_illustration: string | null
           id: string
@@ -159,12 +157,10 @@ export type Database = {
           author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
-          city_published?: string | null
-          country_published?: string | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
-          epub_file_url?: string | null
+          epub_file_url: string
           great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string
@@ -181,12 +177,10 @@ export type Database = {
           author_id?: string | null
           bookshop_link?: string | null
           categories?: string[] | null
-          city_published?: string | null
-          country_published?: string | null
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
-          epub_file_url?: string | null
+          epub_file_url?: string
           great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string

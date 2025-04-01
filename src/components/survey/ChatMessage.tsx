@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -92,7 +91,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-start gap-2 p-3 mb-2 font-libre-baskerville",
+        "flex items-start gap-2 p-3 mb-2 font-oxanium",
         role === 'user' 
           ? "bg-[#332E38]/10 ml-auto max-w-[80%] rounded-2xl text-[#282828]" 
           : "mr-auto max-w-[80%] text-[#282828]"
@@ -115,11 +114,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="flex-1">
         {isTranscribedVoice ? (
           <>
-            <p className="text-xs text-muted-foreground mb-1">Transcribed voice message:</p>
-            <p className="text-sm whitespace-pre-wrap text-[#282828]">{cleanedContent}</p>
+            <p className="text-xs text-muted-foreground mb-1 font-oxanium">Transcribed voice message:</p>
+            <p className="text-sm whitespace-pre-wrap text-[#282828] font-oxanium">{cleanedContent}</p>
           </>
         ) : (
-          <p className="text-sm whitespace-pre-wrap text-[#282828]">{cleanedContent}</p>
+          <p className="text-sm whitespace-pre-wrap text-[#282828] font-oxanium">{cleanedContent}</p>
         )}
       </div>
     </div>

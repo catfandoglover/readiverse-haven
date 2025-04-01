@@ -15,16 +15,16 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
   const screens = [
     {
+      subtitle: "BEFORE WE GET STARTED",
       title: "Take a couple breaths.",
     },
     {
-      title: "First thought, best thought.",
+      subtitle: "THESE AREN'T YOUR NORMAL QUESTIONS",
+      title: "There are no wrong answers.",
     },
     {
-      title: "Interpret as you wish.",
-    },
-    {
-      title: "Let's begin.",
+      subtitle: "BECOME WHO YOU ARE",
+      title: "Let's get started.",
     },
   ];
 
@@ -75,7 +75,7 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
           {screens[currentScreen].subtitle}
         </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight">
+        <h1 className="font-baskerville text-[#373763] text-4xl md:text-5xl leading-tight">
           {screens[currentScreen].title}
         </h1>
       </div>
