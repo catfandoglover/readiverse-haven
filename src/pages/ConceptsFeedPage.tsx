@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ConceptsContent from "@/components/discover/ConceptsContent";
@@ -12,7 +12,12 @@ const ConceptsFeedPage = () => {
   const [detailedViewVisible, setDetailedViewVisible] = React.useState(false);
   const isMobile = useIsMobile();
   
-  React.useEffect(() => {
+  // Force immediate mobile detection check on mount
+  useEffect(() => {
+    console.log("[ConceptsFeedPage] Mobile detection:", isMobile);
+  }, []);
+  
+  useEffect(() => {
     // Save the current page path (not search page) as the source path for proper back navigation
     saveSourcePath(window.location.pathname);
   }, [saveSourcePath]);

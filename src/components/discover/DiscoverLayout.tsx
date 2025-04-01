@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -30,17 +29,18 @@ const DiscoverLayout = () => {
   useEffect(() => {
     // Only track when we enter the discover layout initially
     if (!initialRoute) {
-      setInitialRoute(location.pathname);
-      console.log("[DiscoverLayout] Initial route set to:", location.pathname);
+      const path = location.pathname;
+      setInitialRoute(path);
+      console.log("[DiscoverLayout] Initial route set to:", path);
       
       // Set initial tab based on the initial route
-      if (location.pathname.includes('/discover/classics')) {
+      if (path.includes('/discover/classics')) {
         setActiveTab("classics");
-      } else if (location.pathname.includes('/discover/icons')) {
+      } else if (path.includes('/discover/icons')) {
         setActiveTab("icons");
-      } else if (location.pathname.includes('/discover/concepts')) {
+      } else if (path.includes('/discover/concepts')) {
         setActiveTab("concepts");
-      } else if (location.pathname.includes('/discover/questions')) {
+      } else if (path.includes('/discover/questions')) {
         setActiveTab("questions");
       } else {
         setActiveTab("for-you");
@@ -52,85 +52,84 @@ const DiscoverLayout = () => {
       saveSourcePath(location.pathname);
       console.log("[DiscoverLayout] Saved source path:", location.pathname);
       
-      // Force remount of content components when route changes
+      // Force remount of content components when route changes significantly
       if (location.pathname !== initialRoute) {
-        setRouteKey(`route-key-${location.pathname}-${Date.now()}`);
+        const newRouteKey = `route-key-${location.pathname}`;
+        if (!routeKey.startsWith(newRouteKey)) {
+          setRouteKey(newRouteKey);
+        }
       }
     }
-  }, [location.pathname, saveSourcePath, initialRoute]);
+  }, [location.pathname, saveSourcePath, initialRoute, routeKey]);
 
-  // Update active tab based on the path for non-detail views only
+  // Update active tab and detailed view status based on the path
   useEffect(() => {
-    const showDetailedView = location.pathname.includes('/view/');
-    setDetailedViewVisible(showDetailedView);
+    const path = location.pathname;
+    const showDetailedView = path.includes('/view/');
     
-    // Don't change the active tab for detail views - this is key to fixing the issue
+    // Update detailed view visibility state
+    if (detailedViewVisible !== showDetailedView) {
+      setDetailedViewVisible(showDetailedView);
+    }
+    
+    // Don't change the active tab for detail views
     if (showDetailedView) {
       console.log("[DiscoverLayout] Detail view detected, preserving current tab:", activeTab);
       return;
     }
     
-    // Otherwise, determine what tab should be active based on the route
-    if (location.pathname.includes('/discover/classics')) {
-      setActiveTab("classics");
-      console.log("[DiscoverLayout] Set active tab to classics from discover route");
-    } else if (location.pathname.includes('/discover/icons')) {
-      setActiveTab("icons");
-      console.log("[DiscoverLayout] Set active tab to icons from discover route");
-    } else if (location.pathname.includes('/discover/concepts')) {
-      setActiveTab("concepts");
-      console.log("[DiscoverLayout] Set active tab to concepts from discover route");
-    } else if (location.pathname.includes('/discover/questions')) {
-      setActiveTab("questions");
-      console.log("[DiscoverLayout] Set active tab to questions from discover route");
-    } else if (location.pathname === '/discover') {
-      setActiveTab("for-you");
-      console.log("[DiscoverLayout] Set active tab to for-you from discover route");
+    // Determine what tab should be active based on the route
+    let newTab: TabType | null = null;
+    
+    if (path.includes('/discover/classics')) {
+      newTab = "classics";
+    } else if (path.includes('/discover/icons')) {
+      newTab = "icons";
+    } else if (path.includes('/discover/concepts')) {
+      newTab = "concepts";
+    } else if (path.includes('/discover/questions')) {
+      newTab = "questions";
+    } else if (path === '/discover') {
+      newTab = "for-you";
     }
-  }, [location.pathname, activeTab]);
+    
+    // Only update if we have a new valid tab and it's different from current
+    if (newTab && newTab !== activeTab) {
+      setActiveTab(newTab);
+      setCurrentIndex(0); // Reset index when changing tabs
+      console.log(`[DiscoverLayout] Set active tab to ${newTab} from discover route`);
+    }
+  }, [location.pathname, activeTab, detailedViewVisible]);
 
   const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    setCurrentIndex(0);
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      setCurrentIndex(0);
+      // Update URL to match selected tab
+      navigate(`/discover${tab === "for-you" ? "" : `/${tab}`}`);
+    }
   };
 
   const getContentComponent = (tab: TabType, index: number) => {
+    const sharedProps = {
+      currentIndex: index,
+      onDetailedViewShow: () => setDetailedViewVisible(true),
+      onDetailedViewHide: () => setDetailedViewVisible(false)
+    };
+    
+    const key = `${tab}-${routeKey}`;
+    
     switch (tab) {
       case "for-you":
-        return <ForYouContent 
-                 key={`for-you-${routeKey}`}
-                 currentIndex={index} 
-                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
-                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
-               />;
+        return <ForYouContent key={key} {...sharedProps} />;
       case "classics":
-        return <ClassicsContent 
-                 key={`classics-${routeKey}`}
-                 currentIndex={index} 
-                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
-                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
-               />;
+        return <ClassicsContent key={key} {...sharedProps} />;
       case "icons":
-        return <IconsContent 
-                 key={`icons-${routeKey}`}
-                 currentIndex={index} 
-                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
-                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
-               />;
+        return <IconsContent key={key} {...sharedProps} />;
       case "concepts":
-        return <ConceptsContent 
-                 key={`concepts-${routeKey}`}
-                 currentIndex={index} 
-                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
-                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
-               />;
+        return <ConceptsContent key={key} {...sharedProps} />;
       case "questions":
-        return <QuestionsContent 
-                 key={`questions-${routeKey}`}
-                 currentIndex={index} 
-                 onDetailedViewShow={() => setDetailedViewVisible(true)} 
-                 onDetailedViewHide={() => setDetailedViewVisible(false)} 
-               />;
+        return <QuestionsContent key={key} {...sharedProps} />;
     }
   };
 
