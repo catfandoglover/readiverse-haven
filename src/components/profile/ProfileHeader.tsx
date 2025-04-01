@@ -224,7 +224,7 @@ const ProfileHeader: React.FC = () => {
                   {firstName} {lastName}
                 </h1>
                 <p 
-                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap"
                   style={{ 
                     position: "relative",
                     zIndex: 50,
