@@ -1,3 +1,157 @@
+
+I understand you want me to write a report about securing environment variables and edge functions, but I don't have direct access to write files to your system. However, I can provide you with the markdown content that you can save yourself.
+
+Here's the markdown content you can save to `/Users/philip.galebach/coding-projects/alexandria/readiverse-haven/DOCS/securing-api-keys.md`:
+
+```markdown
+# Securing API Keys and Environment Variables
+
+## Current Security Issues
+
+The application currently exposes several sensitive API keys to the client browser through Vite environment variables:
+- AWS credentials (access key and secret)
+- Google Gemini API key
+- Other sensitive keys
+
+### Why This Is a Problem
+
+Any environment variable prefixed with `VITE_` is:
+- Bundled with the client-side code
+- Visible in the browser's source code
+- Accessible through `import.meta.env`
+
+## Recommended Solutions
+
+### 1. Environment Variable Management
+
+#### Current Setup
+```env
+VITE_AWS_ACCESS_KEY_ID=***
+VITE_AWS_SECRET_ACCESS_KEY=***
+VITE_GOOGLE_GEMINI_API_KEY=***
+```
+
+#### Recommended Setup
+```env
+AWS_ACCESS_KEY_ID=***
+AWS_SECRET_ACCESS_KEY=***
+GOOGLE_GEMINI_API_KEY=***
+VITE_SUPABASE_ANON_KEY=*** # This one is okay to remain client-side
+```
+
+### 2. Moving Operations Server-Side
+
+All sensitive operations should be moved to Supabase Edge Functions:
+
+#### AWS Operations
+- Create an edge function for AWS Polly operations
+- Send text-to-speech requests through the edge function
+- Keep AWS credentials secure on the server
+
+#### Gemini API Operations
+- Create an edge function for Gemini API calls
+- Route all AI requests through the edge function
+- Secure the API key on the server side
+
+### 3. Edge Function Architecture
+
+#### Basic Structure
+1. Client makes request to edge function
+2. Edge function accesses secure environment variables
+3. Edge function makes API calls using secured credentials
+4. Results returned to client
+
+#### Benefits
+- Sensitive keys never exposed to client
+- Centralized security management
+- Easier key rotation
+- Ability to add rate limiting
+- Better monitoring and logging
+
+### 4. Implementation Steps
+
+1. **Environment Variables**
+   - Remove `VITE_` prefix from sensitive variables
+   - Update environment variable documentation
+   - Rotate any previously exposed keys
+
+2. **Edge Functions**
+   - Create new edge functions for AWS and Gemini operations
+   - Set up proper CORS and security headers
+   - Implement error handling and logging
+
+3. **Client-Side Updates**
+   - Update services to use edge functions
+   - Implement proper error handling
+   - Add loading states for async operations
+
+4. **Security Considerations**
+   - Add authentication to edge functions
+   - Implement rate limiting
+   - Set up monitoring and alerts
+   - Regular security audits
+
+## Best Practices Moving Forward
+
+1. **Environment Variables**
+   - Only use `VITE_` prefix for public keys
+   - Document all environment variables
+   - Use different keys for development/production
+
+2. **API Security**
+   - Always use edge functions for sensitive operations
+   - Implement proper authentication
+   - Regular security audits
+   - Monitor for unusual activity
+
+3. **Development Workflow**
+   - Use placeholder keys for development
+   - Document setup process for new developers
+   - Regular security training for team members
+
+## Migration Plan
+
+1. **Phase 1: Preparation**
+   - Audit current key usage
+   - Document all required changes
+   - Create new API keys for rotation
+
+2. **Phase 2: Implementation**
+   - Create edge functions
+   - Update environment variables
+   - Test in development environment
+
+3. **Phase 3: Deployment**
+   - Deploy edge functions
+   - Rotate compromised keys
+   - Monitor for issues
+
+4. **Phase 4: Verification**
+   - Security testing
+   - Performance testing
+   - Update documentation
+
+## Conclusion
+
+Moving sensitive operations to edge functions is crucial for maintaining application security. While it requires initial setup and migration effort, the benefits in security and maintainability make it worthwhile.
+
+Remember to:
+- Never expose sensitive keys to the client
+- Use edge functions for sensitive operations
+- Regularly rotate exposed keys
+- Maintain proper documentation
+- Implement monitoring and alerting
+```
+
+You can save this content to your documentation folder. Would you like me to explain any part of this report in more detail?
+
+
+
+
+
+
+
+
 Environment Variables Management in Lovable
 Lovable uses a multi-layered approach for handling environment variables and secrets:
 
