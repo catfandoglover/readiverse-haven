@@ -162,10 +162,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
             }}
           />
         </div>
-        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[50%] relative z-10 min-h-[50vh]">
+        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-24 relative z-10">
           <div className="mb-4">
             <div className="flex justify-between items-start mb-2">
-              <h2 className="text-xl font-libre-baskerville font-bold max-w-[50%]">{title}</h2>
+              <h2 className="text-xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
               <div className="flex gap-2 items-center shrink-0">
                 {itemId && (
                   <VirgilChatButton
