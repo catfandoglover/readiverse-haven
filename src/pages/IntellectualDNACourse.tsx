@@ -297,7 +297,7 @@ const IntellectualDNACourse: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
-      <header className="sticky top-0 z-10 px-6 py-4 flex justify-between items-center bg-[#1D3A35]">
+      <header className="flex items-center pt-4 pb-4 px-8 bg-[#1D3A35] text-[#E9E7E2] sticky top-0 z-10">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -307,7 +307,9 @@ const IntellectualDNACourse: React.FC = () => {
           <ArrowLeft className="h-6 w-6 text-white" />
         </Button>
         
-        <h1 className="text-sm font-libre-baskerville font-bold uppercase text-[#E9E7E2]">Intellectual DNA</h1>
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+          Intellectual DNA
+        </h2>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

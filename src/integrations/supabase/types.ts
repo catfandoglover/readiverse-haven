@@ -142,7 +142,7 @@ export type Database = {
           Cover_super: string | null
           cover_url: string | null
           created_at: string
-          epub_file_url: string
+          epub_file_url: string | null
           great_question_connection: string | null
           icon_illustration: string | null
           id: string
@@ -164,7 +164,7 @@ export type Database = {
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
-          epub_file_url: string
+          epub_file_url?: string | null
           great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string
@@ -186,7 +186,7 @@ export type Database = {
           Cover_super?: string | null
           cover_url?: string | null
           created_at?: string
-          epub_file_url?: string
+          epub_file_url?: string | null
           great_question_connection?: string | null
           icon_illustration?: string | null
           id?: string
