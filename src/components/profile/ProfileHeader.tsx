@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -130,6 +131,7 @@ const ProfileHeader: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       try {
+        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied!",
@@ -162,16 +164,18 @@ const ProfileHeader: React.FC = () => {
       </div>
       
       <div 
-        className="absolute left-0 w-full px-6 text-[#E9E7E2]" 
+        className="absolute left-0 w-full text-[#E9E7E2]" 
         style={{ 
           bottom: "-40px", 
           zIndex: 30,
           transform: "translateZ(0)",
-          paddingBottom: "2rem"
+          paddingBottom: "2rem",
+          paddingLeft: "1.5rem",
+          paddingRight: "1.5rem"
         }}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col items-start">
+        <div className="flex items-start justify-between w-full">
+          <div className="flex flex-col items-start max-w-[60%]">
             <div className="relative h-20 w-20 mb-2">
               <svg 
                 viewBox="0 0 100 100" 
@@ -220,10 +224,11 @@ const ProfileHeader: React.FC = () => {
                   {firstName} {lastName}
                 </h1>
                 <p 
-                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2]"
+                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap overflow-hidden text-ellipsis"
                   style={{ 
                     position: "relative",
-                    zIndex: 50
+                    zIndex: 50,
+                    maxWidth: "100%"
                   }}
                 >
                   {isLoadingAnalysis ? 'Loading...' : archetype}
