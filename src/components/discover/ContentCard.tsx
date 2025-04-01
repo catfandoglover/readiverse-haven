@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -12,7 +13,7 @@ interface ContentCardProps {
   title: string;
   about: string;
   itemId?: string;
-  itemType?: "classic" | "icon" | "concept";
+  itemType?: "classic" | "icon" | "concept" | "question";
   onLearnMore: () => void;
   onImageClick: () => void;
   onPrevious?: () => void;
