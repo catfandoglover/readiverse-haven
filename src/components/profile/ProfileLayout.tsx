@@ -5,8 +5,9 @@ import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, Hexagon } from "lucide-react";
+import { ArrowRight, Hexagon, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 interface DNAAnalysisResult {
   id: string;
@@ -41,6 +42,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
@@ -139,6 +141,18 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 </p>
                 
                 <DomainsList />
+                
+                {/* Logout Button */}
+                <div className="pt-8 pb-12">
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span className="font-oxanium">Logout</span>
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -306,6 +320,28 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     "Your intellectual DNA reveals a mind that seeks meaningful synthesis across different domains of knowledge, valuing both analytical precision and intuitive understanding. As you continue to develop your philosophical perspective, embrace the productive tensions that arise between different ways of knowing."
                   )}
                 </p>
+                
+                <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Next Steps</h2>
+                <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
+                  {isLoadingIntroduction ? (
+                    <span className="inline-block">Loading...</span>
+                  ) : (
+                    analysisResult?.next_steps || 
+                    "Consider exploring philosophical traditions that challenge your comfort zone, particularly those that value paradox and ambiguity as ends in themselves rather than problems to be solved. Engage with thinkers whose approaches differ most from your own, allowing their perspectives to enrich your intellectual journey."
+                  )}
+                </p>
+                
+                {/* Logout Button */}
+                <div className="pt-4 pb-12">
+                  <Button 
+                    variant="outline" 
+                    className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span className="font-oxanium">Logout</span>
+                  </Button>
+                </div>
               </div>
             )}
           </div>

@@ -22,6 +22,11 @@ interface AuthContextType {
   openSignup: (options?: any) => void;
   openProfile: (options?: any) => void;
   supabase: SupabaseClient<Database> | null;
+  
+  // DNA properties
+  hasCompletedDNA: boolean;
+  hasDNA: boolean; // Alias for hasCompletedDNA for compatibility
+  checkDNAStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,11 +65,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [status, setStatus] = useState<'init' | 'ready'>('init');
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
+  // Add new state
+  const [hasCompletedDNA, setHasCompletedDNA] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const outsetaRef = useRef(getOutseta());
+  
+  // Add function to check DNA status
+  const checkDNAStatus = async (): Promise<boolean> => {
+    if (!user || !supabase) return false;
+    
+    try {
+      setIsLoading(true);
+      
+      // Check pending assessment
+      const pendingId = localStorage.getItem('pending_dna_assessment_id');
+      if (pendingId) {
+        setHasCompletedDNA(true);
+        setIsLoading(false);
+        return true;
+      }
+      
+      // Check profile for assessment_id
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('assessment_id')
+        .eq('outseta_user_id', user.Uid)
+        .maybeSingle();
+        
+      if (error) throw error;
+      
+      const hasAssessment = !!profileData?.assessment_id;
+      console.log('DNA assessment check:', { hasAssessment, profileData });
+      setHasCompletedDNA(hasAssessment);
+      setIsLoading(false);
+      return hasAssessment;
+    } catch (error) {
+      console.error('Error checking DNA status:', error);
+      setHasCompletedDNA(false);
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  // Effect to check DNA status when user or Supabase client changes
+  useEffect(() => {
+    if (user && supabase) {
+      checkDNAStatus().catch(console.error);
+    } else {
+      // Reset DNA status when user logs out
+      setHasCompletedDNA(false);
+    }
+  }, [user, supabase]);
 
   const updateUser = async () => {
     try {
+      setIsLoading(true);
       console.log('Auth State Check:', {
         storedToken: localStorage.getItem('outseta_token'),
         hasOutsetaClient: !!window.Outseta,
@@ -206,24 +262,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
               console.error('Error associating assessment with profile:', error);
             }
           }
+          
+          // Set the user
+          setUser(outsetaUser);
         } catch (error) {
           console.error('Failed to exchange token:', error);
           setSupabase(null);
+          setIsLoading(false);
         }
-        
-        setUser(outsetaUser);
       } else {
+        // No token, user is not logged in
         setUser(null);
         setSupabase(null);
-        localStorage.removeItem('outseta_token');
+        setHasCompletedDNA(false);
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      setUser(null);
-      setSupabase(null);
-      localStorage.removeItem('outseta_token');
+      console.error('Error updating user:', error);
+      setIsLoading(false);
     }
-    setStatus('ready');
   };
 
   useEffect(() => {
@@ -323,12 +380,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading: status !== 'ready',
+        isLoading,
         logout,
         openLogin,
         openSignup,
         openProfile,
         supabase,
+        
+        // DNA values
+        hasCompletedDNA,
+        hasDNA: hasCompletedDNA, // Alias for compatibility with ProtectedRoute
+        checkDNAStatus,
       }}
     >
       {children}

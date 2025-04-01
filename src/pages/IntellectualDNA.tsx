@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Compass, Hexagon, BookOpen, Search, LogIn, LogOut, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,7 +24,7 @@ const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, isLoading, logout, openLogin, openSignup, openProfile } = useAuth();
+  const { user, logout, openLogin, openSignup, openProfile } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -97,7 +96,7 @@ const IntellectualDNA = () => {
           <MainMenu />
         </div>
         <div className="flex space-x-2">
-          {isLoading ? (
+          {false ? (
             <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
               Loading...
             </Button>

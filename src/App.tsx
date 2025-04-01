@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AuthProvider } from "@/contexts/OutsetaAuthContext";
+import { AuthProvider, useAuth } from "@/contexts/OutsetaAuthContext";
 import DiscoverLayout from "@/components/discover/DiscoverLayout"; 
 import Home from "@/components/Home";
 import NewBookshelf from "@/components/NewBookshelf";
@@ -42,6 +42,7 @@ import ExamWelcome from "./pages/ExamWelcome";
 import ExamVirgilChat from "./pages/ExamVirgilChat";
 import BookCounselor from "./pages/BookCounselor";
 import BookingSuccess from "./pages/BookingSuccess";
+import { LoginButtons } from "@/components/auth/LoginButtons";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +52,61 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// ProtectedRoute component to handle authentication and DNA requirements
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAuth: boolean;
+  requireDNA: boolean;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requireAuth, 
+  requireDNA 
+}) => {
+  const { user, hasDNA } = useAuth();
+  const location = useLocation();
+
+  // Not authenticated but authentication required
+  if (requireAuth && !user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Authenticated, DNA is required, but user doesn't have DNA
+  if (requireAuth && requireDNA && user && !hasDNA) {
+    return <Navigate to="/dna" state={{ from: location }} replace />;
+  }
+
+  // Requirements are satisfied, render the children
+  return <>{children}</>;
+};
+
+// New component to handle conditional root redirection
+const RootRedirect: React.FC = () => {
+  const { user, hasDNA } = useAuth();
+  
+  // For logged-in users with DNA assessment completed, redirect to Virgil
+  if (user && hasDNA) {
+    return <Navigate to="/virgil" replace />;
+  }
+  
+  // For all other users (unauthenticated or without DNA), redirect to DNA assessment
+  return <Navigate to="/dna" replace />;
+};
+
+// Also add a handler for the DNA route to prevent users with completed assessments from accessing it
+const DnaRouteHandler: React.FC = () => {
+  const { user, hasDNA } = useAuth();
+  
+  // If the user is logged in and has completed their DNA assessment, redirect them to Virgil
+  if (user && hasDNA) {
+    return <Navigate to="/virgil" replace />;
+  }
+  
+  // Otherwise, show the DNA assessment intro
+  return <IntellectualDNA />;
+};
 
 const ReaderWrapper = () => {
   const location = useLocation();
@@ -81,7 +137,8 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route path="/" element={<Navigate to="/dna" replace />} />
+                {/* Public routes - no auth required */}
+                <Route path="/" element={<RootRedirect />} />
                 <Route path="/discover" element={<DiscoverLayout />} /> 
                 <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
                 <Route path="/discover/questions" element={<DiscoverLayout />} />
@@ -91,46 +148,155 @@ const App = () => (
                 <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
                 <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                 <Route path="/discover/search/questions" element={<GreatQuestions />} />
-                <Route path="/home-old" element={<Home />} /> 
-                <Route path="/bookshelf" element={<NewBookshelf />} />
-                <Route path="/intellectual-dna" element={<IntellectualDNAShelf />} />
-                <Route path="/dna" element={<IntellectualDNA />} />
-                <Route path="/dna/priming" element={<DNAPriming />} />
-                <Route path="/dna/:category" element={<DNAAssessment />} />
-                <Route path="/dna/completion" element={<DNACompletionScreen />} />
-                <Route path="/dna/confirm-email" element={<DNAEmailConfirmationScreen />} />
-                <Route path="/dna/welcome" element={<VirgilWelcome />} />
-                <Route path="/book-counselor" element={<BookCounselor />} />
-                <Route path="/booking-success" element={<BookingSuccess />} />
-                <Route path="/great-questions" element={<GreatQuestions />} />
-                <Route path="/great-questions/:id" element={<GreatQuestions />} />
-                <Route path="/read/:slug" element={<ReaderWrapper />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/login" element={<LoginButtons />} />
                 <Route path="/profile/share/:name" element={<ShareableProfile />} />
                 <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                 <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
                 <Route path="/badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                 <Route path="/badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/domain/:domainId" element={<DomainDetail />} />
-                <Route path="/become-who-you-are" element={<BecomeWhoYouAre />} />
-                <Route path="/virgil" element={<VirgilOffice />} />
-                <Route path="/virgil-modes" element={<VirgilModes />} />
-                <Route path="/virgil-chat" element={<VirgilChat />} />
-                <Route path="/favorites-shelf" element={<FavoritesShelf />} />
-                <Route path="/classroom" element={<Classroom />} />
-                <Route path="/intellectual-dna-course" element={<IntellectualDNACourse />} />
-                <Route path="/intellectual-dna-exam" element={<IntellectualDNAExam />} />
-                <Route path="/classroom-virgil-chat" element={<ClassroomVirgilChat />} />
-                <Route path="/exam-room" element={<ExamRoom />} />
-                <Route path="/exam-welcome" element={<ExamWelcome />} />
-                <Route path="/exam-virgil-chat" element={<ExamVirgilChat />} />
+                <Route path="/dna" element={<DnaRouteHandler />} />
+                <Route path="/dna/completion" element={<DNACompletionScreen />} />
+                <Route path="/book-counselor" element={<BookCounselor />} />
+                <Route path="/booking-success" element={<BookingSuccess />} />
                 
+                {/* Auth required, no DNA required */}
+                <Route path="/dna/priming" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <DNAPriming />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dna/:category" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <DNAAssessment />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dna/confirm-email" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <DNAEmailConfirmationScreen />
+                  </ProtectedRoute>
+                } />
+                <Route path="/read/:slug" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ReaderWrapper />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Auth and DNA required */}
+                <Route path="/dna/welcome" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <VirgilWelcome />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/domain/:domainId" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <DomainDetail />
+                  </ProtectedRoute>
+                } />
+                <Route path="/become-who-you-are" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <BecomeWhoYouAre />
+                  </ProtectedRoute>
+                } />
+                <Route path="/virgil" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <VirgilOffice />
+                  </ProtectedRoute>
+                } />
+                <Route path="/virgil-modes" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <VirgilModes />
+                  </ProtectedRoute>
+                } />
+                <Route path="/virgil-chat" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <VirgilChat />
+                  </ProtectedRoute>
+                } />
+                <Route path="/favorites-shelf" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <FavoritesShelf />
+                  </ProtectedRoute>
+                } />
+                <Route path="/classroom" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <Classroom />
+                  </ProtectedRoute>
+                } />
+                <Route path="/intellectual-dna-course" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <IntellectualDNACourse />
+                  </ProtectedRoute>
+                } />
+                <Route path="/intellectual-dna-exam" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <IntellectualDNAExam />
+                  </ProtectedRoute>
+                } />
+                <Route path="/classroom-virgil-chat" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <ClassroomVirgilChat />
+                  </ProtectedRoute>
+                } />
+                <Route path="/exam-room" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <ExamRoom />
+                  </ProtectedRoute>
+                } />
+                <Route path="/exam-welcome" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <ExamWelcome />
+                  </ProtectedRoute>
+                } />
+                <Route path="/exam-virgil-chat" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <ExamVirgilChat />
+                  </ProtectedRoute>
+                } />
+                <Route path="/bookshelf" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <NewBookshelf />
+                  </ProtectedRoute>
+                } />
+                <Route path="/intellectual-dna" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <IntellectualDNAShelf />
+                  </ProtectedRoute>
+                } />
+                <Route path="/home-old" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <Home />
+                  </ProtectedRoute>
+                } />
+                <Route path="/great-questions" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <GreatQuestions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/great-questions/:id" element={
+                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                    <GreatQuestions />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Redirects */}
                 <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                 <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
                 <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
                 <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
                 <Route path="/search/questions" element={<Navigate to="/discover/search/questions" replace />} />
+                
+                {/* 404 page or fallback */}
+                <Route path="*" element={<Navigate to="/discover" replace />} />
               </Routes>
             </ErrorBoundary>
           </TooltipProvider>

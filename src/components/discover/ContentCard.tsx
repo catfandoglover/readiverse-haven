@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -127,12 +126,17 @@ const ContentCard: React.FC<ContentCardProps> = ({
   // Function to format text with line breaks
   const formatText = (text: string) => {
     if (!text) return "";
-    return text.split("\\n").map((line, i) => (
-      <React.Fragment key={i}>
-        {line}
-        {i < text.split("\\n").length - 1 && <br />}
-      </React.Fragment>
-    ));
+    // Use span instead of div to avoid nesting issues with p tags
+    return (
+      <span className="formatted-text">
+        {text.split("\\n").map((line, i) => (
+          <React.Fragment key={i}>
+            {line}
+            {i < text.split("\\n").length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   };
 
   // Mobile layout (unchanged)

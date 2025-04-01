@@ -1,0 +1,4 @@
+- Refer to the implementation plan at `/Users/philip.galebach/coding-projects/alexandria/readiverse-haven/DOCS/user-flow-implementation-plan.md`. Start on the first uncompleted task and mark tasks as completed in the plan as they are finished.
+- For the full PRD of the app, refer to this document. It has what different user states should be able to see: `/Users/philip.galebach/coding-projects/alexandria/readiverse-haven/DOCS/user-flow-diagrams/user-flow-complete.md`
+- For all of my supabase tables and their relationships refer to /Users/philip.galebach/coding-projects/alexandria/readiverse-haven/DOCS/Supabase/supabase_db_diagram.mmd
+- ONLY EVER COMPLETE ONE TASK AT A TIME. ALWAYS ASK FOR GUIDANCE AFTER COMPLETING A TASK
