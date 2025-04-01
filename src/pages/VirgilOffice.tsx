@@ -46,7 +46,7 @@ const VirgilOffice: React.FC = () => {
         )}>
           <div className="max-w-md w-full mx-auto text-center px-6">
             <h1 
-              className="font-baskerville text-[#E9E7E2] text-3xl md:text-4xl leading-tight" 
+              className="font-libre-baskerville bold text-[#E9E7E2] text-3xl md:text-4xl" 
               style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}
             >
               What brings you here today?
