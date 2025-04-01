@@ -219,7 +219,7 @@ const ProfileHeader: React.FC = () => {
             <div className="flex items-center justify-between w-full">
               <div>
                 <h1 
-                  className="text-xl font-serif" 
+                  className="text-sm font-libre baskerville text-[#E9E7E2]/70 italic" 
                   style={{ 
                     position: "relative",
                     zIndex: 50
@@ -228,7 +228,7 @@ const ProfileHeader: React.FC = () => {
                   {firstName} {lastName}
                 </h1>
                 <p 
-                  className="text-sm font-oxanium text-[#E9E7E2]/70 italic"
+                  className="text-xl font-libre baskerville font-bold text-[#E9E7E2] italic"
                   style={{ 
                     position: "relative",
                     zIndex: 50
