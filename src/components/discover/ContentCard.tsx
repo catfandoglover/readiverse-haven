@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
@@ -110,7 +109,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
           description: `${itemType === 'classic' ? 'Book' : itemType} added to favorites`,
         });
         
-        // If it's a book/classic, also add it to the bookshelf
         if (itemType === 'classic') {
           addToBookshelf.mutate(itemId);
         }
@@ -124,7 +122,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
     }
   };
 
-  // Function to format text with line breaks
   const formatText = (text: string) => {
     if (!text) return "";
     return text.split("\\n").map((line, i) => (
@@ -135,7 +132,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
     ));
   };
 
-  // Mobile layout (unchanged)
   if (isMobile) {
     return (
       <div className="flex flex-col h-full relative">
@@ -155,6 +151,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-2xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
               <div className="flex gap-2 items-center shrink-0">
+                {itemId && (
+                  <VirgilChatButton
+                    contentTitle={title}
+                    contentId={itemId}
+                    contentType={itemType}
+                    className="text-[#2A282A]"
+                  />
+                )}
                 <button
                   className="flex items-center justify-center text-[#2A282A]"
                   aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -165,14 +169,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                     fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                   />
                 </button>
-                {itemId && (
-                  <VirgilChatButton
-                    contentTitle={title}
-                    contentId={itemId}
-                    contentType={itemType}
-                    className="text-[#2A282A]"
-                  />
-                )}
                 <button
                   className="flex items-center justify-center text-[#2A282A]"
                   aria-label="Share"
@@ -199,7 +195,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
           </div>
         </div>
 
-        {/* Navigation buttons at bottom right corner of content container, stacked vertically */}
         <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-20">
           <button
             onClick={onPrevious}
@@ -227,10 +222,8 @@ const ContentCard: React.FC<ContentCardProps> = ({
     );
   }
 
-  // Desktop layout - horizontal card with content moved down 30% of viewport height
   return (
     <div className="flex h-full relative bg-[#2A282A] overflow-hidden">
-      {/* Left side - Image (clickable) */}
       <div 
         className="w-1/2 h-full cursor-pointer" 
         onClick={onImageClick}
@@ -243,12 +236,19 @@ const ContentCard: React.FC<ContentCardProps> = ({
         />
       </div>
       
-      {/* Right side - Content with padding top to move content down 30% of viewport */}
       <div className="w-1/2 p-8 bg-[#E9E7E2] text-[#2A282A] flex flex-col">
         <div className="flex-1 pt-[18vh]">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-3xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
             <div className="flex gap-3 items-center shrink-0">
+              {itemId && (
+                <VirgilChatButton
+                  contentTitle={title}
+                  contentId={itemId}
+                  contentType={itemType}
+                  className="text-[#2A282A] hover:scale-110 transition-transform"
+                />
+              )}
               <button
                 className="flex items-center justify-center text-[#2A282A] hover:scale-110 transition-transform"
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -259,14 +259,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                 />
               </button>
-              {itemId && (
-                <VirgilChatButton
-                  contentTitle={title}
-                  contentId={itemId}
-                  contentType={itemType}
-                  className="text-[#2A282A] hover:scale-110 transition-transform"
-                />
-              )}
               <button
                 className="flex items-center justify-center text-[#2A282A] hover:scale-110 transition-transform"
                 aria-label="Share"
