@@ -83,6 +83,9 @@ export function AnalyzeDNAButton() {
         throw error;
       }
       
+      // Add a small delay to ensure the analysis is stored
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // After the analysis is complete, validate the entities
       console.log('DNA analysis complete, validating entities with assessment ID:', assessment_id);
       
