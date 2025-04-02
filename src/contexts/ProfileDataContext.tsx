@@ -119,9 +119,11 @@ export function ProfileDataProvider({ children }: ProfileDataProviderProps) {
           setAnalysisResult(dnaData as DNAAnalysisResult);
         } else {
           console.log("No DNA analysis result found for assessment ID:", profileData.assessment_id);
+          setAnalysisResult(null);
         }
       } else {
         console.log("No assessment_id found in profile data");
+        setAnalysisResult(null);
       }
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Unknown error occurred";
@@ -139,7 +141,13 @@ export function ProfileDataProvider({ children }: ProfileDataProviderProps) {
   };
 
   useEffect(() => {
-    fetchData();
+    if (user?.id) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+      setProfileData(null);
+      setAnalysisResult(null);
+    }
   }, [user?.id]);
 
   const value = {

@@ -7,6 +7,7 @@ import { Share, Pen, Calendar } from "lucide-react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "../ui/skeleton";
 
 const ProfileHeader: React.FC = () => {
   const { profileData, analysisResult, isLoading } = useProfileData();
@@ -20,7 +21,7 @@ const ProfileHeader: React.FC = () => {
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
-  const archetype = analysisResult?.archetype || "Twilight Navigator";
+  const archetype = analysisResult?.archetype || null;
 
   // Get appropriate background image based on archetype
   const getBackgroundImageForArchetype = (archetype: string | null) => {
@@ -53,14 +54,6 @@ const ProfileHeader: React.FC = () => {
       });
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-64 bg-[#2A282A] flex items-center justify-center">
-        <div className="text-[#E9E7E2] font-oxanium">Loading profile...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative z-10 stacking-context">
@@ -137,16 +130,20 @@ const ProfileHeader: React.FC = () => {
                 >
                   {firstName} {lastName}
                 </h1>
-                <p 
-                  className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap"
-                  style={{ 
-                    position: "relative",
-                    zIndex: 50,
-                    maxWidth: "100%"
-                  }}
-                >
-                  {archetype || "Loading..."}
-                </p>
+                {isLoading ? (
+                  <Skeleton className="h-6 w-32 bg-[#E9E7E2]/10" />
+                ) : (
+                  <p 
+                    className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap"
+                    style={{ 
+                      position: "relative",
+                      zIndex: 50,
+                      maxWidth: "100%"
+                    }}
+                  >
+                    {analysisResult?.archetype || "Loading archetype..."}
+                  </p>
+                )}
               </div>
             </div>
           </div>

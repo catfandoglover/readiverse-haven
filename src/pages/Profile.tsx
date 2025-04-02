@@ -10,18 +10,18 @@ const Profile: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialTab = searchParams.get('tab') as "become" | "profile" | null;
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     document.title = "Your Intellectual Profile | Intellectual DNA";
   }, []);
   
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2A282A]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E9E7E2] mb-4"></div>
-          <p className="text-[#E9E7E2] font-oxanium">Loading profile...</p>
+          <p className="text-[#E9E7E2] font-oxanium">Authenticating...</p>
         </div>
       </div>
     );
