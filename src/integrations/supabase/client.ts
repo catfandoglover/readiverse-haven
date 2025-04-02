@@ -21,6 +21,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
     storage: window.localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    }
+  },
+  db: {
+    schema: 'public'
   }
 });
 
@@ -43,6 +53,9 @@ export const createSupabaseClient = (jwt?: string) => {
         storage: window.localStorage,
         autoRefreshToken: true,
         detectSessionInUrl: true
+      },
+      db: {
+        schema: 'public'
       }
     });
   }

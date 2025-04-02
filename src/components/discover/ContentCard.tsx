@@ -44,17 +44,27 @@ const ContentCard: React.FC<ContentCardProps> = ({
     if (!isAuthLoading && user && itemId && itemType) {
       const checkFavoriteStatus = async () => {
         try {
-          const { data } = await supabase
+          console.log('Checking favorite status with:', {
+            itemId,
+            userId: user.id,
+            itemType,
+            itemTypeType: typeof itemType
+          });
+          
+          const { data, error } = await supabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemId)
             .eq('user_id', user.id)
             .eq('item_type', itemType)
-            .single();
+            .maybeSingle();
           
-          if (data) {
-            setIsFavorite(true);
+          if (error) {
+            console.error('Supabase error:', error);
+            return;
           }
+          
+          setIsFavorite(!!data);
         } catch (error) {
           console.error("Error checking favorite status:", error);
         }
@@ -68,7 +78,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     e.stopPropagation();
     
     if (isAuthLoading) {
-      return; // Don't do anything while auth is loading
+      return;
     }
     
     if (!user) {
@@ -82,15 +92,26 @@ const ContentCard: React.FC<ContentCardProps> = ({
     }
     
     try {
+      console.log('Toggling favorite with:', {
+        itemId,
+        userId: user.id,
+        itemType,
+        itemTypeType: typeof itemType,
+        isFavorite
+      });
+
       if (isFavorite) {
         const { error } = await supabase
           .from('user_favorites')
           .delete()
           .eq('item_id', itemId)
           .eq('user_id', user.id)
-          .eq('item_type', itemType.toString());
+          .eq('item_type', itemType);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Delete error:', error);
+          throw error;
+        }
         
         setIsFavorite(false);
         toast({
@@ -102,11 +123,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .insert({
             item_id: itemId,
             user_id: user.id,
-            item_type: itemType.toString(),
+            item_type: itemType,
             added_at: new Date().toISOString()
           });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
         setIsFavorite(true);
         toast({
