@@ -713,7 +713,6 @@ serve(async (req) => {
           .insert([
             { 
               assessment_id: assessment_id,
-              status: 'pending',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }
@@ -753,7 +752,6 @@ serve(async (req) => {
           .insert([
             { 
               assessment_id: actualassessment_id,
-              status: 'pending',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }
