@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      archetypes: {
+        Row: {
+          archetype: string | null
+          created_at: string
+          id: number
+          landscape_image: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          created_at?: string
+          id?: number
+          landscape_image?: string | null
+        }
+        Relationships: []
+      }
       art: {
         Row: {
           about: string | null
@@ -533,6 +554,7 @@ export type Database = {
           theology_kindred_spirit_5: string | null
           theology_kindred_spirit_5_classic: string | null
           theology_kindred_spirit_5_rationale: string | null
+          validation_summary: Json | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
@@ -747,6 +769,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          validation_summary?: Json | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
@@ -961,6 +984,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          validation_summary?: Json | null
         }
         Relationships: [
           {
@@ -1192,6 +1216,54 @@ export type Database = {
           },
         ]
       }
+      dna_unmatched_entities: {
+        Row: {
+          analysis_id: string | null
+          assessment_id: string | null
+          created_at: string
+          id: string
+          status: string
+          unmatched_classics: Json | null
+          unmatched_thinkers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          assessment_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string | null
+          assessment_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          unmatched_classics?: Json | null
+          unmatched_thinkers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_unmatched_entities_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: true
+            referencedRelation: "dna_analysis_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_unmatched_entities_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: true
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_links: {
         Row: {
           created_at: string
@@ -1323,50 +1395,42 @@ export type Database = {
       }
       profiles: {
         Row: {
-          id: string
-          user_id: string | null
-          outseta_user_id: string | null
+          assessment_id: string | null
+          created_at: string
           email: string
           full_name: string | null
-          created_at: string
-          updated_at: string
-          profile_image: string | null
+          id: string
           landscape_image: string | null
-          assessment_id: string | null
+          outseta_user_id: string | null
+          profile_image: string | null
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
-          id?: string
-          user_id?: string | null
-          outseta_user_id?: string | null
+          assessment_id?: string | null
+          created_at?: string
           email: string
           full_name?: string | null
-          created_at?: string
-          updated_at?: string
-          profile_image?: string | null
+          id?: string
           landscape_image?: string | null
-          assessment_id?: string | null
+          outseta_user_id?: string | null
+          profile_image?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          id?: string
-          user_id?: string | null
-          outseta_user_id?: string | null
+          assessment_id?: string | null
+          created_at?: string
           email?: string
           full_name?: string | null
-          created_at?: string
-          updated_at?: string
-          profile_image?: string | null
+          id?: string
           landscape_image?: string | null
-          assessment_id?: string | null
+          outseta_user_id?: string | null
+          profile_image?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       prompts: {
         Row: {
@@ -1654,33 +1718,56 @@ export type Database = {
       }
       user_books: {
         Row: {
-          id: string
           book_id: string
-          user_id: string
-          created_at: string
+          created_at: string | null
+          current_cfi: string | null
+          current_page: number | null
+          id: string
+          last_read_at: string | null
+          outseta_user_id: string
+          status: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          id?: string
           book_id: string
-          user_id: string
-          created_at?: string
+          created_at?: string | null
+          current_cfi?: string | null
+          current_page?: number | null
+          id?: string
+          last_read_at?: string | null
+          outseta_user_id: string
+          status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          id?: string
           book_id?: string
-          user_id?: string
-          created_at?: string
+          created_at?: string | null
+          current_cfi?: string | null
+          current_page?: number | null
+          id?: string
+          last_read_at?: string | null
+          outseta_user_id?: string
+          status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_books_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
+            foreignKeyName: "user_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
             referencedColumns: ["id"]
-          }
+          },
+          {
+            foreignKeyName: "user_books_outseta_user_id_fkey"
+            columns: ["outseta_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["outseta_user_id"]
+          },
         ]
       }
       user_courses: {
@@ -1739,21 +1826,24 @@ export type Database = {
           id: string
           item_id: string
           item_type: string
-          user_id: string
+          outseta_user_id: string
+          user_id: string | null
         }
         Insert: {
           added_at?: string
           id?: string
           item_id: string
           item_type: string
-          user_id: string
+          outseta_user_id: string
+          user_id?: string | null
         }
         Update: {
           added_at?: string
           id?: string
           item_id?: string
           item_type?: string
-          user_id?: string
+          outseta_user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
