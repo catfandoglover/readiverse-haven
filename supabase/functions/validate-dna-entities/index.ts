@@ -744,46 +744,6 @@ serve(async (req) => {
       classicResults.error = `Error: ${classicError.message}`;
     }
     
-    // Update dna_analysis_results with matched database IDs
-    if (actualAnalysisId && (thinkerResults.matched.length > 0 || classicResults.matched.length > 0)) {
-      console.log('=== STARTING UUID UPDATE PROCESS ===');
-      console.log('Thinker matches:', JSON.stringify(thinkerResults.matched, null, 2));
-      console.log('Classic matches:', JSON.stringify(classicResults.matched, null, 2));
-      
-      // Create an object to store the database updates
-      const updates: Record<string, string> = {};
-      
-      // Process thinker matches - directly use the matches
-      thinkerResults.matched.forEach(match => {
-        updates[`${match.item}_db_id`] = match.db_id;
-        console.log(`Adding UUID for thinker: ${match.item}_db_id = ${match.db_id}`);
-      });
-
-      // Process classic matches - directly use the matches
-      classicResults.matched.forEach(match => {
-        updates[`${match.item}_db_id`] = match.db_id;
-        console.log(`Adding UUID for classic: ${match.item}_db_id = ${match.db_id}`);
-      });
-
-      // Update the analysis results if we have matches to store
-      if (Object.keys(updates).length > 0) {
-        console.log('=== FINAL UPDATE OBJECT ===');
-        console.log(JSON.stringify(updates, null, 2));
-        console.log(`Attempting to update dna_analysis_results for ID: ${actualAnalysisId}`);
-        
-        const { error: updateError } = await supabase
-          .from('dna_analysis_results')
-          .update(updates)
-          .eq('id', actualAnalysisId);
-
-        if (updateError) {
-          console.error('Error updating analysis results with matched IDs:', updateError);
-        } else {
-          console.log('Successfully updated analysis results with matched IDs');
-        }
-      }
-    }
-    
     // Always ensure we record matching results in the database, even if only partial results
     if (actualAnalysisId) {
       console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
