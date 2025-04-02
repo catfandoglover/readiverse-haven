@@ -34,12 +34,13 @@ const ProfileHeader: React.FC = () => {
 
   // Get appropriate background image based on archetype
   const getBackgroundImageForArchetype = (archetype: string | null) => {
-    if (!archetype) return '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
+    if (!archetype) return '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png'; // Default fallback
     
     // Try to get archetype-specific image from Supabase storage
     return `https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//${encodeURIComponent(archetype)}.png`;
   };
 
+  // Use profile's landscape_image if available, otherwise generate based on archetype
   const backgroundImageUrl = profileData?.landscape_image || getBackgroundImageForArchetype(analysisResult?.archetype);
 
   const handleProfileEditClick = () => {
@@ -192,7 +193,7 @@ const ProfileHeader: React.FC = () => {
                 </h1>
                 {analysisResult ? (
                   <p 
-                    className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap"
+                    className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap overflow-hidden text-ellipsis"
                     style={{ 
                       position: "relative",
                       zIndex: 50,
@@ -221,7 +222,7 @@ const ProfileHeader: React.FC = () => {
                       maxWidth: "100%"
                     }}
                   >
-                    Twilight Navigator
+                    Archetype Unavailable
                   </p>
                 )}
               </div>

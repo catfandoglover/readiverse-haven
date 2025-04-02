@@ -125,10 +125,13 @@ export function ProfileDataProvider({ children }: ProfileDataProviderProps) {
             assessment_id: dnaData.assessment_id
           });
           setAnalysisResult(dnaData as DNAAnalysisResult);
+          
+          // If there's an archetype but no landscape image, consider updating the profile's landscape image
+          if (dnaData.archetype && !profileData.landscape_image) {
+            console.log("[ProfileDataContext] Archetype found but no landscape image set. Consider setting a landscape image based on archetype.");
+          }
         } else {
           console.log("[ProfileDataContext] No DNA analysis result found for assessment ID:", profileData.assessment_id);
-          // Handle the case where no analysis result is found
-          // Consider retrying or providing a default/placeholder
           setAnalysisResult(null);
           
           // If we have no analysis result but have assessment_id, we might need to retry
