@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +70,9 @@ const SearchDialog = ({ onSearch, onResultClick }: SearchDialogProps) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Search</DialogTitle>
+          <DialogDescription>
+            Search through the book's content. Press Enter or click the search icon to begin.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 mt-2">
           <div className="relative flex-1">

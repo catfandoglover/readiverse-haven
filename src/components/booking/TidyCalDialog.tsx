@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -6,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import TidyCalBooking from './TidyCalBooking';
 
@@ -44,6 +44,9 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
           <DialogTitle className="text-2xl font-baskerville leading-none tracking-tight text-black font-bold pt-5">
             Book a DNA Assessment Discussion
           </DialogTitle>
+          <DialogDescription className="text-gray-600 mt-2">
+            Schedule a one-on-one discussion about your DNA Assessment results with a counselor.
+          </DialogDescription>
         </DialogHeader>
         <TidyCalBooking 
           onClose={() => onOpenChange(false)} 
