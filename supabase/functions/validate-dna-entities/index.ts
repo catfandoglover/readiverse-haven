@@ -164,9 +164,11 @@ async function storeUnmatchedEntities(
   thinkers: string[] = [],
   classics: string[] = []
 ): Promise<boolean> {
-  // We need either assessment_id or analysis_id to store unmatched entities
+  // Enhanced logging to help debug missing IDs
   if (!assessment_id && !analysis_id) {
     console.error('No assessment_id or analysis_id provided, cannot store unmatched entities');
+    console.error('assessment_id:', assessment_id);
+    console.error('analysis_id:', analysis_id);
     return false;
   }
   
@@ -250,6 +252,9 @@ async function storeUnmatchedEntities(
 }
 
 async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', assessment_id: string | null, analysis_id: string | null) {
+  // Enhanced logging for debugging
+  console.log(`Starting semantic matching with IDs - assessment_id: ${assessment_id || 'null'}, analysis_id: ${analysis_id || 'null'}`);
+  
   if (items.length === 0) {
     console.log(`No ${type}s to match, returning empty results`);
     return { matched: [], unmatched: [] };
@@ -400,13 +405,16 @@ Provide the raw JSON array only, with no additional explanation or text.
 
       console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
-      // IMPROVED: Store unmatched entities if they exist
+      // IMPORTANT FIX: Always attempt to store unmatched entities
       if (unmatched.length > 0) {
+        console.log(`Storing ${unmatched.length} unmatched ${type}s with assessment_id: ${assessment_id}, analysis_id: ${analysis_id}`);
         if (type === 'thinker') {
           await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
         } else {
           await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
         }
+      } else {
+        console.log(`No unmatched ${type}s to store`);
       }
 
       return { matched, unmatched };

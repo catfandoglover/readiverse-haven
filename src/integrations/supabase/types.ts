@@ -1218,7 +1218,8 @@ export type Database = {
       }
       dna_unmatched_entities: {
         Row: {
-          analysis_id: string
+          analysis_id: string | null
+          assessment_id: string | null
           created_at: string
           id: string
           status: string
@@ -1227,7 +1228,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          analysis_id: string
+          analysis_id?: string | null
+          assessment_id?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -1236,7 +1238,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          analysis_id?: string
+          analysis_id?: string | null
+          assessment_id?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -1250,6 +1253,13 @@ export type Database = {
             columns: ["analysis_id"]
             isOneToOne: true
             referencedRelation: "dna_analysis_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_unmatched_entities_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: true
+            referencedRelation: "dna_assessment_results"
             referencedColumns: ["id"]
           },
         ]
