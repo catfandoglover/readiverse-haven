@@ -19,6 +19,7 @@ interface ProfileData {
   updated_at: string;
   landscape_image?: string;
   profile_image?: string;
+  assessment_id?: string;
 }
 
 interface DNAAnalysisResult {
@@ -95,10 +96,29 @@ const ProfileHeader: React.FC = () => {
     const fetchDNAAnalysisResult = async () => {
       try {
         setIsLoadingAnalysis(true);
+        
+        // First get the assessment ID from the profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('assessment_id')
+          .eq('user_id', user?.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Error fetching profile assessment ID:", profileError);
+          return;
+        }
+        
+        if (!profileData?.assessment_id) {
+          console.log("No assessment ID found in profile");
+          return;
+        }
+        
+        // Then get the DNA analysis result using the assessment ID
         const { data, error } = await supabase
           .from('dna_analysis_results')
           .select('id, assessment_id, archetype, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', profileData.assessment_id)
           .maybeSingle();
           
         if (data && !error) {

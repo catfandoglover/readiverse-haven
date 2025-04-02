@@ -1654,53 +1654,33 @@ export type Database = {
       }
       user_books: {
         Row: {
-          book_id: string
-          created_at: string | null
-          current_cfi: string | null
-          current_page: number | null
           id: string
-          last_read_at: string | null
-          outseta_user_id: string
-          status: string | null
+          book_id: string
+          user_id: string
+          created_at: string
           updated_at: string | null
         }
         Insert: {
-          book_id: string
-          created_at?: string | null
-          current_cfi?: string | null
-          current_page?: number | null
           id?: string
-          last_read_at?: string | null
-          outseta_user_id: string
-          status?: string | null
+          book_id: string
+          user_id: string
+          created_at?: string
           updated_at?: string | null
         }
         Update: {
-          book_id?: string
-          created_at?: string | null
-          current_cfi?: string | null
-          current_page?: number | null
           id?: string
-          last_read_at?: string | null
-          outseta_user_id?: string
-          status?: string | null
+          book_id?: string
+          user_id?: string
+          created_at?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_books_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
+            foreignKeyName: "user_books_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_books_outseta_user_id_fkey"
-            columns: ["outseta_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["outseta_user_id"]
-          },
+          }
         ]
       }
       user_courses: {

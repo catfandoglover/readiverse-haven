@@ -1,6 +1,6 @@
-
 import React from "react";
 import MainMenu from "../navigation/MainMenu";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface ExamHeaderProps {
   className?: string;

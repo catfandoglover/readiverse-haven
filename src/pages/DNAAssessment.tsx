@@ -29,7 +29,7 @@ import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
 import TidyCalDialog from "@/components/booking/TidyCalDialog";
 import { useTidyCalBooking } from "@/components/booking/useTidyCalBooking";

@@ -1,4 +1,3 @@
-
 import React from "react";
 import BookshelfHeader from "./bookshelf/BookshelfHeader";
 import BookshelfContent from "./bookshelf/BookshelfContent";
@@ -6,7 +5,7 @@ import LastReadBookHero from "./bookshelf/LastReadBookHero";
 import IntellectualDNACard from "./bookshelf/IntellectualDNACard";
 import { useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const NewBookshelf: React.FC = () => {

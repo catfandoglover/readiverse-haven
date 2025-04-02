@@ -1,8 +1,7 @@
-
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { saveLastVisited } from "@/utils/navigationHistory";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import ClassroomHeader from "@/components/classroom/ClassroomHeader";
 import LastCourseHero from "@/components/classroom/LastCourseHero";
 import SuggestedCourseHero from "@/components/classroom/SuggestedCourseHero";

@@ -1,0 +1,3 @@
+import { useAuth } from "@/contexts/SupabaseAuthContext";
+
+// ... existing code ... 

@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 const ExamWelcome: React.FC = () => {
   const [isAnimationDone, setIsAnimationDone] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const userName = user?.Account?.Name?.split(' ')[0] || 'student';
+  const userName = user?.email?.split('@')[0] || 'student';
 
   useEffect(() => {
     // After 3 seconds, set the animation as done and redirect
