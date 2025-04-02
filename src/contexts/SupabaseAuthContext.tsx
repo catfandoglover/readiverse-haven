@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-interface AuthContextType {
+type AuthContextValue = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
@@ -16,19 +16,13 @@ interface AuthContextType {
   checkDNAStatus: () => Promise<boolean>;
 
   // Auth UI helpers
-  openLogin: (options?: { 
-    authenticationCallbackUrl?: string;
-    modalOptions?: Record<string, any>;
-  }) => void;
-  openSignup: (options?: { 
-    authenticationCallbackUrl?: string;
-    modalOptions?: Record<string, any>;
-  }) => void;
-}
+  openLogin: (destination?: string) => void;
+  openSignup: (destination?: string) => void;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -41,17 +35,14 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [hasCompletedDNA, setHasCompletedDNA] = useState<boolean>(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedDNA, setHasCompletedDNA] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize auth state from Supabase
-    setIsLoading(true);
-    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
       if (sessionError) {
@@ -69,7 +60,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setError(null);
       setIsLoading(false);
     });
 
@@ -85,7 +75,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [user]);
 
-  // Function to check DNA status
   const checkDNAStatus = async (): Promise<boolean> => {
     if (!user) return false;
     
@@ -122,7 +111,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Auth methods
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -130,44 +118,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.removeItem('pending_dna_assessment_id');
       sessionStorage.removeItem('dna_assessment_id');
       sessionStorage.removeItem('dna_assessment_to_save');
-      
-      // Navigate to homepage after signing out
-      navigate('/', { replace: true });
-      toast.success('You have been signed out');
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error('Error signing out');
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
-  // Auth UI helpers
-  const openLogin = (options?: { 
-    authenticationCallbackUrl?: string;
-    modalOptions?: Record<string, any>;
-  }) => {
-    // Save the intended destination for redirecting after login
-    if (options?.authenticationCallbackUrl) {
-      localStorage.setItem('authRedirectTo', options.authenticationCallbackUrl);
+  const openLogin = (destination?: string) => {
+    if (destination) {
+      localStorage.setItem('authRedirectTo', destination);
     }
-    
-    // Navigate to login page
     navigate('/login');
   };
 
-  const openSignup = (options?: { 
-    authenticationCallbackUrl?: string;
-    modalOptions?: Record<string, any>;
-  }) => {
-    // Save the intended destination for redirecting after signup
-    if (options?.authenticationCallbackUrl) {
-      localStorage.setItem('authRedirectTo', options.authenticationCallbackUrl);
+  const openSignup = (destination?: string) => {
+    if (destination) {
+      localStorage.setItem('authRedirectTo', destination);
     }
-    
-    // Navigate to signup page (using the same login page with signup tab active)
-    navigate('/login', { state: { tab: 'signup' } });
+    navigate('/register');
   };
 
-  const value = {
+  const value: AuthContextValue = {
     user,
     session,
     isLoading,
@@ -176,7 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     hasCompletedDNA,
     checkDNAStatus,
     openLogin,
-    openSignup
+    openSignup,
   };
 
   return (

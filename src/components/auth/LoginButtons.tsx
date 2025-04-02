@@ -1,14 +1,16 @@
-import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginButtons() {
-  const { user, openLogin, openSignup, openProfile, logout } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   if (user) {
     return (
       <div className="flex gap-2">
-        <Button onClick={() => openProfile()}>Profile</Button>
-        <Button variant="destructive" onClick={logout}>
+        <Button onClick={() => navigate('/profile')}>Profile</Button>
+        <Button variant="destructive" onClick={signOut}>
           Logout
         </Button>
       </div>
@@ -17,8 +19,8 @@ export function LoginButtons() {
 
   return (
     <div className="flex gap-2">
-      <Button onClick={() => openLogin()}>Login</Button>
-      <Button variant="outline" onClick={() => openSignup()}>
+      <Button onClick={() => navigate('/login')}>Login</Button>
+      <Button variant="outline" onClick={() => navigate('/register')}>
         Sign Up
       </Button>
     </div>

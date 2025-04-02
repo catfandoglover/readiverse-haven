@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Pen, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { User } from "@supabase/supabase-js";
 
 interface ProfileData {
   id: string;
-  outseta_user_id: string;
+  user_id?: string;
+  outseta_user_id?: string;
   email: string;
   full_name: string;
   created_at: string;
@@ -30,7 +31,7 @@ interface DNAAnalysisResult {
 const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const ProfileHeader: React.FC = () => {
-  const { user, openProfile } = useAuth();
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -39,8 +40,9 @@ const ProfileHeader: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [loading, setLoading] = useState(true);
   
-  const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
+  const fullName = profileData?.full_name || user?.user_metadata?.full_name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
@@ -49,13 +51,13 @@ const ProfileHeader: React.FC = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (user?.Uid) {
+      if (user?.id) {
         try {
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('outseta_user_id', user.Uid)
-            .maybeSingle();
+            .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
+            .single();
             
           if (data && !error) {
             console.log("Profile data:", data);
@@ -72,11 +74,22 @@ const ProfileHeader: React.FC = () => {
             }
           } else {
             console.error("Error fetching profile data:", error);
+            toast({
+              title: "Error",
+              description: "Failed to load profile data",
+              variant: "destructive",
+            });
           }
         } catch (e) {
           console.error("Exception fetching profile:", e);
+          toast({
+            title: "Error",
+            description: "Failed to load profile data",
+            variant: "destructive",
+          });
         }
       }
+      setLoading(false);
     };
     
     const fetchDNAAnalysisResult = async () => {
@@ -103,50 +116,35 @@ const ProfileHeader: React.FC = () => {
     
     fetchProfileData();
     fetchDNAAnalysisResult();
-  }, [user]);
+  }, [user?.id, toast]);
 
   const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
 
   const handleProfileEditClick = () => {
-    openProfile({ tab: 'profile' });
+    navigate('/profile/edit');
   };
   
   const handleShareClick = async () => {
     try {
-      const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: `${firstName}'s Profile`,
-          text: `Check out ${firstName}'s reading profile!`,
-          url: shareUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Profile link copied to clipboard",
-        });
-      }
+      const shareUrl = `${window.location.origin}/profile/${user?.id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Success",
+        description: "Profile link copied to clipboard",
+      });
     } catch (error) {
-      console.error('Error sharing:', error);
-      try {
-        const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Profile link copied to clipboard",
-        });
-      } catch (clipboardError) {
-        console.error('Error copying to clipboard:', clipboardError);
-        toast({
-          title: "Share failed",
-          description: "Unable to share or copy link",
-          variant: "destructive",
-        });
-      }
+      console.error('Error copying to clipboard:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy profile link",
+        variant: "destructive",
+      });
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="relative z-10 stacking-context">
