@@ -110,6 +110,42 @@ function ensureRequiredFields(jsonObject: Record<string, string>, section: numbe
   return result;
 }
 
+// New function to ensure all fields follow the correct naming pattern (with numeric suffixes)
+function validateFieldNames(content: Record<string, string>): Record<string, string> {
+  const correctedContent: Record<string, string> = {};
+  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
+  const relationTypes = ['kindred_spirit', 'challenging_voice'];
+  const suffixes = ['', '_classic', '_rationale'];
+  
+  // First copy all existing fields to the new object
+  Object.keys(content).forEach(key => {
+    correctedContent[key] = content[key];
+  });
+  
+  // Check for any base domain/relation fields without numeric suffix (incorrect format)
+  for (const domain of domainTypes) {
+    for (const relation of relationTypes) {
+      const baseFieldName = `${domain}_${relation}`;
+      
+      // Check if the incorrect base field exists
+      if (content[baseFieldName] !== undefined) {
+        console.log(`Found incorrect field name: ${baseFieldName}, removing it`);
+        delete correctedContent[baseFieldName];
+      }
+      
+      for (const suffix of suffixes) {
+        const baseFieldWithSuffix = `${baseFieldName}${suffix}`;
+        if (content[baseFieldWithSuffix] !== undefined) {
+          console.log(`Found incorrect field name: ${baseFieldWithSuffix}, removing it`);
+          delete correctedContent[baseFieldWithSuffix];
+        }
+      }
+    }
+  }
+  
+  return correctedContent;
+}
+
 function repairJson(jsonString: string): string {
   try {
     JSON.parse(jsonString);
@@ -372,7 +408,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       console.log(`Successfully parsed JSON for section ${section}`);
       
       // If this is section 1, ensure all required fields are present
-      const validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
+      let validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
+      
+      // Add the new step to validate field names and remove any incorrectly formatted fields
+      validatedContent = validateFieldNames(validatedContent);
       
       return {
         content: validatedContent,
@@ -398,7 +437,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
         // Ensure all required fields are present, especially for section 1
-        const validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        let validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        
+        // Add the new step to validate field names and remove any incorrectly formatted fields
+        validatedResult = validateFieldNames(validatedResult);
         
         return {
           content: validatedResult,
@@ -623,6 +665,12 @@ serve(async (req) => {
       // Store the validation summary as a JSONB field
       combinedAnalysis['validation_summary'] = validationResults.summary || {};
       
+      // Double-check for any non-indexed fields that might cause insertion errors
+      const correctedAnalysis = validateFieldNames(combinedAnalysis);
+      
+      // Log all keys to help with debugging
+      console.log('Final analysis keys:', Object.keys(correctedAnalysis).join(', ').substring(0, 200) + '...');
+      
       // Proceed to store the analysis results with validation data
       const analysisRecord = {
         assessment_id,
@@ -631,7 +679,7 @@ serve(async (req) => {
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
         validation_summary: validationResults.summary,
-        ...combinedAnalysis
+        ...correctedAnalysis
       };
 
       console.log('Storing combined analysis in database...');
