@@ -1,12 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getPromptForSection } from './prompts.ts';
 
 const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Initialize Supabase client with error handling
 const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
 
 const corsHeaders = {
@@ -14,568 +14,416 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function cleanJsonContent(content: string): string {
-  let cleaned = content
-    .replace(/```json\s*/g, '')
-    .replace(/```\s*/g, '')
-    .replace(/`/g, '')
-    .trim();
+// Helper to extract thinker names from DNA analysis
+function extractThinkersFromAnalysis(analysisData: Record<string, any>): string[] {
+  const thinkers: string[] = [];
+  console.log('Starting thinker extraction from analysis data');
   
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-  return jsonMatch ? jsonMatch[0] : cleaned;
-}
-
-function handlePoliticsFields(jsonString: string): string {
-  console.log("Applying enhanced politics field handling...");
+  // Extract thinker names from all kindred_spirit and challenging_voice fields
+  const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
   
-  let processed = jsonString.replace(/\\"/g, "___ESCAPED_QUOTE___");
-  
-  // Enhanced regex for multiline politics fields, using [\s\S] instead of . to match across lines
-  const regex = /"(politics_[^"]+)"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
-  
-  processed = processed.replace(regex, (match, fieldName, content) => {
-    // Clean content more aggressively for politics fields
-    const cleanedContent = content
-      .replace(/"/g, '\\"')
-      .replace(/\r/g, ' ')
-      .replace(/\n/g, ' ')
-      .replace(/\t/g, ' ')
-      .replace(/\s+/g, ' ')
-      .replace(/\\\\/g, '\\');
-    
-    return `"${fieldName}": "${cleanedContent}"`;
-  });
-  
-  return processed.replace(/___ESCAPED_QUOTE___/g, '\\"');
-}
-
-function handleProblematicFields(jsonString: string): string {
-  console.log("Applying general problematic field handling...");
-  
-  let processed = handlePoliticsFields(jsonString);
-  
-  const rationaleRegex = /"([^"]+(?:_rationale|_classic))"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
-  
-  processed = processed.replace(rationaleRegex, (match, fieldName, content) => {
-    if (fieldName.startsWith('politics_')) {
-      return match;
-    }
-    
-    const cleanedContent = content
-      .replace(/"/g, '\\"')
-      .replace(/\r/g, ' ')
-      .replace(/\n/g, ' ')
-      .replace(/\t/g, ' ')
-      .replace(/\s+/g, ' ');
-    
-    return `"${fieldName}": "${cleanedContent}"`;
-  });
-  
-  return processed;
-}
-
-// Updated function to validate and ensure required fields are present
-function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
-  // Changed from section !== 1 to section !== 2
-  // This ensures we only apply this special handling to section 1
-  if (section !== 1) return jsonObject;
-  
-  const result = { ...jsonObject };
-  
-  // Specifically check for the problematic politics fields
-  for (let i = 4; i <= 5; i++) {
-    // Check for the three related fields for politics_challenging_voice
-    const baseField = `politics_challenging_voice_${i}`;
-    const classicField = `${baseField}_classic`;
-    const rationaleField = `${baseField}_rationale`;
-    
-    // If any of these fields are missing, add defaults
-    if (!result[baseField]) {
-      console.log(`Adding missing field: ${baseField}`);
-      result[baseField] = `Political Challenger ${i}`;
-    }
-    
-    if (!result[classicField]) {
-      console.log(`Adding missing field: ${classicField}`);
-      result[classicField] = "Unknown (0000)";
-    }
-    
-    if (!result[rationaleField]) {
-      console.log(`Adding missing field: ${rationaleField}`);
-      result[rationaleField] = `This challenger represents a political position that contrasts with your views, but the specific details could not be processed correctly.`;
-    }
-  }
-  
-  return result;
-}
-
-// New function to ensure all fields follow the correct naming pattern (with numeric suffixes)
-function validateFieldNames(content: Record<string, string>): Record<string, string> {
-  const correctedContent: Record<string, string> = {};
-  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  const relationTypes = ['kindred_spirit', 'challenging_voice'];
-  const suffixes = ['', '_classic', '_rationale'];
-  
-  // First copy all existing fields to the new object
-  Object.keys(content).forEach(key => {
-    correctedContent[key] = content[key];
-  });
-  
-  // Check for any base domain/relation fields without numeric suffix (incorrect format)
-  for (const domain of domainTypes) {
-    for (const relation of relationTypes) {
-      const baseFieldName = `${domain}_${relation}`;
-      
-      // Check if the incorrect base field exists
-      if (content[baseFieldName] !== undefined) {
-        console.log(`Found incorrect field name: ${baseFieldName}, removing it`);
-        delete correctedContent[baseFieldName];
+  domains.forEach(domain => {
+    console.log(`Processing domain: ${domain}`);
+    for (let i = 1; i <= 5; i++) {
+      // Extract kindred spirit thinkers
+      const kindredSpiritKey = `${domain}_kindred_spirit_${i}`;
+      if (analysisData[kindredSpiritKey]) {
+        thinkers.push(analysisData[kindredSpiritKey]);
+        console.log(`Found kindred spirit: ${kindredSpiritKey} = ${analysisData[kindredSpiritKey]}`);
+      } else {
+        console.log(`Not found: ${kindredSpiritKey}`);
       }
       
-      for (const suffix of suffixes) {
-        const baseFieldWithSuffix = `${baseFieldName}${suffix}`;
-        if (content[baseFieldWithSuffix] !== undefined) {
-          console.log(`Found incorrect field name: ${baseFieldWithSuffix}, removing it`);
-          delete correctedContent[baseFieldWithSuffix];
+      // Extract challenging voice thinkers
+      const challengingVoiceKey = `${domain}_challenging_voice_${i}`;
+      if (analysisData[challengingVoiceKey]) {
+        thinkers.push(analysisData[challengingVoiceKey]);
+        console.log(`Found challenging voice: ${challengingVoiceKey} = ${analysisData[challengingVoiceKey]}`);
+      } else {
+        console.log(`Not found: ${challengingVoiceKey}`);
+      }
+    }
+  });
+  
+  // Also add most_kindred_spirit and most_challenging_voice if they exist
+  if (analysisData.most_kindred_spirit) {
+    thinkers.push(analysisData.most_kindred_spirit);
+    console.log(`Found most_kindred_spirit: ${analysisData.most_kindred_spirit}`);
+  }
+  
+  if (analysisData.most_challenging_voice) {
+    thinkers.push(analysisData.most_challenging_voice);
+    console.log(`Found most_challenging_voice: ${analysisData.most_challenging_voice}`);
+  }
+  
+  const uniqueThinkers = [...new Set(thinkers)]; // Remove duplicates
+  console.log(`Total unique thinkers extracted: ${uniqueThinkers.length}`);
+  console.log('First 5 thinkers:', uniqueThinkers.slice(0, 5));
+  
+  return uniqueThinkers;
+}
+
+// Helper to extract classic texts from DNA analysis
+function extractClassicsFromAnalysis(analysisData: Record<string, any>): string[] {
+  const classics: string[] = [];
+  console.log('Starting classics extraction from analysis data');
+  
+  // Extract classic text titles from all kindred_spirit_classic and challenging_voice_classic fields
+  const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+  
+  domains.forEach(domain => {
+    console.log(`Processing classics for domain: ${domain}`);
+    for (let i = 1; i <= 5; i++) {
+      // Extract kindred spirit classics
+      const kindredSpiritClassicKey = `${domain}_kindred_spirit_${i}_classic`;
+      if (analysisData[kindredSpiritClassicKey]) {
+        // Extract just the title part (removing year/date in parentheses)
+        const classicMatch = String(analysisData[kindredSpiritClassicKey]).match(/([^(]+)(?:\s*\(\d+\))?/);
+        if (classicMatch && classicMatch[1]) {
+          classics.push(classicMatch[1].trim());
+          console.log(`Found kindred classic: ${kindredSpiritClassicKey} = ${classicMatch[1].trim()}`);
+        } else {
+          classics.push(String(analysisData[kindredSpiritClassicKey]));
+          console.log(`Found kindred classic (no match): ${kindredSpiritClassicKey} = ${analysisData[kindredSpiritClassicKey]}`);
         }
+      } else {
+        console.log(`Not found: ${kindredSpiritClassicKey}`);
+      }
+      
+      // Extract challenging voice classics
+      const challengingVoiceClassicKey = `${domain}_challenging_voice_${i}_classic`;
+      if (analysisData[challengingVoiceClassicKey]) {
+        // Extract just the title part (removing year/date in parentheses)
+        const classicMatch = String(analysisData[challengingVoiceClassicKey]).match(/([^(]+)(?:\s*\(\d+\))?/);
+        if (classicMatch && classicMatch[1]) {
+          classics.push(classicMatch[1].trim());
+          console.log(`Found challenging classic: ${challengingVoiceClassicKey} = ${classicMatch[1].trim()}`);
+        } else {
+          classics.push(String(analysisData[challengingVoiceClassicKey]));
+          console.log(`Found challenging classic (no match): ${challengingVoiceClassicKey} = ${analysisData[challengingVoiceClassicKey]}`);
+        }
+      } else {
+        console.log(`Not found: ${challengingVoiceClassicKey}`);
       }
     }
-  }
+  });
   
-  return correctedContent;
+  const uniqueClassics = [...new Set(classics)]; // Remove duplicates
+  console.log(`Total unique classics extracted: ${uniqueClassics.length}`);
+  console.log('First 5 classics:', uniqueClassics.slice(0, 5));
+  
+  return uniqueClassics;
 }
 
-function repairJson(jsonString: string): string {
+// Fetch all items from DB with pagination support
+async function fetchAllItems(type: 'thinker' | 'classic'): Promise<any[]> {
+  const pageSize = 1000;
+  let allItems: any[] = [];
+  let page = 0;
+  let hasMoreData = true;
+  
   try {
-    JSON.parse(jsonString);
-    return jsonString;
-  } catch (e) {
-    console.log("Initial JSON parsing failed, attempting repairs:", e.message);
+    while (hasMoreData) {
+      const query = type === 'thinker' 
+        ? supabase.from('icons').select('id, name').range(page * pageSize, (page + 1) * pageSize - 1)
+        : supabase.from('books').select('id, title, author').range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error(`Error fetching ${type}s (page ${page}):`, error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        allItems = [...allItems, ...data];
+        page++;
+        
+        // Check if we likely have more data
+        if (data.length < pageSize) {
+          hasMoreData = false;
+        }
+      } else {
+        hasMoreData = false;
+      }
+    }
     
-    try {
-      let result = jsonString
-        .replace(/\n/g, ' ')
-        .replace(/\r/g, ' ')
-        .replace(/\t/g, ' ')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, '\\')
-        .replace(/,\s*}/g, '}')
-        .replace(/,\s*\]/g, ']')
-        .replace(/\s+/g, ' ');
+    console.log(`Successfully fetched ${allItems.length} ${type}s from database`);
+    return allItems;
+  } catch (error) {
+    console.error(`Error in fetchAllItems for ${type}:`, error);
+    return [];
+  }
+}
+
+// IMPROVED: Store unmatched entities using assessment_id for linking
+async function storeUnmatchedEntities(
+  assessment_id: string | null,
+  analysis_id: string | null,
+  thinkers: string[] = [],
+  classics: string[] = []
+): Promise<boolean> {
+  // Enhanced logging to help debug missing IDs
+  if (!assessment_id && !analysis_id) {
+    console.error('No assessment_id or analysis_id provided, cannot store unmatched entities');
+    console.error('assessment_id:', assessment_id);
+    console.error('analysis_id:', analysis_id);
+    return false;
+  }
+  
+  if (thinkers.length === 0 && classics.length === 0) {
+    console.log(`No unmatched entities to store for assessment_id ${assessment_id || 'unknown'}`);
+    return true;
+  }
+  
+  try {
+    console.log(`Storing unmatched entities for assessment_id ${assessment_id || 'unknown'}:`, {
+      thinkers: thinkers.length,
+      classics: classics.length
+    });
+    
+    // Create data object for upsert
+    const data: Record<string, any> = {
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    // Add the appropriate ID for linking
+    if (analysis_id) {
+      data.analysis_id = analysis_id;
+    }
+    
+    // Add assessment_id if available (our new approach)
+    if (assessment_id) {
+      data.assessment_id = assessment_id;
+    }
+    
+    // Add entities if provided
+    if (thinkers.length > 0) {
+      data.unmatched_thinkers = thinkers;
+    }
+    
+    if (classics.length > 0) {
+      data.unmatched_classics = classics;
+    }
+    
+    // Log complete insert data for debugging
+    console.log('Upsert data:', JSON.stringify(data));
+    
+    // If we have an analysis_id, upsert based on that
+    if (analysis_id) {
+      const { error } = await supabase
+        .from('dna_unmatched_entities')
+        .upsert([data], { 
+          onConflict: 'analysis_id',
+          ignoreDuplicates: false
+        });
       
-      result = handleProblematicFields(result);
+      if (error) {
+        console.error(`Error storing unmatched entities:`, error);
+        console.error(`Full error details:`, JSON.stringify(error));
+        return false;
+      }
+    } 
+    // If we have only assessment_id, upsert based on that
+    else if (assessment_id) {
+      const { error } = await supabase
+        .from('dna_unmatched_entities')
+        .upsert([data], { 
+          onConflict: 'assessment_id',
+          ignoreDuplicates: false
+        });
       
-      JSON.parse(result);
-      return result;
-    } catch (e) {
-      console.log("First repair attempt failed, trying more aggressive repairs:", e.message);
+      if (error) {
+        console.error(`Error storing unmatched entities:`, error);
+        console.error(`Full error details:`, JSON.stringify(error));
+        return false;
+      }
+    }
+    
+    console.log(`Successfully stored unmatched entities for ${analysis_id ? 'analysis_id' : 'assessment_id'} ${analysis_id || assessment_id}`);
+    return true;
+  } catch (error) {
+    console.error(`Exception in storeUnmatchedEntities:`, error);
+    return false;
+  }
+}
+
+async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', assessment_id: string | null, analysis_id: string | null) {
+  // Enhanced logging for debugging
+  console.log(`Starting semantic matching with IDs - assessment_id: ${assessment_id || 'null'}, analysis_id: ${analysis_id || 'null'}`);
+  
+  if (items.length === 0) {
+    console.log(`No ${type}s to match, returning empty results`);
+    return { matched: [], unmatched: [] };
+  }
+
+  try {
+    // Fetch all items from database with pagination
+    const dbItems = await fetchAllItems(type);
+    const itemsToLookup = items;
+    
+    // If we have a reasonable amount of items to check, use OpenRouter for semantic matching
+    if (items.length > 0 && dbItems.length > 0) {
+      console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
+
+      // Process in batches if we have too many items to match
+      const batchSize = 50; // Adjust based on what the LLM can handle
+      let matched: { item: string, db_id: string, confidence: number }[] = [];
+      let unmatched: string[] = [];
       
-      try {
-        const keyValuePairs: [string, string][] = [];
-        let insideString = false;
-        let currentKey = '';
-        let currentValue = '';
-        let isCollectingKey = true;
-        let escapeNext = false;
+      // Process items in batches
+      for (let i = 0; i < itemsToLookup.length; i += batchSize) {
+        const itemsBatch = itemsToLookup.slice(i, i + batchSize);
         
-        for (let i = 0; i < jsonString.length; i++) {
-          const char = jsonString[i];
-          
-          if (escapeNext) {
-            if (isCollectingKey) {
-              currentKey += char;
-            } else {
-              currentValue += char;
-            }
-            escapeNext = false;
-            continue;
-          }
-          
-          if (char === '\\') {
-            escapeNext = true;
-            if (isCollectingKey) {
-              currentKey += char;
-            } else {
-              currentValue += char;
-            }
-            continue;
-          }
-          
-          if (char === '"' && !insideString) {
-            insideString = true;
-            continue;
-          }
-          
-          if (char === '"' && insideString) {
-            insideString = false;
-            if (isCollectingKey) {
-              isCollectingKey = false;
-            } else {
-              keyValuePairs.push([currentKey, currentValue]);
-              currentKey = '';
-              currentValue = '';
-              isCollectingKey = true;
-            }
-            continue;
-          }
-          
-          if (insideString) {
-            if (isCollectingKey) {
-              currentKey += char;
-            } else {
-              currentValue += char;
-            }
-          }
-          
-          if (!insideString && !isCollectingKey && char === ':') {
-            continue;
-          }
+        // Ensure we have a valid API key
+        if (!openrouterApiKey || openrouterApiKey.trim() === '') {
+          console.error('No OpenRouter API key provided');
+          return { 
+            matched: [], 
+            unmatched: itemsToLookup, 
+            error: 'No OpenRouter API key provided' 
+          };
         }
         
-        const cleanObj: Record<string, string> = {};
-        for (const [key, value] of keyValuePairs) {
-          let cleanValue = value
-            .replace(/\n/g, ' ')
-            .replace(/\r/g, ' ')
-            .replace(/"/g, '\\"')
-            .replace(/\t/g, ' ')
-            .trim();
-          
-          cleanObj[key] = cleanValue;
-        }
-        
-        if (Object.keys(cleanObj).length > 0) {
-          console.log(`Extracted ${Object.keys(cleanObj).length} fields using manual parsing`);
-          
-          const jsonResult = JSON.stringify(cleanObj);
-          
-          return handleProblematicFields(jsonResult);
-        }
-        
-        throw new Error("Failed to extract fields using manual parsing");
-      } catch (manualError) {
-        console.error("Manual parsing failed:", manualError);
+        const prompt = `
+I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries. 
+For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
+
+List A (from analysis):
+${itemsBatch.map((item, i) => `${i+1}. "${item}"`).join('\n')}
+
+List B (from database):
+${dbItems.map((item, i) => {
+  if (type === 'thinker') {
+    return `${i+1}. ID: ${item.id}, Name: "${item.name}"`;
+  } else {
+    return `${i+1}. ID: ${item.id}, Title: "${item.title}", Author: ${item.author || 'Unknown'}`;
+  }
+}).join('\n')}
+
+For each item in List A, provide:
+1. The item name/title from List A
+2. The best matching database ID from List B (just the UUID), or "no_match" if no good semantic match is found
+3. A confidence score (0-100) indicating how confident you are in the match
+
+Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
+Provide the raw JSON array only, with no additional explanation or text.
+`;
+
+        console.log(`Sending batch ${i/batchSize + 1} of ${Math.ceil(itemsToLookup.length/batchSize)} to OpenRouter`);
+        console.log(`Batch contains ${itemsBatch.length} items`);
         
         try {
-          const extractedObject: Record<string, string> = {};
-          
-          // Enhanced politics pattern matching that's more forgiving
-          const politicsPattern = /"(politics_[^"]+)"\s*:\s*"([^"]*)"/g;
-          let match;
-          
-          while ((match = politicsPattern.exec(jsonString)) !== null) {
-            const [_, key, value] = match;
-            
-            const cleanValue = value
-              .replace(/\n/g, ' ')
-              .replace(/\r/g, ' ')
-              .replace(/"/g, '\\"')
-              .replace(/\t/g, ' ')
-              .trim();
-              
-            extractedObject[key] = cleanValue;
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterApiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://lovable.dev',
+              'X-Title': 'Lovable.dev'
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.0-flash-001',
+              messages: [
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ],
+              response_format: { type: "json_object" }
+            })
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
           }
+
+          const responseData = await response.json();
+          let batchResults: { item: string, match_id: string, confidence: number }[] = [];
           
-          // Look for missing politics_challenging_voice fields specifically
-          for (let i = 1; i <= 5; i++) {
-            const baseKey = `politics_challenging_voice_${i}`;
-            const classicKey = `${baseKey}_classic`;
-            const rationaleKey = `${baseKey}_rationale`;
+          try {
+            const content = responseData.choices[0].message.content;
+            console.log(`Raw content from OpenRouter:`, content.substring(0, 100) + '...');
             
-            // If these specific keys are missing, try an even more aggressive pattern
-            if (!extractedObject[baseKey]) {
-              const specialPattern = new RegExp(`"(${baseKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
-              if ((match = specialPattern.exec(jsonString)) !== null) {
-                const [_, key, value] = match;
-                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
+            // Parse the JSON content
+            batchResults = JSON.parse(content);
+            if (!Array.isArray(batchResults)) {
+              // If we got an object with array inside it, try to extract it
+              if (batchResults && typeof batchResults === 'object' && batchResults.results && Array.isArray(batchResults.results)) {
+                batchResults = batchResults.results;
+              } else {
+                throw new Error('Response is not an array or does not contain an array');
               }
             }
-            
-            if (!extractedObject[classicKey]) {
-              const specialPattern = new RegExp(`"(${classicKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
-              if ((match = specialPattern.exec(jsonString)) !== null) {
-                const [_, key, value] = match;
-                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
-              }
-            }
-            
-            if (!extractedObject[rationaleKey]) {
-              const specialPattern = new RegExp(`"(${rationaleKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
-              if ((match = specialPattern.exec(jsonString)) !== null) {
-                const [_, key, value] = match;
-                extractedObject[key] = value.replace(/\n/g, ' ').replace(/"/g, '\\"').trim();
-              }
-            }
+          } catch (parseError) {
+            console.error("Error parsing LLM response:", parseError);
+            console.log("Raw response:", responseData.choices[0].message.content);
+            // Fallback to empty results
+            batchResults = [];
+          }
+
+          console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
+          if (batchResults.length > 0) {
+            console.log('Sample result:', batchResults[0]);
+          }
+
+          // Filter batch results into matched and unmatched
+          const batchMatched = batchResults
+            .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
+            .map(result => ({
+              item: result.item,
+              db_id: result.match_id,
+              confidence: result.confidence
+            }));
+
+          const batchUnmatched = batchResults
+            .filter(result => result.match_id === "no_match" || result.confidence < 70)
+            .map(result => result.item);
+
+          // Append batch results to overall results
+          matched = [...matched, ...batchMatched];
+          unmatched = [...unmatched, ...batchUnmatched];
+          
+          // Add any items that were in the batch but not in the result (this can happen if the LLM omits items)
+          const processedItems = new Set(batchResults.map(r => r.item));
+          const missingItems = itemsBatch.filter(item => !processedItems.has(item));
+          if (missingItems.length > 0) {
+            console.log(`${missingItems.length} items were not processed by LLM, adding to unmatched`);
+            unmatched = [...unmatched, ...missingItems];
           }
           
-          const generalPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
-          
-          while ((match = generalPattern.exec(jsonString)) !== null) {
-            const [_, key, value] = match;
-            
-            if (key.startsWith('politics_')) continue;
-            
-            const cleanValue = value
-              .replace(/\n/g, ' ')
-              .replace(/\r/g, ' ')
-              .replace(/"/g, '\\"')
-              .replace(/\t/g, ' ')
-              .trim();
-              
-            extractedObject[key] = cleanValue;
-          }
-          
-          if (Object.keys(extractedObject).length > 0) {
-            console.log(`Extracted ${Object.keys(extractedObject).length} fields using regex extraction`);
-            return JSON.stringify(extractedObject);
-          }
-          
-          throw new Error("Failed to extract fields from JSON");
-        } catch (extractError) {
-          console.error("Field extraction failed:", extractError);
-          
-          return '{"error":"JSON parsing failed","partial_content":"' + 
-            jsonString.substring(0, 100).replace(/"/g, '\\"') + '..."}';
+        } catch (apiError) {
+          console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
+          // Add all items in this batch to unmatched
+          unmatched = [...unmatched, ...itemsBatch];
         }
       }
-    }
-  }
-}
 
-async function generateAnalysis(answers_json: string, section: number): Promise<{ content: Record<string, string>, raw_response: any }> {
-  console.log(`Generating analysis for section ${section}`);
-  const prompt = getPromptForSection(section, answers_json);
+      console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
-  try {
-    console.log(`Sending request to OpenRouter for section ${section}`);
-    
-    let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
-    
-    // Changed from section === 1 to section === 1 
-    // This ensures special system prompt is applied to section 1 where politics fields are now located
-    if (section === 1) {
-      systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response, including politics_challenging_voice_4, politics_challenging_voice_5, and their associated _classic and _rationale fields. Ensure every field has a complete value.';
-    }
-    
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterApiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://lovable.dev',
-        'X-Title': 'Lovable.dev'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.7-sonnet',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
-        // Changed from section === 1 to section === 1
-        // This ensures lower temperature is applied to section 1 where politics fields are now located
-        temperature: section === 1 ? 0.3 : 0.7, // Lower temperature for section 1 to improve consistency
-        response_format: { type: "json_object" }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`Raw response received for section ${section}`);
-    
-    if (!data?.choices?.[0]?.message?.content) {
-      console.error('Unexpected API response structure:', data);
-      throw new Error('Invalid API response structure');
-    }
-
-    const rawContent = data.choices[0].message.content;
-    console.log(`Processing content for section ${section}: ${rawContent.substring(0, 100)}...`);
-    
-    const cleanedContent = cleanJsonContent(rawContent);
-    
-    try {
-      const parsed = JSON.parse(cleanedContent);
-      console.log(`Successfully parsed JSON for section ${section}`);
-      
-      // If this is section 1, ensure all required fields are present
-      let validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
-      
-      // Add the new step to validate field names and remove any incorrectly formatted fields
-      validatedContent = validateFieldNames(validatedContent);
-      
-      return {
-        content: validatedContent,
-        raw_response: data
-      };
-    } catch (parseError) {
-      console.error(`JSON parsing failed for section ${section}, attempting repairs:`, parseError.message);
-      
-      if (section === 1) {
-        console.log(`Applying specialized handling for section ${section} which contains challenging fields`);
-      }
-      
-      try {
-        const repairedJson = repairJson(cleanedContent);
-        let parsedResult;
-        
-        if (repairedJson.startsWith('{"data":')) {
-          parsedResult = JSON.parse(repairedJson).data;
+      // IMPORTANT FIX: Always attempt to store unmatched entities
+      if (unmatched.length > 0) {
+        console.log(`Storing ${unmatched.length} unmatched ${type}s with assessment_id: ${assessment_id}, analysis_id: ${analysis_id}`);
+        if (type === 'thinker') {
+          await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
         } else {
-          parsedResult = JSON.parse(repairedJson);
+          await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
         }
-        
-        console.log(`Successfully parsed JSON after repairs for section ${section}`);
-        
-        // Ensure all required fields are present, especially for section 1
-        let validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
-        
-        // Add the new step to validate field names and remove any incorrectly formatted fields
-        validatedResult = validateFieldNames(validatedResult);
-        
-        return {
-          content: validatedResult,
-          raw_response: data
-        };
-      } catch (repairError) {
-        console.error(`JSON repair failed for section ${section}:`, repairError.message);
-        
-        const fallbackResponse: Record<string, string> = {
-          error_message: `Failed to parse section ${section}: ${repairError.message}`,
-          partial_content: cleanedContent.substring(0, 500) + "..."
-        };
-        
-        if (section === 1) {
-          for (let i = 1; i <= 5; i++) {
-            fallbackResponse[`politics_kindred_spirit_${i}`] = `Parsing Error: Thinker ${i}`;
-            fallbackResponse[`politics_kindred_spirit_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`politics_kindred_spirit_${i}_rationale`] = "Error retrieving data";
-            
-            fallbackResponse[`politics_challenging_voice_${i}`] = `Parsing Error: Challenger ${i}`;
-            fallbackResponse[`politics_challenging_voice_${i}_classic`] = "Error (0000)";
-            fallbackResponse[`politics_challenging_voice_${i}_rationale`] = "Error retrieving data";
-          }
-        }
-        
-        console.log(`Created fallback response with ${Object.keys(fallbackResponse).length} fields`);
-        return {
-          content: fallbackResponse,
-          raw_response: {
-            error: true,
-            message: repairError.message,
-            original_response: data
-          }
-        };
+      } else {
+        console.log(`No unmatched ${type}s to store`);
       }
-    }
-  } catch (error) {
-    console.error(`Error in section ${section}:`, error);
-    throw error;
-  }
-}
 
-async function generateCompleteAnalysis(answers_json: string): Promise<{ sections: Array<{ analysis: Record<string, string>, raw_response: any }>, error?: string }> {
-  try {
-    console.log('Starting analysis for all sections...');
-    const section1 = await generateAnalysis(answers_json, 1);
-    console.log('Successfully completed section 1');
-    
-    const section2 = await generateAnalysis(answers_json, 2);
-    console.log('Successfully completed section 2');
-    
-    const section3 = await generateAnalysis(answers_json, 3);
-    console.log('Successfully completed section 3');
-    
-    return {
-      sections: [
-        { analysis: section1.content, raw_response: section1.raw_response },
-        { analysis: section2.content, raw_response: section2.raw_response },
-        { analysis: section3.content, raw_response: section3.raw_response }
-      ]
-    };
-  } catch (error) {
-    console.error('Error in generateCompleteAnalysis:', error);
-    return {
-      sections: [],
-      error: `Failed to generate analysis: ${error.message}`
-    };
-  }
-}
-
-async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
-  try {
-    console.log(`Checking if analysis already exists for assessment ${assessment_id}`);
-    
-    const { data, error, count } = await supabase
-      .from('dna_analysis_results')
-      .select('id', { count: 'exact' })
-      .eq('assessment_id', assessment_id);
-      
-    if (error) {
-      console.error('Error checking for existing analysis:', error);
-      return false;
+      return { matched, unmatched };
+    } else {
+      console.log(`Not enough data to perform semantic matching for ${type}s`);
+      return { matched: [], unmatched: items };
     }
-    
-    if (count && count > 0) {
-      console.log(`Analysis already exists for assessment ${assessment_id}`);
-      return true;
-    }
-    
-    console.log(`No existing analysis found for assessment ${assessment_id}`);
-    return false;
   } catch (error) {
-    console.error('Error in checkExistingAnalysis:', error);
-    return false;
-  }
-}
-
-// Function to validate entities using the validate-dna-entities function
-async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
-  try {
-    console.log('Validating DNA entities from analysis results');
-    
-    // Call the validate-dna-entities function directly
-    const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ assessment_id })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Validation API error! Status: ${response.status}`);
-    }
-    
-    const validationResult = await response.json();
-    console.log('Validation completed:', 
-      `Thinkers: ${validationResult.thinkers?.matched || 0}/${validationResult.thinkers?.total || 0} matched, ` +
-      `Classics: ${validationResult.classics?.matched || 0}/${validationResult.classics?.total || 0} matched`
-    );
-    
-    return validationResult;
-  } catch (error) {
-    console.error('Error validating DNA entities:', error);
-    return { 
-      error: error.message, 
-      thinkers: { matched: [], unmatched: [] }, 
-      classics: { matched: [], unmatched: [] },
-      summary: {
-        totalEntities: 0,
-        totalMatched: 0,
-        totalUnmatched: 0,
-        matchRate: '0%'
-      }
-    };
+    console.error(`Error in semantic matching for ${type}s:`, error);
+    return { matched: [], unmatched: items, error: `Matching error: ${error.message || 'Unknown error'}` };
   }
 }
 
@@ -585,169 +433,259 @@ serve(async (req) => {
   }
 
   try {
-    if (req.method === 'POST') {
-      const { answers_json, assessment_id, profile_id } = await req.json();
-      
-      if (!answers_json || !assessment_id) {
-        throw new Error('Missing required fields: answers_json and assessment_id are required');
-      }
-
-      console.log(`Processing assessment ${assessment_id}...`);
-      
-      const analysisExists = await checkExistingAnalysis(assessment_id);
-      
-      if (analysisExists) {
-        console.log(`Analysis already exists for assessment ${assessment_id}, skipping reprocessing`);
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: 'Analysis already exists for this assessment' 
-          }),
-          { 
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-      }
-      
-      const { data: assessmentData, error: assessmentError } = await supabase
-        .from('dna_assessment_results')
-        .select('name')
-        .eq('id', assessment_id)
-        .maybeSingle();
-
-      if (assessmentError) {
-        console.error('Error fetching assessment data:', assessmentError);
-        throw assessmentError;
-      }
-
-      if (!assessmentData) {
-        throw new Error('Assessment not found');
-      }
-
-      console.log('Generating analysis...');
-      const result = await generateCompleteAnalysis(answers_json);
-      
-      if (result.error) {
-        console.error('Analysis generation error:', result.error);
-        return new Response(
-          JSON.stringify({ success: false, error: result.error }),
-          { 
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-      }
-
-      const combinedAnalysis = {};
-      const combinedRawResponses = [];
-      const combinedAnalysisTexts = [];
-
-      for (const section of result.sections) {
-        Object.assign(combinedAnalysis, section.analysis);
-        combinedRawResponses.push(section.raw_response);
-        combinedAnalysisTexts.push(section.analysis);
-      }
-      
-      // Perform entity validation before storing the analysis
-      console.log('Validating entities before storing analysis...');
-      const validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
-      
-      // Store the validation summary as a JSONB field
-      combinedAnalysis['validation_summary'] = validationResults.summary || {};
-      
-      // Double-check for any non-indexed fields that might cause insertion errors
-      const correctedAnalysis = validateFieldNames(combinedAnalysis);
-      
-      // Log all keys to help with debugging
-      console.log('Final analysis keys:', Object.keys(correctedAnalysis).join(', ').substring(0, 200) + '...');
-      
-      // Proceed to store the analysis results with validation data
-      const analysisRecord = {
-        assessment_id,
-        name: assessmentData.name,
-        raw_response: combinedRawResponses,
-        analysis_text: JSON.stringify(combinedAnalysisTexts),
-        analysis_type: 'section_1',
-        validation_summary: validationResults.summary,
-        ...correctedAnalysis
-      };
-
-      console.log('Storing combined analysis in database...');
-      const { data: analysisData, error: storeError } = await supabase
+    console.log('Starting validate-dna-entities function');
+    const { analysisData, analysisId, assessmentId } = await req.json();
+    
+    // Enhanced validation to allow either analysisId, assessmentId, or direct data
+    if (!analysisData && !analysisId && !assessmentId) {
+      throw new Error('Either analysisData, analysisId, or assessmentId must be provided');
+    }
+    
+    let dataToValidate: Record<string, any> = {};
+    let actualAnalysisId: string | null = analysisId || null;
+    let actualAssessmentId: string | null = assessmentId || null;
+    
+    if (analysisId) {
+      // Fetch the analysis data from the database using analysis ID
+      console.log(`Fetching analysis data for ID: ${analysisId}`);
+      const { data, error } = await supabase
         .from('dna_analysis_results')
-        .insert(analysisRecord)
-        .select('id')
-        .single();
-
-      if (storeError) {
-        console.error('Error storing analysis:', storeError);
-        throw storeError;
-      }
-      
-      console.log('Combined analysis stored successfully');
-      
-      // If we have an analysis ID now, store the unmatched entities for later review
-      if (analysisData?.id && 
-          (validationResults.thinkers?.unmatched?.length > 0 || 
-           validationResults.classics?.unmatched?.length > 0)) {
+        .select('*')
+        .eq('id', analysisId)
+        .maybeSingle();
         
-        try {
-          const unmatchedData = {
-            analysis_id: analysisData.id,
-            unmatched_thinkers: validationResults.thinkers?.unmatched || [],
-            unmatched_classics: validationResults.classics?.unmatched || [],
-            status: 'pending'
-          };
-          
-          const { error: unmatchedError } = await supabase
-            .from('dna_unmatched_entities')
-            .upsert([unmatchedData], { onConflict: 'analysis_id' });
-            
-          if (unmatchedError) {
-            console.error('Error storing unmatched entities:', unmatchedError);
-          }
-        } catch (unmatchedErr) {
-          console.error('Exception storing unmatched entities:', unmatchedErr);
-        }
+      if (error) {
+        console.error('Error fetching analysis data:', error);
+        throw error;
+      }
+      if (!data) {
+        console.error(`No analysis found with id: ${analysisId}`);
+        throw new Error(`No analysis found with id: ${analysisId}`);
       }
       
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Combined analysis stored successfully',
-          analysis_id: analysisData?.id,
-          validation_summary: validationResults.summary
-        }),
-        { 
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+      dataToValidate = data;
+      // If we have an analysis record but no assessment ID yet, get it from the record
+      if (!actualAssessmentId && data.assessment_id) {
+        actualAssessmentId = data.assessment_id;
+      }
+      
+      console.log('Successfully fetched analysis data from database');
+    } else if (assessmentId) {
+      // Fetch the analysis data from the database using assessment ID
+      console.log(`Fetching analysis data for assessment ID: ${assessmentId}`);
+      const { data, error } = await supabase
+        .from('dna_analysis_results')
+        .select('*')
+        .eq('assessment_id', assessmentId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching analysis data by assessment ID:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error(`No analysis found for assessment id: ${assessmentId}`);
+        throw new Error(`No analysis found for assessment id: ${assessmentId}. Please ensure the analysis is completed before validation.`);
+      }
+      
+      dataToValidate = data;
+      actualAnalysisId = data.id;
+      console.log('Successfully fetched analysis data from database');
+    } else if (analysisData) {
+      // Use the provided analysis data directly
+      console.log('Using provided analysis data');
+      dataToValidate = analysisData;
+      
+      // If analysisData contains assessment_id, use it
+      if (dataToValidate.assessment_id) {
+        actualAssessmentId = dataToValidate.assessment_id;
+      }
+    }
+    
+    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualAssessmentId || 'none'}`);
+    
+    // Extract thinkers and classics from the analysis
+    const thinkers = extractThinkersFromAnalysis(dataToValidate);
+    const classics = extractClassicsFromAnalysis(dataToValidate);
+    
+    console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
+    
+    // Partial results holder to ensure we don't lose data on errors
+    let thinkerResults = { matched: [], unmatched: thinkers, error: null };
+    let classicResults = { matched: [], unmatched: classics, error: null };
+    
+    try {
+      // Perform semantic matching for thinkers
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
+      console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
+    } catch (thinkerError) {
+      console.error('Error in thinker matching:', thinkerError);
+      thinkerResults.error = `Error: ${thinkerError.message}`;
+    }
+    
+    try {
+      // Perform semantic matching for classics
+      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
+      console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
+    } catch (classicError) {
+      console.error('Error in classic matching:', classicError);
+      classicResults.error = `Error: ${classicError.message}`;
     }
 
-    return new Response('Method not allowed', { 
-      status: 405,
-      headers: corsHeaders,
+    // Always ensure we record matching results in the database, even if only partial results
+    if (actualAnalysisId) {
+      console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
+      
+      // Calculate match rates for summary
+      const totalThinkers = thinkers.length;
+      const totalClassics = classics.length;
+      const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+      const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+      const totalEntities = totalThinkers + totalClassics;
+      const totalMatched = matchedThinkers + matchedClassics;
+      
+      const validationSummary = {
+        timestamp: new Date().toISOString(),
+        thinkers: {
+          total: totalThinkers,
+          matched: matchedThinkers,
+          unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+          match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!thinkerResults.error
+        },
+        classics: {
+          total: totalClassics,
+          matched: matchedClassics,
+          unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+          match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!classicResults.error
+        },
+        overall: {
+          total: totalEntities,
+          matched: totalMatched,
+          unmatched: (totalEntities - totalMatched),
+          match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!(thinkerResults.error || classicResults.error)
+        }
+      };
+      
+      const { error: updateError } = await supabase
+        .from('dna_analysis_results')
+        .update({ validation_summary: validationSummary })
+        .eq('id', actualAnalysisId);
+        
+      if (updateError) {
+        console.error('Error updating validation summary:', updateError);
+      } else {
+        console.log('Successfully updated validation summary');
+      }
+
+      // Final storage attempt for unmatched entities with cleaner approach
+      try {
+        console.log("Final storage attempt for unmatched entities");
+        const thinkerUnmatched = thinkerResults.unmatched || [];
+        const classicUnmatched = classicResults.unmatched || [];
+        
+        // Only attempt storage if we have unmatched entities
+        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+          const storeResult = await storeUnmatchedEntities(
+            actualAssessmentId, 
+            actualAnalysisId, 
+            thinkerUnmatched, 
+            classicUnmatched
+          );
+          
+          console.log(`Final unmatched entity storage result: ${storeResult}`);
+        }
+      } catch (storageError) {
+        console.error("Final storage attempt failed:", storageError);
+      }
+    } else if (actualAssessmentId) {
+      // If we only have assessment ID but no analysis ID yet, still store unmatched entities
+      try {
+        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
+        const thinkerUnmatched = thinkerResults.unmatched || [];
+        const classicUnmatched = classicResults.unmatched || [];
+        
+        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+          const storeResult = await storeUnmatchedEntities(
+            actualAssessmentId,
+            null,
+            thinkerUnmatched,
+            classicUnmatched
+          );
+          
+          console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
+        }
+      } catch (storageError) {
+        console.error("Assessment-only storage attempt failed:", storageError);
+      }
+    }
+
+    // Ensure we calculate match rates properly even if some parts failed
+    const totalThinkers = thinkers.length;
+    const totalClassics = classics.length;
+    const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+    const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+    const totalEntities = totalThinkers + totalClassics;
+    const totalMatched = matchedThinkers + matchedClassics;
+    
+    // Generate validation report, preserving as much data as possible even if errors occurred
+    const validationReport = {
+      analysisId: actualAnalysisId,
+      assessmentId: actualAssessmentId,
+      thinkers: {
+        total: totalThinkers,
+        matched: matchedThinkers,
+        unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+        matchDetails: thinkerResults.matched || [],
+        unmatchedItems: thinkerResults.unmatched || [],
+        error: thinkerResults.error
+      },
+      classics: {
+        total: totalClassics,
+        matched: matchedClassics,
+        unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+        matchDetails: classicResults.matched || [],
+        unmatchedItems: classicResults.unmatched || [],
+        error: classicResults.error
+      },
+      summary: {
+        totalEntities: totalEntities,
+        totalMatched: totalMatched,
+        totalUnmatched: (totalEntities - totalMatched),
+        matchRate: totalEntities > 0 ? 
+          ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : 
+          '0%',
+        hasErrors: !!(thinkerResults.error || classicResults.error)
+      }
+    };
+    
+    console.log('Validation complete:', JSON.stringify({
+      totalEntities: totalEntities,
+      totalMatched: totalMatched,
+      matchRate: validationReport.summary.matchRate,
+      hasErrors: validationReport.summary.hasErrors
+    }));
+    
+    return new Response(JSON.stringify(validationReport), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }), 
-      { 
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    console.error('Error in validate-dna-entities function:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      summary: {
+        totalEntities: 0,
+        totalMatched: 0,
+        totalUnmatched: 0,
+        matchRate: '0%',
+        hasErrors: true
+      } 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
