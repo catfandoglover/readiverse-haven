@@ -615,24 +615,50 @@ Provide the raw JSON array only, with no additional explanation or text.
 }
 
 serve(async (req) => {
+  // Add immediate logging to see if function is being called
+  console.log('=== VALIDATE DNA ENTITIES FUNCTION STARTED ===');
+  console.log('Request method:', req.method);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { analysisData, analysisId, assessment_id } = await req.json();
+    console.log('Attempting to parse request body...');
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body, null, 2));
     
-    // Enhanced validation to allow either analysisId, assessment_id, or direct data
+    const { analysisData, analysisId, assessment_id } = body;
+    console.log('Extracted parameters:', { 
+      hasAnalysisData: !!analysisData, 
+      analysisId, 
+      assessment_id,
+      analysisDataKeys: analysisData ? Object.keys(analysisData) : []
+    });
+    
+    // Enhanced validation to allow either analysisData, analysisId, or assessment_id
     if (!analysisData && !analysisId && !assessment_id) {
+      console.error('No valid parameters provided');
       throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
     }
     
     let dataToValidate: Record<string, any> = {};
     let actualAnalysisId: string | null = analysisId || null;
-    let actualassessment_id: string | null = assessment_id || null;
+    let actualAssessmentId: string | null = assessment_id || null;
     
-    if (analysisId) {
+    if (analysisData) {
+      // Use the provided analysis data directly
+      console.log('Using provided analysis data');
+      dataToValidate = analysisData;
+      
+      // If analysisData contains assessment_id, use it
+      if (dataToValidate.assessment_id) {
+        actualAssessmentId = dataToValidate.assessment_id;
+      }
+    } else if (analysisId) {
       // Fetch the analysis data from the database using analysis ID
       console.log(`Fetching analysis data for ID: ${analysisId}`);
       const { data, error } = await supabase
@@ -652,8 +678,8 @@ serve(async (req) => {
       
       dataToValidate = data;
       // If we have an analysis record but no assessment ID yet, get it from the record
-      if (!actualassessment_id && data.assessment_id) {
-        actualassessment_id = data.assessment_id;
+      if (!actualAssessmentId && data.assessment_id) {
+        actualAssessmentId = data.assessment_id;
       }
       
       console.log('Successfully fetched analysis data from database');
@@ -679,24 +705,22 @@ serve(async (req) => {
       dataToValidate = data;
       actualAnalysisId = data.id;
       console.log('Successfully fetched analysis data from database');
-    } else if (analysisData) {
-      // Use the provided analysis data directly
-      console.log('Using provided analysis data');
-      dataToValidate = analysisData;
-      
-      // If analysisData contains assessment_id, use it
-      if (dataToValidate.assessment_id) {
-        actualassessment_id = dataToValidate.assessment_id;
-      }
     }
     
-    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualassessment_id || 'none'}`);
+    // Log the data we're about to validate
+    console.log('Data to validate:', {
+      hasData: !!dataToValidate,
+      keys: Object.keys(dataToValidate),
+      sampleValues: Object.entries(dataToValidate).slice(0, 5).map(([k, v]) => `${k}: ${v}`)
+    });
     
     // Extract thinkers and classics from the analysis
     const thinkers = extractThinkersFromAnalysis(dataToValidate);
     const classics = extractClassicsFromAnalysis(dataToValidate);
     
     console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
+    if (thinkers.length > 0) console.log('Sample thinkers:', thinkers.slice(0, 3));
+    if (classics.length > 0) console.log('Sample classics:', classics.slice(0, 3));
     
     // Partial results holder to ensure we don't lose data on errors
     let thinkerResults = { matched: [], unmatched: thinkers, error: null };
@@ -704,7 +728,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for thinkers
-      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
       console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
     } catch (thinkerError) {
       console.error('Error in thinker matching:', thinkerError);
@@ -713,7 +737,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
+      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
       console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
@@ -777,7 +801,7 @@ serve(async (req) => {
         // Only attempt storage if we have unmatched entities
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualassessment_id, 
+            actualAssessmentId, 
             actualAnalysisId, 
             thinkerUnmatched, 
             classicUnmatched
@@ -788,16 +812,16 @@ serve(async (req) => {
       } catch (storageError) {
         console.error("Final storage attempt failed:", storageError);
       }
-    } else if (actualassessment_id) {
+    } else if (actualAssessmentId) {
       // If we only have assessment ID but no analysis ID yet, still store unmatched entities
       try {
-        console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
+        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
         const thinkerUnmatched = thinkerResults.unmatched || [];
         const classicUnmatched = classicResults.unmatched || [];
         
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualassessment_id,
+            actualAssessmentId,
             null,
             thinkerUnmatched,
             classicUnmatched
@@ -821,7 +845,7 @@ serve(async (req) => {
     // Generate validation report, preserving as much data as possible even if errors occurred
     const validationReport = {
       analysisId: actualAnalysisId,
-      assessment_id: actualassessment_id,
+      assessment_id: actualAssessmentId,
       thinkers: {
         total: totalThinkers,
         matched: matchedThinkers,
