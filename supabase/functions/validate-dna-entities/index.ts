@@ -14,6 +14,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface ThinkerClassicPair {
+  thinker: string;
+  classic: string;
+  domain: string;
+  type: 'kindred_spirit' | 'challenging_voice';
+  index: number;
+}
+
 // Helper to extract thinker names from DNA analysis
 function extractThinkersFromAnalysis(analysisData: Record<string, any>): string[] {
   const thinkers: string[] = [];
@@ -113,6 +121,142 @@ function extractClassicsFromAnalysis(analysisData: Record<string, any>): string[
   console.log('First 5 classics:', uniqueClassics.slice(0, 5));
   
   return uniqueClassics;
+}
+
+// Helper to extract thinker-classic pairs from DNA analysis
+function extractThinkerClassicPairs(analysisData: Record<string, any>): ThinkerClassicPair[] {
+  const pairs: ThinkerClassicPair[] = [];
+  console.log('Starting thinker-classic pair extraction from analysis data');
+  
+  const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+  
+  domains.forEach(domain => {
+    console.log(`Processing domain: ${domain}`);
+    for (let i = 1; i <= 5; i++) {
+      // Process kindred spirit pairs
+      const kindredSpiritKey = `${domain}_kindred_spirit_${i}`;
+      const kindredSpiritClassicKey = `${domain}_kindred_spirit_${i}_classic`;
+      
+      if (analysisData[kindredSpiritKey] && analysisData[kindredSpiritClassicKey]) {
+        const classicMatch = String(analysisData[kindredSpiritClassicKey]).match(/([^(]+)(?:\s*\(\d+\))?/);
+        const classic = classicMatch && classicMatch[1] ? classicMatch[1].trim() : String(analysisData[kindredSpiritClassicKey]);
+        
+        pairs.push({
+          thinker: analysisData[kindredSpiritKey],
+          classic,
+          domain,
+          type: 'kindred_spirit',
+          index: i
+        });
+        console.log(`Found kindred spirit pair: ${analysisData[kindredSpiritKey]} - ${classic}`);
+      }
+      
+      // Process challenging voice pairs
+      const challengingVoiceKey = `${domain}_challenging_voice_${i}`;
+      const challengingVoiceClassicKey = `${domain}_challenging_voice_${i}_classic`;
+      
+      if (analysisData[challengingVoiceKey] && analysisData[challengingVoiceClassicKey]) {
+        const classicMatch = String(analysisData[challengingVoiceClassicKey]).match(/([^(]+)(?:\s*\(\d+\))?/);
+        const classic = classicMatch && classicMatch[1] ? classicMatch[1].trim() : String(analysisData[challengingVoiceClassicKey]);
+        
+        pairs.push({
+          thinker: analysisData[challengingVoiceKey],
+          classic,
+          domain,
+          type: 'challenging_voice',
+          index: i
+        });
+        console.log(`Found challenging voice pair: ${analysisData[challengingVoiceKey]} - ${classic}`);
+      }
+    }
+  });
+  
+  // Add most kindred spirit and challenging voice if they exist
+  if (analysisData.most_kindred_spirit && analysisData.most_kindred_spirit_classic) {
+    const classicMatch = String(analysisData.most_kindred_spirit_classic).match(/([^(]+)(?:\s*\(\d+\))?/);
+    const classic = classicMatch && classicMatch[1] ? classicMatch[1].trim() : String(analysisData.most_kindred_spirit_classic);
+    
+    pairs.push({
+      thinker: analysisData.most_kindred_spirit,
+      classic,
+      domain: 'overall',
+      type: 'kindred_spirit',
+      index: 0
+    });
+  }
+  
+  if (analysisData.most_challenging_voice && analysisData.most_challenging_voice_classic) {
+    const classicMatch = String(analysisData.most_challenging_voice_classic).match(/([^(]+)(?:\s*\(\d+\))?/);
+    const classic = classicMatch && classicMatch[1] ? classicMatch[1].trim() : String(analysisData.most_challenging_voice_classic);
+    
+    pairs.push({
+      thinker: analysisData.most_challenging_voice,
+      classic,
+      domain: 'overall',
+      type: 'challenging_voice',
+      index: 0
+    });
+  }
+  
+  console.log(`Total thinker-classic pairs extracted: ${pairs.length}`);
+  return pairs;
+}
+
+function parseMatches(content: string, items: string[], dbItems: any[]): { matched: { item: string, db_id: string, confidence: number }[], unmatched: string[] } {
+  const matched: { item: string, db_id: string, confidence: number }[] = [];
+  const unmatched: string[] = [];
+  
+  // Split the content into individual match entries
+  const entries = content.split('\n\n').filter(entry => entry.trim());
+  
+  for (const entry of entries) {
+    const lines = entry.split('\n').map(line => line.trim());
+    const itemMatch = lines.find(line => line.startsWith('Item:'));
+    const matchMatch = lines.find(line => line.startsWith('Match:'));
+    const confidenceMatch = lines.find(line => line.startsWith('Confidence:'));
+    
+    if (!itemMatch || !matchMatch || !confidenceMatch) {
+      console.log('Skipping malformed entry:', entry);
+      continue;
+    }
+    
+    const itemIndex = parseInt(itemMatch.split(':')[1].trim()) - 1;
+    const matchText = matchMatch.split(':')[1].trim();
+    const confidence = parseFloat(confidenceMatch.split(':')[1].trim());
+    
+    if (itemIndex < 0 || itemIndex >= items.length) {
+      console.log('Invalid item index:', itemIndex);
+      continue;
+    }
+    
+    const item = items[itemIndex];
+    
+    if (matchText === 'No match' || confidence < 0.7) {
+      unmatched.push(item);
+      continue;
+    }
+    
+    const matchIndex = parseInt(matchText) - 1;
+    if (matchIndex < 0 || matchIndex >= dbItems.length) {
+      console.log('Invalid match index:', matchIndex);
+      unmatched.push(item);
+      continue;
+    }
+    
+    const dbItem = dbItems[matchIndex];
+    matched.push({
+      item,
+      db_id: dbItem.id,
+      confidence
+    });
+  }
+  
+  // Add any items that weren't processed to unmatched
+  const processedItems = new Set(matched.map(m => m.item));
+  const missingItems = items.filter(item => !processedItems.has(item));
+  unmatched.push(...missingItems);
+  
+  return { matched, unmatched };
 }
 
 // Fetch all items from DB with pagination support
@@ -288,7 +432,7 @@ async function performSemanticMatching(items: string[], type: 'thinker' | 'class
         }
         
         const prompt = `
-I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries. 
+I need to match these philosophical thinkers and their works from a DNA analysis against our database entries.
 For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
 
 List A (from analysis):
@@ -299,101 +443,76 @@ ${dbItems.map((item, i) => {
   if (type === 'thinker') {
     return `${i+1}. ID: ${item.id}, Name: "${item.name}"`;
   } else {
-    return `${i+1}. ID: ${item.id}, Title: "${item.title}", Author: ${item.author || 'Unknown'}`;
+    return `${i+1}. ID: ${item.id}, Title: "${item.title}"`;
   }
 }).join('\n')}
 
-For each item in List A, provide:
-1. The item name/title from List A
-2. The best matching database ID from List B (just the UUID), or "no_match" if no good semantic match is found
-3. A confidence score (0-100) indicating how confident you are in the match
+For each item in List A, respond with:
+1. The number of the best match from List B (or "No match" if none found)
+2. A confidence score from 0-1
+3. A brief explanation of why this is a good match
 
-Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
-Provide the raw JSON array only, with no additional explanation or text.
+Format each response as:
+Item: [List A number]
+Match: [List B number or "No match"]
+Confidence: [0-1]
+Explanation: [brief explanation]
+
+Example:
+Item: 1
+Match: 3
+Confidence: 0.95
+Explanation: Exact name match with minor spelling variation
+
+Item: 2
+Match: No match
+Confidence: 0
+Explanation: No similar entries found in database
+
+Please analyze each item carefully, considering:
+- Exact matches (including common variations in spelling or formatting)
+- Semantic similarity in meaning and context
+- Historical and philosophical context
+- The relationship between thinkers and their works
 `;
 
-        console.log(`Sending batch ${i/batchSize + 1} of ${Math.ceil(itemsToLookup.length/batchSize)} to OpenRouter`);
-        console.log(`Batch contains ${itemsBatch.length} items`);
-        
         try {
           const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${openrouterApiKey}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://lovable.dev',
-              'X-Title': 'Lovable.dev'
+              'HTTP-Referer': 'https://readiverse.com',
+              'X-Title': 'Readiverse DNA Analysis'
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.0-flash-001',
+              model: 'anthropic/claude-3-opus-20240229',
               messages: [
+                {
+                  role: 'system',
+                  content: 'You are a precise matching system for philosophical thinkers and their works. Your task is to match entries from a DNA analysis against a database of known philosophers and their works. Consider both exact matches and semantic similarity, paying special attention to the relationship between thinkers and their classic works.'
+                },
                 {
                   role: 'user',
                   content: prompt
                 }
               ],
-              response_format: { type: "json_object" }
+              temperature: 0.1,
+              max_tokens: 2000
             })
           });
 
           if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
+            throw new Error(`API error! Status: ${response.status}`);
           }
 
-          const responseData = await response.json();
-          let batchResults: { item: string, match_id: string, confidence: number }[] = [];
+          const result = await response.json();
+          const content = result.choices[0].message.content;
           
-          try {
-            const content = responseData.choices[0].message.content;
-            console.log(`Raw content from OpenRouter:`, content.substring(0, 100) + '...');
-            
-            // Parse the JSON content
-            batchResults = JSON.parse(content);
-            if (!Array.isArray(batchResults)) {
-              // If we got an object with array inside it, try to extract it
-              if (batchResults && typeof batchResults === 'object' && batchResults.results && Array.isArray(batchResults.results)) {
-                batchResults = batchResults.results;
-              } else {
-                throw new Error('Response is not an array or does not contain an array');
-              }
-            }
-          } catch (parseError) {
-            console.error("Error parsing LLM response:", parseError);
-            console.log("Raw response:", responseData.choices[0].message.content);
-            // Fallback to empty results
-            batchResults = [];
-          }
-
-          console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
-          if (batchResults.length > 0) {
-            console.log('Sample result:', batchResults[0]);
-          }
-
-          // Filter batch results into matched and unmatched
-          const batchMatched = batchResults
-            .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
-            .map(result => ({
-              item: result.item,
-              db_id: result.match_id,
-              confidence: result.confidence
-            }));
-
-          const batchUnmatched = batchResults
-            .filter(result => result.match_id === "no_match" || result.confidence < 70)
-            .map(result => result.item);
-
-          // Append batch results to overall results
-          matched = [...matched, ...batchMatched];
-          unmatched = [...unmatched, ...batchUnmatched];
-          
-          // Add any items that were in the batch but not in the result (this can happen if the LLM omits items)
-          const processedItems = new Set(batchResults.map(r => r.item));
-          const missingItems = itemsBatch.filter(item => !processedItems.has(item));
-          if (missingItems.length > 0) {
-            console.log(`${missingItems.length} items were not processed by LLM, adding to unmatched`);
-            unmatched = [...unmatched, ...missingItems];
-          }
+          // Parse the response and extract matches
+          const matches = parseMatches(content, itemsBatch, dbItems);
+          matched = [...matched, ...matches.matched];
+          unmatched = [...unmatched, ...matches.unmatched];
           
         } catch (apiError) {
           console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
@@ -434,16 +553,16 @@ serve(async (req) => {
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { analysisData, analysisId, assessment_id } = await req.json();
+    const { analysisData, analysisId, assessmentId } = await req.json();
     
-    // Enhanced validation to allow either analysisId, assessment_id, or direct data
-    if (!analysisData && !analysisId && !assessment_id) {
-      throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
+    // Enhanced validation to allow either analysisId, assessmentId, or direct data
+    if (!analysisData && !analysisId && !assessmentId) {
+      throw new Error('Either analysisData, analysisId, or assessmentId must be provided');
     }
     
     let dataToValidate: Record<string, any> = {};
     let actualAnalysisId: string | null = analysisId || null;
-    let actualassessment_id: string | null = assessment_id || null;
+    let actualAssessmentId: string | null = assessmentId || null;
     
     if (analysisId) {
       // Fetch the analysis data from the database using analysis ID
@@ -465,18 +584,18 @@ serve(async (req) => {
       
       dataToValidate = data;
       // If we have an analysis record but no assessment ID yet, get it from the record
-      if (!actualassessment_id && data.assessment_id) {
-        actualassessment_id = data.assessment_id;
+      if (!actualAssessmentId && data.assessment_id) {
+        actualAssessmentId = data.assessment_id;
       }
       
       console.log('Successfully fetched analysis data from database');
-    } else if (assessment_id) {
+    } else if (assessmentId) {
       // Fetch the analysis data from the database using assessment ID
-      console.log(`Fetching analysis data for assessment ID: ${assessment_id}`);
+      console.log(`Fetching analysis data for assessment ID: ${assessmentId}`);
       const { data, error } = await supabase
         .from('dna_analysis_results')
         .select('*')
-        .eq('assessment_id', assessment_id)
+        .eq('assessment_id', assessmentId)
         .maybeSingle();
         
       if (error) {
@@ -485,8 +604,8 @@ serve(async (req) => {
       }
       
       if (!data) {
-        console.error(`No analysis found for assessment id: ${assessment_id}`);
-        throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
+        console.error(`No analysis found for assessment id: ${assessmentId}`);
+        throw new Error(`No analysis found for assessment id: ${assessmentId}. Please ensure the analysis is completed before validation.`);
       }
       
       dataToValidate = data;
@@ -499,11 +618,11 @@ serve(async (req) => {
       
       // If analysisData contains assessment_id, use it
       if (dataToValidate.assessment_id) {
-        actualassessment_id = dataToValidate.assessment_id;
+        actualAssessmentId = dataToValidate.assessment_id;
       }
     }
     
-    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualassessment_id || 'none'}`);
+    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualAssessmentId || 'none'}`);
     
     // Extract thinkers and classics from the analysis
     const thinkers = extractThinkersFromAnalysis(dataToValidate);
@@ -517,7 +636,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for thinkers
-      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
       console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
     } catch (thinkerError) {
       console.error('Error in thinker matching:', thinkerError);
@@ -526,7 +645,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
+      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
       console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
@@ -590,7 +709,7 @@ serve(async (req) => {
         // Only attempt storage if we have unmatched entities
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualassessment_id, 
+            actualAssessmentId, 
             actualAnalysisId, 
             thinkerUnmatched, 
             classicUnmatched
@@ -601,16 +720,16 @@ serve(async (req) => {
       } catch (storageError) {
         console.error("Final storage attempt failed:", storageError);
       }
-    } else if (actualassessment_id) {
+    } else if (actualAssessmentId) {
       // If we only have assessment ID but no analysis ID yet, still store unmatched entities
       try {
-        console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
+        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
         const thinkerUnmatched = thinkerResults.unmatched || [];
         const classicUnmatched = classicResults.unmatched || [];
         
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualassessment_id,
+            actualAssessmentId,
             null,
             thinkerUnmatched,
             classicUnmatched
@@ -634,7 +753,7 @@ serve(async (req) => {
     // Generate validation report, preserving as much data as possible even if errors occurred
     const validationReport = {
       analysisId: actualAnalysisId,
-      assessment_id: actualassessment_id,
+      assessmentId: actualAssessmentId,
       thinkers: {
         total: totalThinkers,
         matched: matchedThinkers,
