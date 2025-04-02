@@ -113,10 +113,26 @@ const App = () => (
               <Routes>
                 {/* Public routes - no auth required */}
                 <Route path="/" element={<RootRedirect />} />
-                <Route path="/discover" element={<DiscoverLayout />} /> 
-                <Route path="/view/:type/:slug" element={<DiscoverLayout />} />
-                <Route path="/discover/questions" element={<DiscoverLayout />} />
-                <Route path="/discover/questions/:index" element={<DiscoverLayout />} />
+                <Route path="/discover" element={
+                  <ProtectedRoute requireAuth={false} requireDNA={false}>
+                    <DiscoverLayout />
+                  </ProtectedRoute>
+                } /> 
+                <Route path="/view/:type/:slug" element={
+                  <ProtectedRoute requireAuth={false} requireDNA={false}>
+                    <DiscoverLayout />
+                  </ProtectedRoute>
+                } />
+                <Route path="/discover/questions" element={
+                  <ProtectedRoute requireAuth={false} requireDNA={false}>
+                    <DiscoverLayout />
+                  </ProtectedRoute>
+                } />
+                <Route path="/discover/questions/:index" element={
+                  <ProtectedRoute requireAuth={false} requireDNA={false}>
+                    <DiscoverLayout />
+                  </ProtectedRoute>
+                } />
                 <Route path="/discover/search" element={<SearchPage />} /> 
                 <Route path="/discover/search/icons" element={<IconsFeedPage />} />
                 <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />

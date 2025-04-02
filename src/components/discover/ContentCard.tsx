@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,20 +35,20 @@ const ContentCard: React.FC<ContentCardProps> = ({
   hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const { user, openLogin } = useAuth();
+  const { user, openLogin, isLoading: isAuthLoading } = useAuth();
   const { addToBookshelf } = useBookshelfManager();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
-    if (user && itemId && itemType) {
+    if (!isAuthLoading && user && itemId && itemType) {
       const checkFavoriteStatus = async () => {
         try {
           const { data } = await supabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemId)
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .eq('item_type', itemType)
             .single();
           
@@ -62,10 +62,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
       
       checkFavoriteStatus();
     }
-  }, [user, itemId, itemType]);
+  }, [user, itemId, itemType, isAuthLoading]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (isAuthLoading) {
+      return; // Don't do anything while auth is loading
+    }
     
     if (!user) {
       openLogin();
@@ -83,7 +87,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .from('user_favorites')
           .delete()
           .eq('item_id', itemId)
-          .eq('outseta_user_id', user.Uid)
+          .eq('user_id', user.id)
           .eq('item_type', itemType);
           
         if (error) throw error;
@@ -97,7 +101,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .from('user_favorites')
           .insert({
             item_id: itemId,
-            outseta_user_id: user.Uid,
+            user_id: user.id,
             item_type: itemType,
             added_at: new Date().toISOString()
           });
@@ -110,7 +114,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         });
         
         if (itemType === 'classic') {
-          addToBookshelf.mutate(itemId);
+          addToBookshelf(itemId);
         }
       }
     } catch (error) {
