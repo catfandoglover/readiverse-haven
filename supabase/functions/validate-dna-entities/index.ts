@@ -746,7 +746,10 @@ serve(async (req) => {
     
     // Update dna_analysis_results with matched database IDs
     if (actualAnalysisId && (thinkerResults.matched.length > 0 || classicResults.matched.length > 0)) {
-      console.log('Updating dna_analysis_results with matched database IDs');
+      console.log('=== STARTING UUID UPDATE PROCESS ===');
+      console.log('Thinker matches:', JSON.stringify(thinkerResults.matched, null, 2));
+      console.log('Classic matches:', JSON.stringify(classicResults.matched, null, 2));
+      console.log('Analysis data keys:', Object.keys(dataToValidate));
       
       // Helper function to validate UUID
       function isValidUUID(uuid: string) {
@@ -759,15 +762,17 @@ serve(async (req) => {
       
       // Process thinker matches
       thinkerResults.matched.forEach(match => {
+        console.log(`Processing thinker match: ${match.item}`);
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
-          if (value === match.item && !key.includes('classic')) {
+          console.log(`Checking field ${key} with value ${value} against match ${match.item}`);
+          if (String(value) === String(match.item) && !key.includes('classic')) {
             // Validate UUID before adding to updates
             if (isValidUUID(match.db_id)) {
               updates[`${key}_db_id`] = match.db_id;
-              console.log(`Adding valid UUID match for thinker: ${key}_db_id = ${match.db_id}`);
+              console.log(`✓ Adding valid UUID match for thinker: ${key}_db_id = ${match.db_id}`);
             } else {
-              console.error(`Invalid UUID found for thinker ${key}: ${match.db_id}`);
+              console.error(`✗ Invalid UUID found for thinker ${key}: ${match.db_id}`);
             }
           }
         }
@@ -775,15 +780,17 @@ serve(async (req) => {
 
       // Process classic matches
       classicResults.matched.forEach(match => {
+        console.log(`Processing classic match: ${match.item}`);
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
-          if (value === match.item && key.includes('classic')) {
+          console.log(`Checking field ${key} with value ${value} against match ${match.item}`);
+          if (String(value) === String(match.item) && key.includes('classic')) {
             // Validate UUID before adding to updates
             if (isValidUUID(match.db_id)) {
               updates[`${key}_db_id`] = match.db_id;
-              console.log(`Adding valid UUID match for classic: ${key}_db_id = ${match.db_id}`);
+              console.log(`✓ Adding valid UUID match for classic: ${key}_db_id = ${match.db_id}`);
             } else {
-              console.error(`Invalid UUID found for classic ${key}: ${match.db_id}`);
+              console.error(`✗ Invalid UUID found for classic ${key}: ${match.db_id}`);
             }
           }
         }
@@ -791,7 +798,10 @@ serve(async (req) => {
 
       // Update the analysis results if we have matches to store
       if (Object.keys(updates).length > 0) {
-        console.log('Updating analysis results with matched IDs:', updates);
+        console.log('=== FINAL UPDATE OBJECT ===');
+        console.log(JSON.stringify(updates, null, 2));
+        console.log(`Attempting to update dna_analysis_results for ID: ${actualAnalysisId}`);
+        
         const { error: updateError } = await supabase
           .from('dna_analysis_results')
           .update(updates)
@@ -805,6 +815,10 @@ serve(async (req) => {
         }
       } else {
         console.log('No valid UUIDs to update in dna_analysis_results');
+        console.log('This could be because:');
+        console.log('1. No matches were found');
+        console.log('2. Matches were found but field names didn\'t match');
+        console.log('3. Matches were found but UUIDs were invalid');
       }
     }
     
