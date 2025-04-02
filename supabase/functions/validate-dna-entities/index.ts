@@ -34,19 +34,15 @@ console.log(`Found kindred spirit: ${kindredSpiritKey} = ${analysisData[kindredS
 console.log(`Not found: ${kindredSpiritKey}`);
 }
 
-```
-  // Extract challenging voice thinkers
-  const challengingVoiceKey = `${domain}_challenging_voice_${i}`;
-  if (analysisData[challengingVoiceKey]) {
-    thinkers.push(analysisData[challengingVoiceKey]);
-    console.log(`Found challenging voice: ${challengingVoiceKey} = ${analysisData[challengingVoiceKey]}`);
-  } else {
-    console.log(`Not found: ${challengingVoiceKey}`);
-  }
+// Extract challenging voice thinkers
+const challengingVoiceKey = `${domain}_challenging_voice_${i}`;
+if (analysisData[challengingVoiceKey]) {
+thinkers.push(analysisData[challengingVoiceKey]);
+console.log(`Found challenging voice: ${challengingVoiceKey} = ${analysisData[challengingVoiceKey]}`);
+} else {
+console.log(`Not found: ${challengingVoiceKey}`);
 }
-
-```
-
+}
 });
 
 // Also add most_kindred_spirit and most_challenging_voice if they exist
@@ -94,26 +90,22 @@ console.log(`Found kindred classic (no match): ${kindredSpiritClassicKey} = ${an
 console.log(`Not found: ${kindredSpiritClassicKey}`);
 }
 
-```
-  // Extract challenging voice classics
-  const challengingVoiceClassicKey = `${domain}_challenging_voice_${i}_classic`;
-  if (analysisData[challengingVoiceClassicKey]) {
-    // Extract just the title part (removing year/date in parentheses)
-    const classicMatch = String(analysisData[challengingVoiceClassicKey]).match(/([^(]+)(?:\\s*\\(\\d+\\))?/);
-    if (classicMatch && classicMatch[1]) {
-      classics.push(classicMatch[1].trim());
-      console.log(`Found challenging classic: ${challengingVoiceClassicKey} = ${classicMatch[1].trim()}`);
-    } else {
-      classics.push(String(analysisData[challengingVoiceClassicKey]));
-      console.log(`Found challenging classic (no match): ${challengingVoiceClassicKey} = ${analysisData[challengingVoiceClassicKey]}`);
-    }
-  } else {
-    console.log(`Not found: ${challengingVoiceClassicKey}`);
-  }
+// Extract challenging voice classics
+const challengingVoiceClassicKey = `${domain}_challenging_voice_${i}_classic`;
+if (analysisData[challengingVoiceClassicKey]) {
+// Extract just the title part (removing year/date in parentheses)
+const classicMatch = String(analysisData[challengingVoiceClassicKey]).match(/([^(]+)(?:\\s*\\(\\d+\\))?/);
+if (classicMatch && classicMatch[1]) {
+classics.push(classicMatch[1].trim());
+console.log(`Found challenging classic: ${challengingVoiceClassicKey} = ${classicMatch[1].trim()}`);
+} else {
+classics.push(String(analysisData[challengingVoiceClassicKey]));
+console.log(`Found challenging classic (no match): ${challengingVoiceClassicKey} = ${analysisData[challengingVoiceClassicKey]}`);
 }
-
-```
-
+} else {
+console.log(`Not found: ${challengingVoiceClassicKey}`);
+}
+}
 });
 
 const uniqueClassics = [...new Set(classics)]; // Remove duplicates
@@ -136,31 +128,28 @@ const query = type === 'thinker'
 ? supabase.from('icons').select('id, name').range(page * pageSize, (page + 1) * pageSize - 1)
 : supabase.from('books').select('id, title, author').range(page * pageSize, (page + 1) * pageSize - 1);
 
-```
-  const { data, error } = await query;
+const { data, error } = await query;
 
-  if (error) {
-    console.error(`Error fetching ${type}s (page ${page}):`, error);
-    throw error;
-  }
+if (error) {
+console.error(`Error fetching ${type}s (page ${page}):`, error);
+throw error;
+}
 
-  if (data && data.length > 0) {
-    allItems = [...allItems, ...data];
-    page++;
+if (data && data.length > 0) {
+allItems = [...allItems, ...data];
+page++;
 
-    // Check if we likely have more data
-    if (data.length < pageSize) {
-      hasMoreData = false;
-    }
-  } else {
-    hasMoreData = false;
-  }
+// Check if we likely have more data
+if (data.length < pageSize) {
+hasMoreData = false;
+}
+} else {
+hasMoreData = false;
+}
 }
 
 console.log(`Successfully fetched ${allItems.length} ${type}s from database`);
 return allItems;
-
-```
 
 } catch (error) {
 console.error(`Error in fetchAllItems for ${type}:`, error);
@@ -194,31 +183,30 @@ thinkers: thinkers.length,
 classics: classics.length
 });
 
-```
 // Create data object for upsert
 const data: Record<string, any> = {
-  status: 'pending',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
+status: 'pending',
+created_at: new Date().toISOString(),
+updated_at: new Date().toISOString()
 };
 
 // Add the appropriate ID for linking
 if (analysis_id) {
-  data.analysis_id = analysis_id;
+data.analysis_id = analysis_id;
 }
 
 // Add assessment_id if available (our new approach)
 if (assessment_id) {
-  data.assessment_id = assessment_id;
+data.assessment_id = assessment_id;
 }
 
 // Add entities if provided
 if (thinkers.length > 0) {
-  data.unmatched_thinkers = thinkers;
+data.unmatched_thinkers = thinkers;
 }
 
 if (classics.length > 0) {
-  data.unmatched_classics = classics;
+data.unmatched_classics = classics;
 }
 
 // Log complete insert data for debugging
@@ -226,39 +214,37 @@ console.log('Upsert data:', JSON.stringify(data));
 
 // If we have an analysis_id, upsert based on that
 if (analysis_id) {
-  const { error } = await supabase
-    .from('dna_unmatched_entities')
-    .upsert([data], {
-      onConflict: 'analysis_id',
-      ignoreDuplicates: false
-    });
+const { error } = await supabase
+.from('dna_unmatched_entities')
+.upsert([data], {
+onConflict: 'analysis_id',
+ignoreDuplicates: false
+});
 
-  if (error) {
-    console.error(`Error storing unmatched entities:`, error);
-    console.error(`Full error details:`, JSON.stringify(error));
-    return false;
-  }
+if (error) {
+console.error(`Error storing unmatched entities:`, error);
+console.error(`Full error details:`, JSON.stringify(error));
+return false;
+}
 }
 // If we have only assessment_id, upsert based on that
 else if (assessment_id) {
-  const { error } = await supabase
-    .from('dna_unmatched_entities')
-    .upsert([data], {
-      onConflict: 'assessment_id',
-      ignoreDuplicates: false
-    });
+const { error } = await supabase
+.from('dna_unmatched_entities')
+.upsert([data], {
+onConflict: 'assessment_id',
+ignoreDuplicates: false
+});
 
-  if (error) {
-    console.error(`Error storing unmatched entities:`, error);
-    console.error(`Full error details:`, JSON.stringify(error));
-    return false;
-  }
+if (error) {
+console.error(`Error storing unmatched entities:`, error);
+console.error(`Full error details:`, JSON.stringify(error));
+return false;
+}
 }
 
 console.log(`Successfully stored unmatched entities for ${analysis_id ? 'analysis_id' : 'assessment_id'} ${analysis_id || assessment_id}`);
 return true;
-
-```
 
 } catch (error) {
 console.error(`Exception in storeUnmatchedEntities:`, error);
@@ -266,7 +252,13 @@ return false;
 }
 }
 
-async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', assessment_id: string | null, analysis_id: string | null) {
+async function performSemanticMatching(
+items: string[], 
+type: 'thinker' | 'classic', 
+assessment_id: string | null, 
+analysis_id: string | null,
+thinkerClassicPairs?: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[]
+): Promise<{ matched: { item: string, db_id: string, confidence: number }[], unmatched: string[], error?: string }> {
 // Enhanced logging for debugging
 console.log(`Starting semantic matching with IDs - assessment_id: ${assessment_id || 'null'}, analysis_id: ${analysis_id || 'null'}`);
 
@@ -280,39 +272,50 @@ try {
 const dbItems = await fetchAllItems(type);
 const itemsToLookup = items;
 
-```
 // If we have a reasonable amount of items to check, use OpenRouter for semantic matching
 if (items.length > 0 && dbItems.length > 0) {
-  console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
+console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
 
-  // Process in batches if we have too many items to match
-  const batchSize = 50; // Adjust based on what the LLM can handle
-  let matched: { item: string, db_id: string, confidence: number }[] = [];
-  let unmatched: string[] = [];
+// Process in batches if we have too many items to match
+const batchSize = 50; // Adjust based on what the LLM can handle
+let matched: { item: string, db_id: string, confidence: number }[] = [];
+let unmatched: string[] = [];
 
-  // Process items in batches
-  for (let i = 0; i < itemsToLookup.length; i += batchSize) {
-    const itemsBatch = itemsToLookup.slice(i, i + batchSize);
+// Process items in batches
+for (let i = 0; i < itemsToLookup.length; i += batchSize) {
+const itemsBatch = itemsToLookup.slice(i, i + batchSize);
 
-    // Ensure we have a valid API key
-    if (!openrouterApiKey || openrouterApiKey.trim() === '') {
-      console.error('No OpenRouter API key provided');
-      return {
-        matched: [],
-        unmatched: itemsToLookup,
-        error: 'No OpenRouter API key provided'
-      };
-    }
+// Ensure we have a valid API key
+if (!openrouterApiKey || openrouterApiKey.trim() === '') {
+console.error('No OpenRouter API key provided');
+return { 
+matched: [], 
+unmatched: itemsToLookup, 
+error: 'No OpenRouter API key provided' 
+};
+}
 
-    const prompt = `
+// Create a map of classics to their associated thinkers for context
+const classicToThinkerMap = new Map<string, string>();
+if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
+thinkerClassicPairs.forEach(pair => {
+classicToThinkerMap.set(pair.classic, pair.thinker);
+});
+console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
+}
 
-```
-
+const prompt = `
 I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries.
 For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
 
 List A (from analysis):
-${itemsBatch.map((item, i) => `${i+1}. "${item}"`).join('\n')}
+${itemsBatch.map((item, i) => {
+if (type === 'classic' && classicToThinkerMap.has(item)) {
+return `${i+1}. "${item}" (associated with thinker: ${classicToThinkerMap.get(item)})`;
+} else {
+return `${i+1}. "${item}"`;
+}
+}).join('\n')}
 
 List B (from database):
 ${dbItems.map((item, i) => {
@@ -329,123 +332,142 @@ For each item in List A, provide:
 2. The best matching database ID from List B (just the UUID), or "no_match" if no good semantic match is found
 3. A confidence score (0-100) indicating how confident you are in the match
 
+Please analyze each item carefully, considering:
+- Exact matches (including common variations in spelling or formatting)
+- Semantic similarity in meaning and context
+- Historical and philosophical context
+- The relationship between thinkers and their works
+
+IMPORTANT MATCHING GUIDELINES:
+${type === 'classic' ? `
+For classics, be especially generous with matching:
+- Match partial titles (e.g., "Politics" should match "Politics" by Aristotle)
+- Match common variations (e.g., "Second Treatise" should match "Second Treatise of Government")
+- Match without author names (e.g., "Analects" should match "The Analects" by Confucius)
+- Match without articles (e.g., "Symposium" should match "The Symposium" by Plato)
+- Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
+- Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
+- Use the associated thinker information to help with matching (e.g., if a classic is associated with Aristotle, it's more likely to be "Politics" by Aristotle)
+` : `
+For thinkers, be especially careful with matching:
+- Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
+- Match without titles (e.g., "Kant" should match "Immanuel Kant")
+- Match without middle names (e.g., "John Locke" should match "John W. Locke")
+`}
+
 Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
 Provide the raw JSON array only, with no additional explanation or text.
 `;
 
-```
-    console.log(`Sending batch ${i/batchSize + 1} of ${Math.ceil(itemsToLookup.length/batchSize)} to OpenRouter`);
-    console.log(`Batch contains ${itemsBatch.length} items`);
+console.log(`Sending batch ${i/batchSize + 1} of ${Math.ceil(itemsToLookup.length/batchSize)} to OpenRouter`);
+console.log(`Batch contains ${itemsBatch.length} items`);
 
-    try {
-      const response = await fetch('<https://openrouter.ai/api/v1/chat/completions>', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': '<https://lovable.dev>',
-          'X-Title': 'Lovable.dev'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
-          messages: [
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          response_format: { type: "json_object" }
-        })
-      });
+try {
+const response = await fetch('<https://openrouter.ai/api/v1/chat/completions>', {
+method: 'POST',
+headers: {
+'Authorization': `Bearer ${openrouterApiKey}`,
+'Content-Type': 'application/json',
+'HTTP-Referer': '<https://lovable.dev>',
+'X-Title': 'Lovable.dev'
+},
+body: JSON.stringify({
+model: 'google/gemini-2.0-flash-001',
+messages: [
+{
+role: 'user',
+content: prompt
+}
+],
+response_format: { type: "json_object" }
+})
+});
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
-      }
-
-      const responseData = await response.json();
-      let batchResults: { item: string, match_id: string, confidence: number }[] = [];
-
-      try {
-        const content = responseData.choices[0].message.content;
-        console.log(`Raw content from OpenRouter:`, content.substring(0, 100) + '...');
-
-        // Parse the JSON content
-        batchResults = JSON.parse(content);
-        if (!Array.isArray(batchResults)) {
-          // If we got an object with array inside it, try to extract it
-          if (batchResults && typeof batchResults === 'object' && batchResults.results && Array.isArray(batchResults.results)) {
-            batchResults = batchResults.results;
-          } else {
-            throw new Error('Response is not an array or does not contain an array');
-          }
-        }
-      } catch (parseError) {
-        console.error("Error parsing LLM response:", parseError);
-        console.log("Raw response:", responseData.choices[0].message.content);
-        // Fallback to empty results
-        batchResults = [];
-      }
-
-      console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
-      if (batchResults.length > 0) {
-        console.log('Sample result:', batchResults[0]);
-      }
-
-      // Filter batch results into matched and unmatched
-      const batchMatched = batchResults
-        .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
-        .map(result => ({
-          item: result.item,
-          db_id: result.match_id,
-          confidence: result.confidence
-        }));
-
-      const batchUnmatched = batchResults
-        .filter(result => result.match_id === "no_match" || result.confidence < 70)
-        .map(result => result.item);
-
-      // Append batch results to overall results
-      matched = [...matched, ...batchMatched];
-      unmatched = [...unmatched, ...batchUnmatched];
-
-      // Add any items that were in the batch but not in the result (this can happen if the LLM omits items)
-      const processedItems = new Set(batchResults.map(r => r.item));
-      const missingItems = itemsBatch.filter(item => !processedItems.has(item));
-      if (missingItems.length > 0) {
-        console.log(`${missingItems.length} items were not processed by LLM, adding to unmatched`);
-        unmatched = [...unmatched, ...missingItems];
-      }
-
-    } catch (apiError) {
-      console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
-      // Add all items in this batch to unmatched
-      unmatched = [...unmatched, ...itemsBatch];
-    }
-  }
-
-  console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
-
-  // IMPORTANT FIX: Always attempt to store unmatched entities
-  if (unmatched.length > 0) {
-    console.log(`Storing ${unmatched.length} unmatched ${type}s with assessment_id: ${assessment_id}, analysis_id: ${analysis_id}`);
-    if (type === 'thinker') {
-      await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
-    } else {
-      await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
-    }
-  } else {
-    console.log(`No unmatched ${type}s to store`);
-  }
-
-  return { matched, unmatched };
-} else {
-  console.log(`Not enough data to perform semantic matching for ${type}s`);
-  return { matched: [], unmatched: items };
+if (!response.ok) {
+const errorBody = await response.text();
+throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
 }
 
-```
+const responseData = await response.json();
+let batchResults: { item: string, match_id: string, confidence: number }[] = [];
 
+try {
+const content = responseData.choices[0].message.content;
+console.log(`Raw content from OpenRouter:`, content.substring(0, 100) + '...');
+
+// Parse the JSON content
+batchResults = JSON.parse(content);
+if (!Array.isArray(batchResults)) {
+// If we got an object with array inside it, try to extract it
+if (batchResults && typeof batchResults === 'object' && batchResults.results && Array.isArray(batchResults.results)) {
+batchResults = batchResults.results;
+} else {
+throw new Error('Response is not an array or does not contain an array');
+}
+}
+} catch (parseError) {
+console.error("Error parsing LLM response:", parseError);
+console.log("Raw response:", responseData.choices[0].message.content);
+// Fallback to empty results
+batchResults = [];
+}
+
+console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
+if (batchResults.length > 0) {
+console.log('Sample result:', batchResults[0]);
+}
+
+// Filter batch results into matched and unmatched
+const batchMatched = batchResults
+.filter(result => result.match_id !== "no_match" && result.confidence >= 70)
+.map(result => ({
+item: result.item,
+db_id: result.match_id,
+confidence: result.confidence
+}));
+
+const batchUnmatched = batchResults
+.filter(result => result.match_id === "no_match" || result.confidence < 70)
+.map(result => result.item);
+
+// Append batch results to overall results
+matched = [...matched, ...batchMatched];
+unmatched = [...unmatched, ...batchUnmatched];
+
+// Add any items that were in the batch but not in the result (this can happen if the LLM omits items)
+const processedItems = new Set(batchResults.map(r => r.item));
+const missingItems = itemsBatch.filter(item => !processedItems.has(item));
+if (missingItems.length > 0) {
+console.log(`${missingItems.length} items were not processed by LLM, adding to unmatched`);
+unmatched = [...unmatched, ...missingItems];
+}
+
+} catch (apiError) {
+console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
+// Add all items in this batch to unmatched
+unmatched = [...unmatched, ...itemsBatch];
+}
+}
+
+console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
+
+// IMPORTANT FIX: Always attempt to store unmatched entities
+if (unmatched.length > 0) {
+console.log(`Storing ${unmatched.length} unmatched ${type}s with assessment_id: ${assessment_id}, analysis_id: ${analysis_id}`);
+if (type === 'thinker') {
+await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
+} else {
+await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
+}
+} else {
+console.log(`No unmatched ${type}s to store`);
+}
+
+return { matched, unmatched };
+} else {
+console.log(`Not enough data to perform semantic matching for ${type}s`);
+return { matched: [], unmatched: items };
+}
 } catch (error) {
 console.error(`Error in semantic matching for ${type}s:`, error);
 return { matched: [], unmatched: items, error: `Matching error: ${error.message || 'Unknown error'}` };
@@ -461,10 +483,9 @@ try {
 console.log('Starting validate-dna-entities function');
 const { analysisData, analysisId, assessment_id } = await req.json();
 
-```
 // Enhanced validation to allow either analysisId, assessment_id, or direct data
 if (!analysisData && !analysisId && !assessment_id) {
-  throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
+throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
 }
 
 let dataToValidate: Record<string, any> = {};
@@ -472,61 +493,61 @@ let actualAnalysisId: string | null = analysisId || null;
 let actualassessment_id: string | null = assessment_id || null;
 
 if (analysisId) {
-  // Fetch the analysis data from the database using analysis ID
-  console.log(`Fetching analysis data for ID: ${analysisId}`);
-  const { data, error } = await supabase
-    .from('dna_analysis_results')
-    .select('*')
-    .eq('id', analysisId)
-    .maybeSingle();
+// Fetch the analysis data from the database using analysis ID
+console.log(`Fetching analysis data for ID: ${analysisId}`);
+const { data, error } = await supabase
+.from('dna_analysis_results')
+.select('*')
+.eq('id', analysisId)
+.maybeSingle();
 
-  if (error) {
-    console.error('Error fetching analysis data:', error);
-    throw error;
-  }
-  if (!data) {
-    console.error(`No analysis found with id: ${analysisId}`);
-    throw new Error(`No analysis found with id: ${analysisId}`);
-  }
+if (error) {
+console.error('Error fetching analysis data:', error);
+throw error;
+}
+if (!data) {
+console.error(`No analysis found with id: ${analysisId}`);
+throw new Error(`No analysis found with id: ${analysisId}`);
+}
 
-  dataToValidate = data;
-  // If we have an analysis record but no assessment ID yet, get it from the record
-  if (!actualassessment_id && data.assessment_id) {
-    actualassessment_id = data.assessment_id;
-  }
+dataToValidate = data;
+// If we have an analysis record but no assessment ID yet, get it from the record
+if (!actualassessment_id && data.assessment_id) {
+actualassessment_id = data.assessment_id;
+}
 
-  console.log('Successfully fetched analysis data from database');
+console.log('Successfully fetched analysis data from database');
 } else if (assessment_id) {
-  // Fetch the analysis data from the database using assessment ID
-  console.log(`Fetching analysis data for assessment ID: ${assessment_id}`);
-  const { data, error } = await supabase
-    .from('dna_analysis_results')
-    .select('*')
-    .eq('assessment_id', assessment_id)
-    .maybeSingle();
+// Fetch the analysis data from the database using assessment ID
+console.log(`Fetching analysis data for assessment ID: ${assessment_id}`);
+const { data, error } = await supabase
+.from('dna_analysis_results')
+.select('*')
+.eq('assessment_id', assessment_id)
+.maybeSingle();
 
-  if (error) {
-    console.error('Error fetching analysis data by assessment ID:', error);
-    throw error;
-  }
+if (error) {
+console.error('Error fetching analysis data by assessment ID:', error);
+throw error;
+}
 
-  if (!data) {
-    console.error(`No analysis found for assessment id: ${assessment_id}`);
-    throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
-  }
+if (!data) {
+console.error(`No analysis found for assessment id: ${assessment_id}`);
+throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
+}
 
-  dataToValidate = data;
-  actualAnalysisId = data.id;
-  console.log('Successfully fetched analysis data from database');
+dataToValidate = data;
+actualAnalysisId = data.id;
+console.log('Successfully fetched analysis data from database');
 } else if (analysisData) {
-  // Use the provided analysis data directly
-  console.log('Using provided analysis data');
-  dataToValidate = analysisData;
+// Use the provided analysis data directly
+console.log('Using provided analysis data');
+dataToValidate = analysisData;
 
-  // If analysisData contains assessment_id, use it
-  if (dataToValidate.assessment_id) {
-    actualassessment_id = dataToValidate.assessment_id;
-  }
+// If analysisData contains assessment_id, use it
+if (dataToValidate.assessment_id) {
+actualassessment_id = dataToValidate.assessment_id;
+}
 }
 
 console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualassessment_id || 'none'}`);
@@ -542,111 +563,111 @@ let thinkerResults = { matched: [], unmatched: thinkers, error: null };
 let classicResults = { matched: [], unmatched: classics, error: null };
 
 try {
-  // Perform semantic matching for thinkers
-  thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
-  console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
+// Perform semantic matching for thinkers
+thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
+console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
 } catch (thinkerError) {
-  console.error('Error in thinker matching:', thinkerError);
-  thinkerResults.error = `Error: ${thinkerError.message}`;
+console.error('Error in thinker matching:', thinkerError);
+thinkerResults.error = `Error: ${thinkerError.message}`;
 }
 
 try {
-  // Perform semantic matching for classics
-  classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
-  console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
+// Perform semantic matching for classics
+classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
+console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
 } catch (classicError) {
-  console.error('Error in classic matching:', classicError);
-  classicResults.error = `Error: ${classicError.message}`;
+console.error('Error in classic matching:', classicError);
+classicResults.error = `Error: ${classicError.message}`;
 }
 
 // Always ensure we record matching results in the database, even if only partial results
 if (actualAnalysisId) {
-  console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
+console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
 
-  // Calculate match rates for summary
-  const totalThinkers = thinkers.length;
-  const totalClassics = classics.length;
-  const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
-  const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
-  const totalEntities = totalThinkers + totalClassics;
-  const totalMatched = matchedThinkers + matchedClassics;
+// Calculate match rates for summary
+const totalThinkers = thinkers.length;
+const totalClassics = classics.length;
+const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+const totalEntities = totalThinkers + totalClassics;
+const totalMatched = matchedThinkers + matchedClassics;
 
-  const validationSummary = {
-    timestamp: new Date().toISOString(),
-    thinkers: {
-      total: totalThinkers,
-      matched: matchedThinkers,
-      unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
-      match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
-      has_errors: !!thinkerResults.error
-    },
-    classics: {
-      total: totalClassics,
-      matched: matchedClassics,
-      unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
-      match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
-      has_errors: !!classicResults.error
-    },
-    overall: {
-      total: totalEntities,
-      matched: totalMatched,
-      unmatched: (totalEntities - totalMatched),
-      match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
-      has_errors: !!(thinkerResults.error || classicResults.error)
-    }
-  };
+const validationSummary = {
+timestamp: new Date().toISOString(),
+thinkers: {
+total: totalThinkers,
+matched: matchedThinkers,
+unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
+has_errors: !!thinkerResults.error
+},
+classics: {
+total: totalClassics,
+matched: matchedClassics,
+unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
+has_errors: !!classicResults.error
+},
+overall: {
+total: totalEntities,
+matched: totalMatched,
+unmatched: (totalEntities - totalMatched),
+match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
+has_errors: !!(thinkerResults.error || classicResults.error)
+}
+};
 
-  const { error: updateError } = await supabase
-    .from('dna_analysis_results')
-    .update({ validation_summary: validationSummary })
-    .eq('id', actualAnalysisId);
+const { error: updateError } = await supabase
+.from('dna_analysis_results')
+.update({ validation_summary: validationSummary })
+.eq('id', actualAnalysisId);
 
-  if (updateError) {
-    console.error('Error updating validation summary:', updateError);
-  } else {
-    console.log('Successfully updated validation summary');
-  }
+if (updateError) {
+console.error('Error updating validation summary:', updateError);
+} else {
+console.log('Successfully updated validation summary');
+}
 
-  // Final storage attempt for unmatched entities with cleaner approach
-  try {
-    console.log("Final storage attempt for unmatched entities");
-    const thinkerUnmatched = thinkerResults.unmatched || [];
-    const classicUnmatched = classicResults.unmatched || [];
+// Final storage attempt for unmatched entities with cleaner approach
+try {
+console.log("Final storage attempt for unmatched entities");
+const thinkerUnmatched = thinkerResults.unmatched || [];
+const classicUnmatched = classicResults.unmatched || [];
 
-    // Only attempt storage if we have unmatched entities
-    if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
-      const storeResult = await storeUnmatchedEntities(
-        actualassessment_id,
-        actualAnalysisId,
-        thinkerUnmatched,
-        classicUnmatched
-      );
+// Only attempt storage if we have unmatched entities
+if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+const storeResult = await storeUnmatchedEntities(
+actualassessment_id,
+actualAnalysisId,
+thinkerUnmatched,
+classicUnmatched
+);
 
-      console.log(`Final unmatched entity storage result: ${storeResult}`);
-    }
-  } catch (storageError) {
-    console.error("Final storage attempt failed:", storageError);
-  }
+console.log(`Final unmatched entity storage result: ${storeResult}`);
+}
+} catch (storageError) {
+console.error("Final storage attempt failed:", storageError);
+}
 } else if (actualassessment_id) {
-  // If we only have assessment ID but no analysis ID yet, still store unmatched entities
-  try {
-    console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
-    const thinkerUnmatched = thinkerResults.unmatched || [];
-    const classicUnmatched = classicResults.unmatched || [];
+// If we only have assessment ID but no analysis ID yet, still store unmatched entities
+try {
+console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
+const thinkerUnmatched = thinkerResults.unmatched || [];
+const classicUnmatched = classicResults.unmatched || [];
 
-    if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
-      const storeResult = await storeUnmatchedEntities(
-        actualassessment_id,
-        null,
-        thinkerUnmatched,
-        classicUnmatched
-      );
+if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+const storeResult = await storeUnmatchedEntities(
+actualassessment_id,
+null,
+thinkerUnmatched,
+classicUnmatched
+);
 
-      console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
-    }
-  } catch (storageError) {
-    console.error("Assessment-only storage attempt failed:", storageError);
-  }
+console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
+}
+} catch (storageError) {
+console.error("Assessment-only storage attempt failed:", storageError);
+}
 }
 
 // Ensure we calculate match rates properly even if some parts failed
@@ -659,47 +680,45 @@ const totalMatched = matchedThinkers + matchedClassics;
 
 // Generate validation report, preserving as much data as possible even if errors occurred
 const validationReport = {
-  analysisId: actualAnalysisId,
-  assessment_id: actualassessment_id,
-  thinkers: {
-    total: totalThinkers,
-    matched: matchedThinkers,
-    unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
-    matchDetails: thinkerResults.matched || [],
-    unmatchedItems: thinkerResults.unmatched || [],
-    error: thinkerResults.error
-  },
-  classics: {
-    total: totalClassics,
-    matched: matchedClassics,
-    unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
-    matchDetails: classicResults.matched || [],
-    unmatchedItems: classicResults.unmatched || [],
-    error: classicResults.error
-  },
-  summary: {
-    totalEntities: totalEntities,
-    totalMatched: totalMatched,
-    totalUnmatched: (totalEntities - totalMatched),
-    matchRate: totalEntities > 0 ?
-      ((totalMatched / totalEntities) * 100).toFixed(2) + '%' :
-      '0%',
-    hasErrors: !!(thinkerResults.error || classicResults.error)
-  }
+analysisId: actualAnalysisId,
+assessment_id: actualassessment_id,
+thinkers: {
+total: totalThinkers,
+matched: matchedThinkers,
+unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+matchDetails: thinkerResults.matched || [],
+unmatchedItems: thinkerResults.unmatched || [],
+error: thinkerResults.error
+},
+classics: {
+total: totalClassics,
+matched: matchedClassics,
+unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+matchDetails: classicResults.matched || [],
+unmatchedItems: classicResults.unmatched || [],
+error: classicResults.error
+},
+summary: {
+totalEntities: totalEntities,
+totalMatched: totalMatched,
+totalUnmatched: (totalEntities - totalMatched),
+matchRate: totalEntities > 0 ?
+((totalMatched / totalEntities) * 100).toFixed(2) + '%' :
+'0%',
+hasErrors: !!(thinkerResults.error || classicResults.error)
+}
 };
 
 console.log('Validation complete:', JSON.stringify({
-  totalEntities: totalEntities,
-  totalMatched: totalMatched,
-  matchRate: validationReport.summary.matchRate,
-  hasErrors: validationReport.summary.hasErrors
+totalEntities: totalEntities,
+totalMatched: totalMatched,
+matchRate: validationReport.summary.matchRate,
+hasErrors: validationReport.summary.hasErrors
 }));
 
 return new Response(JSON.stringify(validationReport), {
-  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+headers: { ...corsHeaders, 'Content-Type': 'application/json' },
 });
-
-```
 
 } catch (error) {
 console.error('Error in validate-dna-entities function:', error);
