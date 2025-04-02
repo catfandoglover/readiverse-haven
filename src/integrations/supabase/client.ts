@@ -38,7 +38,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
 export const createSupabaseClient = (jwt?: string) => {
   if (jwt) {
     // Create a new client with the custom JWT
-    return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: {
         headers: {
           Authorization: `Bearer ${jwt}`,
