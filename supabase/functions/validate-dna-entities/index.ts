@@ -551,10 +551,8 @@ Please analyze each item carefully, considering:
   }
 }
 
-export async function validateDNAEntities(req: Request): Promise<Response> {
+export async function validateDNAEntities(assessment_id: string): Promise<Response> {
   try {
-    const { assessment_id } = await req.json();
-    
     if (!assessment_id) {
       throw new Error('assessment_id is required');
     }
@@ -675,8 +673,8 @@ serve(async (req) => {
       throw new Error('assessment_id is required');
     }
     
-    // Use the validateDNAEntities function
-    return await validateDNAEntities(req);
+    // Use the validateDNAEntities function with the parsed assessment_id
+    return await validateDNAEntities(assessment_id);
   } catch (error) {
     console.error('Error in validate-dna-entities function:', error);
     return new Response(JSON.stringify({ 
