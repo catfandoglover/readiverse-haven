@@ -109,12 +109,9 @@ function ensureRequiredFields(jsonObject: Record<string, string>, section: numbe
   return result;
 }
 
-// New function to ensure all fields follow the correct naming pattern (with numeric suffixes)
+// Function to ensure all fields follow the correct naming pattern (with numeric suffixes)
 function validateFieldNames(content: Record<string, string>): Record<string, string> {
   const correctedContent: Record<string, string> = {};
-  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  const relationTypes = ['kindred_spirit', 'challenging_voice'];
-  const suffixes = ['', '_classic', '_rationale'];
   
   // First copy all existing fields to the new object
   Object.keys(content).forEach(key => {
@@ -122,6 +119,10 @@ function validateFieldNames(content: Record<string, string>): Record<string, str
   });
   
   // Check for any base domain/relation fields without numeric suffix (incorrect format)
+  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
+  const relationTypes = ['kindred_spirit', 'challenging_voice'];
+  const suffixes = ['', '_classic', '_rationale'];
+  
   for (const domain of domainTypes) {
     for (const relation of relationTypes) {
       const baseFieldName = `${domain}_${relation}`;
@@ -142,6 +143,7 @@ function validateFieldNames(content: Record<string, string>): Record<string, str
     }
   }
   
+  // Return all fields as individual columns
   return correctedContent;
 }
 
@@ -541,41 +543,34 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
 async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
   try {
     console.log('Validating DNA entities from analysis results');
+    console.log('Analysis data keys:', Object.keys(analysisData));
     
-    // Call the validate-dna-entities function directly
+    // Call the validate-dna-entities function with the analysis data
     const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${supabaseServiceRoleKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ assessment_id })
+      body: JSON.stringify({ 
+        analysisData,
+        assessment_id
+      })
     });
     
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Validation API error:', errorData);
       throw new Error(`Validation API error! Status: ${response.status}`);
     }
     
-    const validationResult = await response.json();
-    console.log('Validation completed:', 
-      `Thinkers: ${validationResult.thinkers?.matched || 0}/${validationResult.thinkers?.total || 0} matched, ` +
-      `Classics: ${validationResult.classics?.matched || 0}/${validationResult.classics?.total || 0} matched`
-    );
+    const validationData = await response.json();
+    console.log('Validation results:', validationData);
     
-    return validationResult;
+    return validationData;
   } catch (error) {
-    console.error('Error validating DNA entities:', error);
-    return { 
-      error: error.message, 
-      thinkers: { matched: [], unmatched: [] }, 
-      classics: { matched: [], unmatched: [] },
-      summary: {
-        totalEntities: 0,
-        totalMatched: 0,
-        totalUnmatched: 0,
-        matchRate: '0%'
-      }
-    };
+    console.error('Error in validateDNAEntities:', error);
+    throw error;
   }
 }
 
