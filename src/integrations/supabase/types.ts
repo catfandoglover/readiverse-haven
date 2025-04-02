@@ -171,6 +171,7 @@ export type Database = {
           Notion_URL: string | null
           randomizer: number | null
           slug: string
+          source: string | null
           title: string
         }
         Insert: {
@@ -193,6 +194,7 @@ export type Database = {
           Notion_URL?: string | null
           randomizer?: number | null
           slug: string
+          source?: string | null
           title: string
         }
         Update: {
@@ -215,6 +217,7 @@ export type Database = {
           Notion_URL?: string | null
           randomizer?: number | null
           slug?: string
+          source?: string | null
           title?: string
         }
         Relationships: [
@@ -344,34 +347,54 @@ export type Database = {
         Row: {
           aesthetics_challenging_voice_1: string | null
           aesthetics_challenging_voice_1_classic: string | null
+          aesthetics_challenging_voice_1_classic_db_id: string | null
+          aesthetics_challenging_voice_1_db_id: string | null
           aesthetics_challenging_voice_1_rationale: string | null
           aesthetics_challenging_voice_2: string | null
           aesthetics_challenging_voice_2_classic: string | null
+          aesthetics_challenging_voice_2_classic_db_id: string | null
+          aesthetics_challenging_voice_2_db_id: string | null
           aesthetics_challenging_voice_2_rationale: string | null
           aesthetics_challenging_voice_3: string | null
           aesthetics_challenging_voice_3_classic: string | null
+          aesthetics_challenging_voice_3_classic_db_id: string | null
+          aesthetics_challenging_voice_3_db_id: string | null
           aesthetics_challenging_voice_3_rationale: string | null
           aesthetics_challenging_voice_4: string | null
           aesthetics_challenging_voice_4_classic: string | null
+          aesthetics_challenging_voice_4_classic_db_id: string | null
+          aesthetics_challenging_voice_4_db_id: string | null
           aesthetics_challenging_voice_4_rationale: string | null
           aesthetics_challenging_voice_5: string | null
           aesthetics_challenging_voice_5_classic: string | null
+          aesthetics_challenging_voice_5_classic_db_id: string | null
+          aesthetics_challenging_voice_5_db_id: string | null
           aesthetics_challenging_voice_5_rationale: string | null
           aesthetics_introduction: string | null
           aesthetics_kindred_spirit_1: string | null
           aesthetics_kindred_spirit_1_classic: string | null
+          aesthetics_kindred_spirit_1_classic_db_id: string | null
+          aesthetics_kindred_spirit_1_db_id: string | null
           aesthetics_kindred_spirit_1_rationale: string | null
           aesthetics_kindred_spirit_2: string | null
           aesthetics_kindred_spirit_2_classic: string | null
+          aesthetics_kindred_spirit_2_classic_db_id: string | null
+          aesthetics_kindred_spirit_2_db_id: string | null
           aesthetics_kindred_spirit_2_rationale: string | null
           aesthetics_kindred_spirit_3: string | null
           aesthetics_kindred_spirit_3_classic: string | null
+          aesthetics_kindred_spirit_3_classic_db_id: string | null
+          aesthetics_kindred_spirit_3_db_id: string | null
           aesthetics_kindred_spirit_3_rationale: string | null
           aesthetics_kindred_spirit_4: string | null
           aesthetics_kindred_spirit_4_classic: string | null
+          aesthetics_kindred_spirit_4_classic_db_id: string | null
+          aesthetics_kindred_spirit_4_db_id: string | null
           aesthetics_kindred_spirit_4_rationale: string | null
           aesthetics_kindred_spirit_5: string | null
           aesthetics_kindred_spirit_5_classic: string | null
+          aesthetics_kindred_spirit_5_classic_db_id: string | null
+          aesthetics_kindred_spirit_5_db_id: string | null
           aesthetics_kindred_spirit_5_rationale: string | null
           analysis_text: string | null
           analysis_type: Database["public"]["Enums"]["dna_result_type"]
@@ -383,65 +406,105 @@ export type Database = {
           created_at: string
           epistemology_challenging_voice_1: string | null
           epistemology_challenging_voice_1_classic: string | null
+          epistemology_challenging_voice_1_classic_db_id: string | null
+          epistemology_challenging_voice_1_db_id: string | null
           epistemology_challenging_voice_1_rationale: string | null
           epistemology_challenging_voice_2: string | null
           epistemology_challenging_voice_2_classic: string | null
+          epistemology_challenging_voice_2_classic_db_id: string | null
+          epistemology_challenging_voice_2_db_id: string | null
           epistemology_challenging_voice_2_rationale: string | null
           epistemology_challenging_voice_3: string | null
           epistemology_challenging_voice_3_classic: string | null
+          epistemology_challenging_voice_3_classic_db_id: string | null
+          epistemology_challenging_voice_3_db_id: string | null
           epistemology_challenging_voice_3_rationale: string | null
           epistemology_challenging_voice_4: string | null
           epistemology_challenging_voice_4_classic: string | null
+          epistemology_challenging_voice_4_classic_db_id: string | null
+          epistemology_challenging_voice_4_db_id: string | null
           epistemology_challenging_voice_4_rationale: string | null
           epistemology_challenging_voice_5: string | null
           epistemology_challenging_voice_5_classic: string | null
+          epistemology_challenging_voice_5_classic_db_id: string | null
+          epistemology_challenging_voice_5_db_id: string | null
           epistemology_challenging_voice_5_rationale: string | null
           epistemology_introduction: string | null
           epistemology_kindred_spirit_1: string | null
           epistemology_kindred_spirit_1_classic: string | null
+          epistemology_kindred_spirit_1_classic_db_id: string | null
+          epistemology_kindred_spirit_1_db_id: string | null
           epistemology_kindred_spirit_1_rationale: string | null
           epistemology_kindred_spirit_2: string | null
           epistemology_kindred_spirit_2_classic: string | null
+          epistemology_kindred_spirit_2_classic_db_id: string | null
+          epistemology_kindred_spirit_2_db_id: string | null
           epistemology_kindred_spirit_2_rationale: string | null
           epistemology_kindred_spirit_3: string | null
           epistemology_kindred_spirit_3_classic: string | null
+          epistemology_kindred_spirit_3_classic_db_id: string | null
+          epistemology_kindred_spirit_3_db_id: string | null
           epistemology_kindred_spirit_3_rationale: string | null
           epistemology_kindred_spirit_4: string | null
           epistemology_kindred_spirit_4_classic: string | null
+          epistemology_kindred_spirit_4_classic_db_id: string | null
+          epistemology_kindred_spirit_4_db_id: string | null
           epistemology_kindred_spirit_4_rationale: string | null
           epistemology_kindred_spirit_5: string | null
           epistemology_kindred_spirit_5_classic: string | null
+          epistemology_kindred_spirit_5_classic_db_id: string | null
+          epistemology_kindred_spirit_5_db_id: string | null
           epistemology_kindred_spirit_5_rationale: string | null
           ethics_challenging_voice_1: string | null
           ethics_challenging_voice_1_classic: string | null
+          ethics_challenging_voice_1_classic_db_id: string | null
+          ethics_challenging_voice_1_db_id: string | null
           ethics_challenging_voice_1_rationale: string | null
           ethics_challenging_voice_2: string | null
           ethics_challenging_voice_2_classic: string | null
+          ethics_challenging_voice_2_classic_db_id: string | null
+          ethics_challenging_voice_2_db_id: string | null
           ethics_challenging_voice_2_rationale: string | null
           ethics_challenging_voice_3: string | null
           ethics_challenging_voice_3_classic: string | null
+          ethics_challenging_voice_3_classic_db_id: string | null
+          ethics_challenging_voice_3_db_id: string | null
           ethics_challenging_voice_3_rationale: string | null
           ethics_challenging_voice_4: string | null
           ethics_challenging_voice_4_classic: string | null
+          ethics_challenging_voice_4_classic_db_id: string | null
+          ethics_challenging_voice_4_db_id: string | null
           ethics_challenging_voice_4_rationale: string | null
           ethics_challenging_voice_5: string | null
           ethics_challenging_voice_5_classic: string | null
+          ethics_challenging_voice_5_classic_db_id: string | null
+          ethics_challenging_voice_5_db_id: string | null
           ethics_challenging_voice_5_rationale: string | null
           ethics_introduction: string | null
           ethics_kindred_spirit_1: string | null
           ethics_kindred_spirit_1_classic: string | null
+          ethics_kindred_spirit_1_classic_db_id: string | null
+          ethics_kindred_spirit_1_db_id: string | null
           ethics_kindred_spirit_1_rationale: string | null
           ethics_kindred_spirit_2: string | null
           ethics_kindred_spirit_2_classic: string | null
+          ethics_kindred_spirit_2_classic_db_id: string | null
+          ethics_kindred_spirit_2_db_id: string | null
           ethics_kindred_spirit_2_rationale: string | null
           ethics_kindred_spirit_3: string | null
           ethics_kindred_spirit_3_classic: string | null
+          ethics_kindred_spirit_3_classic_db_id: string | null
+          ethics_kindred_spirit_3_db_id: string | null
           ethics_kindred_spirit_3_rationale: string | null
           ethics_kindred_spirit_4: string | null
           ethics_kindred_spirit_4_classic: string | null
+          ethics_kindred_spirit_4_classic_db_id: string | null
+          ethics_kindred_spirit_4_db_id: string | null
           ethics_kindred_spirit_4_rationale: string | null
           ethics_kindred_spirit_5: string | null
           ethics_kindred_spirit_5_classic: string | null
+          ethics_kindred_spirit_5_classic_db_id: string | null
+          ethics_kindred_spirit_5_db_id: string | null
           ethics_kindred_spirit_5_rationale: string | null
           growth_edges_1: string | null
           growth_edges_2: string | null
@@ -452,7 +515,9 @@ export type Database = {
           key_tension_2: string | null
           key_tension_3: string | null
           most_challenging_voice: string | null
+          most_challenging_voice_db_id: string | null
           most_kindred_spirit: string | null
+          most_kindred_spirit_db_id: string | null
           name: string | null
           natural_strength_1: string | null
           natural_strength_2: string | null
@@ -460,133 +525,213 @@ export type Database = {
           next_steps: string | null
           ontology_challenging_voice_1: string | null
           ontology_challenging_voice_1_classic: string | null
+          ontology_challenging_voice_1_classic_db_id: string | null
+          ontology_challenging_voice_1_db_id: string | null
           ontology_challenging_voice_1_rationale: string | null
           ontology_challenging_voice_2: string | null
           ontology_challenging_voice_2_classic: string | null
+          ontology_challenging_voice_2_classic_db_id: string | null
+          ontology_challenging_voice_2_db_id: string | null
           ontology_challenging_voice_2_rationale: string | null
           ontology_challenging_voice_3: string | null
           ontology_challenging_voice_3_classic: string | null
+          ontology_challenging_voice_3_classic_db_id: string | null
+          ontology_challenging_voice_3_db_id: string | null
           ontology_challenging_voice_3_rationale: string | null
           ontology_challenging_voice_4: string | null
           ontology_challenging_voice_4_classic: string | null
+          ontology_challenging_voice_4_classic_db_id: string | null
+          ontology_challenging_voice_4_db_id: string | null
           ontology_challenging_voice_4_rationale: string | null
           ontology_challenging_voice_5: string | null
           ontology_challenging_voice_5_classic: string | null
+          ontology_challenging_voice_5_classic_db_id: string | null
+          ontology_challenging_voice_5_db_id: string | null
           ontology_challenging_voice_5_rationale: string | null
           ontology_introduction: string | null
           ontology_kindred_spirit_1: string | null
           ontology_kindred_spirit_1_classic: string | null
+          ontology_kindred_spirit_1_classic_db_id: string | null
+          ontology_kindred_spirit_1_db_id: string | null
           ontology_kindred_spirit_1_rationale: string | null
           ontology_kindred_spirit_2: string | null
           ontology_kindred_spirit_2_classic: string | null
+          ontology_kindred_spirit_2_classic_db_id: string | null
+          ontology_kindred_spirit_2_db_id: string | null
           ontology_kindred_spirit_2_rationale: string | null
           ontology_kindred_spirit_3: string | null
           ontology_kindred_spirit_3_classic: string | null
+          ontology_kindred_spirit_3_classic_db_id: string | null
+          ontology_kindred_spirit_3_db_id: string | null
           ontology_kindred_spirit_3_rationale: string | null
           ontology_kindred_spirit_4: string | null
           ontology_kindred_spirit_4_classic: string | null
+          ontology_kindred_spirit_4_classic_db_id: string | null
+          ontology_kindred_spirit_4_db_id: string | null
           ontology_kindred_spirit_4_rationale: string | null
           ontology_kindred_spirit_5: string | null
           ontology_kindred_spirit_5_classic: string | null
+          ontology_kindred_spirit_5_classic_db_id: string | null
+          ontology_kindred_spirit_5_db_id: string | null
           ontology_kindred_spirit_5_rationale: string | null
           politics_challenging_voice_1: string | null
           politics_challenging_voice_1_classic: string | null
+          politics_challenging_voice_1_classic_db_id: string | null
+          politics_challenging_voice_1_db_id: string | null
           politics_challenging_voice_1_rationale: string | null
           politics_challenging_voice_2: string | null
           politics_challenging_voice_2_classic: string | null
+          politics_challenging_voice_2_classic_db_id: string | null
+          politics_challenging_voice_2_db_id: string | null
           politics_challenging_voice_2_rationale: string | null
           politics_challenging_voice_3: string | null
           politics_challenging_voice_3_classic: string | null
+          politics_challenging_voice_3_classic_db_id: string | null
+          politics_challenging_voice_3_db_id: string | null
           politics_challenging_voice_3_rationale: string | null
           politics_challenging_voice_4: string | null
           politics_challenging_voice_4_classic: string | null
+          politics_challenging_voice_4_classic_db_id: string | null
+          politics_challenging_voice_4_db_id: string | null
           politics_challenging_voice_4_rationale: string | null
           politics_challenging_voice_5: string | null
           politics_challenging_voice_5_classic: string | null
+          politics_challenging_voice_5_classic_db_id: string | null
+          politics_challenging_voice_5_db_id: string | null
           politics_challenging_voice_5_rationale: string | null
           politics_introduction: string | null
           politics_kindred_spirit_1: string | null
           politics_kindred_spirit_1_classic: string | null
+          politics_kindred_spirit_1_classic_db_id: string | null
+          politics_kindred_spirit_1_db_id: string | null
           politics_kindred_spirit_1_rationale: string | null
           politics_kindred_spirit_2: string | null
           politics_kindred_spirit_2_classic: string | null
+          politics_kindred_spirit_2_classic_db_id: string | null
+          politics_kindred_spirit_2_db_id: string | null
           politics_kindred_spirit_2_rationale: string | null
           politics_kindred_spirit_3: string | null
           politics_kindred_spirit_3_classic: string | null
+          politics_kindred_spirit_3_classic_db_id: string | null
+          politics_kindred_spirit_3_db_id: string | null
           politics_kindred_spirit_3_rationale: string | null
           politics_kindred_spirit_4: string | null
           politics_kindred_spirit_4_classic: string | null
+          politics_kindred_spirit_4_classic_db_id: string | null
+          politics_kindred_spirit_4_db_id: string | null
           politics_kindred_spirit_4_rationale: string | null
           politics_kindred_spirit_5: string | null
           politics_kindred_spirit_5_classic: string | null
+          politics_kindred_spirit_5_classic_db_id: string | null
+          politics_kindred_spirit_5_db_id: string | null
           politics_kindred_spirit_5_rationale: string | null
           profile_image_url: string | null
           raw_response: Json | null
           share_summary: string | null
           theology_challenging_voice_1: string | null
           theology_challenging_voice_1_classic: string | null
+          theology_challenging_voice_1_classic_db_id: string | null
+          theology_challenging_voice_1_db_id: string | null
           theology_challenging_voice_1_rationale: string | null
           theology_challenging_voice_2: string | null
           theology_challenging_voice_2_classic: string | null
+          theology_challenging_voice_2_classic_db_id: string | null
+          theology_challenging_voice_2_db_id: string | null
           theology_challenging_voice_2_rationale: string | null
           theology_challenging_voice_3: string | null
           theology_challenging_voice_3_classic: string | null
+          theology_challenging_voice_3_classic_db_id: string | null
+          theology_challenging_voice_3_db_id: string | null
           theology_challenging_voice_3_rationale: string | null
           theology_challenging_voice_4: string | null
           theology_challenging_voice_4_classic: string | null
+          theology_challenging_voice_4_classic_db_id: string | null
+          theology_challenging_voice_4_db_id: string | null
           theology_challenging_voice_4_rationale: string | null
           theology_challenging_voice_5: string | null
           theology_challenging_voice_5_classic: string | null
+          theology_challenging_voice_5_classic_db_id: string | null
+          theology_challenging_voice_5_db_id: string | null
           theology_challenging_voice_5_rationale: string | null
           theology_introduction: string | null
           theology_kindred_spirit_1: string | null
           theology_kindred_spirit_1_classic: string | null
+          theology_kindred_spirit_1_classic_db_id: string | null
+          theology_kindred_spirit_1_db_id: string | null
           theology_kindred_spirit_1_rationale: string | null
           theology_kindred_spirit_2: string | null
           theology_kindred_spirit_2_classic: string | null
+          theology_kindred_spirit_2_classic_db_id: string | null
+          theology_kindred_spirit_2_db_id: string | null
           theology_kindred_spirit_2_rationale: string | null
           theology_kindred_spirit_3: string | null
           theology_kindred_spirit_3_classic: string | null
+          theology_kindred_spirit_3_classic_db_id: string | null
+          theology_kindred_spirit_3_db_id: string | null
           theology_kindred_spirit_3_rationale: string | null
           theology_kindred_spirit_4: string | null
           theology_kindred_spirit_4_classic: string | null
+          theology_kindred_spirit_4_classic_db_id: string | null
+          theology_kindred_spirit_4_db_id: string | null
           theology_kindred_spirit_4_rationale: string | null
           theology_kindred_spirit_5: string | null
           theology_kindred_spirit_5_classic: string | null
+          theology_kindred_spirit_5_classic_db_id: string | null
+          theology_kindred_spirit_5_db_id: string | null
           theology_kindred_spirit_5_rationale: string | null
           validation_summary: Json | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
           aesthetics_challenging_voice_1_classic?: string | null
+          aesthetics_challenging_voice_1_classic_db_id?: string | null
+          aesthetics_challenging_voice_1_db_id?: string | null
           aesthetics_challenging_voice_1_rationale?: string | null
           aesthetics_challenging_voice_2?: string | null
           aesthetics_challenging_voice_2_classic?: string | null
+          aesthetics_challenging_voice_2_classic_db_id?: string | null
+          aesthetics_challenging_voice_2_db_id?: string | null
           aesthetics_challenging_voice_2_rationale?: string | null
           aesthetics_challenging_voice_3?: string | null
           aesthetics_challenging_voice_3_classic?: string | null
+          aesthetics_challenging_voice_3_classic_db_id?: string | null
+          aesthetics_challenging_voice_3_db_id?: string | null
           aesthetics_challenging_voice_3_rationale?: string | null
           aesthetics_challenging_voice_4?: string | null
           aesthetics_challenging_voice_4_classic?: string | null
+          aesthetics_challenging_voice_4_classic_db_id?: string | null
+          aesthetics_challenging_voice_4_db_id?: string | null
           aesthetics_challenging_voice_4_rationale?: string | null
           aesthetics_challenging_voice_5?: string | null
           aesthetics_challenging_voice_5_classic?: string | null
+          aesthetics_challenging_voice_5_classic_db_id?: string | null
+          aesthetics_challenging_voice_5_db_id?: string | null
           aesthetics_challenging_voice_5_rationale?: string | null
           aesthetics_introduction?: string | null
           aesthetics_kindred_spirit_1?: string | null
           aesthetics_kindred_spirit_1_classic?: string | null
+          aesthetics_kindred_spirit_1_classic_db_id?: string | null
+          aesthetics_kindred_spirit_1_db_id?: string | null
           aesthetics_kindred_spirit_1_rationale?: string | null
           aesthetics_kindred_spirit_2?: string | null
           aesthetics_kindred_spirit_2_classic?: string | null
+          aesthetics_kindred_spirit_2_classic_db_id?: string | null
+          aesthetics_kindred_spirit_2_db_id?: string | null
           aesthetics_kindred_spirit_2_rationale?: string | null
           aesthetics_kindred_spirit_3?: string | null
           aesthetics_kindred_spirit_3_classic?: string | null
+          aesthetics_kindred_spirit_3_classic_db_id?: string | null
+          aesthetics_kindred_spirit_3_db_id?: string | null
           aesthetics_kindred_spirit_3_rationale?: string | null
           aesthetics_kindred_spirit_4?: string | null
           aesthetics_kindred_spirit_4_classic?: string | null
+          aesthetics_kindred_spirit_4_classic_db_id?: string | null
+          aesthetics_kindred_spirit_4_db_id?: string | null
           aesthetics_kindred_spirit_4_rationale?: string | null
           aesthetics_kindred_spirit_5?: string | null
           aesthetics_kindred_spirit_5_classic?: string | null
+          aesthetics_kindred_spirit_5_classic_db_id?: string | null
+          aesthetics_kindred_spirit_5_db_id?: string | null
           aesthetics_kindred_spirit_5_rationale?: string | null
           analysis_text?: string | null
           analysis_type: Database["public"]["Enums"]["dna_result_type"]
@@ -598,65 +743,105 @@ export type Database = {
           created_at?: string
           epistemology_challenging_voice_1?: string | null
           epistemology_challenging_voice_1_classic?: string | null
+          epistemology_challenging_voice_1_classic_db_id?: string | null
+          epistemology_challenging_voice_1_db_id?: string | null
           epistemology_challenging_voice_1_rationale?: string | null
           epistemology_challenging_voice_2?: string | null
           epistemology_challenging_voice_2_classic?: string | null
+          epistemology_challenging_voice_2_classic_db_id?: string | null
+          epistemology_challenging_voice_2_db_id?: string | null
           epistemology_challenging_voice_2_rationale?: string | null
           epistemology_challenging_voice_3?: string | null
           epistemology_challenging_voice_3_classic?: string | null
+          epistemology_challenging_voice_3_classic_db_id?: string | null
+          epistemology_challenging_voice_3_db_id?: string | null
           epistemology_challenging_voice_3_rationale?: string | null
           epistemology_challenging_voice_4?: string | null
           epistemology_challenging_voice_4_classic?: string | null
+          epistemology_challenging_voice_4_classic_db_id?: string | null
+          epistemology_challenging_voice_4_db_id?: string | null
           epistemology_challenging_voice_4_rationale?: string | null
           epistemology_challenging_voice_5?: string | null
           epistemology_challenging_voice_5_classic?: string | null
+          epistemology_challenging_voice_5_classic_db_id?: string | null
+          epistemology_challenging_voice_5_db_id?: string | null
           epistemology_challenging_voice_5_rationale?: string | null
           epistemology_introduction?: string | null
           epistemology_kindred_spirit_1?: string | null
           epistemology_kindred_spirit_1_classic?: string | null
+          epistemology_kindred_spirit_1_classic_db_id?: string | null
+          epistemology_kindred_spirit_1_db_id?: string | null
           epistemology_kindred_spirit_1_rationale?: string | null
           epistemology_kindred_spirit_2?: string | null
           epistemology_kindred_spirit_2_classic?: string | null
+          epistemology_kindred_spirit_2_classic_db_id?: string | null
+          epistemology_kindred_spirit_2_db_id?: string | null
           epistemology_kindred_spirit_2_rationale?: string | null
           epistemology_kindred_spirit_3?: string | null
           epistemology_kindred_spirit_3_classic?: string | null
+          epistemology_kindred_spirit_3_classic_db_id?: string | null
+          epistemology_kindred_spirit_3_db_id?: string | null
           epistemology_kindred_spirit_3_rationale?: string | null
           epistemology_kindred_spirit_4?: string | null
           epistemology_kindred_spirit_4_classic?: string | null
+          epistemology_kindred_spirit_4_classic_db_id?: string | null
+          epistemology_kindred_spirit_4_db_id?: string | null
           epistemology_kindred_spirit_4_rationale?: string | null
           epistemology_kindred_spirit_5?: string | null
           epistemology_kindred_spirit_5_classic?: string | null
+          epistemology_kindred_spirit_5_classic_db_id?: string | null
+          epistemology_kindred_spirit_5_db_id?: string | null
           epistemology_kindred_spirit_5_rationale?: string | null
           ethics_challenging_voice_1?: string | null
           ethics_challenging_voice_1_classic?: string | null
+          ethics_challenging_voice_1_classic_db_id?: string | null
+          ethics_challenging_voice_1_db_id?: string | null
           ethics_challenging_voice_1_rationale?: string | null
           ethics_challenging_voice_2?: string | null
           ethics_challenging_voice_2_classic?: string | null
+          ethics_challenging_voice_2_classic_db_id?: string | null
+          ethics_challenging_voice_2_db_id?: string | null
           ethics_challenging_voice_2_rationale?: string | null
           ethics_challenging_voice_3?: string | null
           ethics_challenging_voice_3_classic?: string | null
+          ethics_challenging_voice_3_classic_db_id?: string | null
+          ethics_challenging_voice_3_db_id?: string | null
           ethics_challenging_voice_3_rationale?: string | null
           ethics_challenging_voice_4?: string | null
           ethics_challenging_voice_4_classic?: string | null
+          ethics_challenging_voice_4_classic_db_id?: string | null
+          ethics_challenging_voice_4_db_id?: string | null
           ethics_challenging_voice_4_rationale?: string | null
           ethics_challenging_voice_5?: string | null
           ethics_challenging_voice_5_classic?: string | null
+          ethics_challenging_voice_5_classic_db_id?: string | null
+          ethics_challenging_voice_5_db_id?: string | null
           ethics_challenging_voice_5_rationale?: string | null
           ethics_introduction?: string | null
           ethics_kindred_spirit_1?: string | null
           ethics_kindred_spirit_1_classic?: string | null
+          ethics_kindred_spirit_1_classic_db_id?: string | null
+          ethics_kindred_spirit_1_db_id?: string | null
           ethics_kindred_spirit_1_rationale?: string | null
           ethics_kindred_spirit_2?: string | null
           ethics_kindred_spirit_2_classic?: string | null
+          ethics_kindred_spirit_2_classic_db_id?: string | null
+          ethics_kindred_spirit_2_db_id?: string | null
           ethics_kindred_spirit_2_rationale?: string | null
           ethics_kindred_spirit_3?: string | null
           ethics_kindred_spirit_3_classic?: string | null
+          ethics_kindred_spirit_3_classic_db_id?: string | null
+          ethics_kindred_spirit_3_db_id?: string | null
           ethics_kindred_spirit_3_rationale?: string | null
           ethics_kindred_spirit_4?: string | null
           ethics_kindred_spirit_4_classic?: string | null
+          ethics_kindred_spirit_4_classic_db_id?: string | null
+          ethics_kindred_spirit_4_db_id?: string | null
           ethics_kindred_spirit_4_rationale?: string | null
           ethics_kindred_spirit_5?: string | null
           ethics_kindred_spirit_5_classic?: string | null
+          ethics_kindred_spirit_5_classic_db_id?: string | null
+          ethics_kindred_spirit_5_db_id?: string | null
           ethics_kindred_spirit_5_rationale?: string | null
           growth_edges_1?: string | null
           growth_edges_2?: string | null
@@ -667,7 +852,9 @@ export type Database = {
           key_tension_2?: string | null
           key_tension_3?: string | null
           most_challenging_voice?: string | null
+          most_challenging_voice_db_id?: string | null
           most_kindred_spirit?: string | null
+          most_kindred_spirit_db_id?: string | null
           name?: string | null
           natural_strength_1?: string | null
           natural_strength_2?: string | null
@@ -675,133 +862,213 @@ export type Database = {
           next_steps?: string | null
           ontology_challenging_voice_1?: string | null
           ontology_challenging_voice_1_classic?: string | null
+          ontology_challenging_voice_1_classic_db_id?: string | null
+          ontology_challenging_voice_1_db_id?: string | null
           ontology_challenging_voice_1_rationale?: string | null
           ontology_challenging_voice_2?: string | null
           ontology_challenging_voice_2_classic?: string | null
+          ontology_challenging_voice_2_classic_db_id?: string | null
+          ontology_challenging_voice_2_db_id?: string | null
           ontology_challenging_voice_2_rationale?: string | null
           ontology_challenging_voice_3?: string | null
           ontology_challenging_voice_3_classic?: string | null
+          ontology_challenging_voice_3_classic_db_id?: string | null
+          ontology_challenging_voice_3_db_id?: string | null
           ontology_challenging_voice_3_rationale?: string | null
           ontology_challenging_voice_4?: string | null
           ontology_challenging_voice_4_classic?: string | null
+          ontology_challenging_voice_4_classic_db_id?: string | null
+          ontology_challenging_voice_4_db_id?: string | null
           ontology_challenging_voice_4_rationale?: string | null
           ontology_challenging_voice_5?: string | null
           ontology_challenging_voice_5_classic?: string | null
+          ontology_challenging_voice_5_classic_db_id?: string | null
+          ontology_challenging_voice_5_db_id?: string | null
           ontology_challenging_voice_5_rationale?: string | null
           ontology_introduction?: string | null
           ontology_kindred_spirit_1?: string | null
           ontology_kindred_spirit_1_classic?: string | null
+          ontology_kindred_spirit_1_classic_db_id?: string | null
+          ontology_kindred_spirit_1_db_id?: string | null
           ontology_kindred_spirit_1_rationale?: string | null
           ontology_kindred_spirit_2?: string | null
           ontology_kindred_spirit_2_classic?: string | null
+          ontology_kindred_spirit_2_classic_db_id?: string | null
+          ontology_kindred_spirit_2_db_id?: string | null
           ontology_kindred_spirit_2_rationale?: string | null
           ontology_kindred_spirit_3?: string | null
           ontology_kindred_spirit_3_classic?: string | null
+          ontology_kindred_spirit_3_classic_db_id?: string | null
+          ontology_kindred_spirit_3_db_id?: string | null
           ontology_kindred_spirit_3_rationale?: string | null
           ontology_kindred_spirit_4?: string | null
           ontology_kindred_spirit_4_classic?: string | null
+          ontology_kindred_spirit_4_classic_db_id?: string | null
+          ontology_kindred_spirit_4_db_id?: string | null
           ontology_kindred_spirit_4_rationale?: string | null
           ontology_kindred_spirit_5?: string | null
           ontology_kindred_spirit_5_classic?: string | null
+          ontology_kindred_spirit_5_classic_db_id?: string | null
+          ontology_kindred_spirit_5_db_id?: string | null
           ontology_kindred_spirit_5_rationale?: string | null
           politics_challenging_voice_1?: string | null
           politics_challenging_voice_1_classic?: string | null
+          politics_challenging_voice_1_classic_db_id?: string | null
+          politics_challenging_voice_1_db_id?: string | null
           politics_challenging_voice_1_rationale?: string | null
           politics_challenging_voice_2?: string | null
           politics_challenging_voice_2_classic?: string | null
+          politics_challenging_voice_2_classic_db_id?: string | null
+          politics_challenging_voice_2_db_id?: string | null
           politics_challenging_voice_2_rationale?: string | null
           politics_challenging_voice_3?: string | null
           politics_challenging_voice_3_classic?: string | null
+          politics_challenging_voice_3_classic_db_id?: string | null
+          politics_challenging_voice_3_db_id?: string | null
           politics_challenging_voice_3_rationale?: string | null
           politics_challenging_voice_4?: string | null
           politics_challenging_voice_4_classic?: string | null
+          politics_challenging_voice_4_classic_db_id?: string | null
+          politics_challenging_voice_4_db_id?: string | null
           politics_challenging_voice_4_rationale?: string | null
           politics_challenging_voice_5?: string | null
           politics_challenging_voice_5_classic?: string | null
+          politics_challenging_voice_5_classic_db_id?: string | null
+          politics_challenging_voice_5_db_id?: string | null
           politics_challenging_voice_5_rationale?: string | null
           politics_introduction?: string | null
           politics_kindred_spirit_1?: string | null
           politics_kindred_spirit_1_classic?: string | null
+          politics_kindred_spirit_1_classic_db_id?: string | null
+          politics_kindred_spirit_1_db_id?: string | null
           politics_kindred_spirit_1_rationale?: string | null
           politics_kindred_spirit_2?: string | null
           politics_kindred_spirit_2_classic?: string | null
+          politics_kindred_spirit_2_classic_db_id?: string | null
+          politics_kindred_spirit_2_db_id?: string | null
           politics_kindred_spirit_2_rationale?: string | null
           politics_kindred_spirit_3?: string | null
           politics_kindred_spirit_3_classic?: string | null
+          politics_kindred_spirit_3_classic_db_id?: string | null
+          politics_kindred_spirit_3_db_id?: string | null
           politics_kindred_spirit_3_rationale?: string | null
           politics_kindred_spirit_4?: string | null
           politics_kindred_spirit_4_classic?: string | null
+          politics_kindred_spirit_4_classic_db_id?: string | null
+          politics_kindred_spirit_4_db_id?: string | null
           politics_kindred_spirit_4_rationale?: string | null
           politics_kindred_spirit_5?: string | null
           politics_kindred_spirit_5_classic?: string | null
+          politics_kindred_spirit_5_classic_db_id?: string | null
+          politics_kindred_spirit_5_db_id?: string | null
           politics_kindred_spirit_5_rationale?: string | null
           profile_image_url?: string | null
           raw_response?: Json | null
           share_summary?: string | null
           theology_challenging_voice_1?: string | null
           theology_challenging_voice_1_classic?: string | null
+          theology_challenging_voice_1_classic_db_id?: string | null
+          theology_challenging_voice_1_db_id?: string | null
           theology_challenging_voice_1_rationale?: string | null
           theology_challenging_voice_2?: string | null
           theology_challenging_voice_2_classic?: string | null
+          theology_challenging_voice_2_classic_db_id?: string | null
+          theology_challenging_voice_2_db_id?: string | null
           theology_challenging_voice_2_rationale?: string | null
           theology_challenging_voice_3?: string | null
           theology_challenging_voice_3_classic?: string | null
+          theology_challenging_voice_3_classic_db_id?: string | null
+          theology_challenging_voice_3_db_id?: string | null
           theology_challenging_voice_3_rationale?: string | null
           theology_challenging_voice_4?: string | null
           theology_challenging_voice_4_classic?: string | null
+          theology_challenging_voice_4_classic_db_id?: string | null
+          theology_challenging_voice_4_db_id?: string | null
           theology_challenging_voice_4_rationale?: string | null
           theology_challenging_voice_5?: string | null
           theology_challenging_voice_5_classic?: string | null
+          theology_challenging_voice_5_classic_db_id?: string | null
+          theology_challenging_voice_5_db_id?: string | null
           theology_challenging_voice_5_rationale?: string | null
           theology_introduction?: string | null
           theology_kindred_spirit_1?: string | null
           theology_kindred_spirit_1_classic?: string | null
+          theology_kindred_spirit_1_classic_db_id?: string | null
+          theology_kindred_spirit_1_db_id?: string | null
           theology_kindred_spirit_1_rationale?: string | null
           theology_kindred_spirit_2?: string | null
           theology_kindred_spirit_2_classic?: string | null
+          theology_kindred_spirit_2_classic_db_id?: string | null
+          theology_kindred_spirit_2_db_id?: string | null
           theology_kindred_spirit_2_rationale?: string | null
           theology_kindred_spirit_3?: string | null
           theology_kindred_spirit_3_classic?: string | null
+          theology_kindred_spirit_3_classic_db_id?: string | null
+          theology_kindred_spirit_3_db_id?: string | null
           theology_kindred_spirit_3_rationale?: string | null
           theology_kindred_spirit_4?: string | null
           theology_kindred_spirit_4_classic?: string | null
+          theology_kindred_spirit_4_classic_db_id?: string | null
+          theology_kindred_spirit_4_db_id?: string | null
           theology_kindred_spirit_4_rationale?: string | null
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
+          theology_kindred_spirit_5_classic_db_id?: string | null
+          theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
           validation_summary?: Json | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
           aesthetics_challenging_voice_1_classic?: string | null
+          aesthetics_challenging_voice_1_classic_db_id?: string | null
+          aesthetics_challenging_voice_1_db_id?: string | null
           aesthetics_challenging_voice_1_rationale?: string | null
           aesthetics_challenging_voice_2?: string | null
           aesthetics_challenging_voice_2_classic?: string | null
+          aesthetics_challenging_voice_2_classic_db_id?: string | null
+          aesthetics_challenging_voice_2_db_id?: string | null
           aesthetics_challenging_voice_2_rationale?: string | null
           aesthetics_challenging_voice_3?: string | null
           aesthetics_challenging_voice_3_classic?: string | null
+          aesthetics_challenging_voice_3_classic_db_id?: string | null
+          aesthetics_challenging_voice_3_db_id?: string | null
           aesthetics_challenging_voice_3_rationale?: string | null
           aesthetics_challenging_voice_4?: string | null
           aesthetics_challenging_voice_4_classic?: string | null
+          aesthetics_challenging_voice_4_classic_db_id?: string | null
+          aesthetics_challenging_voice_4_db_id?: string | null
           aesthetics_challenging_voice_4_rationale?: string | null
           aesthetics_challenging_voice_5?: string | null
           aesthetics_challenging_voice_5_classic?: string | null
+          aesthetics_challenging_voice_5_classic_db_id?: string | null
+          aesthetics_challenging_voice_5_db_id?: string | null
           aesthetics_challenging_voice_5_rationale?: string | null
           aesthetics_introduction?: string | null
           aesthetics_kindred_spirit_1?: string | null
           aesthetics_kindred_spirit_1_classic?: string | null
+          aesthetics_kindred_spirit_1_classic_db_id?: string | null
+          aesthetics_kindred_spirit_1_db_id?: string | null
           aesthetics_kindred_spirit_1_rationale?: string | null
           aesthetics_kindred_spirit_2?: string | null
           aesthetics_kindred_spirit_2_classic?: string | null
+          aesthetics_kindred_spirit_2_classic_db_id?: string | null
+          aesthetics_kindred_spirit_2_db_id?: string | null
           aesthetics_kindred_spirit_2_rationale?: string | null
           aesthetics_kindred_spirit_3?: string | null
           aesthetics_kindred_spirit_3_classic?: string | null
+          aesthetics_kindred_spirit_3_classic_db_id?: string | null
+          aesthetics_kindred_spirit_3_db_id?: string | null
           aesthetics_kindred_spirit_3_rationale?: string | null
           aesthetics_kindred_spirit_4?: string | null
           aesthetics_kindred_spirit_4_classic?: string | null
+          aesthetics_kindred_spirit_4_classic_db_id?: string | null
+          aesthetics_kindred_spirit_4_db_id?: string | null
           aesthetics_kindred_spirit_4_rationale?: string | null
           aesthetics_kindred_spirit_5?: string | null
           aesthetics_kindred_spirit_5_classic?: string | null
+          aesthetics_kindred_spirit_5_classic_db_id?: string | null
+          aesthetics_kindred_spirit_5_db_id?: string | null
           aesthetics_kindred_spirit_5_rationale?: string | null
           analysis_text?: string | null
           analysis_type?: Database["public"]["Enums"]["dna_result_type"]
@@ -813,65 +1080,105 @@ export type Database = {
           created_at?: string
           epistemology_challenging_voice_1?: string | null
           epistemology_challenging_voice_1_classic?: string | null
+          epistemology_challenging_voice_1_classic_db_id?: string | null
+          epistemology_challenging_voice_1_db_id?: string | null
           epistemology_challenging_voice_1_rationale?: string | null
           epistemology_challenging_voice_2?: string | null
           epistemology_challenging_voice_2_classic?: string | null
+          epistemology_challenging_voice_2_classic_db_id?: string | null
+          epistemology_challenging_voice_2_db_id?: string | null
           epistemology_challenging_voice_2_rationale?: string | null
           epistemology_challenging_voice_3?: string | null
           epistemology_challenging_voice_3_classic?: string | null
+          epistemology_challenging_voice_3_classic_db_id?: string | null
+          epistemology_challenging_voice_3_db_id?: string | null
           epistemology_challenging_voice_3_rationale?: string | null
           epistemology_challenging_voice_4?: string | null
           epistemology_challenging_voice_4_classic?: string | null
+          epistemology_challenging_voice_4_classic_db_id?: string | null
+          epistemology_challenging_voice_4_db_id?: string | null
           epistemology_challenging_voice_4_rationale?: string | null
           epistemology_challenging_voice_5?: string | null
           epistemology_challenging_voice_5_classic?: string | null
+          epistemology_challenging_voice_5_classic_db_id?: string | null
+          epistemology_challenging_voice_5_db_id?: string | null
           epistemology_challenging_voice_5_rationale?: string | null
           epistemology_introduction?: string | null
           epistemology_kindred_spirit_1?: string | null
           epistemology_kindred_spirit_1_classic?: string | null
+          epistemology_kindred_spirit_1_classic_db_id?: string | null
+          epistemology_kindred_spirit_1_db_id?: string | null
           epistemology_kindred_spirit_1_rationale?: string | null
           epistemology_kindred_spirit_2?: string | null
           epistemology_kindred_spirit_2_classic?: string | null
+          epistemology_kindred_spirit_2_classic_db_id?: string | null
+          epistemology_kindred_spirit_2_db_id?: string | null
           epistemology_kindred_spirit_2_rationale?: string | null
           epistemology_kindred_spirit_3?: string | null
           epistemology_kindred_spirit_3_classic?: string | null
+          epistemology_kindred_spirit_3_classic_db_id?: string | null
+          epistemology_kindred_spirit_3_db_id?: string | null
           epistemology_kindred_spirit_3_rationale?: string | null
           epistemology_kindred_spirit_4?: string | null
           epistemology_kindred_spirit_4_classic?: string | null
+          epistemology_kindred_spirit_4_classic_db_id?: string | null
+          epistemology_kindred_spirit_4_db_id?: string | null
           epistemology_kindred_spirit_4_rationale?: string | null
           epistemology_kindred_spirit_5?: string | null
           epistemology_kindred_spirit_5_classic?: string | null
+          epistemology_kindred_spirit_5_classic_db_id?: string | null
+          epistemology_kindred_spirit_5_db_id?: string | null
           epistemology_kindred_spirit_5_rationale?: string | null
           ethics_challenging_voice_1?: string | null
           ethics_challenging_voice_1_classic?: string | null
+          ethics_challenging_voice_1_classic_db_id?: string | null
+          ethics_challenging_voice_1_db_id?: string | null
           ethics_challenging_voice_1_rationale?: string | null
           ethics_challenging_voice_2?: string | null
           ethics_challenging_voice_2_classic?: string | null
+          ethics_challenging_voice_2_classic_db_id?: string | null
+          ethics_challenging_voice_2_db_id?: string | null
           ethics_challenging_voice_2_rationale?: string | null
           ethics_challenging_voice_3?: string | null
           ethics_challenging_voice_3_classic?: string | null
+          ethics_challenging_voice_3_classic_db_id?: string | null
+          ethics_challenging_voice_3_db_id?: string | null
           ethics_challenging_voice_3_rationale?: string | null
           ethics_challenging_voice_4?: string | null
           ethics_challenging_voice_4_classic?: string | null
+          ethics_challenging_voice_4_classic_db_id?: string | null
+          ethics_challenging_voice_4_db_id?: string | null
           ethics_challenging_voice_4_rationale?: string | null
           ethics_challenging_voice_5?: string | null
           ethics_challenging_voice_5_classic?: string | null
+          ethics_challenging_voice_5_classic_db_id?: string | null
+          ethics_challenging_voice_5_db_id?: string | null
           ethics_challenging_voice_5_rationale?: string | null
           ethics_introduction?: string | null
           ethics_kindred_spirit_1?: string | null
           ethics_kindred_spirit_1_classic?: string | null
+          ethics_kindred_spirit_1_classic_db_id?: string | null
+          ethics_kindred_spirit_1_db_id?: string | null
           ethics_kindred_spirit_1_rationale?: string | null
           ethics_kindred_spirit_2?: string | null
           ethics_kindred_spirit_2_classic?: string | null
+          ethics_kindred_spirit_2_classic_db_id?: string | null
+          ethics_kindred_spirit_2_db_id?: string | null
           ethics_kindred_spirit_2_rationale?: string | null
           ethics_kindred_spirit_3?: string | null
           ethics_kindred_spirit_3_classic?: string | null
+          ethics_kindred_spirit_3_classic_db_id?: string | null
+          ethics_kindred_spirit_3_db_id?: string | null
           ethics_kindred_spirit_3_rationale?: string | null
           ethics_kindred_spirit_4?: string | null
           ethics_kindred_spirit_4_classic?: string | null
+          ethics_kindred_spirit_4_classic_db_id?: string | null
+          ethics_kindred_spirit_4_db_id?: string | null
           ethics_kindred_spirit_4_rationale?: string | null
           ethics_kindred_spirit_5?: string | null
           ethics_kindred_spirit_5_classic?: string | null
+          ethics_kindred_spirit_5_classic_db_id?: string | null
+          ethics_kindred_spirit_5_db_id?: string | null
           ethics_kindred_spirit_5_rationale?: string | null
           growth_edges_1?: string | null
           growth_edges_2?: string | null
@@ -882,7 +1189,9 @@ export type Database = {
           key_tension_2?: string | null
           key_tension_3?: string | null
           most_challenging_voice?: string | null
+          most_challenging_voice_db_id?: string | null
           most_kindred_spirit?: string | null
+          most_kindred_spirit_db_id?: string | null
           name?: string | null
           natural_strength_1?: string | null
           natural_strength_2?: string | null
@@ -890,99 +1199,159 @@ export type Database = {
           next_steps?: string | null
           ontology_challenging_voice_1?: string | null
           ontology_challenging_voice_1_classic?: string | null
+          ontology_challenging_voice_1_classic_db_id?: string | null
+          ontology_challenging_voice_1_db_id?: string | null
           ontology_challenging_voice_1_rationale?: string | null
           ontology_challenging_voice_2?: string | null
           ontology_challenging_voice_2_classic?: string | null
+          ontology_challenging_voice_2_classic_db_id?: string | null
+          ontology_challenging_voice_2_db_id?: string | null
           ontology_challenging_voice_2_rationale?: string | null
           ontology_challenging_voice_3?: string | null
           ontology_challenging_voice_3_classic?: string | null
+          ontology_challenging_voice_3_classic_db_id?: string | null
+          ontology_challenging_voice_3_db_id?: string | null
           ontology_challenging_voice_3_rationale?: string | null
           ontology_challenging_voice_4?: string | null
           ontology_challenging_voice_4_classic?: string | null
+          ontology_challenging_voice_4_classic_db_id?: string | null
+          ontology_challenging_voice_4_db_id?: string | null
           ontology_challenging_voice_4_rationale?: string | null
           ontology_challenging_voice_5?: string | null
           ontology_challenging_voice_5_classic?: string | null
+          ontology_challenging_voice_5_classic_db_id?: string | null
+          ontology_challenging_voice_5_db_id?: string | null
           ontology_challenging_voice_5_rationale?: string | null
           ontology_introduction?: string | null
           ontology_kindred_spirit_1?: string | null
           ontology_kindred_spirit_1_classic?: string | null
+          ontology_kindred_spirit_1_classic_db_id?: string | null
+          ontology_kindred_spirit_1_db_id?: string | null
           ontology_kindred_spirit_1_rationale?: string | null
           ontology_kindred_spirit_2?: string | null
           ontology_kindred_spirit_2_classic?: string | null
+          ontology_kindred_spirit_2_classic_db_id?: string | null
+          ontology_kindred_spirit_2_db_id?: string | null
           ontology_kindred_spirit_2_rationale?: string | null
           ontology_kindred_spirit_3?: string | null
           ontology_kindred_spirit_3_classic?: string | null
+          ontology_kindred_spirit_3_classic_db_id?: string | null
+          ontology_kindred_spirit_3_db_id?: string | null
           ontology_kindred_spirit_3_rationale?: string | null
           ontology_kindred_spirit_4?: string | null
           ontology_kindred_spirit_4_classic?: string | null
+          ontology_kindred_spirit_4_classic_db_id?: string | null
+          ontology_kindred_spirit_4_db_id?: string | null
           ontology_kindred_spirit_4_rationale?: string | null
           ontology_kindred_spirit_5?: string | null
           ontology_kindred_spirit_5_classic?: string | null
+          ontology_kindred_spirit_5_classic_db_id?: string | null
+          ontology_kindred_spirit_5_db_id?: string | null
           ontology_kindred_spirit_5_rationale?: string | null
           politics_challenging_voice_1?: string | null
           politics_challenging_voice_1_classic?: string | null
+          politics_challenging_voice_1_classic_db_id?: string | null
+          politics_challenging_voice_1_db_id?: string | null
           politics_challenging_voice_1_rationale?: string | null
           politics_challenging_voice_2?: string | null
           politics_challenging_voice_2_classic?: string | null
+          politics_challenging_voice_2_classic_db_id?: string | null
+          politics_challenging_voice_2_db_id?: string | null
           politics_challenging_voice_2_rationale?: string | null
           politics_challenging_voice_3?: string | null
           politics_challenging_voice_3_classic?: string | null
+          politics_challenging_voice_3_classic_db_id?: string | null
+          politics_challenging_voice_3_db_id?: string | null
           politics_challenging_voice_3_rationale?: string | null
           politics_challenging_voice_4?: string | null
           politics_challenging_voice_4_classic?: string | null
+          politics_challenging_voice_4_classic_db_id?: string | null
+          politics_challenging_voice_4_db_id?: string | null
           politics_challenging_voice_4_rationale?: string | null
           politics_challenging_voice_5?: string | null
           politics_challenging_voice_5_classic?: string | null
+          politics_challenging_voice_5_classic_db_id?: string | null
+          politics_challenging_voice_5_db_id?: string | null
           politics_challenging_voice_5_rationale?: string | null
           politics_introduction?: string | null
           politics_kindred_spirit_1?: string | null
           politics_kindred_spirit_1_classic?: string | null
+          politics_kindred_spirit_1_classic_db_id?: string | null
+          politics_kindred_spirit_1_db_id?: string | null
           politics_kindred_spirit_1_rationale?: string | null
           politics_kindred_spirit_2?: string | null
           politics_kindred_spirit_2_classic?: string | null
+          politics_kindred_spirit_2_classic_db_id?: string | null
+          politics_kindred_spirit_2_db_id?: string | null
           politics_kindred_spirit_2_rationale?: string | null
           politics_kindred_spirit_3?: string | null
           politics_kindred_spirit_3_classic?: string | null
+          politics_kindred_spirit_3_classic_db_id?: string | null
+          politics_kindred_spirit_3_db_id?: string | null
           politics_kindred_spirit_3_rationale?: string | null
           politics_kindred_spirit_4?: string | null
           politics_kindred_spirit_4_classic?: string | null
+          politics_kindred_spirit_4_classic_db_id?: string | null
+          politics_kindred_spirit_4_db_id?: string | null
           politics_kindred_spirit_4_rationale?: string | null
           politics_kindred_spirit_5?: string | null
           politics_kindred_spirit_5_classic?: string | null
+          politics_kindred_spirit_5_classic_db_id?: string | null
+          politics_kindred_spirit_5_db_id?: string | null
           politics_kindred_spirit_5_rationale?: string | null
           profile_image_url?: string | null
           raw_response?: Json | null
           share_summary?: string | null
           theology_challenging_voice_1?: string | null
           theology_challenging_voice_1_classic?: string | null
+          theology_challenging_voice_1_classic_db_id?: string | null
+          theology_challenging_voice_1_db_id?: string | null
           theology_challenging_voice_1_rationale?: string | null
           theology_challenging_voice_2?: string | null
           theology_challenging_voice_2_classic?: string | null
+          theology_challenging_voice_2_classic_db_id?: string | null
+          theology_challenging_voice_2_db_id?: string | null
           theology_challenging_voice_2_rationale?: string | null
           theology_challenging_voice_3?: string | null
           theology_challenging_voice_3_classic?: string | null
+          theology_challenging_voice_3_classic_db_id?: string | null
+          theology_challenging_voice_3_db_id?: string | null
           theology_challenging_voice_3_rationale?: string | null
           theology_challenging_voice_4?: string | null
           theology_challenging_voice_4_classic?: string | null
+          theology_challenging_voice_4_classic_db_id?: string | null
+          theology_challenging_voice_4_db_id?: string | null
           theology_challenging_voice_4_rationale?: string | null
           theology_challenging_voice_5?: string | null
           theology_challenging_voice_5_classic?: string | null
+          theology_challenging_voice_5_classic_db_id?: string | null
+          theology_challenging_voice_5_db_id?: string | null
           theology_challenging_voice_5_rationale?: string | null
           theology_introduction?: string | null
           theology_kindred_spirit_1?: string | null
           theology_kindred_spirit_1_classic?: string | null
+          theology_kindred_spirit_1_classic_db_id?: string | null
+          theology_kindred_spirit_1_db_id?: string | null
           theology_kindred_spirit_1_rationale?: string | null
           theology_kindred_spirit_2?: string | null
           theology_kindred_spirit_2_classic?: string | null
+          theology_kindred_spirit_2_classic_db_id?: string | null
+          theology_kindred_spirit_2_db_id?: string | null
           theology_kindred_spirit_2_rationale?: string | null
           theology_kindred_spirit_3?: string | null
           theology_kindred_spirit_3_classic?: string | null
+          theology_kindred_spirit_3_classic_db_id?: string | null
+          theology_kindred_spirit_3_db_id?: string | null
           theology_kindred_spirit_3_rationale?: string | null
           theology_kindred_spirit_4?: string | null
           theology_kindred_spirit_4_classic?: string | null
+          theology_kindred_spirit_4_classic_db_id?: string | null
+          theology_kindred_spirit_4_db_id?: string | null
           theology_kindred_spirit_4_rationale?: string | null
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
+          theology_kindred_spirit_5_classic_db_id?: string | null
+          theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
           validation_summary?: Json | null
         }

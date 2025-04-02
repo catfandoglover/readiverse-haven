@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
@@ -27,10 +28,9 @@ interface DNAAnalysisResult {
   growth_edges_3: string | null;
   become_who_you_are: string | null;
   conclusion: string | null;
+  next_steps: string | null;
   created_at: string;
 }
-
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface ProfileLayoutProps {
   initialTab?: "become" | "profile";
@@ -40,29 +40,66 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">(initialTab || "profile");
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
 
+  // First fetch the user's assessment ID from their profile
+  useEffect(() => {
+    const fetchUserAssessmentId = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('assessment_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching user assessment ID:", error);
+          return;
+        }
+        
+        if (data?.assessment_id) {
+          console.log("User assessment ID:", data.assessment_id);
+          setAssessmentId(data.assessment_id);
+        } else {
+          console.log("No assessment ID found for user");
+        }
+      } catch (e) {
+        console.error("Exception fetching user assessment ID:", e);
+      }
+    };
+    
+    fetchUserAssessmentId();
+  }, [user]);
+
+  // Then fetch the DNA analysis using the assessment ID
   useEffect(() => {
     const fetchDNAAnalysisResult = async () => {
+      if (!assessmentId) return;
+      
       try {
         setIsLoadingIntroduction(true);
+        
         const { data, error } = await supabase
           .from('dna_analysis_results')
           .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', assessmentId)
           .maybeSingle();
           
-        if (data && !error) {
+        if (error) {
+          console.error("Error fetching DNA analysis result:", error);
+        } else if (data) {
           console.log("DNA analysis result:", data);
           setAnalysisResult(data as DNAAnalysisResult);
         } else {
-          console.error("Error fetching DNA analysis result:", error);
+          console.log("No DNA analysis result found for assessment ID:", assessmentId);
         }
       } catch (e) {
         console.error("Exception fetching DNA analysis result:", e);
@@ -72,7 +109,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
     };
     
     fetchDNAAnalysisResult();
-  }, []);
+  }, [assessmentId]);
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
@@ -172,7 +209,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                       <div className="absolute inset-0 flex items-center justify-center">
                         <img 
                           src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Friedrich%20Nietzsche.png" 
-                          alt="Friedrich Nietzsche" 
+                          alt="Most Kindred Spirit" 
                           className="h-10 w-10 object-cover"
                           style={{ 
                             clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
@@ -203,7 +240,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                       <div className="absolute inset-0 flex items-center justify-center">
                         <img 
                           src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Martin%20Heidegger.png" 
-                          alt="Martin Heidegger" 
+                          alt="Most Challenging Voice" 
                           className="h-10 w-10 object-cover"
                           style={{ 
                             clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',

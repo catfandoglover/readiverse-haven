@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
@@ -7,12 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { User } from "@supabase/supabase-js";
 
 interface ProfileData {
   id: string;
-  user_id?: string;
-  outseta_user_id?: string;
+  user_id: string;
   email: string;
   full_name: string;
   created_at: string;
@@ -28,8 +27,6 @@ interface DNAAnalysisResult {
   archetype: string | null;
   created_at: string;
 }
-
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
@@ -52,101 +49,99 @@ const ProfileHeader: React.FC = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (user?.id) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
-            .single();
-            
-          if (data && !error) {
-            console.log("Profile data:", data);
-            
-            const profileData = data as ProfileData;
-            setProfileData(profileData);
-            
-            if (profileData.landscape_image) {
-              setLandscapeImage(profileData.landscape_image);
-            }
-            
-            if (profileData.profile_image) {
-              setProfileImage(profileData.profile_image);
-            }
-          } else {
-            console.error("Error fetching profile data:", error);
-            toast({
-              title: "Error",
-              description: "Failed to load profile data",
-              variant: "destructive",
-            });
-          }
-        } catch (e) {
-          console.error("Exception fetching profile:", e);
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch user profile using user_id
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching profile data:", error);
           toast({
             title: "Error",
             description: "Failed to load profile data",
             variant: "destructive",
           });
-        }
-      }
-      setLoading(false);
-    };
-    
-    const fetchDNAAnalysisResult = async () => {
-      try {
-        setIsLoadingAnalysis(true);
-        
-        // First get the assessment ID from the profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('assessment_id')
-          .eq('user_id', user?.id)
-          .maybeSingle();
-          
-        if (profileError) {
-          console.error("Error fetching profile assessment ID:", profileError);
           return;
         }
         
-        if (!profileData?.assessment_id) {
-          console.log("No assessment ID found in profile");
+        if (!data) {
+          console.error("No profile found for user");
           return;
         }
         
-        // Then get the DNA analysis result using the assessment ID
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, created_at')
-          .eq('assessment_id', profileData.assessment_id)
-          .maybeSingle();
-          
-        if (data && !error) {
-          console.log("DNA analysis result:", data);
-          setAnalysisResult(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching DNA analysis result:", error);
+        console.log("Profile data:", data);
+        
+        const profileData = data as ProfileData;
+        setProfileData(profileData);
+        
+        if (profileData.landscape_image) {
+          setLandscapeImage(profileData.landscape_image);
         }
+        
+        if (profileData.profile_image) {
+          setProfileImage(profileData.profile_image);
+        }
+        
+        // Fetch DNA analysis using the assessment_id from profile
+        if (profileData.assessment_id) {
+          const { data: dnaData, error: dnaError } = await supabase
+            .from('dna_analysis_results')
+            .select('id, assessment_id, archetype, created_at')
+            .eq('assessment_id', profileData.assessment_id)
+            .maybeSingle();
+            
+          if (dnaError) {
+            console.error("Error fetching DNA analysis result:", dnaError);
+          } else if (dnaData) {
+            console.log("DNA analysis result:", dnaData);
+            setAnalysisResult(dnaData as DNAAnalysisResult);
+          }
+        }
+        
       } catch (e) {
-        console.error("Exception fetching DNA analysis result:", e);
+        console.error("Exception fetching profile or DNA data:", e);
       } finally {
+        setLoading(false);
         setIsLoadingAnalysis(false);
       }
     };
     
     fetchProfileData();
-    fetchDNAAnalysisResult();
   }, [user?.id, toast]);
 
-  const backgroundImageUrl = landscapeImage || '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
+  // Get appropriate background image based on archetype
+  const getBackgroundImageForArchetype = (archetype: string | null) => {
+    if (!archetype) return '/lovable-uploads/78b6880f-c65b-4b75-ab6c-8c1c3c45e81d.png';
+    
+    // Try to get archetype-specific image from Supabase storage
+    return `https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//${encodeURIComponent(archetype)}.png`;
+  };
+
+  const backgroundImageUrl = landscapeImage || getBackgroundImageForArchetype(archetype);
 
   const handleProfileEditClick = () => {
     navigate('/profile/edit');
   };
   
   const handleShareClick = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Cannot share profile: User not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const shareUrl = `${window.location.origin}/profile/${user?.id}`;
+      const shareUrl = `${window.location.origin}/profile/${user.id}`;
       await navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Success",
@@ -163,7 +158,11 @@ const ProfileHeader: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="w-full h-64 bg-[#2A282A] flex items-center justify-center">
+        <div className="text-[#E9E7E2] font-oxanium">Loading profile...</div>
+      </div>
+    );
   }
 
   return (
@@ -172,7 +171,7 @@ const ProfileHeader: React.FC = () => {
         <div 
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//Twilight%20Navigator.png')`,
+            backgroundImage: `url('${backgroundImageUrl}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: "0.5"
@@ -214,7 +213,7 @@ const ProfileHeader: React.FC = () => {
                 }}
               >
                 <Avatar className="h-full w-full overflow-hidden rounded-none">
-                  <AvatarImage src={profileImage || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/profile_images//Alex%20Jakubowski.png"} />
+                  <AvatarImage src={profileImage || ""} />
                   <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                     {initials}
                   </AvatarFallback>
