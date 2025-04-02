@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { AnalyzeDNAButton } from "@/components/AnalyzeDNAButton";
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -69,7 +70,18 @@ const SearchPage = () => {
               DISCOVER
             </h1>
           </div>
-          <div className="w-10"></div> {/* Empty space to balance the layout */}
+          <div className="absolute right-16 z-50">
+            <AnalyzeDNAButton />
+          </div>
+          <div className="w-10">
+            <button
+              onClick={() => navigate('/search')}
+              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
 

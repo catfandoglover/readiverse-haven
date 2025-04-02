@@ -109,6 +109,44 @@ function ensureRequiredFields(jsonObject: Record<string, string>, section: numbe
   return result;
 }
 
+// Function to ensure all fields follow the correct naming pattern (with numeric suffixes)
+function validateFieldNames(content: Record<string, string>): Record<string, string> {
+  const correctedContent: Record<string, string> = {};
+  
+  // First copy all existing fields to the new object
+  Object.keys(content).forEach(key => {
+    correctedContent[key] = content[key];
+  });
+  
+  // Check for any base domain/relation fields without numeric suffix (incorrect format)
+  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
+  const relationTypes = ['kindred_spirit', 'challenging_voice'];
+  const suffixes = ['', '_classic', '_rationale'];
+  
+  for (const domain of domainTypes) {
+    for (const relation of relationTypes) {
+      const baseFieldName = `${domain}_${relation}`;
+      
+      // Check if the incorrect base field exists
+      if (content[baseFieldName] !== undefined) {
+        console.log(`Found incorrect field name: ${baseFieldName}, removing it`);
+        delete correctedContent[baseFieldName];
+      }
+      
+      for (const suffix of suffixes) {
+        const baseFieldWithSuffix = `${baseFieldName}${suffix}`;
+        if (content[baseFieldWithSuffix] !== undefined) {
+          console.log(`Found incorrect field name: ${baseFieldWithSuffix}, removing it`);
+          delete correctedContent[baseFieldWithSuffix];
+        }
+      }
+    }
+  }
+  
+  // Return all fields as individual columns
+  return correctedContent;
+}
+
 function repairJson(jsonString: string): string {
   try {
     JSON.parse(jsonString);
@@ -371,7 +409,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       console.log(`Successfully parsed JSON for section ${section}`);
       
       // If this is section 1, ensure all required fields are present
-      const validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
+      let validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
+      
+      // Add the new step to validate field names and remove any incorrectly formatted fields
+      validatedContent = validateFieldNames(validatedContent);
       
       return {
         content: validatedContent,
@@ -397,7 +438,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
         // Ensure all required fields are present, especially for section 1
-        const validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        let validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
+        
+        // Add the new step to validate field names and remove any incorrectly formatted fields
+        validatedResult = validateFieldNames(validatedResult);
         
         return {
           content: validatedResult,
@@ -495,6 +539,41 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   }
 }
 
+// Function to validate entities using the validate-dna-entities function
+async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
+  try {
+    console.log('Validating DNA entities from analysis results');
+    console.log('Analysis data keys:', Object.keys(analysisData));
+    
+    // Call the validate-dna-entities function with the analysis data
+    const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        analysisData,
+        assessment_id
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Validation API error:', errorData);
+      throw new Error(`Validation API error! Status: ${response.status}`);
+    }
+    
+    const validationData = await response.json();
+    console.log('Validation results:', validationData);
+    
+    return validationData;
+  } catch (error) {
+    console.error('Error in validateDNAEntities:', error);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -570,26 +649,36 @@ serve(async (req) => {
         combinedAnalysisTexts.push(section.analysis);
       }
       
+      // Perform entity validation before storing the analysis
+      console.log('Validating entities before storing analysis...');
+      const validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
+      
+      // Store the validation summary as a JSONB field
+      combinedAnalysis['validation_summary'] = validationResults.summary || {};
+      
+      // Double-check for any non-indexed fields that might cause insertion errors
+      const correctedAnalysis = validateFieldNames(combinedAnalysis);
+      
+      // Log all keys to help with debugging
+      console.log('Final analysis keys:', Object.keys(correctedAnalysis).join(', ').substring(0, 200) + '...');
+      
+      // Proceed to store the analysis results with validation data
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
-        ...combinedAnalysis
+        validation_summary: validationResults.summary,
+        ...correctedAnalysis
       };
 
-      // Debug logging to see the full objects before saving
-      console.log('===== DEBUG: combinedAnalysis keys =====');
-      console.log(Object.keys(combinedAnalysis));
-      
-      console.log('===== DEBUG: Full analysisRecord =====');
-      console.log(JSON.stringify(analysisRecord, null, 2));
-      
       console.log('Storing combined analysis in database...');
-      const { error: storeError } = await supabase
+      const { data: analysisData, error: storeError } = await supabase
         .from('dna_analysis_results')
-        .insert(analysisRecord);
+        .insert(analysisRecord)
+        .select('id')
+        .single();
 
       if (storeError) {
         console.error('Error storing analysis:', storeError);
@@ -598,10 +687,40 @@ serve(async (req) => {
       
       console.log('Combined analysis stored successfully');
       
+      // If we have an analysis ID now, store the unmatched entities for later review
+      if (analysisData?.id && 
+          (validationResults.thinkers?.unmatched?.length > 0 || 
+           validationResults.classics?.unmatched?.length > 0)) {
+        
+        try {
+          const unmatchedData = {
+            analysis_id: analysisData.id,
+            unmatched_thinkers: validationResults.thinkers?.unmatched || [],
+            unmatched_classics: validationResults.classics?.unmatched || [],
+            status: 'pending'
+          };
+          
+          const { error: unmatchedError } = await supabase
+            .from('dna_unmatched_entities')
+            .upsert([unmatchedData], { onConflict: 'analysis_id' });
+            
+          if (unmatchedError) {
+            console.error('Error storing unmatched entities:', unmatchedError);
+          }
+        } catch (unmatchedErr) {
+          console.error('Exception storing unmatched entities:', unmatchedErr);
+        }
+      }
+
+      // Add a small delay to ensure the database transaction is complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Combined analysis stored successfully'
+          message: 'Combined analysis stored successfully',
+          analysis_id: analysisData?.id,
+          validation_summary: validationResults.summary
         }),
         { 
           headers: {

@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import TidyCalBooking from './TidyCalBooking';
 
 interface TidyCalDialogProps {
   open: boolean;
@@ -17,17 +16,6 @@ interface TidyCalDialogProps {
 const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
 
-  const handleSuccess = (bookingData: any) => {
-    console.log('Booking successful:', bookingData);
-    // Dispatch event for integration with the parent component
-    window.dispatchEvent(new CustomEvent('tidycal:booking-completed', { detail: bookingData }));
-    
-    // Close the dialog after a short delay to show the success message
-    setTimeout(() => {
-      onOpenChange(false);
-    }, 2000);
-  };
-
   // When the dialog opens, navigate to the full page instead
   React.useEffect(() => {
     if (open) {
@@ -36,7 +24,8 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
     }
   }, [open, navigate, onOpenChange]);
 
-  // We still render the dialog for cases where we might want to use it directly
+  // We don't render the actual TidyCalBooking component in the dialog anymore,
+  // as we redirect to the full page immediately
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[90%] max-w-lg bg-[#E9E7E2] p-6 rounded-2xl">
@@ -48,10 +37,9 @@ const TidyCalDialog: React.FC<TidyCalDialogProps> = ({ open, onOpenChange }) => 
             Schedule a one-on-one discussion about your DNA Assessment results with a counselor.
           </DialogDescription>
         </DialogHeader>
-        <TidyCalBooking 
-          onClose={() => onOpenChange(false)} 
-          onSuccess={handleSuccess}
-        />
+        <div className="py-8 flex justify-center items-center">
+          <p>Redirecting to booking page...</p>
+        </div>
       </DialogContent>
     </Dialog>
   );

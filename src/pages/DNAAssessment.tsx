@@ -31,8 +31,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
-import TidyCalDialog from "@/components/booking/TidyCalDialog";
-import { useTidyCalBooking } from "@/components/booking/useTidyCalBooking";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -66,8 +64,6 @@ const DNAAssessment = () => {
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
-  
-  const { showBookingDialog, openBookingDialog, closeBookingDialog, handleBookingCompletedEvents } = useTidyCalBooking();
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -718,36 +714,6 @@ const DNAAssessment = () => {
     saveAssessmentId();
   }, [showLoginPrompt, completedAssessmentId, supabase]);
 
-  React.useEffect(() => {
-    const loadTidyCalScript = () => {
-      console.log("Loading TidyCal script...");
-      const existingScript = document.getElementById('tidycal-script');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = 'https://asset-tidycal.b-cdn.net/js/embed.js';
-        script.id = 'tidycal-script';
-        script.async = true;
-        script.onload = () => {
-          console.log("TidyCal script loaded successfully");
-          if (window.TidyCal) {
-            window.TidyCal.init();
-            console.log("TidyCal initialized on script load");
-          }
-        };
-        document.body.appendChild(script);
-      } else if (window.TidyCal) {
-        window.TidyCal.init();
-        console.log("TidyCal reinitialized with existing script");
-      }
-    };
-    
-    loadTidyCalScript();
-    
-    return () => {
-      // Do not remove the script on unmount to prevent reloading issues
-    };
-  }, []);
-
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
@@ -895,14 +861,14 @@ const DNAAssessment = () => {
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>
           <AlertDialogContent className="bg-[#E9E7E2]">
-            <AlertDialogHeader className="tidycal-header">
+            <AlertDialogHeader>
               <AlertDialogTitle className="font-libre-baskerville font-bold">Need some time to think?</AlertDialogTitle>
               <AlertDialogDescription className="font-oxanium">
                 These questions explore deep and complex ideas—it's natural to find them challenging. If you'd like to pause, you can either restart the assessment later or book a session with one of our intellectual genetic counselors for personalized guidance.
               </AlertDialogDescription>
             </AlertDialogHeader>
             
-            <AlertDialogFooter className="tidycal-footer">
+            <AlertDialogFooter>
               <AlertDialogAction 
                 className="bg-[#373763] text-white font-oxanium"
                 onClick={(e) => {
@@ -923,15 +889,6 @@ const DNAAssessment = () => {
         </AlertDialog>
         
       </div>
-
-      <TidyCalDialog
-        open={showBookingDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeBookingDialog();
-          }
-        }}
-      />
 
       <AIChatDialog 
         open={showAIChat}

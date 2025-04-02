@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 const SAMPLE_ANSWERS = {
-  "ETHICS": "ABABA",
+  "ETHICS": "ABAAA",
   "ONTOLOGY": "BBABA",
-  "POLITICS": "BAABB",
+  "POLITICS": "BAAAA",
   "THEOLOGY": "ABAAB",
-  "AESTHETICS": "AABAB",
-  "EPISTEMOLOGY": "BABBA"
+  "AESTHETICS": "ABAAB",
+  "EPISTEMOLOGY": "AABBA"
 };
 
 export function AnalyzeDNAButton() {
@@ -82,8 +82,28 @@ export function AnalyzeDNAButton() {
         throw error;
       }
       
-      console.log('Analysis response:', data);
-      toast.success('Successfully analyzed DNA');
+      // Add a small delay to ensure the analysis is stored
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // After the analysis is complete, validate the entities
+      console.log('DNA analysis complete, validating entities with assessment ID:', assessment_id);
+      
+      const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-dna-entities', {
+        method: 'POST',
+        body: {
+          assessment_id
+        }
+      });
+      
+      if (validationError) {
+        console.error('Error validating DNA entities:', validationError);
+        // Don't fail the whole process for validation errors
+        toast.warning('DNA analysis complete, but entity validation had issues');
+      } else {
+        console.log('Entity validation results:', validationData);
+        toast.success('Successfully analyzed DNA with entity validation');
+      }
+      
     } catch (error) {
       console.error('Error triggering DNA analysis:', error);
       toast.error('Failed to analyze DNA');
