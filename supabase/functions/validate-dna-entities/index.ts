@@ -748,6 +748,12 @@ serve(async (req) => {
     if (actualAnalysisId && (thinkerResults.matched.length > 0 || classicResults.matched.length > 0)) {
       console.log('Updating dna_analysis_results with matched database IDs');
       
+      // Helper function to validate UUID
+      function isValidUUID(uuid: string) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+      }
+      
       // Create an object to store the database updates
       const updates: Record<string, string> = {};
       
@@ -756,8 +762,13 @@ serve(async (req) => {
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
           if (value === match.item && !key.includes('classic')) {
-            updates[`${key}_db_id`] = match.db_id;
-            console.log(`Adding thinker match: ${key}_db_id = ${match.db_id}`);
+            // Validate UUID before adding to updates
+            if (isValidUUID(match.db_id)) {
+              updates[`${key}_db_id`] = match.db_id;
+              console.log(`Adding valid UUID match for thinker: ${key}_db_id = ${match.db_id}`);
+            } else {
+              console.error(`Invalid UUID found for thinker ${key}: ${match.db_id}`);
+            }
           }
         }
       });
@@ -767,8 +778,13 @@ serve(async (req) => {
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
           if (value === match.item && key.includes('classic')) {
-            updates[`${key}_db_id`] = match.db_id;
-            console.log(`Adding classic match: ${key}_db_id = ${match.db_id}`);
+            // Validate UUID before adding to updates
+            if (isValidUUID(match.db_id)) {
+              updates[`${key}_db_id`] = match.db_id;
+              console.log(`Adding valid UUID match for classic: ${key}_db_id = ${match.db_id}`);
+            } else {
+              console.error(`Invalid UUID found for classic ${key}: ${match.db_id}`);
+            }
           }
         }
       });
@@ -787,6 +803,8 @@ serve(async (req) => {
         } else {
           console.log('Successfully updated analysis results with matched IDs');
         }
+      } else {
+        console.log('No valid UUIDs to update in dna_analysis_results');
       }
     }
     
