@@ -7,12 +7,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/OutsetaAuthContext";
 
 const SAMPLE_ANSWERS = {
-  "ETHICS": "ABABA",
+  "ETHICS": "ABAAA",
   "ONTOLOGY": "BBABA",
-  "POLITICS": "BAABB",
+  "POLITICS": "BAAAA",
   "THEOLOGY": "ABAAB",
-  "AESTHETICS": "AABAB",
-  "EPISTEMOLOGY": "BABBA"
+  "AESTHETICS": "ABAAB",
+  "EPISTEMOLOGY": "AABBA"
 };
 
 export function AnalyzeDNAButton() {
