@@ -744,6 +744,52 @@ serve(async (req) => {
       classicResults.error = `Error: ${classicError.message}`;
     }
     
+    // Update dna_analysis_results with matched database IDs
+    if (actualAnalysisId && (thinkerResults.matched.length > 0 || classicResults.matched.length > 0)) {
+      console.log('Updating dna_analysis_results with matched database IDs');
+      
+      // Create an object to store the database updates
+      const updates: Record<string, string> = {};
+      
+      // Process thinker matches
+      thinkerResults.matched.forEach(match => {
+        // Find the original field name by searching through the analysis data
+        for (const [key, value] of Object.entries(dataToValidate)) {
+          if (value === match.item && !key.includes('classic')) {
+            updates[`${key}_db_id`] = match.db_id;
+            console.log(`Adding thinker match: ${key}_db_id = ${match.db_id}`);
+          }
+        }
+      });
+
+      // Process classic matches
+      classicResults.matched.forEach(match => {
+        // Find the original field name by searching through the analysis data
+        for (const [key, value] of Object.entries(dataToValidate)) {
+          if (value === match.item && key.includes('classic')) {
+            updates[`${key}_db_id`] = match.db_id;
+            console.log(`Adding classic match: ${key}_db_id = ${match.db_id}`);
+          }
+        }
+      });
+
+      // Update the analysis results if we have matches to store
+      if (Object.keys(updates).length > 0) {
+        console.log('Updating analysis results with matched IDs:', updates);
+        const { error: updateError } = await supabase
+          .from('dna_analysis_results')
+          .update(updates)
+          .eq('id', actualAnalysisId);
+
+        if (updateError) {
+          console.error('Error updating analysis results with matched IDs:', updateError);
+          // Don't throw here - we want to continue with the response even if the update fails
+        } else {
+          console.log('Successfully updated analysis results with matched IDs');
+        }
+      }
+    }
+    
     // Always ensure we record matching results in the database, even if only partial results
     if (actualAnalysisId) {
       console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
