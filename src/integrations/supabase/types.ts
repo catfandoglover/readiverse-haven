@@ -1323,39 +1323,50 @@ export type Database = {
       }
       profiles: {
         Row: {
-          assessment_id: string | null
-          created_at: string
+          id: string
+          user_id: string | null
+          outseta_user_id: string | null
           email: string
           full_name: string | null
-          id: string
-          landscape_image: string | null
-          outseta_user_id: string
-          profile_image: string | null
+          created_at: string
           updated_at: string
+          profile_image: string | null
+          landscape_image: string | null
+          assessment_id: string | null
         }
         Insert: {
-          assessment_id?: string | null
-          created_at?: string
+          id?: string
+          user_id?: string | null
+          outseta_user_id?: string | null
           email: string
           full_name?: string | null
-          id?: string
-          landscape_image?: string | null
-          outseta_user_id: string
-          profile_image?: string | null
+          created_at?: string
           updated_at?: string
+          profile_image?: string | null
+          landscape_image?: string | null
+          assessment_id?: string | null
         }
         Update: {
-          assessment_id?: string | null
-          created_at?: string
+          id?: string
+          user_id?: string | null
+          outseta_user_id?: string | null
           email?: string
           full_name?: string | null
-          id?: string
-          landscape_image?: string | null
-          outseta_user_id?: string
-          profile_image?: string | null
+          created_at?: string
           updated_at?: string
+          profile_image?: string | null
+          landscape_image?: string | null
+          assessment_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       prompts: {
         Row: {
