@@ -128,6 +128,9 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
   const pairs: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[] = [];
   console.log('Starting thinker-classic pair extraction from analysis data');
   
+  // Log the analysis data structure to help debug
+  console.log('Analysis data keys:', Object.keys(analysisData));
+  
   const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
   
   domains.forEach(domain => {
@@ -183,6 +186,7 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
       type: 'kindred_spirit',
       index: 0
     });
+    console.log(`Found most kindred spirit pair: ${analysisData.most_kindred_spirit} - ${classic}`);
   }
   
   if (analysisData.most_challenging_voice && analysisData.most_challenging_voice_classic) {
@@ -195,6 +199,25 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
       domain: 'overall',
       type: 'challenging_voice',
       index: 0
+    });
+    console.log(`Found most challenging voice pair: ${analysisData.most_challenging_voice} - ${classic}`);
+  }
+  
+  // Check for direct thinker-classic pairs in the analysis data
+  // This is a fallback in case the pairs are stored in a different format
+  if (analysisData.thinker_classic_pairs && Array.isArray(analysisData.thinker_classic_pairs)) {
+    console.log(`Found ${analysisData.thinker_classic_pairs.length} direct thinker-classic pairs`);
+    analysisData.thinker_classic_pairs.forEach((pair: any) => {
+      if (pair.thinker && pair.classic) {
+        pairs.push({
+          thinker: pair.thinker,
+          classic: pair.classic,
+          domain: pair.domain || 'unknown',
+          type: pair.type || 'kindred_spirit',
+          index: pair.index || 0
+        });
+        console.log(`Added direct pair: ${pair.thinker} - ${pair.classic}`);
+      }
     });
   }
   
@@ -448,6 +471,11 @@ async function performSemanticMatching(
             classicToThinkerMap.set(pair.classic, pair.thinker);
           });
           console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
+          
+          // Log the map contents for debugging
+          classicToThinkerMap.forEach((thinker, classic) => {
+            console.log(`Map entry: "${classic}" -> "${thinker}"`);
+          });
         }
         
         const prompt = `
@@ -494,6 +522,8 @@ For classics, be especially generous with matching:
 - Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
 - Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
 - Use the associated thinker information to help with matching (e.g., if a classic is associated with Aristotle, it's more likely to be "Politics" by Aristotle)
+- If a classic is associated with a specific thinker, prioritize matching it to a work by that thinker
+- For well-known classics like "Politics", "Leviathan", "The Communist Manifesto", etc., be especially generous with matching when the associated thinker matches the author
 ` : `
 For thinkers, be especially careful with matching:
 - Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
@@ -564,8 +594,12 @@ Provide the raw JSON array only, with no additional explanation or text.
           }
 
           // Filter batch results into matched and unmatched
+          // Lower the confidence threshold for classics to 50% to be more generous with matching
+          const confidenceThreshold = type === 'classic' ? 50 : 70;
+          console.log(`Using confidence threshold of ${confidenceThreshold} for ${type}s`);
+          
           const batchMatched = batchResults
-            .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
+            .filter(result => result.match_id !== "no_match" && result.confidence >= confidenceThreshold)
             .map(result => ({
               item: result.item,
               db_id: result.match_id,
@@ -573,7 +607,7 @@ Provide the raw JSON array only, with no additional explanation or text.
             }));
 
           const batchUnmatched = batchResults
-            .filter(result => result.match_id === "no_match" || result.confidence < 70)
+            .filter(result => result.match_id === "no_match" || result.confidence < confidenceThreshold)
             .map(result => result.item);
 
           // Append batch results to overall results
