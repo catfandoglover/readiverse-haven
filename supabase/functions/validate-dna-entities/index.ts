@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -430,15 +429,7 @@ serve(async (req) => {
       // Use the provided analysis data directly
       console.log('Using provided analysis data');
       dataToValidate = analysisData;
-    } else {
-      // This should never happen due to earlier validation, but just in case
-      console.error('No valid data source provided for validation');
-      throw new Error('No valid data source provided for validation');
     }
-    
-    // Log the keys present in the data
-    console.log(`Data has ${Object.keys(dataToValidate).length} keys`);
-    console.log('Sample keys:', Object.keys(dataToValidate).slice(0, 10));
     
     // The actual analysis ID to use for storage, or null if we're validating pre-storage data
     const actualAnalysisId = analysisId || null;

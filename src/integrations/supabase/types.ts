@@ -1248,7 +1248,7 @@ export type Database = {
           {
             foreignKeyName: "dna_unmatched_entities_analysis_id_fkey"
             columns: ["analysis_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "dna_analysis_results"
             referencedColumns: ["id"]
           },

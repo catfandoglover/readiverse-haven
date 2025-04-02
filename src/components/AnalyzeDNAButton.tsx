@@ -83,8 +83,29 @@ export function AnalyzeDNAButton() {
         throw error;
       }
       
-      console.log('Analysis response:', data);
-      toast.success('Successfully analyzed DNA');
+      if (data?.analysisId) {
+        console.log('Analysis complete, validating entities with analysis ID:', data.analysisId);
+        
+        // After the analysis is done, call the validate-dna-entities function with the analysis ID
+        const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-dna-entities', {
+          method: 'POST',
+          body: {
+            analysisId: data.analysisId
+          }
+        });
+        
+        if (validationError) {
+          console.error('Error validating DNA entities:', validationError);
+          // Don't fail the whole process for validation errors
+          toast.warning('DNA analysis complete, but entity validation had issues');
+        } else {
+          console.log('Entity validation results:', validationData);
+          toast.success('Successfully analyzed DNA with entity validation');
+        }
+      } else {
+        console.log('Analysis response:', data);
+        toast.success('Successfully analyzed DNA');
+      }
     } catch (error) {
       console.error('Error triggering DNA analysis:', error);
       toast.error('Failed to analyze DNA');
