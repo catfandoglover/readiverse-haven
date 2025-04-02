@@ -1,120 +1,26 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { useProfileData } from "@/contexts/ProfileDataContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Pen, Calendar } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface ProfileData {
-  id: string;
-  user_id: string;
-  email: string;
-  full_name: string;
-  created_at: string;
-  updated_at: string;
-  landscape_image?: string;
-  profile_image?: string;
-  assessment_id?: string;
-}
-
-interface DNAAnalysisResult {
-  id: string;
-  assessment_id: string;
-  archetype: string | null;
-  created_at: string;
-}
-
 const ProfileHeader: React.FC = () => {
-  const { user } = useAuth();
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [landscapeImage, setLandscapeImage] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
-  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
+  const { profileData, analysisResult, isLoading } = useProfileData();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [loading, setLoading] = useState(true);
   
-  const fullName = profileData?.full_name || user?.user_metadata?.full_name || "Explorer";
+  // Calculate display values from profile data
+  const fullName = profileData?.full_name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
   
   const archetype = analysisResult?.archetype || "Twilight Navigator";
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setLoading(true);
-        
-        // Fetch user profile using user_id
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (error) {
-          console.error("Error fetching profile data:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load profile data",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (!data) {
-          console.error("No profile found for user");
-          return;
-        }
-        
-        console.log("Profile data:", data);
-        
-        const profileData = data as ProfileData;
-        setProfileData(profileData);
-        
-        if (profileData.landscape_image) {
-          setLandscapeImage(profileData.landscape_image);
-        }
-        
-        if (profileData.profile_image) {
-          setProfileImage(profileData.profile_image);
-        }
-        
-        // Fetch DNA analysis using the assessment_id from profile
-        if (profileData.assessment_id) {
-          const { data: dnaData, error: dnaError } = await supabase
-            .from('dna_analysis_results')
-            .select('id, assessment_id, archetype, created_at')
-            .eq('assessment_id', profileData.assessment_id)
-            .maybeSingle();
-            
-          if (dnaError) {
-            console.error("Error fetching DNA analysis result:", dnaError);
-          } else if (dnaData) {
-            console.log("DNA analysis result:", dnaData);
-            setAnalysisResult(dnaData as DNAAnalysisResult);
-          }
-        }
-        
-      } catch (e) {
-        console.error("Exception fetching profile or DNA data:", e);
-      } finally {
-        setLoading(false);
-        setIsLoadingAnalysis(false);
-      }
-    };
-    
-    fetchProfileData();
-  }, [user?.id, toast]);
 
   // Get appropriate background image based on archetype
   const getBackgroundImageForArchetype = (archetype: string | null) => {
@@ -124,24 +30,15 @@ const ProfileHeader: React.FC = () => {
     return `https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//${encodeURIComponent(archetype)}.png`;
   };
 
-  const backgroundImageUrl = landscapeImage || getBackgroundImageForArchetype(archetype);
+  const backgroundImageUrl = profileData?.landscape_image || getBackgroundImageForArchetype(archetype);
 
   const handleProfileEditClick = () => {
     navigate('/profile/edit');
   };
   
   const handleShareClick = async () => {
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "Cannot share profile: User not found",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      const shareUrl = `${window.location.origin}/profile/${user.id}`;
+      const shareUrl = `${window.location.origin}/profile/${profileData?.user_id}`;
       await navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Success",
@@ -157,7 +54,7 @@ const ProfileHeader: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="w-full h-64 bg-[#2A282A] flex items-center justify-center">
         <div className="text-[#E9E7E2] font-oxanium">Loading profile...</div>
@@ -213,7 +110,7 @@ const ProfileHeader: React.FC = () => {
                 }}
               >
                 <Avatar className="h-full w-full overflow-hidden rounded-none">
-                  <AvatarImage src={profileImage || ""} />
+                  <AvatarImage src={profileData?.profile_image || ""} />
                   <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                     {initials}
                   </AvatarFallback>
@@ -248,7 +145,7 @@ const ProfileHeader: React.FC = () => {
                     maxWidth: "100%"
                   }}
                 >
-                  {isLoadingAnalysis ? 'Loading...' : archetype}
+                  {isLoading ? 'Loading...' : archetype}
                 </p>
               </div>
             </div>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
 import DomainsList from "./DomainsList";
@@ -7,30 +7,8 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfileData } from "@/contexts/ProfileDataContext";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
-
-interface DNAAnalysisResult {
-  id: string;
-  assessment_id: string;
-  archetype: string | null;
-  introduction: string | null;
-  most_kindred_spirit: string | null;
-  most_challenging_voice: string | null;
-  key_tension_1: string | null;
-  key_tension_2: string | null;
-  key_tension_3: string | null;
-  natural_strength_1: string | null;
-  natural_strength_2: string | null;
-  natural_strength_3: string | null;
-  growth_edges_1: string | null;
-  growth_edges_2: string | null;
-  growth_edges_3: string | null;
-  become_who_you_are: string | null;
-  conclusion: string | null;
-  next_steps: string | null;
-  created_at: string;
-}
 
 interface ProfileLayoutProps {
   initialTab?: "become" | "profile";
@@ -38,78 +16,13 @@ interface ProfileLayoutProps {
 
 const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   const [activeSection, setActiveSection] = useState<"become" | "profile">(initialTab || "profile");
-  const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
-  const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
-  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const { analysisResult, isLoading } = useProfileData();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
   };
-
-  // First fetch the user's assessment ID from their profile
-  useEffect(() => {
-    const fetchUserAssessmentId = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('assessment_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error("Error fetching user assessment ID:", error);
-          return;
-        }
-        
-        if (data?.assessment_id) {
-          console.log("User assessment ID:", data.assessment_id);
-          setAssessmentId(data.assessment_id);
-        } else {
-          console.log("No assessment ID found for user");
-        }
-      } catch (e) {
-        console.error("Exception fetching user assessment ID:", e);
-      }
-    };
-    
-    fetchUserAssessmentId();
-  }, [user]);
-
-  // Then fetch the DNA analysis using the assessment ID
-  useEffect(() => {
-    const fetchDNAAnalysisResult = async () => {
-      if (!assessmentId) return;
-      
-      try {
-        setIsLoadingIntroduction(true);
-        
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, introduction, most_kindred_spirit, most_challenging_voice, key_tension_1, key_tension_2, key_tension_3, natural_strength_1, natural_strength_2, natural_strength_3, growth_edges_1, growth_edges_2, growth_edges_3, become_who_you_are, conclusion, next_steps, created_at')
-          .eq('assessment_id', assessmentId)
-          .maybeSingle();
-          
-        if (error) {
-          console.error("Error fetching DNA analysis result:", error);
-        } else if (data) {
-          console.log("DNA analysis result:", data);
-          setAnalysisResult(data as DNAAnalysisResult);
-        } else {
-          console.log("No DNA analysis result found for assessment ID:", assessmentId);
-        }
-      } catch (e) {
-        console.error("Exception fetching DNA analysis result:", e);
-      } finally {
-        setIsLoadingIntroduction(false);
-      }
-    };
-    
-    fetchDNAAnalysisResult();
-  }, [assessmentId]);
 
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
@@ -169,7 +82,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
             {activeSection === "become" ? (
               <div className="space-y-4">
                 <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                  {isLoadingIntroduction ? (
+                  {isLoading ? (
                     <span className="inline-block">Loading wisdom guidance...</span>
                   ) : (
                     analysisResult?.become_who_you_are || 
@@ -194,7 +107,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
             ) : (
               <div className="space-y-4">
                 <p className="font-oxanium text-[#E9E7E2]/80 mb-4">
-                  {isLoadingIntroduction ? (
+                  {isLoading ? (
                     <span className="inline-block">Loading your intellectual profile...</span>
                   ) : (
                     analysisResult?.introduction || 
@@ -219,7 +132,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     </div>
                     <div>
                       <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                        {isLoadingIntroduction ? (
+                        {isLoading ? (
                           <span className="inline-block">Loading...</span>
                         ) : (
                           analysisResult?.most_kindred_spirit || "FRIEDRICH NIETZSCHE"
@@ -250,7 +163,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     </div>
                     <div>
                       <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                        {isLoadingIntroduction ? (
+                        {isLoading ? (
                           <span className="inline-block">Loading...</span>
                         ) : (
                           analysisResult?.most_challenging_voice || "MARTIN HEIDEGGER"
@@ -267,7 +180,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Key Tensions</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_1 || 
@@ -275,7 +188,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_2 || 
@@ -283,7 +196,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.key_tension_3 || 
@@ -295,7 +208,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Natural Strengths</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_1 || 
@@ -303,7 +216,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_2 || 
@@ -311,7 +224,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.natural_strength_3 || 
@@ -323,7 +236,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Growth Edges</h2>
                 <ul className="list-disc pl-5 space-y-2 font-oxanium text-[#E9E7E2]/80 mb-6">
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_1 || 
@@ -331,7 +244,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_2 || 
@@ -339,7 +252,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                     )}
                   </li>
                   <li>
-                    {isLoadingIntroduction ? (
+                    {isLoading ? (
                       <span className="inline-block">Loading...</span>
                     ) : (
                       analysisResult?.growth_edges_3 || 
@@ -350,7 +263,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 
                 <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Conclusion</h2>
                 <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
-                  {isLoadingIntroduction ? (
+                  {isLoading ? (
                     <span className="inline-block">Loading...</span>
                   ) : (
                     analysisResult?.conclusion || 
@@ -360,7 +273,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 
                 <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3  font-bold">Next Steps</h2>
                 <p className="font-oxanium text-[#E9E7E2]/80 mb-6">
-                  {isLoadingIntroduction ? (
+                  {isLoading ? (
                     <span className="inline-block">Loading...</span>
                   ) : (
                     analysisResult?.next_steps || 

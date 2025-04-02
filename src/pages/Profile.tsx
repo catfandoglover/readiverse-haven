@@ -4,6 +4,7 @@ import ProfileLayout from "@/components/profile/ProfileLayout";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Navigate } from "react-router-dom";
+import { ProfileDataProvider } from "@/contexts/ProfileDataContext";
 
 const Profile: React.FC = () => {
   const location = useLocation();
@@ -31,7 +32,11 @@ const Profile: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
   
-  return <ProfileLayout initialTab={initialTab || undefined} />;
+  return (
+    <ProfileDataProvider>
+      <ProfileLayout initialTab={initialTab || undefined} />
+    </ProfileDataProvider>
+  );
 };
 
 export default Profile;
