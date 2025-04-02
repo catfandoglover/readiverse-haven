@@ -716,6 +716,9 @@ serve(async (req) => {
           console.error('Exception storing unmatched entities:', unmatchedErr);
         }
       }
+
+      // Add a small delay to ensure the database transaction is complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       return new Response(
         JSON.stringify({ 
