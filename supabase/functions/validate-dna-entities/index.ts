@@ -447,192 +447,18 @@ async function performSemanticMatching(
     if (items.length > 0 && dbItems.length > 0) {
       console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
 
-      // For classics, try direct matching first using the thinker-classic pairs
-      if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
-        console.log('Attempting direct matching for classics using thinker-classic pairs');
-        
-        const directMatches: { item: string, db_id: string, confidence: number }[] = [];
-        const remainingItems = [...itemsToLookup];
-        
-        // Create a map of thinkers to their classics for easier lookup
-        const thinkerToClassicsMap = new Map<string, string[]>();
-        thinkerClassicPairs.forEach(pair => {
-          if (!thinkerToClassicsMap.has(pair.thinker)) {
-            thinkerToClassicsMap.set(pair.thinker, []);
-          }
-          thinkerToClassicsMap.get(pair.thinker)?.push(pair.classic);
-        });
-        
-        // Create a map of classics to their thinkers for easier lookup
-        const classicToThinkerMap = new Map<string, string>();
-        thinkerClassicPairs.forEach(pair => {
-          classicToThinkerMap.set(pair.classic, pair.thinker);
-        });
-        
-        // Log the maps for debugging
-        console.log(`Created map of ${thinkerToClassicsMap.size} thinkers to their classics`);
-        console.log(`Created map of ${classicToThinkerMap.size} classics to their thinkers`);
-        
-        // Try direct matching for each classic
-        for (const item of itemsToLookup) {
-          const associatedThinker = classicToThinkerMap.get(item);
-          
-          if (associatedThinker) {
-            console.log(`Classic "${item}" is associated with thinker "${associatedThinker}"`);
-            
-            // Find all books by this thinker
-            const booksByThinker = dbItems.filter(book => 
-              book.author && book.author.toLowerCase().includes(associatedThinker.toLowerCase())
-            );
-            
-            console.log(`Found ${booksByThinker.length} books by ${associatedThinker}`);
-            
-            if (booksByThinker.length > 0) {
-              // Try to find an exact match first
-              const exactMatch = booksByThinker.find(book => 
-                book.title.toLowerCase() === item.toLowerCase() ||
-                book.title.toLowerCase().includes(item.toLowerCase()) ||
-                item.toLowerCase().includes(book.title.toLowerCase())
-              );
-              
-              if (exactMatch) {
-                console.log(`Found exact match for "${item}": "${exactMatch.title}" by ${exactMatch.author}`);
-                directMatches.push({
-                  item,
-                  db_id: exactMatch.id,
-                  confidence: 100
-                });
-                
-                // Remove this item from the remaining items
-                const index = remainingItems.indexOf(item);
-                if (index !== -1) {
-                  remainingItems.splice(index, 1);
-                }
-                continue;
-              }
-              
-              // If no exact match, try semantic matching just for this thinker's books
-              if (booksByThinker.length > 0) {
-                console.log(`Attempting semantic matching for "${item}" against ${booksByThinker.length} books by ${associatedThinker}`);
-                
-                // Ensure we have a valid API key
-                if (!openrouterApiKey || openrouterApiKey.trim() === '') {
-                  console.error('No OpenRouter API key provided for semantic matching');
-                  continue;
-                }
-                
-                const prompt = `
-I need to match this classic title from a philosophical DNA analysis against our database entries.
-Find the best semantic match from List B, or indicate if there's no good match.
-
-Classic to match: "${item}" (associated with thinker: ${associatedThinker})
-
-List B (from database):
-${booksByThinker.map((book, i) => `${i+1}. ID: ${book.id}, Title: "${book.title}", Author: ${book.author || 'Unknown'}`).join('\n')}
-
-Please analyze carefully, considering:
-- Exact matches (including common variations in spelling or formatting)
-- Semantic similarity in meaning and context
-- Historical and philosophical context
-- The relationship between the classic and its author
-
-For classics, be especially generous with matching:
-- Match partial titles (e.g., "Politics" should match "Politics" by Aristotle)
-- Match common variations (e.g., "Second Treatise" should match "Second Treatise of Government")
-- Match without author names (e.g., "Analects" should match "The Analects" by Confucius)
-- Match without articles (e.g., "Symposium" should match "The Symposium" by Plato)
-- Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
-- Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
-
-Format your response as a JSON object with properties: "item", "match_id", "confidence".
-Provide the raw JSON object only, with no additional explanation or text.
-`;
-
-                try {
-                  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${openrouterApiKey}`,
-                      'Content-Type': 'application/json',
-                      'HTTP-Referer': 'https://lovable.dev',
-                      'X-Title': 'Lovable.dev'
-                    },
-                    body: JSON.stringify({
-                      model: 'google/gemini-2.0-flash-001',
-                      messages: [
-                        {
-                          role: 'user',
-                          content: prompt
-                        }
-                      ],
-                      response_format: { type: "json_object" }
-                    })
-                  });
-
-                  if (!response.ok) {
-                    const errorBody = await response.text();
-                    throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
-                  }
-
-                  const responseData = await response.json();
-                  let result: { item: string, match_id: string, confidence: number } | null = null;
-
-                  try {
-                    const content = responseData.choices[0].message.content;
-                    console.log(`Raw content from OpenRouter for "${item}":`, content);
-
-                    // Parse the JSON content
-                    result = JSON.parse(content);
-                  } catch (parseError) {
-                    console.error(`Error parsing LLM response for "${item}":`, parseError);
-                    console.log("Raw response:", responseData.choices[0].message.content);
-                  }
-
-                  if (result && result.match_id !== "no_match" && result.confidence >= 50) {
-                    console.log(`Found semantic match for "${item}": ID ${result.match_id} with confidence ${result.confidence}`);
-                    directMatches.push({
-                      item: result.item,
-                      db_id: result.match_id,
-                      confidence: result.confidence
-                    });
-                    
-                    // Remove this item from the remaining items
-                    const index = remainingItems.indexOf(item);
-                    if (index !== -1) {
-                      remainingItems.splice(index, 1);
-                    }
-                  }
-                } catch (apiError) {
-                  console.error(`Error in semantic matching for "${item}":`, apiError);
-                }
-              }
-            }
-          }
-        }
-        
-        console.log(`Direct matching found ${directMatches.length} matches out of ${itemsToLookup.length} classics`);
-        
-        // If we found all matches through direct matching, return them
-        if (directMatches.length === itemsToLookup.length) {
-          console.log('All classics matched through direct matching');
-          return { matched: directMatches, unmatched: [] };
-        }
-        
-        // Otherwise, proceed with batch matching for the remaining items
-        itemsToLookup = remainingItems;
-        console.log(`Proceeding with batch matching for ${itemsToLookup.length} remaining classics`);
-      }
-
       // Process in batches if we have too many items to match
       const batchSize = 50; // Adjust based on what the LLM can handle
       let matched: { item: string, db_id: string, confidence: number }[] = [];
       let unmatched: string[] = [];
       
-      // If we already have direct matches, add them to the matched array
+      // Create a map of classics to their associated thinkers for context
+      const classicToThinkerMap = new Map<string, string>();
       if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
-        const directMatches = await performDirectMatching(itemsToLookup, dbItems, thinkerClassicPairs);
-        matched = [...matched, ...directMatches.matched];
-        itemsToLookup = directMatches.remainingItems;
+        thinkerClassicPairs.forEach(pair => {
+          classicToThinkerMap.set(pair.classic, pair.thinker);
+        });
+        console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
       }
       
       // Process items in batches
@@ -651,20 +477,6 @@ Provide the raw JSON object only, with no additional explanation or text.
             unmatched: itemsToLookup, 
             error: 'No OpenRouter API key provided' 
           };
-        }
-        
-        // Create a map of classics to their associated thinkers for context
-        const classicToThinkerMap = new Map<string, string>();
-        if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
-          thinkerClassicPairs.forEach(pair => {
-            classicToThinkerMap.set(pair.classic, pair.thinker);
-          });
-          console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
-          
-          // Log the map contents for debugging
-          classicToThinkerMap.forEach((thinker, classic) => {
-            console.log(`Map entry: "${classic}" -> "${thinker}"`);
-          });
         }
         
         const prompt = `
@@ -701,8 +513,6 @@ Please analyze each item carefully, considering:
 - Historical and philosophical context
 - The relationship between thinkers and their works
 
-IMPORTANT MATCHING GUIDELINES:
-${type === 'classic' ? `
 For classics, be especially generous with matching:
 - Match partial titles (e.g., "Politics" should match "Politics" by Aristotle)
 - Match common variations (e.g., "Second Treatise" should match "Second Treatise of Government")
@@ -713,12 +523,6 @@ For classics, be especially generous with matching:
 - Use the associated thinker information to help with matching (e.g., if a classic is associated with Aristotle, it's more likely to be "Politics" by Aristotle)
 - If a classic is associated with a specific thinker, prioritize matching it to a work by that thinker
 - For well-known classics like "Politics", "Leviathan", "The Communist Manifesto", etc., be especially generous with matching when the associated thinker matches the author
-` : `
-For thinkers, be especially careful with matching:
-- Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
-- Match without titles (e.g., "Kant" should match "Immanuel Kant")
-- Match without middle names (e.g., "John Locke" should match "John W. Locke")
-`}
 
 Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
 Provide the raw JSON array only, with no additional explanation or text.
@@ -783,8 +587,8 @@ Provide the raw JSON array only, with no additional explanation or text.
           }
 
           // Filter batch results into matched and unmatched
-          // Lower the confidence threshold for classics to 50% to be more generous with matching
-          const confidenceThreshold = type === 'classic' ? 50 : 70;
+          // Lower the confidence threshold for classics to 40% to be more generous with matching
+          const confidenceThreshold = type === 'classic' ? 40 : 70;
           console.log(`Using confidence threshold of ${confidenceThreshold} for ${type}s`);
           
           const batchMatched = batchResults
