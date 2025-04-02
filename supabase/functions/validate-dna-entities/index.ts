@@ -429,6 +429,10 @@ async function performSemanticMatching(
         // Ensure we have a valid API key
         if (!openrouterApiKey || openrouterApiKey.trim() === '') {
           console.error('No OpenRouter API key provided');
+          // Store unmatched entities before returning
+          if (assessment_id || analysis_id) {
+            await storeUnmatchedEntities(assessment_id, analysis_id, type === 'thinker' ? itemsBatch : [], type === 'classic' ? itemsBatch : []);
+          }
           return { 
             matched: [], 
             unmatched: itemsToLookup, 
@@ -491,7 +495,7 @@ Please analyze each item carefully, considering:
               'X-Title': 'Readiverse DNA Analysis'
             },
             body: JSON.stringify({
-              model: 'anthropic/claude-3-opus-20240229',
+              model: 'google/gemini-2.5-pro-exp-03-25:free',
               messages: [
                 {
                   role: 'system',
@@ -499,7 +503,12 @@ Please analyze each item carefully, considering:
                 },
                 {
                   role: 'user',
-                  content: prompt
+                  content: [
+                    {
+                      type: 'text',
+                      text: prompt
+                    }
+                  ]
                 }
               ],
               temperature: 0.1,
@@ -523,30 +532,57 @@ Please analyze each item carefully, considering:
           console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
           // Add all items in this batch to unmatched
           unmatched = [...unmatched, ...itemsBatch];
+          
+          // Store unmatched entities from this batch
+          if (assessment_id || analysis_id) {
+            await storeUnmatchedEntities(
+              assessment_id, 
+              analysis_id, 
+              type === 'thinker' ? itemsBatch : [], 
+              type === 'classic' ? itemsBatch : []
+            );
+          }
         }
       }
 
       console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
-      // IMPORTANT FIX: Always attempt to store unmatched entities
-      if (unmatched.length > 0) {
+      // Store any remaining unmatched entities
+      if (unmatched.length > 0 && (assessment_id || analysis_id)) {
         console.log(`Storing ${unmatched.length} unmatched ${type}s with assessment_id: ${assessment_id}, analysis_id: ${analysis_id}`);
-        if (type === 'thinker') {
-          await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
-        } else {
-          await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
-        }
-      } else {
-        console.log(`No unmatched ${type}s to store`);
+        await storeUnmatchedEntities(
+          assessment_id, 
+          analysis_id, 
+          type === 'thinker' ? unmatched : [], 
+          type === 'classic' ? unmatched : []
+        );
       }
 
       return { matched, unmatched };
     } else {
       console.log(`Not enough data to perform semantic matching for ${type}s`);
+      // Store all items as unmatched if we can't perform matching
+      if (items.length > 0 && (assessment_id || analysis_id)) {
+        await storeUnmatchedEntities(
+          assessment_id, 
+          analysis_id, 
+          type === 'thinker' ? items : [], 
+          type === 'classic' ? items : []
+        );
+      }
       return { matched: [], unmatched: items };
     }
   } catch (error) {
     console.error(`Error in semantic matching for ${type}s:`, error);
+    // Store all items as unmatched in case of error
+    if (items.length > 0 && (assessment_id || analysis_id)) {
+      await storeUnmatchedEntities(
+        assessment_id, 
+        analysis_id, 
+        type === 'thinker' ? items : [], 
+        type === 'classic' ? items : []
+      );
+    }
     return { matched: [], unmatched: items, error: `Matching error: ${error.message || 'Unknown error'}` };
   }
 }
