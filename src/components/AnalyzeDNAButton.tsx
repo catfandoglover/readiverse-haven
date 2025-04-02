@@ -89,7 +89,7 @@ export function AnalyzeDNAButton() {
       const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-dna-entities', {
         method: 'POST',
         body: {
-          assessmentId: assessment_id
+          assessment_id
         }
       });
       
