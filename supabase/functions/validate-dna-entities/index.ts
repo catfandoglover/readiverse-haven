@@ -441,7 +441,7 @@ async function performSemanticMatching(
         }
         
         const prompt = `
-I need to match these philosophical thinkers and their works from a DNA analysis against our database entries.
+I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries.
 For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
 
 List A (from analysis):
@@ -452,38 +452,28 @@ ${dbItems.map((item, i) => {
   if (type === 'thinker') {
     return `${i+1}. ID: ${item.id}, Name: "${item.name}"`;
   } else {
-    return `${i+1}. ID: ${item.id}, Title: "${item.title}"`;
+    return `${i+1}. ID: ${item.id}, Title: "${item.title}", Author: ${item.author || 'Unknown'}`;
   }
 }).join('\n')}
 
-For each item in List A, respond with:
-1. The number of the best match from List B (or "No match" if none found)
-2. A confidence score from 0-1
-3. A brief explanation of why this is a good match
+For each item in List A, provide:
 
-Format each response as:
-Item: [List A number]
-Match: [List B number or "No match"]
-Confidence: [0-1]
-Explanation: [brief explanation]
-
-Example:
-Item: 1
-Match: 3
-Confidence: 0.95
-Explanation: Exact name match with minor spelling variation
-
-Item: 2
-Match: No match
-Confidence: 0
-Explanation: No similar entries found in database
+1. The item name/title from List A
+2. The best matching database ID from List B (just the UUID), or "no_match" if no good semantic match is found
+3. A confidence score (0-100) indicating how confident you are in the match
 
 Please analyze each item carefully, considering:
 - Exact matches (including common variations in spelling or formatting)
 - Semantic similarity in meaning and context
 - Historical and philosophical context
 - The relationship between thinkers and their works
+
+Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
+Provide the raw JSON array only, with no additional explanation or text.
 `;
+
+        console.log(`Sending batch ${i/batchSize + 1} of ${Math.ceil(itemsToLookup.length/batchSize)} to OpenRouter`);
+        console.log(`Batch contains ${itemsBatch.length} items`);
 
         try {
           const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -491,43 +481,80 @@ Please analyze each item carefully, considering:
             headers: {
               'Authorization': `Bearer ${openrouterApiKey}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://readiverse.com',
-              'X-Title': 'Readiverse DNA Analysis'
+              'HTTP-Referer': 'https://lovable.dev',
+              'X-Title': 'Lovable.dev'
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.5-pro-exp-03-25:free',
+              model: 'google/gemini-2.0-flash-001',
               messages: [
                 {
-                  role: 'system',
-                  content: 'You are a precise matching system for philosophical thinkers and their works. Your task is to match entries from a DNA analysis against a database of known philosophers and their works. Consider both exact matches and semantic similarity, paying special attention to the relationship between thinkers and their classic works.'
-                },
-                {
                   role: 'user',
-                  content: [
-                    {
-                      type: 'text',
-                      text: prompt
-                    }
-                  ]
+                  content: prompt
                 }
               ],
-              temperature: 0.1,
-              max_tokens: 2000
+              response_format: { type: "json_object" }
             })
           });
 
           if (!response.ok) {
-            throw new Error(`API error! Status: ${response.status}`);
+            const errorBody = await response.text();
+            throw new Error(`OpenRouter API responded with status: ${response.status}, body: ${errorBody}`);
           }
 
-          const result = await response.json();
-          const content = result.choices[0].message.content;
-          
-          // Parse the response and extract matches
-          const matches = parseMatches(content, itemsBatch, dbItems);
-          matched = [...matched, ...matches.matched];
-          unmatched = [...unmatched, ...matches.unmatched];
-          
+          const responseData = await response.json();
+          let batchResults: { item: string, match_id: string, confidence: number }[] = [];
+
+          try {
+            const content = responseData.choices[0].message.content;
+            console.log(`Raw content from OpenRouter:`, content.substring(0, 100) + '...');
+
+            // Parse the JSON content
+            batchResults = JSON.parse(content);
+            if (!Array.isArray(batchResults)) {
+              // If we got an object with array inside it, try to extract it
+              if (batchResults && typeof batchResults === 'object' && batchResults.results && Array.isArray(batchResults.results)) {
+                batchResults = batchResults.results;
+              } else {
+                throw new Error('Response is not an array or does not contain an array');
+              }
+            }
+          } catch (parseError) {
+            console.error("Error parsing LLM response:", parseError);
+            console.log("Raw response:", responseData.choices[0].message.content);
+            // Fallback to empty results
+            batchResults = [];
+          }
+
+          console.log(`Got ${batchResults.length} match results for batch ${i / batchSize + 1}`);
+          if (batchResults.length > 0) {
+            console.log('Sample result:', batchResults[0]);
+          }
+
+          // Filter batch results into matched and unmatched
+          const batchMatched = batchResults
+            .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
+            .map(result => ({
+              item: result.item,
+              db_id: result.match_id,
+              confidence: result.confidence
+            }));
+
+          const batchUnmatched = batchResults
+            .filter(result => result.match_id === "no_match" || result.confidence < 70)
+            .map(result => result.item);
+
+          // Append batch results to overall results
+          matched = [...matched, ...batchMatched];
+          unmatched = [...unmatched, ...batchUnmatched];
+
+          // Add any items that were in the batch but not in the result (this can happen if the LLM omits items)
+          const processedItems = new Set(batchResults.map(r => r.item));
+          const missingItems = itemsBatch.filter(item => !processedItems.has(item));
+          if (missingItems.length > 0) {
+            console.log(`${missingItems.length} items were not processed by LLM, adding to unmatched`);
+            unmatched = [...unmatched, ...missingItems];
+          }
+
         } catch (apiError) {
           console.error(`Error in batch ${i/batchSize + 1}:`, apiError);
           // Add all items in this batch to unmatched
@@ -587,115 +614,6 @@ Please analyze each item carefully, considering:
   }
 }
 
-export async function validateDNAEntities(assessment_id: string): Promise<Response> {
-  try {
-    if (!assessment_id) {
-      throw new Error('assessment_id is required');
-    }
-    
-    // Get the analysis data from the database
-    const { data: analysis, error: analysisError } = await supabase
-      .from('dna_analysis_results')
-      .select('*')
-      .eq('assessment_id', assessment_id)
-      .single();
-      
-    if (analysisError) {
-      throw new Error(`Error fetching analysis: ${analysisError.message}`);
-    }
-    
-    if (!analysis) {
-      throw new Error(`No analysis found for assessment_id: ${assessment_id}`);
-    }
-    
-    // Extract thinkers and classics from the analysis
-    const thinkers = extractThinkersFromAnalysis(analysis);
-    const classics = extractClassicsFromAnalysis(analysis);
-    
-    console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
-    
-    // Perform semantic matching for thinkers
-    const thinkerResults = await performSemanticMatching(thinkers, 'thinker', assessment_id, analysis.id);
-    console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
-    
-    // Perform semantic matching for classics
-    const classicResults = await performSemanticMatching(classics, 'classic', assessment_id, analysis.id);
-    console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
-    
-    // Calculate match rates for summary
-    const totalThinkers = thinkers.length;
-    const totalClassics = classics.length;
-    const matchedThinkers = thinkerResults.matched.length;
-    const matchedClassics = classicResults.matched.length;
-    const totalEntities = totalThinkers + totalClassics;
-    const totalMatched = matchedThinkers + matchedClassics;
-    
-    const validationSummary = {
-      timestamp: new Date().toISOString(),
-      thinkers: {
-        total: totalThinkers,
-        matched: matchedThinkers,
-        unmatched: thinkerResults.unmatched.length,
-        match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
-        has_errors: !!thinkerResults.error
-      },
-      classics: {
-        total: totalClassics,
-        matched: matchedClassics,
-        unmatched: classicResults.unmatched.length,
-        match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
-        has_errors: !!classicResults.error
-      },
-      overall: {
-        total: totalEntities,
-        matched: totalMatched,
-        unmatched: (totalEntities - totalMatched),
-        match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
-        has_errors: !!(thinkerResults.error || classicResults.error)
-      }
-    };
-    
-    // Update the analysis with validation results
-    const { error: updateError } = await supabase
-      .from('dna_analysis_results')
-      .update({
-        validation_summary: validationSummary,
-        validated_at: new Date().toISOString()
-      })
-      .eq('assessment_id', assessment_id);
-      
-    if (updateError) {
-      throw new Error(`Error updating analysis: ${updateError.message}`);
-    }
-    
-    return new Response(JSON.stringify({ 
-      success: true, 
-      thinkers: {
-        total: totalThinkers,
-        matched: matchedThinkers,
-        unmatched: thinkerResults.unmatched,
-        matchDetails: thinkerResults.matched
-      },
-      classics: {
-        total: totalClassics,
-        matched: matchedClassics,
-        unmatched: classicResults.unmatched,
-        matchDetails: classicResults.matched
-      },
-      summary: validationSummary
-    }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200
-    });
-  } catch (error) {
-    console.error('Error validating DNA entities:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 500
-    });
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -703,14 +621,244 @@ serve(async (req) => {
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { assessment_id } = await req.json();
+    const { analysisData, analysisId, assessment_id } = await req.json();
     
-    if (!assessment_id) {
-      throw new Error('assessment_id is required');
+    // Enhanced validation to allow either analysisId, assessment_id, or direct data
+    if (!analysisData && !analysisId && !assessment_id) {
+      throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
     }
     
-    // Use the validateDNAEntities function with the parsed assessment_id
-    return await validateDNAEntities(assessment_id);
+    let dataToValidate: Record<string, any> = {};
+    let actualAnalysisId: string | null = analysisId || null;
+    let actualassessment_id: string | null = assessment_id || null;
+    
+    if (analysisId) {
+      // Fetch the analysis data from the database using analysis ID
+      console.log(`Fetching analysis data for ID: ${analysisId}`);
+      const { data, error } = await supabase
+        .from('dna_analysis_results')
+        .select('*')
+        .eq('id', analysisId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching analysis data:', error);
+        throw error;
+      }
+      if (!data) {
+        console.error(`No analysis found with id: ${analysisId}`);
+        throw new Error(`No analysis found with id: ${analysisId}`);
+      }
+      
+      dataToValidate = data;
+      // If we have an analysis record but no assessment ID yet, get it from the record
+      if (!actualassessment_id && data.assessment_id) {
+        actualassessment_id = data.assessment_id;
+      }
+      
+      console.log('Successfully fetched analysis data from database');
+    } else if (assessment_id) {
+      // Fetch the analysis data from the database using assessment ID
+      console.log(`Fetching analysis data for assessment ID: ${assessment_id}`);
+      const { data, error } = await supabase
+        .from('dna_analysis_results')
+        .select('*')
+        .eq('assessment_id', assessment_id)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching analysis data by assessment ID:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error(`No analysis found for assessment id: ${assessment_id}`);
+        throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
+      }
+      
+      dataToValidate = data;
+      actualAnalysisId = data.id;
+      console.log('Successfully fetched analysis data from database');
+    } else if (analysisData) {
+      // Use the provided analysis data directly
+      console.log('Using provided analysis data');
+      dataToValidate = analysisData;
+      
+      // If analysisData contains assessment_id, use it
+      if (dataToValidate.assessment_id) {
+        actualassessment_id = dataToValidate.assessment_id;
+      }
+    }
+    
+    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualassessment_id || 'none'}`);
+    
+    // Extract thinkers and classics from the analysis
+    const thinkers = extractThinkersFromAnalysis(dataToValidate);
+    const classics = extractClassicsFromAnalysis(dataToValidate);
+    
+    console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
+    
+    // Partial results holder to ensure we don't lose data on errors
+    let thinkerResults = { matched: [], unmatched: thinkers, error: null };
+    let classicResults = { matched: [], unmatched: classics, error: null };
+    
+    try {
+      // Perform semantic matching for thinkers
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
+      console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
+    } catch (thinkerError) {
+      console.error('Error in thinker matching:', thinkerError);
+      thinkerResults.error = `Error: ${thinkerError.message}`;
+    }
+    
+    try {
+      // Perform semantic matching for classics
+      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
+      console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
+    } catch (classicError) {
+      console.error('Error in classic matching:', classicError);
+      classicResults.error = `Error: ${classicError.message}`;
+    }
+    
+    // Always ensure we record matching results in the database, even if only partial results
+    if (actualAnalysisId) {
+      console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
+      
+      // Calculate match rates for summary
+      const totalThinkers = thinkers.length;
+      const totalClassics = classics.length;
+      const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+      const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+      const totalEntities = totalThinkers + totalClassics;
+      const totalMatched = matchedThinkers + matchedClassics;
+      
+      const validationSummary = {
+        timestamp: new Date().toISOString(),
+        thinkers: {
+          total: totalThinkers,
+          matched: matchedThinkers,
+          unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+          match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!thinkerResults.error
+        },
+        classics: {
+          total: totalClassics,
+          matched: matchedClassics,
+          unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+          match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!classicResults.error
+        },
+        overall: {
+          total: totalEntities,
+          matched: totalMatched,
+          unmatched: (totalEntities - totalMatched),
+          match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!(thinkerResults.error || classicResults.error)
+        }
+      };
+      
+      const { error: updateError } = await supabase
+        .from('dna_analysis_results')
+        .update({ validation_summary: validationSummary })
+        .eq('id', actualAnalysisId);
+        
+      if (updateError) {
+        console.error('Error updating validation summary:', updateError);
+      } else {
+        console.log('Successfully updated validation summary');
+      }
+      
+      // Final storage attempt for unmatched entities with cleaner approach
+      try {
+        console.log("Final storage attempt for unmatched entities");
+        const thinkerUnmatched = thinkerResults.unmatched || [];
+        const classicUnmatched = classicResults.unmatched || [];
+        
+        // Only attempt storage if we have unmatched entities
+        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+          const storeResult = await storeUnmatchedEntities(
+            actualassessment_id, 
+            actualAnalysisId, 
+            thinkerUnmatched, 
+            classicUnmatched
+          );
+          
+          console.log(`Final unmatched entity storage result: ${storeResult}`);
+        }
+      } catch (storageError) {
+        console.error("Final storage attempt failed:", storageError);
+      }
+    } else if (actualassessment_id) {
+      // If we only have assessment ID but no analysis ID yet, still store unmatched entities
+      try {
+        console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
+        const thinkerUnmatched = thinkerResults.unmatched || [];
+        const classicUnmatched = classicResults.unmatched || [];
+        
+        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+          const storeResult = await storeUnmatchedEntities(
+            actualassessment_id,
+            null,
+            thinkerUnmatched,
+            classicUnmatched
+          );
+          
+          console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
+        }
+      } catch (storageError) {
+        console.error("Assessment-only storage attempt failed:", storageError);
+      }
+    }
+    
+    // Ensure we calculate match rates properly even if some parts failed
+    const totalThinkers = thinkers.length;
+    const totalClassics = classics.length;
+    const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+    const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+    const totalEntities = totalThinkers + totalClassics;
+    const totalMatched = matchedThinkers + matchedClassics;
+    
+    // Generate validation report, preserving as much data as possible even if errors occurred
+    const validationReport = {
+      analysisId: actualAnalysisId,
+      assessment_id: actualassessment_id,
+      thinkers: {
+        total: totalThinkers,
+        matched: matchedThinkers,
+        unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+        matchDetails: thinkerResults.matched || [],
+        unmatchedItems: thinkerResults.unmatched || [],
+        error: thinkerResults.error
+      },
+      classics: {
+        total: totalClassics,
+        matched: matchedClassics,
+        unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+        matchDetails: classicResults.matched || [],
+        unmatchedItems: classicResults.unmatched || [],
+        error: classicResults.error
+      },
+      summary: {
+        totalEntities: totalEntities,
+        totalMatched: totalMatched,
+        totalUnmatched: (totalEntities - totalMatched),
+        matchRate: totalEntities > 0 ? 
+          ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : 
+          '0%',
+        hasErrors: !!(thinkerResults.error || classicResults.error)
+      }
+    };
+    
+    console.log('Validation complete:', JSON.stringify({
+      totalEntities: totalEntities,
+      totalMatched: totalMatched,
+      matchRate: validationReport.summary.matchRate,
+      hasErrors: validationReport.summary.hasErrors
+    }));
+    
+    return new Response(JSON.stringify(validationReport), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error in validate-dna-entities function:', error);
     return new Response(JSON.stringify({ 
