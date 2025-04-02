@@ -328,7 +328,6 @@ async function storeUnmatchedEntities(
     
     // Create data object for upsert
     const data: Record<string, any> = {
-      status: 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -414,8 +413,8 @@ async function performSemanticMatching(
     const dbItems = await fetchAllItems(type);
     const itemsToLookup = items;
     
-    // If we have a reasonable amount of items to check, use OpenRouter for semantic matching
-    if (items.length > 0 && dbItems.length > 0) {
+    // If we have items to check, use OpenRouter for semantic matching
+    if (items.length > 0) {
       console.log(`Performing semantic matching for ${items.length} ${type}s against ${dbItems.length} database entries`);
 
       // Process in batches if we have too many items to match
