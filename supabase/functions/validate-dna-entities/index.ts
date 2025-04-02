@@ -124,8 +124,8 @@ function extractClassicsFromAnalysis(analysisData: Record<string, any>): string[
 }
 
 // Helper to extract thinker-classic pairs from DNA analysis
-function extractThinkerClassicPairs(analysisData: Record<string, any>): ThinkerClassicPair[] {
-  const pairs: ThinkerClassicPair[] = [];
+function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[] {
+  const pairs: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[] = [];
   console.log('Starting thinker-classic pair extraction from analysis data');
   
   const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
@@ -398,7 +398,8 @@ async function performSemanticMatching(
   items: string[], 
   type: 'thinker' | 'classic', 
   assessment_id: string | null, 
-  analysis_id: string | null
+  analysis_id: string | null,
+  thinkerClassicPairs?: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[]
 ): Promise<{ matched: { item: string, db_id: string, confidence: number }[], unmatched: string[], error?: string }> {
   // Enhanced logging for debugging
   console.log(`Starting semantic matching with IDs - assessment_id: ${assessment_id || 'null'}, analysis_id: ${analysis_id || 'null'}`);
@@ -440,12 +441,27 @@ async function performSemanticMatching(
           };
         }
         
+        // Create a map of classics to their associated thinkers for context
+        const classicToThinkerMap = new Map<string, string>();
+        if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
+          thinkerClassicPairs.forEach(pair => {
+            classicToThinkerMap.set(pair.classic, pair.thinker);
+          });
+          console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
+        }
+        
         const prompt = `
 I need to match these ${type} names/titles from a philosophical DNA analysis against our database entries.
 For each item in List A, find the best semantic match from List B, or indicate if there's no good match.
 
 List A (from analysis):
-${itemsBatch.map((item, i) => `${i+1}. "${item}"`).join('\n')}
+${itemsBatch.map((item, i) => {
+  if (type === 'classic' && classicToThinkerMap.has(item)) {
+    return `${i+1}. "${item}" (associated with thinker: ${classicToThinkerMap.get(item)})`;
+  } else {
+    return `${i+1}. "${item}"`;
+  }
+}).join('\n')}
 
 List B (from database):
 ${dbItems.map((item, i) => {
@@ -477,6 +493,7 @@ For classics, be especially generous with matching:
 - Match without articles (e.g., "Symposium" should match "The Symposium" by Plato)
 - Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
 - Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
+- Use the associated thinker information to help with matching (e.g., if a classic is associated with Aristotle, it's more likely to be "Politics" by Aristotle)
 ` : `
 For thinkers, be especially careful with matching:
 - Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
@@ -712,6 +729,10 @@ serve(async (req) => {
     const thinkers = extractThinkersFromAnalysis(dataToValidate);
     const classics = extractClassicsFromAnalysis(dataToValidate);
     
+    // Extract thinker-classic pairs for context
+    const thinkerClassicPairs = extractThinkerClassicPairs(dataToValidate);
+    console.log(`Extracted ${thinkerClassicPairs.length} thinker-classic pairs for context`);
+    
     console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
     
     // Partial results holder to ensure we don't lose data on errors
@@ -728,8 +749,8 @@ serve(async (req) => {
     }
     
     try {
-      // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
+      // Perform semantic matching for classics with thinker context
+      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId, thinkerClassicPairs);
       console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
