@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -156,59 +157,91 @@ async function fetchAllItems(type: 'thinker' | 'classic'): Promise<any[]> {
   }
 }
 
-// IMPROVED: Direct upsert function to ensure entity storage works
-async function storeUnmatchedEntities(analysisId: string, thinkers: string[] = [], classics: string[] = []): Promise<boolean> {
-  if (!analysisId) {
-    console.error('No analysis ID provided, cannot store unmatched entities');
+// IMPROVED: Store unmatched entities using assessment_id for linking
+async function storeUnmatchedEntities(
+  assessment_id: string | null,
+  analysis_id: string | null,
+  thinkers: string[] = [],
+  classics: string[] = []
+): Promise<boolean> {
+  // We need either assessment_id or analysis_id to store unmatched entities
+  if (!assessment_id && !analysis_id) {
+    console.error('No assessment_id or analysis_id provided, cannot store unmatched entities');
     return false;
   }
   
   if (thinkers.length === 0 && classics.length === 0) {
-    console.log(`No unmatched entities to store for analysis ID ${analysisId}`);
+    console.log(`No unmatched entities to store for assessment_id ${assessment_id || 'unknown'}`);
     return true;
   }
   
   try {
-    console.log(`Storing unmatched entities for analysis ID ${analysisId}:`, {
+    console.log(`Storing unmatched entities for assessment_id ${assessment_id || 'unknown'}:`, {
       thinkers: thinkers.length,
       classics: classics.length
     });
     
     // Create data object for upsert
-    const data = {
-      analysis_id: analysisId,
+    const data: Record<string, any> = {
       status: 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     
+    // Add the appropriate ID for linking
+    if (analysis_id) {
+      data.analysis_id = analysis_id;
+    }
+    
+    // Add assessment_id if available (our new approach)
+    if (assessment_id) {
+      data.assessment_id = assessment_id;
+    }
+    
     // Add entities if provided
     if (thinkers.length > 0) {
-      Object.assign(data, { unmatched_thinkers: thinkers });
+      data.unmatched_thinkers = thinkers;
     }
     
     if (classics.length > 0) {
-      Object.assign(data, { unmatched_classics: classics });
+      data.unmatched_classics = classics;
     }
     
     // Log complete insert data for debugging
     console.log('Upsert data:', JSON.stringify(data));
     
-    // Perform upsert operation with explicit on_conflict
-    const { data: result, error } = await supabase
-      .from('dna_unmatched_entities')
-      .upsert([data], { 
-        onConflict: 'analysis_id',
-        ignoreDuplicates: false
-      });
-    
-    if (error) {
-      console.error(`Error storing unmatched entities:`, error);
-      console.error(`Full error details:`, JSON.stringify(error));
-      return false;
+    // If we have an analysis_id, upsert based on that
+    if (analysis_id) {
+      const { error } = await supabase
+        .from('dna_unmatched_entities')
+        .upsert([data], { 
+          onConflict: 'analysis_id',
+          ignoreDuplicates: false
+        });
+      
+      if (error) {
+        console.error(`Error storing unmatched entities:`, error);
+        console.error(`Full error details:`, JSON.stringify(error));
+        return false;
+      }
+    } 
+    // If we have only assessment_id, upsert based on that
+    else if (assessment_id) {
+      const { error } = await supabase
+        .from('dna_unmatched_entities')
+        .upsert([data], { 
+          onConflict: 'assessment_id',
+          ignoreDuplicates: false
+        });
+      
+      if (error) {
+        console.error(`Error storing unmatched entities:`, error);
+        console.error(`Full error details:`, JSON.stringify(error));
+        return false;
+      }
     }
     
-    console.log(`Successfully stored unmatched entities for analysis ID ${analysisId}`);
+    console.log(`Successfully stored unmatched entities for ${analysis_id ? 'analysis_id' : 'assessment_id'} ${analysis_id || assessment_id}`);
     return true;
   } catch (error) {
     console.error(`Exception in storeUnmatchedEntities:`, error);
@@ -216,7 +249,7 @@ async function storeUnmatchedEntities(analysisId: string, thinkers: string[] = [
   }
 }
 
-async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', analysisId: string | null) {
+async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', assessment_id: string | null, analysis_id: string | null) {
   if (items.length === 0) {
     console.log(`No ${type}s to match, returning empty results`);
     return { matched: [], unmatched: [] };
@@ -367,15 +400,13 @@ Provide the raw JSON array only, with no additional explanation or text.
 
       console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
-      // IMPROVED: Store unmatched entities immediately if analysisId is provided
-      if (analysisId && unmatched.length > 0) {
+      // IMPROVED: Store unmatched entities if they exist
+      if (unmatched.length > 0) {
         if (type === 'thinker') {
-          await storeUnmatchedEntities(analysisId, unmatched, []);
+          await storeUnmatchedEntities(assessment_id, analysis_id, unmatched, []);
         } else {
-          await storeUnmatchedEntities(analysisId, [], unmatched);
+          await storeUnmatchedEntities(assessment_id, analysis_id, [], unmatched);
         }
-      } else if (!analysisId && unmatched.length > 0) {
-        console.warn(`No analysis ID provided, skipping storage of unmatched ${type}s`);
       }
 
       return { matched, unmatched };
@@ -396,17 +427,19 @@ serve(async (req) => {
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { analysisData, analysisId } = await req.json();
+    const { analysisData, analysisId, assessmentId } = await req.json();
     
-    // Enhanced validation to ensure at least one parameter is provided
-    if (!analysisData && !analysisId) {
-      throw new Error('Either analysisData or analysisId must be provided');
+    // Enhanced validation to allow either analysisId, assessmentId, or direct data
+    if (!analysisData && !analysisId && !assessmentId) {
+      throw new Error('Either analysisData, analysisId, or assessmentId must be provided');
     }
     
     let dataToValidate: Record<string, any> = {};
+    let actualAnalysisId: string | null = analysisId || null;
+    let actualAssessmentId: string | null = assessmentId || null;
     
     if (analysisId) {
-      // Fetch the analysis data from the database
+      // Fetch the analysis data from the database using analysis ID
       console.log(`Fetching analysis data for ID: ${analysisId}`);
       const { data, error } = await supabase
         .from('dna_analysis_results')
@@ -424,17 +457,53 @@ serve(async (req) => {
       }
       
       dataToValidate = data;
+      // If we have an analysis record but no assessment ID yet, get it from the record
+      if (!actualAssessmentId && data.assessment_id) {
+        actualAssessmentId = data.assessment_id;
+      }
+      
       console.log('Successfully fetched analysis data from database');
+    } else if (assessmentId) {
+      // Fetch the analysis data from the database using assessment ID
+      console.log(`Fetching analysis data for assessment ID: ${assessmentId}`);
+      const { data, error } = await supabase
+        .from('dna_analysis_results')
+        .select('*')
+        .eq('assessment_id', assessmentId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching analysis data by assessment ID:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error(`No analysis found for assessment id: ${assessmentId}`);
+        
+        if (analysisData) {
+          // If we have direct data but no matching record, use the direct data
+          console.log('Using provided analysis data since no record exists yet');
+          dataToValidate = analysisData;
+        } else {
+          throw new Error(`No analysis found for assessment id: ${assessmentId}`);
+        }
+      } else {
+        dataToValidate = data;
+        actualAnalysisId = data.id;
+        console.log(`Found analysis id ${actualAnalysisId} for assessment id ${assessmentId}`);
+      }
     } else if (analysisData) {
       // Use the provided analysis data directly
       console.log('Using provided analysis data');
       dataToValidate = analysisData;
+      
+      // If analysisData contains assessment_id, use it
+      if (dataToValidate.assessment_id) {
+        actualAssessmentId = dataToValidate.assessment_id;
+      }
     }
     
-    // The actual analysis ID to use for storage, or null if we're validating pre-storage data
-    const actualAnalysisId = analysisId || null;
-    
-    console.log(`Validating entities ${actualAnalysisId ? 'for analysis ID: ' + actualAnalysisId : 'for pre-storage data'}`);
+    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualAssessmentId || 'none'}`);
     
     // Extract thinkers and classics from the analysis
     const thinkers = extractThinkersFromAnalysis(dataToValidate);
@@ -448,7 +517,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for thinkers
-      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAnalysisId);
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
       console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
     } catch (thinkerError) {
       console.error('Error in thinker matching:', thinkerError);
@@ -457,7 +526,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualAnalysisId);
+      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
       console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
@@ -512,7 +581,7 @@ serve(async (req) => {
         console.log('Successfully updated validation summary');
       }
 
-      // IMPROVED: Final storage attempt for unmatched entities with cleaner approach
+      // Final storage attempt for unmatched entities with cleaner approach
       try {
         console.log("Final storage attempt for unmatched entities");
         const thinkerUnmatched = thinkerResults.unmatched || [];
@@ -521,15 +590,36 @@ serve(async (req) => {
         // Only attempt storage if we have unmatched entities
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
+            actualAssessmentId, 
             actualAnalysisId, 
             thinkerUnmatched, 
             classicUnmatched
           );
           
-          console.log(`Direct unmatched entity storage result: ${storeResult}`);
+          console.log(`Final unmatched entity storage result: ${storeResult}`);
         }
       } catch (storageError) {
         console.error("Final storage attempt failed:", storageError);
+      }
+    } else if (actualAssessmentId) {
+      // If we only have assessment ID but no analysis ID yet, still store unmatched entities
+      try {
+        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
+        const thinkerUnmatched = thinkerResults.unmatched || [];
+        const classicUnmatched = classicResults.unmatched || [];
+        
+        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
+          const storeResult = await storeUnmatchedEntities(
+            actualAssessmentId,
+            null,
+            thinkerUnmatched,
+            classicUnmatched
+          );
+          
+          console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
+        }
+      } catch (storageError) {
+        console.error("Assessment-only storage attempt failed:", storageError);
       }
     }
 
@@ -544,6 +634,7 @@ serve(async (req) => {
     // Generate validation report, preserving as much data as possible even if errors occurred
     const validationReport = {
       analysisId: actualAnalysisId,
+      assessmentId: actualAssessmentId,
       thinkers: {
         total: totalThinkers,
         matched: matchedThinkers,
