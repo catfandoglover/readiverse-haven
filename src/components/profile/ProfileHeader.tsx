@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfileData } from "@/contexts/ProfileDataContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -10,18 +10,27 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "../ui/skeleton";
 
 const ProfileHeader: React.FC = () => {
-  const { profileData, analysisResult, isLoading } = useProfileData();
+  const { profileData, analysisResult, isLoading, error } = useProfileData();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("[ProfileHeader] Rendering with:", { 
+      isLoading, 
+      hasProfile: !!profileData, 
+      hasAnalysis: !!analysisResult,
+      archetype: analysisResult?.archetype,
+      error: error?.message
+    });
+  }, [profileData, analysisResult, isLoading, error]);
   
   // Calculate display values from profile data
   const fullName = profileData?.full_name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const initials = `${firstName[0]}${lastName[0] || ""}`;
-  
-  const archetype = analysisResult?.archetype || null;
 
   // Get appropriate background image based on archetype
   const getBackgroundImageForArchetype = (archetype: string | null) => {
@@ -31,7 +40,7 @@ const ProfileHeader: React.FC = () => {
     return `https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/landscape_images//${encodeURIComponent(archetype)}.png`;
   };
 
-  const backgroundImageUrl = profileData?.landscape_image || getBackgroundImageForArchetype(archetype);
+  const backgroundImageUrl = profileData?.landscape_image || getBackgroundImageForArchetype(analysisResult?.archetype);
 
   const handleProfileEditClick = () => {
     navigate('/profile/edit');
@@ -54,6 +63,57 @@ const ProfileHeader: React.FC = () => {
       });
     }
   };
+
+  // Show loading UI for the entire component if we're still loading critical data
+  if (isLoading) {
+    return (
+      <div className="relative z-10 stacking-context">
+        <div className="w-full h-64 bg-[#2A282A] relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/0 via-[#2A282A]/70 to-[#2A282A]"></div>
+        </div>
+        <div className="absolute left-0 w-full text-[#E9E7E2]" 
+          style={{ 
+            bottom: "-40px", 
+            zIndex: 30,
+            transform: "translateZ(0)",
+            paddingBottom: "2rem",
+            paddingLeft: "1.5rem",
+            paddingRight: "1.5rem"
+          }}>
+          <div className="flex items-start justify-between w-full">
+            <div className="flex flex-col items-start max-w-[60%]">
+              <div className="relative h-20 w-20 mb-2">
+                <svg 
+                  viewBox="0 0 100 100" 
+                  className="absolute inset-0 h-full w-full text-[#CCFF23]"
+                >
+                  <polygon 
+                    points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="3"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between w-full mt-2">
+                <div className="w-full">
+                  <Skeleton className="h-4 w-24 bg-[#E9E7E2]/10 mb-2" />
+                  <Skeleton className="h-6 w-32 bg-[#E9E7E2]/10" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-end self-start">
+              <Skeleton className="h-10 w-32 bg-[#E9E7E2]/10 rounded-2xl mb-2" />
+              <Skeleton className="h-10 w-32 bg-[#E9E7E2]/10 rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative z-10 stacking-context">
@@ -130,9 +190,7 @@ const ProfileHeader: React.FC = () => {
                 >
                   {firstName} {lastName}
                 </h1>
-                {isLoading ? (
-                  <Skeleton className="h-6 w-32 bg-[#E9E7E2]/10" />
-                ) : (
+                {analysisResult ? (
                   <p 
                     className="text-xl font-libre-baskerville font-bold text-[#E9E7E2] whitespace-nowrap"
                     style={{ 
@@ -141,7 +199,29 @@ const ProfileHeader: React.FC = () => {
                       maxWidth: "100%"
                     }}
                   >
-                    {analysisResult?.archetype || "Loading archetype..."}
+                    {analysisResult.archetype || "Archetype Unavailable"}
+                  </p>
+                ) : error ? (
+                  <p 
+                    className="text-xl font-libre-baskerville font-bold text-[#ff6b6b] whitespace-nowrap"
+                    style={{ 
+                      position: "relative",
+                      zIndex: 50,
+                      maxWidth: "100%"
+                    }}
+                  >
+                    Error Loading Archetype
+                  </p>
+                ) : (
+                  <p 
+                    className="text-xl font-libre-baskerville font-bold text-[#E9E7E2]/50 whitespace-nowrap"
+                    style={{ 
+                      position: "relative",
+                      zIndex: 50,
+                      maxWidth: "100%"
+                    }}
+                  >
+                    Twilight Navigator
                   </p>
                 )}
               </div>

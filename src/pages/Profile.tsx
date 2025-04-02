@@ -16,6 +16,15 @@ const Profile: React.FC = () => {
     document.title = "Your Intellectual Profile | Intellectual DNA";
   }, []);
   
+  // Add some debug logging
+  useEffect(() => {
+    console.log("[Profile] Rendering with auth state:", { 
+      authLoading, 
+      isAuthenticated: !!user,
+      userId: user?.id 
+    });
+  }, [user, authLoading]);
+  
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2A282A]">
