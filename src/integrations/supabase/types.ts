@@ -1391,9 +1391,10 @@ export type Database = {
           full_name: string | null
           id: string
           landscape_image: string | null
-          outseta_user_id: string
+          outseta_user_id: string | null
           profile_image: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           assessment_id?: string | null
@@ -1402,9 +1403,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id: string
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           assessment_id?: string | null
@@ -1413,9 +1415,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id?: string
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1714,6 +1717,7 @@ export type Database = {
           outseta_user_id: string
           status: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           book_id: string
@@ -1725,6 +1729,7 @@ export type Database = {
           outseta_user_id: string
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           book_id?: string
@@ -1736,6 +1741,7 @@ export type Database = {
           outseta_user_id?: string
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1811,6 +1817,7 @@ export type Database = {
           item_id: string
           item_type: string
           outseta_user_id: string
+          user_id: string | null
         }
         Insert: {
           added_at?: string
@@ -1818,6 +1825,7 @@ export type Database = {
           item_id: string
           item_type: string
           outseta_user_id: string
+          user_id?: string | null
         }
         Update: {
           added_at?: string
@@ -1825,6 +1833,7 @@ export type Database = {
           item_id?: string
           item_type?: string
           outseta_user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

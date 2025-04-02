@@ -7,6 +7,7 @@ const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Initialize Supabase client with error handling
 const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
 
 const corsHeaders = {
@@ -153,6 +154,88 @@ async function fetchAllItems(type: 'thinker' | 'classic'): Promise<any[]> {
   } catch (error) {
     console.error(`Error in fetchAllItems for ${type}:`, error);
     return [];
+  }
+}
+
+// Store unmatched entities in the dna_unmatched_entities table
+async function storeUnmatchedEntities(analysisId: string, type: 'thinker' | 'classic', unmatched: string[]): Promise<boolean> {
+  if (!analysisId) {
+    console.warn('No analysis ID provided, cannot store unmatched entities');
+    return false;
+  }
+  
+  if (unmatched.length === 0) {
+    console.log(`No unmatched ${type}s to store for analysis ID ${analysisId}`);
+    return true;
+  }
+  
+  try {
+    console.log(`Storing ${unmatched.length} unmatched ${type}s for analysis ID ${analysisId}`);
+    
+    // First check if a record exists
+    const { data: existingRecord, error: lookupError } = await supabase
+      .from('dna_unmatched_entities')
+      .select('*')
+      .eq('analysis_id', analysisId)
+      .single();
+    
+    if (lookupError && lookupError.code !== 'PGRST116') {  // PGRST116 is "not found"
+      console.error(`Error checking for existing record:`, lookupError);
+      throw lookupError;
+    }
+    
+    let result;
+    
+    // Prepare the data based on entity type
+    const unmatchedField = type === 'thinker' ? 'unmatched_thinkers' : 'unmatched_classics';
+    
+    if (existingRecord) {
+      // Update existing record
+      console.log(`Found existing record for analysis_id ${analysisId}, updating ${unmatchedField}...`);
+      
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString()
+      };
+      
+      updateData[unmatchedField] = unmatched;
+      
+      result = await supabase
+        .from('dna_unmatched_entities')
+        .update(updateData)
+        .eq('analysis_id', analysisId);
+    } else {
+      // Insert new record
+      console.log(`No existing record for analysis_id ${analysisId}, inserting new record...`);
+      
+      const insertData: Record<string, any> = {
+        analysis_id: analysisId,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      insertData[unmatchedField] = unmatched;
+      
+      // Log full insert data for debugging
+      console.log('Insert data:', JSON.stringify(insertData));
+      
+      result = await supabase
+        .from('dna_unmatched_entities')
+        .insert([insertData]);
+    }
+    
+    if (result.error) {
+      console.error(`Error storing unmatched ${type}s:`, result.error);
+      console.error(`Full error details:`, JSON.stringify(result.error));
+      throw result.error;
+    } else {
+      console.log(`Successfully stored ${unmatched.length} unmatched ${type}s in database for analysis ID ${analysisId}`);
+      return true;
+    }
+  } catch (error) {
+    console.error(`Error in storeUnmatchedEntities for ${type}s:`, error);
+    console.error(`Full error details:`, JSON.stringify(error));
+    return false;
   }
 }
 
@@ -307,63 +390,18 @@ Provide the raw JSON array only, with no additional explanation or text.
 
       console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
-      // Record unmatched entities in the database if we have an analysis ID
-      if (analysisId) {
+      // Store unmatched entities in the database
+      if (analysisId && unmatched.length > 0) {
         try {
-          console.log(`Storing ${unmatched.length} unmatched ${type}s for analysis ID ${analysisId}`);
-          
-          // Prepare the data for insert/update based on type
-          const dataToUpsert = {
-            analysis_id: analysisId,
-            ...(type === 'thinker' ? { unmatched_thinkers: unmatched } : { unmatched_classics: unmatched }),
-            status: 'pending'
-          };
-          
-          // First check if a record exists
-          const { data: existingRecord, error: lookupError } = await supabase
-            .from('dna_unmatched_entities')
-            .select('*')
-            .eq('analysis_id', analysisId)
-            .maybeSingle();
-          
-          if (lookupError) {
-            console.error(`Error checking for existing record:`, lookupError);
-            throw lookupError;
-          }
-          
-          let result;
-          if (existingRecord) {
-            // Update existing record
-            console.log(`Found existing record for analysis_id ${analysisId}, updating...`);
-            const updateData = {
-              ...(type === 'thinker' ? { unmatched_thinkers: unmatched } : { unmatched_classics: unmatched }),
-              updated_at: new Date().toISOString()
-            };
-            
-            result = await supabase
-              .from('dna_unmatched_entities')
-              .update(updateData)
-              .eq('analysis_id', analysisId);
-          } else {
-            // Insert new record
-            console.log(`No existing record for analysis_id ${analysisId}, inserting new record...`);
-            result = await supabase
-              .from('dna_unmatched_entities')
-              .insert([dataToUpsert]);
-          }
-          
-          if (result.error) {
-            console.error(`Error storing unmatched ${type}s:`, result.error);
-            console.error(`Full error details:`, JSON.stringify(result.error));
-            throw result.error;
-          } else {
-            console.log(`Successfully stored ${unmatched.length} unmatched ${type}s in database`);
+          // Use the new dedicated function to store unmatched entities
+          const storeResult = await storeUnmatchedEntities(analysisId, type, unmatched);
+          if (!storeResult) {
+            console.error(`Failed to store unmatched ${type}s in database`);
           }
         } catch (storageError) {
-          console.error(`Error in unmatched ${type}s storage:`, storageError);
-          console.error(`Full storage error:`, JSON.stringify(storageError));
+          console.error(`Error storing unmatched ${type}s:`, storageError);
         }
-      } else {
+      } else if (!analysisId) {
         console.warn(`No analysis ID provided, skipping storage of unmatched ${type}s`);
       }
 
@@ -507,6 +545,16 @@ serve(async (req) => {
         console.error('Error updating validation summary:', updateError);
       } else {
         console.log('Successfully updated validation summary');
+      }
+
+      // Explicitly store unmatched entities if there are any
+      // This is a critical step to make sure data is stored correctly
+      if (thinkerResults.unmatched && thinkerResults.unmatched.length > 0) {
+        await storeUnmatchedEntities(actualAnalysisId, 'thinker', thinkerResults.unmatched);
+      }
+      
+      if (classicResults.unmatched && classicResults.unmatched.length > 0) {
+        await storeUnmatchedEntities(actualAnalysisId, 'classic', classicResults.unmatched);
       }
     }
 
