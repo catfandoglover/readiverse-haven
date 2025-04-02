@@ -1,24 +1,22 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import FavoritesCarousel from "./FavoritesCarousel";
 
 const ConceptsFavoritesContent: React.FC = () => {
   const { user } = useAuth();
-  const userId = user?.Account?.Uid;
   
   const { data: favorites, isLoading } = useQuery({
-    queryKey: ["concepts-favorites", userId],
+    queryKey: ["concepts-favorites", user?.id],
     queryFn: async () => {
-      if (!userId) return null;
+      if (!user?.id) return null;
       
       // Get user's concept favorites
       const { data: favoriteConcepts, error } = await supabase
         .from("user_favorites")
         .select("item_id")
-        .eq("outseta_user_id", userId)
+        .eq("user_id", user.id)
         .eq("item_type", "concept");
         
       if (error) {
@@ -49,7 +47,7 @@ const ConceptsFavoritesContent: React.FC = () => {
         slug: concept.slug
       }));
     },
-    enabled: !!userId,
+    enabled: !!user?.id,
   });
 
   // Don't show section if no favorites

@@ -185,7 +185,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemData.id)
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .eq('item_type', 'question')
             .single();
           
@@ -303,7 +303,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           .from('user_favorites')
           .delete()
           .eq('item_id', combinedData.id)
-          .eq('outseta_user_id', user.Uid)
+          .eq('user_id', user.id)
           .eq('item_type', 'question');
           
         if (error) throw error;
@@ -317,7 +317,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           .from('user_favorites')
           .insert({
             item_id: combinedData.id,
-            outseta_user_id: user.Uid,
+            user_id: user.id,
             item_type: 'question',
             added_at: new Date().toISOString()
           });

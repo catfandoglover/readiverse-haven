@@ -302,7 +302,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemData.id)
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .eq('item_type', type)
             .single();
           
@@ -380,7 +380,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             .from('user_favorites')
             .insert({
               item_id: combinedData.id,
-              outseta_user_id: user.Uid,
+              user_id: user.id,
               item_type: type,
               added_at: new Date().toISOString()
             });
@@ -449,7 +449,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         .from('user_books')
         .insert({
           book_id: combinedData.id,
-          outseta_user_id: user.Uid,
+          user_id: user.id,
           status: 'reading'
         });
 
@@ -534,7 +534,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         .from('user_books')
         .select('*')
         .eq('book_id', itemId)
-        .eq('outseta_user_id', user.Uid)
+        .eq('user_id', user.id)
         .single();
       
       if (checkError && checkError.code !== 'PGRST116') {
@@ -547,7 +547,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           .from('user_books')
           .insert({
             book_id: itemId,
-            outseta_user_id: user.Uid,
+            user_id: user.id,
             status: 'reading'
           });
 
@@ -577,7 +577,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           .from('user_favorites')
           .delete()
           .eq('item_id', combinedData.id)
-          .eq('outseta_user_id', user.Uid)
+          .eq('user_id', user.id)
           .eq('item_type', type);
           
         if (error) throw error;
@@ -591,7 +591,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           .from('user_favorites')
           .insert({
             item_id: combinedData.id,
-            outseta_user_id: user.Uid,
+            user_id: user.id,
             item_type: type,
             added_at: new Date().toISOString()
           });

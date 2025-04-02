@@ -1739,21 +1739,21 @@ export type Database = {
           id: string
           item_id: string
           item_type: string
-          outseta_user_id: string
+          user_id: string
         }
         Insert: {
           added_at?: string
           id?: string
           item_id: string
           item_type: string
-          outseta_user_id: string
+          user_id: string
         }
         Update: {
           added_at?: string
           id?: string
           item_id?: string
           item_type?: string
-          outseta_user_id?: string
+          user_id?: string
         }
         Relationships: []
       }

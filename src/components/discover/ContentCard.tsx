@@ -128,7 +128,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
   const formatText = (text: string) => {
     if (!text) return "";
-    // Use span instead of div to avoid nesting issues with p tags
     return (
       <span className="formatted-text">
         {text.split("\\n").map((line, i) => (
