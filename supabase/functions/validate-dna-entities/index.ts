@@ -705,13 +705,35 @@ serve(async (req) => {
       }
       
       if (!data) {
-        console.error(`No analysis found for assessment id: ${assessment_id}`);
-        throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
+        console.log(`No analysis found for assessment id: ${assessment_id}. Creating a temporary record.`);
+        
+        // Create a temporary analysis record with the assessment_id
+        const { data: newData, error: insertError } = await supabase
+          .from('dna_analysis_results')
+          .insert([
+            { 
+              assessment_id: assessment_id,
+              status: 'pending',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
+          
+        if (insertError) {
+          console.error('Error creating temporary analysis record:', insertError);
+          throw new Error(`Failed to create temporary analysis record: ${insertError.message}`);
+        }
+        
+        console.log(`Created temporary analysis record with ID: ${newData.id}`);
+        dataToValidate = newData;
+        actualAnalysisId = newData.id;
+      } else {
+        dataToValidate = data;
+        actualAnalysisId = data.id;
+        console.log('Successfully fetched analysis data from database');
       }
-      
-      dataToValidate = data;
-      actualAnalysisId = data.id;
-      console.log('Successfully fetched analysis data from database');
     } else if (analysisData) {
       // Use the provided analysis data directly
       console.log('Using provided analysis data');
@@ -720,6 +742,32 @@ serve(async (req) => {
       // If analysisData contains assessment_id, use it
       if (dataToValidate.assessment_id) {
         actualassessment_id = dataToValidate.assessment_id;
+      }
+      
+      // If we have analysis data but no analysis ID, create a record
+      if (!actualAnalysisId && actualassessment_id) {
+        console.log(`Creating analysis record for provided data with assessment ID: ${actualassessment_id}`);
+        
+        const { data: newData, error: insertError } = await supabase
+          .from('dna_analysis_results')
+          .insert([
+            { 
+              assessment_id: actualassessment_id,
+              status: 'pending',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
+          
+        if (insertError) {
+          console.error('Error creating analysis record for provided data:', insertError);
+          // Continue without creating a record - we'll still process the data
+        } else {
+          actualAnalysisId = newData.id;
+          console.log(`Created analysis record with ID: ${actualAnalysisId}`);
+        }
       }
     }
     
