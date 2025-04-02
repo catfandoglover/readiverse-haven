@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -539,12 +538,9 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
 }
 
 // Function to validate entities using the validate-dna-entities function
-async function validateDNAEntities(analysisData: Record<string, string>): Promise<any> {
+async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
   try {
     console.log('Validating DNA entities from analysis results');
-    
-    // Create a deep copy of the analysis data to send to the validation function
-    const analysisCopy = JSON.parse(JSON.stringify(analysisData));
     
     // Call the validate-dna-entities function directly
     const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
@@ -553,7 +549,7 @@ async function validateDNAEntities(analysisData: Record<string, string>): Promis
         'Authorization': `Bearer ${supabaseServiceRoleKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ analysisData: analysisCopy })
+      body: JSON.stringify({ assessment_id })
     });
     
     if (!response.ok) {
@@ -660,7 +656,7 @@ serve(async (req) => {
       
       // Perform entity validation before storing the analysis
       console.log('Validating entities before storing analysis...');
-      const validationResults = await validateDNAEntities(combinedAnalysis);
+      const validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
       
       // Store the validation summary as a JSONB field
       combinedAnalysis['validation_summary'] = validationResults.summary || {};
