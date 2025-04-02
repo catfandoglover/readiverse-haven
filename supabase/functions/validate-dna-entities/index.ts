@@ -434,16 +434,16 @@ serve(async (req) => {
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { analysisData, analysisId, assessmentId } = await req.json();
+    const { analysisData, analysisId, assessment_id } = await req.json();
     
-    // Enhanced validation to allow either analysisId, assessmentId, or direct data
-    if (!analysisData && !analysisId && !assessmentId) {
-      throw new Error('Either analysisData, analysisId, or assessmentId must be provided');
+    // Enhanced validation to allow either analysisId, assessment_id, or direct data
+    if (!analysisData && !analysisId && !assessment_id) {
+      throw new Error('Either analysisData, analysisId, or assessment_id must be provided');
     }
     
     let dataToValidate: Record<string, any> = {};
     let actualAnalysisId: string | null = analysisId || null;
-    let actualAssessmentId: string | null = assessmentId || null;
+    let actualassessment_id: string | null = assessment_id || null;
     
     if (analysisId) {
       // Fetch the analysis data from the database using analysis ID
@@ -465,18 +465,18 @@ serve(async (req) => {
       
       dataToValidate = data;
       // If we have an analysis record but no assessment ID yet, get it from the record
-      if (!actualAssessmentId && data.assessment_id) {
-        actualAssessmentId = data.assessment_id;
+      if (!actualassessment_id && data.assessment_id) {
+        actualassessment_id = data.assessment_id;
       }
       
       console.log('Successfully fetched analysis data from database');
-    } else if (assessmentId) {
+    } else if (assessment_id) {
       // Fetch the analysis data from the database using assessment ID
-      console.log(`Fetching analysis data for assessment ID: ${assessmentId}`);
+      console.log(`Fetching analysis data for assessment ID: ${assessment_id}`);
       const { data, error } = await supabase
         .from('dna_analysis_results')
         .select('*')
-        .eq('assessment_id', assessmentId)
+        .eq('assessment_id', assessment_id)
         .maybeSingle();
         
       if (error) {
@@ -485,8 +485,8 @@ serve(async (req) => {
       }
       
       if (!data) {
-        console.error(`No analysis found for assessment id: ${assessmentId}`);
-        throw new Error(`No analysis found for assessment id: ${assessmentId}. Please ensure the analysis is completed before validation.`);
+        console.error(`No analysis found for assessment id: ${assessment_id}`);
+        throw new Error(`No analysis found for assessment id: ${assessment_id}. Please ensure the analysis is completed before validation.`);
       }
       
       dataToValidate = data;
@@ -499,11 +499,11 @@ serve(async (req) => {
       
       // If analysisData contains assessment_id, use it
       if (dataToValidate.assessment_id) {
-        actualAssessmentId = dataToValidate.assessment_id;
+        actualassessment_id = dataToValidate.assessment_id;
       }
     }
     
-    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualAssessmentId || 'none'}`);
+    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualassessment_id || 'none'}`);
     
     // Extract thinkers and classics from the analysis
     const thinkers = extractThinkersFromAnalysis(dataToValidate);
@@ -517,7 +517,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for thinkers
-      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
+      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualassessment_id, actualAnalysisId);
       console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
     } catch (thinkerError) {
       console.error('Error in thinker matching:', thinkerError);
@@ -526,7 +526,7 @@ serve(async (req) => {
     
     try {
       // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
+      classicResults = await performSemanticMatching(classics, 'classic', actualassessment_id, actualAnalysisId);
       console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
@@ -590,7 +590,7 @@ serve(async (req) => {
         // Only attempt storage if we have unmatched entities
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualAssessmentId, 
+            actualassessment_id, 
             actualAnalysisId, 
             thinkerUnmatched, 
             classicUnmatched
@@ -601,16 +601,16 @@ serve(async (req) => {
       } catch (storageError) {
         console.error("Final storage attempt failed:", storageError);
       }
-    } else if (actualAssessmentId) {
+    } else if (actualassessment_id) {
       // If we only have assessment ID but no analysis ID yet, still store unmatched entities
       try {
-        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
+        console.log(`Storing unmatched entities using only assessment ID: ${actualassessment_id}`);
         const thinkerUnmatched = thinkerResults.unmatched || [];
         const classicUnmatched = classicResults.unmatched || [];
         
         if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
           const storeResult = await storeUnmatchedEntities(
-            actualAssessmentId,
+            actualassessment_id,
             null,
             thinkerUnmatched,
             classicUnmatched
@@ -634,7 +634,7 @@ serve(async (req) => {
     // Generate validation report, preserving as much data as possible even if errors occurred
     const validationReport = {
       analysisId: actualAnalysisId,
-      assessmentId: actualAssessmentId,
+      assessment_id: actualassessment_id,
       thinkers: {
         total: totalThinkers,
         matched: matchedThinkers,
