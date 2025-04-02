@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +10,7 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface BookshelfCarouselProps {
   queryKey: string;
@@ -27,18 +26,18 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
   const { user } = useAuth();
   
   const { data: fetchedBooks, isLoading: fetchLoading } = useQuery({
-    queryKey: [queryKey, user?.Account?.Uid],
+    queryKey: [queryKey, user?.id],
     queryFn: async () => {
-      if (!user?.Account?.Uid) return [];
+      if (!user?.id) return [];
 
       try {
-        console.log(`Fetching books for user: ${user.Account.Uid}`);
+        console.log(`Fetching books for user: ${user.id}`);
         
         // First get the user books entries
         const { data: userBooks, error: userBooksError } = await supabase
           .from("user_books")
           .select("*")
-          .eq("outseta_user_id", user.Account.Uid);
+          .eq("user_id", user.id);
         
         if (userBooksError) {
           console.error("Error fetching user books:", userBooksError);
@@ -76,7 +75,7 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
         return [];
       }
     },
-    enabled: !providedBooks && !!user?.Account?.Uid,
+    enabled: !providedBooks && !!user?.id,
   });
 
   const books = providedBooks || fetchedBooks;

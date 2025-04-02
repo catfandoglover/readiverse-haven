@@ -1,8 +1,7 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import BookCard from "../BookCard";
 
@@ -10,18 +9,18 @@ const AllBooksContent: React.FC = () => {
   const { user } = useAuth();
 
   const { data: books, isLoading } = useQuery({
-    queryKey: ["all-user-books", user?.Account?.Uid],
+    queryKey: ["all-user-books", user?.id],
     queryFn: async () => {
-      if (!user?.Account?.Uid) return [];
+      if (!user?.id) return [];
 
       try {
-        console.log("Fetching books for user:", user.Account.Uid);
+        console.log("Fetching books for user:", user.id);
         
         // First get the user books entries
         const { data: userBooks, error: userBooksError } = await supabase
           .from("user_books")
           .select("*")
-          .eq("outseta_user_id", user.Account.Uid);
+          .eq("user_id", user.id);
         
         if (userBooksError) {
           console.error("Error fetching user books:", userBooksError);
@@ -59,7 +58,7 @@ const AllBooksContent: React.FC = () => {
         return [];
       }
     },
-    enabled: !!user?.Account?.Uid,
+    enabled: !!user?.id,
   });
 
   if (isLoading) {

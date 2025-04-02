@@ -7,7 +7,7 @@ import DetailedView from "./DetailedView";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useNavigationState } from "@/hooks/useNavigationState";
 
 interface ForYouContentItem {

@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage } from "../ui/form";
@@ -8,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -50,14 +49,11 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
 
     setIsLoading(true);
     try {
-      // Use the Outseta user ID directly
-      const outsetaUserId = user.Account.Uid;
-
       // First, try to find if a custom domain with this name already exists
-      const { data: existingDomains, error: searchError } = await (supabase as any)
+      const { data: existingDomains, error: searchError } = await supabase
         .from("custom_domains")
         .select("*")
-        .eq("outseta_user_id", outsetaUserId)
+        .eq("user_id", user.id)
         .eq("name", values.name)
         .limit(1);
 
@@ -75,12 +71,12 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
       }
 
       // Create the new domain
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("custom_domains")
         .insert([
           {
             name: values.name,
-            outseta_user_id: outsetaUserId,
+            user_id: user.id,
           },
         ])
         .select()
@@ -109,6 +105,9 @@ const NewDomainDialog: React.FC<NewDomainDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-oxanium uppercase">CREATE NEW SHELF</DialogTitle>
+          <DialogDescription>
+            Create a new shelf to organize your intellectual domains.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

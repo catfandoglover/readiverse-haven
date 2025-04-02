@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,27 +35,37 @@ const ContentCard: React.FC<ContentCardProps> = ({
   hasNext = true,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const { user, openLogin } = useAuth();
+  const { user, openLogin, isLoading: isAuthLoading } = useAuth();
   const { addToBookshelf } = useBookshelfManager();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   React.useEffect(() => {
-    if (user && itemId && itemType) {
+    if (!isAuthLoading && user && itemId && itemType) {
       const checkFavoriteStatus = async () => {
         try {
-          const { data } = await supabase
+          console.log('Checking favorite status with:', {
+            itemId,
+            userId: user.id,
+            itemType,
+            itemTypeType: typeof itemType
+          });
+          
+          const { data, error } = await supabase
             .from('user_favorites')
             .select('*')
             .eq('item_id', itemId)
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .eq('item_type', itemType)
-            .single();
+            .maybeSingle();
           
-          if (data) {
-            setIsFavorite(true);
+          if (error) {
+            console.error('Supabase error:', error);
+            return;
           }
+          
+          setIsFavorite(!!data);
         } catch (error) {
           console.error("Error checking favorite status:", error);
         }
@@ -63,10 +73,14 @@ const ContentCard: React.FC<ContentCardProps> = ({
       
       checkFavoriteStatus();
     }
-  }, [user, itemId, itemType]);
+  }, [user, itemId, itemType, isAuthLoading]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (isAuthLoading) {
+      return;
+    }
     
     if (!user) {
       openLogin();
@@ -79,15 +93,26 @@ const ContentCard: React.FC<ContentCardProps> = ({
     }
     
     try {
+      console.log('Toggling favorite with:', {
+        itemId,
+        userId: user.id,
+        itemType,
+        itemTypeType: typeof itemType,
+        isFavorite
+      });
+
       if (isFavorite) {
         const { error } = await supabase
           .from('user_favorites')
           .delete()
           .eq('item_id', itemId)
-          .eq('outseta_user_id', user.Uid)
+          .eq('user_id', user.id)
           .eq('item_type', itemType);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Delete error:', error);
+          throw error;
+        }
         
         setIsFavorite(false);
         toast({
@@ -98,12 +123,15 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .from('user_favorites')
           .insert({
             item_id: itemId,
-            outseta_user_id: user.Uid,
+            user_id: user.id,
             item_type: itemType,
             added_at: new Date().toISOString()
           });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
         setIsFavorite(true);
         toast({
@@ -111,7 +139,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         });
         
         if (itemType === 'classic') {
-          addToBookshelf.mutate(itemId);
+          addToBookshelf(itemId);
         }
       }
     } catch (error) {
@@ -128,10 +156,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
     return (
       <span className="formatted-text">
         {text.split("\\n").map((line, i) => (
-          <React.Fragment key={i}>
+          <span key={i}>
             {line}
             {i < text.split("\\n").length - 1 && <br />}
-          </React.Fragment>
+          </span>
         ))}
       </span>
     );

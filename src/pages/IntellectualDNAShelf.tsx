@@ -1,8 +1,7 @@
-
 import React from "react";
 import { ArrowLeft, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import EthicsContent from "@/components/bookshelf/domains/EthicsContent";
 import EpistemologyContent from "@/components/bookshelf/domains/EpistemologyContent";
 import PoliticsContent from "@/components/bookshelf/domains/PoliticsContent";

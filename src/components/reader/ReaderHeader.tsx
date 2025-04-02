@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ExternalLink, ArrowLeft, MessageSquare } from "lucide-react";
 import SearchDialog from "./SearchDialog";
 import type { SearchResult } from '@/types/reader';
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface ReaderHeaderProps {
   externalLink: string | null;

@@ -7,7 +7,8 @@ import type { Database } from '@/integrations/supabase/types';
 
 interface OutsetaUser {
   email: string;
-  Uid: string;  // Added this line
+  Uid: string;
+  id: string;
   Account: {
     Uid: string;
     Name: string;

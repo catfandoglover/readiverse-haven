@@ -34,19 +34,16 @@ export const useFormatText = () => {
       // If the line contains HTML, render it using dangerouslySetInnerHTML
       if (processedLine.includes('<')) {
         return (
-          <React.Fragment key={i}>
-            <span dangerouslySetInnerHTML={{ __html: processedLine }} />
-            {i < text.split('\\n').length - 1 && <br />}
-          </React.Fragment>
+          <span key={i} dangerouslySetInnerHTML={{ __html: processedLine }} />
         );
       }
       
       // Otherwise render plain text
       return (
-        <React.Fragment key={i}>
+        <span key={i}>
           {processedLine}
           {i < text.split('\\n').length - 1 && <br />}
-        </React.Fragment>
+        </span>
       );
     });
   };

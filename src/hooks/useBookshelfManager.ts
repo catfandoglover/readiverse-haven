@@ -1,93 +1,127 @@
-
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useState, useEffect } from 'react';
 
-export const useBookshelfManager = () => {
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string;
+  description: string;
+  created_at: string;
+  updated_at: string | null;
+}
+
+interface UserBook {
+  id: string;
+  book_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string | null;
+  books: Book;
+}
+
+export function useBookshelfManager() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function fetchBooks() {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_books')
+          .select('*, books(*)')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        // Type assertion to handle the books data
+        const userBooks = data as unknown as UserBook[];
+        setBooks(userBooks.map(item => item.books));
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch books'));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBooks();
+  }, [user?.id]);
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user?.Uid) {
+      if (!user?.id) {
         throw new Error('User must be logged in to add books to bookshelf');
       }
 
-      // First check if book is already in bookshelf
-      const { data: existingBook, error: checkError } = await supabase
+      const { data: existingBook } = await supabase
         .from('user_books')
         .select('*')
         .eq('book_id', bookId)
-        .eq('outseta_user_id', user.Uid)
+        .eq('user_id', user.id)
         .single();
       
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is expected
-        throw checkError;
-      }
-      
-      // If book is already in bookshelf, we're done
       if (existingBook) {
-        return existingBook;
+        throw new Error('Book already in bookshelf');
       }
-      
-      // If book is not in bookshelf, add it
-      const { data, error } = await supabase
+
+      const { error } = await supabase
         .from('user_books')
         .insert({
           book_id: bookId,
-          outseta_user_id: user.Uid,
+          user_id: user.id,
           status: 'reading'
-        })
-        .select()
-        .single();
+        });
 
-      if (error) {
-        throw error;
-      }
-      
-      return data;
+      if (error) throw error;
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Book added to your bookshelf"
+        title: 'Success',
+        description: 'Book added to your bookshelf',
       });
     },
-    onError: (error) => {
-      console.error('Error adding book to bookshelf:', error);
+    onError: (error: Error) => {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add book to your bookshelf."
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const checkBookInShelf = async (bookId: string): Promise<boolean> => {
-    if (!user?.Uid) return false;
+    if (!user?.id) return false;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_books')
         .select('*')
         .eq('book_id', bookId)
-        .eq('outseta_user_id', user.Uid)
+        .eq('user_id', user.id)
         .single();
         
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking bookshelf:', error);
-      }
-      
       return !!data;
     } catch (error) {
-      console.error('Error checking bookshelf:', error);
       return false;
     }
   };
 
   return {
-    addToBookshelf,
+    books,
+    loading,
+    error,
+    addToBookshelf: addToBookshelf.mutate,
     checkBookInShelf
   };
-};
+}

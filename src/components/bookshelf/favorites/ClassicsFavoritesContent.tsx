@@ -1,24 +1,22 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import BookshelfCarousel from "../BookshelfCarousel";
 
 const ClassicsFavoritesContent: React.FC = () => {
   const { user } = useAuth();
-  const userId = user?.Account?.Uid;
   
   const { data: favorites, isLoading } = useQuery({
-    queryKey: ["classics-favorites", userId],
+    queryKey: ["classics-favorites", user?.id],
     queryFn: async () => {
-      if (!userId) return null;
+      if (!user?.id) return null;
       
       // Get user's book favorites
       const { data: favoriteBooks, error } = await supabase
         .from("user_favorites")
         .select("item_id")
-        .eq("outseta_user_id", userId)
+        .eq("user_id", user.id)
         .eq("item_type", "book");
         
       if (error) {
@@ -48,7 +46,7 @@ const ClassicsFavoritesContent: React.FC = () => {
         book_id: book.id,
       }));
     },
-    enabled: !!userId,
+    enabled: !!user?.id,
   });
 
   // Don't show section if no favorites

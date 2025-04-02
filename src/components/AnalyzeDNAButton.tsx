@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Dna, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 const SAMPLE_ANSWERS = {
   "ETHICS": "ABABA",
@@ -33,7 +32,7 @@ export function AnalyzeDNAButton() {
           .insert({
             name: 'Quick Analysis',
             answers: SAMPLE_ANSWERS,
-            profile_id: user?.Uid ? user.Uid : null
+            profile_id: user?.id ? user.id : null
           })
           .select('id')
           .single();
@@ -73,7 +72,7 @@ export function AnalyzeDNAButton() {
         body: {
           answers_json: SAMPLE_ANSWERS,
           assessment_id,
-          profile_id: user?.Uid || null
+          profile_id: user?.id || null
         }
       });
 

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { saveLastVisited, getLastVisited, saveScrollPosition, getScrollPosition } from "@/utils/navigationHistory";
 import { Database } from "@/integrations/supabase/types";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import MainMenu from "@/components/navigation/MainMenu";
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
@@ -24,7 +24,7 @@ const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, logout, openLogin, openSignup, openProfile } = useAuth();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -103,17 +103,17 @@ const IntellectualDNA = () => {
           ) : user ? (
             <>
               <Button 
-                onClick={openProfile} 
+                onClick={() => navigate('/profile')} 
                 variant="outline" 
                 size="sm" 
                 className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title={`Profile: ${user.Account?.Name || user.email}`}
+                title={`Profile: ${user.email}`}
               >
                 <User className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline truncate max-w-[100px]">{user.Account?.Name || user.email}</span>
+                <span className="hidden sm:inline truncate max-w-[100px]">{user.email}</span>
               </Button>
               <Button 
-                onClick={logout} 
+                onClick={signOut} 
                 variant="outline" 
                 size="sm" 
                 className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
@@ -126,7 +126,7 @@ const IntellectualDNA = () => {
           ) : (
             <>
               <Button 
-                onClick={openLogin} 
+                onClick={() => navigate('/login')} 
                 variant="outline" 
                 size="sm" 
                 className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
@@ -136,7 +136,7 @@ const IntellectualDNA = () => {
                 <span className="hidden sm:inline">Login</span>
               </Button>
               <Button 
-                onClick={openSignup} 
+                onClick={() => navigate('/register')} 
                 variant="outline" 
                 size="sm" 
                 className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"

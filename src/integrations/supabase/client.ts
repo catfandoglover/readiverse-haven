@@ -4,12 +4,35 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://myeyoafugkrkwcnfedlu.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
+// Read from environment variable - must be in .env.local as VITE_SUPABASE_ANON_KEY. that's how it is in "vercel env ls"
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZXlvYWZ1Z2tya3djbmZlZGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxMTEzMTAsImV4cCI6MjA1ODY4NzMxMH0.aYCbR62ym2XYDdY6Ss6sGj14yOy3i8wj9f5gHujmqDI";
+
+// Sanity check to ensure the key is available at runtime
+if (!SUPABASE_ANON_KEY) {
+  console.error('VITE_SUPABASE_ANON_KEY is not defined in your .env.local file or in vercel env');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    storageKey: 'supabase.auth.token',
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  },
+  db: {
+    schema: 'public'
+  }
+});
 
 // Function to create a Supabase client with a custom JWT token
 export const createSupabaseClient = (jwt?: string) => {
@@ -19,8 +42,20 @@ export const createSupabaseClient = (jwt?: string) => {
       global: {
         headers: {
           Authorization: `Bearer ${jwt}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
       },
+      auth: {
+        persistSession: true,
+        storageKey: 'supabase.auth.token',
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      db: {
+        schema: 'public'
+      }
     });
   }
   // Return the default client if no JWT is provided

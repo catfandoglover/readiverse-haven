@@ -554,6 +554,7 @@ export type Database = {
           theology_kindred_spirit_5: string | null
           theology_kindred_spirit_5_classic: string | null
           theology_kindred_spirit_5_rationale: string | null
+          validation_summary: Json | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
@@ -768,6 +769,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          validation_summary?: Json | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
@@ -982,6 +984,7 @@ export type Database = {
           theology_kindred_spirit_5?: string | null
           theology_kindred_spirit_5_classic?: string | null
           theology_kindred_spirit_5_rationale?: string | null
+          validation_summary?: Json | null
         }
         Relationships: [
           {
@@ -1215,7 +1218,8 @@ export type Database = {
       }
       dna_unmatched_entities: {
         Row: {
-          analysis_id: string
+          analysis_id: string | null
+          assessment_id: string | null
           created_at: string
           id: string
           status: string
@@ -1224,7 +1228,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          analysis_id: string
+          analysis_id?: string | null
+          assessment_id?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -1233,7 +1238,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          analysis_id?: string
+          analysis_id?: string | null
+          assessment_id?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -1245,8 +1251,15 @@ export type Database = {
           {
             foreignKeyName: "dna_unmatched_entities_analysis_id_fkey"
             columns: ["analysis_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "dna_analysis_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dna_unmatched_entities_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: true
+            referencedRelation: "dna_assessment_results"
             referencedColumns: ["id"]
           },
         ]
@@ -1388,9 +1401,10 @@ export type Database = {
           full_name: string | null
           id: string
           landscape_image: string | null
-          outseta_user_id: string
+          outseta_user_id: string | null
           profile_image: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           assessment_id?: string | null
@@ -1399,9 +1413,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id: string
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           assessment_id?: string | null
@@ -1410,9 +1425,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id?: string
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1711,6 +1727,7 @@ export type Database = {
           outseta_user_id: string
           status: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           book_id: string
@@ -1722,6 +1739,7 @@ export type Database = {
           outseta_user_id: string
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           book_id?: string
@@ -1733,6 +1751,7 @@ export type Database = {
           outseta_user_id?: string
           status?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1808,6 +1827,7 @@ export type Database = {
           item_id: string
           item_type: string
           outseta_user_id: string
+          user_id: string | null
         }
         Insert: {
           added_at?: string
@@ -1815,6 +1835,7 @@ export type Database = {
           item_id: string
           item_type: string
           outseta_user_id: string
+          user_id?: string | null
         }
         Update: {
           added_at?: string
@@ -1822,6 +1843,7 @@ export type Database = {
           item_id?: string
           item_type?: string
           outseta_user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

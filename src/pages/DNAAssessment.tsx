@@ -29,7 +29,7 @@ import AIChatDialog from '@/components/survey/AIChatDialog';
 import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
 import TidyCalDialog from "@/components/booking/TidyCalDialog";
 import { useTidyCalBooking } from "@/components/booking/useTidyCalBooking";
@@ -586,7 +586,7 @@ const DNAAssessment = () => {
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select('id')
-              .eq('outseta_user_id', userData.user.id)
+              .eq('user_id', userData.user.id)
               .maybeSingle();
               
             if (profileError) {
@@ -606,20 +606,18 @@ const DNAAssessment = () => {
             sessionStorage.setItem('user_id', tempId);
           }
         } catch (error) {
-          console.error('Error in ensureUserId:', error);
+          console.error('Error setting user_id:', error);
           const tempId = 'temp-' + Math.random().toString(36).substring(2, 15);
           sessionStorage.setItem('user_id', tempId);
         }
       } else {
-        console.log('Found existing user_id in sessionStorage:', existingUserId);
-        if (!profileId && !existingUserId.startsWith('temp-')) {
-          setProfileId(existingUserId);
-        }
+        console.log('Using existing user_id from sessionStorage:', existingUserId);
+        setProfileId(existingUserId);
       }
     };
-    
+
     ensureUserId();
-  }, [profileId]);
+  }, []);
 
   React.useEffect(() => {
     (window as any).debugDNAConversation = () => {

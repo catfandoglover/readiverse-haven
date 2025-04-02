@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 export const useLastReadBook = () => {
   const { user } = useAuth();
-  const userId = user?.Account?.Uid; // Use Account.Uid for consistency with AllBooksContent
+  const userId = user?.id;
 
   console.log('useLastReadBook - user:', user);
   console.log('useLastReadBook - userId:', userId);
@@ -26,7 +26,7 @@ export const useLastReadBook = () => {
           *,
           book:books!user_books_book_id_fkey(*)
         `)
-        .eq('outseta_user_id', userId)
+        .eq('user_id', userId)
         .order('last_read_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -54,7 +54,7 @@ export const useLastReadBook = () => {
           *,
           book:books!user_books_book_id_fkey(*)
         `)
-        .eq('outseta_user_id', userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

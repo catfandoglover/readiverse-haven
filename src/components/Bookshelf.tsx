@@ -6,7 +6,7 @@ import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 type Book = Database['public']['Tables']['books']['Row'];
 
@@ -21,26 +21,26 @@ const Bookshelf = () => {
   }, [location.pathname]);
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.Account?.Uid],
+    queryKey: ['user-bookshelf', user?.id],
     queryFn: async () => {
-      if (!user?.Account?.Uid || !supabase) {
+      if (!user?.id || !supabase) {
         console.log('No user or Supabase client available');
         return [];
       }
 
-      console.log('Fetching books for user:', user.Account.Uid);
+      console.log('Fetching books for user:', user.id);
 
       try {
         // First get the book IDs
         const { data: userBooks, error: userBooksError } = await supabase
           .from('user_books')
           .select('book_id')
-          .eq('outseta_user_id', user.Account.Uid);
+          .eq('user_id', user.id);
 
         if (userBooksError) {
           console.error('Error fetching user books:', {
             error: userBooksError,
-            userId: user.Account.Uid
+            userId: user.id
           });
           return [];
         }
@@ -76,7 +76,7 @@ const Bookshelf = () => {
         return [];
       }
     },
-    enabled: !!user?.Account?.Uid && !!supabase
+    enabled: !!user?.id && !!supabase
   });
 
   const handleBookClick = (slug: string, epub_file_url: string) => {

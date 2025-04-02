@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface DNAAnalysisResult {
   id: string;
@@ -42,7 +42,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   const [isLoadingIntroduction, setIsLoadingIntroduction] = useState<boolean>(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   const handleSectionChange = (section: "become" | "profile") => {
     setActiveSection(section);
@@ -147,7 +147,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                   <Button 
                     variant="outline" 
                     className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors"
-                    onClick={logout}
+                    onClick={signOut}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     <span className="font-oxanium">Logout</span>
@@ -336,7 +336,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                   <Button 
                     variant="outline" 
                     className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors"
-                    onClick={logout}
+                    onClick={signOut}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     <span className="font-oxanium">Logout</span>

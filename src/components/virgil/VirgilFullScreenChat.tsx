@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { stopAllAudio } from '@/services/AudioContext';
@@ -8,6 +7,7 @@ import MessageBubble from './MessageBubble';
 import ChatInputForm from './ChatInputForm';
 import { ChatVariant } from '@/types/chat';
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface VirgilFullScreenChatProps {
   variant?: ChatVariant;

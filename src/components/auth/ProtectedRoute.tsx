@@ -1,7 +1,6 @@
-
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Navigate, useLocation } from "react-router-dom";
-import React, { useEffect } from "react";
+import React from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,38 +13,34 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   requireDNA = false,
 }) => {
-  const { user, isLoading, openLogin, hasCompletedDNA } = useAuth();
+  const { user, isLoading, hasCompletedDNA } = useAuth();
   const location = useLocation();
   
   // Show loading state while checking auth
   if (isLoading) {
-    return <div>Loading...</div>; // Consider replacing with a proper loading component
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1A181B]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E9E7E2] mb-4"></div>
+          <p className="text-[#E9E7E2] font-oxanium">Authenticating...</p>
+        </div>
+      </div>
+    );
   }
-  
-  // Paths that should show the auth modal instead of redirecting
-  const modalTriggerPaths = ['/virgil', '/bookshelf'];
-  const currentPath = location.pathname;
-  const shouldShowAuthModal = modalTriggerPaths.some(path => currentPath.startsWith(path));
   
   // DNA assessment paths that should be accessible without authentication
   const dnaAssessmentPaths = ['/dna', '/dna/priming', '/dna/ethics', '/dna/epistemology', 
     '/dna/politics', '/dna/theology', '/dna/ontology', '/dna/aesthetics', '/dna/completion'];
-  const isDNAAssessmentPath = dnaAssessmentPaths.some(path => currentPath === path);
+  const isDNAAssessmentPath = dnaAssessmentPaths.some(path => location.pathname === path);
   
   // Only authenticate paths that actually require authentication
   // Allow DNA assessment paths to proceed without authentication
   if (requireAuth && !user && !isDNAAssessmentPath) {
-    // If this is a path that should trigger the auth modal
-    if (shouldShowAuthModal) {
-      // Open the Outseta auth modal and render nothing (will be caught by routes that don't require auth)
-      useEffect(() => {
-        openLogin({ authenticationCallbackUrl: window.location.href });
-      }, []);
-      return null;
-    } else {
-      // For all other auth-required routes, redirect to login and save intended destination
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
+    // Save the current location for redirecting after login
+    localStorage.setItem('authRedirectTo', location.pathname);
+    
+    // Redirect to login and save intended destination
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   // DNA assessment check - only if user is logged in and DNA is required

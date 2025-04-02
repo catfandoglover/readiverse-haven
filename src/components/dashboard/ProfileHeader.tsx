@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Pen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,13 +8,14 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ProfileData {
   id: string;
-  outseta_user_id: string;
+  user_id: string;
   email: string;
   full_name: string;
   created_at: string;
   updated_at: string;
   landscape_image?: string;
   profile_image?: string;
+  assessment_id?: string;
 }
 
 interface DNAAnalysisResult {
@@ -35,7 +36,7 @@ const ProfileHeader: React.FC = () => {
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
   const { toast } = useToast();
   
-  const fullName = profileData?.full_name || user?.Account?.Name || "Explorer";
+  const fullName = profileData?.full_name || user?.user_metadata?.full_name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
   const lastName = fullName.split(' ').slice(1).join(' ') || "";
   const email = profileData?.email || user?.email || "alex@midwestlfg.com";
@@ -45,12 +46,12 @@ const ProfileHeader: React.FC = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (user?.Uid) {
+      if (user?.id) {
         try {
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .maybeSingle();
             
           if (data && !error) {
@@ -78,17 +79,38 @@ const ProfileHeader: React.FC = () => {
     const fetchDNAAnalysisResult = async () => {
       try {
         setIsLoadingAnalysis(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
-          .select('id, assessment_id, archetype, created_at')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
-          .maybeSingle();
+        
+        // First get the user's assessment ID from their profile
+        if (user?.id) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('assessment_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error fetching profile for DNA:", profileError);
+            return;
+          }
           
-        if (data && !error) {
-          console.log("DNA analysis result:", data);
-          setAnalysisResult(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching DNA analysis result:", error);
+          if (!profileData?.assessment_id) {
+            console.log("No assessment ID found for user");
+            return;
+          }
+          
+          // Then fetch the DNA analysis result using the assessment ID
+          const { data, error } = await supabase
+            .from('dna_analysis_results')
+            .select('id, assessment_id, archetype, created_at')
+            .eq('assessment_id', profileData.assessment_id)
+            .maybeSingle();
+            
+          if (data && !error) {
+            console.log("DNA analysis result:", data);
+            setAnalysisResult(data as DNAAnalysisResult);
+          } else {
+            console.error("Error fetching DNA analysis result:", error);
+          }
         }
       } catch (e) {
         console.error("Exception fetching DNA analysis result:", e);
@@ -108,9 +130,14 @@ const ProfileHeader: React.FC = () => {
   };
   
   const handleShareClick = async () => {
+    if (!user?.id) {
+      toast.error("Cannot share profile: User not found");
+      return;
+    }
+
+    const shareUrl = window.location.origin + `/profile/share/${user.id}`;
+    
     try {
-      const shareUrl = window.location.origin + `/profile/share/alex-jakubowski`;
-      
       if (navigator.share) {
         await navigator.share({
           title: `${firstName}'s Profile`,

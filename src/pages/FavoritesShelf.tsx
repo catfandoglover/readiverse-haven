@@ -1,8 +1,7 @@
-
 import React from "react";
 import { BookOpenText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import ClassicsFavoritesContent from "@/components/bookshelf/favorites/ClassicsFavoritesContent";
 import IconsFavoritesContent from "@/components/bookshelf/favorites/IconsFavoritesContent";
 import ConceptsFavoritesContent from "@/components/bookshelf/favorites/ConceptsFavoritesContent";

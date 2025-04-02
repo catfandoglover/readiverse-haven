@@ -6,13 +6,13 @@ import { Menu, BookOpen, Compass, Dna, CircleUserRound, Calendar } from "lucide-
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 const MainMenu: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const { user, hasCompletedDNA, openLogin } = useAuth();
+  const { user, hasCompletedDNA } = useAuth();
 
   // Determine which path is active
   const isActive = (path: string) => {
@@ -37,7 +37,7 @@ const MainMenu: React.FC = () => {
 
   const handleVirgilNavigation = () => {
     if (!user) {
-      openLogin({ authenticationCallbackUrl: window.location.href });
+      navigate('/login', { state: { from: location } });
       setOpen(false);
     } else {
       navigate("/virgil");
@@ -47,7 +47,7 @@ const MainMenu: React.FC = () => {
 
   const handleStudyNavigation = () => {
     if (!user) {
-      openLogin({ authenticationCallbackUrl: window.location.href });
+      navigate('/login', { state: { from: location } });
       setOpen(false);
     } else {
       navigate("/bookshelf");

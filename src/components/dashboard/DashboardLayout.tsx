@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Header } from "@/components/ui/header";
 import { saveLastVisited, getLastVisited, sections } from "@/utils/navigationHistory";
 import { Home, User, Compass, BookOpenCheck, LayoutDashboard, GraduationCap, Headset } from "lucide-react";
@@ -138,11 +137,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="p-4 flex items-center justify-between border-b">
               <div className="flex items-center gap-2">
                 <Avatar>
-                  <AvatarImage src={user?.Account?.ProfilePictureUrl} />
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
                   <AvatarFallback>{user?.email ? user.email[0].toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold">{user?.Account?.Name || user?.email}</div>
+                  <div className="font-semibold">{user?.user_metadata?.full_name || user?.email}</div>
                   <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
