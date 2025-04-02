@@ -88,7 +88,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .delete()
           .eq('item_id', itemId)
           .eq('user_id', user.id)
-          .eq('item_type', itemType);
+          .eq('item_type', itemType.toString());
           
         if (error) throw error;
         
@@ -102,7 +102,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           .insert({
             item_id: itemId,
             user_id: user.id,
-            item_type: itemType,
+            item_type: itemType.toString(),
             added_at: new Date().toISOString()
           });
           
@@ -131,10 +131,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
     return (
       <span className="formatted-text">
         {text.split("\\n").map((line, i) => (
-          <React.Fragment key={i}>
+          <span key={i}>
             {line}
             {i < text.split("\\n").length - 1 && <br />}
-          </React.Fragment>
+          </span>
         ))}
       </span>
     );

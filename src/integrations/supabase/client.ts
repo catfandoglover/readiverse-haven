@@ -32,6 +32,9 @@ export const createSupabaseClient = (jwt?: string) => {
       global: {
         headers: {
           Authorization: `Bearer ${jwt}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
         },
       },
       auth: {
