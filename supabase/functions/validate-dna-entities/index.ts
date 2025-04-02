@@ -312,24 +312,50 @@ Provide the raw JSON array only, with no additional explanation or text.
         try {
           console.log(`Storing ${unmatched.length} unmatched ${type}s for analysis ID ${analysisId}`);
           
-          // Prepare the data for upsert based on type
-          const unmatchedData = type === 'thinker' ? 
-            { analysis_id: analysisId, unmatched_thinkers: unmatched } : 
-            { analysis_id: analysisId, unmatched_classics: unmatched };
+          // Prepare the data for insert/update based on type
+          const dataToUpsert = {
+            analysis_id: analysisId,
+            ...(type === 'thinker' ? { unmatched_thinkers: unmatched } : { unmatched_classics: unmatched }),
+            status: 'pending'
+          };
           
-          // Explicitly log the payload for debugging
-          console.log(`Upsert payload for dna_unmatched_entities:`, JSON.stringify(unmatchedData));
-          
-          const { data, error } = await supabase
+          // First check if a record exists
+          const { data: existingRecord, error: lookupError } = await supabase
             .from('dna_unmatched_entities')
-            .upsert([unmatchedData], { 
-              onConflict: 'analysis_id',
-              ignoreDuplicates: false
-            });
+            .select('*')
+            .eq('analysis_id', analysisId)
+            .maybeSingle();
           
-          if (error) {
-            console.error(`Error storing unmatched ${type}s:`, error);
-            console.error(`Full error details:`, JSON.stringify(error));
+          if (lookupError) {
+            console.error(`Error checking for existing record:`, lookupError);
+            throw lookupError;
+          }
+          
+          let result;
+          if (existingRecord) {
+            // Update existing record
+            console.log(`Found existing record for analysis_id ${analysisId}, updating...`);
+            const updateData = {
+              ...(type === 'thinker' ? { unmatched_thinkers: unmatched } : { unmatched_classics: unmatched }),
+              updated_at: new Date().toISOString()
+            };
+            
+            result = await supabase
+              .from('dna_unmatched_entities')
+              .update(updateData)
+              .eq('analysis_id', analysisId);
+          } else {
+            // Insert new record
+            console.log(`No existing record for analysis_id ${analysisId}, inserting new record...`);
+            result = await supabase
+              .from('dna_unmatched_entities')
+              .insert([dataToUpsert]);
+          }
+          
+          if (result.error) {
+            console.error(`Error storing unmatched ${type}s:`, result.error);
+            console.error(`Full error details:`, JSON.stringify(result.error));
+            throw result.error;
           } else {
             console.log(`Successfully stored ${unmatched.length} unmatched ${type}s in database`);
           }
