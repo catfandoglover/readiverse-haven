@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Share, Star } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited, getPreviousPage, sections } from "@/utils/navigationHistory";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";

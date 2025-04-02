@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Session, User, AuthError } from '@supabase/supabase-js';
+import { Session, User, AuthError, SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-type AuthContextValue = {
+interface AuthContextValue {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
@@ -18,7 +18,11 @@ type AuthContextValue = {
   // Auth UI helpers
   openLogin: (destination?: string) => void;
   openSignup: (destination?: string) => void;
-};
+
+  supabase: SupabaseClient;
+  openProfile: (options?: { tab?: string }) => void;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -139,6 +143,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     navigate('/register');
   };
 
+  const openProfile = (options?: { tab?: string }) => {
+    // Implement profile modal or redirect
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
   const value: AuthContextValue = {
     user,
     session,
@@ -149,6 +161,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkDNAStatus,
     openLogin,
     openSignup,
+    supabase,
+    openProfile,
+    logout,
   };
 
   return (

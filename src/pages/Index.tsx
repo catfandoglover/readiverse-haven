@@ -8,7 +8,7 @@ import QuestionsCards from "@/components/QuestionsCards";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
 import { LoginButtons } from "@/components/auth/LoginButtons";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 

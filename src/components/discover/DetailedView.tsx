@@ -3,7 +3,7 @@ import { ArrowLeft, BookOpenText, ChevronDown, Plus, ShoppingCart, Star, Share, 
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { saveLastVisited, getLastVisited, sections, getPreviousPage, popNavigationHistory, getOriginPath } from "@/utils/navigationHistory";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";

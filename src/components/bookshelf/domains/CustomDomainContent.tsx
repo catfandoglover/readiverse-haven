@@ -2,7 +2,7 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/OutsetaAuthContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -58,13 +58,6 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
     queryFn: async () => {
       if (!user) return [];
 
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      
-      if (!supabaseUser) {
-        console.error("Error: No authenticated user found");
-        return [];
-      }
-
       try {
         const { data, error } = await supabase
           .from("custom_domain_books")
@@ -76,7 +69,7 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
           return [];
         }
         
-        return data as BookData[] || [];
+        return (data || []) as BookData[];
       } catch (error) {
         console.error("Exception fetching domain books:", error);
         return [];
@@ -93,16 +86,16 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
 
     setIsSubmitting(true);
     try {
-      const outsetaUserId = user.Account.Uid;
+      const userId = user.id;
       
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("custom_domain_books")
         .insert({
           domain_id: domainId,
           title: values.title,
           author: values.author,
           cover_url: values.coverUrl,
-          outseta_user_id: outsetaUserId,
+          user_id: userId,
         });
 
       if (error) {
@@ -158,10 +151,13 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
       )}
 
       <Dialog open={isAddBookDialogOpen} onOpenChange={setIsAddBookDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" aria-describedby="add-book-dialog-description">
           <DialogHeader>
             <DialogTitle>Add Book to {domainName}</DialogTitle>
           </DialogHeader>
+          <div id="add-book-dialog-description" className="sr-only">
+            Form to add a new book to {domainName}
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
