@@ -468,6 +468,22 @@ Please analyze each item carefully, considering:
 - Historical and philosophical context
 - The relationship between thinkers and their works
 
+IMPORTANT MATCHING GUIDELINES:
+${type === 'classic' ? `
+For classics, be especially generous with matching:
+- Match partial titles (e.g., "Politics" should match "Politics" by Aristotle)
+- Match common variations (e.g., "Second Treatise" should match "Second Treatise of Government")
+- Match without author names (e.g., "Analects" should match "The Analects" by Confucius)
+- Match without articles (e.g., "Symposium" should match "The Symposium" by Plato)
+- Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
+- Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
+` : `
+For thinkers, be especially careful with matching:
+- Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
+- Match without titles (e.g., "Kant" should match "Immanuel Kant")
+- Match without middle names (e.g., "John Locke" should match "John W. Locke")
+`}
+
 Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
 Provide the raw JSON array only, with no additional explanation or text.
 `;
