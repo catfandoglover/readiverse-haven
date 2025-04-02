@@ -25,8 +25,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
   global: {
     headers: {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
+      'Content-Type': 'application/json'
     }
   },
   db: {
@@ -43,8 +42,7 @@ export const createSupabaseClient = (jwt?: string) => {
         headers: {
           Authorization: `Bearer ${jwt}`,
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Content-Type': 'application/json'
         },
       },
       auth: {
