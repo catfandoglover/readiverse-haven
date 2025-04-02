@@ -809,6 +809,65 @@ serve(async (req) => {
     if (actualAnalysisId) {
       console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
       
+      // Create an object to store all the matched IDs
+      const matchedIds: Record<string, string> = {};
+      
+      // Process thinker matches
+      thinkerResults.matched.forEach(match => {
+        // Find which field this thinker matches to
+        const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+        domains.forEach(domain => {
+          for (let i = 1; i <= 5; i++) {
+            const kindredKey = `${domain}_kindred_spirit_${i}`;
+            const challengingKey = `${domain}_challenging_voice_${i}`;
+            
+            if (dataToValidate[kindredKey] === match.item) {
+              matchedIds[`${kindredKey}_db_id`] = match.db_id;
+            }
+            if (dataToValidate[challengingKey] === match.item) {
+              matchedIds[`${challengingKey}_db_id`] = match.db_id;
+            }
+          }
+        });
+        
+        // Check most kindred spirit and challenging voice
+        if (dataToValidate.most_kindred_spirit === match.item) {
+          matchedIds['most_kindred_spirit_db_id'] = match.db_id;
+        }
+        if (dataToValidate.most_challenging_voice === match.item) {
+          matchedIds['most_challenging_voice_db_id'] = match.db_id;
+        }
+      });
+      
+      // Process classic matches
+      classicResults.matched.forEach(match => {
+        // Find which field this classic matches to
+        const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+        domains.forEach(domain => {
+          for (let i = 1; i <= 5; i++) {
+            const kindredKey = `${domain}_kindred_spirit_${i}_classic`;
+            const challengingKey = `${domain}_challenging_voice_${i}_classic`;
+            
+            if (dataToValidate[kindredKey] === match.item) {
+              matchedIds[`${kindredKey}_db_id`] = match.db_id;
+            }
+            if (dataToValidate[challengingKey] === match.item) {
+              matchedIds[`${challengingKey}_db_id`] = match.db_id;
+            }
+          }
+        });
+        
+        // Check most kindred spirit and challenging voice classics
+        if (dataToValidate.most_kindred_spirit_classic === match.item) {
+          matchedIds['most_kindred_spirit_classic_db_id'] = match.db_id;
+        }
+        if (dataToValidate.most_challenging_voice_classic === match.item) {
+          matchedIds['most_challenging_voice_classic_db_id'] = match.db_id;
+        }
+      });
+      
+      console.log('Updating matched IDs:', matchedIds);
+      
       // Calculate match rates for summary
       const totalThinkers = thinkers.length;
       const totalClassics = classics.length;
@@ -842,15 +901,19 @@ serve(async (req) => {
         }
       };
       
+      // Update both the validation summary and matched IDs
       const { error: updateError } = await supabase
         .from('dna_analysis_results')
-        .update({ validation_summary: validationSummary })
+        .update({ 
+          validation_summary: validationSummary,
+          ...matchedIds
+        })
         .eq('id', actualAnalysisId);
         
       if (updateError) {
-        console.error('Error updating validation summary:', updateError);
+        console.error('Error updating validation summary and matched IDs:', updateError);
       } else {
-        console.log('Successfully updated validation summary');
+        console.log('Successfully updated validation summary and matched IDs');
       }
       
       // Final storage attempt for unmatched entities with cleaner approach
