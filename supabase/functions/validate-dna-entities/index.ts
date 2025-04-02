@@ -394,7 +394,12 @@ async function storeUnmatchedEntities(
   }
 }
 
-async function performSemanticMatching(items: string[], type: 'thinker' | 'classic', assessment_id: string | null, analysis_id: string | null) {
+async function performSemanticMatching(
+  items: string[], 
+  type: 'thinker' | 'classic', 
+  assessment_id: string | null, 
+  analysis_id: string | null
+): Promise<{ matched: { item: string, db_id: string, confidence: number }[], unmatched: string[], error?: string }> {
   // Enhanced logging for debugging
   console.log(`Starting semantic matching with IDs - assessment_id: ${assessment_id || 'null'}, analysis_id: ${analysis_id || 'null'}`);
   
@@ -546,6 +551,117 @@ Please analyze each item carefully, considering:
   }
 }
 
+export async function validateDNAEntities(req: Request): Promise<Response> {
+  try {
+    const { assessment_id } = await req.json();
+    
+    if (!assessment_id) {
+      throw new Error('assessment_id is required');
+    }
+    
+    // Get the analysis data from the database
+    const { data: analysis, error: analysisError } = await supabase
+      .from('dna_analysis_results')
+      .select('*')
+      .eq('assessment_id', assessment_id)
+      .single();
+      
+    if (analysisError) {
+      throw new Error(`Error fetching analysis: ${analysisError.message}`);
+    }
+    
+    if (!analysis) {
+      throw new Error(`No analysis found for assessment_id: ${assessment_id}`);
+    }
+    
+    // Extract thinkers and classics from the analysis
+    const thinkers = extractThinkersFromAnalysis(analysis);
+    const classics = extractClassicsFromAnalysis(analysis);
+    
+    console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
+    
+    // Perform semantic matching for thinkers
+    const thinkerResults = await performSemanticMatching(thinkers, 'thinker', assessment_id, analysis.id);
+    console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
+    
+    // Perform semantic matching for classics
+    const classicResults = await performSemanticMatching(classics, 'classic', assessment_id, analysis.id);
+    console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
+    
+    // Calculate match rates for summary
+    const totalThinkers = thinkers.length;
+    const totalClassics = classics.length;
+    const matchedThinkers = thinkerResults.matched.length;
+    const matchedClassics = classicResults.matched.length;
+    const totalEntities = totalThinkers + totalClassics;
+    const totalMatched = matchedThinkers + matchedClassics;
+    
+    const validationSummary = {
+      timestamp: new Date().toISOString(),
+      thinkers: {
+        total: totalThinkers,
+        matched: matchedThinkers,
+        unmatched: thinkerResults.unmatched.length,
+        match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
+        has_errors: !!thinkerResults.error
+      },
+      classics: {
+        total: totalClassics,
+        matched: matchedClassics,
+        unmatched: classicResults.unmatched.length,
+        match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
+        has_errors: !!classicResults.error
+      },
+      overall: {
+        total: totalEntities,
+        matched: totalMatched,
+        unmatched: (totalEntities - totalMatched),
+        match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
+        has_errors: !!(thinkerResults.error || classicResults.error)
+      }
+    };
+    
+    // Update the analysis with validation results
+    const { error: updateError } = await supabase
+      .from('dna_analysis_results')
+      .update({
+        validation_summary: validationSummary,
+        validated_at: new Date().toISOString()
+      })
+      .eq('assessment_id', assessment_id);
+      
+    if (updateError) {
+      throw new Error(`Error updating analysis: ${updateError.message}`);
+    }
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      thinkers: {
+        total: totalThinkers,
+        matched: matchedThinkers,
+        unmatched: thinkerResults.unmatched,
+        matchDetails: thinkerResults.matched
+      },
+      classics: {
+        total: totalClassics,
+        matched: matchedClassics,
+        unmatched: classicResults.unmatched,
+        matchDetails: classicResults.matched
+      },
+      summary: validationSummary
+    }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 200
+    });
+  } catch (error) {
+    console.error('Error validating DNA entities:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 500
+    });
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -553,244 +669,14 @@ serve(async (req) => {
 
   try {
     console.log('Starting validate-dna-entities function');
-    const { analysisData, analysisId, assessmentId } = await req.json();
+    const { assessment_id } = await req.json();
     
-    // Enhanced validation to allow either analysisId, assessmentId, or direct data
-    if (!analysisData && !analysisId && !assessmentId) {
-      throw new Error('Either analysisData, analysisId, or assessmentId must be provided');
+    if (!assessment_id) {
+      throw new Error('assessment_id is required');
     }
     
-    let dataToValidate: Record<string, any> = {};
-    let actualAnalysisId: string | null = analysisId || null;
-    let actualAssessmentId: string | null = assessmentId || null;
-    
-    if (analysisId) {
-      // Fetch the analysis data from the database using analysis ID
-      console.log(`Fetching analysis data for ID: ${analysisId}`);
-      const { data, error } = await supabase
-        .from('dna_analysis_results')
-        .select('*')
-        .eq('id', analysisId)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching analysis data:', error);
-        throw error;
-      }
-      if (!data) {
-        console.error(`No analysis found with id: ${analysisId}`);
-        throw new Error(`No analysis found with id: ${analysisId}`);
-      }
-      
-      dataToValidate = data;
-      // If we have an analysis record but no assessment ID yet, get it from the record
-      if (!actualAssessmentId && data.assessment_id) {
-        actualAssessmentId = data.assessment_id;
-      }
-      
-      console.log('Successfully fetched analysis data from database');
-    } else if (assessmentId) {
-      // Fetch the analysis data from the database using assessment ID
-      console.log(`Fetching analysis data for assessment ID: ${assessmentId}`);
-      const { data, error } = await supabase
-        .from('dna_analysis_results')
-        .select('*')
-        .eq('assessment_id', assessmentId)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching analysis data by assessment ID:', error);
-        throw error;
-      }
-      
-      if (!data) {
-        console.error(`No analysis found for assessment id: ${assessmentId}`);
-        throw new Error(`No analysis found for assessment id: ${assessmentId}. Please ensure the analysis is completed before validation.`);
-      }
-      
-      dataToValidate = data;
-      actualAnalysisId = data.id;
-      console.log('Successfully fetched analysis data from database');
-    } else if (analysisData) {
-      // Use the provided analysis data directly
-      console.log('Using provided analysis data');
-      dataToValidate = analysisData;
-      
-      // If analysisData contains assessment_id, use it
-      if (dataToValidate.assessment_id) {
-        actualAssessmentId = dataToValidate.assessment_id;
-      }
-    }
-    
-    console.log(`Validating entities with analysis ID: ${actualAnalysisId || 'none'}, assessment ID: ${actualAssessmentId || 'none'}`);
-    
-    // Extract thinkers and classics from the analysis
-    const thinkers = extractThinkersFromAnalysis(dataToValidate);
-    const classics = extractClassicsFromAnalysis(dataToValidate);
-    
-    console.log(`Extracted ${thinkers.length} thinkers and ${classics.length} classics from analysis`);
-    
-    // Partial results holder to ensure we don't lose data on errors
-    let thinkerResults = { matched: [], unmatched: thinkers, error: null };
-    let classicResults = { matched: [], unmatched: classics, error: null };
-    
-    try {
-      // Perform semantic matching for thinkers
-      thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAssessmentId, actualAnalysisId);
-      console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
-    } catch (thinkerError) {
-      console.error('Error in thinker matching:', thinkerError);
-      thinkerResults.error = `Error: ${thinkerError.message}`;
-    }
-    
-    try {
-      // Perform semantic matching for classics
-      classicResults = await performSemanticMatching(classics, 'classic', actualAssessmentId, actualAnalysisId);
-      console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
-    } catch (classicError) {
-      console.error('Error in classic matching:', classicError);
-      classicResults.error = `Error: ${classicError.message}`;
-    }
-
-    // Always ensure we record matching results in the database, even if only partial results
-    if (actualAnalysisId) {
-      console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
-      
-      // Calculate match rates for summary
-      const totalThinkers = thinkers.length;
-      const totalClassics = classics.length;
-      const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
-      const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
-      const totalEntities = totalThinkers + totalClassics;
-      const totalMatched = matchedThinkers + matchedClassics;
-      
-      const validationSummary = {
-        timestamp: new Date().toISOString(),
-        thinkers: {
-          total: totalThinkers,
-          matched: matchedThinkers,
-          unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
-          match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
-          has_errors: !!thinkerResults.error
-        },
-        classics: {
-          total: totalClassics,
-          matched: matchedClassics,
-          unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
-          match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
-          has_errors: !!classicResults.error
-        },
-        overall: {
-          total: totalEntities,
-          matched: totalMatched,
-          unmatched: (totalEntities - totalMatched),
-          match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
-          has_errors: !!(thinkerResults.error || classicResults.error)
-        }
-      };
-      
-      const { error: updateError } = await supabase
-        .from('dna_analysis_results')
-        .update({ validation_summary: validationSummary })
-        .eq('id', actualAnalysisId);
-        
-      if (updateError) {
-        console.error('Error updating validation summary:', updateError);
-      } else {
-        console.log('Successfully updated validation summary');
-      }
-
-      // Final storage attempt for unmatched entities with cleaner approach
-      try {
-        console.log("Final storage attempt for unmatched entities");
-        const thinkerUnmatched = thinkerResults.unmatched || [];
-        const classicUnmatched = classicResults.unmatched || [];
-        
-        // Only attempt storage if we have unmatched entities
-        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
-          const storeResult = await storeUnmatchedEntities(
-            actualAssessmentId, 
-            actualAnalysisId, 
-            thinkerUnmatched, 
-            classicUnmatched
-          );
-          
-          console.log(`Final unmatched entity storage result: ${storeResult}`);
-        }
-      } catch (storageError) {
-        console.error("Final storage attempt failed:", storageError);
-      }
-    } else if (actualAssessmentId) {
-      // If we only have assessment ID but no analysis ID yet, still store unmatched entities
-      try {
-        console.log(`Storing unmatched entities using only assessment ID: ${actualAssessmentId}`);
-        const thinkerUnmatched = thinkerResults.unmatched || [];
-        const classicUnmatched = classicResults.unmatched || [];
-        
-        if (thinkerUnmatched.length > 0 || classicUnmatched.length > 0) {
-          const storeResult = await storeUnmatchedEntities(
-            actualAssessmentId,
-            null,
-            thinkerUnmatched,
-            classicUnmatched
-          );
-          
-          console.log(`Assessment-only unmatched entity storage result: ${storeResult}`);
-        }
-      } catch (storageError) {
-        console.error("Assessment-only storage attempt failed:", storageError);
-      }
-    }
-
-    // Ensure we calculate match rates properly even if some parts failed
-    const totalThinkers = thinkers.length;
-    const totalClassics = classics.length;
-    const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
-    const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
-    const totalEntities = totalThinkers + totalClassics;
-    const totalMatched = matchedThinkers + matchedClassics;
-    
-    // Generate validation report, preserving as much data as possible even if errors occurred
-    const validationReport = {
-      analysisId: actualAnalysisId,
-      assessmentId: actualAssessmentId,
-      thinkers: {
-        total: totalThinkers,
-        matched: matchedThinkers,
-        unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
-        matchDetails: thinkerResults.matched || [],
-        unmatchedItems: thinkerResults.unmatched || [],
-        error: thinkerResults.error
-      },
-      classics: {
-        total: totalClassics,
-        matched: matchedClassics,
-        unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
-        matchDetails: classicResults.matched || [],
-        unmatchedItems: classicResults.unmatched || [],
-        error: classicResults.error
-      },
-      summary: {
-        totalEntities: totalEntities,
-        totalMatched: totalMatched,
-        totalUnmatched: (totalEntities - totalMatched),
-        matchRate: totalEntities > 0 ? 
-          ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : 
-          '0%',
-        hasErrors: !!(thinkerResults.error || classicResults.error)
-      }
-    };
-    
-    console.log('Validation complete:', JSON.stringify({
-      totalEntities: totalEntities,
-      totalMatched: totalMatched,
-      matchRate: validationReport.summary.matchRate,
-      hasErrors: validationReport.summary.hasErrors
-    }));
-    
-    return new Response(JSON.stringify(validationReport), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // Use the validateDNAEntities function
+    return await validateDNAEntities(req);
   } catch (error) {
     console.error('Error in validate-dna-entities function:', error);
     return new Response(JSON.stringify({ 
