@@ -765,12 +765,11 @@ serve(async (req) => {
         console.log(`Processing thinker match: ${match.item}`);
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
-          console.log(`Checking field ${key} with value ${value} against match ${match.item}`);
-          if (String(value) === String(match.item) && !key.includes('classic')) {
+          if (!key.includes('classic')) {
             // Validate UUID before adding to updates
             if (isValidUUID(match.db_id)) {
               updates[`${key}_db_id`] = match.db_id;
-              console.log(`✓ Adding valid UUID match for thinker: ${key}_db_id = ${match.db_id}`);
+              console.log(`✓ Adding UUID for thinker: ${key}_db_id = ${match.db_id}`);
             } else {
               console.error(`✗ Invalid UUID found for thinker ${key}: ${match.db_id}`);
             }
@@ -783,12 +782,11 @@ serve(async (req) => {
         console.log(`Processing classic match: ${match.item}`);
         // Find the original field name by searching through the analysis data
         for (const [key, value] of Object.entries(dataToValidate)) {
-          console.log(`Checking field ${key} with value ${value} against match ${match.item}`);
-          if (String(value) === String(match.item) && key.includes('classic')) {
+          if (key.includes('classic')) {
             // Validate UUID before adding to updates
             if (isValidUUID(match.db_id)) {
               updates[`${key}_db_id`] = match.db_id;
-              console.log(`✓ Adding valid UUID match for classic: ${key}_db_id = ${match.db_id}`);
+              console.log(`✓ Adding UUID for classic: ${key}_db_id = ${match.db_id}`);
             } else {
               console.error(`✗ Invalid UUID found for classic ${key}: ${match.db_id}`);
             }
@@ -817,8 +815,7 @@ serve(async (req) => {
         console.log('No valid UUIDs to update in dna_analysis_results');
         console.log('This could be because:');
         console.log('1. No matches were found');
-        console.log('2. Matches were found but field names didn\'t match');
-        console.log('3. Matches were found but UUIDs were invalid');
+        console.log('2. Matches were found but UUIDs were invalid');
       }
     }
     
