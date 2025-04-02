@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -307,24 +308,37 @@ Provide the raw JSON array only, with no additional explanation or text.
       console.log(`Total matched: ${matched.length}, Total unmatched: ${unmatched.length}`);
 
       // Record unmatched entities in the database if we have an analysis ID
-      if (unmatched.length > 0 && analysisId) {
+      if (analysisId) {
         try {
+          console.log(`Storing ${unmatched.length} unmatched ${type}s for analysis ID ${analysisId}`);
+          
+          // Prepare the data for upsert based on type
           const unmatchedData = type === 'thinker' ? 
             { analysis_id: analysisId, unmatched_thinkers: unmatched } : 
             { analysis_id: analysisId, unmatched_classics: unmatched };
           
+          // Explicitly log the payload for debugging
+          console.log(`Upsert payload for dna_unmatched_entities:`, JSON.stringify(unmatchedData));
+          
           const { data, error } = await supabase
             .from('dna_unmatched_entities')
-            .upsert([unmatchedData], { onConflict: 'analysis_id' });
+            .upsert([unmatchedData], { 
+              onConflict: 'analysis_id',
+              ignoreDuplicates: false
+            });
           
           if (error) {
             console.error(`Error storing unmatched ${type}s:`, error);
+            console.error(`Full error details:`, JSON.stringify(error));
           } else {
-            console.log(`Stored ${unmatched.length} unmatched ${type}s in database`);
+            console.log(`Successfully stored ${unmatched.length} unmatched ${type}s in database`);
           }
         } catch (storageError) {
           console.error(`Error in unmatched ${type}s storage:`, storageError);
+          console.error(`Full storage error:`, JSON.stringify(storageError));
         }
+      } else {
+        console.warn(`No analysis ID provided, skipping storage of unmatched ${type}s`);
       }
 
       return { matched, unmatched };
@@ -406,6 +420,7 @@ serve(async (req) => {
     try {
       // Perform semantic matching for thinkers
       thinkerResults = await performSemanticMatching(thinkers, 'thinker', actualAnalysisId);
+      console.log(`Thinker matching complete: ${thinkerResults.matched.length} matched, ${thinkerResults.unmatched.length} unmatched`);
     } catch (thinkerError) {
       console.error('Error in thinker matching:', thinkerError);
       thinkerResults.error = `Error: ${thinkerError.message}`;
@@ -414,9 +429,59 @@ serve(async (req) => {
     try {
       // Perform semantic matching for classics
       classicResults = await performSemanticMatching(classics, 'classic', actualAnalysisId);
+      console.log(`Classic matching complete: ${classicResults.matched.length} matched, ${classicResults.unmatched.length} unmatched`);
     } catch (classicError) {
       console.error('Error in classic matching:', classicError);
       classicResults.error = `Error: ${classicError.message}`;
+    }
+
+    // Always ensure we record matching results in the database, even if only partial results
+    if (actualAnalysisId) {
+      console.log(`Updating dna_analysis_results with validation summary for ID: ${actualAnalysisId}`);
+      
+      // Calculate match rates for summary
+      const totalThinkers = thinkers.length;
+      const totalClassics = classics.length;
+      const matchedThinkers = thinkerResults.matched ? thinkerResults.matched.length : 0;
+      const matchedClassics = classicResults.matched ? classicResults.matched.length : 0;
+      const totalEntities = totalThinkers + totalClassics;
+      const totalMatched = matchedThinkers + matchedClassics;
+      
+      const validationSummary = {
+        timestamp: new Date().toISOString(),
+        thinkers: {
+          total: totalThinkers,
+          matched: matchedThinkers,
+          unmatched: thinkerResults.unmatched ? thinkerResults.unmatched.length : totalThinkers - matchedThinkers,
+          match_rate: totalThinkers > 0 ? ((matchedThinkers / totalThinkers) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!thinkerResults.error
+        },
+        classics: {
+          total: totalClassics,
+          matched: matchedClassics,
+          unmatched: classicResults.unmatched ? classicResults.unmatched.length : totalClassics - matchedClassics,
+          match_rate: totalClassics > 0 ? ((matchedClassics / totalClassics) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!classicResults.error
+        },
+        overall: {
+          total: totalEntities,
+          matched: totalMatched,
+          unmatched: (totalEntities - totalMatched),
+          match_rate: totalEntities > 0 ? ((totalMatched / totalEntities) * 100).toFixed(2) + '%' : '0%',
+          has_errors: !!(thinkerResults.error || classicResults.error)
+        }
+      };
+      
+      const { error: updateError } = await supabase
+        .from('dna_analysis_results')
+        .update({ validation_summary: validationSummary })
+        .eq('id', actualAnalysisId);
+        
+      if (updateError) {
+        console.error('Error updating validation summary:', updateError);
+      } else {
+        console.log('Successfully updated validation summary');
+      }
     }
 
     // Ensure we calculate match rates properly even if some parts failed
