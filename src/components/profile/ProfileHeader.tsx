@@ -145,7 +145,7 @@ const ProfileHeader: React.FC = () => {
                     maxWidth: "100%"
                   }}
                 >
-                  {isLoading ? 'Loading...' : archetype}
+                  {archetype || "Loading..."}
                 </p>
               </div>
             </div>
