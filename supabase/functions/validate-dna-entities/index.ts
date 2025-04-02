@@ -128,9 +128,6 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
   const pairs: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[] = [];
   console.log('Starting thinker-classic pair extraction from analysis data');
   
-  // Log the analysis data structure to help debug
-  console.log('Analysis data keys:', Object.keys(analysisData));
-  
   const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
   
   domains.forEach(domain => {
@@ -186,7 +183,6 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
       type: 'kindred_spirit',
       index: 0
     });
-    console.log(`Found most kindred spirit pair: ${analysisData.most_kindred_spirit} - ${classic}`);
   }
   
   if (analysisData.most_challenging_voice && analysisData.most_challenging_voice_classic) {
@@ -199,25 +195,6 @@ function extractThinkerClassicPairs(analysisData: Record<string, any>): { thinke
       domain: 'overall',
       type: 'challenging_voice',
       index: 0
-    });
-    console.log(`Found most challenging voice pair: ${analysisData.most_challenging_voice} - ${classic}`);
-  }
-  
-  // Check for direct thinker-classic pairs in the analysis data
-  // This is a fallback in case the pairs are stored in a different format
-  if (analysisData.thinker_classic_pairs && Array.isArray(analysisData.thinker_classic_pairs)) {
-    console.log(`Found ${analysisData.thinker_classic_pairs.length} direct thinker-classic pairs`);
-    analysisData.thinker_classic_pairs.forEach((pair: any) => {
-      if (pair.thinker && pair.classic) {
-        pairs.push({
-          thinker: pair.thinker,
-          classic: pair.classic,
-          domain: pair.domain || 'unknown',
-          type: pair.type || 'kindred_spirit',
-          index: pair.index || 0
-        });
-        console.log(`Added direct pair: ${pair.thinker} - ${pair.classic}`);
-      }
     });
   }
   
@@ -316,12 +293,6 @@ async function fetchAllItems(type: 'thinker' | 'classic'): Promise<any[]> {
     }
     
     console.log(`Successfully fetched ${allItems.length} ${type}s from database`);
-    
-    // Log a sample of the items for debugging
-    if (allItems.length > 0) {
-      console.log(`Sample of ${type}s from database:`, allItems.slice(0, 5));
-    }
-    
     return allItems;
   } catch (error) {
     console.error(`Error in fetchAllItems for ${type}:`, error);
@@ -452,15 +423,6 @@ async function performSemanticMatching(
       let matched: { item: string, db_id: string, confidence: number }[] = [];
       let unmatched: string[] = [];
       
-      // Create a map of classics to their associated thinkers for context
-      const classicToThinkerMap = new Map<string, string>();
-      if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
-        thinkerClassicPairs.forEach(pair => {
-          classicToThinkerMap.set(pair.classic, pair.thinker);
-        });
-        console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
-      }
-      
       // Process items in batches
       for (let i = 0; i < itemsToLookup.length; i += batchSize) {
         const itemsBatch = itemsToLookup.slice(i, i + batchSize);
@@ -477,6 +439,15 @@ async function performSemanticMatching(
             unmatched: itemsToLookup, 
             error: 'No OpenRouter API key provided' 
           };
+        }
+        
+        // Create a map of classics to their associated thinkers for context
+        const classicToThinkerMap = new Map<string, string>();
+        if (type === 'classic' && thinkerClassicPairs && thinkerClassicPairs.length > 0) {
+          thinkerClassicPairs.forEach(pair => {
+            classicToThinkerMap.set(pair.classic, pair.thinker);
+          });
+          console.log(`Created map of ${classicToThinkerMap.size} classics to their associated thinkers`);
         }
         
         const prompt = `
@@ -513,6 +484,8 @@ Please analyze each item carefully, considering:
 - Historical and philosophical context
 - The relationship between thinkers and their works
 
+IMPORTANT MATCHING GUIDELINES:
+${type === 'classic' ? `
 For classics, be especially generous with matching:
 - Match partial titles (e.g., "Politics" should match "Politics" by Aristotle)
 - Match common variations (e.g., "Second Treatise" should match "Second Treatise of Government")
@@ -521,8 +494,12 @@ For classics, be especially generous with matching:
 - Match without subtitles (e.g., "Truth" should match "On Truth" or similar titles)
 - Match without year/date information (e.g., "The Picture of Dorian Gray" should match even if the database has "The Picture of Dorian Gray (1890)")
 - Use the associated thinker information to help with matching (e.g., if a classic is associated with Aristotle, it's more likely to be "Politics" by Aristotle)
-- If a classic is associated with a specific thinker, prioritize matching it to a work by that thinker
-- For well-known classics like "Politics", "Leviathan", "The Communist Manifesto", etc., be especially generous with matching when the associated thinker matches the author
+` : `
+For thinkers, be especially careful with matching:
+- Match variations of names (e.g., "Nietzsche" should match "Friedrich Nietzsche")
+- Match without titles (e.g., "Kant" should match "Immanuel Kant")
+- Match without middle names (e.g., "John Locke" should match "John W. Locke")
+`}
 
 Format your response as a JSON array of objects with properties: "item", "match_id", "confidence".
 Provide the raw JSON array only, with no additional explanation or text.
@@ -587,12 +564,8 @@ Provide the raw JSON array only, with no additional explanation or text.
           }
 
           // Filter batch results into matched and unmatched
-          // Lower the confidence threshold for classics to 40% to be more generous with matching
-          const confidenceThreshold = type === 'classic' ? 40 : 70;
-          console.log(`Using confidence threshold of ${confidenceThreshold} for ${type}s`);
-          
           const batchMatched = batchResults
-            .filter(result => result.match_id !== "no_match" && result.confidence >= confidenceThreshold)
+            .filter(result => result.match_id !== "no_match" && result.confidence >= 70)
             .map(result => ({
               item: result.item,
               db_id: result.match_id,
@@ -600,7 +573,7 @@ Provide the raw JSON array only, with no additional explanation or text.
             }));
 
           const batchUnmatched = batchResults
-            .filter(result => result.match_id === "no_match" || result.confidence < confidenceThreshold)
+            .filter(result => result.match_id === "no_match" || result.confidence < 70)
             .map(result => result.item);
 
           // Append batch results to overall results
@@ -672,65 +645,6 @@ Provide the raw JSON array only, with no additional explanation or text.
     }
     return { matched: [], unmatched: items, error: `Matching error: ${error.message || 'Unknown error'}` };
   }
-}
-
-// Helper function to perform direct matching for classics using thinker-classic pairs
-async function performDirectMatching(
-  items: string[],
-  dbItems: any[],
-  thinkerClassicPairs: { thinker: string, classic: string, domain: string, type: 'kindred_spirit' | 'challenging_voice', index: number }[]
-): Promise<{ matched: { item: string, db_id: string, confidence: number }[], remainingItems: string[] }> {
-  const matched: { item: string, db_id: string, confidence: number }[] = [];
-  const remainingItems = [...items];
-  
-  // Create a map of classics to their thinkers for easier lookup
-  const classicToThinkerMap = new Map<string, string>();
-  thinkerClassicPairs.forEach(pair => {
-    classicToThinkerMap.set(pair.classic, pair.thinker);
-  });
-  
-  // Try direct matching for each classic
-  for (const item of items) {
-    const associatedThinker = classicToThinkerMap.get(item);
-    
-    if (associatedThinker) {
-      console.log(`Classic "${item}" is associated with thinker "${associatedThinker}"`);
-      
-      // Find all books by this thinker
-      const booksByThinker = dbItems.filter(book => 
-        book.author && book.author.toLowerCase().includes(associatedThinker.toLowerCase())
-      );
-      
-      console.log(`Found ${booksByThinker.length} books by ${associatedThinker}`);
-      
-      if (booksByThinker.length > 0) {
-        // Try to find an exact match first
-        const exactMatch = booksByThinker.find(book => 
-          book.title.toLowerCase() === item.toLowerCase() ||
-          book.title.toLowerCase().includes(item.toLowerCase()) ||
-          item.toLowerCase().includes(book.title.toLowerCase())
-        );
-        
-        if (exactMatch) {
-          console.log(`Found exact match for "${item}": "${exactMatch.title}" by ${exactMatch.author}`);
-          matched.push({
-            item,
-            db_id: exactMatch.id,
-            confidence: 100
-          });
-          
-          // Remove this item from the remaining items
-          const index = remainingItems.indexOf(item);
-          if (index !== -1) {
-            remainingItems.splice(index, 1);
-          }
-        }
-      }
-    }
-  }
-  
-  console.log(`Direct matching found ${matched.length} matches out of ${items.length} classics`);
-  return { matched, remainingItems };
 }
 
 serve(async (req) => {
