@@ -270,7 +270,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/great-questions" element={
-                  <ProtectedRoute requireAuth={true} requireDNA={true}>
+                  <ProtectedRoute requireAuth={false} requireDNA={false}>
                     <GreatQuestions />
                   </ProtectedRoute>
                 } />
