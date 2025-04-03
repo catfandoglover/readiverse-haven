@@ -4,6 +4,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Define profile interface to include vanity_url
+interface Profile {
+  id: string;
+  user_id: string;
+  outseta_user_id?: string;
+  email?: string;
+  full_name?: string;
+  created_at?: string;
+  updated_at?: string;
+  landscape_image?: string;
+  profile_image?: string;
+  assessment_id?: string;
+  vanity_url?: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -19,6 +34,9 @@ interface AuthContextValue {
   openLogin: (destination?: string) => void;
   openSignup: (destination?: string) => void;
 
+  // Profile helpers
+  ensureVanityUrl: () => Promise<string | null>;
+  
   supabase: SupabaseClient;
   openProfile: (options?: { tab?: string }) => void;
   logout: () => Promise<void>;
@@ -151,6 +169,67 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await supabase.auth.signOut();
   };
 
+  // Function to ensure a profile has a vanity URL
+  const ensureVanityUrl = async (): Promise<string | null> => {
+    if (!user) return null;
+    
+    try {
+      // Check if profile exists with this user_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, user_id, vanity_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (profileError) throw profileError;
+      
+      // If no profile exists, can't create vanity URL yet
+      if (!profileData) {
+        console.log('No profile found for user, cannot create vanity URL');
+        return null;
+      }
+      
+      const profile = profileData as Profile;
+      
+      // If profile already has vanity_url, return it
+      if (profile.vanity_url) {
+        console.log('Existing vanity URL found:', profile.vanity_url);
+        return profile.vanity_url;
+      }
+      
+      // Generate new vanity URL
+      const fullName = profile.full_name || user.user_metadata?.full_name || 'User';
+      const userIdSuffix = user.id.substring(0, 4);
+      const formattedName = fullName.replace(/\s+/g, '-');
+      const vanityUrl = `${formattedName}-${userIdSuffix}`;
+      
+      console.log('Generated new vanity URL:', vanityUrl);
+      
+      // Update profile with new vanity_url
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ vanity_url: vanityUrl })
+        .eq('id', profile.id);
+        
+      if (updateError) {
+        console.error('Error updating profile with vanity URL:', updateError);
+        return null;
+      }
+      
+      return vanityUrl;
+    } catch (error) {
+      console.error('Error ensuring vanity URL:', error);
+      return null;
+    }
+  };
+
+  // Call ensureVanityUrl when user changes
+  useEffect(() => {
+    if (user) {
+      ensureVanityUrl().catch(console.error);
+    }
+  }, [user]);
+
   const value: AuthContextValue = {
     user,
     session,
@@ -161,6 +240,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkDNAStatus,
     openLogin,
     openSignup,
+    ensureVanityUrl,
     supabase,
     openProfile,
     logout,

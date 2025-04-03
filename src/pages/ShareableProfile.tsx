@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface ProfileData {
   landscape_image?: string;
   profile_image?: string;
   assessment_id?: string;
+  vanity_url?: string;
 }
 
 interface DNAAnalysisResult {
@@ -62,8 +63,8 @@ const getIconUrlByName = async (name: string | null): Promise<string> => {
   }
 };
 
-const ShareableProfile: React.FC = () => {
-  const { name } = useParams<{ name: string }>();
+function ShareableProfile(): JSX.Element {
+  const { name } = useParams() as { name: string };
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatText } = useFormatText();
@@ -75,72 +76,139 @@ const ShareableProfile: React.FC = () => {
   const [kindredSpiritIconUrl, setKindredSpiritIconUrl] = useState<string>("");
   const [challengingVoiceIconUrl, setChallengingVoiceIconUrl] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  // Add new state and refs for scroll effects
+  const [shouldBlurHeader, setShouldBlurHeader] = useState<boolean>(false);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Function to navigate to icon detail page
+  const navigateToIconDetail = (iconName: string | null): void => {
+    if (!iconName) return;
+    // Format the name for URL (lowercase, replace spaces with hyphens)
+    const formattedName = iconName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/view/icon/${formattedName}`);
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!name) {
-        setError("No profile name provided");
+        setError("No profile identifier provided");
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
-        console.log("Fetching profile for name:", name);
+        console.log("Processing profile identifier:", name);
         
-        // Decode the name from URL format to handle spaces
-        const decodedName = decodeURIComponent(name).replace(/-/g, ' ');
-        console.log("Decoded name:", decodedName);
+        // Try all available lookup methods
+        let profile: ProfileData | null = null;
         
-        // Find the profile by name
-        const { data: profileResult, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .ilike('full_name', decodedName)
-          .single();
+        try {
+          // Step 1: Try finding by exact vanity URL (preferred)
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, user_id, full_name, profile_image, landscape_image, assessment_id')
+            .eq('vanity_url', name)
+            .maybeSingle();
+            
+          if (!error && data) {
+            console.log("Profile found by vanity_url:", data);
+            profile = data as unknown as ProfileData;
+          }
+        } catch (err) {
+          console.log("Error or vanity_url column not available:", err);
+        }
+        
+        // Step 2: If not found, try name-id combination (legacy format)
+        if (!profile) {
+          console.log("Trying legacy vanity URL format...");
+          const nameParts = decodeURIComponent(name).split('-');
           
-        if (profileError || !profileResult) {
-          console.error("Error fetching profile:", profileError);
-          setError("Profile not found");
+          if (nameParts.length > 1) {
+            const potentialIdSuffix = nameParts[nameParts.length - 1];
+            
+            if (/^[a-zA-Z0-9]{4}$/.test(potentialIdSuffix)) {
+              const userIdPrefix = potentialIdSuffix;
+              const decodedName = nameParts.slice(0, nameParts.length - 1).join(' ');
+              
+              console.log("Parsed legacy URL - Name:", decodedName, "ID prefix:", userIdPrefix);
+              
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('id, user_id, full_name, profile_image, landscape_image, assessment_id')
+                .ilike('full_name', decodedName)
+                .filter('user_id', 'ilike', `${userIdPrefix}%`);
+                
+              if (!error && data && data.length > 0) {
+                console.log("Profile found by name+id prefix:", data[0]);
+                profile = data[0] as unknown as ProfileData;
+              }
+            }
+          }
+        }
+        
+        if (!profile) {
+          console.error("No profile found for identifier:", name);
+          setError("Profile not found. The link may be incorrect.");
           setIsLoading(false);
           return;
         }
         
-        console.log("Profile data found:", profileResult);
-        setProfileData(profileResult);
-        setLandscapeImage(profileResult.landscape_image || null);
-        setProfileImage(profileResult.profile_image || null);
+        // Step 3: Profile found, load the data
+        console.log("Using profile:", profile);
+        setProfileData(profile);
+        setLandscapeImage(profile.landscape_image || null);
+        setProfileImage(profile.profile_image || null);
         
-        // Get assessment_id from profile
-        const assessmentId = profileResult.assessment_id;
+        // Step 4: Get DNA analysis data using assessment_id
+        const assessmentId = profile.assessment_id;
         if (!assessmentId) {
-          console.error("No assessment ID found for profile");
+          console.error("No assessment ID found for profile:", profile.id);
           setError("No assessment data available for this profile");
           setIsLoading(false);
           return;
         }
         
-        // Fetch DNA analysis data using assessment_id
-        console.log("Fetching DNA analysis with assessment_id:", assessmentId);
-        const { data: dnaData, error: dnaError } = await supabase
+        console.log("Looking up DNA data with assessment_id:", assessmentId);
+        let dnaData = null;
+        
+        // Try both ways to find DNA data
+        const { data: dnaById, error: dnaByIdError } = await supabase
           .from('dna_analysis_results')
           .select('*')
           .eq('id', assessmentId)
-          .single();
+          .maybeSingle();
           
-        if (dnaError || !dnaData) {
-          console.error("DNA analysis fetch error:", dnaError);
-          setError("DNA analysis data not found");
+        if (!dnaByIdError && dnaById) {
+          console.log("DNA data found by direct ID match:", dnaById);
+          dnaData = dnaById;
+        } else {
+          // Try assessment_id field
+          const { data: dnaByAssessmentId, error: dnaByAssessmentIdError } = await supabase
+            .from('dna_analysis_results')
+            .select('*')
+            .eq('assessment_id', assessmentId)
+            .maybeSingle();
+            
+          if (!dnaByAssessmentIdError && dnaByAssessmentId) {
+            console.log("DNA data found by assessment_id field:", dnaByAssessmentId);
+            dnaData = dnaByAssessmentId;
+          }
+        }
+        
+        if (!dnaData) {
+          console.error("No DNA analysis data found for assessment_id:", assessmentId);
+          setError("Could not load the analysis data associated with this profile.");
           setIsLoading(false);
           return;
         }
         
-        console.log("DNA analysis data fetched:", dnaData);
         setAnalysisResult(dnaData);
 
       } catch (e) {
-        console.error("Exception fetching profile:", e);
-        setError("Error loading profile data");
+        console.error("Exception during profile fetch process:", e);
+        setError("An unexpected error occurred while loading profile data");
       } finally {
         setIsLoading(false);
       }
@@ -148,6 +216,30 @@ const ShareableProfile: React.FC = () => {
     
     fetchProfileData();
   }, [name, navigate]);
+
+  // Add scroll effect handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!imageRef.current || !scrollContainerRef.current) return;
+      
+      const imageBottom = imageRef.current.getBoundingClientRect().bottom;
+      const headerBottom = 60; // approximate header height
+      
+      setShouldBlurHeader(imageBottom <= headerBottom);
+    };
+
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      handleScroll(); // Check initial state
+    }
+    
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
 
   // Fetch icon URLs when analysisResult changes
   useEffect(() => {
@@ -170,9 +262,9 @@ const ShareableProfile: React.FC = () => {
     }
   }, [analysisResult]);
 
-  const handleCloseClick = () => {
-    navigate('/dna');
-  };
+  const handleCloseClick = (): void => {
+  navigate('/dna');
+};
   
   if (isLoading) {
     return (
@@ -184,14 +276,31 @@ const ShareableProfile: React.FC = () => {
 
   if (error || !profileData || !analysisResult) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#2A282A] text-[#E9E7E2]">
-        <p>{error || "Profile could not be loaded"}</p>
-        <Button 
-          onClick={() => navigate('/dna')}
-          className="mt-4"
-        >
-          Go to DNA Assessment
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#2A282A] text-[#E9E7E2] p-8">
+        <h1 className="text-2xl font-serif mb-4">Profile Not Available</h1>
+        <p className="text-center mb-6 max-w-md">
+          {error || "This profile could not be loaded. The link may be incorrect or the profile may not be public."}
+        </p>
+        
+        <div className="flex flex-col gap-4 w-full max-w-xs">
+          <Button 
+            onClick={() => navigate('/dna')}
+            className="bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium w-full"
+          >
+            Discover Your Intellectual DNA
+          </Button>
+          <Button 
+            onClick={() => navigate('/discover')}
+            variant="outline"
+            className="border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors font-oxanium w-full"
+          >
+            Explore Lightning Inspiration
+          </Button>
+        </div>
+        
+        <p className="mt-8 text-sm text-[#E9E7E2]/50 text-center">
+          Lightning Inspiration helps you discover your intellectual DNA and connect with ideas that resonate with you.
+        </p>
       </div>
     );
   }
@@ -212,7 +321,7 @@ const ShareableProfile: React.FC = () => {
   
   const challengingVoice = analysisResult.most_challenging_voice || "";
   const challengingVoiceName = challengingVoice.split(' - ')[0];
-
+  
   return (
     <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       <div className="relative w-full h-64 bg-[#2A282A]">
@@ -262,7 +371,7 @@ const ShareableProfile: React.FC = () => {
               }}
             >
               <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || ""} />
+                <AvatarImage src={profileImage || FALLBACK_ICON} />
                 <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                   {initials}
                 </AvatarFallback>
@@ -289,7 +398,12 @@ const ShareableProfile: React.FC = () => {
         
         {/* Most Kindred Spirit section - Only shown if data exists */}
         {kindredSpirit && (
-          <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-6">
+          <div 
+            className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-6 cursor-pointer hover:bg-[#383741] transition-colors"
+            onClick={() => navigateToIconDetail(kindredSpiritName)}
+            role="button"
+            aria-label={`View details for ${kindredSpiritName}`}
+          >
             <div className="flex items-center">
               <div className="relative mr-4">
                 <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
@@ -319,7 +433,12 @@ const ShareableProfile: React.FC = () => {
         
         {/* Most Challenging Voice section - Only shown if data exists */}
         {challengingVoice && (
-          <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-8">
+          <div
+            className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-8 cursor-pointer hover:bg-[#383741] transition-colors"
+            onClick={() => navigateToIconDetail(challengingVoiceName)}
+            role="button"
+            aria-label={`View details for ${challengingVoiceName}`}
+          >
             <div className="flex items-center">
               <div className="relative mr-4">
                 <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
@@ -367,6 +486,6 @@ const ShareableProfile: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default ShareableProfile;

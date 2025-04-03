@@ -1,4 +1,3 @@
-
 import React from "react";
 import DomainCard from "./DomainCard";
 
@@ -49,7 +48,7 @@ const DomainsList: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="grid grid-cols-1 gap-2">
       {domains.map((domain) => (
         <DomainCard 
           key={domain.id}

@@ -66,7 +66,6 @@ export function Login() {
                   inputBorder: '#3E3E71',
                   inputBorderFocus: '#5656A5',
                   inputBorderHover: '#5656A5',
-                  buttonText: '#E9E7E2',
                   dividerBackground: '#3E3E71',
                 }
               }
@@ -83,6 +82,17 @@ export function Login() {
           providers={[]} // No social providers as per requirements
           redirectTo={`${window.location.origin}/auth/callback`}
           onError={(error) => handleAuthError(error.message)}
+          options={{
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            shouldCreateUser: true,
+            signUpFields: {
+              full_name: {
+                label: 'Full Name',
+                placeholder: 'John Doe',
+                required: true,
+              },
+            },
+          }}
         />
       </div>
     </div>

@@ -3,9 +3,11 @@ import { ArrowRight, Hexagon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore, getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
+import { useProfileData } from "@/contexts/ProfileDataContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
-// Fixed assessment ID - same as used in DomainDetail.tsx
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+// Remove the hardcoded ID
+// const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface DNAAnalysisResult {
   [key: string]: string | null;
@@ -29,18 +31,49 @@ const DomainCard: React.FC<DomainCardProps> = ({
   const navigate = useNavigate();
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { profileData, dnaAnalysisData } = useProfileData();
   
   useEffect(() => {
     const fetchDomainData = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+        
+        // Use the DNA analysis data from context if available
+        if (dnaAnalysisData) {
+          setDomainAnalysis(dnaAnalysisData as DNAAnalysisResult);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise fetch it using the assessment_id from the user's profile
+        if (!profileData?.assessment_id) {
+          console.error("No assessment ID found in profile data");
+          setIsLoading(false);
+          return;
+        }
+        
+        // First try using assessment_id field
+        let { data, error } = await supabase
           .from('dna_analysis_results')
           .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', profileData.assessment_id)
           .maybeSingle();
           
-        if (data && !error) {
+        // If that fails, try using id field (legacy approach)
+        if (!data && !error) {
+          const { data: legacyData, error: legacyError } = await supabase
+            .from('dna_analysis_results')
+            .select('*')
+            .eq('id', profileData.assessment_id)
+            .maybeSingle();
+            
+          if (legacyData && !legacyError) {
+            data = legacyData;
+          }
+        }
+        
+        if (data) {
           setDomainAnalysis(data as DNAAnalysisResult);
         }
       } catch (e) {
@@ -51,11 +84,11 @@ const DomainCard: React.FC<DomainCardProps> = ({
     };
     
     fetchDomainData();
-  }, []);
+  }, [profileData, dnaAnalysisData]);
   
   return (
     <div 
-      className="rounded-xl overflow-hidden bg-[#383741] mb-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+      className="rounded-xl overflow-hidden bg-[#383741] shadow-md hover:shadow-lg transition-shadow cursor-pointer"
       onClick={() => navigate(`/dashboard/domain/${id}`)}
     >
       <div className="p-4 flex items-center">

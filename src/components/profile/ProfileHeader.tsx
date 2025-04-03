@@ -25,6 +25,9 @@ const ProfileHeader: React.FC = () => {
   // No default landscape image - if there's none, don't show one
   const landscapeImage = profileData?.landscape_image || null;
   const profileImage = profileData?.profile_image || null;
+  
+  // Lightning logo fallback image
+  const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzNjI4OTkwLCJleHAiOjg2NTc0MzU0MjU5MH0.iC8ooiUUENlvy-6ZtRexi_3jIJS5lBy2Y5FnUM82p9o";
 
   const handleProfileEditClick = () => {
     navigate('/profile/edit');
@@ -32,8 +35,21 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     try {
-      // Update to use the full_name for the URL with hyphen formatting
-      const shareUrl = `${window.location.origin}/profile/share/${fullName.replace(/\s+/g, '-')}`;
+      if (!user?.id) {
+        toast({
+          title: "Error",
+          description: "User not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Generate a vanity URL format without relying on the database column
+      const userIdSuffix = user.id.substring(0, 4);
+      const formattedName = fullName.replace(/\s+/g, '-');
+      const shareUrl = `${window.location.origin}/profile/share/${formattedName}-${userIdSuffix}`;
+      console.log("Generated vanity URL for sharing:", `${formattedName}-${userIdSuffix}`);
+      
       await navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Success",
@@ -103,7 +119,7 @@ const ProfileHeader: React.FC = () => {
                 }}
               >
                 <Avatar className="h-full w-full overflow-hidden rounded-none">
-                  <AvatarImage src={profileImage || ""} />
+                  <AvatarImage src={profileImage || FALLBACK_ICON} />
                   <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                     {initials}
                   </AvatarFallback>
