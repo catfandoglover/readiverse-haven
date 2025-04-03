@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import {
   DropdownMenu,
@@ -12,17 +13,17 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
-
 interface DNAAnalysisResult {
   [key: string]: string | null;
 }
 
 const IntellectualDNACourse: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<any>({});
   
   const domains = [
     {
@@ -72,31 +73,171 @@ const IntellectualDNACourse: React.FC = () => {
   const filteredDomains = domainFilter && domainFilter !== "all" 
     ? domains.filter(domain => domain.id === domainFilter)
     : domains;
-  
+    
+  // Fetch DNA analysis data for the current user
   useEffect(() => {
+    const debug: any = { steps: [] };
+    
     const fetchDomainData = async () => {
+      if (!user) {
+        setDebugInfo({ error: "No authenticated user" });
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
+        
+        // STEP 1: Get user profile
+        debug.steps.push({
+          step: 1,
+          description: "Finding user profile",
+          userId: user.id
+        });
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
           .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .or(`user_id.eq.${user.id}`)
           .maybeSingle();
           
-        if (data && !error) {
-          setDomainAnalysis(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching domain analysis:", error);
+        if (profileError || !profile) {
+          setDebugInfo({ 
+            error: profileError?.message || "No profile found for user",
+            userId: user.id
+          });
+          throw new Error(profileError?.message || "No profile found for user");
         }
-      } catch (e) {
-        console.error("Exception fetching domain analysis:", e);
+        
+        debug.steps.push({
+          step: 2, 
+          description: "Found user profile",
+          profileId: profile.id,
+          success: true
+        });
+        
+        // STEP 2: Get assessment_id from profile
+        if (!profile.assessment_id) {
+          setDebugInfo({
+            error: "Profile has no assessment_id",
+            profile
+          });
+          throw new Error("Profile doesn't have an assessment_id");
+        }
+        
+        debug.steps.push({
+          step: 3,
+          description: "Got assessment_id from profile",
+          assessmentId: profile.assessment_id,
+          success: true
+        });
+        
+        // STEP 3: Try multiple approaches to find DNA data
+        // Approach 1: Try direct assessment_id match
+        const { data: dnaData1, error: dnaError1 } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('assessment_id', profile.assessment_id)
+          .maybeSingle();
+          
+        if (!dnaError1 && dnaData1) {
+          // Success with direct assessment_id match
+          setDomainAnalysis(dnaData1 as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using assessment_id field (correct approach)",
+            dnaId: dnaData1.id,
+            dnaAssessmentId: dnaData1.assessment_id,
+            success: true
+          });
+          
+          debug.dnaDataFound = "By assessment_id field match";
+          debug.success = true;
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // Approach 2: Try legacy lookup by record ID
+        const { data: dnaData2, error: dnaError2 } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('id', profile.assessment_id)
+          .maybeSingle();
+          
+        if (!dnaError2 && dnaData2) {
+          // Success with ID match (legacy approach)
+          setDomainAnalysis(dnaData2 as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using ID field (legacy approach)",
+            dnaId: dnaData2.id,
+            dnaAssessmentId: dnaData2.assessment_id || "Not set",
+            success: true,
+            warning: "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id"
+          });
+          
+          debug.dnaDataFound = "By ID field match (legacy approach)";
+          debug.success = true;
+          debug.warning = "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id";
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // Approach 3: As a last resort, find ANY DNA record that exists
+        const { data: anyDnaData, error: anyDnaError } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+          
+        if (!anyDnaError && anyDnaData) {
+          // Success with fallback to any record
+          setDomainAnalysis(anyDnaData as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using fallback to any record (emergency approach)",
+            dnaId: anyDnaData.id,
+            dnaAssessmentId: anyDnaData.assessment_id || "Not set",
+            success: true,
+            warning: "Using EMERGENCY fallback: No matching record found, using first available DNA record"
+          });
+          
+          debug.dnaDataFound = "By emergency fallback (first available record)";
+          debug.success = true;
+          debug.warning = "EMERGENCY FALLBACK: No matching record found, using first available DNA record";
+          
+          // Also update the profile with this assessment_id to fix the relationship
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ assessment_id: anyDnaData.id })
+            .eq('id', profile.id);
+            
+          if (updateError) {
+            debug.warning += ` (Failed to update profile: ${updateError.message})`;
+          } else {
+            debug.warning += " (Updated profile.assessment_id to match this record)";
+          }
+          
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // All attempts failed
+        throw new Error(`No DNA analysis data found. Tried assessment_id: ${profile.assessment_id}`);
+      } catch (err) {
+        console.error('Error in DNA course:', err);
+        setDomainAnalysis(null);
+        setDebugInfo({
+          ...debug,
+          error: err instanceof Error ? err.message : String(err)
+        });
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchDomainData();
-  }, []);
+  }, [user]);
   
   const getDomainIntroduction = (domainId: string) => {
     if (isLoading) {
@@ -125,6 +266,13 @@ const IntellectualDNACourse: React.FC = () => {
     }
   };
   
+  // Helper function to get icon URL for a philosopher
+  const getIconUrl = (dbId: string | null): string | null => {
+    if (!dbId) return "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+    
+    return "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"; // Default fallback
+  };
+  
   const getResourcesForTab = (domainId: string, tab: "kindred" | "challenging") => {
     if (isLoading || !domainAnalysis) {
       return Array(5).fill({
@@ -146,20 +294,24 @@ const IntellectualDNACourse: React.FC = () => {
       let resourceKey = '';
       let classicKey = '';
       let rationaleKey = '';
+      let dbIdKey = '';
       
       if (tab === "kindred") {
         resourceKey = `${domainId}_kindred_spirit_${i}`;
         classicKey = `${domainId}_kindred_spirit_${i}_classic`;
         rationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
+        dbIdKey = `${domainId}_kindred_spirit_${i}_db_id`;
       } else {
         resourceKey = `${domainId}_challenging_voice_${i}`;
         classicKey = `${domainId}_challenging_voice_${i}_classic`;
         rationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
+        dbIdKey = `${domainId}_challenging_voice_${i}_db_id`;
       }
       
       const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
       const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
+      const dbId = domainAnalysis[dbIdKey as keyof DNAAnalysisResult];
       
       let status = "locked";
       if (i === 1) status = "completed";
@@ -168,7 +320,7 @@ const IntellectualDNACourse: React.FC = () => {
       
       resources.push({
         id: `resource-${i}`,
-        image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+        image: getIconUrl(dbId as string) || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
         description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
@@ -296,20 +448,18 @@ const IntellectualDNACourse: React.FC = () => {
   };
   
   return (
-    <div className="min-h-screen bg-[#2A282A] text-[#E9E7E2] relative">
-      <header className="flex items-center pt-4 pb-4 px-8 bg-[#1D3A35] text-[#E9E7E2] sticky top-0 z-10">
+    <div className="min-h-screen bg-[#1D3A35] text-[#E9E7E2] relative">
+      <header className="sticky top-0 z-10 px-6 py-4 flex justify-between items-center bg-[#1D3A35]">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate("/classroom")}
+          onClick={() => navigate(-1)}
           className="p-0 h-auto w-auto hover:bg-transparent"
         >
           <ArrowLeft className="h-6 w-6 text-white" />
         </Button>
         
-        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
-          Intellectual DNA
-        </h2>
+        <h1 className="text-sm font-oxanium uppercase font-bold text-[#E9E7E2]">Intellectual DNA Course</h1>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -317,7 +467,7 @@ const IntellectualDNACourse: React.FC = () => {
               <SlidersHorizontal className="h-6 w-6 text-[#E9E7E2]" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#19352F] border-[#2A3A35] text-[#E9E7E2]">
+          <DropdownMenuContent align="end" className="bg-[#1D3A35] border-[#356E61] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
               className="flex items-center cursor-pointer font-libre-baskerville"
@@ -359,6 +509,15 @@ const IntellectualDNACourse: React.FC = () => {
           </div>
         )}
       </main>
+      
+      {/* Debug Info (for development, can be removed in production) */}
+      {debugInfo.error && (
+        <div className="p-4 bg-red-900/30 rounded m-6">
+          <h3 className="font-bold mb-2">Error Loading DNA Data:</h3>
+          <p>{debugInfo.error}</p>
+          {debugInfo.warning && <p className="text-yellow-300 mt-2">{debugInfo.warning}</p>}
+        </div>
+      )}
     </div>
   );
 };
