@@ -263,8 +263,8 @@ function ShareableProfile(): JSX.Element {
   }, [analysisResult]);
 
   const handleCloseClick = (): void => {
-    navigate(-1);
-  };
+  navigate('/dna');
+};
   
   if (isLoading) {
     return (
