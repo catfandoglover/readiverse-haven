@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { MasteryScore } from "@/components/reader/MasteryScore";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
-
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
+import { useProfileData } from "@/contexts/ProfileDataContext";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 interface DNAAnalysisResult {
   theology_introduction: string | null;
@@ -237,22 +237,59 @@ const DomainDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"kindred" | "challenging">("kindred");
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { profileData, dnaAnalysisData } = useProfileData();
   
   useEffect(() => {
     const fetchDomainData = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+        
+        // Use the DNA analysis data from context if available
+        if (dnaAnalysisData) {
+          console.log("Using DNA analysis data from context:", dnaAnalysisData);
+          setDomainAnalysis(dnaAnalysisData as DNAAnalysisResult);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise fetch it using the assessment_id from the profile
+        if (!profileData?.assessment_id) {
+          console.error("No assessment ID found in profile data");
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log("Fetching DNA analysis with assessment ID:", profileData.assessment_id);
+        
+        // First try using assessment_id field
+        let { data, error } = await supabase
           .from('dna_analysis_results')
           .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .eq('assessment_id', profileData.assessment_id)
           .maybeSingle();
           
-        if (data && !error) {
+        // If that fails, try using id field (legacy approach)
+        if (!data && !error) {
+          const { data: legacyData, error: legacyError } = await supabase
+            .from('dna_analysis_results')
+            .select('*')
+            .eq('id', profileData.assessment_id)
+            .maybeSingle();
+            
+          if (legacyData && !legacyError) {
+            console.log("Found DNA analysis using legacy approach (ID match):", legacyData);
+            data = legacyData;
+          } else if (legacyError) {
+            console.error("Error fetching DNA analysis using legacy approach:", legacyError);
+          }
+        }
+        
+        if (data) {
           console.log("Domain analysis:", data);
           setDomainAnalysis(data as DNAAnalysisResult);
         } else {
-          console.error("Error fetching domain analysis:", error);
+          console.error("No DNA analysis data found for assessment ID:", profileData.assessment_id);
         }
       } catch (e) {
         console.error("Exception fetching domain analysis:", e);
@@ -262,7 +299,7 @@ const DomainDetail: React.FC = () => {
     };
     
     fetchDomainData();
-  }, []);
+  }, [profileData, dnaAnalysisData]);
   
   const getDomainData = (id: string) => {
     const domains: Record<string, {

@@ -8,7 +8,6 @@ import MainMenu from "../navigation/MainMenu";
 import { ArrowRight, Hexagon, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useProfileData } from "@/contexts/ProfileDataContext";
-import ProfileDebug from "./ProfileDebug";
 
 interface ProfileLayoutProps {
   initialTab?: "become" | "profile";
@@ -270,9 +269,6 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
           </div>
         </div>
       </main>
-      
-      {/* Add ProfileDebug component */}
-      <ProfileDebug />
     </div>
   );
 };
