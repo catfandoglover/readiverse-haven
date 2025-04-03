@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/SupabaseAuthContext";
@@ -47,6 +47,7 @@ import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +103,38 @@ const ReaderWrapper = () => {
   );
 };
 
+const IconRedirect = ({ id }: { id: string }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { supabase } = useAuth();
+
+  useEffect(() => {
+    const fetchSlug = async () => {
+      const { data, error } = await supabase
+        .from('icons')
+        .select('slug')
+        .eq('id', id)
+        .single();
+
+      if (error || !data?.slug) {
+        console.error('Error fetching icon slug:', error);
+        navigate('/discover', { replace: true });
+        return;
+      }
+
+      // Preserve the location state when redirecting
+      navigate(`/icons/${data.slug}`, { 
+        replace: true,
+        state: location.state // Pass through any state from the original navigation
+      });
+    };
+
+    fetchSlug();
+  }, [id, navigate, supabase, location.state]);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
@@ -140,6 +173,25 @@ const App = () => (
                   <Route path="/discover/search/concepts" element={<ConceptsFeedPage />} />
                   <Route path="/discover/search/classics" element={<ClassicsFeedPage />} />
                   <Route path="/discover/search/questions" element={<GreatQuestions />} />
+                  <Route path="/view/icon/:id" element={<IconRedirect id={useParams().id || ''} />} />
+                  <Route path="/view/classic/:id" element={
+                    <Navigate to="/texts/:id" replace />
+                  } />
+                  <Route path="/icons/:slug" element={
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
+                      <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/concepts/:slug" element={
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
+                      <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/texts/:slug" element={
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
+                      <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Login />} /> {/* Reuse Login component with signup tab */}
                   <Route path="/auth/callback" element={<AuthCallback />} />
@@ -289,8 +341,12 @@ const App = () => (
                   <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
                   <Route path="/search/questions" element={<Navigate to="/discover/search/questions" replace />} />
                   
-                  {/* 404 page or fallback */}
-                  <Route path="*" element={<Navigate to="/discover" replace />} />
+                  {/* Catch-all route should be last */}
+                  <Route path="/:slug" element={
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
+                      <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </ErrorBoundary>
             </TooltipProvider>

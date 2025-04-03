@@ -18,12 +18,12 @@ const SearchPage = () => {
   
   React.useEffect(() => {
     const checkAssessment = async () => {
-      if (supabase && user?.Uid) {
+      if (supabase && user?.id) {
         try {
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('assessment_id')
-            .eq('outseta_user_id', user.Uid)
+            .eq('user_id', user.id)
             .maybeSingle();
             
           if (error) {
@@ -266,7 +266,7 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
 
   const query = supabase
     .from(tableName as any)
-    .select(`id, ${column}, ${imageColumn}`)
+    .select(`id, ${column}, ${imageColumn}, slug`)
     .limit(limit);
     
   const { data, error } = tableName === 'great_questions' 
@@ -281,7 +281,8 @@ const fetchTrendingItems = async (tableName: string, limit: number = 6) => {
   return data.map((item: any) => ({
     id: item.id,
     title: item[column],
-    image: item[imageColumn] || '/placeholder.svg'
+    image: item[imageColumn] || '/placeholder.svg',
+    slug: item.slug
   }));
 };
 
@@ -289,6 +290,7 @@ interface TrendingItem {
   id: string;
   title: string;
   image: string;
+  slug?: string;
 }
 
 interface TrendingCarouselProps {
@@ -305,10 +307,10 @@ const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ title, items, type 
     
     switch (type) {
       case 'icons':
-        route = `/view/icon/${item.id}`;
+        route = `/icons/${item.slug || item.id}`;
         break;
       case 'concepts':
-        route = `/view/concept/${item.id}`;
+        route = `/view/concept/${item.slug || item.id}`;
         break;
       case 'questions':
         route = `/great-questions/${item.id}`;

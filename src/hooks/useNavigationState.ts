@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { saveLastVisited, sections, getOriginPath } from '@/utils/navigationHistory';
@@ -15,7 +14,10 @@ export const useNavigationState = () => {
   
   // Store the current path in session storage when it changes
   useEffect(() => {
-    if (!location.pathname.includes('/view/')) {
+    if (!location.pathname.includes('/view/') && 
+        !location.pathname.includes('/icons/') && 
+        !location.pathname.includes('/texts/') && 
+        !location.pathname.includes('/concepts/')) {
       // Track the exact path for better navigation
       const currentPath = location.pathname;
       sessionStorage.setItem('lastContentPath', currentPath);
@@ -50,8 +52,8 @@ export const useNavigationState = () => {
   const getContentType = useCallback((): ContentType => {
     const pathname = location.pathname;
     
-    if (pathname.includes('/view/classic/')) return 'classic';
-    if (pathname.includes('/view/icon/')) return 'icon';
+    if (pathname.includes('/view/classic/') || pathname.includes('/texts/')) return 'classic';
+    if (pathname.includes('/icons/')) return 'icon';
     if (pathname.includes('/view/concept/')) return 'concept';
     if (pathname.includes('/view/question/')) return 'question';
     if (pathname.includes('/discover/search/classics')) return 'classic';
@@ -68,7 +70,7 @@ export const useNavigationState = () => {
    */
   const saveSourcePath = useCallback((path: string) => {
     // Only save non-detail view paths
-    if (!path.includes('/view/')) {
+    if (!path.includes('/view/') && !path.includes('/texts/') && !path.includes('/concepts/')) {
       sessionStorage.setItem('sourcePath', path);
       setCurrentSourcePath(path);
       console.log('[NavigationState] Saved source path:', path);

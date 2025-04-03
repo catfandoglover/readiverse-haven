@@ -291,7 +291,7 @@ const Home = () => {
                       <Card 
                         key={icon.id} 
                         className="flex-none w-48 hover:bg-accent/50 transition-colors cursor-pointer bg-card text-card-foreground"
-                        onClick={() => navigate(`/view/icon/${icon.id}`)}
+                        onClick={() => navigate(`/icons/${icon.id}`)}
                       >
                         <div className="aspect-[2/3] w-full p-[2px] rounded-lg relative after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#7E69AB]">
                           <img

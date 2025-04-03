@@ -135,12 +135,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-      // Clear any auth-related local storage
+      // Clear any auth-related local storage first
       localStorage.removeItem('pending_dna_assessment_id');
       sessionStorage.removeItem('dna_assessment_id');
       sessionStorage.removeItem('dna_assessment_to_save');
-      navigate('/');
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear the auth state
+      setUser(null);
+      setSession(null);
+      setHasCompletedDNA(false);
+      
+      // Navigate to DNA assessment page
+      navigate('/dna');
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out. Please try again.');

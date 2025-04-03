@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +22,7 @@ interface Concept {
   randomizer?: number;
   created_at?: string;
   introduction?: string;
+  slug?: string;
 }
 
 interface ConceptsContentProps {
@@ -50,8 +50,8 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     queryFn: async () => {
       const { data, error } = await supabase
         .from("concepts")
-        .select("*")
-        .order("randomizer");
+        .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
+        .limit(5);
       
       if (error) {
         toast({
@@ -59,12 +59,16 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           title: "Error",
           description: "Failed to load concepts",
         });
+        console.error("Error fetching concepts:", error);
         return [];
       }
 
-      return data.map((concept: any) => ({
+      // Sort the concepts by randomizer after fetching
+      const sortedData = [...(data || [])].sort((a, b) => (a.randomizer || 0) - (b.randomizer || 0));
+
+      return sortedData.map((concept: any) => ({
         ...concept,
-        type: "concept",
+        type: concept.concept_type || "concept",
         about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
         genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
         great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
@@ -80,22 +84,49 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   // Handle URL-based navigation and detailed view visibility
   useEffect(() => {
-    if (location.pathname.includes('/view/concept/')) {
-      const conceptId = location.pathname.split('/view/concept/')[1];
-      const concept = concepts.find(c => c.id === conceptId);
-      
-      if (concept) {
-        setSelectedConcept(concept);
-        if (onDetailedViewShow) onDetailedViewShow();
+    const loadConceptFromUrl = async () => {
+      if (location.pathname.includes('/concepts/')) {
+        const slug = location.pathname.split('/concepts/')[1];
+        
+        // First try to find the concept in our existing data
+        let concept = concepts.find(c => c.slug === slug);
+        
+        // If not found in existing data, fetch it directly
+        if (!concept) {
+          const { data, error } = await supabase
+            .from("concepts")
+            .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
+            .eq('slug', slug)
+            .single();
+            
+          if (data && !error) {
+            concept = {
+              ...data,
+              type: data.concept_type || "concept",
+              about: data.about || `${data.title} is a significant philosophical concept.`,
+              genealogy: `The historical development of ${data.title} spans multiple philosophical traditions.`,
+              great_conversation: data.great_conversation || `${data.title} has been debated throughout philosophical history.`,
+              image: data.illustration,
+            };
+          }
+        }
+        
+        if (concept) {
+          setSelectedConcept(concept);
+          if (onDetailedViewShow) onDetailedViewShow();
+        }
       }
-    }
-  }, [location.pathname, concepts, onDetailedViewShow]);
+    };
+    
+    loadConceptFromUrl();
+  }, [location.pathname, concepts, onDetailedViewShow, supabase]);
 
   // Save the current path for proper back navigation - this is critical
   useEffect(() => {
     const currentPath = location.pathname;
     
-    if (!currentPath.includes('/view/')) {
+    // Only save the source path if we're not in a detail view
+    if (!currentPath.includes('/concepts/')) {
       // This will store the current feed page as the source path
       saveSourcePath(currentPath);
       console.log('[ConceptsContent] Saved source path:', currentPath);
@@ -117,15 +148,19 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
     
-    // Get the current path before navigation to use it as the source path
+    // Get the current path before navigation
     const sourcePath = location.pathname;
     console.log("[ConceptsContent] Setting source path for detail view:", sourcePath);
     
-    navigate(`/view/concept/${concept.id}`, { 
-      replace: true,
+    // Save the source path before navigation
+    saveSourcePath(sourcePath);
+    
+    // Navigate to concept detail view
+    const slug = concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id;
+    navigate(`/concepts/${slug}`, { 
       state: { 
         fromSection: 'discover',
-        sourcePath: sourcePath // Pass the exact current path
+        sourcePath: sourcePath
       }
     });
     
@@ -138,7 +173,11 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     const sourcePath = getSourcePath();
     console.log("[ConceptsContent] Navigating back to:", sourcePath);
     
-    navigate(sourcePath, { replace: true });
+    if (sourcePath) {
+      navigate(sourcePath);
+    } else {
+      navigate('/discover');
+    }
     
     if (onDetailedViewHide) onDetailedViewHide();
   };

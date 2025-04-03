@@ -1,4 +1,3 @@
-
 const LAST_VISITED_KEY_PREFIX = 'last-visited-';
 const SCROLL_POSITION_KEY_PREFIX = 'scroll-position-';
 const PREVIOUS_PAGE_KEY = 'previous-page';
@@ -16,7 +15,7 @@ export const sections = {
 // Store a stack of the last 10 visited pages to provide better back navigation
 const saveNavigationHistory = (path: string) => {
   // Don't track detail view pages as previous pages to avoid circular navigation
-  if (path.includes('/view/')) return;
+  if (path.includes('/view/') || path.includes('/icons/') || path.includes('/texts/')) return;
   
   try {
     // Get current history or initialize empty array
@@ -50,7 +49,7 @@ export const saveLastVisited = (section: keyof typeof sections, path: string) =>
   localStorage.setItem(`${LAST_VISITED_KEY_PREFIX}${section}`, path);
   
   // Store current path as previous page for back navigation
-  if (!path.includes('/view/')) {
+  if (!path.includes('/view/') && !path.includes('/texts/')) {
     localStorage.setItem(PREVIOUS_PAGE_KEY, path);
     console.log("Saved previous page:", path);
   }
@@ -95,7 +94,7 @@ export const getPreviousPage = (): string => {
       // Find the last valid page in history (not a detail view)
       for (let i = history.length - 1; i >= 0; i--) {
         const page = history[i];
-        if (!page.includes('/view/')) {
+        if (!page.includes('/view/') && !page.includes('/icons/') && !page.includes('/texts/')) {
           return page;
         }
       }

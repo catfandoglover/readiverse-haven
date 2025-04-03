@@ -52,7 +52,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-  const { saveSourcePath } = useNavigationState();
+  const { saveSourcePath, getSourcePath } = useNavigationState();
   
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -115,39 +115,40 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   }, [loadedCount, refetch]);
 
   useEffect(() => {
-    if (location.pathname.includes('/view/icon/')) {
-      const iconParam = location.pathname.split('/view/icon/')[1];
-      console.log("Icon param detected:", iconParam);
+    if (location.pathname.includes('/icons/')) {
+      const iconParam = location.pathname.split('/icons/')[1];
+      console.log("[IconsContent] Icon param detected:", iconParam);
       
-      if (selectedIcon?.id !== iconParam && selectedIcon?.slug !== iconParam) {
-        const icon = icons.find(i => (i.id === iconParam || i.slug === iconParam));
+      if (!selectedIcon || selectedIcon.slug !== iconParam) {
+        console.log("[IconsContent] Loading icon from URL param");
+        const icon = icons.find(i => i.slug === iconParam);
         
         if (icon) {
-          console.log("Found matching icon in list:", icon.name);
+          console.log("[IconsContent] Found matching icon in list:", icon.name);
           setSelectedIcon({...icon});
           if (onDetailedViewShow) onDetailedViewShow();
         } else {
-          console.log("Icon not found in current list, fetching directly");
+          console.log("[IconsContent] Icon not found in current list, fetching directly");
           fetchIconDirectly(iconParam);
         }
       }
     } else if (selectedIcon) {
       setSelectedIcon(null);
     }
-  }, [location.pathname, icons]);
+  }, [location.pathname, icons, location.key]);
 
-  const fetchIconDirectly = async (iconId: string) => {
+  const fetchIconDirectly = async (iconSlug: string) => {
     try {
-      console.log("Directly fetching icon with ID:", iconId);
+      console.log("[IconsContent] Directly fetching icon with slug:", iconSlug);
       
       const { data, error } = await supabase
         .from("icons")
         .select("*")
-        .or(`id.eq.${iconId},slug.eq.${iconId}`)
+        .eq('slug', iconSlug)
         .single();
       
       if (error) {
-        console.error("Error fetching icon directly:", error);
+        console.error("[IconsContent] Error fetching icon directly:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -157,10 +158,9 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       }
       
       if (data) {
-        console.log("Directly fetched icon:", data.name);
+        console.log("[IconsContent] Directly fetched icon:", data.name);
         const processedIcon: Icon = {
           ...data,
-          slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
           about: data.about || `${data.name} was a significant figure in philosophical history.`,
           great_conversation: data.great_conversation || `${data.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
           anecdotes: data.anecdotes || `Various interesting stories surround ${data.name}'s life and work.`,
@@ -168,9 +168,21 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
         
         setSelectedIcon(processedIcon);
         if (onDetailedViewShow) onDetailedViewShow();
+      } else {
+        console.error("[IconsContent] No data returned for icon slug:", iconSlug);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load the requested icon"
+        });
       }
     } catch (e) {
-      console.error("Unexpected error in fetchIconDirectly:", e);
+      console.error("[IconsContent] Unexpected error in fetchIconDirectly:", e);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while loading the icon"
+      });
     }
   };
 
@@ -187,13 +199,16 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handleLearnMore = (icon: Icon) => {
+    if (!icon.slug) {
+      console.error("Icon missing slug:", icon);
+      return;
+    }
+    
     setSelectedIcon(icon);
-    navigate(`/view/icon/${icon.id}`, { 
+    
+    navigate(`/icons/${icon.slug}`, { 
       replace: true,
-      state: { 
-        fromSection: 'discover',
-        sourcePath: location.pathname
-      }
+      state: { fromSection: 'discover' }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -201,8 +216,60 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   const handleCloseDetailedView = () => {
     setSelectedIcon(null);
+    
+    // Check all possible storage locations for source path
+    const sourcePaths = {
+      localStorage: localStorage.getItem('sourcePath'),
+      sessionStorage: sessionStorage.getItem('sourcePath'),
+      localDetailedView: localStorage.getItem('detailedViewSourcePath'),
+      sessionDetailedView: sessionStorage.getItem('detailedViewSourcePath')
+    };
+    
+    console.log("[IconsContent] Available source paths for back navigation:", sourcePaths);
+    
+    // First try localStorage detailedViewSourcePath (most specific)
+    if (sourcePaths.localDetailedView && sourcePaths.localDetailedView !== location.pathname) {
+      console.log("[IconsContent] Navigating to source path from localStorage (detailedViewSourcePath):", sourcePaths.localDetailedView);
+      navigate(sourcePaths.localDetailedView, { replace: true });
+      localStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    // Then try sessionStorage detailedViewSourcePath
+    if (sourcePaths.sessionDetailedView && sourcePaths.sessionDetailedView !== location.pathname) {
+      console.log("[IconsContent] Navigating to source path from sessionStorage (detailedViewSourcePath):", sourcePaths.sessionDetailedView);
+      navigate(sourcePaths.sessionDetailedView, { replace: true });
+      sessionStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    // Then try localStorage sourcePath
+    if (sourcePaths.localStorage && sourcePaths.localStorage !== location.pathname) {
+      console.log("[IconsContent] Navigating to source path from localStorage:", sourcePaths.localStorage);
+      navigate(sourcePaths.localStorage, { replace: true });
+      localStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    // Then try sessionStorage sourcePath
+    if (sourcePaths.sessionStorage && sourcePaths.sessionStorage !== location.pathname) {
+      console.log("[IconsContent] Navigating to source path from sessionStorage:", sourcePaths.sessionStorage);
+      navigate(sourcePaths.sessionStorage, { replace: true });
+      sessionStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    // Fall back to previous page from history
     const previousPath = getPreviousPage();
-    console.log("Navigating back to previous page:", previousPath);
+    console.log("[IconsContent] Falling back to previous page from history:", previousPath);
     navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
