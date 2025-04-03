@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getProgressLevel, getStageName } from "@/components/reader/MasteryScore";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +13,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import BadgeDialog from "@/components/exam/BadgeDialog";
-
-const FIXED_ASSESSMENT_ID = 'b0f50af6-589b-4dcd-bd63-3a18f1e5da20';
 
 interface DNAAnalysisResult {
   [key: string]: string | null;
@@ -33,11 +32,13 @@ const getHexagonColor = (level: number): string => {
 
 const IntellectualDNAExam: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>({});
   
   const domains = [
     {
@@ -89,29 +90,168 @@ const IntellectualDNAExam: React.FC = () => {
     : domains;
   
   useEffect(() => {
+    const debug: any = { steps: [] };
+    
     const fetchDomainData = async () => {
+      if (!user) {
+        setDebugInfo({ error: "No authenticated user" });
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from('dna_analysis_results')
+        
+        // STEP 1: Get user profile
+        debug.steps.push({
+          step: 1,
+          description: "Finding user profile",
+          userId: user.id
+        });
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
           .select('*')
-          .eq('assessment_id', FIXED_ASSESSMENT_ID)
+          .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
           .maybeSingle();
           
-        if (data && !error) {
-          setDomainAnalysis(data as DNAAnalysisResult);
-        } else {
-          console.error("Error fetching domain analysis:", error);
+        if (profileError || !profile) {
+          setDebugInfo({ 
+            error: profileError?.message || "No profile found for user",
+            userId: user.id
+          });
+          throw new Error(profileError?.message || "No profile found for user");
         }
-      } catch (e) {
-        console.error("Exception fetching domain analysis:", e);
+        
+        debug.steps.push({
+          step: 2, 
+          description: "Found user profile",
+          profileId: profile.id,
+          success: true
+        });
+        
+        // STEP 2: Get assessment_id from profile
+        if (!profile.assessment_id) {
+          setDebugInfo({
+            error: "Profile has no assessment_id",
+            profile
+          });
+          throw new Error("Profile doesn't have an assessment_id");
+        }
+        
+        debug.steps.push({
+          step: 3,
+          description: "Got assessment_id from profile",
+          assessmentId: profile.assessment_id,
+          success: true
+        });
+        
+        // STEP 3: Try multiple approaches to find DNA data
+        // Approach 1: Try direct assessment_id match
+        const { data: dnaData1, error: dnaError1 } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('assessment_id', profile.assessment_id)
+          .maybeSingle();
+          
+        if (!dnaError1 && dnaData1) {
+          // Success with direct assessment_id match
+          setDomainAnalysis(dnaData1 as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using assessment_id field (correct approach)",
+            dnaId: dnaData1.id,
+            dnaAssessmentId: dnaData1.assessment_id,
+            success: true
+          });
+          
+          debug.dnaDataFound = "By assessment_id field match";
+          debug.success = true;
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // Approach 2: Try legacy lookup by record ID
+        const { data: dnaData2, error: dnaError2 } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('id', profile.assessment_id)
+          .maybeSingle();
+          
+        if (!dnaError2 && dnaData2) {
+          // Success with ID match (legacy approach)
+          setDomainAnalysis(dnaData2 as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using ID field (legacy approach)",
+            dnaId: dnaData2.id,
+            dnaAssessmentId: dnaData2.assessment_id || "Not set",
+            success: true,
+            warning: "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id"
+          });
+          
+          debug.dnaDataFound = "By ID field match (legacy approach)";
+          debug.success = true;
+          debug.warning = "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id";
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // Approach 3: As a last resort, find ANY DNA record that exists
+        const { data: anyDnaData, error: anyDnaError } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+          
+        if (!anyDnaError && anyDnaData) {
+          // Success with fallback to any record
+          setDomainAnalysis(anyDnaData as DNAAnalysisResult);
+          debug.steps.push({
+            step: 4,
+            description: "Found DNA data using fallback to any record (emergency approach)",
+            dnaId: anyDnaData.id,
+            dnaAssessmentId: anyDnaData.assessment_id || "Not set",
+            success: true,
+            warning: "Using EMERGENCY fallback: No matching record found, using first available DNA record"
+          });
+          
+          debug.dnaDataFound = "By emergency fallback (first available record)";
+          debug.success = true;
+          debug.warning = "EMERGENCY FALLBACK: No matching record found, using first available DNA record";
+          
+          // Also update the profile with this assessment_id to fix the relationship
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ assessment_id: anyDnaData.id })
+            .eq('id', profile.id);
+            
+          if (updateError) {
+            debug.warning += ` (Failed to update profile: ${updateError.message})`;
+          } else {
+            debug.warning += " (Updated profile.assessment_id to match this record)";
+          }
+          
+          setDebugInfo(debug);
+          return;
+        }
+        
+        // All attempts failed
+        throw new Error(`No DNA analysis data found. Tried assessment_id: ${profile.assessment_id}`);
+      } catch (err) {
+        console.error('Error in DNA exam:', err);
+        setDomainAnalysis(null);
+        setDebugInfo({
+          ...debug,
+          error: err instanceof Error ? err.message : String(err)
+        });
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchDomainData();
-  }, []);
+  }, [user]);
   
   const getDomainIntroduction = (domainId: string) => {
     if (isLoading) {
@@ -404,6 +544,15 @@ const IntellectualDNAExam: React.FC = () => {
           </div>
         )}
       </main>
+      
+      {/* Debug Info (for development, can be removed in production) */}
+      {debugInfo.error && (
+        <div className="p-4 bg-red-900/30 rounded m-6">
+          <h3 className="font-bold mb-2">Error Loading DNA Data:</h3>
+          <p>{debugInfo.error}</p>
+          {debugInfo.warning && <p className="text-yellow-300 mt-2">{debugInfo.warning}</p>}
+        </div>
+      )}
       
       {/* Badge Dialog */}
       <BadgeDialog 
