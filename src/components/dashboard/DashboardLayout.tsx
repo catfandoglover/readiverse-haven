@@ -18,7 +18,7 @@ interface NavigationTabProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -145,7 +145,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
-              <Button variant="destructive" size="sm" onClick={() => logout && logout()}>Sign Out</Button>
+              <Button variant="destructive" size="sm" onClick={() => signOut && signOut()}>Sign Out</Button>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-4">

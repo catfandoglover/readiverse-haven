@@ -33,7 +33,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const location = useLocation();
   const { addToBookshelf } = useBookshelfManager();
   const { user } = useAuth();
-  useNavigationState();
+  const { saveSourcePath, getSourcePath } = useNavigationState();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -44,9 +44,9 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     queryFn: async () => {
       try {
         const [booksResponse, iconsResponse, conceptsResponse] = await Promise.all([
-          supabase.from("books").select("*").order("randomizer").limit(5),
-          supabase.from("icons").select("*").order("randomizer").limit(5),
-          supabase.from("concepts").select("*").order("randomizer").limit(5),
+          supabase.from("books").select("id, title, author, icon_illustration, Cover_super, about, epub_file_url, slug").order("randomizer").limit(5),
+          supabase.from("icons").select("id, name, illustration, about, great_conversation, anecdotes, slug").order("randomizer").limit(5),
+          supabase.from("concepts").select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer").limit(5),
         ]);
 
         const books = booksResponse.data || [];
@@ -64,6 +64,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
             Cover_super: book.Cover_super,
             epub_file_url: book.epub_file_url,
+            slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
           })),
           ...icons.map((icon: any) => ({
             id: icon.id,
@@ -73,6 +74,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
             great_conversation: `${icon.name}'s contributions to philosophical discourse were substantial.`,
             anecdotes: `Various interesting stories surround ${icon.name}'s life and work.`,
+            slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
           })),
           ...concepts.map((concept: any) => ({
             id: concept.id,
@@ -81,11 +83,16 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             image: concept.illustration,
             about: concept.about || `${concept.title} is a significant philosophical concept.`,
             genealogy: `The historical development of ${concept.title} spans multiple philosophical traditions.`,
-            great_conversation: `${concept.title} has been debated throughout philosophical history.`,
+            great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
+            slug: concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id,
           })),
         ];
 
-        return forYouItems.sort(() => Math.random() - 0.5);
+        return forYouItems.sort((a, b) => {
+          const aRandomizer = a.randomizer || 0;
+          const bRandomizer = b.randomizer || 0;
+          return aRandomizer - bRandomizer;
+        });
       } catch (error) {
         console.error("Error fetching For You content:", error);
         toast({
@@ -99,17 +106,26 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   });
 
   useEffect(() => {
-    if (location.pathname.includes('/view/')) {
-      const parts = location.pathname.split('/');
-      const type = parts[2];
-      const id = parts[3];
-      
-      if (type && id) {
-        const item = forYouItems.find(item => item.id === id && item.type === type);
-        if (item) {
-          setSelectedItem(item);
-          if (onDetailedViewShow) onDetailedViewShow();
-        }
+    if (location.pathname.includes('/icons/')) {
+      const slug = location.pathname.split('/icons/')[1];
+      const item = forYouItems.find(item => item.type === 'icon' && item.slug === slug);
+      if (item) {
+        setSelectedItem(item);
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    } else if (location.pathname.includes('/texts/')) {
+      const slug = location.pathname.split('/texts/')[1];
+      const item = forYouItems.find(item => item.type === 'classic' && item.slug === slug);
+      if (item) {
+        setSelectedItem(item);
+        if (onDetailedViewShow) onDetailedViewShow();
+      }
+    } else if (location.pathname.includes('/concepts/')) {
+      const slug = location.pathname.split('/concepts/')[1];
+      const item = forYouItems.find(item => item.type === 'concept' && item.slug === slug);
+      if (item) {
+        setSelectedItem(item);
+        if (onDetailedViewShow) onDetailedViewShow();
       }
     }
   }, [location.pathname, forYouItems, onDetailedViewShow]);
@@ -129,11 +145,42 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
+    // Save the current path before navigation
+    const currentPath = location.pathname;
+    console.log("[ForYouContent] Setting source path for detail view:", currentPath);
+    
+    // Save the source path before navigation
+    saveSourcePath(currentPath);
+    
     setSelectedItem(item);
-    navigate(`/view/${item.type}/${item.id}`, { 
-      replace: true,
-      state: { fromSection: 'discover' }
-    });
+    
+    if (item.type === 'icon' && item.slug) {
+      navigate(`/icons/${item.slug}`, { 
+        replace: true,
+        state: { 
+          fromSection: 'discover',
+          sourcePath: currentPath
+        }
+      });
+    } else if (item.type === 'classic' && item.slug) {
+      navigate(`/texts/${item.slug}`, { 
+        replace: true,
+        state: { 
+          fromSection: 'discover',
+          sourcePath: currentPath
+        }
+      });
+    } else if (item.type === 'concept' && item.slug) {
+      navigate(`/concepts/${item.slug}`, { 
+        replace: true,
+        state: { 
+          fromSection: 'discover',
+          sourcePath: currentPath
+        }
+      });
+    } else {
+      console.error("Item missing slug:", item);
+    }
     
     if (onDetailedViewShow) onDetailedViewShow();
   };
@@ -141,7 +188,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
     const previousPath = getPreviousPage();
-    console.log("Navigating back to previous page:", previousPath);
+    console.log("[ForYouContent] Navigating back to previous page:", previousPath);
     navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();

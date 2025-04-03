@@ -86,7 +86,7 @@ function ShareableProfile(): JSX.Element {
     if (!iconName) return;
     // Format the name for URL (lowercase, replace spaces with hyphens)
     const formattedName = iconName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/view/icon/${formattedName}`);
+    navigate(`/icons/${formattedName}`);
   };
 
   useEffect(() => {

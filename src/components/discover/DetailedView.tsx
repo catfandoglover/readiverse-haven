@@ -55,7 +55,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, openLogin } = useAuth();
-  const { getSourcePath, getFeedSourcePath } = useNavigationState();
+  const { getSourcePath, saveSourcePath, getFeedSourcePath } = useNavigationState();
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [readerFilter, setReaderFilter] = useState<"SEEKERS" | "READERS" | "TOP RANKED">(
     type === "icon" ? "SEEKERS" : "READERS"
@@ -120,10 +120,15 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     queryFn: async () => {
       const { data } = await supabase
         .from("books")
-        .select("*")
+        .select("id, title, author, cover_url, slug, epub_file_url")
         .neq('id', itemData.id)
         .limit(10);
-      return data || [];
+      
+      // Transform data to include slugs if needed
+      return data?.map(book => ({
+        ...book,
+        slug: book.slug || (book.title ? book.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : null)
+      })) || [];
     },
   });
 
@@ -324,52 +329,48 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       locationState: location.state,
       pathname: location.pathname
     });
-    
-    // Priority 1: Use provided onBack callback if available
+
+    // First check if we have an explicit source path in the location state
+    if (location.state?.sourcePath) {
+      const sourcePath = location.state.sourcePath;
+      console.log("[DetailedView] Navigating to source path from location state:", sourcePath);
+      navigate(sourcePath, { replace: true });
+      return;
+    }
+
+    // If we have a callback, use it
     if (onBack) {
       console.log("[DetailedView] Using onBack callback");
       onBack();
       return;
     }
-    
-    // Priority 2: Get source path from location state
-    if (location.state?.sourcePath) {
-      const sourcePath = location.state.sourcePath;
-      console.log("[DetailedView] Navigating to source path from location state:", sourcePath);
-      navigate(sourcePath);
-      return;
-    }
-    
-    // Priority 3: Use getFeedSourcePath for content viewed from feeds
-    // This is CRITICAL to ensure we go back to FOR YOU feed if that's where we came from
-    const contentType = location.pathname.split('/view/')[1]?.split('/')[0];
-    if (contentType && ['icon', 'classic', 'concept', 'question'].includes(contentType)) {
-      const feedPath = getFeedSourcePath();
-      if (feedPath) {
-        console.log("[DetailedView] Navigating to feed source path:", feedPath);
-        navigate(feedPath);
-        return;
-      }
-    }
-    
-    // Priority 4: Fall back to getSourcePath from navigation state hook
+
+    // Get source path from the navigation state hook (this is more robust)
     const sourcePath = getSourcePath();
     if (sourcePath && sourcePath !== location.pathname) {
       console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
-      navigate(sourcePath);
+      navigate(sourcePath, { replace: true });
       return;
     }
-    
-    // Priority 5: Use general back navigation as last resort
+
+    // Try the feed source path as another option
+    const feedPath = getFeedSourcePath();
+    if (feedPath && feedPath !== location.pathname) {
+      console.log("[DetailedView] Navigating to feed source path:", feedPath);
+      navigate(feedPath, { replace: true });
+      return;
+    }
+
+    // If we have browser history, use that
     if (window.history.length > 1) {
       console.log("[DetailedView] Using window.history.back()");
       window.history.back();
       return;
     }
-    
-    // Ultimate fallback to For You feed
-    console.log("[DetailedView] Fallback to For You feed");
-    navigate('/discover');
+
+    // Last resort: go to discover
+    console.log("[DetailedView] Fallback to discover feed");
+    navigate('/discover', { replace: true });
   };
 
   const handleReadNow = async () => {
@@ -417,24 +418,43 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (combinedData?.author_id) {
-      console.log("Navigating to author icon page:", combinedData.author_id);
+  const handleAuthorClick = () => {
+    if (combinedData.author_id) {
+      console.log("[DetailedView] Navigating to author by ID:", combinedData.author_id);
       
-      navigate(`/view/icon/${combinedData.author_id}`, { replace: true });
+      // Get the current location
+      const currentPath = location.pathname;
       
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else {
-      console.log("No author_id found for navigation:", combinedData);
-      toast({
-        description: "Author information unavailable",
-        variant: "destructive"
+      // Store the current path as source path in all relevant places
+      localStorage.setItem('sourcePath', currentPath);
+      sessionStorage.setItem('sourcePath', currentPath);
+      localStorage.setItem('detailedViewSourcePath', currentPath);
+      sessionStorage.setItem('detailedViewSourcePath', currentPath);
+      
+      console.log("[DetailedView] Saved source paths before author navigation:", {
+        localStorage: currentPath,
+        sessionStorage: currentPath
       });
+      
+      // We should always have the author data with slug from the authorIconData query
+      if (authorIconData?.slug) {
+        console.log("[DetailedView] Navigating to author slug:", authorIconData.slug);
+        navigate(`/icons/${authorIconData.slug}`, {
+          replace: true,
+          state: { 
+            fromSection: 'classic-detail',
+            sourcePath: currentPath
+          }
+        });
+      } else {
+        // This should almost never happen since authorIconData is pre-fetched
+        console.error("[DetailedView] Missing authorIconData for author_id:", combinedData.author_id);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not navigate to author page"
+        });
+      }
     }
   };
 
@@ -617,24 +637,88 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   };
 
   const handleCarouselItemClick = (item: CarouselItem, itemType: "classic" | "concept" | "question" | "icon") => {
-    let targetType: "classic" | "concept" | "icon" | "question" = "classic";
+    // Get the current location to use for back navigation
+    const currentPath = location.pathname;
     
-    switch(itemType) {
-      case "classic":
-        targetType = "classic";
-        break;
-      case "concept":
-        targetType = "concept";
-        break;
-      case "icon":
-        targetType = "icon";
-        break;
-      case "question":
-        targetType = "question";
-        break;
+    // Save the source path using the hook - this is more reliable than manually setting storage
+    saveSourcePath(currentPath);
+    
+    console.log(`[DetailedView] Clicked carousel item (${itemType}):`, item);
+    console.log("[DetailedView] Saved current path for back navigation:", currentPath);
+    
+    // Generate a fallback slug if needed (especially for classics)
+    if (itemType === "classic" && !item.slug && item.title) {
+      // Generate a slug from the title (similar to ClassicsContent)
+      item.slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      console.log(`[DetailedView] Generated fallback slug for classic: ${item.slug}`);
     }
     
-    navigate(`/view/${targetType}/${item.id}`, { replace: true });
+    // Navigate to the appropriate URL based on the item type
+    switch(itemType) {
+      case "classic":
+        if (!item.slug) {
+          console.error("[DetailedView] Classic missing slug and no title to generate one:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        navigate(`/texts/${item.slug}`, { 
+          replace: true,
+          state: { 
+            fromSection: 'detail-view',
+            sourcePath: currentPath
+          }
+        });
+        break;
+      case "concept":
+        if (!item.slug) {
+          console.error("[DetailedView] Concept missing slug:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        navigate(`/concepts/${item.slug}`, { 
+          replace: true,
+          state: { 
+            fromSection: 'detail-view',
+            sourcePath: currentPath
+          }
+        });
+        break;
+      case "icon":
+        if (!item.slug) {
+          console.error("[DetailedView] Icon missing slug:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        navigate(`/icons/${item.slug}`, { 
+          replace: true,
+          state: { 
+            fromSection: 'detail-view',
+            sourcePath: currentPath
+          }
+        });
+        break;
+      case "question":
+        navigate(`/discover/questions/${item.id}`, { 
+          replace: true,
+          state: { 
+            fromSection: 'detail-view',
+            sourcePath: currentPath
+          }
+        });
+        break;
+    }
   };
 
   const renderHeader = () => (
@@ -642,7 +726,8 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       "bg-transparent fixed top-0 left-0 right-0 z-10 transition-all duration-200",
       shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : ""
     )}>
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="flex items-center px-4 py-4">
+        {/* Left section - Back button */}
         <button
           onClick={handleBack}
           className={cn(
@@ -653,15 +738,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex-1 text-center">
+        
+        {/* Middle section - Title */}
+        <div className="flex-1 text-center mx-2">
           <h1 className={cn(
-            "font-oxanium text-sm uppercase tracking-wider font-bold",
+            "font-oxanium text-sm uppercase tracking-wider font-bold truncate",
             shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}>
             {combinedData?.title || combinedData?.name || type.toUpperCase()}
           </h1>
         </div>
-        <div className="flex items-center space-x-2">
+        
+        {/* Right section - Action buttons */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <VirgilChatButton
             contentTitle={combinedData?.title || combinedData?.name || type}
             contentId={combinedData?.id || ""}
@@ -675,16 +764,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           
           {type === "classic" ? (
             <>
-              <button
-                className={cn(
-                  "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-                )}
-                aria-label="Read"
-                onClick={handleReadNow}
-              >
-                <BookOpenText className="h-5 w-5" />
-              </button>
+              {combinedData?.epub_file_url && (
+                <button
+                  className={cn(
+                    "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
+                    shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                  )}
+                  aria-label="Read"
+                  onClick={handleReadNow}
+                >
+                  <BookOpenText className="h-5 w-5" />
+                </button>
+              )}
               <ClassicActionsMenu
                 isFavorite={isFavorite}
                 toggleFavorite={toggleFavorite}
@@ -734,31 +825,42 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
         <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="relative flex-none cursor-pointer group"
-                onClick={() => handleCarouselItemClick(item, itemType)}
-              >
-                <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
-                    <img
-                      src={item[imageKey] || ''}
-                      alt={item[textKey] || ""}
-                      className="h-full w-full object-cover"
-                      draggable="false"
-                    />
+            {items.map((item) => {
+              // Determine the correct image source for different item types
+              let imageSrc = item[imageKey];
+              
+              // For classics, try different possible image fields
+              if (itemType === "classic") {
+                imageSrc = item.cover_url || item.Cover_super || item.icon_illustration || imageSrc;
+                console.log(`[DetailedView] Classic image source for ${item.title}:`, imageSrc);
+              }
+              
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex-none cursor-pointer group"
+                  onClick={() => handleCarouselItemClick(item, itemType)}
+                >
+                  <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
+                    <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
+                      <img
+                        src={imageSrc || ''}
+                        alt={item[textKey] || ""}
+                        className="h-full w-full object-cover"
+                        draggable="false"
+                      />
+                    </div>
                   </div>
+                  <h4 className={cn(
+                    "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
+                    "w-36 break-words line-clamp-2",
+                    type === "classic" ? "text-white" : "text-[#2A282A]"
+                  )}>
+                    {item[textKey]}
+                  </h4>
                 </div>
-                <h4 className={cn(
-                  "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
-                  "w-36 break-words line-clamp-2",
-                  type === "classic" ? "text-white" : "text-[#2A282A]"
-                )}>
-                  {item[textKey]}
-                </h4>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
       </div>

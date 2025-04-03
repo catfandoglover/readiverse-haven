@@ -70,6 +70,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
           Cover_super: book.Cover_super,
           epub_file_url: book.epub_file_url,
+          slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
         }));
 
         return classics;
@@ -86,17 +87,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   });
 
   useEffect(() => {
-    if (location.pathname.includes('/view/')) {
-      const parts = location.pathname.split('/');
-      const type = parts[2];
-      const id = parts[3];
-      
-      if (type === 'classic' && id) {
-        const item = classicsItems.find(item => item.id === id);
-        if (item) {
-          setSelectedItem(item);
-          if (onDetailedViewShow) onDetailedViewShow();
-        }
+    if (location.pathname.includes('/texts/')) {
+      const slug = location.pathname.split('/texts/')[1];
+      const item = classicsItems.find(item => item.slug === slug);
+      if (item) {
+        setSelectedItem(item);
+        if (onDetailedViewShow) onDetailedViewShow();
       }
     }
   }, [location.pathname, classicsItems, onDetailedViewShow]);
@@ -104,7 +100,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   useEffect(() => {
     const currentPath = location.pathname;
     
-    if (!currentPath.includes('/view/')) {
+    if (!currentPath.includes('/texts/')) {
       saveSourcePath(currentPath);
       console.log('[ClassicsContent] Saved source path:', currentPath);
     }
@@ -125,13 +121,16 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const itemToShow = classicsItems[displayIndex % Math.max(1, classicsItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
+    if (!item.slug) {
+      console.error("Book missing slug:", item);
+      return;
+    }
+    
     setSelectedItem(item);
-    navigate(`/view/${item.type}/${item.id}`, { 
+    
+    navigate(`/texts/${item.slug}`, { 
       replace: true,
-      state: { 
-        fromSection: 'discover',
-        sourcePath: getSourcePath()
-      }
+      state: { fromSection: 'discover' }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -140,10 +139,10 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
     
-    const sourcePath = getSourcePath();
-    console.log("[ClassicsContent] Navigating back to:", sourcePath);
+    const previousPath = getPreviousPage();
+    console.log("[ClassicsContent] Navigating back to:", previousPath);
     
-    navigate(sourcePath, { replace: true });
+    navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
   };

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ interface Item {
   question?: string;
   image?: string;
   illustration?: string;
+  slug?: string;
 }
 
 interface ContentCarouselProps {
@@ -57,18 +57,26 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
     }
     
     let viewType: string;
-    let itemId = item.id;
+    let itemSlug = item.slug || item.id;
     
     switch (type) {
       case "questions":
         viewType = "question";
         break;
       case "classics":
-        viewType = "classic";
-        break;
+        if (!item.slug) {
+          console.error("Book missing slug:", item);
+          return;
+        }
+        navigate(`/texts/${item.slug}`);
+        return;
       case "icons":
-        viewType = "icon";
-        break;
+        if (!item.slug) {
+          console.error("Icon missing slug:", item);
+          return;
+        }
+        navigate(`/icons/${item.slug}`);
+        return;
       case "concepts":
         viewType = "concept";
         break;
@@ -76,7 +84,7 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({
         viewType = "classic";
     }
     
-    navigate(`/view/${viewType}/${itemId}`);
+    navigate(`/view/${viewType}/${itemSlug}`);
   };
 
   const getItemTitle = (item: Item): string => {

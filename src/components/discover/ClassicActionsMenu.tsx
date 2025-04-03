@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MoreHorizontal, Star, ShoppingCart, Share } from 'lucide-react';
 import {
@@ -40,7 +39,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
       <DropdownMenuContent 
         align="end" 
         className={cn(
-          "flex flex-col p-0 border-none shadow-lg w-auto",
+          "flex flex-col p-0 border-none shadow-lg w-auto min-w-0",
           shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : "backdrop-blur-md bg-black/30"
         )}
       >

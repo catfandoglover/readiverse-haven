@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import ForYouContent from "./ForYouContent";
@@ -60,7 +59,10 @@ const DiscoverLayout = () => {
     }
     
     // Only save non-detail view paths to avoid circular navigation
-    if (!location.pathname.includes('/view/')) {
+    if (!location.pathname.includes('/view/') && 
+        !location.pathname.includes('/icons/') && 
+        !location.pathname.includes('/texts/') && 
+        !location.pathname.includes('/concepts/')) {
       saveSourcePath(location.pathname);
       console.log("[DiscoverLayout] Saved source path:", location.pathname);
       
@@ -82,16 +84,48 @@ const DiscoverLayout = () => {
   // Update active tab and detailed view status based on the path
   useEffect(() => {
     const path = location.pathname;
-    const showDetailedView = path.includes('/view/');
+    const showDetailedView = path.includes('/view/') || 
+                           path.includes('/icons/') || 
+                           path.includes('/texts/') ||
+                           path.includes('/concepts/');
     
     // Update detailed view visibility state
     if (detailedViewVisible !== showDetailedView) {
       setDetailedViewVisible(showDetailedView);
     }
     
-    // Don't change the active tab for detail views
+    // If this is a detail view, determine what tab to activate
     if (showDetailedView) {
-      console.log("[DiscoverLayout] Detail view detected, preserving current tab:", activeTab);
+      console.log("[DiscoverLayout] Detail view detected, current tab:", activeTab);
+      
+      // Set the tab based on the content type in the URL
+      let contentType: TabType | null = null;
+      
+      if (path.includes('/icons/')) {
+        contentType = "icons";
+      } else if (path.includes('/texts/')) {
+        contentType = "classics";
+      } else if (path.includes('/concepts/')) {
+        contentType = "concepts";
+      }
+      
+      // Update the active tab if needed and we've determined a content type
+      if (contentType && activeTab !== contentType) {
+        console.log(`[DiscoverLayout] Changing tab from ${activeTab} to ${contentType} based on detail view URL`);
+        setActiveTab(contentType);
+      }
+      
+      // Force rerender content when detail view URL changes
+      // This is crucial for when navigating between different detail views (e.g., book to author)
+      if (location.key) {
+        console.log("[DiscoverLayout] Detail view URL changed, updating content with key:", location.key);
+        setRouteKey(`detail-${location.key}`);
+        // Reset content ready state and set it after a short delay
+        setContentReady(false);
+        setTimeout(() => {
+          setContentReady(true);
+        }, 100);
+      }
       return;
     }
     
@@ -122,13 +156,17 @@ const DiscoverLayout = () => {
         setContentReady(true);
       }, 100);
     }
-  }, [location.pathname, activeTab, detailedViewVisible]);
+  }, [location.pathname, location.key, activeTab, detailedViewVisible]);
 
   const handleTabChange = (tab: TabType) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
       setCurrentIndex(0);
       // Update URL to match selected tab
+      if (tab === "icons" && location.pathname.includes('/icons/')) {
+        // Keep the current icon detail view
+        return;
+      }
       navigate(`/discover${tab === "for-you" ? "" : `/${tab}`}`);
     }
   };
