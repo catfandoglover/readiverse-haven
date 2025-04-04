@@ -170,12 +170,33 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="toc" className="h-[70vh] overflow-y-auto pt-4 px-1">
-            <TableOfContents 
-              toc={toc} 
-              onNavigate={onTocNavigate} 
-              variant="inline" 
-            />
+          <TabsContent value="toc" className="flex flex-col h-[70vh]">
+            <div className="flex-grow overflow-y-auto pt-4 px-1 pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
+              <TableOfContents 
+                toc={toc} 
+                onNavigate={onTocNavigate} 
+                variant="inline" 
+              />
+            </div>
+            
+            <div className="pt-4 px-1 mt-4">
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
+              <p className="text-sm text-white/80 mt-3 mb-4">
+                Mary Shelley's groundbreaking novel explores scientific ambition, creation, and responsibility through the story of Victor Frankenstein and his monstrous creation. Written when Shelley was just 18, this Gothic masterpiece raises profound questions about the limits of science and the nature of humanity.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full border-white/20 text-white hover:bg-white/10 rounded-2xl mt-6"
+                onClick={() => {
+                  onOpenChange(false);
+                  const pathParts = window.location.pathname.split('/');
+                  const bookSlug = pathParts[pathParts.length - 1];
+                  navigate(`/texts/${bookSlug}`);
+                }}
+              >
+                Return to Book Details
+              </Button>
+            </div>
           </TabsContent>
           
           <TabsContent value="appearance" className="space-y-8 px-1 pt-4">
@@ -190,6 +211,18 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
               fontSize={fontSize}
               onFontSizeChange={onFontSizeChange}
             />
+            
+            <div>
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Display Mode</h3>
+              <Button
+                variant="outline"
+                className="w-full border-white/20 text-white hover:bg-white/10 flex items-center rounded-2xl mt-6"
+                onClick={toggleFullScreen}
+              >
+                <Maximize className="h-4 w-4 mr-2" />
+                {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              </Button>
+            </div>
           </TabsContent>
           
           <TabsContent value="tools" className="space-y-8 px-1 pt-4">
@@ -257,42 +290,6 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
                   bookKey={bookKey}
                 />
               </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Notes (Coming Soon)</h3>
-              <div className="bg-[#332E38] p-4 rounded-2xl mt-6 text-white/50 flex items-center">
-                <StickyNote className="h-4 w-4 mr-2" />
-                <span>Notes feature will be available soon</span>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Display Mode</h3>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10 flex items-center rounded-2xl mt-6"
-                onClick={toggleFullScreen}
-              >
-                <Maximize className="h-4 w-4 mr-2" />
-                {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              </Button>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10 rounded-2xl mt-6"
-                onClick={() => {
-                  onOpenChange(false);
-                  const pathParts = window.location.pathname.split('/');
-                  const bookSlug = pathParts[pathParts.length - 1];
-                  navigate(`/discover/book/${bookSlug}`);
-                }}
-              >
-                Return to Book Details
-              </Button>
             </div>
           </TabsContent>
         </Tabs>
