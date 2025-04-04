@@ -38,6 +38,11 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
                   padding: 0 !important;
                   height: 100% !important;
                 }
+                
+                body > * {
+                  padding-top: 20px !important;
+                  padding-bottom: 20px !important;
+                }
               `;
               iframeDoc.head.appendChild(style);
             }
