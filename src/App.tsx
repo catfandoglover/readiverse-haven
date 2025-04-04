@@ -44,10 +44,14 @@ import ExamVirgilChat from "./pages/ExamVirgilChat";
 import BookCounselor from "./pages/BookCounselor";
 import BookingSuccess from "./pages/BookingSuccess";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";
+import EmailConfirmation from "./pages/EmailConfirmation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,29 +62,23 @@ const queryClient = new QueryClient({
   },
 });
 
-// New component to handle conditional root redirection
 const RootRedirect: React.FC = () => {
   const { user, hasCompletedDNA } = useAuth();
   
-  // For logged-in users with DNA assessment completed, redirect to Virgil
   if (user && hasCompletedDNA) {
     return <Navigate to="/virgil" replace />;
   }
   
-  // For all other users (unauthenticated or without DNA), redirect to DNA assessment
   return <Navigate to="/dna" replace />;
 };
 
-// Also add a handler for the DNA route to prevent users with completed assessments from accessing it
 const DnaRouteHandler: React.FC = () => {
   const { user, hasCompletedDNA } = useAuth();
   
-  // If the user is logged in and has completed their DNA assessment, redirect them to Virgil
   if (user && hasCompletedDNA) {
     return <Navigate to="/virgil" replace />;
   }
   
-  // Otherwise, show the DNA assessment intro
   return <IntellectualDNA />;
 };
 
@@ -122,10 +120,9 @@ const IconRedirect = ({ id }: { id: string }) => {
         return;
       }
 
-      // Preserve the location state when redirecting
       navigate(`/icons/${data.slug}`, { 
         replace: true,
-        state: location.state // Pass through any state from the original navigation
+        state: location.state
       });
     };
 
@@ -146,7 +143,6 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <Routes>
-                  {/* Public routes - no auth required */}
                   <Route path="/" element={<RootRedirect />} />
                   <Route path="/discover" element={
                     <ProtectedRoute requireAuth={false} requireDNA={false}>
@@ -193,8 +189,11 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Login />} /> {/* Reuse Login component with signup tab */}
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/email-confirmation" element={<EmailConfirmation />} /> {/* Add the new email confirmation route */}
                   <Route path="/profile/share/:name" element={<ShareableProfile />} />
                   <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                   <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />
@@ -204,8 +203,6 @@ const App = () => (
                   <Route path="/dna/completion" element={<DNACompletionScreen />} />
                   <Route path="/book-counselor" element={<BookCounselor />} />
                   <Route path="/booking-success" element={<BookingSuccess />} />
-                  
-                  {/* Auth required, no DNA required */}
                   <Route path="/dna/priming" element={
                     <ProtectedRoute requireAuth={true} requireDNA={false}>
                       <DNAPriming />
@@ -226,8 +223,6 @@ const App = () => (
                       <ReaderWrapper />
                     </ProtectedRoute>
                   } />
-                  
-                  {/* Auth and DNA required */}
                   <Route path="/dna/welcome" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <VirgilWelcome />
@@ -333,15 +328,11 @@ const App = () => (
                       <GreatQuestions />
                     </ProtectedRoute>
                   } />
-                  
-                  {/* Redirects */}
                   <Route path="/search" element={<Navigate to="/discover/search" replace />} />
                   <Route path="/search/icons" element={<Navigate to="/discover/search/icons" replace />} />
                   <Route path="/search/concepts" element={<Navigate to="/discover/search/concepts" replace />} />
                   <Route path="/search/classics" element={<Navigate to="/discover/search/classics" replace />} />
                   <Route path="/search/questions" element={<Navigate to="/discover/search/questions" replace />} />
-                  
-                  {/* Catch-all route should be last */}
                   <Route path="/:slug" element={
                     <ProtectedRoute requireAuth={false} requireDNA={false}>
                       <DiscoverLayout />

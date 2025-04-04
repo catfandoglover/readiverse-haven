@@ -3,16 +3,16 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
-import LoginForm from '@/components/auth/LoginForm';
+import SignUpForm from '@/components/auth/SignUpForm';
 import { toast } from "sonner";
 
-export function Login() {
+export function Register() {
   const location = useLocation();
-  const state = location.state as { tab?: string; authError?: string; from?: Location };
+  const state = location.state as { authError?: string; from?: Location; showEmailForm?: boolean };
   const [authError, setAuthError] = useState<string | null>(state?.authError || null);
   const { user, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(state?.showEmailForm || false);
   
   useEffect(() => {
     if (authError) {
@@ -30,7 +30,7 @@ export function Login() {
     return <Navigate to={redirectTo} replace />;
   }
   
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     setGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -44,8 +44,8 @@ export function Login() {
         setAuthError(error.message);
       }
     } catch (err) {
-      console.error('Google sign in error:', err);
-      setAuthError('Failed to sign in with Google');
+      console.error('Google sign up error:', err);
+      setAuthError('Failed to sign up with Google');
     } finally {
       setGoogleLoading(false);
     }
@@ -63,7 +63,7 @@ export function Login() {
   
   return (
     <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col justify-between p-6">
-      {/* Top section with logo and title */}
+      {/* Top section with logo only */}
       <div className="flex flex-col items-center mt-24 mb-12">
         <div className="w-28 h-28 mb-10">
           <img 
@@ -74,25 +74,22 @@ export function Login() {
             className="w-full h-full"
           />
         </div>
-        <h1 className="text-4xl font-libre-baskerville font-bold text-[#373763] mb-6">Login</h1>
-        <h2 className="font-oxanium text-[#332E38]/50 text-center uppercase tracking-wider text-sm font-bold">
-          WELCOME BACK TO THE GREAT CONVERSATION
-        </h2>
+        <h1 className="text-4xl font-libre-baskerville font-bold text-[#373763] mb-6">Sign Up</h1>
       </div>
 
       {/* Middle content area */}
       <div className="flex-grow flex items-center justify-center w-full max-w-md mx-auto">
         {showEmailForm && (
-          <LoginForm />
+          <SignUpForm />
         )}
       </div>
 
-      {/* Bottom section with buttons - positioned at bottom */}
+      {/* Bottom section with buttons - positioned absolutely at bottom */}
       <div className="w-full max-w-md mx-auto mb-16 px-6">
         {!showEmailForm && (
           <>
             <button
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignup}
               disabled={googleLoading}
               className="w-full h-[52px] rounded-2xl bg-[#373763] text-[#F9F9F9] font-medium flex items-center justify-center gap-3 hover:bg-[#373763]/90 transition-colors border border-[#373763] shadow-sm"
             >
@@ -106,7 +103,7 @@ export function Login() {
                   <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
                 </svg>
               )}
-              <span>Sign in with Google</span>
+              <span>Sign up with Google</span>
             </button>
             
             <div className="text-center mt-4">
@@ -115,7 +112,7 @@ export function Login() {
                 disabled={googleLoading}
                 className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold hover:text-[#373763]"
               >
-                SIGN IN WITH EMAIL
+                SIGN UP WITH EMAIL
               </button>
             </div>
           </>
@@ -125,4 +122,4 @@ export function Login() {
   );
 }
 
-export default Login;
+export default Register;

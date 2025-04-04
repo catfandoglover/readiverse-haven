@@ -1,17 +1,23 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Inbox } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { LightningSpinner } from '@/components/ui/lightning-spinner';
+import AuthLayout from "@/components/auth/AuthLayout";
 
-const DNAEmailConfirmationScreen = () => {
+const EmailConfirmation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Check if the user came from DNA flow to customize the message
+  const isDnaFlow = location.state?.fromDna || 
+                    localStorage.getItem('authRedirectTo') === '/dna/welcome';
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -46,8 +52,11 @@ const DNAEmailConfirmationScreen = () => {
         return;
       }
 
-      // Email is verified, redirect to welcome page
-      navigate('/dna/welcome');
+      // Email is verified, redirect to appropriate destination
+      const redirectPath = localStorage.getItem('authRedirectTo') || '/';
+      localStorage.removeItem('authRedirectTo');
+      
+      navigate(redirectPath);
     } catch (error) {
       console.error('Error checking email verification:', error);
       toast.error('An unexpected error occurred');
@@ -57,29 +66,20 @@ const DNAEmailConfirmationScreen = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
-      {/* No back button in header */}
-      <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-        <div className="flex-1"></div> {/* Spacer */}
-      </header>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
-        <div className="flex justify-center mb-8">
-          <div className="rounded-full bg-[#373763]/10 p-4">
-            <Inbox className="h-8 w-8 text-[#373763]" />
-          </div>
+    <AuthLayout 
+      title="Check your email"
+      subtitle={isDnaFlow ? "Confirm your email to view your results" : "Confirm your email to continue"}
+      showBackButton={false}
+    >
+      <div className="flex flex-col items-center justify-center space-y-8">
+        <div className="rounded-full bg-[#373763]/10 p-4">
+          <Inbox className="h-8 w-8 text-[#373763]" />
         </div>
-        <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          CHECK YOUR EMAIL
-        </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight mb-8">
-          Confirm your email to view your results
-        </h1>
-      </div>
 
-      {/* Continue button */}
-      <div className="w-full max-w-md mb-16 px-6">
+        <p className="text-[#332E38]/70 text-center">
+          We've sent a confirmation email to your inbox. Please click the link in the email to verify your account.
+        </p>
+
         <Button 
           onClick={handleContinue}
           disabled={isLoading}
@@ -88,8 +88,8 @@ const DNAEmailConfirmationScreen = () => {
           {isLoading ? <LightningSpinner size="sm" /> : "I'VE CONFIRMED MY EMAIL"}
         </Button>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
-export default DNAEmailConfirmationScreen;
+export default EmailConfirmation;
