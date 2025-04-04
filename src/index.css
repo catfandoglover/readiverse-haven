@@ -181,6 +181,11 @@
     @apply scale-x-100;
   }
   
+  /* Input placeholder styling */
+  .uppercase-placeholder::placeholder {
+    text-transform: uppercase;
+  }
+  
   /* DNA Continue Button shared class */
   .dna-continue-button {
     height: 60px;

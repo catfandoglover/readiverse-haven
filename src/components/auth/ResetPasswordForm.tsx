@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LightningSpinner } from "@/components/ui/lightning-spinner";
 import { toast } from "sonner";
 
@@ -56,31 +54,42 @@ const ResetPasswordForm: React.FC = () => {
     }
   };
 
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-[#373763]">
-          New Password
-        </Label>
+    <div className="w-full max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          placeholder="Enter your new password"
-          className="bg-white border-[#373763]/20 rounded-lg py-6 h-auto"
+          placeholder="ENTER NEW PASSWORD"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
-      </div>
 
-      <Button
-        type="submit"
-        disabled={isLoading || isSubmitted}
-        className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
-      >
-        {isLoading ? <LightningSpinner size="sm" /> : "Reset Password"}
-      </Button>
-    </form>
+        <Button
+          type="submit"
+          disabled={isLoading || isSubmitted}
+          className="w-full h-[52px] rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+        >
+          {isLoading ? <LightningSpinner size="sm" /> : "SET NEW PASSWORD"}
+        </Button>
+        
+        <div className="flex justify-center text-sm">
+          <button
+            type="button"
+            onClick={handleLogin}
+            className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold hover:text-[#373763]"
+          >
+            BACK TO <span className="underline">LOGIN</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

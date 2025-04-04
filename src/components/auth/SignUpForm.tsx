@@ -73,7 +73,7 @@ const SignUpForm: React.FC = () => {
           onChange={(e) => setFullName(e.target.value)}
           required
           placeholder="WHAT IS YOUR NAME?"
-          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
 
         <Input
@@ -83,7 +83,7 @@ const SignUpForm: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="ENTER EMAIL"
-          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
 
         <Input
@@ -93,7 +93,7 @@ const SignUpForm: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="ENTER PASSWORD"
-          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
         
         <Button
