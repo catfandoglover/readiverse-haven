@@ -1,30 +1,18 @@
 
-import { useState, useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/components/auth/AuthLayout';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
-import SignUpForm from '@/components/auth/SignUpForm';
 import { toast } from "sonner";
+import { Link } from 'react-router-dom';
 
 export function Register() {
-  const location = useLocation();
-  const state = location.state as { authError?: string; from?: Location };
-  const [authError, setAuthError] = useState<string | null>(state?.authError || null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  
-  useEffect(() => {
-    if (authError) {
-      toast.error(authError);
-      
-      // Auto-clear error after 5 seconds
-      setTimeout(() => setAuthError(null), 5000);
-    }
-  }, [authError]);
   
   // If already logged in, redirect to home or intended destination
   if (user && !isLoading) {
@@ -45,10 +33,12 @@ export function Register() {
       
       if (error) {
         setAuthError(error.message);
+        toast.error(error.message);
       }
     } catch (err) {
       console.error('Google sign up error:', err);
       setAuthError('Failed to sign up with Google');
+      toast.error('Failed to sign up with Google');
     } finally {
       setGoogleLoading(false);
     }
@@ -68,34 +58,31 @@ export function Register() {
   
   return (
     <AuthLayout 
-      title={showEmailForm ? "Create an account" : "Sign up"}
-      subtitle={showEmailForm ? "Enter your details to create an account" : "Create an account to continue"}
+      title="Login"
+      subtitle="WELCOME BACK TO THE GREAT CONVERSATION"
+      showLightningLogo={true}
+      verticalCenter={false}
     >
-      {showEmailForm ? (
-        <SignUpForm />
-      ) : (
-        <div className="space-y-6">
+      <div className="flex flex-col h-full">
+        <div className="flex-grow"></div>
+        
+        <div className="space-y-8">
           <GoogleSignInButton 
             onClick={handleGoogleSignup}
             isLoading={googleLoading}
-            text="Sign up with Google"
+            text="Continue with Google"
             onError={(error) => setAuthError(error)}
+            className="mb-6"
           />
           
-          <div className="relative flex items-center justify-center">
-            <div className="flex-grow h-px bg-[#373763]/10"></div>
-            <span className="px-4 text-[#332E38]/70 text-sm">or</span>
-            <div className="flex-grow h-px bg-[#373763]/10"></div>
-          </div>
-          
-          <button
-            onClick={() => setShowEmailForm(true)}
-            className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          <Link
+            to="/login"
+            className="block text-center text-[#373763] font-oxanium text-sm uppercase tracking-wider"
           >
-            Sign up with Email
-          </button>
+            Sign in with Email
+          </Link>
         </div>
-      )}
+      </div>
     </AuthLayout>
   );
 }
