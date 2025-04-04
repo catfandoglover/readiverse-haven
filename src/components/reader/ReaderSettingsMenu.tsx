@@ -146,7 +146,7 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-md bg-[#221F26] text-white border-l border-white/10 rounded-l-2xl">
         <SheetHeader>
-          <SheetTitle className="text-white text-sm tracking-wider uppercase font-oxanium font-bold">SETTINGS</SheetTitle>
+          <SheetTitle className="text-white text-sm tracking-wider uppercase font-oxanium font-bold text-center">SETTINGS</SheetTitle>
         </SheetHeader>
         
         <Tabs 
