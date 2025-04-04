@@ -1,13 +1,10 @@
-
 import React, { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
-import { Button } from '@/components/ui/button';
 import ReaderSettingsMenu from './ReaderSettingsMenu';
-import ProgressBar from './ProgressBar';
 import type { SearchResult } from '@/types/reader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ReaderEdgeControlsProps {
   show: boolean;
@@ -43,6 +40,8 @@ interface ReaderEdgeControlsProps {
   bookKey: string | null;
   onSearch: (query: string) => Promise<SearchResult[]>;
   onSearchResultClick: (result: SearchResult) => void;
+  showSettingsMenu: boolean;
+  setShowSettingsMenu: (show: boolean) => void;
 }
 
 const ReaderEdgeControls: React.FC<ReaderEdgeControlsProps> = ({
@@ -73,9 +72,11 @@ const ReaderEdgeControls: React.FC<ReaderEdgeControlsProps> = ({
   removeHighlight,
   bookKey,
   onSearch,
-  onSearchResultClick
+  onSearchResultClick,
+  showSettingsMenu,
+  setShowSettingsMenu
 }) => {
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const isMobile = useIsMobile();
 
   // Edge navigation touch areas
   const handlePrevTap = (e: React.MouseEvent) => {
@@ -92,40 +93,27 @@ const ReaderEdgeControls: React.FC<ReaderEdgeControlsProps> = ({
     <>
       {/* Left edge for previous page */}
       <div 
-        className="absolute left-0 top-0 w-[15%] h-full z-10 cursor-w-resize"
+        className="fixed left-0 z-10 cursor-pointer"
+        style={{ 
+          width: isMobile ? "30%" : "max(0px, calc((100vw - 860px) / 2))",
+          pointerEvents: "auto",
+          top: "120px", 
+          bottom: "60px"
+        }}
         onClick={handlePrevTap}
       />
       
       {/* Right edge for next page */}
       <div 
-        className="absolute right-0 top-0 w-[15%] h-full z-10 cursor-e-resize"
+        className="fixed right-0 z-10 cursor-pointer"
+        style={{ 
+          width: isMobile ? "30%" : "max(0px, calc((100vw - 860px) / 2))",
+          pointerEvents: "auto",
+          top: "120px",
+          bottom: "60px"
+        }}
         onClick={handleNextTap}
       />
-
-      {/* Progress bar */}
-      <div 
-        className={`absolute bottom-12 left-0 w-full px-4 transition-opacity duration-300 ${
-          show ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <ProgressBar progress={progress.book} />
-      </div>
-
-      {/* Menu button */}
-      <div 
-        className={`absolute right-4 top-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-          show ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowSettingsMenu(true)}
-          className="text-white hover:bg-white/10 rounded-full"
-        >
-          <MoreVertical className="h-5 w-5" />
-        </Button>
-      </div>
 
       <ReaderSettingsMenu 
         open={showSettingsMenu}

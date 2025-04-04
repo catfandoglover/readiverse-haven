@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import type { Book, Contents, Rendition } from 'epubjs';
 import type { Theme } from '@/contexts/ThemeContext';
@@ -23,7 +22,7 @@ export const useRenditionSetup = (
     const newRendition = book.renderTo(container, {
       width: '100%',
       height: '100%',
-      spread: isMobile ? 'none' : 'auto',
+      spread: isMobile ? 'none' : 'auto'
     });
 
     // Apply theme colors and text settings
@@ -40,9 +39,6 @@ export const useRenditionSetup = (
           'Helvetica, Arial, sans-serif' : 
           'Times New Roman, serif',
       },
-      'a, h1, h2, h3, h4, h5, h6': {
-        color: theme.accent,
-      },
       'p': {
         'font-family': fontFamily === 'lexend' ? 
           "'Lexend', sans-serif" : 
@@ -51,7 +47,10 @@ export const useRenditionSetup = (
           fontFamily === 'helvetica' ? 
           'Helvetica, Arial, sans-serif' : 
           'Times New Roman, serif',
-      }
+      },
+      'a, h1, h2, h3, h4, h5, h6': {
+        color: theme.accent,
+      },
     });
 
     // Text selection handler
