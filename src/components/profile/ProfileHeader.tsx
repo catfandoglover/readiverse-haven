@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useProfileData } from "@/contexts/ProfileDataContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Share, Pen, Calendar } from "lucide-react";
+import { Share, Settings, Calendar } from "lucide-react";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,7 +30,7 @@ const ProfileHeader: React.FC = () => {
   const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzNjI4OTkwLCJleHAiOjg2NTc0MzU0MjU5MH0.iC8ooiUUENlvy-6ZtRexi_3jIJS5lBy2Y5FnUM82p9o";
 
   const handleProfileEditClick = () => {
-    navigate('/profile/edit');
+    navigate('/profile/settings');
   };
   
   const handleShareClick = async () => {
@@ -129,9 +129,9 @@ const ProfileHeader: React.FC = () => {
               <button 
                 onClick={handleProfileEditClick}
                 className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
-                aria-label="Edit profile picture"
+                aria-label="Edit profile settings"
               >
-                <Pen size={12} className="text-gray-700" />
+                <Settings size={12} className="text-gray-700" />
               </button>
             </div>
             

@@ -52,6 +52,8 @@ import { LoginButtons } from "@/components/auth/LoginButtons";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import ProfileSettings from "@/pages/ProfileSettings";
+import TestUpload from "@/pages/TestUpload";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -231,6 +233,16 @@ const App = () => (
                   <Route path="/profile" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <Profile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile/settings" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
+                      <ProfileSettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/test-upload" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                      <TestUpload />
                     </ProtectedRoute>
                   } />
                   <Route path="/dashboard" element={

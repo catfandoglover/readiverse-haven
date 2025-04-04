@@ -14,6 +14,7 @@ type ProfileDataContextType = {
   error: Error | null;
   getIconByName: (thinkerName: string | null) => string;
   debugInfo: any;
+  refreshProfileData: () => Promise<void>;
 };
 
 // Create context
@@ -241,6 +242,27 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  // Add refreshProfileData function
+  const refreshProfileData = async (): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
+        .maybeSingle();
+        
+      if (profileError || !profile) {
+        throw new Error(profileError?.message || "No profile found for user");
+      }
+      
+      setProfileData(profile);
+    } catch (err) {
+      console.error('Error refreshing profile data:', err);
+    }
+  };
+
   return (
     <ProfileDataContext.Provider 
       value={{ 
@@ -250,7 +272,8 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
         isLoading, 
         error, 
         getIconByName,
-        debugInfo
+        debugInfo,
+        refreshProfileData
       }}
     >
       {children}
