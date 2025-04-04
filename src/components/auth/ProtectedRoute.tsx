@@ -45,8 +45,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   // DNA assessment check - only if user is logged in and DNA is required
   if (requireDNA && !hasCompletedDNA && user) {
-    // User is logged in but needs DNA assessment
-    return <Navigate to="/dna/priming" replace />;
+    // Check for pending assessment ID in localStorage
+    const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
+    const isDnaWelcomePath = location.pathname === '/dna/welcome';
+    
+    // If there's a pending assessment and we're trying to access the welcome page,
+    // allow it through. Otherwise, redirect to priming.
+    if (!pendingAssessmentId || !isDnaWelcomePath) {
+      return <Navigate to="/dna/priming" replace />;
+    }
   }
   
   // All checks passed, render the protected content
