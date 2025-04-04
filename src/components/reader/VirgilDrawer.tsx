@@ -20,14 +20,13 @@ const VirgilDrawer: React.FC<VirgilDrawerProps> = ({ bookTitle }) => {
     >
       <div className="flex items-center justify-center px-4 py-3 relative">
         <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-1 bg-[#CCFF33] rounded-full my-1" />
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={toggleVirgilChat}
-          className="absolute right-4 top-3 text-white hover:bg-white/10"
+          className="absolute right-4 top-1 p-3 w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 rounded-md"
+          aria-label="Close Virgil chat"
         >
           <X className="h-5 w-5" />
-        </Button>
+        </button>
       </div>
       
       <div className="relative h-[calc(50vh-3rem)]">
