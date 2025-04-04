@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -31,13 +30,32 @@ const VirgilWelcome: React.FC = () => {
   // Two-minute timer for DNA results
   useEffect(() => {
     if (state === 'chat') {
-      const resultsTimer = setTimeout(() => {
+      const resultsTimer = setTimeout(async () => {
         setResultsReady(true);
-      }, 120000); // 2 minutes (120,000 ms)
+        
+        // Wait 3 seconds after showing the completion message before navigating
+        setTimeout(async () => {
+          // Automatically save conversation and navigate
+          try {
+            const sessionId = Math.random().toString(36).substring(2, 15);
+            await conversationManager.saveConversationToSupabase(
+              sessionId,
+              "dna-welcome",
+              null,
+              "welcome"
+            );
+          } catch (error) {
+            console.error('Error saving conversation:', error);
+          }
+          
+          // Navigate to profile page
+          navigate('/profile?tab=profile');
+        }, 3000); // 3 second delay
+      }, 6000); // 2 minutes (120,000 ms)
       
       return () => clearTimeout(resultsTimer);
     }
-  }, [state]);
+  }, [state, navigate]);
 
   // Save conversation and handle navigation
   const handleViewResults = async () => {

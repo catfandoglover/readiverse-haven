@@ -436,7 +436,7 @@ const DNAAssessment = () => {
           }
 
           if (!nextCategory) {
-            console.log('Assessment complete, navigating to completion screen...');
+            console.log('Assessment complete, navigating to welcome screen...');
             
             setCompletedAssessmentId(assessmentId);
             
@@ -476,7 +476,11 @@ const DNAAssessment = () => {
 
             await initAnalysis(updatedAnswers, assessmentId);
             
-            navigate('/dna/completion');
+            if (user) {
+              navigate('/dna/welcome');
+            } else {
+              navigate('/dna/completion');
+            }
             return;
           } else {
             await queryClient.prefetchQuery({
