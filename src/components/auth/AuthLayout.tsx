@@ -11,7 +11,6 @@ interface AuthLayoutProps {
   showBackButton?: boolean;
   fullHeight?: boolean;
   verticalCenter?: boolean;
-  showLightningLogo?: boolean;
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ 
@@ -20,15 +19,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   subtitle,
   showBackButton = true,
   fullHeight = true,
-  verticalCenter = true,
-  showLightningLogo = false
+  verticalCenter = true
 }) => {
   const navigate = useNavigate();
 
   return (
     <div 
       className={`bg-[#E9E7E2] ${fullHeight ? 'min-h-screen' : ''} ${
-        verticalCenter ? 'flex flex-col items-center justify-center' : 'flex flex-col'
+        verticalCenter ? 'flex flex-col items-center justify-center' : ''
       } p-6`}
     >
       {showBackButton && (
@@ -44,30 +42,18 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         </div>
       )}
 
-      <div className="max-w-md w-full mx-auto flex flex-col h-full py-12">
-        {showLightningLogo && (
-          <div className="flex justify-center mb-8">
-            <img 
-              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning%20Hexagon.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZyBIZXhhZ29uLnBuZyIsImlhdCI6MTc0MzczODUzMiwiZXhwIjo4ODE0MzY1MjEzMn0.nqjOMHSqPwcszVHj-OUBxUHDP1OEMBkkg8GceJiY0TY"
-              alt="Lightning Logo"
-              className="w-32 h-32 object-contain"
-            />
-          </div>
-        )}
-
+      <div className="max-w-md w-full mx-auto">
         <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-4xl text-center mb-4">
           {title}
         </h1>
         
         {subtitle && (
-          <p className="text-[#373763] text-center mb-8 font-oxanium uppercase text-sm tracking-wider">
+          <p className="text-[#332E38]/70 text-center mb-8">
             {subtitle}
           </p>
         )}
 
-        <div className="flex-grow">
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );

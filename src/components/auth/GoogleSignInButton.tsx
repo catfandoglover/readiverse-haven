@@ -9,15 +9,13 @@ interface GoogleSignInButtonProps {
   isLoading?: boolean;
   text?: string;
   onError?: (error: string) => void;
-  className?: string;
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ 
   onClick, 
   isLoading = false,
   text = "Continue with Google",
-  onError,
-  className = ""
+  onError
 }) => {
   const handleClick = async () => {
     try {
@@ -53,7 +51,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       type="button"
       disabled={isLoading}
       onClick={handleClick}
-      className={`w-full flex items-center justify-center gap-2 border border-[#373763]/20 bg-white hover:bg-gray-50 text-[#373763] py-6 rounded-xl font-oxanium ${className}`}
+      className="w-full flex items-center justify-center gap-2 border border-[#373763]/20 bg-white hover:bg-gray-50 text-[#373763] py-6 rounded-xl font-oxanium"
     >
       {isLoading ? (
         <LightningSpinner size="sm" />
