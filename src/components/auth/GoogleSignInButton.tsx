@@ -24,10 +24,21 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       console.error("Google Sign In error:", error);
       const errorMessage = error?.message || "Failed to sign in with Google";
       
+      // Handle specific error cases
       if (errorMessage.includes("provider is not enabled")) {
         const providerErrorMessage = "Google sign-in is not enabled. Please enable it in your Supabase Authentication providers.";
         toast.error(providerErrorMessage);
         if (onError) onError(providerErrorMessage);
+      } else if (errorMessage.includes("403") || errorMessage.includes("access to this page")) {
+        const accessErrorMessage = "Google authentication failed with a 403 error. Please check your Google OAuth configuration in both Google Cloud Console and Supabase.";
+        toast.error(accessErrorMessage);
+        if (onError) onError(accessErrorMessage);
+        
+        console.info("Google OAuth 403 troubleshooting steps:", [
+          "1. Verify your Google client ID and secret are correctly set in Supabase",
+          "2. Ensure your app's redirect URL is properly whitelisted in Google Cloud Console",
+          "3. Check that the Google provider is enabled in Supabase Authentication settings"
+        ]);
       } else {
         toast.error(errorMessage);
         if (onError) onError(errorMessage);
