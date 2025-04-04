@@ -1,3 +1,4 @@
+
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,7 @@ import type { Book } from "epubjs";
 import Spine from "epubjs/types/spine";
 import UploadPrompt from "./reader/UploadPrompt";
 import ReaderHeader from "./reader/ReaderHeader";
-import ReaderContent from "./reader/ReaderContent";
+import MinimalistReaderContent from "./reader/MinimalistReaderContent";
 import { useBookProgress } from "@/hooks/useBookProgress";
 import { useFileHandler } from "@/hooks/useFileHandler";
 import { useNavigation } from "@/hooks/useNavigation";
@@ -20,6 +21,7 @@ import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateReadingStatus } from "@/hooks/useUpdateReadingStatus";
+import { VirgilReaderContext } from "@/contexts/VirgilReaderContext";
 
 interface SpineItem {
   href: string;
@@ -37,8 +39,8 @@ interface SearchResult {
 
 const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }) => {
   const { toast } = useToast();
-  console.log('Reader metadata:', metadata);
-
+  const [showVirgilChat, setShowVirgilChat] = React.useState(false);
+  
   const {
     book,
     setBook,
@@ -270,26 +272,31 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
   const sessionTime = useSessionTimer(isReading);
   useLocationPersistence(book, currentLocation);
 
+  const toggleVirgilChat = () => {
+    setShowVirgilChat(!showVirgilChat);
+  };
+
+  const contextValue = {
+    showVirgilChat,
+    toggleVirgilChat,
+    bookTitle: metadata?.title || "Current Book"
+  };
+
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background transition-colors duration-300">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          {isLoading ? (
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="text-lg">Loading book...</div>
-            </div>
-          ) : !book && !preloadedBookUrl ? (
-            <div>
-              <UploadPrompt onFileUpload={handleFileUpload} />
-            </div>
-          ) : (
-            <>
-              <ReaderHeader
-                externalLink={metadata?.Cover_super || null}
-                onSearch={handleSearch}
-                onSearchResultClick={handleSearchResultClick}
-              />
-              <ReaderContent
+    <VirgilReaderContext.Provider value={contextValue}>
+      <ThemeProvider>
+        <div className="min-h-screen bg-[#332E38] transition-colors duration-300">
+          <div className="container mx-auto px-0 py-0 max-w-6xl h-screen flex flex-col">
+            {isLoading ? (
+              <div className="flex items-center justify-center min-h-screen">
+                <div className="text-lg text-white">Loading book...</div>
+              </div>
+            ) : !book && !preloadedBookUrl ? (
+              <div>
+                <UploadPrompt onFileUpload={handleFileUpload} />
+              </div>
+            ) : (
+              <MinimalistReaderContent
                 book={book}
                 fontSize={fontSize}
                 fontFamily={fontFamily}
@@ -319,12 +326,16 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
                 handleRemoveBookmark={handleRemoveBookmark}
                 setSelectedColor={setSelectedColor}
                 removeHighlight={removeHighlight}
+                externalLink={metadata?.Cover_super || null}
+                onSearch={handleSearch}
+                onSearchResultClick={handleSearchResultClick}
+                metadata={metadata}
               />
-            </>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </ThemeProvider>
+      </ThemeProvider>
+    </VirgilReaderContext.Provider>
   );
 };
 

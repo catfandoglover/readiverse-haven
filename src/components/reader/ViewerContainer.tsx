@@ -14,9 +14,9 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   return (
     <div 
       ref={(el) => setContainer(el)}
-      className="epub-view h-[80vh] border border-gray-200/10 rounded-lg overflow-hidden shadow-lg" 
+      className="epub-view h-[80vh] overflow-hidden" 
       style={{ 
-        background: theme.background,
+        background: "#332E38",
         color: theme.text,
         WebkitUserSelect: 'text',
         userSelect: 'text',
@@ -26,6 +26,9 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
         overscrollBehavior: 'contain',
         whiteSpace: 'pre-line', // Preserves line breaks in text
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '20px'
       }}
     />
   );

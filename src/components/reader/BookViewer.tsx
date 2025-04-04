@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition, Location } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -17,7 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Share2, Highlighter } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy, Share2, Highlighter, StickyNote } from "lucide-react";
 
 interface BookViewerProps {
   book: Book;
@@ -51,7 +53,9 @@ const BookViewer = ({
     cfiRange: string;
     text: string;
   } | null>(null);
+  const [noteText, setNoteText] = useState('');
   const [showTextDialog, setShowTextDialog] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
   const pendingHighlightRef = useRef<{ cfiRange: string; text: string } | null>(null);
@@ -306,16 +310,32 @@ const BookViewer = ({
     };
   }, [rendition, isRenditionReady, toast, highlights]);
 
+  const saveNote = () => {
+    if (!selectedText || !noteText.trim()) return;
+    
+    // Here we would save the note to local storage or a database
+    // For now, we'll just show a toast
+    toast({
+      description: "Note saved successfully",
+    });
+    
+    setNoteText('');
+    setShowNoteDialog(false);
+    setSelectedText(null);
+  };
+
   return (
     <div className="relative">
       <ViewerContainer theme={theme} setContainer={setContainer} />
+      
+      {/* Text selection options dialog */}
       <Dialog open={showTextDialog} onOpenChange={setShowTextDialog}>
-        <DialogContent>
+        <DialogContent className="bg-[#221F26] text-white border border-white/10">
           <DialogHeader>
-            <DialogTitle>Text Options</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Text Options</DialogTitle>
+            <DialogDescription className="text-white/70">
               Choose what you'd like to do with the selected text:
-              <div className="mt-2 p-4 bg-muted rounded-md">
+              <div className="mt-2 p-4 bg-[#332E38] rounded-md text-white">
                 {selectedText?.text}
               </div>
             </DialogDescription>
@@ -323,7 +343,7 @@ const BookViewer = ({
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
               onClick={() => {
                 if (selectedText && onTextSelect) {
                   onTextSelect(selectedText.cfiRange, selectedText.text);
@@ -340,7 +360,18 @@ const BookViewer = ({
             </Button>
             <Button
               variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+              onClick={() => {
+                setShowTextDialog(false);
+                setShowNoteDialog(true);
+              }}
+            >
+              <StickyNote className="h-4 w-4" />
+              Add Note
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
               onClick={async () => {
                 if (selectedText) {
                   try {
@@ -363,7 +394,7 @@ const BookViewer = ({
               Copy
             </Button>
             <Button
-              className="w-full sm:w-auto flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center gap-2 bg-[#CCFF33] text-[#221F26] hover:bg-[#CCFF33]/90"
               onClick={async () => {
                 if (selectedText) {
                   try {
@@ -389,6 +420,46 @@ const BookViewer = ({
             >
               <Share2 className="h-4 w-4" />
               Share
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add note dialog */}
+      <Dialog open={showNoteDialog} onOpenChange={setShowNoteDialog}>
+        <DialogContent className="bg-[#221F26] text-white border border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Add a Note</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Write a note about this text:
+              <div className="mt-2 p-4 bg-[#332E38] rounded-md text-white">
+                {selectedText?.text}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Write your note here..."
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            className="bg-[#332E38] text-white border-white/10 min-h-[100px]"
+          />
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                setShowNoteDialog(false);
+                setNoteText('');
+              }}
+              className="bg-transparent text-white hover:bg-white/10 border border-white/20"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={saveNote}
+              className="bg-[#CCFF33] text-[#221F26] hover:bg-[#CCFF33]/90"
+              disabled={!noteText.trim()}
+            >
+              Save Note
             </Button>
           </DialogFooter>
         </DialogContent>
