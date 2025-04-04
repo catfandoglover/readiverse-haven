@@ -1,10 +1,8 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LightningSpinner } from "@/components/ui/lightning-spinner";
 import { toast } from "sonner";
 
@@ -57,70 +55,74 @@ const SignUpForm: React.FC = () => {
     }
   };
 
+  const handleResetPassword = () => {
+    navigate('/forgot-password');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
   return (
-    <form onSubmit={handleSignUp} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="fullName" className="text-[#373763]">
-          Full Name
-        </Label>
+    <div className="w-full max-w-md mx-auto">
+      <form onSubmit={handleSignUp} className="space-y-8">
         <Input
           id="fullName"
           type="text"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           required
-          placeholder="Enter your full name"
-          className="bg-white border-[#373763]/20 rounded-lg py-6 h-auto"
+          placeholder="WHAT IS YOUR NAME?"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-[#373763]">
-          Email
-        </Label>
         <Input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          placeholder="Enter your email"
-          className="bg-white border-[#373763]/20 rounded-lg py-6 h-auto"
+          placeholder="ENTER EMAIL"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-[#373763]">
-          Password
-        </Label>
         <Input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          placeholder="Create a password"
-          className="bg-white border-[#373763]/20 rounded-lg py-6 h-auto"
+          placeholder="ENTER PASSWORD"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase tracking-wider h-[52px]"
         />
-      </div>
-
-      <Button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
-      >
-        {isLoading ? <LightningSpinner size="sm" /> : "Sign up"}
-      </Button>
-
-      <div className="text-center">
-        <p className="text-[#332E38]/70">
-          Already have an account?{" "}
-          <Link to="/login" className="text-[#373763] font-medium hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    </form>
+        
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full h-[52px] rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+        >
+          {isLoading ? <LightningSpinner size="sm" /> : "SIGN UP"}
+        </Button>
+        
+        <div className="flex justify-between text-sm">
+          <button 
+            type="button" 
+            onClick={handleResetPassword}
+            className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold hover:text-[#373763] underline"
+          >
+            RESET PASSWORD
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleLogin}
+            className="font-oxanium text-[#282828] uppercase tracking-wider text-sm font-bold hover:text-[#373763]"
+          >
+            EXISTING USER? <span className="underline">LOGIN</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
