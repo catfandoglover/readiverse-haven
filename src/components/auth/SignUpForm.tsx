@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ const SignUpForm: React.FC = () => {
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +43,11 @@ const SignUpForm: React.FC = () => {
       if (isDnaFlow) {
         navigate('/dna/confirm-email', { replace: true });
       } else {
-        toast.success("Check your email for the confirmation link");
+        // Navigate to the general email confirmation page
+        navigate('/email-confirmation', { 
+          replace: true,
+          state: { fromSignup: true }
+        });
       }
     } catch (error) {
       console.error("Sign up error:", error);

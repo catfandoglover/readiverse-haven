@@ -51,6 +51,7 @@ import AuthCallback from "./pages/AuthCallback";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";
+import EmailConfirmation from "./pages/EmailConfirmation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -192,6 +193,7 @@ const App = () => (
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/email-confirmation" element={<EmailConfirmation />} /> {/* Add the new email confirmation route */}
                   <Route path="/profile/share/:name" element={<ShareableProfile />} />
                   <Route path="/share-badge/:domainId/:resourceId" element={<ShareBadgePage />} />
                   <Route path="/share-badge/:domainId/:resourceId/:userName" element={<ShareBadgePage />} />

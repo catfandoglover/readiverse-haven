@@ -78,6 +78,7 @@ export function Login() {
           <GoogleSignInButton 
             onClick={handleGoogleLogin}
             isLoading={googleLoading}
+            onError={(error) => setAuthError(error)}
           />
           
           <div className="relative flex items-center justify-center">

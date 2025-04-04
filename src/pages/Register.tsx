@@ -79,6 +79,7 @@ export function Register() {
             onClick={handleGoogleSignup}
             isLoading={googleLoading}
             text="Sign up with Google"
+            onError={(error) => setAuthError(error)}
           />
           
           <div className="relative flex items-center justify-center">

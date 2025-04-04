@@ -2,23 +2,44 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { LightningSpinner } from "@/components/ui/lightning-spinner";
+import { toast } from "sonner";
 
 interface GoogleSignInButtonProps {
   onClick: () => Promise<void>;
   isLoading?: boolean;
   text?: string;
+  onError?: (error: string) => void;
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ 
   onClick, 
   isLoading = false,
-  text = "Continue with Google" 
+  text = "Continue with Google",
+  onError
 }) => {
+  const handleClick = async () => {
+    try {
+      await onClick();
+    } catch (error: any) {
+      console.error("Google Sign In error:", error);
+      const errorMessage = error?.message || "Failed to sign in with Google";
+      
+      if (errorMessage.includes("provider is not enabled")) {
+        const providerErrorMessage = "Google sign-in is not enabled. Please enable it in your Supabase Authentication providers.";
+        toast.error(providerErrorMessage);
+        if (onError) onError(providerErrorMessage);
+      } else {
+        toast.error(errorMessage);
+        if (onError) onError(errorMessage);
+      }
+    }
+  };
+  
   return (
     <Button
       type="button"
       disabled={isLoading}
-      onClick={onClick}
+      onClick={handleClick}
       className="w-full flex items-center justify-center gap-2 border border-[#373763]/20 bg-white hover:bg-gray-50 text-[#373763] py-6 rounded-xl font-oxanium"
     >
       {isLoading ? (
