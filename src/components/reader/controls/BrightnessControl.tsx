@@ -1,5 +1,5 @@
 import React from 'react';
-import { Slider } from "@/components/ui/slider";
+import { CustomSlider } from "./CustomSlider";
 
 interface BrightnessControlProps {
   brightness: number;
@@ -11,15 +11,15 @@ const BrightnessControl = ({
   onBrightnessChange,
 }: BrightnessControlProps) => {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium whitespace-nowrap">Brightness</span>
-      <Slider
+    <div className="space-y-4">
+      <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Brightness</h3>
+      <CustomSlider
         value={[brightness]}
         onValueChange={onBrightnessChange}
         min={0.2}
         max={1}
         step={0.1}
-        className="w-32"
+        className="w-full mt-6"
       />
     </div>
   );

@@ -59,7 +59,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="flex-1 p-4 space-y-4 overflow-y-auto font-libre-baskerville">
         {messages.map((message) => (
           <MessageBubble 
@@ -84,7 +84,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
       </div>
 
       <div className={cn(
-        "transition-all duration-500 ease-in-out",
+        "mt-auto fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-in-out",
         resultsReady 
           ? "transform translate-y-full opacity-0 pointer-events-none" 
           : "opacity-100"

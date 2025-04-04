@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -88,16 +87,6 @@ export default {
 	},
 	plugins: [
 		require("tailwindcss-animate"),
-		function({ addBase }: { addBase: Function }) {
-			addBase({
-				'*': {
-					'&::-webkit-scrollbar': {
-						display: 'none'
-					},
-					'-ms-overflow-style': 'none',
-					'scrollbar-width': 'none'
-				}
-			});
-		}
+		require('tailwind-scrollbar'),
 	],
 } satisfies Config;

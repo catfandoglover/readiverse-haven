@@ -343,6 +343,39 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string
+          subscription_status: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id: string
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dna_analysis_results: {
         Row: {
           aesthetics_challenging_voice_1: string | null
@@ -2302,6 +2335,15 @@ export type Database = {
           folder: string
           name: string
           url: string
+        }[]
+      }
+      get_user_subscription: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: {
+          subscription_status: string
+          subscription_tier: string
         }[]
       }
       gtrgm_compress: {

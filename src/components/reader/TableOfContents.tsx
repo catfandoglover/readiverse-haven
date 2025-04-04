@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,12 +16,58 @@ import type { NavItem } from "epubjs";
 interface TableOfContentsProps {
   toc?: NavItem[];
   onNavigate: (href: string) => void;
+  variant?: 'drawer' | 'inline';
 }
 
-const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
+const TocList = ({ 
+  toc = [], 
+  onNavigate, 
+  closeDrawer 
+}: { 
+  toc: NavItem[]; 
+  onNavigate: (href: string) => void; 
+  closeDrawer?: () => void;
+}) => {
+  return (
+    <div className="space-y-2">
+      {toc.map((item, index) => (
+        closeDrawer ? (
+          <DrawerClose key={index} asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left whitespace-normal h-auto text-foreground hover:bg-accent"
+              onClick={() => onNavigate(item.href)}
+            >
+              <span className="line-clamp-2">{item.label}</span>
+            </Button>
+          </DrawerClose>
+        ) : (
+          <Button
+            key={index}
+            variant="ghost"
+            className="w-full justify-start text-left whitespace-normal h-auto text-foreground hover:bg-accent"
+            onClick={() => onNavigate(item.href)}
+          >
+            <span className="line-clamp-2">{item.label}</span>
+          </Button>
+        )
+      ))}
+    </div>
+  );
+};
+
+const TableOfContents = ({ toc = [], onNavigate, variant = 'drawer' }: TableOfContentsProps) => {
   const handleNavigation = (href: string) => {
     onNavigate(href);
   };
+
+  if (variant === 'inline') {
+    return (
+      <ScrollArea className="h-[65vh]">
+        <TocList toc={toc} onNavigate={handleNavigation} />
+      </ScrollArea>
+    );
+  }
 
   return (
     <Drawer>
@@ -41,19 +86,7 @@ const TableOfContents = ({ toc = [], onNavigate }: TableOfContentsProps) => {
             <DrawerTitle className="text-foreground">Table of Contents</DrawerTitle>
           </DrawerHeader>
           <ScrollArea className="h-[50vh] px-4">
-            <div className="space-y-2">
-              {toc.map((item, index) => (
-                <DrawerClose key={index} asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-left whitespace-normal h-auto text-foreground hover:bg-accent"
-                    onClick={() => handleNavigation(item.href)}
-                  >
-                    <span className="line-clamp-2">{item.label}</span>
-                  </Button>
-                </DrawerClose>
-              ))}
-            </div>
+            <TocList toc={toc} onNavigate={handleNavigation} closeDrawer={() => {}} />
           </ScrollArea>
           <DrawerFooter>
             <DrawerClose asChild>

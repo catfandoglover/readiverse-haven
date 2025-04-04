@@ -87,8 +87,17 @@
 
   .epub-view {
     @apply bg-background text-foreground shadow-lg rounded-lg transition-colors duration-300;
+    position: relative;
+    width: 100%;
   }
-
+  
+  /* Custom styling for EPUB content inside */
+  .epub-view iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+  }
+  
   /* Theme-aware hover states */
   *:hover {
     @apply transition-colors duration-200;
