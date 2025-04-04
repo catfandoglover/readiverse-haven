@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dna, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +16,7 @@ const SAMPLE_ANSWERS = {
 
 export function AnalyzeDNAButton() {
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, supabase: supabaseClient } = useAuth();
 
   const handleAnalyzeDNA = async () => {
     try {
@@ -25,27 +24,51 @@ export function AnalyzeDNAButton() {
       toast.info('Starting DNA analysis...');
       
       // First, create an assessment result record to store the analysis
-      const { data: assessmentData, error: assessmentError } = await supabase
-        .from('dna_assessment_results')
-        .insert({
-          name: 'Quick Analysis',
-          answers: SAMPLE_ANSWERS,
-          profile_id: user?.id || null
-        })
-        .select('id')
-        .single();
-
-      if (assessmentError) {
-        console.error('Error creating assessment record:', assessmentError);
-        toast.error('Failed to initialize DNA analysis');
-        throw assessmentError;
-      }
+      let assessment_id;
       
-      const assessment_id = assessmentData.id;
-      console.log('Created assessment record:', assessment_id);
+      if (supabaseClient) {
+        const { data: assessmentData, error: assessmentError } = await supabaseClient
+          .from('dna_assessment_results')
+          .insert({
+            name: 'Quick Analysis',
+            answers: SAMPLE_ANSWERS,
+            profile_id: user?.id ? user.id : null
+          })
+          .select('id')
+          .single();
+
+        if (assessmentError) {
+          console.error('Error creating assessment record:', assessmentError);
+          toast.error('Failed to initialize DNA analysis');
+          throw assessmentError;
+        }
+        
+        assessment_id = assessmentData.id;
+        console.log('Created assessment record:', assessment_id);
+      } else {
+        console.log('No authenticated user, creating anonymous assessment');
+        const { data: assessmentData, error: assessmentError } = await supabase
+          .from('dna_assessment_results')
+          .insert({
+            name: 'Anonymous Analysis',
+            answers: SAMPLE_ANSWERS
+          })
+          .select('id')
+          .single();
+
+        if (assessmentError) {
+          console.error('Error creating assessment record:', assessmentError);
+          toast.error('Failed to initialize DNA analysis');
+          throw assessmentError;
+        }
+        
+        assessment_id = assessmentData.id;
+        console.log('Created anonymous assessment record:', assessment_id);
+      }
 
       // Now call the edge function to analyze the DNA
       const { data, error } = await supabase.functions.invoke('analyze-dna', {
+        method: 'POST',
         body: {
           answers_json: SAMPLE_ANSWERS,
           assessment_id,
@@ -55,11 +78,9 @@ export function AnalyzeDNAButton() {
 
       if (error) {
         console.error('Error from Edge Function:', error);
-        toast.error('Failed to analyze DNA: ' + error.message);
+        toast.error('Failed to analyze DNA');
         throw error;
       }
-      
-      console.log('Analysis response:', data);
       
       // Add a small delay to ensure the analysis is stored
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -68,6 +89,7 @@ export function AnalyzeDNAButton() {
       console.log('DNA analysis complete, validating entities with assessment ID:', assessment_id);
       
       const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-dna-entities', {
+        method: 'POST',
         body: {
           assessment_id
         }
@@ -84,7 +106,7 @@ export function AnalyzeDNAButton() {
       
     } catch (error) {
       console.error('Error triggering DNA analysis:', error);
-      toast.error('Failed to analyze DNA: ' + (error.message || 'Unknown error'));
+      toast.error('Failed to analyze DNA');
     } finally {
       setIsLoading(false);
     }

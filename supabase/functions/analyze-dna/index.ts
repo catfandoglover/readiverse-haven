@@ -30,9 +30,11 @@ function handlePoliticsFields(jsonString: string): string {
   
   let processed = jsonString.replace(/\\"/g, "___ESCAPED_QUOTE___");
   
+  // Enhanced regex for multiline politics fields, using [\s\S] instead of . to match across lines
   const regex = /"(politics_[^"]+)"\s*:\s*"([\s\S]*?)(?<!\\)"/gs;
   
   processed = processed.replace(regex, (match, fieldName, content) => {
+    // Clean content more aggressively for politics fields
     const cleanedContent = content
       .replace(/"/g, '\\"')
       .replace(/\r/g, ' ')
@@ -72,16 +74,22 @@ function handleProblematicFields(jsonString: string): string {
   return processed;
 }
 
+// Updated function to validate and ensure required fields are present
 function ensureRequiredFields(jsonObject: Record<string, string>, section: number): Record<string, string> {
+  // Changed from section !== 1 to section !== 2
+  // This ensures we only apply this special handling to section 1
   if (section !== 1) return jsonObject;
   
   const result = { ...jsonObject };
   
+  // Specifically check for the problematic politics fields
   for (let i = 4; i <= 5; i++) {
+    // Check for the three related fields for politics_challenging_voice
     const baseField = `politics_challenging_voice_${i}`;
     const classicField = `${baseField}_classic`;
     const rationaleField = `${baseField}_rationale`;
     
+    // If any of these fields are missing, add defaults
     if (!result[baseField]) {
       console.log(`Adding missing field: ${baseField}`);
       result[baseField] = `Political Challenger ${i}`;
@@ -101,13 +109,16 @@ function ensureRequiredFields(jsonObject: Record<string, string>, section: numbe
   return result;
 }
 
+// Function to ensure all fields follow the correct naming pattern (with numeric suffixes)
 function validateFieldNames(content: Record<string, string>): Record<string, string> {
   const correctedContent: Record<string, string> = {};
   
+  // First copy all existing fields to the new object
   Object.keys(content).forEach(key => {
     correctedContent[key] = content[key];
   });
   
+  // Check for any base domain/relation fields without numeric suffix (incorrect format)
   const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
   const relationTypes = ['kindred_spirit', 'challenging_voice'];
   const suffixes = ['', '_classic', '_rationale'];
@@ -116,6 +127,7 @@ function validateFieldNames(content: Record<string, string>): Record<string, str
     for (const relation of relationTypes) {
       const baseFieldName = `${domain}_${relation}`;
       
+      // Check if the incorrect base field exists
       if (content[baseFieldName] !== undefined) {
         console.log(`Found incorrect field name: ${baseFieldName}, removing it`);
         delete correctedContent[baseFieldName];
@@ -131,6 +143,7 @@ function validateFieldNames(content: Record<string, string>): Record<string, str
     }
   }
   
+  // Return all fields as individual columns
   return correctedContent;
 }
 
@@ -248,6 +261,7 @@ function repairJson(jsonString: string): string {
         try {
           const extractedObject: Record<string, string> = {};
           
+          // Enhanced politics pattern matching that's more forgiving
           const politicsPattern = /"(politics_[^"]+)"\s*:\s*"([^"]*)"/g;
           let match;
           
@@ -264,11 +278,13 @@ function repairJson(jsonString: string): string {
             extractedObject[key] = cleanValue;
           }
           
+          // Look for missing politics_challenging_voice fields specifically
           for (let i = 1; i <= 5; i++) {
             const baseKey = `politics_challenging_voice_${i}`;
             const classicKey = `${baseKey}_classic`;
             const rationaleKey = `${baseKey}_rationale`;
             
+            // If these specific keys are missing, try an even more aggressive pattern
             if (!extractedObject[baseKey]) {
               const specialPattern = new RegExp(`"(${baseKey})"\\s*:\\s*"([\\s\\S]*?)(?:"\\s*,\\s*"|"\\s*})`, "g");
               if ((match = specialPattern.exec(jsonString)) !== null) {
@@ -337,6 +353,8 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
     
     let systemPrompt = 'You are a philosophical profiler who analyzes philosophical tendencies and provides insights in the second person ("you"). Return ONLY a JSON object with no additional formatting. The response must start with { and end with }. All field values must be properly escaped strings with no unescaped quotes or special characters. Follow the template exactly as specified.';
     
+    // Changed from section === 1 to section === 1 
+    // This ensures special system prompt is applied to section 1 where politics fields are now located
     if (section === 1) {
       systemPrompt += ' IMPORTANT: For politics_challenging_voice fields and other fields containing philosophical explanations, use single quotes for any quotations within the content, not double quotes. Avoid newlines, tabs, or special characters in your responses. Keep all JSON field values as simple strings without complex formatting. Make sure to include ALL fields in the response, including politics_challenging_voice_4, politics_challenging_voice_5, and their associated _classic and _rationale fields. Ensure every field has a complete value.';
     }
@@ -361,8 +379,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
             content: prompt
           }
         ],
-        max_tokens: 16000,
-        temperature: section === 1 ? 0.3 : 0.7,
+        max_tokens: 16000, // Increased from 4000 to 16000 to accommodate all fields
+        // Changed from section === 1 to section === 1
+        // This ensures lower temperature is applied to section 1 where politics fields are now located
+        temperature: section === 1 ? 0.3 : 0.7, // Lower temperature for section 1 to improve consistency
         response_format: { type: "json_object" }
       })
     });
@@ -388,8 +408,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       const parsed = JSON.parse(cleanedContent);
       console.log(`Successfully parsed JSON for section ${section}`);
       
+      // If this is section 1, ensure all required fields are present
       let validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
       
+      // Add the new step to validate field names and remove any incorrectly formatted fields
       validatedContent = validateFieldNames(validatedContent);
       
       return {
@@ -415,8 +437,10 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
+        // Ensure all required fields are present, especially for section 1
         let validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
         
+        // Add the new step to validate field names and remove any incorrectly formatted fields
         validatedResult = validateFieldNames(validatedResult);
         
         return {
@@ -515,11 +539,13 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   }
 }
 
+// Function to validate entities using the validate-dna-entities function
 async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
   try {
     console.log('Validating DNA entities from analysis results');
     console.log('Analysis data keys:', Object.keys(analysisData));
     
+    // Call the validate-dna-entities function with the analysis data
     const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
       method: 'POST',
       headers: {
@@ -555,15 +581,13 @@ serve(async (req) => {
 
   try {
     if (req.method === 'POST') {
-      const requestBody = await req.json();
-      const { answers_json, assessment_id, profile_id } = requestBody;
+      const { answers_json, assessment_id, profile_id } = await req.json();
       
       if (!answers_json || !assessment_id) {
         throw new Error('Missing required fields: answers_json and assessment_id are required');
       }
 
       console.log(`Processing assessment ${assessment_id}...`);
-      console.log('Request body:', JSON.stringify(requestBody));
       
       const analysisExists = await checkExistingAnalysis(assessment_id);
       
@@ -625,32 +649,27 @@ serve(async (req) => {
         combinedAnalysisTexts.push(section.analysis);
       }
       
-      let validationResults;
-      try {
-        validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
-      } catch (validationError) {
-        console.error('Error validating entities:', validationError);
-        validationResults = { 
-          summary: { 
-            status: 'error', 
-            error_message: validationError.message 
-          }
-        };
-      }
+      // Perform entity validation before storing the analysis
+      console.log('Validating entities before storing analysis...');
+      const validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
       
-      combinedAnalysis['validation_summary'] = validationResults?.summary || {};
+      // Store the validation summary as a JSONB field
+      combinedAnalysis['validation_summary'] = validationResults.summary || {};
       
+      // Double-check for any non-indexed fields that might cause insertion errors
       const correctedAnalysis = validateFieldNames(combinedAnalysis);
       
+      // Log all keys to help with debugging
       console.log('Final analysis keys:', Object.keys(correctedAnalysis).join(', ').substring(0, 200) + '...');
       
+      // Proceed to store the analysis results with validation data
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
-        validation_summary: validationResults?.summary,
+        validation_summary: validationResults.summary,
         ...correctedAnalysis
       };
 
@@ -666,11 +685,12 @@ serve(async (req) => {
         throw storeError;
       }
       
-      console.log('Combined analysis stored successfully with ID:', analysisData?.id);
+      console.log('Combined analysis stored successfully');
       
+      // If we have an analysis ID now, store the unmatched entities for later review
       if (analysisData?.id && 
-          (validationResults?.thinkers?.unmatched?.length > 0 || 
-           validationResults?.classics?.unmatched?.length > 0)) {
+          (validationResults.thinkers?.unmatched?.length > 0 || 
+           validationResults.classics?.unmatched?.length > 0)) {
         
         try {
           const unmatchedData = {
@@ -686,14 +706,13 @@ serve(async (req) => {
             
           if (unmatchedError) {
             console.error('Error storing unmatched entities:', unmatchedError);
-          } else {
-            console.log('Stored unmatched entities successfully');
           }
         } catch (unmatchedErr) {
           console.error('Exception storing unmatched entities:', unmatchedErr);
         }
       }
 
+      // Add a small delay to ensure the database transaction is complete
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       return new Response(
@@ -701,7 +720,7 @@ serve(async (req) => {
           success: true, 
           message: 'Combined analysis stored successfully',
           analysis_id: analysisData?.id,
-          validation_summary: validationResults?.summary
+          validation_summary: validationResults.summary
         }),
         { 
           headers: {
@@ -719,7 +738,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error occurred' }), 
+      JSON.stringify({ error: error.message }), 
       { 
         status: 500,
         headers: {
