@@ -187,7 +187,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
     <div 
       className="flex flex-col h-full w-full relative bg-[#332E38]"
       style={{
-        height: showVirgilChat ? 'calc(60vh)' : '100vh',
+        height: showVirgilChat ? 'calc(50vh)' : '100vh',
         transition: 'height 0.3s ease-in-out'
       }}
     >
@@ -261,7 +261,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
         show={showControls} 
       />
 
-      <VirgilChatButton />
+      {!showVirgilChat && <VirgilChatButton />}
       
       <VirgilDrawer bookTitle={metadata?.title || currentChapterTitle} />
 
