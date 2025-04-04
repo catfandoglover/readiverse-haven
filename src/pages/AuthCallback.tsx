@@ -1,7 +1,9 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Spinner } from '@/components/ui/spinner';
+import AuthLayout from '@/components/auth/AuthLayout';
+import { LightningSpinner } from '@/components/ui/lightning-spinner';
 import { toast } from 'sonner';
 
 export function AuthCallback() {
@@ -12,6 +14,9 @@ export function AuthCallback() {
     // Handle the auth callback from Supabase
     const handleAuthCallback = async () => {
       try {
+        // Check if this callback is from the DNA assessment flow
+        const isDnaFlow = localStorage.getItem('dnaAssessmentComplete') === 'true';
+        
         const { error } = await supabase.auth.getSession();
         
         if (error) {
@@ -25,7 +30,14 @@ export function AuthCallback() {
         toast.success('Successfully authenticated');
         
         // Get the original intended URL from local storage or default to home
-        const redirectTo = localStorage.getItem('authRedirectTo') || '/';
+        let redirectTo = localStorage.getItem('authRedirectTo') || '/';
+        
+        // Special handling for DNA flow
+        if (isDnaFlow) {
+          localStorage.removeItem('dnaAssessmentComplete');
+          redirectTo = '/dna/welcome';
+        }
+        
         localStorage.removeItem('authRedirectTo');
         
         navigate(redirectTo, { replace: true });
@@ -62,27 +74,29 @@ export function AuthCallback() {
     }
     
     return (
-      <div className="min-h-screen bg-[#1A181B] flex flex-col items-center justify-center p-4">
-        <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-md text-red-500 max-w-md">
+      <AuthLayout title="Authentication Error" showBackButton={false}>
+        <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-lg text-red-500 max-w-md mb-6">
           {errorMessage}
         </div>
         <button 
           onClick={() => navigate('/login')} 
-          className="mt-4 px-4 py-2 rounded bg-[#373763] text-white"
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
         >
           Return to Login
         </button>
-      </div>
+      </AuthLayout>
     );
   }
   
   return (
-    <div className="min-h-screen bg-[#1A181B] flex flex-col items-center justify-center p-4">
-      <Spinner size="lg" />
-      <div className="text-[#E9E7E2] font-oxanium mt-4">
-        Processing your login...
+    <AuthLayout title="Processing Login" showBackButton={false}>
+      <div className="flex flex-col items-center justify-center py-12">
+        <LightningSpinner size="lg" />
+        <p className="text-[#373763] font-oxanium mt-6">
+          Processing your login...
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 

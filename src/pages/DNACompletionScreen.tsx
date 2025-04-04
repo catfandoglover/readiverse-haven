@@ -1,25 +1,55 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import { toast } from "sonner";
 
 const DNACompletionScreen = () => {
   const navigate = useNavigate();
-  const { openLogin, user } = useAuth();
+  const { user } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  
+  // Store that DNA assessment is complete to redirect after auth
+  useEffect(() => {
+    localStorage.setItem('dnaAssessmentComplete', 'true');
+    localStorage.setItem('authRedirectTo', '/dna/welcome');
+  }, []);
 
   // If user is already logged in, redirect to results
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       navigate('/dna/welcome');
     }
   }, [user, navigate]);
 
-  const handleLoginClick = () => {
-    // Open the Outseta login/register modal
-    openLogin({
-      widgetMode: 'login|register', // Keep the combined mode as requested
-    });
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message);
+      }
+    } catch (err) {
+      console.error('Google sign in error:', err);
+      toast.error('Failed to sign in with Google');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleEmailAuth = () => {
+    navigate('/register');
   };
 
   return (
@@ -44,13 +74,25 @@ const DNACompletionScreen = () => {
         </h1>
       </div>
 
-      {/* Continue button */}
-      <div className="w-full max-w-md mb-16 px-6">
+      {/* Auth buttons */}
+      <div className="w-full max-w-md mb-16 px-6 space-y-4">
+        <GoogleSignInButton 
+          onClick={handleGoogleLogin} 
+          isLoading={googleLoading}
+          text="Continue with Google"
+        />
+        
+        <div className="relative flex items-center justify-center">
+          <div className="flex-grow h-px bg-[#373763]/10"></div>
+          <span className="px-4 text-[#332E38]/70 text-sm">or</span>
+          <div className="flex-grow h-px bg-[#373763]/10"></div>
+        </div>
+        
         <Button 
-          onClick={handleLoginClick}
-          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider dna-continue-button"
+          onClick={handleEmailAuth}
+          className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
         >
-          LOGIN / REGISTER
+          CONTINUE WITH EMAIL
         </Button>
       </div>
     </div>

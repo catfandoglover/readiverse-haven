@@ -6,12 +6,12 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/components/auth/AuthLayout';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
-import LoginForm from '@/components/auth/LoginForm';
+import SignUpForm from '@/components/auth/SignUpForm';
 import { toast } from "sonner";
 
-export function Login() {
+export function Register() {
   const location = useLocation();
-  const state = location.state as { tab?: string; authError?: string; from?: Location };
+  const state = location.state as { authError?: string; from?: Location };
   const [authError, setAuthError] = useState<string | null>(state?.authError || null);
   const { user, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -33,7 +33,7 @@ export function Login() {
     return <Navigate to={redirectTo} replace />;
   }
   
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     setGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -47,8 +47,8 @@ export function Login() {
         setAuthError(error.message);
       }
     } catch (err) {
-      console.error('Google sign in error:', err);
-      setAuthError('Failed to sign in with Google');
+      console.error('Google sign up error:', err);
+      setAuthError('Failed to sign up with Google');
     } finally {
       setGoogleLoading(false);
     }
@@ -68,16 +68,17 @@ export function Login() {
   
   return (
     <AuthLayout 
-      title={showEmailForm ? "Log in with email" : "Welcome back"}
-      subtitle={showEmailForm ? "Enter your email and password to continue" : "Log in to your account to continue"}
+      title={showEmailForm ? "Create an account" : "Sign up"}
+      subtitle={showEmailForm ? "Enter your details to create an account" : "Create an account to continue"}
     >
       {showEmailForm ? (
-        <LoginForm />
+        <SignUpForm />
       ) : (
         <div className="space-y-6">
           <GoogleSignInButton 
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleSignup}
             isLoading={googleLoading}
+            text="Sign up with Google"
           />
           
           <div className="relative flex items-center justify-center">
@@ -90,7 +91,7 @@ export function Login() {
             onClick={() => setShowEmailForm(true)}
             className="w-full py-6 rounded-2xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
           >
-            Continue with Email
+            Sign up with Email
           </button>
         </div>
       )}
@@ -98,4 +99,4 @@ export function Login() {
   );
 }
 
-export default Login;
+export default Register;
