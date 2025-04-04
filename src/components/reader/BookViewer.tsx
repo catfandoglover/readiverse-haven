@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import type { Book, Rendition, Location } from "epubjs";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -7,6 +6,7 @@ import { useRenditionSetup } from "@/hooks/useRenditionSetup";
 import { useReaderResize } from "@/hooks/useReaderResize";
 import { useFontSizeEffect } from "@/hooks/useFontSizeEffect";
 import { useHighlightManagement } from "@/hooks/useHighlightManagement";
+import { useNotes } from "@/hooks/useNotes";
 import ViewerContainer from "./ViewerContainer";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -59,6 +59,10 @@ const BookViewer = ({
   const lastTapRef = useRef(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
   const pendingHighlightRef = useRef<{ cfiRange: string; text: string } | null>(null);
+  
+  // Use the notes hook
+  const bookKey = book?.key() || null;
+  const { notes, addNote, removeNote } = useNotes(bookKey);
 
   const {
     rendition,
@@ -311,13 +315,34 @@ const BookViewer = ({
   }, [rendition, isRenditionReady, toast, highlights]);
 
   const saveNote = () => {
-    if (!selectedText || !noteText.trim()) return;
+    if (!selectedText || !noteText.trim() || !bookKey) return;
     
-    // Here we would save the note to local storage or a database
-    // For now, we'll just show a toast
-    toast({
-      description: "Note saved successfully",
+    console.log('Adding note with:', {
+      cfi: selectedText.cfiRange,
+      text: selectedText.text,
+      note: noteText.trim(),
+      bookKey
     });
+    
+    // Save the note using the useNotes hook
+    const newNote = addNote(
+      selectedText.cfiRange,
+      selectedText.text,
+      noteText.trim()
+    );
+    
+    console.log('Note created:', newNote);
+    
+    if (newNote) {
+      toast({
+        description: "Note saved successfully",
+      });
+      
+      // Dispatch a custom event so other components can react to note changes
+      window.dispatchEvent(new CustomEvent('noteAdded', { 
+        detail: { note: newNote } 
+      }));
+    }
     
     setNoteText('');
     setShowNoteDialog(false);
@@ -325,7 +350,7 @@ const BookViewer = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <ViewerContainer theme={theme} setContainer={setContainer} />
       
       {/* Text selection options dialog */}

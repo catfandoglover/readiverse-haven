@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -23,20 +22,23 @@ import {
   Highlighter,
   Maximize,
   StickyNote,
-  FileSearch
+  FileSearch,
+  Trash2
 } from "lucide-react";
-import FontControls from "./controls/FontControls";
-import AlignmentControls from "./controls/AlignmentControls";
 import BrightnessControl from "./controls/BrightnessControl";
+import FontSelector from "./controls/FontSelector";
 import SessionTimer from "./SessionTimer";
 import TableOfContents from "./TableOfContents";
-import HighlightsMenu from "./HighlightsMenu";
-import BookmarksMenu from "./BookmarksMenu";
+import HighlightsList from "./HighlightsList";
+import BookmarksList from "./BookmarksList";
+import InlineSearch from "./InlineSearch";
 import { useNavigate } from "react-router-dom";
 import SearchDialog from "./SearchDialog";
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
 import type { SearchResult } from '@/types/reader';
+import { useToast } from "@/hooks/use-toast";
+import { useNotes } from '@/hooks/useNotes';
 
 interface ReaderSettingsMenuProps {
   open: boolean;
@@ -94,6 +96,30 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("toc");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const bookmarksListRef = useRef<any>(null);
+  const { toast } = useToast();
+  
+  // Get notes using the useNotes hook
+  const { notes, removeNote } = useNotes(bookKey);
+  
+  // Debug logs
+  useEffect(() => {
+    console.log('Notes in ReaderSettingsMenu:', notes);
+  }, [notes]);
+  
+  // Listen for note changes
+  useEffect(() => {
+    const handleNoteAdded = () => {
+      // Force a re-render when notes change
+      setActiveTab(prevTab => prevTab);
+    };
+    
+    window.addEventListener('noteAdded', handleNoteAdded);
+    
+    return () => {
+      window.removeEventListener('noteAdded', handleNoteAdded);
+    };
+  }, []);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -118,12 +144,9 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-md bg-[#221F26] text-white border-l border-white/10">
+      <SheetContent side="right" className="w-full max-w-md bg-[#221F26] text-white border-l border-white/10 rounded-l-2xl">
         <SheetHeader>
-          <SheetTitle className="text-white">Reader Settings</SheetTitle>
-          <SheetDescription className="text-white/70">
-            Customize your reading experience
-          </SheetDescription>
+          <SheetTitle className="text-white text-sm tracking-wider uppercase font-oxanium font-bold">SETTINGS</SheetTitle>
         </SheetHeader>
         
         <Tabs 
@@ -132,114 +155,123 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
           onValueChange={setActiveTab}
           className="mt-6"
         >
-          <TabsList className="grid grid-cols-4 mb-4 bg-[#332E38]">
-            <TabsTrigger value="toc" className="text-white data-[state=active]:bg-[#4A4351]">
+          <TabsList className="grid grid-cols-4 mb-4 bg-[#332E38] rounded-2xl p-1">
+            <TabsTrigger value="toc" className="text-white data-[state=active]:bg-[#373763] rounded-xl">
               <BookOpen className="h-4 w-4" />
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="text-white data-[state=active]:bg-[#4A4351]">
+            <TabsTrigger value="appearance" className="text-white data-[state=active]:bg-[#373763] rounded-xl">
               <Type className="h-4 w-4" />
             </TabsTrigger>
-            <TabsTrigger value="tools" className="text-white data-[state=active]:bg-[#4A4351]">
+            <TabsTrigger value="tools" className="text-white data-[state=active]:bg-[#373763] rounded-xl">
               <Bookmark className="h-4 w-4" />
             </TabsTrigger>
-            <TabsTrigger value="more" className="text-white data-[state=active]:bg-[#4A4351]">
+            <TabsTrigger value="more" className="text-white data-[state=active]:bg-[#373763] rounded-xl">
               <Highlighter className="h-4 w-4" />
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="toc" className="h-[70vh] overflow-y-auto">
-            <div className="mb-4">
-              <TableOfContents toc={toc} onNavigate={onTocNavigate} />
-            </div>
+          <TabsContent value="toc" className="h-[70vh] overflow-y-auto pt-4 px-1">
+            <TableOfContents 
+              toc={toc} 
+              onNavigate={onTocNavigate} 
+              variant="inline" 
+            />
           </TabsContent>
           
-          <TabsContent value="appearance" className="space-y-6">
+          <TabsContent value="appearance" className="space-y-8 px-1 pt-4">
+            <BrightnessControl
+              brightness={brightness}
+              onBrightnessChange={onBrightnessChange}
+            />
+            
+            <FontSelector
+              fontFamily={fontFamily}
+              onFontFamilyChange={onFontFamilyChange}
+              fontSize={fontSize}
+              onFontSizeChange={onFontSizeChange}
+            />
+          </TabsContent>
+          
+          <TabsContent value="tools" className="space-y-8 px-1 pt-4">
             <div>
-              <h3 className="mb-2 text-sm font-medium">Text Appearance</h3>
-              <FontControls
-                fontSize={fontSize}
-                onFontSizeChange={onFontSizeChange}
-                fontFamily={fontFamily}
-                onFontFamilyChange={onFontFamilyChange}
-              />
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Search</h3>
+              <div className="mt-6">
+                <InlineSearch 
+                  onSearch={onSearch}
+                  onResultClick={onSearchResultClick}
+                />
+              </div>
             </div>
             
             <div>
-              <h3 className="mb-2 text-sm font-medium">Text Alignment</h3>
-              <AlignmentControls
-                textAlign={textAlign}
-                onTextAlignChange={onTextAlignChange}
-              />
-            </div>
-            
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Brightness</h3>
-              <BrightnessControl
-                brightness={brightness}
-                onBrightnessChange={onBrightnessChange}
-              />
-            </div>
-            
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Reading Session</h3>
-              <div className="bg-[#332E38] p-4 rounded-md">
-                <SessionTimer seconds={sessionTime} className="text-lg" showIcon={false} />
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Bookmarks</h3>
+                <button 
+                  className="text-xs font-oxanium uppercase tracking-wider font-bold text-white/70 hover:text-white flex items-center gap-1"
+                  onClick={() => {
+                    if (bookmarksListRef.current && typeof bookmarksListRef.current.__clearAll === 'function') {
+                      bookmarksListRef.current.__clearAll();
+                    }
+                  }}
+                >
+                  <span>Clear All</span>
+                </button>
+              </div>
+              <div className="mt-6">
+                <BookmarksList 
+                  ref={bookmarksListRef}
+                  currentLocation={currentLocation} 
+                  onLocationSelect={onLocationChange}
+                  bookKey={bookKey}
+                />
               </div>
             </div>
           </TabsContent>
           
-          <TabsContent value="tools" className="space-y-6">
+          <TabsContent value="more" className="space-y-8 px-1 pt-4">
             <div>
-              <h3 className="mb-2 text-sm font-medium">Bookmarks</h3>
-              <div className="bg-[#332E38] p-4 rounded-md">
-                <BookmarksMenu 
-                  currentLocation={currentLocation} 
-                  onLocationSelect={onLocationChange} 
-                  onBookmarkClick={onBookmarkClick}
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Highlights</h3>
+                <button 
+                  className="text-xs font-oxanium uppercase tracking-wider font-bold text-white/70 hover:text-white flex items-center gap-1"
+                  onClick={() => {
+                    if (highlights.length > 0 && removeHighlight) {
+                      // Remove all highlights for this book
+                      highlights
+                        .filter(h => h.bookKey === bookKey)
+                        .forEach(h => removeHighlight(h.id));
+                    }
+                  }}
+                >
+                  <span>Clear All</span>
+                </button>
+              </div>
+              <div className="mt-6">
+                <HighlightsList
+                  highlights={highlights}
+                  notes={notes}
+                  currentLocation={currentLocation}
+                  onHighlightSelect={onLocationChange}
+                  onRemoveHighlight={removeHighlight}
+                  onRemoveNote={removeNote}
                   bookKey={bookKey}
                 />
               </div>
             </div>
             
             <div>
-              <h3 className="mb-2 text-sm font-medium">Notes (Coming Soon)</h3>
-              <div className="bg-[#332E38] p-4 rounded-md text-white/50 flex items-center">
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Notes (Coming Soon)</h3>
+              <div className="bg-[#332E38] p-4 rounded-2xl mt-6 text-white/50 flex items-center">
                 <StickyNote className="h-4 w-4 mr-2" />
                 <span>Notes feature will be available soon</span>
               </div>
             </div>
             
             <div>
-              <h3 className="mb-2 text-sm font-medium">Search</h3>
-              <div className="bg-[#332E38] p-4 rounded-md">
-                <SearchDialog 
-                  onSearch={onSearch}
-                  onResultClick={onSearchResultClick}
-                  variant="minimal"
-                />
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="more" className="space-y-6">
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Highlights</h3>
-              <div className="bg-[#332E38] p-4 rounded-md">
-                <HighlightsMenu
-                  highlights={highlights}
-                  selectedColor={selectedColor}
-                  onColorSelect={setSelectedColor}
-                  onHighlightSelect={onLocationChange}
-                  onRemoveHighlight={removeHighlight}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Display Mode</h3>
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Display Mode</h3>
               <Button
                 variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10 flex items-center"
+                className="w-full border-white/20 text-white hover:bg-white/10 flex items-center rounded-2xl mt-6"
                 onClick={toggleFullScreen}
               >
                 <Maximize className="h-4 w-4 mr-2" />
@@ -248,10 +280,10 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
             </div>
             
             <div>
-              <h3 className="mb-2 text-sm font-medium">Book Details</h3>
+              <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
               <Button
                 variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10"
+                className="w-full border-white/20 text-white hover:bg-white/10 rounded-2xl mt-6"
                 onClick={() => {
                   onOpenChange(false);
                   const pathParts = window.location.pathname.split('/');

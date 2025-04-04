@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,12 +7,18 @@ interface MinimalistTopBarProps {
   title: string;
   externalLink: string | null;
   showControls: boolean;
+  onMenuClick?: () => void;
+  onBookmarkClick?: () => void;
+  isBookmarked?: boolean;
 }
 
 const MinimalistTopBar: React.FC<MinimalistTopBarProps> = ({ 
   title, 
   externalLink,
-  showControls
+  showControls,
+  onMenuClick,
+  onBookmarkClick,
+  isBookmarked = false
 }) => {
   const navigate = useNavigate();
 
@@ -42,7 +47,30 @@ const MinimalistTopBar: React.FC<MinimalistTopBarProps> = ({
       
       <h1 className="text-md font-medium truncate max-w-[70%]">{title}</h1>
       
-      <div className="w-10" />
+      <div className="flex items-center gap-2">
+        {onBookmarkClick && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBookmarkClick}
+            className="text-white hover:bg-white/10"
+          >
+            <Bookmark 
+              className="h-5 w-5" 
+              fill={isBookmarked ? "currentColor" : "none"} 
+            />
+          </Button>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="text-white hover:bg-white/10"
+        >
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 };

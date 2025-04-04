@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
@@ -16,6 +15,7 @@ import type { SearchResult, BookMetadata } from '@/types/reader';
 import BookmarkDialog from './BookmarkDialog';
 import BrightnessOverlay from './BrightnessOverlay';
 import type { Rendition } from 'epubjs';
+import { Progress } from '@/components/ui/progress';
 
 interface MinimalistReaderContentProps {
   book: Book;
@@ -97,8 +97,42 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
   const isMobile = useIsMobile();
   const bookKey = book?.key() || null;
   const [showControls, setShowControls] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const showControlsTimer = useRef<NodeJS.Timeout | null>(null);
   const { showVirgilChat } = useVirgilReader();
+
+  // Check if current location is bookmarked
+  useEffect(() => {
+    if (!currentLocation || !bookKey) return;
+    
+    const checkIfBookmarked = () => {
+      const bookmarkKey = `book-progress-${currentLocation}`;
+      const bookmarkData = localStorage.getItem(bookmarkKey);
+      if (bookmarkData) {
+        try {
+          const data = JSON.parse(bookmarkData);
+          setIsBookmarked(data.bookKey === bookKey);
+        } catch {
+          setIsBookmarked(false);
+        }
+      } else {
+        setIsBookmarked(false);
+      }
+    };
+    
+    checkIfBookmarked();
+    
+    // Listen for storage events (works better on desktop)
+    const handleStorage = () => {
+      checkIfBookmarked();
+    };
+    
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [currentLocation, bookKey]);
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
@@ -161,7 +195,18 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
         title={metadata?.title || currentChapterTitle} 
         externalLink={externalLink}
         showControls={showControls}
+        onMenuClick={() => setShowSettingsMenu(true)}
+        isBookmarked={isBookmarked}
+        onBookmarkClick={onBookmarkClick}
       />
+
+      {/* Progress Bar - Only visible in hover state */}
+      <div className={`w-full px-4 md:px-6 lg:px-8 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+        <Progress 
+          value={progress.book} 
+          className="h-1" 
+        />
+      </div>
 
       <div className="flex-grow relative">
         <BookViewer
@@ -205,6 +250,8 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
           bookKey={bookKey}
           onSearch={onSearch}
           onSearchResultClick={onSearchResultClick}
+          showSettingsMenu={showSettingsMenu}
+          setShowSettingsMenu={setShowSettingsMenu}
         />
       </div>
 

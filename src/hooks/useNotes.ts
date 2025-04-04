@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,8 +24,12 @@ export const useNotes = (bookKey: string | null) => {
     
     try {
       const savedNotes = localStorage.getItem(`book-notes-${bookKey}`);
+      console.log('Loading notes for book:', bookKey, 'Found:', savedNotes);
+      
       if (savedNotes) {
-        setNotes(JSON.parse(savedNotes));
+        const parsedNotes = JSON.parse(savedNotes);
+        console.log('Parsed notes:', parsedNotes);
+        setNotes(parsedNotes);
       }
     } catch (error) {
       console.error('Error loading notes:', error);
@@ -37,6 +40,7 @@ export const useNotes = (bookKey: string | null) => {
     if (!bookKey) return;
     
     try {
+      console.log('Saving notes:', updatedNotes);
       localStorage.setItem(`book-notes-${bookKey}`, JSON.stringify(updatedNotes));
     } catch (error) {
       console.error('Error saving notes:', error);
