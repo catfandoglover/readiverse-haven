@@ -841,7 +841,49 @@ const DNAAssessment = () => {
               
               <button 
                 className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={() => navigate('/dna/completion')}
+                onClick={async () => {
+                  try {
+                    // Create a test assessment record
+                    const assessmentData = {
+                      name: 'Test User',
+                      answers: {},
+                      ethics_sequence: 'ABAAA',
+                      epistemology_sequence: 'AABBA',
+                      politics_sequence: 'BAAAA',
+                      theology_sequence: 'ABAAB',
+                      ontology_sequence: 'BBABA',
+                      aesthetics_sequence: 'ABAAB'
+                    };
+                    
+                    const { data: newAssessment, error: createError } = await supabase
+                      .from('dna_assessment_results')
+                      .insert([assessmentData])
+                      .select()
+                      .maybeSingle();
+
+                    if (createError) {
+                      console.error('Error creating test assessment:', createError);
+                      toast.error('Error creating test assessment');
+                      return;
+                    }
+
+                    if (!newAssessment) {
+                      console.error('No test assessment created');
+                      toast.error('Error creating test assessment');
+                      return;
+                    }
+
+                    // Store the assessment ID
+                    localStorage.setItem('pending_dna_assessment_id', newAssessment.id);
+                    sessionStorage.setItem('dna_assessment_id', newAssessment.id);
+                    
+                    // Navigate to completion screen
+                    navigate('/dna/completion');
+                  } catch (error) {
+                    console.error('Error in test completion flow:', error);
+                    toast.error('Error testing completion flow');
+                  }
+                }}
               >
                 TEST COMPLETION SCREEN
               </button>
