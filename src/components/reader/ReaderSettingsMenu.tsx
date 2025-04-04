@@ -171,7 +171,7 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
           </TabsList>
           
           <TabsContent value="toc" className="pt-4 px-1 flex flex-col">
-            <div style={{ maxHeight: "60vh", overflow: "auto" }}>
+            <div style={{ maxHeight: "40vh", overflow: "auto" }}>
               <TableOfContents 
                 toc={toc} 
                 onNavigate={onTocNavigate} 
@@ -181,6 +181,9 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
             
             <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
               <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
+              <p className="text-sm text-white/80 mt-3 mb-4">
+                Mary Shelley's groundbreaking novel explores scientific ambition, creation, and responsibility through the story of Victor Frankenstein and his monstrous creation. Written when Shelley was just 18, this Gothic masterpiece raises profound questions about the limits of science and the nature of humanity.
+              </p>
               <Button
                 variant="outline"
                 className="w-full border-white/20 text-white hover:bg-white/10 rounded-2xl mt-4"
