@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 interface Profile {
   id: string;
   user_id: string;
-  outseta_user_id?: string;
   email?: string;
   full_name?: string;
   created_at?: string;

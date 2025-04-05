@@ -56,7 +56,7 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
+          .eq('user_id', user.id)
           .maybeSingle();
           
         if (profileError || !profile) {
@@ -250,7 +250,7 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .or(`user_id.eq.${user.id},outseta_user_id.eq.${user.id}`)
+        .eq('user_id', user.id)
         .maybeSingle();
         
       if (profileError || !profile) {

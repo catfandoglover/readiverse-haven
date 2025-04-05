@@ -3,6 +3,26 @@
 ## Overview
 This document tracks the removal of all `outseta_user_id` references from the codebase as part of the migration to using only `user_id` for profile lookups and updates.
 
+outseta_user_id was still in:
+
+src/components/discover/DetailedView.tsx
+src/contexts/ProfileDataContext.tsx
+src/contexts/SupabaseAuthContext.tsx
+src/hooks/useCourses.ts
+src/integrations/supabase/types.ts
+src/pages/DNAAssessment.tsx
+src/pages/Index.tsx
+src/pages/IntellectualDNAExam.tsx
+src/pages/ShareableProfile.tsx
+
+
+Let me summarize the changes we've made:
+Updated DetailedView.tsx to use user_id instead of outseta_user_id in database queries
+Updated Index.tsx to use user.id instead of user.Account.Uid in database queries
+Updated SupabaseAuthTest.tsx to use the Supabase auth context and user.id instead of user.Account.Uid
+Updated the database types in types.ts to use user_id instead of outseta_user_id in table definitions
+
+
 ## Changes Made
 
 ### 1. ShareableProfile.tsx
@@ -26,7 +46,6 @@ This document tracks the removal of all `outseta_user_id` references from the co
 ## Database Schema
 The `profiles` table schema now uses:
 - `user_id` (UUID) as the primary identifier for user profiles
-- No more `outseta_user_id` field
 
 ## Migration Notes
 - All profile lookups now use `user_id` from Supabase auth
