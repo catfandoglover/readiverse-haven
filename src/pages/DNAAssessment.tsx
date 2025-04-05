@@ -136,7 +136,7 @@ const DNAAssessment = () => {
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select('id')
-              .eq('outseta_user_id', userData.user.id)
+              .eq('user_id', userData.user.id)
               .maybeSingle();
               
             if (profileError) {
@@ -449,7 +449,7 @@ const DNAAssessment = () => {
                 const { data: profileData, error: profileError } = await supabase
                   .from('profiles')
                   .select('id')
-                  .eq('outseta_user_id', user.Uid)
+                  .eq('user_id', user.id)
                   .maybeSingle();
                 
                 if (!profileError && profileData) {
@@ -688,7 +688,7 @@ const DNAAssessment = () => {
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select('id')
-              .eq('outseta_user_id', userData.user.id)
+              .eq('user_id', userData.user.id)
               .maybeSingle();
             
             if (!profileError && profileData) {

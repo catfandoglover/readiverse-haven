@@ -152,13 +152,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const { data, error } = await supabase
         .from("user_books")
         .select(`
-          outseta_user_id,
+          user_id,
           status,
           last_read_at,
-          profiles:outseta_user_id(full_name, email)
+          profiles:user_id(full_name, email)
         `)
         .eq("book_id", itemData.id)
-        .order("outseta_user_id", { ascending: true });
+        .order("user_id", { ascending: true });
       
       if (error) {
         console.error("Error fetching readers:", error);
@@ -390,16 +390,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     try {
       if (user && combinedData.id) {
         if (!isFavorite) {
-          const { error } = await supabase
-            .from('user_favorites')
+          const { data: favoriteData, error: favoriteError } = await supabase
+            .from("user_favorites")
             .insert({
               item_id: combinedData.id,
               user_id: user.id,
               item_type: type,
               added_at: new Date().toISOString()
-            });
-            
-          if (!error) {
+            })
+            .select()
+            .single();
+
+          if (!favoriteError) {
             setIsFavorite(true);
             toast({
               description: `Added to favorites`,
@@ -478,16 +480,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
 
     try {
-      const { error } = await supabase
-        .from('user_books')
+      const { error: libraryError } = await supabase
+        .from("user_books")
         .insert({
           book_id: combinedData.id,
           user_id: user.id,
-          status: 'reading'
+          status: "want_to_read"
         });
 
-      if (error) {
-        throw error;
+      if (libraryError) {
+        throw libraryError;
       }
 
       toast({
@@ -581,7 +583,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           .insert({
             book_id: itemId,
             user_id: user.id,
-            status: 'reading'
+            status: "want_to_read"
           });
 
         if (error) {
@@ -606,30 +608,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     try {
       if (isFavorite) {
-        const { error } = await supabase
+        const { error: favoriteError } = await supabase
           .from('user_favorites')
           .delete()
           .eq('item_id', combinedData.id)
           .eq('user_id', user.id)
           .eq('item_type', type);
           
-        if (error) throw error;
+        if (favoriteError) throw favoriteError;
         
         setIsFavorite(false);
         toast({
           description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
         });
       } else {
-        const { error } = await supabase
-          .from('user_favorites')
+        const { data: favoriteData, error: favoriteError } = await supabase
+          .from("user_favorites")
           .insert({
             item_id: combinedData.id,
             user_id: user.id,
             item_type: type,
             added_at: new Date().toISOString()
-          });
+          })
+          .select()
+          .single();
           
-        if (error) throw error;
+        if (favoriteError) throw favoriteError;
         
         setIsFavorite(true);
         toast({

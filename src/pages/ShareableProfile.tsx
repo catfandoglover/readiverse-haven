@@ -11,7 +11,7 @@ import { Hexagon } from "lucide-react";
 
 interface ProfileData {
   id: string;
-  outseta_user_id: string;
+  user_id: string;
   email: string;
   full_name: string;
   created_at: string;
