@@ -12,6 +12,7 @@ import { useFormatText } from "@/hooks/useFormatText";
 import VirgilChatButton from "./VirgilChatButton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import FloatingVirgilButton from "./FloatingVirgilButton";
 
 interface CarouselItem {
   id: string;
@@ -483,16 +484,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
-          <VirgilChatButton
-            contentTitle={combinedData?.question || "Great Question"}
-            contentId={combinedData?.id || ""}
-            contentType="question"
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
-          />
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
@@ -634,6 +625,13 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Floating Virgil Button */}
+      <FloatingVirgilButton
+        contentTitle={combinedData?.question || "Great Question"}
+        contentId={combinedData?.id || ""}
+        contentType="question"
+      />
     </div>
   );
 };

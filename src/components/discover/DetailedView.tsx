@@ -17,6 +17,7 @@ import VirgilChatButton from "./VirgilChatButton";
 import ClassicActionsMenu from "./ClassicActionsMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import FloatingVirgilButton from "./FloatingVirgilButton";
 
 interface CarouselItem {
   id: string;
@@ -743,17 +744,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         
         {/* Right section - Action buttons */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          <VirgilChatButton
-            contentTitle={combinedData?.title || combinedData?.name || type}
-            contentId={combinedData?.id || ""}
-            contentType={type}
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
-          />
-          
           {type === "classic" ? (
             <>
               {combinedData?.epub_file_url && (
@@ -1087,6 +1077,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           onOpenChange={() => setIsOrderDialogOpen(false)}
         />
       )}
+
+      {/* Floating Virgil Button */}
+      <FloatingVirgilButton
+        contentTitle={combinedData?.title || combinedData?.name || type}
+        contentId={combinedData?.id || ""}
+        contentType={type}
+      />
     </div>
   );
 };
