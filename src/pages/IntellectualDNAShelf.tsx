@@ -8,7 +8,7 @@ import PoliticsContent from "@/components/bookshelf/domains/PoliticsContent";
 import TheologyContent from "@/components/bookshelf/domains/TheologyContent";
 import OntologyContent from "@/components/bookshelf/domains/OntologyContent";
 import AestheticsContent from "@/components/bookshelf/domains/AestheticsContent";
-import MainMenu from "@/components/navigation/MainMenu";
+import BackButton from "@/components/navigation/BackButton";
 
 const IntellectualDNAShelf: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const IntellectualDNAShelf: React.FC = () => {
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - fixed at top */}
       <div className="flex items-center pt-4 px-4 bg-[#332E38] text-[#E9E7E2] flex-shrink-0 sticky top-0 z-10">
-        <MainMenu />
+        <BackButton />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           INTELLECTUAL DNA SHELF
         </h2>

@@ -24,7 +24,7 @@ const IntellectualDNA = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, signOut } = useAuth();
+  const { user, signOut, hasCompletedDNA } = useAuth();
 
   useEffect(() => {
     saveLastVisited('dna', location.pathname);
@@ -96,11 +96,23 @@ const IntellectualDNA = () => {
           <MainMenu />
         </div>
         <div className="flex space-x-2">
-          {false ? (
-            <Button disabled variant="outline" size="sm" className="text-[#373763]/70">
-              Loading...
-            </Button>
-          ) : user ? (
+          {!user ? (
+            <button 
+              onClick={() => navigate('/register')}
+              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold"
+              type="button"
+            >
+              SIGN UP
+            </button>
+          ) : !hasCompletedDNA ? (
+            <button 
+              onClick={signOut}
+              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold"
+              type="button"
+            >
+              SIGN OUT
+            </button>
+          ) : (
             <>
               <Button 
                 onClick={() => navigate('/profile')} 
@@ -121,29 +133,6 @@ const IntellectualDNA = () => {
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                onClick={() => navigate('/login')} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title="Login"
-              >
-                <LogIn className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Login</span>
-              </Button>
-              <Button 
-                onClick={() => navigate('/register')} 
-                variant="outline" 
-                size="sm" 
-                className="bg-[#373763]/10 text-[#373763] hover:bg-[#373763]/20 border-[#373763]/20"
-                title="Sign Up"
-              >
-                <User className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Sign Up</span>
               </Button>
             </>
           )}

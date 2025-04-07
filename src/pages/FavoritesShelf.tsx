@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/SupabaseAuthContext";
 import ClassicsFavoritesContent from "@/components/bookshelf/favorites/ClassicsFavoritesContent";
 import IconsFavoritesContent from "@/components/bookshelf/favorites/IconsFavoritesContent";
 import ConceptsFavoritesContent from "@/components/bookshelf/favorites/ConceptsFavoritesContent";
-import MainMenu from "@/components/navigation/MainMenu";
+import BackButton from "@/components/navigation/BackButton";
 
 const FavoritesShelf: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const FavoritesShelf: React.FC = () => {
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - fixed at top */}
       <div className="flex items-center pt-4 px-4 bg-[#332E38] text-[#E9E7E2] flex-shrink-0 sticky top-0 z-10">
-        <MainMenu />
+        <BackButton />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           FAVORITES
         </h2>
