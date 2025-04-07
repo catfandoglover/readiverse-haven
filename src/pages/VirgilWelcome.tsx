@@ -36,14 +36,24 @@ const VirgilWelcome: React.FC = () => {
         // Check for pending assessment
         const pendingId = localStorage.getItem('pending_dna_assessment_id');
         
-        // If user has both existing and pending assessments, redirect to profile
+        // If user has both existing and pending assessments, show dialog
         if (profileData?.assessment_id && pendingId) {
-          // Clear pending assessment ID
-          localStorage.removeItem('pending_dna_assessment_id');
-          sessionStorage.removeItem('dna_assessment_to_save');
+          setExistingAssessmentId(profileData.assessment_id);
+          setPendingAssessmentId(pendingId);
+          setShowExistingAssessmentDialog(true);
           
-          // Navigate directly to profile
-          navigate('/profile');
+          // Show dialog for 2 seconds, then route to profile
+          setTimeout(() => {
+            setShowExistingAssessmentDialog(false);
+            
+            // Clear pending assessment ID
+            localStorage.removeItem('pending_dna_assessment_id');
+            sessionStorage.removeItem('dna_assessment_to_save');
+            
+            // Navigate to profile
+            navigate('/profile');
+          }, 2000);
+          
           return;
         }
       } catch (error) {

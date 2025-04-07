@@ -10,7 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface ExistingAssessmentDialogProps {
   open: boolean;
@@ -94,7 +93,7 @@ const ExistingAssessmentDialog: React.FC<ExistingAssessmentDialogProps> = ({
             You already have a DNA assessment
           </DialogTitle>
           <DialogDescription className="font-oxanium mt-4 text-[#373763]/80">
-            You already have a completed DNA assessment. Would you like to view your existing assessment or replace it with the new one?
+            You already have a completed DNA assessment. Taking you to your existing profile.
           </DialogDescription>
         </DialogHeader>
         
