@@ -330,6 +330,27 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       pathname: location.pathname
     });
 
+    // Check for from_question parameter in URL
+    const searchParams = new URLSearchParams(location.search);
+    const fromQuestionId = searchParams.get('from_question');
+    
+    if (fromQuestionId) {
+      // If we have a question ID in the URL, navigate back to that question
+      console.log("[DetailedView] Navigating back to question from URL parameter:", fromQuestionId);
+      navigate(`/view/question/${fromQuestionId}`, { replace: true });
+      return;
+    }
+    
+    // Check for saved question path in localStorage
+    const lastQuestionPath = localStorage.getItem('last_question_path');
+    const lastQuestionId = localStorage.getItem('last_question_id');
+    
+    if (lastQuestionPath && lastQuestionId) {
+      console.log("[DetailedView] Navigating back to question from localStorage:", lastQuestionPath);
+      navigate(lastQuestionPath, { replace: true });
+      return;
+    }
+
     // First check if we have an explicit source path in the location state
     if (location.state?.sourcePath) {
       const sourcePath = location.state.sourcePath;
@@ -640,24 +661,19 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     // Get the current location to use for back navigation
     const currentPath = location.pathname;
     
-    // Save the source path using the hook - this is more reliable than manually setting storage
+    // Save the source path using the hook
     saveSourcePath(currentPath);
-    
-    console.log(`[DetailedView] Clicked carousel item (${itemType}):`, item);
-    console.log("[DetailedView] Saved current path for back navigation:", currentPath);
     
     // Generate a fallback slug if needed (especially for classics)
     if (itemType === "classic" && !item.slug && item.title) {
       // Generate a slug from the title (similar to ClassicsContent)
       item.slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      console.log(`[DetailedView] Generated fallback slug for classic: ${item.slug}`);
     }
     
     // Navigate to the appropriate URL based on the item type
     switch(itemType) {
       case "classic":
         if (!item.slug) {
-          console.error("[DetailedView] Classic missing slug and no title to generate one:", item);
           toast({
             variant: "destructive",
             title: "Error",
@@ -665,17 +681,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           });
           return;
         }
-        navigate(`/texts/${item.slug}`, { 
-          replace: true,
-          state: { 
-            fromSection: 'detail-view',
-            sourcePath: currentPath
-          }
-        });
+        
+        // Use direct browser navigation for consistency
+        window.location.href = `/texts/${item.slug}`;
         break;
       case "concept":
         if (!item.slug) {
-          console.error("[DetailedView] Concept missing slug:", item);
           toast({
             variant: "destructive",
             title: "Error",
@@ -683,17 +694,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           });
           return;
         }
-        navigate(`/concepts/${item.slug}`, { 
-          replace: true,
-          state: { 
-            fromSection: 'detail-view',
-            sourcePath: currentPath
-          }
-        });
+        window.location.href = `/concepts/${item.slug}`;
         break;
       case "icon":
         if (!item.slug) {
-          console.error("[DetailedView] Icon missing slug:", item);
           toast({
             variant: "destructive",
             title: "Error",
@@ -701,22 +705,10 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           });
           return;
         }
-        navigate(`/icons/${item.slug}`, { 
-          replace: true,
-          state: { 
-            fromSection: 'detail-view',
-            sourcePath: currentPath
-          }
-        });
+        window.location.href = `/icons/${item.slug}`;
         break;
       case "question":
-        navigate(`/discover/questions/${item.id}`, { 
-          replace: true,
-          state: { 
-            fromSection: 'detail-view',
-            sourcePath: currentPath
-          }
-        });
+        window.location.href = `/view/question/${item.id}`;
         break;
     }
   };
@@ -832,29 +824,28 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               // For classics, try different possible image fields
               if (itemType === "classic") {
                 imageSrc = item.cover_url || item.Cover_super || item.icon_illustration || imageSrc;
-                console.log(`[DetailedView] Classic image source for ${item.title}:`, imageSrc);
               }
               
               return (
                 <div
                   key={item.id}
-                  className="relative flex-none cursor-pointer group"
+                  className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
                   onClick={() => handleCarouselItemClick(item, itemType)}
                 >
-                  <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                    <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
+                    <div className="relative h-full w-full overflow-hidden rounded-2xl">
                       <img
                         src={imageSrc || ''}
                         alt={item[textKey] || ""}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         draggable="false"
                       />
                     </div>
                   </div>
                   <h4 className={cn(
                     "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
-                    "w-36 break-words line-clamp-2",
-                    type === "classic" ? "text-white" : "text-[#2A282A]"
+                    "w-full break-words line-clamp-2",
+                    "text-[#2A282A]"
                   )}>
                     {item[textKey]}
                   </h4>
@@ -961,21 +952,20 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             {authorClassics.map((classic) => (
               <div
                 key={classic.id}
-                className="relative flex-none cursor-pointer group"
+                className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
                 onClick={() => handleCarouselItemClick(classic, "classic")}
               >
-                <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="absolute inset-0 bg-[#2A282A]"></div>
-                  <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
+                <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
+                  <div className="relative h-full w-full overflow-hidden rounded-2xl">
                     <img
                       src={classic.cover_url || classic.Cover_super || ''}
                       alt={classic.title || ""}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       draggable="false"
                     />
                   </div>
                 </div>
-                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5]">
+                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5] w-full break-words">
                   {classic.title}
                 </h4>
               </div>
@@ -1015,17 +1005,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           paddingBottom: "env(safe-area-inset-bottom, 0px)"
         }}
       >
-        <div ref={imageRef} className="w-full">
+        <div ref={imageRef} className="w-full flex justify-center items-center bg-[#2A282A]">
           <img 
             src={combinedData?.image} 
             alt={combinedData?.title || combinedData?.name} 
-            className="w-full object-cover" 
+            className="max-w-full max-h-[100vh] object-contain" 
             style={{ 
               aspectRatio: "1/1",
-              maxHeight: "100vh",
-              ...(type === "classic" ? {
-                objectPosition: "center -5vh"
-              } : {})
+              width: "100%"
             }} 
           />
         </div>

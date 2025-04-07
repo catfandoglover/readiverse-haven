@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -57,33 +56,41 @@ const QuestionsContent: React.FC<QuestionsContentProps> = ({
   });
 
   useEffect(() => {
+    // Handle explicitly parameterized routes like /view/question/:id
     if (type === "question" && slug) {
-      const loadQuestionDetails = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("great_questions")
-            .select("*")
-            .eq("id", slug)
-            .single();
-
-          if (error) throw error;
-
-          if (data) {
-            setSelectedQuestion(data);
-            setDetailViewVisible(true);
-            onDetailedViewShow();
-          }
-        } catch (err) {
-          console.error("Error loading question details:", err);
-          navigate("/discover", { replace: true });
-        }
-      };
-
-      loadQuestionDetails();
+      loadQuestionById(slug);
+    } 
+    // Handle /view/question/:id route pattern without params
+    else if (location.pathname.includes('/view/question/')) {
+      const questionId = location.pathname.split('/view/question/')[1];
+      if (questionId) {
+        loadQuestionById(questionId);
+      }
     } else {
       setDetailViewVisible(false);
     }
-  }, [type, slug, navigate, onDetailedViewShow]);
+  }, [type, slug, location.pathname, navigate, onDetailedViewShow]);
+
+  const loadQuestionById = async (questionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("great_questions")
+        .select("*")
+        .eq("id", questionId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setSelectedQuestion(data);
+        setDetailViewVisible(true);
+        onDetailedViewShow();
+      }
+    } catch (err) {
+      console.error("Error loading question details:", err);
+      navigate("/discover", { replace: true });
+    }
+  };
 
   const handleCloseDetailView = () => {
     setDetailViewVisible(false);
