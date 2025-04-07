@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Hexagon } from "lucide-react";
@@ -83,7 +82,8 @@ const ExamsList: React.FC = () => {
   
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-6">
+        <div className="h-px w-full my-6 bg-[#9F9EA1]/20"></div>
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold">
           MY BADGES
         </h2>

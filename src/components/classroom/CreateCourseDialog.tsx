@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription
+  DialogDescription,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Search, Hexagon } from "lucide-react";
+import { Search, Hexagon, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourses } from "@/hooks/useCourses";
@@ -41,8 +42,26 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
   const [icons, setIcons] = useState<ContentItem[]>([]);
   const [concepts, setConcepts] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { createCourse } = useCourses();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Track pagination for each tab
+  const [page, setPage] = useState({
+    classics: 0,
+    icons: 0,
+    concepts: 0
+  });
+  
+  // Track if there's more data to load
+  const [hasMore, setHasMore] = useState({
+    classics: true,
+    icons: true,
+    concepts: true
+  });
+  
+  const PAGE_SIZE = 20;
   
   useEffect(() => {
     if (open) {
@@ -50,51 +69,150 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
     }
   }, [open]);
   
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (loadMore = false) => {
+    if (!loadMore) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     
     try {
-      const { data: classicsData, error: classicsError } = await supabase
-        .from('books')
-        .select('id, title, author, cover_url, about')
-        .order('randomizer', { ascending: false })
-        .limit(20);
-      
-      if (classicsError) throw classicsError;
-      if (classicsData) setClassics(classicsData);
-      
-      const { data: iconsData, error: iconsError } = await supabase
-        .from('icons')
-        .select('id, name, illustration, about')
-        .order('randomizer', { ascending: false })
-        .limit(20);
-      
-      if (iconsError) throw iconsError;
-      if (iconsData) {
-        const transformedIcons = iconsData.map(icon => ({
-          id: icon.id,
-          title: icon.name,
-          illustration: icon.illustration,
-          about: icon.about
-        }));
-        setIcons(transformedIcons);
+      if (activeTab === "classics") {
+        await fetchClassics(loadMore);
+      } else if (activeTab === "icons") {
+        await fetchIcons(loadMore);
+      } else if (activeTab === "concepts") {
+        await fetchConcepts(loadMore);
       }
-      
-      const { data: conceptsData, error: conceptsError } = await supabase
-        .from('concepts')
-        .select('id, title, illustration, about')
-        .order('randomizer', { ascending: false })
-        .limit(20);
-      
-      if (conceptsError) throw conceptsError;
-      if (conceptsData) setConcepts(conceptsData);
     } catch (error) {
       console.error("Error fetching content:", error);
       toast.error("Failed to load content");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const fetchClassics = async (loadMore = false) => {
+    const currentPage = loadMore ? page.classics + 1 : 0;
+    const offset = currentPage * PAGE_SIZE;
+    
+    const { data, error } = await supabase
+      .from('books')
+      .select('id, title, author, cover_url, about')
+      .order('randomizer', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+    
+    if (error) throw error;
+    
+    if (data) {
+      if (loadMore) {
+        setClassics(prev => [...prev, ...data]);
+      } else {
+        setClassics(data);
+      }
+      
+      setPage(prev => ({ ...prev, classics: currentPage }));
+      setHasMore(prev => ({ ...prev, classics: data.length === PAGE_SIZE }));
+    }
+  };
+  
+  const fetchIcons = async (loadMore = false) => {
+    const currentPage = loadMore ? page.icons + 1 : 0;
+    const offset = currentPage * PAGE_SIZE;
+    
+    const { data, error } = await supabase
+      .from('icons')
+      .select('id, name, illustration, about')
+      .order('randomizer', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+    
+    if (error) throw error;
+    
+    if (data) {
+      const transformedIcons = data.map(icon => ({
+        id: icon.id,
+        title: icon.name,
+        illustration: icon.illustration,
+        about: icon.about
+      }));
+      
+      if (loadMore) {
+        setIcons(prev => [...prev, ...transformedIcons]);
+      } else {
+        setIcons(transformedIcons);
+      }
+      
+      setPage(prev => ({ ...prev, icons: currentPage }));
+      setHasMore(prev => ({ ...prev, icons: data.length === PAGE_SIZE }));
+    }
+  };
+  
+  const fetchConcepts = async (loadMore = false) => {
+    const currentPage = loadMore ? page.concepts + 1 : 0;
+    const offset = currentPage * PAGE_SIZE;
+    
+    const { data, error } = await supabase
+      .from('concepts')
+      .select('id, title, illustration, about')
+      .order('randomizer', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+    
+    if (error) throw error;
+    
+    if (data) {
+      if (loadMore) {
+        setConcepts(prev => [...prev, ...data]);
+      } else {
+        setConcepts(data);
+      }
+      
+      setPage(prev => ({ ...prev, concepts: currentPage }));
+      setHasMore(prev => ({ ...prev, concepts: data.length === PAGE_SIZE }));
+    }
+  };
+  
+  // Handle tab change
+  useEffect(() => {
+    if (open) {
+      fetchData();
+    }
+  }, [activeTab]);
+  
+  // Handle scroll event to implement infinite scrolling
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current || loading || loadingMore) return;
+    
+    const scrollContainer = scrollRef.current;
+    const scrollPosition = scrollContainer.scrollTop + scrollContainer.clientHeight;
+    const scrollHeight = scrollContainer.scrollHeight;
+    
+    // When user scrolls to near bottom, load more content
+    if (scrollHeight - scrollPosition < 200) {
+      const currentTabHasMore = hasMore[activeTab];
+      if (currentTabHasMore) {
+        fetchData(true);
+      }
+    }
+  }, [activeTab, fetchData, hasMore, loading, loadingMore]);
+  
+  // Attach scroll listener
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      return () => scrollElement.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
+  
+  // Reset search and pagination when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSearchQuery("");
+      setPage({ classics: 0, icons: 0, concepts: 0 });
+      setHasMore({ classics: true, icons: true, concepts: true });
+    }
+  }, [open]);
   
   const handleSelectItem = async (item: ContentItem, type: "book" | "icon" | "concept") => {
     try {
@@ -180,10 +298,15 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1D3A35] text-[#E9E7E2] border-[#333] p-0 max-w-2xl w-[90vw]">
+      <DialogContent className="bg-[#1D3A35] text-[#E9E7E2] border-[#333] p-0 max-w-2xl w-[calc(100%-2rem)] mx-auto my-auto rounded-2xl max-h-[calc(100vh-2rem)] overflow-hidden">
+        <DialogClose className="absolute right-4 top-4 rounded-full h-8 w-8 flex items-center justify-center opacity-100 transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <X className="h-4 w-4 text-[#E9E7E2]" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
+        
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-baskerville text-[#E9E7E2]">
-            Create Your Own Course
+            Choose Your Own Course
           </DialogTitle>
           <DialogDescription className="text-[#E9E7E2]/70 font-oxanium">
             Select a classic, icon, or concept to create your personalized learning journey.
@@ -227,14 +350,28 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
             </TabsList>
           </div>
           
-          <ScrollArea className="h-[60vh] px-6">
+          <div ref={scrollRef} className="h-[50vh] px-6 overflow-y-auto">
             <TabsContent value="classics" className="space-y-4 mt-0">
-              {loading ? (
+              {loading && !loadingMore ? (
                 <div className="p-6 text-center">Loading classics...</div>
               ) : filterContent(classics).length > 0 ? (
-                filterContent(classics).map(classic => (
-                  <ContentCard key={classic.id} item={classic} type="book" />
-                ))
+                <>
+                  {filterContent(classics).map(classic => (
+                    <ContentCard key={classic.id} item={classic} type="book" />
+                  ))}
+                  
+                  {loadingMore && (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-[#CCFF23]" />
+                    </div>
+                  )}
+                  
+                  {!loadingMore && !hasMore.classics && !searchQuery && (
+                    <div className="p-4 text-center text-[#E9E7E2]/70 text-sm">
+                      You've reached the end of the list
+                    </div>
+                  )}
+                </>
               ) : searchQuery ? (
                 <div className="p-6 text-center">No classics found matching your search.</div>
               ) : (
@@ -243,12 +380,26 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
             </TabsContent>
             
             <TabsContent value="icons" className="space-y-4 mt-0">
-              {loading ? (
+              {loading && !loadingMore ? (
                 <div className="p-6 text-center">Loading icons...</div>
               ) : filterContent(icons).length > 0 ? (
-                filterContent(icons).map(icon => (
-                  <ContentCard key={icon.id} item={icon} type="icon" />
-                ))
+                <>
+                  {filterContent(icons).map(icon => (
+                    <ContentCard key={icon.id} item={icon} type="icon" />
+                  ))}
+                  
+                  {loadingMore && (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-[#CCFF23]" />
+                    </div>
+                  )}
+                  
+                  {!loadingMore && !hasMore.icons && !searchQuery && (
+                    <div className="p-4 text-center text-[#E9E7E2]/70 text-sm">
+                      You've reached the end of the list
+                    </div>
+                  )}
+                </>
               ) : searchQuery ? (
                 <div className="p-6 text-center">No icons found matching your search.</div>
               ) : (
@@ -257,19 +408,33 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({
             </TabsContent>
             
             <TabsContent value="concepts" className="space-y-4 mt-0">
-              {loading ? (
+              {loading && !loadingMore ? (
                 <div className="p-6 text-center">Loading concepts...</div>
               ) : filterContent(concepts).length > 0 ? (
-                filterContent(concepts).map(concept => (
-                  <ContentCard key={concept.id} item={concept} type="concept" />
-                ))
+                <>
+                  {filterContent(concepts).map(concept => (
+                    <ContentCard key={concept.id} item={concept} type="concept" />
+                  ))}
+                  
+                  {loadingMore && (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-[#CCFF23]" />
+                    </div>
+                  )}
+                  
+                  {!loadingMore && !hasMore.concepts && !searchQuery && (
+                    <div className="p-4 text-center text-[#E9E7E2]/70 text-sm">
+                      You've reached the end of the list
+                    </div>
+                  )}
+                </>
               ) : searchQuery ? (
                 <div className="p-6 text-center">No concepts found matching your search.</div>
               ) : (
                 <div className="p-6 text-center">No concepts found.</div>
               )}
             </TabsContent>
-          </ScrollArea>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>

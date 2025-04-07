@@ -58,9 +58,14 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     handleSubmitMessage();
   };
 
+  // Calculate safe padding - base of 24 (6rem) plus height of composer form
+  const composerHeight = 72; // Typical height of the composer form is around 72px (4.5rem)
+  const safePadding = `${composerHeight + 32}px`; // 72px + 32px extra space = 104px
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 p-4 pb-24 space-y-4 overflow-y-auto font-libre-baskerville scroll-p-24">
+      {/* Add more padding at bottom to prevent overlap */}
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto font-libre-baskerville" style={{ paddingBottom: safePadding }}>
         {messages.map((message) => (
           <MessageBubble 
             key={message.id} 
@@ -70,7 +75,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
         ))}
         
         {resultsReady && (
-          <div className="flex justify-center mt-8">
+          <div className="flex justify-center mt-8 mb-8">
             <button
               onClick={onViewResults}
               className="h-[52px] px-8 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 transition-colors duration-200"
@@ -80,11 +85,11 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
           </div>
         )}
         
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       <div className={cn(
-        "mt-auto fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-in-out",
+        "mt-auto fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-in-out z-10",
         resultsReady 
           ? "transform translate-y-full opacity-0 pointer-events-none" 
           : "opacity-100"

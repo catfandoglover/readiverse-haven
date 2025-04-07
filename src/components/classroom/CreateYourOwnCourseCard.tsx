@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { CreateCourseDialog } from "./CreateCourseDialog";
@@ -14,7 +13,7 @@ const CreateYourOwnCourseCard: React.FC = () => {
       >
         <div className="flex items-center gap-2 mb-1">
           <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold">
-            Create Your Own Course
+            Choose Your Own Course
           </h3>
         </div>
         <div className="flex items-left justify-left mt-2 mb-3">

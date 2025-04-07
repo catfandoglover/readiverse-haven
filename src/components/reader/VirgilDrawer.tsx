@@ -29,7 +29,7 @@ const VirgilDrawer: React.FC<VirgilDrawerProps> = ({ bookTitle }) => {
         </button>
       </div>
       
-      <div className="relative h-[calc(50vh-3rem)]">
+      <div className="relative h-[calc(50vh-3rem)] overflow-hidden">
         <VirgilFullScreenChat 
           variant="virgilchat"
           initialMessage={`I'm Virgil, your intellectual guide. We're currently reading "${bookTitle}". How can I assist you with this text?`}

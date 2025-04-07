@@ -1,42 +1,21 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { MessageSquareText } from "lucide-react";
-import AIChatDialog from './AIChatDialog';
+import React from 'react';
+import { MessageSquareText } from 'lucide-react';
 
 interface AIChatButtonProps {
-  currentQuestion: string;
-  enabled?: boolean;
+  toggleChat: () => void;
 }
 
-const AIChatButton: React.FC<AIChatButtonProps> = ({ currentQuestion, enabled = true }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Get a consistent session ID from sessionStorage
-  const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-
-  if (!enabled) return null;
-
+const AIChatButton: React.FC<AIChatButtonProps> = ({ toggleChat }) => {
   return (
-    <>
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full w-12 h-12 shadow-lg hover:shadow-xl 
-          transition-all duration-200 bg-background border-2 border-primary z-50"
-        onClick={() => setIsDialogOpen(true)}
-        aria-label="Talk to AI Assistant"
-      >
-        <MessageSquareText className="h-6 w-6 text-primary" />
-      </Button>
-      
-      <AIChatDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        currentQuestion={currentQuestion}
-        sessionId={sessionId}
-      />
-    </>
+    <button
+      className="fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl 
+          transition-all duration-200 bg-white border-2 border-[#373763] hover:scale-110"
+      onClick={toggleChat}
+      aria-label="Talk to AI Assistant"
+      data-test-id="ai-chat-button"
+    >
+      <MessageSquareText className="h-6 w-6 text-[#373763] mx-auto" />
+    </button>
   );
 };
 
