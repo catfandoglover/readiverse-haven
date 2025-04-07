@@ -69,9 +69,6 @@ const DNACompletionScreen = () => {
         <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
           ASSESSMENT COMPLETED
         </h2>
-        <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          JOIN THE GREAT CONVERSATION
-        </h2>
         <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-4xl leading-tight mb-8">
           Create an account or login to view your results
         </h1>
