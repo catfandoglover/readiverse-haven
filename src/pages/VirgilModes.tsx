@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -158,7 +157,7 @@ const VirgilModes: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
-      <div className="flex items-center pt-4 px-8">
+      <div className="flex items-center pt-4 px-4">
         <MainMenu />
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Chat with Virgil

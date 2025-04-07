@@ -81,17 +81,17 @@ const ClassroomVirgilChat: React.FC = () => {
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl text-[#E9E7E2] mb-3">
+          <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl text-[#E9E7E2] mb-3 uppercase">
             {courseData?.title || "Course"}
           </h1>
-          <p className="font-inter text-lg text-[#E9E7E2]/70">
+          <p className="font-oxanium text-lg text-[#E9E7E2]/70">
             {courseData?.description || "Starting your lesson..."}
           </p>
         </div>
         
         {/* Chat interface - only shows after transition */}
         {state === 'chat' && (
-          <div className="absolute inset-0 flex flex-col">
+          <div className="absolute inset-0 flex flex-col pt-6">
             <VirgilFullScreenChat 
               variant="classroom"
               initialMessage={initialMessage}
