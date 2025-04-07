@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,15 +15,19 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
   const screens = [
     {
       title: "Take a couple breaths.",
+      subtitle: ""
     },
     {
       title: "First thought, best thought.",
+      subtitle: ""
     },
     {
       title: "Interpret as you wish.",
+      subtitle: ""
     },
     {
       title: "Let's begin.",
+      subtitle: ""
     },
   ];
 
@@ -72,10 +75,12 @@ const PrimingScreens = ({ onComplete, defaultName = "" }: PrimingScreensProps) =
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
-        <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          {screens[currentScreen].subtitle}
-        </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-5xl leading-tight">
+        {screens[currentScreen].subtitle && (
+          <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
+            {screens[currentScreen].subtitle}
+          </h2>
+        )}
+        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-4xl leading-tight">
           {screens[currentScreen].title}
         </h1>
       </div>

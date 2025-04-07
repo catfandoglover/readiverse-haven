@@ -60,7 +60,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto font-libre-baskerville">
+      <div className="flex-1 p-4 pb-24 space-y-4 overflow-y-auto font-libre-baskerville scroll-p-24">
         {messages.map((message) => (
           <MessageBubble 
             key={message.id} 
@@ -89,16 +89,18 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
           ? "transform translate-y-full opacity-0 pointer-events-none" 
           : "opacity-100"
       )}>
-        <ChatInputForm
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSubmit={handleSubmit}
-          isRecording={isRecording}
-          isProcessing={isProcessing}
-          toggleRecording={toggleRecording}
-          themeColors={themeColors}
-          disabled={disableChat}
-        />
+        <div className="mb-0 rounded-t-2xl overflow-hidden">
+          <ChatInputForm
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSubmit={handleSubmit}
+            isRecording={isRecording}
+            isProcessing={isProcessing}
+            toggleRecording={toggleRecording}
+            themeColors={themeColors}
+            disabled={disableChat}
+          />
+        </div>
       </div>
     </div>
   );

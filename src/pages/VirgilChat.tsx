@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -72,14 +71,14 @@ const VirgilChat: React.FC = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h2 className="font-oxanium uppercase text-[#E9E7E2]/70 tracking-wider text-sm font-bold mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           {promptData?.user_title || "VIRGIL"}
         </h2>
         <div className="w-10 h-10" />
       </div>
       
       {/* Main content area */}
-      <div className="flex-1 flex items-center justify-center relative">
+      <div className="flex-1 flex items-center justify-center relative pt-6">
         {/* Initial centered text */}
         <div 
           className={cn(
@@ -87,17 +86,17 @@ const VirgilChat: React.FC = () => {
             state === 'initial' ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-20 pointer-events-none'
           )}
         >
-          <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl text-[#E9E7E2] mb-3">
+          <h1 className="font-libre-baskerville font-bold text-4xl md:text-5xl text-[#E9E7E2] mb-3 uppercase">
             {promptData?.user_title || "Explore Ideas"}
           </h1>
-          <p className="font-inter text-lg text-[#E9E7E2]/70">
+          <p className="font-oxanium text-lg text-[#E9E7E2]/70">
             {promptData?.user_subtitle || "Chat with Virgil about anything"}
           </p>
         </div>
         
         {/* Chat interface - only shows after transition */}
         {state === 'chat' && (
-          <div className="absolute inset-0 flex flex-col">
+          <div className="absolute inset-0 flex flex-col pt-6">
             <VirgilFullScreenChat 
               variant="virgilchat"
               initialMessage={initialMessage}

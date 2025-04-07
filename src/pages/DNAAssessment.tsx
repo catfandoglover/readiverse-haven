@@ -773,7 +773,7 @@ const DNAAssessment = () => {
 
   return (
     <>
-      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
+      <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col justify-between">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
           <button 
             onClick={handleExit}
@@ -794,13 +794,13 @@ const DNAAssessment = () => {
             className="h-2 bg-[#373763]/30"
           />
         </div>
-        <div className="flex-1 flex flex-col relative h-[calc(100dvh-5rem)]">
-          <div className={`flex-1 flex items-center justify-center py-8 transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
+        <div className="flex-1 flex flex-col relative">
+          <div className={`flex items-center justify-center py-8 min-h-[40vh] max-h-[40vh] transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
             <h1 className="text-3xl md:text-4xl font-libre-baskerville font-bold text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion?.question?.question}
             </h1>
           </div>
-          <div className={`w-full px-6 mb-48 relative z-40 transform transition-transform duration-300 ${
+          <div className={`w-full px-6 absolute top-[40vh] z-40 transform transition-transform duration-300 ${
             showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <button
@@ -843,20 +843,20 @@ const DNAAssessment = () => {
               </button>
             </div>
           </div>
-          
-          <div className="w-full max-w-md mx-auto mb-16 px-6 absolute bottom-0 left-0 right-0">
-            <Button 
-              onClick={handleContinue}
-              disabled={selectedAnswer === null}
-              className={`w-full h-[52px] rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
-                selectedAnswer !== null 
-                  ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
-                  : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
-              }`}
-            >
-              CONTINUE
-            </Button>
-          </div>
+        </div>
+        
+        <div className="w-full max-w-md mx-auto mb-16 px-6">
+          <Button 
+            onClick={handleContinue}
+            disabled={selectedAnswer === null}
+            className={`w-full py-6 rounded-2xl font-oxanium text-sm font-bold uppercase tracking-wider border transition-colors duration-200 ${
+              selectedAnswer !== null 
+                ? "bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90 border-[#373763]" 
+                : "bg-[#E9E7E2] text-[#373763] border-[#373763]/20 cursor-not-allowed"
+            }`}
+          >
+            CONTINUE
+          </Button>
         </div>
 
         <AlertDialog open={showExitAlert} onOpenChange={setShowExitAlert}>

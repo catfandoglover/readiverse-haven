@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -68,7 +67,7 @@ const EmailConfirmation = () => {
   return (
     <AuthLayout 
       title="Check your email"
-      subtitle={isDnaFlow ? "Confirm your email to view your results" : "Confirm your email to continue"}
+      subtitle={`JOIN THE GREAT CONVERSATION${isDnaFlow ? "\nConfirm your email to view your results" : "\nConfirm your email to continue"}`}
       showBackButton={false}
     >
       <div className="flex flex-col items-center justify-center space-y-8">

@@ -91,7 +91,7 @@ const IntellectualDNA = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
-      <header className="w-full p-4 flex justify-between items-center">
+      <header className="w-full pt-4 px-4 flex justify-between items-center">
         <div>
           <MainMenu />
         </div>

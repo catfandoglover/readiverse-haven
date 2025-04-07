@@ -28,7 +28,7 @@ const Classroom: React.FC = () => {
       {/* Scrollable container for the rest of the content */}
       <div className="flex-1 flex flex-col overflow-auto">
         {/* Main content area with consistent padding */}
-        <div className="px-4 flex flex-col gap-4">
+        <div className="px-4 pt-6 flex flex-col gap-4">
           {/* Hero section - responsive layout */}
           {user && (
             isMobile ? (

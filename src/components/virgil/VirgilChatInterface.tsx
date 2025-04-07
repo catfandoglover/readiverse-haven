@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -77,7 +76,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           <div className="w-6" />
         </div>
 
-        <div className="flex-1 p-4 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)] font-libre-baskerville">
+        <div className="flex-1 p-4 pb-24 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)] font-libre-baskerville scroll-p-24">
           {messages.map((message) => (
             <MessageBubble 
               key={message.id} 
@@ -88,15 +87,17 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInputForm
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSubmit={handleSubmit}
-          isRecording={isRecording}
-          isProcessing={isProcessing}
-          toggleRecording={toggleRecording}
-          themeColors={themeColors}
-        />
+        <div className="mb-0 rounded-t-2xl overflow-hidden">
+          <ChatInputForm
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSubmit={handleSubmit}
+            isRecording={isRecording}
+            isProcessing={isProcessing}
+            toggleRecording={toggleRecording}
+            themeColors={themeColors}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );
