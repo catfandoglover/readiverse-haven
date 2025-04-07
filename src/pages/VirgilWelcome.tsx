@@ -3,11 +3,56 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 import conversationManager from '@/services/ConversationManager';
+import ExistingAssessmentDialog from '@/components/dna/ExistingAssessmentDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 const VirgilWelcome: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const [resultsReady, setResultsReady] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // State for existing assessment dialog
+  const [showExistingAssessmentDialog, setShowExistingAssessmentDialog] = useState(false);
+  const [existingAssessmentId, setExistingAssessmentId] = useState<string>('');
+  const [pendingAssessmentId, setPendingAssessmentId] = useState<string>('');
+
+  // Check for existing assessment on component mount
+  useEffect(() => {
+    const checkForExistingAssessment = async () => {
+      if (!user) return;
+      
+      try {
+        // Check profile for assessment_id
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('assessment_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        // Check for pending assessment
+        const pendingId = localStorage.getItem('pending_dna_assessment_id');
+        
+        // If user has both existing and pending assessments, redirect to profile
+        if (profileData?.assessment_id && pendingId) {
+          // Clear pending assessment ID
+          localStorage.removeItem('pending_dna_assessment_id');
+          sessionStorage.removeItem('dna_assessment_to_save');
+          
+          // Navigate directly to profile
+          navigate('/profile');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking for existing assessment:', error);
+      }
+    };
+    
+    checkForExistingAssessment();
+  }, [user, navigate]);
 
   // Initial animation timing
   useEffect(() => {
@@ -120,6 +165,14 @@ const VirgilWelcome: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Existing Assessment Dialog */}
+      <ExistingAssessmentDialog
+        open={showExistingAssessmentDialog}
+        onOpenChange={setShowExistingAssessmentDialog}
+        existingAssessmentId={existingAssessmentId}
+        pendingAssessmentId={pendingAssessmentId}
+      />
     </div>
   );
 };
