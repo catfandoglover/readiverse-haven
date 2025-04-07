@@ -671,52 +671,46 @@ const DNAAssessment = () => {
     navigate('/dna');
   }
 
-  React.useEffect(() => {
-    const saveAssessmentId = async () => {
-      if (!showLoginPrompt) return;
-      
-      const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
-      if (assessmentId) {
-        localStorage.setItem('pending_dna_assessment_id', assessmentId);
-        console.log('Saved assessment ID for login/signup:', assessmentId);
-        
-        sessionStorage.setItem('dna_assessment_to_save', assessmentId);
-        
-        try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          if (!userError && userData?.user) {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('user_id', userData.user.id)
-              .maybeSingle();
-            
-            if (!profileError && profileData) {
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                  assessment_id: assessmentId 
-                } as any)
-                .eq('id', profileData.id);
-                
-              if (updateError) {
-                console.error('Error updating profile with assessment ID:', updateError);
-              } else {
-                console.log('Successfully saved assessment ID to profile:', {
-                  profileId: profileData.id,
-                  assessmentId
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error saving assessment ID to profile:', error);
-        }
-      }
-    };
-    
-    saveAssessmentId();
-  }, [showLoginPrompt, completedAssessmentId, supabase]);
+  const handleTestCompletionClick = () => {
+    const currentAssessmentId = assessmentId || sessionStorage.getItem('dna_assessment_id');
+
+    if (!currentAssessmentId) {
+      console.error("TEST BUTTON ERROR: No assessmentId available (state or sessionStorage) to mark as complete.");
+      toast.error("Error: Cannot simulate completion without an active assessment ID.");
+      return;
+    }
+
+    console.log(`TEST BUTTON: Simulating completion for assessment ID: ${currentAssessmentId}`);
+
+    // Set the completedAssessmentId state
+    setCompletedAssessmentId(currentAssessmentId);
+    console.log(`TEST BUTTON: Set completedAssessmentId state to: ${currentAssessmentId}`);
+
+    // Check if the user is currently anonymous
+    if (!user) {
+      // If anonymous, set showLoginPrompt to true
+      setShowLoginPrompt(true);
+      console.log("TEST BUTTON: User is anonymous. Setting showLoginPrompt state to true.");
+
+      // Also save to session storage as a backup/consistency
+      sessionStorage.setItem('dna_assessment_id', currentAssessmentId);
+      sessionStorage.setItem('dna_assessment_to_save', currentAssessmentId);
+      localStorage.setItem('pending_dna_assessment_id', currentAssessmentId);
+      console.log("TEST BUTTON: Saved assessment ID to session and local storage.");
+
+      // Navigate to the completion screen
+      console.log("TEST BUTTON: Navigating to /dna/completion to show login/signup prompt.");
+      navigate('/dna/completion');
+
+      toast.info("Simulated anonymous completion. Navigating to completion screen.");
+
+    } else {
+      console.log("TEST BUTTON: User is already logged in. Not setting showLoginPrompt.");
+      toast.warn("Simulating completion for logged-in user. This test focuses on the anonymous flow.");
+       // Optionally navigate logged-in users elsewhere if needed for testing
+       // navigate('/dna/welcome');
+    }
+  };
 
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
     return (
@@ -839,54 +833,17 @@ const DNAAssessment = () => {
                 I HAVE MORE TO SAY
               </button>
               
-              <button 
-                className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={async () => {
-                  try {
-                    // Create a test assessment record
-                    const assessmentData = {
-                      name: 'Test User',
-                      answers: {},
-                      ethics_sequence: 'ABAAA',
-                      epistemology_sequence: 'AABBA',
-                      politics_sequence: 'BAAAA',
-                      theology_sequence: 'ABAAB',
-                      ontology_sequence: 'BBABA',
-                      aesthetics_sequence: 'ABAAB'
-                    };
-                    
-                    const { data: newAssessment, error: createError } = await supabase
-                      .from('dna_assessment_results')
-                      .insert([assessmentData])
-                      .select()
-                      .maybeSingle();
-
-                    if (createError) {
-                      console.error('Error creating test assessment:', createError);
-                      toast.error('Error creating test assessment');
-                      return;
-                    }
-
-                    if (!newAssessment) {
-                      console.error('No test assessment created');
-                      toast.error('Error creating test assessment');
-                      return;
-                    }
-
-                    // Store the assessment ID
-                    localStorage.setItem('pending_dna_assessment_id', newAssessment.id);
-                    sessionStorage.setItem('dna_assessment_id', newAssessment.id);
-                    
-                    // Navigate to completion screen
-                    navigate('/dna/completion');
-                  } catch (error) {
-                    console.error('Error in test completion flow:', error);
-                    toast.error('Error testing completion flow');
-                  }
-                }}
-              >
-                TEST COMPLETION SCREEN
-              </button>
+              {/* Development/Testing Buttons */}
+              {process.env.NODE_ENV === 'development' && (
+                <>
+                  <button
+                    onClick={handleTestCompletionClick}
+                    className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
+                  >
+                    Simulate Anonymous Finish & Go To Completion Screen
+                  </button>
+                </>
+              )}
             </div>
           </div>
           

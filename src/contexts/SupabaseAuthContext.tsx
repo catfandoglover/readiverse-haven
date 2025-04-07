@@ -3,6 +3,7 @@ import { Session, User, AuthError, SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { linkPendingAssessmentToUser } from '@/utils/dnaAssessmentUtils';
 
 // Define profile interface to include vanity_url
 interface Profile {
@@ -73,6 +74,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(session);
         setUser(session?.user ?? null);
         setError(null);
+        
+        // If we have a user, immediately try to link any pending assessment
+        if (session?.user) {
+          linkPendingAssessmentToUser(session.user.id)
+            .then(success => {
+              if (success) {
+                console.log('Successfully linked pending assessment on session init');
+                // Also refresh DNA status
+                checkDNAStatus().catch(console.error);
+              }
+            })
+            .catch(err => console.error('Error linking assessment on session init:', err));
+        }
       }
       setIsLoading(false);
     });
@@ -81,6 +95,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // If we have a user, immediately try to link any pending assessment
+      if (session?.user) {
+        linkPendingAssessmentToUser(session.user.id)
+          .then(success => {
+            if (success) {
+              console.log('Successfully linked pending assessment on auth change');
+              // Also refresh DNA status
+              checkDNAStatus().catch(console.error);
+            }
+          })
+          .catch(err => console.error('Error linking assessment on auth change:', err));
+      }
+      
       setIsLoading(false);
     });
 

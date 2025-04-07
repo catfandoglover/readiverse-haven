@@ -1,0 +1,18 @@
+import React from 'react';
+// ... other imports
+import { useLinkPendingAssessment } from '@/hooks/useLinkPendingAssessment'; // Adjust path
+
+function App() { // Or your Layout Component
+  // Call the hook here - it will run its logic automatically on mount/user change
+  useLinkPendingAssessment();
+
+  return (
+    // ... your existing layout and routing setup ...
+    <main>
+       {/* Your Router Outlet or Page Content */}
+    </main>
+    // ...
+  );
+}
+
+export default App; 
