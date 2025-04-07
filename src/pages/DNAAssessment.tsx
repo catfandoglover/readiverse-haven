@@ -890,11 +890,6 @@ const DNAAssessment = () => {
         
       </div>
 
-      {/* Add the chat button that toggles the drawer only when not already showing */}
-      {!showAIChat && (
-        <AIChatButton toggleChat={() => setShowAIChat(true)} />
-      )}
-
       <AIChatDialog 
         open={showAIChat}
         onOpenChange={setShowAIChat}
