@@ -66,6 +66,30 @@ const DNAAssessment = () => {
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   const [isAssessmentComplete, setIsAssessmentComplete] = React.useState(false);
 
+  // Utility function to safely check if a user is logged in
+  const safeRedirectToCompletionScreen = () => {
+    try {
+      // Try to get the current user, but handle potential errors
+      supabase.auth.getUser()
+        .then(({ data, error }) => {
+          if (error || !data.user) {
+            console.log('No authenticated user detected, redirecting to completion screen');
+            navigate('/dna/completion', { replace: true });
+          } else {
+            console.log('Authenticated user detected, redirecting to welcome screen');
+            navigate('/dna/welcome', { replace: true });
+          }
+        })
+        .catch(error => {
+          console.log('Error checking auth state, defaulting to completion screen:', error);
+          navigate('/dna/completion', { replace: true });
+        });
+    } catch (error) {
+      console.log('Exception in redirect check, defaulting to completion screen:', error);
+      navigate('/dna/completion', { replace: true });
+    }
+  };
+
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
 
@@ -118,7 +142,18 @@ const DNAAssessment = () => {
             return;
           }
           
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          let userData = null;
+          let userError = null;
+          
+          try {
+            // This call can throw AuthSessionMissingError
+            const authResult = await supabase.auth.getUser();
+            userData = authResult.data;
+            userError = authResult.error;
+          } catch (authError) {
+            console.log('Auth error caught during initialization:', authError);
+            userError = authError;
+          }
           
           if (userError) {
             console.error('Error getting user:', userError);
@@ -469,16 +504,15 @@ const DNAAssessment = () => {
             setCompletedAssessmentId(assessmentId);
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
+            // Force immediate redirect after 50ms regardless of analysis
+            setTimeout(() => {
+              safeRedirectToCompletionScreen();
+            }, 50);
+            
             await initAnalysis(updatedAnswers, assessmentId);
             
-            // Force navigation to completion for anonymous users
-            if (!user) {
-              console.log('Anonymous user - forcing navigation to completion screen');
-              navigate('/dna/completion', { replace: true });
-            } else {
-              console.log('Logged in user - navigating to welcome screen');
-              navigate('/dna/welcome');
-            }
+            // Force navigation to completion for anonymous users or welcome for logged-in users
+            safeRedirectToCompletionScreen();
             
             if (user) {
               try {
@@ -576,7 +610,7 @@ const DNAAssessment = () => {
         if (nextQuestionNumber > TOTAL_QUESTIONS) {
           console.log(`Reached question limit (${TOTAL_QUESTIONS}), redirecting...`);
           
-          // Redirect based on user status
+          // Redirect based on user status with replace:true to prevent back navigation
           if (!user) {
             navigate('/dna/completion', { replace: true });
           } else {
@@ -618,7 +652,18 @@ const DNAAssessment = () => {
         console.log('No user_id found in sessionStorage, attempting to set it');
         
         try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          let userData = null;
+          let userError = null;
+          
+          try {
+            // This call can throw AuthSessionMissingError
+            const authResult = await supabase.auth.getUser();
+            userData = authResult.data;
+            userError = authResult.error;
+          } catch (authError) {
+            console.log('Auth error caught:', authError);
+            userError = authError;
+          }
           
           if (userError) {
             console.log('User is not authenticated, using anonymous ID');
@@ -761,14 +806,13 @@ const DNAAssessment = () => {
     if (currentQuestionNumber > TOTAL_QUESTIONS) {
       console.log('End of assessment detected during loading state - redirecting...');
       
-      // Force immediate redirection based on user status
-      if (!user) {
-        console.log('Anonymous user - redirecting to completion screen');
-        navigate('/dna/completion', { replace: true });
-      } else {
-        console.log('Logged in user - redirecting to welcome screen');
-        navigate('/dna/welcome', { replace: true });
-      }
+      // Force immediate redirection with 50ms timeout
+      setTimeout(() => {
+        safeRedirectToCompletionScreen();
+      }, 50);
+      
+      // Force immediate redirection based on user status with replace:true
+      safeRedirectToCompletionScreen();
       
       return null; // Return null to prevent rendering while redirecting
     }
