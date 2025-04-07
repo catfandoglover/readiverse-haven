@@ -98,21 +98,6 @@ const ExistingAssessmentDialog: React.FC<ExistingAssessmentDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
-          <Button 
-            variant="outline" 
-            className="w-full sm:w-auto bg-[#E9E7E2]/50 text-[#373763] border border-[#373763]/20 hover:bg-[#E9E7E2]/80"
-            onClick={handleViewProfile}
-          >
-            VIEW EXISTING PROFILE
-          </Button>
-          <Button 
-            className="w-full sm:w-auto bg-[#373763] text-[#E9E7E2] hover:bg-[#373763]/90"
-            onClick={handleReplaceAssessment}
-          >
-            REPLACE WITH NEW ASSESSMENT
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
