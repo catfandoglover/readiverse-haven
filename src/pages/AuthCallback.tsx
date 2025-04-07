@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,8 +15,9 @@ export function AuthCallback() {
       try {
         // Check if this callback is from the DNA assessment flow
         const isDnaFlow = localStorage.getItem('dnaAssessmentComplete') === 'true';
+        const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
         
-        const { error } = await supabase.auth.getSession();
+        const { data: sessionData, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Auth callback error:', error);
@@ -27,6 +27,47 @@ export function AuthCallback() {
         }
         
         // Authentication successful
+        const user = sessionData?.session?.user;
+        
+        // If we have a pending assessment ID and a valid user, link them now
+        if (isDnaFlow && pendingAssessmentId && user) {
+          console.log('Auth callback: Found pending assessment to link:', pendingAssessmentId);
+          
+          try {
+            // First get the user's profile
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error fetching profile:', profileError);
+              // Continue with navigation anyway
+            } else if (profileData) {
+              // Update the profile with the assessment ID
+              console.log(`Updating profile ${profileData.id} with assessment ID: ${pendingAssessmentId}`);
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ assessment_id: pendingAssessmentId })
+                .eq('id', profileData.id);
+                
+              if (updateError) {
+                console.error('Error updating profile:', updateError);
+              } else {
+                console.log('Successfully linked assessment to profile!');
+                toast.success('Your assessment results are ready to view!');
+                
+                // Clear storage now that we've successfully linked
+                localStorage.removeItem('pending_dna_assessment_id');
+                sessionStorage.removeItem('dna_assessment_to_save');
+              }
+            }
+          } catch (err) {
+            console.error('Error linking assessment:', err);
+          }
+        }
+        
         toast.success('Successfully authenticated');
         
         // Get the original intended URL from local storage or default to home
