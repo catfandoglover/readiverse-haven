@@ -234,6 +234,18 @@ const DNAAssessment = () => {
         throw new Error('Category is required');
       }
 
+      // Safety check to prevent trying to load Q31 and beyond
+      if (currentPosition === 'Q31' || currentQuestionNumber > TOTAL_QUESTIONS) {
+        console.log('Attempted to load question beyond limit:', currentPosition);
+        // Redirect to completion or welcome based on user status
+        if (!user) {
+          navigate('/dna/completion', { replace: true });
+        } else {
+          navigate('/dna/welcome', { replace: true });
+        }
+        throw new Error('Question beyond limit');
+      }
+
       const { data, error } = await supabase
         .from('dna_tree_structure')
         .select(`
@@ -438,14 +450,35 @@ const DNAAssessment = () => {
             return;
           }
 
-          if (!nextCategory) {
-            console.log('Assessment complete, navigating to welcome screen...');
+          // Add detailed logging for debugging
+          console.log('Category completion check:', {
+            currentCategory: upperCategory,
+            isAesthetics: upperCategory === "AESTHETICS",
+            hasNextCategory: !!nextCategory,
+            nextCategory,
+            currentCategoryIndex,
+            totalCategories: categoryOrder.length,
+            questionNumber: currentQuestionNumber,
+            isLastQuestion: currentQuestionNumber === TOTAL_QUESTIONS
+          });
+
+          // Check if this is the last category (AESTHETICS) or we've reached the final question
+          if (upperCategory === "AESTHETICS" || !nextCategory || currentQuestionNumber === TOTAL_QUESTIONS) {
+            console.log('Assessment complete, finishing assessment...');
             
             setCompletedAssessmentId(assessmentId);
-            
             localStorage.setItem('pending_dna_assessment_id', assessmentId);
             
-            setIsTransitioning(false);
+            await initAnalysis(updatedAnswers, assessmentId);
+            
+            // Force navigation to completion for anonymous users
+            if (!user) {
+              console.log('Anonymous user - forcing navigation to completion screen');
+              navigate('/dna/completion', { replace: true });
+            } else {
+              console.log('Logged in user - navigating to welcome screen');
+              navigate('/dna/welcome');
+            }
             
             if (user) {
               try {
@@ -476,19 +509,8 @@ const DNAAssessment = () => {
                 console.error('Error saving assessment ID to profile:', error);
               }
             }
-
-            await initAnalysis(updatedAnswers, assessmentId);
             
-            // Force navigation to completion for anonymous users
-            if (!user) {
-              console.log('Anonymous user - forcing navigation to completion screen');
-              setTimeout(() => {
-                navigate('/dna/completion', { replace: true });
-              }, 20);
-            } else {
-              console.log('Logged in user - navigating to welcome screen');
-              navigate('/dna/welcome');
-            }
+            setIsTransitioning(false);
             return;
           } else {
             await queryClient.prefetchQuery({
@@ -546,6 +568,20 @@ const DNAAssessment = () => {
 
         if (!nextQuestion) {
           console.error('Next question not found for ID:', nextQuestionId);
+          return;
+        }
+
+        // If we're about to exceed the total questions limit, redirect instead of loading next question
+        const nextQuestionNumber = currentQuestionNumber + 1;
+        if (nextQuestionNumber > TOTAL_QUESTIONS) {
+          console.log(`Reached question limit (${TOTAL_QUESTIONS}), redirecting...`);
+          
+          // Redirect based on user status
+          if (!user) {
+            navigate('/dna/completion', { replace: true });
+          } else {
+            navigate('/dna/welcome', { replace: true });
+          }
           return;
         }
 
@@ -721,6 +757,22 @@ const DNAAssessment = () => {
   };
 
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
+    // Add immediate redirection when we've reached the end (question 30/AESTHETICS category)
+    if (currentQuestionNumber > TOTAL_QUESTIONS) {
+      console.log('End of assessment detected during loading state - redirecting...');
+      
+      // Force immediate redirection based on user status
+      if (!user) {
+        console.log('Anonymous user - redirecting to completion screen');
+        navigate('/dna/completion', { replace: true });
+      } else {
+        console.log('Logged in user - redirecting to welcome screen');
+        navigate('/dna/welcome', { replace: true });
+      }
+      
+      return null; // Return null to prevent rendering while redirecting
+    }
+    
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
