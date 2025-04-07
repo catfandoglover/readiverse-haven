@@ -29,6 +29,23 @@ export function AuthCallback() {
         // Authentication successful
         const user = sessionData?.session?.user;
         
+        // Check if this is a new user who needs to confirm their email
+        if (user && !user.email_confirmed_at) {
+          console.log('New user needs to confirm email');
+          // Redirect to email confirmation page
+          const isDnaFlow = localStorage.getItem('authRedirectTo') === '/dna/welcome';
+          
+          if (isDnaFlow) {
+            navigate('/dna/confirm-email', { replace: true });
+          } else {
+            navigate('/email-confirmation', { 
+              replace: true,
+              state: { fromSignup: true }
+            });
+          }
+          return;
+        }
+        
         // If we have a pending assessment ID and a valid user, link them now
         if (isDnaFlow && pendingAssessmentId && user) {
           console.log('Auth callback: Found pending assessment to link:', pendingAssessmentId);

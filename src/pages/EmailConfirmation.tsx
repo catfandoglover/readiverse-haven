@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,9 @@ const EmailConfirmation = () => {
   // Check if the user came from DNA flow to customize the message
   const isDnaFlow = location.state?.fromDna || 
                     localStorage.getItem('authRedirectTo') === '/dna/welcome';
+  
+  // Check if the user came from signup flow
+  const isFromSignup = location.state?.fromSignup === true;
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -52,7 +54,26 @@ const EmailConfirmation = () => {
         return;
       }
 
-      // Email is verified, redirect to appropriate destination
+      // Email is verified, show success message if from signup
+      if (isFromSignup) {
+        toast.success('Email confirmed successfully! You can now log in.');
+        
+        // If we have an intended destination that's not the email confirmation page,
+        // keep it for after login
+        const redirectPath = localStorage.getItem('authRedirectTo');
+        if (redirectPath && !redirectPath.includes('email-confirmation')) {
+          // Keep the redirect path for after login
+        } else {
+          // Clear the redirect if there's no specific destination
+          localStorage.removeItem('authRedirectTo');
+        }
+        
+        // Redirect to login page
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      // For non-signup flow, do the normal redirect
       const redirectPath = localStorage.getItem('authRedirectTo') || '/';
       localStorage.removeItem('authRedirectTo');
       

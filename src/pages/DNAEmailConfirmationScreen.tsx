@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
@@ -12,6 +11,22 @@ const DNAEmailConfirmationScreen = () => {
   const navigate = useNavigate();
   const { openLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFromSignup, setIsFromSignup] = useState(false);
+
+  // Check if this is a new account on component mount
+  useEffect(() => {
+    const checkAccount = async () => {
+      // Check if user has a session already
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const { data: userData } = await supabase.auth.getUser();
+        // If email isn't confirmed yet, they are a new signup
+        setIsFromSignup(!userData.user?.email_confirmed_at);
+      }
+    };
+    
+    checkAccount();
+  }, []);
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -42,8 +57,15 @@ const DNAEmailConfirmationScreen = () => {
       }
 
       if (!user?.email_confirmed_at) {
-        toast.error('Please confirm your email before continuing');
-        return;
+        // For new signups who haven't confirmed email, redirect to login
+        if (isFromSignup) {
+          toast.success('Please check your email and confirm your account, then log in.');
+          navigate('/login', { replace: true });
+          return;
+        } else {
+          toast.error('Please confirm your email before continuing');
+          return;
+        }
       }
 
       // Email is verified, redirect to welcome page

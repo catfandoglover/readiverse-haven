@@ -97,7 +97,22 @@ const ExistingAssessmentDialog: React.FC<ExistingAssessmentDialogProps> = ({
             You already have a completed DNA assessment. I've directed you to your profile page to see those results.
           </DialogDescription>
         </DialogHeader>
-        
+
+        <DialogFooter className="mt-6 flex flex-col sm:flex-row sm:justify-between sm:space-x-4 space-y-3 sm:space-y-0">
+          <Button 
+            onClick={handleViewProfile}
+            className="bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium text-sm font-bold uppercase tracking-wider"
+          >
+            View Profile
+          </Button>
+          <Button 
+            onClick={handleReplaceAssessment}
+            variant="outline"
+            className="border-[#373763] text-[#373763] hover:bg-[#373763]/10 font-oxanium text-sm font-bold uppercase tracking-wider"
+          >
+            Replace Assessment
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
