@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { useFormatText } from "@/hooks/useFormatText";
 import VirgilChatButton from "./VirgilChatButton";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { useIsMobile } from "@/hooks/use-mobile";
+import FloatingVirgilButton from "./FloatingVirgilButton";
 
 interface CarouselItem {
   id: string;
@@ -22,6 +24,7 @@ interface CarouselItem {
   cover_url?: string;
   Cover_super?: string;
   icon_illustration?: string;
+  slug?: string;
   [key: string]: any;
 }
 
@@ -38,7 +41,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const location = useLocation();
   const { user, openLogin } = useAuth();
   const { toast } = useToast();
-  const { getSourcePath } = useNavigationState();
+  const { getSourcePath, getFeedSourcePath, saveSourcePath } = useNavigationState();
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatText } = useFormatText();
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -46,6 +49,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const [shouldBlurHeader, setShouldBlurHeader] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const { data: enhancedData, isLoading: isEnhancedDataLoading } = useQuery({
     queryKey: ["question-details", itemData.id],
@@ -201,41 +205,71 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     }
   }, [user, itemData.id]);
 
+  useEffect(() => {
+    if (!isMobile && imageRef.current && scrollContainerRef.current && isDataLoaded) {
+      const imageHeight = imageRef.current.clientHeight;
+      const scrollTarget = imageHeight * 0.6; // 60% of the header image height
+
+      // Small timeout to ensure the image is fully loaded
+      const timer = setTimeout(() => {
+        scrollContainerRef.current?.scrollTo({
+          top: scrollTarget,
+          behavior: 'auto'
+        });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, isDataLoaded]);
+
   const handleBack = () => {
     console.log("[GreatQuestionDetailedView] Back button clicked", {
       onBack: !!onBack,
       locationState: location.state,
       pathname: location.pathname
     });
-    
+
+    // First check if we have an explicit source path in the location state
+    if (location.state?.sourcePath) {
+      const sourcePath = location.state.sourcePath;
+      console.log("[GreatQuestionDetailedView] Navigating to source path from location state:", sourcePath);
+      navigate(sourcePath, { replace: true });
+      return;
+    }
+
+    // If we have a callback, use it
     if (onBack) {
       console.log("[GreatQuestionDetailedView] Using onBack callback");
       onBack();
       return;
     }
-    
-    if (location.state?.sourcePath) {
-      const sourcePath = location.state.sourcePath;
-      console.log("[GreatQuestionDetailedView] Navigating to source path from location state:", sourcePath);
-      navigate(sourcePath);
-      return;
-    }
-    
+
+    // Get source path from the navigation state hook (this is more robust)
     const sourcePath = getSourcePath();
     if (sourcePath && sourcePath !== location.pathname) {
       console.log("[GreatQuestionDetailedView] Navigating to source path from hook:", sourcePath);
-      navigate(sourcePath);
+      navigate(sourcePath, { replace: true });
       return;
     }
-    
+
+    // Try the feed source path as another option
+    const feedPath = getFeedSourcePath();
+    if (feedPath && feedPath !== location.pathname) {
+      console.log("[GreatQuestionDetailedView] Navigating to feed source path:", feedPath);
+      navigate(feedPath, { replace: true });
+      return;
+    }
+
+    // If we have browser history, use that
     if (window.history.length > 1) {
       console.log("[GreatQuestionDetailedView] Using window.history.back()");
       window.history.back();
       return;
     }
-    
-    console.log("[GreatQuestionDetailedView] Fallback to For You feed");
-    navigate('/discover');
+
+    // Last resort: go to discover
+    console.log("[GreatQuestionDetailedView] Fallback to discover feed");
+    navigate('/discover', { replace: true });
   };
 
   const handleShare = async () => {
@@ -339,24 +373,90 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   };
 
   const handleCarouselItemClick = (item: CarouselItem, itemType: "classic" | "concept" | "question" | "icon") => {
-    let targetType: "classic" | "concept" | "icon" | "question" = "classic";
+    // Get the current location to use for back navigation
+    const currentPath = location.pathname;
+    const currentQuestionId = combinedData?.id;
     
-    switch(itemType) {
-      case "classic":
-        targetType = "classic";
-        break;
-      case "concept":
-        targetType = "concept";
-        break;
-      case "icon":
-        targetType = "icon";
-        break;
-      case "question":
-        targetType = "question";
-        break;
+    // Save the source path using the hook - this is more reliable than manually setting storage
+    saveSourcePath(currentPath);
+    
+    // Also store explicitly in localStorage to ensure back navigation works reliably
+    // This is essential since window.location.href navigation loses React Router state
+    if (currentQuestionId) {
+      localStorage.setItem('last_question_path', currentPath);
+      localStorage.setItem('last_question_id', currentQuestionId);
+      console.log(`[GreatQuestionDetailedView] Saved question path for back navigation: ${currentPath}`);
     }
     
-    navigate(`/view/${targetType}/${item.id}`, { replace: true });
+    console.log(`[GreatQuestionDetailedView] Clicked carousel item (${itemType}):`, item);
+    
+    // Generate a fallback slug if needed (especially for classics)
+    if (itemType === "classic" && !item.slug && item.title) {
+      // Generate a slug from the title
+      item.slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      console.log(`[GreatQuestionDetailedView] Generated fallback slug for classic: ${item.slug}`);
+    }
+    
+    // Navigate to the appropriate URL based on the item type
+    switch(itemType) {
+      case "classic":
+        if (!item.slug) {
+          console.error("[GreatQuestionDetailedView] Classic missing slug and no title to generate one:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        
+        // For classics, we need to use the /texts/ path format
+        const targetUrl = `/texts/${item.slug}`;
+        console.log(`[GreatQuestionDetailedView] Navigating to classic at: ${targetUrl}`);
+        
+        // Include query parameter to indicate source path for back navigation
+        window.location.href = `${targetUrl}?from_question=${currentQuestionId}`;
+        break;
+        
+      case "concept":
+        if (!item.slug) {
+          console.error("[GreatQuestionDetailedView] Concept missing slug:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        // Include query parameter for back navigation
+        const conceptUrl = `/concepts/${item.slug}?from_question=${currentQuestionId}`;
+        console.log(`[GreatQuestionDetailedView] Navigating to concept at: ${conceptUrl}`);
+        window.location.href = conceptUrl;
+        break;
+        
+      case "icon":
+        if (!item.slug) {
+          console.error("[GreatQuestionDetailedView] Icon missing slug:", item);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Cannot navigate to this item"
+          });
+          return;
+        }
+        // Include query parameter for back navigation
+        const iconUrl = `/icons/${item.slug}?from_question=${currentQuestionId}`;
+        console.log(`[GreatQuestionDetailedView] Navigating to icon at: ${iconUrl}`);
+        window.location.href = iconUrl;
+        break;
+        
+      case "question":
+        // Include query parameter for back navigation
+        const questionUrl = `/view/question/${item.id}?from_question=${currentQuestionId}`;
+        console.log(`[GreatQuestionDetailedView] Navigating to question at: ${questionUrl}`);
+        window.location.href = questionUrl;
+        break;
+    }
   };
 
   const renderHeader = () => (
@@ -384,16 +484,6 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </h1>
         </div>
         <div className="flex items-center space-x-2">
-          <VirgilChatButton
-            contentTitle={combinedData?.question || "Great Question"}
-            contentId={combinedData?.id || ""}
-            contentType="question"
-            className={cn(
-              "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
-            )}
-            iconClassName={shouldBlurHeader ? "opacity-90" : "brightness-[1.2]"}
-          />
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
@@ -428,30 +518,42 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-oxanium mb-4 text-[#2A282A] uppercase">{title}</h3>
+        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
         <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
           <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="relative flex-none cursor-pointer group"
-                onClick={() => handleCarouselItemClick(item, itemType)}
-              >
-                <div className="h-36 w-36 rounded-lg overflow-hidden mb-2">
-                  <div className="relative h-full w-full overflow-hidden rounded-[0.4rem]">
-                    <img
-                      src={item[imageKey] || ''}
-                      alt={item[textKey] || ""}
-                      className="h-full w-full object-cover"
-                      draggable="false"
-                    />
+            {items.map((item) => {
+              let imageSrc = item[imageKey];
+              
+              if (itemType === "classic") {
+                imageSrc = item.cover_url || item.Cover_super || item.icon_illustration || imageSrc;
+              }
+              
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
+                  onClick={() => handleCarouselItemClick(item, itemType)}
+                >
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
+                    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                      <img
+                        src={imageSrc || ''}
+                        alt={item[textKey] || ""}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        draggable="false"
+                      />
+                    </div>
                   </div>
+                  <h4 className={cn(
+                    "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
+                    "w-full break-words line-clamp-2",
+                    "text-[#2A282A]"
+                  )}>
+                    {item[textKey]}
+                  </h4>
                 </div>
-                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase transition-colors group-hover:text-[#9b87f5] w-36 break-words line-clamp-2">
-                  {item[textKey]}
-                </h4>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
@@ -470,20 +572,25 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           paddingBottom: "env(safe-area-inset-bottom, 0px)" 
         }}
       >
-        <div ref={imageRef} className="w-full">
+        <div ref={imageRef} className="w-full flex justify-center items-center bg-[#2A282A]">
           <img 
             src={combinedData?.image} 
             alt={combinedData?.question} 
-            className="w-full object-cover" 
+            className="max-w-full max-h-[100vh] object-contain" 
             style={{ 
               aspectRatio: "1/1",
-              maxHeight: "100vh" 
+              width: "100%"
             }} 
           />
         </div>
 
         <div className="relative -mt-6">
-          <div className="p-6 bg-[#E9E7E2] rounded-t-2xl">
+          <div 
+            className={cn(
+              "bg-[#E9E7E2] rounded-t-2xl",
+              isMobile ? "p-6" : "px-[18%] py-8"
+            )}
+          >
             <h2 className="text-2xl font-baskerville mb-6 text-[#2A282A]">
               {combinedData?.question}
             </h2>
@@ -491,13 +598,19 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
             {isEnhancedDataLoading ? (
               <div className="h-20 bg-gray-200 animate-pulse rounded mb-8"></div>
             ) : combinedData?.great_conversation ? (
-              <div className="mb-8 prose prose-slate">
-                <div className="text-gray-800 font-baskerville text-lg">
+              <div className="mb-8">
+                <p className={cn(
+                  "text-gray-800 font-baskerville",
+                  isMobile ? "text-lg" : "text-xl leading-relaxed"
+                )}>
                   {formatText(combinedData.great_conversation)}
-                </div>
+                </p>
               </div>
             ) : (
-              <p className="text-gray-800 font-baskerville text-lg mb-8 italic">
+              <p className={cn(
+                "text-gray-800 font-baskerville mb-8 italic",
+                isMobile ? "text-lg" : "text-xl leading-relaxed"
+              )}>
                 Great conversation content will appear here when available.
               </p>
             )}
@@ -512,6 +625,13 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Floating Virgil Button */}
+      <FloatingVirgilButton
+        contentTitle={combinedData?.question || "Great Question"}
+        contentId={combinedData?.id || ""}
+        contentType="question"
+      />
     </div>
   );
 };

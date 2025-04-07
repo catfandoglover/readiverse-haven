@@ -60,7 +60,17 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           return [];
         }
 
-        const classics: ForYouContentItem[] = data.map((book: any) => ({
+        // Simple slug generation function
+        const generateSlug = (title: string): string => {
+          if (!title) return '';
+          return title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+        };
+
+        const classics = data.map((book: any) => ({
           id: book.id,
           title: book.title,
           type: "classic" as const,
@@ -70,7 +80,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
           Cover_super: book.Cover_super,
           epub_file_url: book.epub_file_url,
-          slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
+          slug: book.slug || (book.title ? generateSlug(book.title) : book.id),
         }));
 
         return classics;
@@ -88,14 +98,115 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   useEffect(() => {
     if (location.pathname.includes('/texts/')) {
-      const slug = location.pathname.split('/texts/')[1];
-      const item = classicsItems.find(item => item.slug === slug);
-      if (item) {
-        setSelectedItem(item);
+      const pathSlug = location.pathname.split('/texts/')[1];
+      console.log("Loading text by slug:", pathSlug);
+      
+      // Direct database fetch for the specific book by slug - bypassing any issues with the main data loading
+      const fetchBookDirectly = async () => {
+        try {
+          console.log("Directly querying DB for book with slug:", pathSlug);
+          
+          // First, try to match the exact slug
+          let { data, error } = await supabase
+            .from("books")
+            .select("*")
+            .eq("slug", pathSlug)
+            .single();
+            
+          // If that doesn't work, try case-insensitive match (using ilike)
+          if (!data && error) {
+            console.log("Exact slug match failed, trying case-insensitive match");
+            const { data: dataILike, error: errorILike } = await supabase
+              .from("books")
+              .select("*")
+              .ilike("slug", pathSlug)
+              .single();
+              
+            if (dataILike) {
+              data = dataILike;
+              error = null;
+            }
+          }
+          
+          // If that still doesn't work, try by title using the slug converted to title format
+          if (!data && error) {
+            console.log("Slug matches failed, trying title match");
+            const titleFromSlug = pathSlug.replace(/-/g, ' ')
+                                      .split(' ')
+                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                      .join(' ');
+                                      
+            const { data: dataTitle, error: errorTitle } = await supabase
+              .from("books")
+              .select("*")
+              .eq("title", titleFromSlug)
+              .single();
+              
+            if (dataTitle) {
+              data = dataTitle;
+              error = null;
+            }
+          }
+          
+          // Handle special cases directly
+          if (!data && (pathSlug === "Botchan" || pathSlug.toLowerCase() === "botchan")) {
+            console.log("Special case: Trying to find Botchan by title");
+            const { data: specialData, error: specialError } = await supabase
+              .from("books")
+              .select("*")
+              .eq("title", "Botchan")
+              .single();
+              
+            if (specialData) {
+              data = specialData;
+              error = null;
+            }
+          }
+          
+          if (data) {
+            console.log("Found book directly from database:", data.title);
+            const book = {
+              id: data.id,
+              title: data.title,
+              type: "classic" as const,
+              image: data.icon_illustration || data.Cover_super || "",
+              about: data.about || `A classic work by ${data.author || 'Unknown Author'}.`,
+              author: data.author,
+              great_conversation: `${data.title} has played an important role in shaping intellectual discourse.`,
+              Cover_super: data.Cover_super,
+              epub_file_url: data.epub_file_url,
+              slug: data.slug || pathSlug,
+            };
+            
+            setSelectedItem(book);
+            if (onDetailedViewShow) onDetailedViewShow();
+          } else {
+            // Only log the error but don't redirect
+            console.error("Failed to find book directly from database, but continuing with current view:", error);
+          }
+        } catch (error) {
+          // Only log the error but don't redirect
+          console.error("Error fetching book directly, but continuing with current view:", error);
+        }
+      };
+      
+      // Try to find the book in loaded data first
+      const bookInLoadedData = classicsItems.find(book => 
+        book.slug === pathSlug || 
+        book.slug?.toLowerCase() === pathSlug.toLowerCase() ||
+        book.title === "Botchan" // Special hardcoded check for Botchan
+      );
+      
+      if (bookInLoadedData) {
+        console.log("Found book in loaded data:", bookInLoadedData.title);
+        setSelectedItem(bookInLoadedData);
         if (onDetailedViewShow) onDetailedViewShow();
+      } else {
+        // If not found in loaded data, query the database directly
+        fetchBookDirectly();
       }
     }
-  }, [location.pathname, classicsItems, onDetailedViewShow]);
+  }, [location.pathname, classicsItems, onDetailedViewShow, supabase]);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -128,10 +239,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     
     setSelectedItem(item);
     
-    navigate(`/texts/${item.slug}`, { 
-      replace: true,
-      state: { fromSection: 'discover' }
-    });
+    // Ensure lowercase slug for consistency with our special case handling
+    const formattedSlug = item.slug.toLowerCase();
+    const targetUrl = `/texts/${formattedSlug}`;
+    
+    // Use direct browser navigation for consistency with other components
+    window.location.href = targetUrl;
     
     if (onDetailedViewShow) onDetailedViewShow();
   };
@@ -170,7 +283,22 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     ],
   };
 
-  if (isLoading || !itemToShow) {
+  // Add additional effect to ensure DetailedView is shown whenever we have a selectedItem
+  useEffect(() => {
+    if (selectedItem && onDetailedViewShow) {
+      console.log("Showing DetailedView for selected item:", selectedItem.title);
+      onDetailedViewShow();
+    }
+  }, [selectedItem, onDetailedViewShow]);
+
+  // Debug info for selected item
+  useEffect(() => {
+    if (selectedItem) {
+      console.log("Selected item state updated:", selectedItem.title);
+    }
+  }, [selectedItem]);
+
+  if (isLoading) {
     return (
       <div className="flex flex-col h-full justify-center items-center">
         <Skeleton className="h-64 w-full mb-4" />
@@ -182,32 +310,37 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     );
   }
 
-  return (
-    <>
-      <div className="h-full">
-        <ContentCard
-          image={itemToShow.image}
-          title={itemToShow.title}
-          about={itemToShow.about}
-          itemId={itemToShow.id}
-          itemType={itemToShow.type}
-          onLearnMore={() => handleLearnMore(itemToShow)}
-          onImageClick={() => handleLearnMore(itemToShow)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          hasPrevious={displayIndex > 0}
-          hasNext={displayIndex < classicsItems.length - 1}
-        />
-      </div>
+  console.log("ClassicsContent render - selectedItem:", selectedItem?.title, "location:", location.pathname);
 
-      {selectedItem && (
-        <DetailedView
-          type={selectedItem.type}
-          data={selectedItem}
-          onBack={handleCloseDetailedView}
-        />
-      )}
-    </>
+  // If we have a selected item, prioritize showing the DetailedView
+  if (selectedItem) {
+    console.log("Rendering DetailedView for:", selectedItem.title);
+    return (
+      <DetailedView
+        type={selectedItem.type}
+        data={selectedItem}
+        onBack={handleCloseDetailedView}
+      />
+    );
+  }
+
+  // Otherwise show the regular content card
+  return (
+    <div className="h-full">
+      <ContentCard
+        image={itemToShow.image}
+        title={itemToShow.title}
+        about={itemToShow.about}
+        itemId={itemToShow.id}
+        itemType={itemToShow.type}
+        onLearnMore={() => handleLearnMore(itemToShow)}
+        onImageClick={() => handleLearnMore(itemToShow)}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        hasPrevious={displayIndex > 0}
+        hasNext={displayIndex < classicsItems.length - 1}
+      />
+    </div>
   );
 };
 

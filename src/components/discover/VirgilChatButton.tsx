@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Hexagon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VirgilChatButtonProps {
@@ -43,11 +43,19 @@ const VirgilChatButton = ({
         onClick={handleVirgilChat}
         className={cn("flex items-center gap-2 py-2 px-3 rounded-md", className)}
       >
-        <img 
-          src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Chat.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBDaGF0LnBuZyIsImlhdCI6MTc0MjkzNjUxMSwiZXhwIjoxMDM4Mjg1MDExMX0.HsT3uMlyP1aA14PNfHnQAEmnxy4U4GaBxnuf4aMLL10"
-          alt="Chat with Virgil"
-          className={cn("h-5 w-5", iconClassName)}
-        />
+        <div className="relative flex items-center justify-center">
+          {/* Hexagon background */}
+          <Hexagon className="h-5 w-5 text-[#CCFF23]" strokeWidth={2} />
+          
+          {/* Virgil icon on top */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <img 
+              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Dot.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBEb3QucG5nIiwiaWF0IjoxNzQ0MDU2NjY5LCJleHAiOjEwMzgzOTcwMjY5fQ.RFSdd2eKLrgMOBG9mGeMcEMi_GIXU4E7SvRjdF5ZoYY"
+              alt="Chat with Virgil" 
+              className="h-4 w-4 object-cover"
+            />
+          </div>
+        </div>
         <span>Chat with Virgil</span>
       </button>
     );
@@ -59,11 +67,19 @@ const VirgilChatButton = ({
       aria-label="Chat with Virgil"
       onClick={handleVirgilChat}
     >
-      <img 
-        src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Chat.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBDaGF0LnBuZyIsImlhdCI6MTc0MjkzNjUxMSwiZXhwIjoxMDM4Mjg1MDExMX0.HsT3uMlyP1aA14PNfHnQAEmnxy4U4GaBxnuf4aMLL10"
-        alt="Chat with Virgil"
-        className={cn("h-6 w-6", iconClassName)} 
-      />
+      <div className="relative flex items-center justify-center hover:scale-110 transition-transform">
+        {/* Hexagon background */}
+        <Hexagon className="h-7 w-7 text-[#CCFF23]" strokeWidth={2} />
+        
+        {/* Virgil icon on top */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <img 
+            src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Virgil%20Dot.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL1ZpcmdpbCBEb3QucG5nIiwiaWF0IjoxNzQ0MDU2NjY5LCJleHAiOjEwMzgzOTcwMjY5fQ.RFSdd2eKLrgMOBG9mGeMcEMi_GIXU4E7SvRjdF5ZoYY"
+            alt="Chat with Virgil" 
+            className="h-6 w-6 object-cover"
+          />
+        </div>
+      </div>
     </button>
   );
 };

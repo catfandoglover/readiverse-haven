@@ -105,8 +105,18 @@ const DiscoverLayout = () => {
         contentType = "icons";
       } else if (path.includes('/texts/')) {
         contentType = "classics";
+        
+        // Force immediate content loading for text paths
+        if (activeTab !== "classics") {
+          console.log("[DiscoverLayout] Forcing classics tab for text route");
+          setActiveTab("classics");
+          // Special handling - proactively render content right away
+          setContentReady(true);
+        }
       } else if (path.includes('/concepts/')) {
         contentType = "concepts";
+      } else if (path.includes('/view/question/')) {
+        contentType = "questions";
       }
       
       // Update the active tab if needed and we've determined a content type
@@ -157,6 +167,16 @@ const DiscoverLayout = () => {
       }, 100);
     }
   }, [location.pathname, location.key, activeTab, detailedViewVisible]);
+
+  // Force classics tab when on text routes - this must happen immediately
+  useEffect(() => {
+    if (location.pathname.startsWith('/texts/')) {
+      console.log("[DiscoverLayout] On text route, forcing classics tab");
+      setActiveTab("classics");
+      setDetailedViewVisible(true);
+      setContentReady(true);
+    }
+  }, [location.pathname]);
 
   const handleTabChange = (tab: TabType) => {
     if (tab !== activeTab) {
