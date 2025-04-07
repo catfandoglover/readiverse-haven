@@ -86,40 +86,100 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   useEffect(() => {
     const loadConceptFromUrl = async () => {
       if (location.pathname.includes('/concepts/')) {
-        const slug = location.pathname.split('/concepts/')[1];
+        // Extract the entire path after /concepts/
+        let fullPath = location.pathname.split('/concepts/')[1];
         
-        // First try to find the concept in our existing data
-        let concept = concepts.find(c => c.slug === slug);
+        // Remove any trailing slashes
+        fullPath = fullPath.replace(/\/$/, '');
         
-        // If not found in existing data, fetch it directly
+        console.log("[ConceptsContent] Full path:", fullPath);
+        
+        // Extract the last segment (the actual concept name)
+        const segments = fullPath.split('/');
+        const lastSegment = segments[segments.length - 1];
+        
+        console.log("[ConceptsContent] Last segment:", lastSegment);
+        
+        // First try to find the concept in the cached data
+        let concept = concepts.find(c => 
+          c.slug === fullPath || 
+          c.slug === lastSegment || 
+          c.title?.toLowerCase() === lastSegment.toLowerCase()
+        );
+        
+        // If not found in memory, query the database
         if (!concept) {
-          const { data, error } = await supabase
+          console.log("[ConceptsContent] Concept not found in memory, querying database");
+          
+          // Try several strategies to find the concept
+          
+          // 1. Try exact match with full path
+          let { data: exactMatchData, error: exactMatchError } = await supabase
             .from("concepts")
             .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
-            .eq('slug', slug)
-            .single();
+            .eq('slug', fullPath)
+            .limit(1);
+          
+          // 2. If not found, try with the last segment
+          if (!exactMatchData || exactMatchData.length === 0) {
+            console.log("[ConceptsContent] Trying with last segment:", lastSegment);
             
-          if (data && !error) {
+            const { data: lastSegmentData, error: lastSegmentError } = await supabase
+              .from("concepts")
+              .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
+              .or(`slug.eq.${lastSegment},title.ilike.%${lastSegment}%`)
+              .limit(1);
+            
+            if (lastSegmentData && lastSegmentData.length > 0) {
+              exactMatchData = lastSegmentData;
+            }
+          }
+          
+          // 3. If still not found, use a more fuzzy match on title
+          if (!exactMatchData || exactMatchData.length === 0) {
+            console.log("[ConceptsContent] Trying fuzzy match on title:", lastSegment);
+            
+            const { data: fuzzyMatchData, error: fuzzyMatchError } = await supabase
+              .from("concepts")
+              .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
+              .ilike('title', `%${lastSegment}%`)
+              .limit(1);
+            
+            if (fuzzyMatchData && fuzzyMatchData.length > 0) {
+              exactMatchData = fuzzyMatchData;
+            }
+          }
+          
+          // If we found data with any of our strategies, create a concept object
+          if (exactMatchData && exactMatchData.length > 0) {
             concept = {
-              ...data,
-              type: data.concept_type || "concept",
-              about: data.about || `${data.title} is a significant philosophical concept.`,
-              genealogy: `The historical development of ${data.title} spans multiple philosophical traditions.`,
-              great_conversation: data.great_conversation || `${data.title} has been debated throughout philosophical history.`,
-              image: data.illustration,
+              ...exactMatchData[0],
+              type: exactMatchData[0].concept_type || "concept",
+              about: exactMatchData[0].about || `${exactMatchData[0].title} is a significant philosophical concept.`,
+              genealogy: `The historical development of ${exactMatchData[0].title} spans multiple philosophical traditions.`,
+              great_conversation: exactMatchData[0].great_conversation || `${exactMatchData[0].title} has been debated throughout philosophical history.`,
+              image: exactMatchData[0].illustration,
             };
           }
         }
         
         if (concept) {
+          console.log("[ConceptsContent] Found concept:", concept);
           setSelectedConcept(concept);
           if (onDetailedViewShow) onDetailedViewShow();
+        } else {
+          console.error("[ConceptsContent] Failed to find concept for path:", fullPath);
+          toast({
+            variant: "destructive",
+            title: "Concept Not Found",
+            description: "We couldn't find the concept you're looking for. Please try again.",
+          });
         }
       }
     };
     
     loadConceptFromUrl();
-  }, [location.pathname, concepts, onDetailedViewShow, supabase]);
+  }, [location.pathname, concepts, onDetailedViewShow, supabase, toast]);
 
   // Save the current path for proper back navigation - this is critical
   useEffect(() => {
@@ -156,7 +216,15 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     saveSourcePath(sourcePath);
     
     // Navigate to concept detail view
-    const slug = concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id;
+    // Use concept.slug if available, otherwise generate from title or id
+    let slug = concept.slug;
+    
+    // If the slug contains slashes (complex path), use it directly
+    if (!slug || !slug.includes('/')) {
+      // For simple slugs, ensure we generate a clean version if needed
+      slug = concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id;
+    }
+    
     navigate(`/concepts/${slug}`, { 
       state: { 
         fromSection: 'discover',

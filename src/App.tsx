@@ -185,6 +185,11 @@ const App = () => (
                       <DiscoverLayout />
                     </ProtectedRoute>
                   } />
+                  <Route path="/concepts/*" element={
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
+                      <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/texts/:slug" element={
                     <ProtectedRoute requireAuth={false} requireDNA={false}>
                       <DiscoverLayout />
