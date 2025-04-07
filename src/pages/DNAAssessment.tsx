@@ -64,6 +64,7 @@ const DNAAssessment = () => {
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
+  const [isAssessmentComplete, setIsAssessmentComplete] = React.useState(false);
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -84,9 +85,11 @@ const DNAAssessment = () => {
       }
 
       toast.success('Analysis completed successfully');
+      setIsAssessmentComplete(true);
     } catch (error) {
       console.error('Error in DNA analysis:', error);
       toast.error('Error analyzing results');
+      setIsAssessmentComplete(true); // Still mark as complete so user can proceed
     }
   };
 
@@ -476,10 +479,15 @@ const DNAAssessment = () => {
 
             await initAnalysis(updatedAnswers, assessmentId);
             
-            if (user) {
-              navigate('/dna/welcome');
+            // Force navigation to completion for anonymous users
+            if (!user) {
+              console.log('Anonymous user - forcing navigation to completion screen');
+              setTimeout(() => {
+                navigate('/dna/completion', { replace: true });
+              }, 20);
             } else {
-              navigate('/dna/completion');
+              console.log('Logged in user - navigating to welcome screen');
+              navigate('/dna/welcome');
             }
             return;
           } else {
@@ -706,7 +714,7 @@ const DNAAssessment = () => {
 
     } else {
       console.log("TEST BUTTON: User is already logged in. Not setting showLoginPrompt.");
-      toast.warn("Simulating completion for logged-in user. This test focuses on the anonymous flow.");
+      toast.warning("Simulating completion for logged-in user. This test focuses on the anonymous flow.");
        // Optionally navigate logged-in users elsewhere if needed for testing
        // navigate('/dna/welcome');
     }
