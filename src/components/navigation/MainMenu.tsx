@@ -30,8 +30,33 @@ const MainMenu: React.FC = () => {
 
   const defaultPath = getDefaultHighlight();
 
+  // Check if we're on a reader page and handle navigation accordingly
+  const checkAndNavigateFromReader = (targetPath: string) => {
+    // Extract book slug from path if we're on a reader page
+    const pathParts = location.pathname.split('/');
+    const isReaderPage = pathParts.includes('read');
+
+    // If we're on a reader page, go to book details first
+    if (isReaderPage) {
+      const hasBooksPath = pathParts.includes('read');
+      const slug = hasBooksPath ? pathParts[pathParts.indexOf('read') + 1] : pathParts[pathParts.length - 1];
+      
+      if (slug && slug.length > 0) {
+        navigate(`/texts/${slug}`);
+        setOpen(false);
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
   const handleNavigation = (path: string) => {
-    navigate(path);
+    // If we're on a reader page, navigate to book details instead
+    if (!checkAndNavigateFromReader(path)) {
+      navigate(path);
+    }
+    
     setOpen(false);
   };
 
@@ -40,7 +65,11 @@ const MainMenu: React.FC = () => {
       navigate('/login', { state: { from: location } });
       setOpen(false);
     } else {
-      navigate("/virgil");
+      // If we're on a reader page, navigate to book details instead
+      if (!checkAndNavigateFromReader("/virgil")) {
+        navigate("/virgil");
+      }
+      
       setOpen(false);
     }
   };
@@ -50,7 +79,11 @@ const MainMenu: React.FC = () => {
       navigate('/login', { state: { from: location } });
       setOpen(false);
     } else {
-      navigate("/bookshelf");
+      // If we're on a reader page, navigate to book details instead
+      if (!checkAndNavigateFromReader("/bookshelf")) {
+        navigate("/bookshelf");
+      }
+      
       setOpen(false);
     }
   };

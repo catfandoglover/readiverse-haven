@@ -189,9 +189,19 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
                 className="w-full border-white/20 text-white hover:bg-white/10 rounded-2xl mt-4"
                 onClick={() => {
                   onOpenChange(false);
+                  
+                  // Extract the book slug from the current URL
                   const pathParts = window.location.pathname.split('/');
-                  const bookSlug = pathParts[pathParts.length - 1];
-                  navigate(`/texts/${bookSlug}`);
+                  const hasBooksPath = pathParts.includes('read');
+                  const slug = hasBooksPath ? pathParts[pathParts.indexOf('read') + 1] : pathParts[pathParts.length - 1];
+                  
+                  // Try to navigate to the book detail view if we have a slug
+                  if (slug && slug.length > 0) {
+                    navigate(`/texts/${slug}`);
+                  } else {
+                    // If we couldn't extract the slug, fall back to bookshelf
+                    navigate('/bookshelf');
+                  }
                 }}
               >
                 Return to Book Details

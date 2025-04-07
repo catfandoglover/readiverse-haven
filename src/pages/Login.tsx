@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import LoginForm from '@/components/auth/LoginForm';
 import { toast } from "sonner";
+import MainMenu from '@/components/navigation/MainMenu';
 
 export function Login() {
   const location = useLocation();
@@ -65,6 +66,9 @@ export function Login() {
     <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col justify-between p-6">
       {/* Top section with logo and title */}
       <div className="flex flex-col items-center mt-24 mb-12">
+        <div className="absolute top-4 left-4">
+          <MainMenu />
+        </div>
         <div className="w-28 h-28 mb-10">
           <img 
             src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning%20Hexagon.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZyBIZXhhZ29uLnBuZyIsImlhdCI6MTc0MzczODUzMiwiZXhwIjo4ODE0MzY1MjEzMn0.nqjOMHSqPwcszVHj-OUBxUHDP1OEMBkkg8GceJiY0TY"
