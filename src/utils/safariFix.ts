@@ -8,14 +8,38 @@
  * but isn't accounted for in 100vh calculations
  */
 export const setupViewportHeightFix = (): (() => void) => {
+  // Detect browser types
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isChrome = /chrome/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  
+  // Set appropriate browser chrome height
+  const getBrowserChromeHeight = () => {
+    if (isIOS) {
+      if (isSafari) {
+        return 80; // Safari has larger UI elements
+      } else if (isChrome) {
+        return 60; // Chrome has medium UI elements
+      } else {
+        return 70; // Default for other iOS browsers
+      }
+    }
+    return 0; // Non-iOS browsers
+  };
+  
   // Calculate the real viewport height and set it as a CSS variable
   const calculateVh = () => {
     // Get the viewport height
     const vh = window.innerHeight;
-    // Set it as a CSS variable
-    document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
     
-    // If Visual Viewport API is available (iOS 13+), use it
+    // Get browser chrome height
+    const chromeHeight = getBrowserChromeHeight();
+    
+    // Set all variables
+    document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
+    document.documentElement.style.setProperty('--browser-nav-height', `${chromeHeight}px`);
+    
+    // If Visual Viewport API is available (iOS 13+), use it for more accuracy
     if (window.visualViewport) {
       document.documentElement.style.setProperty('--vw-width', `${window.visualViewport.width}px`);
       document.documentElement.style.setProperty('--vw-height', `${window.visualViewport.height}px`);
@@ -78,6 +102,30 @@ export const isIOS = (): boolean => {
  */
 export const isMobileSafari = (): boolean => {
   return isSafari() && isIOS();
+};
+
+/**
+ * Determines if the current browser is Chrome on iOS
+ */
+export const isIOSChrome = (): boolean => {
+  const isChrome = /CriOS/i.test(navigator.userAgent);
+  return isIOS() && isChrome;
+};
+
+/**
+ * Get the estimated height of browser UI elements
+ */
+export const getBrowserUIHeight = (): number => {
+  if (isIOS()) {
+    if (isSafari()) {
+      return 80; // Safari has larger UI
+    } else if (isIOSChrome()) {
+      return 60; // Chrome has medium UI
+    } else {
+      return 70; // Default for other browsers
+    }
+  }
+  return 0; // No adjustment needed
 };
 
 /**

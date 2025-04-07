@@ -18,6 +18,7 @@ import ReaderControls from './ReaderControls';
 import ProgressTracker from './ProgressTracker';
 import FloatingControls from './FloatingControls';
 import BookmarkDialog from './BookmarkDialog';
+import { getBrowserUIHeight } from '@/utils/safariFix';
 
 interface ReaderContentProps {
   book: Book;
@@ -92,6 +93,7 @@ const ReaderContent = ({
   const isMobile = useIsMobile();
   const isSafariMobile = useSafariViewportFix();
   const bookKey = book?.key() || null;
+  const browserUIHeight = getBrowserUIHeight();
 
   const {
     rendition,
@@ -145,7 +147,7 @@ const ReaderContent = ({
 
   // Effect to initialize any iOS Safari specific handling
   useEffect(() => {
-    if (!isMobile || !isSafariMobile) return;
+    if (!isMobile) return;
     
     // Handle Safari-specific viewport issues
     const metaViewport = document.querySelector('meta[name="viewport"]');
@@ -162,39 +164,49 @@ const ReaderContent = ({
         metaViewport.setAttribute('content', originalContent);
       };
     }
-  }, [isMobile, isSafariMobile]);
+  }, [isMobile]);
+
+  // Adjust UI container styles for mobile
+  const containerStyle = isMobile ? {
+    paddingBottom: `${browserUIHeight}px`,
+  } : {};
 
   return (
     <>
-      <ReaderControls
-        fontSize={fontSize}
-        onFontSizeChange={onFontSizeChange}
-        fontFamily={fontFamily}
-        onFontFamilyChange={onFontFamilyChange}
-        textAlign={textAlign}
-        onTextAlignChange={onTextAlignChange}
-        brightness={brightness}
-        onBrightnessChange={onBrightnessChange}
-        currentLocation={currentLocation}
-        onBookmarkClick={onBookmarkClick}
-        onLocationChange={onLocationChange}
-        sessionTime={sessionTime}
-        highlights={highlights}
-        selectedHighlightColor={selectedColor}
-        onHighlightColorSelect={setSelectedColor}
-        onHighlightSelect={onLocationChange}
-        onRemoveHighlight={removeHighlight}
-        toc={toc}
-        onNavigate={onTocNavigate}
-        bookKey={bookKey}
-      />
-      
-      <ProgressTracker 
-        bookProgress={progress.book}
-        pageInfo={pageInfo}
-      />
+      <div className="flex flex-col items-center justify-center w-full h-full reader-content">
+        <ReaderControls
+          fontSize={fontSize}
+          onFontSizeChange={onFontSizeChange}
+          fontFamily={fontFamily}
+          onFontFamilyChange={onFontFamilyChange}
+          textAlign={textAlign}
+          onTextAlignChange={onTextAlignChange}
+          brightness={brightness}
+          onBrightnessChange={onBrightnessChange}
+          currentLocation={currentLocation}
+          onLocationChange={onLocationChange}
+          onBookmarkClick={onBookmarkClick}
+          sessionTime={sessionTime}
+          highlights={highlights}
+          selectedHighlightColor={selectedColor}
+          onHighlightColorSelect={setSelectedColor}
+          onHighlightSelect={(cfi) => {
+            if (rendition) {
+              rendition.display(cfi);
+            }
+          }}
+          onRemoveHighlight={removeHighlight}
+          toc={toc}
+          onNavigate={onTocNavigate}
+          bookKey={bookKey}
+        />
 
-      <div className="relative">
+        <ProgressTracker 
+          bookProgress={progress!.book} 
+          pageInfo={pageInfo}
+        />
+
+      <div className="relative reader-content-inner" style={containerStyle}>
         <NavigationButtons
           onPrevPage={onPrevPage}
           onNextPage={onNextPage}
@@ -229,17 +241,20 @@ const ReaderContent = ({
         </div>
       </div>
 
-      <FloatingControls
-        currentLocation={currentLocation}
-        onLocationSelect={onLocationChange}
-        onBookmarkClick={onBookmarkClick}
-        highlights={highlights}
-        selectedColor={selectedColor}
-        onColorSelect={setSelectedColor}
-        onHighlightSelect={onLocationChange}
-        onRemoveHighlight={removeHighlight}
-        bookKey={bookKey}
-      />
+      {/* Keep controls outside of container so they remain visible */}
+      <div className="mt-2 floating-controls" style={{ paddingBottom: `${browserUIHeight/2}px` }}>
+        <FloatingControls
+          currentLocation={currentLocation}
+          onLocationSelect={onLocationChange}
+          onBookmarkClick={onBookmarkClick}
+          highlights={highlights}
+          selectedColor={selectedColor}
+          onColorSelect={setSelectedColor}
+          onHighlightSelect={onLocationChange}
+          onRemoveHighlight={removeHighlight}
+          bookKey={bookKey}
+        />
+      </div>
 
       <BookmarkDialog
         open={showBookmarkDialog}
@@ -249,6 +264,7 @@ const ReaderContent = ({
       />
 
       <BrightnessOverlay brightness={brightness} />
+      </div>
     </>
   );
 };

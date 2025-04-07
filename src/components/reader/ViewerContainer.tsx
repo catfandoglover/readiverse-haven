@@ -104,16 +104,32 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   }, [setContainer]);
 
   // Calculate container height based on viewport
+  // Much more aggressive height reduction for mobile browsers
   const containerHeight = isMobile 
-    ? `calc(var(--vh, 1vh) * 80)` // Use CSS variable fallback approach
+    ? `calc(var(--vh, 1vh) * 70)` // Reduce to 70% of viewport to account for browser UI
     : '80vh';
+
+  // Detect Safari for additional fixes
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isChrome = /chrome/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  
+  // Additional height adjustment for iOS browsers
+  let heightAdjustment = '0px';
+  if (isMobile) {
+    if (isSafari && isIOS) {
+      heightAdjustment = '80px'; // More space for Safari UI
+    } else if (isChrome) {
+      heightAdjustment = '60px'; // Space for Chrome UI
+    }
+  }
 
   return (
     <div 
       ref={containerRef}
       className="epub-view overflow-hidden w-full" 
       style={{ 
-        height: containerHeight,
+        height: isMobile ? `calc(${containerHeight} - ${heightAdjustment})` : containerHeight,
         background: "#332E38",
         color: theme.text,
         WebkitUserSelect: 'text',

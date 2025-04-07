@@ -92,9 +92,15 @@
     --vh: 1vh;
     --vw-width: 100vw;
     --vw-height: 100vh;
+    --browser-nav-height: 0px;
   }
 
   @supports (-webkit-touch-callout: none) {
+    /* iOS devices - account for browser UI */
+    :root {
+      --browser-nav-height: 80px; /* Default height for Safari bottom bar */
+    }
+    
     .h-screen {
       height: -webkit-fill-available;
     }
@@ -108,9 +114,35 @@
     }
     
     .reader-viewport {
-      height: calc(var(--vh, 1vh) * 90);
-      max-height: calc(var(--vw-height, 100vh) - 60px);
+      height: calc(var(--vh, 1vh) * 70); /* More aggressively reduced */
+      max-height: calc(var(--vw-height, 100vh) - var(--browser-nav-height));
     }
+    
+    /* Chrome specific adjustments */
+    @media screen and (-webkit-min-device-pixel-ratio: 0) {
+      .reader-viewport {
+        height: calc(var(--vh, 1vh) * 70 - 60px);
+      }
+    }
+  }
+
+  /* Reader container specific adjustments */
+  .epub-container {
+    position: relative !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+  
+  /* Make sure EPUB iframe is fully responsive */
+  .epub-container iframe {
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .epub-view {
@@ -265,5 +297,49 @@
     overflow-x: hidden;
     mask-image: radial-gradient(white, black);
     -webkit-mask-image: radial-gradient(white, black);
+  }
+}
+
+/* Additional mobile browser adjustments */
+@media screen and (max-width: 768px) {
+  /* Fix for making sure content doesn't overflow on mobile */
+  .reader-content {
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .reader-content-inner {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Critical fix for mobile browsers to ensure content fits in viewport */
+  .reader-viewport {
+    max-height: calc(100vh - 180px) !important; /* Enforced maximum height */
+    min-height: 300px; /* Minimum reasonable height */
+  }
+  
+  /* Safari specific */
+  @supports (-webkit-touch-callout: none) {
+    .reader-viewport {
+      max-height: calc(100vh - 210px) !important; /* Safari needs more space */
+    }
+  }
+  
+  /* Adjust scrolling behavior */
+  .epub-view iframe {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: scroll !important;
+  }
+  
+  /* Ensure controls stay visible */
+  .floating-controls {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 20px); 
+    z-index: 50;
   }
 }
