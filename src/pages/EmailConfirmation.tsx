@@ -67,7 +67,7 @@ const EmailConfirmation = () => {
   return (
     <AuthLayout 
       title="Check your email"
-      subtitle={`JOIN THE GREAT CONVERSATION${isDnaFlow ? "\nConfirm your email to view your results" : "\nConfirm your email to continue"}`}
+      subtitle={`${isDnaFlow ? "\nConfirm your email to view your results" : "\nConfirm your email to continue"}`}
       showBackButton={false}
     >
       <div className="flex flex-col items-center justify-center space-y-8">
