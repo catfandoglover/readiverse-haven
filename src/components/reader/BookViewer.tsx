@@ -350,7 +350,7 @@ const BookViewer = ({
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full reader-viewport">
       <ViewerContainer theme={theme} setContainer={setContainer} />
       
       {/* Text selection options dialog */}

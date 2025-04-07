@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ViewerContainerProps {
   theme: Theme;
@@ -11,6 +12,36 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   setContainer 
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
+  const [viewportHeight, setViewportHeight] = useState<number>(window.innerHeight);
+  
+  // Effect to update viewport dimensions
+  useEffect(() => {
+    // Calculate the real viewport height for mobile devices
+    const calculateViewportHeight = () => {
+      const vh = window.innerHeight;
+      setViewportHeight(vh);
+      
+      // Apply the height to document root as CSS variable
+      document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
+    };
+    
+    calculateViewportHeight();
+    
+    // Handle orientation changes and resize events
+    const handleResize = () => {
+      // Small timeout to ensure dimension changes have completed
+      setTimeout(calculateViewportHeight, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
   
   useEffect(() => {
     if (containerRef.current) {
@@ -29,7 +60,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
                 existingStyle.remove();
               }
               
-              // Create and add our new style - minimal necessary styling
+              // Create and add our new style with viewport-aware adjustments
               const style = iframeDoc.createElement('style');
               style.id = 'epub-custom-style';
               style.textContent = `
@@ -37,11 +68,22 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
                   margin: 0 !important;
                   padding: 0 !important;
                   height: 100% !important;
+                  touch-action: manipulation !important;
+                  -webkit-overflow-scrolling: touch !important;
                 }
                 
                 body > * {
                   padding-top: 20px !important;
-                  padding-bottom: 20px !important;
+                  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+                  padding-left: env(safe-area-inset-left, 0px) !important;
+                  padding-right: env(safe-area-inset-right, 0px) !important;
+                }
+                
+                @supports (-webkit-touch-callout: none) {
+                  /* iOS-specific optimizations */
+                  body {
+                    height: -webkit-fill-available !important;
+                  }
                 }
               `;
               iframeDoc.head.appendChild(style);
@@ -61,11 +103,17 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
     }
   }, [setContainer]);
 
+  // Calculate container height based on viewport
+  const containerHeight = isMobile 
+    ? `calc(var(--vh, 1vh) * 80)` // Use CSS variable fallback approach
+    : '80vh';
+
   return (
     <div 
       ref={containerRef}
-      className="epub-view h-[80vh] overflow-hidden w-full" 
+      className="epub-view overflow-hidden w-full" 
       style={{ 
+        height: containerHeight,
         background: "#332E38",
         color: theme.text,
         WebkitUserSelect: 'text',
@@ -75,6 +123,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
         WebkitOverflowScrolling: 'touch',
         WebkitTapHighlightColor: 'rgba(0,0,0,0)',
         overscrollBehavior: 'contain',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     />
   );

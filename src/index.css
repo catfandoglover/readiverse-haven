@@ -83,6 +83,34 @@
 
   html {
     height: -webkit-fill-available;
+    /* iOS Safari viewport fix */
+    height: 100%;
+  }
+
+  /* Safari viewport height fix - using CSS variables */
+  :root {
+    --vh: 1vh;
+    --vw-width: 100vw;
+    --vw-height: 100vh;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: -webkit-fill-available;
+    }
+    
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+    
+    .h-full-safari {
+      height: calc(var(--vh, 1vh) * 100);
+    }
+    
+    .reader-viewport {
+      height: calc(var(--vh, 1vh) * 90);
+      max-height: calc(var(--vw-height, 100vh) - 60px);
+    }
   }
 
   .epub-view {

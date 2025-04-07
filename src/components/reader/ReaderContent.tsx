@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Book } from 'epubjs';
 import type { NavItem } from 'epubjs';
 import type { Highlight, HighlightColor } from '@/types/highlight';
@@ -13,6 +13,7 @@ import { MobileControls } from './controls/MobileControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRenditionSetup } from '@/hooks/useRenditionSetup';
 import { useReaderResize } from '@/hooks/useReaderResize';
+import { useSafariViewportFix } from '@/hooks/useSafariViewportFix';
 import ReaderControls from './ReaderControls';
 import ProgressTracker from './ProgressTracker';
 import FloatingControls from './FloatingControls';
@@ -89,6 +90,7 @@ const ReaderContent = ({
   const [container, setContainer] = useState<Element | null>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const isSafariMobile = useSafariViewportFix();
   const bookKey = book?.key() || null;
 
   const {
@@ -140,6 +142,27 @@ const ReaderContent = ({
       document.removeEventListener('click', handleTouchStart);
     };
   }, [isMobile, handleTouchStart]);
+
+  // Effect to initialize any iOS Safari specific handling
+  useEffect(() => {
+    if (!isMobile || !isSafariMobile) return;
+    
+    // Handle Safari-specific viewport issues
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    if (metaViewport) {
+      // Store original content to restore later
+      const originalContent = metaViewport.getAttribute('content') || '';
+      
+      // Set viewport to prevent scaling/zooming during reading
+      metaViewport.setAttribute('content', 
+        'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
+      
+      // Restore original viewport on cleanup
+      return () => {
+        metaViewport.setAttribute('content', originalContent);
+      };
+    }
+  }, [isMobile, isSafariMobile]);
 
   return (
     <>
