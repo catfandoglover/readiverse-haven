@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { linkPendingAssessmentToUser } from '@/utils/dnaAssessmentUtils';
+import ExistingAssessmentDialog from '@/components/dna/ExistingAssessmentDialog';
 
 // Define profile interface to include vanity_url
 interface Profile {
@@ -63,6 +64,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [hasCompletedDNA, setHasCompletedDNA] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
   const navigate = useNavigate();
+  
+  // State for existing assessment dialog
+  const [showExistingAssessmentDialog, setShowExistingAssessmentDialog] = useState(false);
+  const [existingAssessmentId, setExistingAssessmentId] = useState<string>('');
+  const [pendingAssessmentId, setPendingAssessmentId] = useState<string>('');
 
   useEffect(() => {
     // Get initial session
@@ -78,11 +84,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // If we have a user, immediately try to link any pending assessment
         if (session?.user) {
           linkPendingAssessmentToUser(session.user.id)
-            .then(success => {
-              if (success) {
+            .then(result => {
+              if (result.success) {
                 console.log('Successfully linked pending assessment on session init');
                 // Also refresh DNA status
                 checkDNAStatus().catch(console.error);
+              } else if (result.hasExistingAssessment && result.existingAssessmentId) {
+                // User already has a DNA assessment, show dialog
+                console.log('User already has an existing assessment:', result.existingAssessmentId);
+                
+                // Set the hasCompletedDNA flag
+                setHasCompletedDNA(true);
+                
+                // Store assessment IDs for the dialog
+                setExistingAssessmentId(result.existingAssessmentId);
+                const pendingId = localStorage.getItem('pending_dna_assessment_id');
+                if (pendingId) {
+                  setPendingAssessmentId(pendingId);
+                  // Show the dialog
+                  setShowExistingAssessmentDialog(true);
+                }
               }
             })
             .catch(err => console.error('Error linking assessment on session init:', err));
@@ -99,11 +120,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // If we have a user, immediately try to link any pending assessment
       if (session?.user) {
         linkPendingAssessmentToUser(session.user.id)
-          .then(success => {
-            if (success) {
+          .then(result => {
+            if (result.success) {
               console.log('Successfully linked pending assessment on auth change');
               // Also refresh DNA status
               checkDNAStatus().catch(console.error);
+            } else if (result.hasExistingAssessment && result.existingAssessmentId) {
+              // User already has a DNA assessment, show dialog
+              console.log('User already has an existing assessment:', result.existingAssessmentId);
+              
+              // Set the hasCompletedDNA flag
+              setHasCompletedDNA(true);
+              
+              // Store assessment IDs for the dialog
+              setExistingAssessmentId(result.existingAssessmentId);
+              const pendingId = localStorage.getItem('pending_dna_assessment_id');
+              if (pendingId) {
+                setPendingAssessmentId(pendingId);
+                // Show the dialog
+                setShowExistingAssessmentDialog(true);
+              }
             }
           })
           .catch(err => console.error('Error linking assessment on auth change:', err));
@@ -113,7 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   // Check DNA status when user changes
   useEffect(() => {
@@ -285,6 +321,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <ExistingAssessmentDialog 
+        open={showExistingAssessmentDialog}
+        onOpenChange={setShowExistingAssessmentDialog}
+        existingAssessmentId={existingAssessmentId}
+        pendingAssessmentId={pendingAssessmentId}
+      />
     </AuthContext.Provider>
   );
 }
