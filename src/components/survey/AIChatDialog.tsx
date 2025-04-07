@@ -415,16 +415,20 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               <Mic className="h-4 w-4" />
             )}
           </Button>
-          <Button 
-            type="submit" 
-            variant="ghost" 
-            size="icon"
-            disabled={!inputMessage.trim() && !isRecording || isProcessing}
-            className="h-10 w-10 rounded-full text-[#282828] flex-shrink-0"
-            aria-label="Send message"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          
+          {inputMessage.trim().length > 0 && (
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon"
+              disabled={!inputMessage.trim() || isProcessing}
+              className="h-10 w-10 rounded-full flex-shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4 text-[#9b87f5]" />
+            </Button>
+          )}
+          
           {isProcessing && (
             <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
               <Loader2 className="h-4 w-4 animate-spin" />
