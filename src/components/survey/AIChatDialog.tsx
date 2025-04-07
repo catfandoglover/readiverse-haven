@@ -11,13 +11,6 @@ import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 interface Message {
   id: string;
@@ -346,15 +339,28 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="font-oxanium">AI Assistant</DialogTitle>
-          <DialogDescription className="font-oxanium text-sm">
-            Ask questions about the assessment or get help understanding the concepts.
-          </DialogDescription>
-        </DialogHeader>
-        
+    <div 
+      className={`fixed bottom-0 left-0 w-full z-50 transition-transform duration-300 ease-in-out bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-lg rounded-t-xl ${
+        open ? 'transform translate-y-0' : 'transform translate-y-full'
+      }`}
+      style={{ height: '80vh' }}
+    >
+      <div className="flex items-center justify-center px-4 py-3 relative border-b border-[#D0CBBD]/25">
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-1 bg-[#373763] rounded-full my-1" />
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-1 p-3 w-10 h-10 flex items-center justify-center text-[#373763] hover:bg-[#373763]/10 rounded-md"
+          aria-label="Close AI Assistant"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h3 className="font-oxanium">AI Assistant</h3>
+      </div>
+      
+      <div className={cn(
+        "h-[calc(80vh-4rem)] flex flex-col",
+        !isMobile && "max-w-2xl mx-auto"
+      )}>
         <div className="flex-1 overflow-y-auto">
           <div className="chat-content-container p-4 space-y-2">
             {messages.map((msg, index) => {
@@ -409,24 +415,28 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
               <Mic className="h-4 w-4" />
             )}
           </Button>
-          <Button 
-            type="submit" 
-            variant="ghost" 
-            size="icon"
-            disabled={!inputMessage.trim() && !isRecording || isProcessing}
-            className="h-10 w-10 rounded-full text-[#282828] flex-shrink-0"
-            aria-label="Send message"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          
+          {inputMessage.trim().length > 0 && (
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon"
+              disabled={!inputMessage.trim() || isProcessing}
+              className="h-10 w-10 rounded-full flex-shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4 text-[#9b87f5]" />
+            </Button>
+          )}
+          
           {isProcessing && (
             <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
               <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 

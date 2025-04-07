@@ -35,6 +35,9 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
     }
   };
 
+  // Show send button only when there's text in the input
+  const showSendButton = inputMessage.trim().length > 0;
+
   return (
     <form 
       onSubmit={handleSubmit} 
@@ -85,16 +88,20 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
               <Mic className={cn("h-4 w-4", themeColors.text)} />
             )}
           </Button>
-          <Button 
-            type="submit" 
-            variant="ghost" 
-            size="icon"
-            disabled={(!inputMessage.trim() && !isRecording) || disabled}
-            className="h-10 w-10 rounded-full flex-shrink-0"
-            aria-label="Send message"
-          >
-            <Send className={cn("h-4 w-4", themeColors.text)} />
-          </Button>
+          
+          {/* Only show send button when there's text input */}
+          {showSendButton && (
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              size="icon"
+              disabled={!inputMessage.trim() || disabled}
+              className="h-10 w-10 rounded-full flex-shrink-0"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4 text-[#9b87f5]" />
+            </Button>
+          )}
         </>
       )}
     </form>

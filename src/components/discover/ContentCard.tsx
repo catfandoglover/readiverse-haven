@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowUp, ArrowDown, Share, Star, ArrowRight } from "lucide-react";
+import { ArrowUp, ArrowDown, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useToast } from "@/hooks/use-toast";
@@ -210,12 +210,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                     fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                   />
                 </button>
-                <button
-                  className="flex items-center justify-center text-[#2A282A]"
-                  aria-label="Share"
-                >
-                  <Share className="h-5 w-5" />
-                </button>
               </div>
             </div>
             <p className="text-gray-800 font-baskerville text-lg">{formatText(about)}</p>
@@ -309,12 +303,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   className="h-7 w-7" 
                   fill={isFavorite ? "#EFFE91" : "#E9E7E2"} 
                 />
-              </button>
-              <button
-                className="flex items-center justify-center text-[#2A282A] hover:scale-110 transition-transform"
-                aria-label="Share"
-              >
-                <Share className="h-6 w-6" />
               </button>
             </div>
           </div>
