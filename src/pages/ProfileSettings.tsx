@@ -6,12 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Upload, CreditCard, LogOut, Zap } from "lucide-react";
+import { ArrowLeft, Upload, CreditCard, LogOut, Zap, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import TokenUsageDisplay from '@/components/subscription/TokenUsageDisplay';
-import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 
 const ProfileSettings: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -210,6 +209,10 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
+  const handleUpgradeClick = () => {
+    navigate('/upgrade');
+  };
+
   const handleBillingPortal = async () => {
     if (!user) {
       toast({
@@ -322,6 +325,8 @@ const ProfileSettings: React.FC = () => {
     if (!subscriptionInfo.tier) return "Library Card";
     
     switch (subscriptionInfo.tier) {
+      case 'surge':
+        return "SURGE";
       case 'scholar':
         return "Scholar";
       case 'philosopher':
@@ -468,89 +473,63 @@ const ProfileSettings: React.FC = () => {
               <CardDescription className="text-[#E9E7E2]/70">Manage your subscription</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="current">
-                <TabsList className="bg-[#2A282A] mb-4">
-                  <TabsTrigger value="current" className="data-[state=active]:bg-[#373763]">Current Plan</TabsTrigger>
-                  <TabsTrigger value="upgrade" className="data-[state=active]:bg-[#373763]">Upgrade Options</TabsTrigger>
-                </TabsList>
+              <div className="bg-[#2A282A] p-4 rounded-md">
+                <h3 className="font-oxanium uppercase mb-2">{getCurrentTierName()}</h3>
+                <p className="text-[#E9E7E2]/70 text-sm mb-4">{getSubscriptionStatusMessage()}</p>
                 
-                <TabsContent value="current">
-                  <div className="bg-[#2A282A] p-4 rounded-md">
-                    <h3 className="font-oxanium uppercase mb-2">{getCurrentTierName()}</h3>
-                    <p className="text-[#E9E7E2]/70 text-sm mb-4">{getSubscriptionStatusMessage()}</p>
-                    
-                    {subscriptionInfo.tier !== 'surge' && (
-                      <div className="mb-4">
-                        <TokenUsageDisplay />
-                      </div>
-                    )}
-                    
-                    <ul className="space-y-2 text-sm text-[#E9E7E2]/80">
-                      {subscriptionInfo.tier === 'surge' ? (
-                        <>
-                          <li>• Unlimited Virgil conversations</li>
-                          <li>• Premium features</li>
-                          <li>• Priority support</li>
-                        </>
-                      ) : (
-                        <>
-                          <li>• Limited monthly conversations</li>
-                          <li>• Basic features</li>
-                          <li>• Standard support</li>
-                        </>
-                      )}
-                    </ul>
-                    
-                    {subscriptionInfo.tier !== 'surge' && (
-                      <div className="mt-4">
-                        <Button
-                          onClick={() => navigate('/upgrade')}
-                          className="w-full bg-[#CCFF23] hover:bg-[#CCFF23]/90 text-[#2A282A] font-oxanium uppercase tracking-wider"
-                        >
-                          <Zap className="h-4 w-4 mr-2" />
-                          Upgrade to SURGE
-                        </Button>
-                      </div>
-                    )}
+                {subscriptionInfo.tier !== 'surge' && (
+                  <div className="mb-4">
+                    <TokenUsageDisplay />
                   </div>
-                </TabsContent>
+                )}
                 
-                <TabsContent value="upgrade">
-                  <div className="space-y-4">
-                    {subscriptionInfo.tier !== 'surge' ? (
-                      <div className="bg-[#2A282A] p-4 rounded-md border border-[#CCFF23]">
-                        <h3 className="font-oxanium uppercase mb-2">SURGE</h3>
-                        <p className="text-[#E9E7E2]/70 text-sm mb-1">$8.99/month</p>
-                        <p className="text-[#E9E7E2]/80 text-sm mb-4">Unlimited AI conversations</p>
-                        <ul className="space-y-2 text-sm text-[#E9E7E2]/80 mb-4">
-                          <li>• Unlimited Virgil conversations</li>
-                          <li>• Premium features</li>
-                          <li>• Priority support</li>
-                          <li>• Cancel anytime</li>
-                        </ul>
-                        <Button 
-                          className="w-full bg-[#CCFF23] text-[#2A282A] hover:bg-[#CCFF23]/90"
-                          onClick={() => navigate('/upgrade')}
-                        >
-                          <Zap className="h-4 w-4 mr-2" />
-                          Upgrade to SURGE
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="bg-[#2A282A] p-4 rounded-md">
-                        <h3 className="font-oxanium uppercase mb-2">SURGE (Current Plan)</h3>
-                        <p className="text-[#E9E7E2]/70 text-sm mb-1">$8.99/month</p>
-                        <p className="text-[#E9E7E2]/80 text-sm mb-4">You're enjoying unlimited AI conversations</p>
-                        <ul className="space-y-2 text-sm text-[#E9E7E2]/80">
-                          <li>• Unlimited Virgil conversations</li>
-                          <li>• Premium features</li>
-                          <li>• Priority support</li>
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                <ul className="space-y-2 text-sm text-[#E9E7E2]/80 mb-4">
+                  {subscriptionInfo.tier === 'surge' ? (
+                    <>
+                      <li>• Unlimited Virgil conversations</li>
+                      <li>• Premium features</li>
+                      <li>• Priority support</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Limited monthly conversations</li>
+                      <li>• Basic features</li>
+                      <li>• Standard support</li>
+                    </>
+                  )}
+                </ul>
+                
+                <div className="flex flex-col space-y-3">
+                  {subscriptionInfo.tier !== 'surge' ? (
+                    <Button
+                      onClick={handleUpgradeClick}
+                      className="w-full bg-[#CCFF23] hover:bg-[#CCFF23]/90 text-[#2A282A] font-oxanium uppercase tracking-wider"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Upgrade to SURGE
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleBillingPortal}
+                      className="w-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] flex items-center gap-2"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Manage Subscription
+                    </Button>
+                  )}
+                  
+                  {subscriptionInfo.status === 'active' && (
+                    <Button
+                      variant="outline"
+                      onClick={handleBillingPortal}
+                      className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Billing Portal
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
           
