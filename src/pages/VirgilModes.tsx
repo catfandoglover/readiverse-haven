@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import MainMenu from "@/components/navigation/MainMenu";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircleMore } from "lucide-react";
+import { MessageCircleMore, Loader2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PromptCard from "@/components/virgil/PromptCard";
 import WelcomeContainer from "@/components/virgil/WelcomeContainer";
@@ -158,20 +157,24 @@ const VirgilModes: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2] overflow-hidden">
       <div className="flex items-center pt-4 px-4">
-        <MainMenu />
+        <button
+          onClick={() => navigate('/virgil')}
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
+          aria-label="Back to Virgil's Office"
+        >
+          <ArrowLeft className="h-7 w-7" />
+        </button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Chat with Virgil
         </h2>
         <div>
-          <Button 
-            variant="ghost"
-            size="icon"
+          <button
             onClick={() => setShowHistory(true)}
-            className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
             aria-label="Conversation History"
           >
-            <MessageCircleMore className="h-5 w-5" />
-          </Button>
+            <MessageCircleMore className="h-7 w-7" />
+          </button>
         </div>
       </div>
       

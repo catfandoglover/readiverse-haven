@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -19,7 +18,7 @@ const SuggestedCourseHero: React.FC = () => {
   };
 
   return (
-    <div className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
+    <div className="relative h-52 w-full rounded-2xl overflow-hidden cursor-pointer"
       onClick={handleStartCourse}
     >
       {/* Background Image with Blur and Dark Overlay */}

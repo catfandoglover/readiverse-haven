@@ -54,6 +54,8 @@ import { useEffect } from "react";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import ProfileSettings from "@/pages/ProfileSettings";
 import TestUpload from "@/pages/TestUpload";
+import ChooseYourOwnExam from "./pages/ChooseYourOwnExam";
+import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -281,6 +283,16 @@ const App = () => (
                   <Route path="/virgil-chat" element={
                     <ProtectedRoute requireAuth={true} requireDNA={false}>
                       <VirgilChat />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/choose-your-own-exam" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                      <ChooseYourOwnExam />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/choose-your-own-course" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                      <ChooseYourOwnCourse />
                     </ProtectedRoute>
                   } />
                   <Route path="/favorites-shelf" element={

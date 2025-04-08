@@ -1,4 +1,3 @@
-
 import React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,10 +30,9 @@ const WelcomeContainer: React.FC<WelcomeContainerProps> = ({ onDismiss }) => {
         "pt-4",
         isMobile ? "px-4 pb-4" : "px-8 pb-6"
       )}>
-        <h1 className={cn(
-          "font-libre-baskerville font-bold text-[#E9E7E2] leading-tight mb-3",
-          isMobile ? "text-xl" : "text-2xl"
-        )}>
+        <h1 
+          className="font-libre-baskerville bold text-[#E9E7E2] text-xl mb-2"
+        >
           Discover, awaken, and direct a love of learning.
         </h1>
         

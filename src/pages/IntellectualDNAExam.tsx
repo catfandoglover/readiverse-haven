@@ -332,14 +332,6 @@ const IntellectualDNAExam: React.FC = () => {
   };
   
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
-    let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
-    
-    if (resource.status === "completed") {
-      StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
-    } else if (resource.status === "locked") {
-      StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
-    }
-    
     const handleClick = () => {
       if (resource.score > 0) {
         setSelectedResource({...resource, domainId});
@@ -430,7 +422,7 @@ const IntellectualDNAExam: React.FC = () => {
       <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
           <h1 className="font-baskerville uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
-          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domain.subtitle}</p>
+          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35] text-lg">{domain.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5] mb-10">
             {getDomainIntroduction(domain.id)}
           </p>
@@ -507,28 +499,28 @@ const IntellectualDNAExam: React.FC = () => {
           <DropdownMenuContent align="end" className="bg-[#373763] border-[#4D4D8F] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer font-libre-baskerville"
+              className="flex items-center cursor-pointer font-libre-baskerville uppercase"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
               ) : (
                 <div className="w-4 mr-2" />
               )}
-              All Domains
+              ALL DOMAINS
             </DropdownMenuItem>
             
             {domains.map(domain => (
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer font-libre-baskerville"
+                className="flex items-center cursor-pointer font-libre-baskerville uppercase"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />
                 ) : (
                   <div className="w-4 mr-2" />
                 )}
-                {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
+                {domain.title}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

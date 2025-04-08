@@ -7,7 +7,7 @@ const BookshelfContent: React.FC = () => {
       {/* Header with divider */}
       <div className="mb-6">
         <div className="h-px w-full my-6 bg-[#9F9EA1]/20"></div>
-        <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2] px-1">
+        <h2 className="font-oxanium text-base font-bold text-[#E9E7E2] px-1 uppercase tracking-wider">
           All Books
         </h2>
       </div>

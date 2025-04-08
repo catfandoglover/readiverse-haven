@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -162,8 +161,12 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
       state: { 
         promptData: {
           id: 2, // GROW MY MIND mode ID
-          user_title: "Chat with Virgil",
-          icon_display: "Earth"
+          user_title: "Grow My Mind",
+          user_subtitle: "Philosophical exploration with Virgil",
+          section: "intellectual",
+          icon_display: "Earth",
+          context: "chat",
+          initial_message: "I'm Virgil, your philosophical guide to humanity's great conversation. How can I help you grow your mind today?"
         }
       }
     });
@@ -172,77 +175,78 @@ const ConversationHistorySidebar: React.FC<ConversationHistorySidebarProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10">
-        <nav className="flex flex-col gap-8 mt-10">
-          <div className="px-2">
-            <h2 className="text-xl font-baskerville mb-8 font-[#E9E7E2]">Conversations</h2>
-            {loading ? (
-              <div className="flex-1 flex items-center justify-center p-4">
-                <p className="text-[#E9E7E2]/70">Loading conversations...</p>
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
-                <div 
-                  className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
-                  onClick={handleStartNewConversation}
-                >
-                  <div className="flex-shrink-0 rounded-full p-3">
-                    <div className="h-6 w-6 flex items-center justify-center">
-                      <Earth className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                      Chat with Virgil
-                    </h3>
+      <SheetContent side="right" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10 p-0">
+        <div className="p-6 pt-10">
+          <h2 className="text-xl font-baskerville mb-8">Conversations</h2>
+        </div>
+        
+        <nav className="flex flex-col gap-8 px-6">
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center p-4">
+              <p className="text-[#E9E7E2]/70">Loading conversations...</p>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-[#E9E7E2]/70 mb-4">No conversations yet.</p>
+              <div 
+                className="flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/20 cursor-pointer hover:bg-[#E3E0D9]/10 transition-colors"
+                onClick={handleStartNewConversation}
+              >
+                <div className="flex-shrink-0 rounded-full p-3">
+                  <div className="h-6 w-6 flex items-center justify-center">
+                    <Earth className="h-6 w-6" />
                   </div>
                 </div>
+                <div className="flex-1">
+                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
+                    Chat with Virgil
+                  </h3>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {conversations.map((conversation) => {
-                  const IconComponent = getLucideIcon(conversation.mode_icon || "");
-                  return (
-                    <div 
-                      key={conversation.id} 
-                      className="group relative flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
-                      onClick={() => handleSelectConversation(conversation)}
-                    >
-                      <div className="flex-shrink-0 rounded-full p-2">
-                        <div className="h-8 w-8 flex items-center justify-center">
-                          <IconComponent className="h-8 w-8" />
-                        </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {conversations.map((conversation) => {
+                const IconComponent = getLucideIcon(conversation.mode_icon || "");
+                return (
+                  <div 
+                    key={conversation.id} 
+                    className="group relative flex items-center space-x-4 shadow-md rounded-2xl p-3 bg-[#E3E0D9]/10 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors"
+                    onClick={() => handleSelectConversation(conversation)}
+                  >
+                    <div className="flex-shrink-0 rounded-full p-2">
+                      <div className="h-8 w-8 flex items-center justify-center">
+                        <IconComponent className="h-8 w-8" />
                       </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
-                          {conversation.mode_title}
-                        </h3>
-                        <p className="text-[#E9E7E2]/60 text-xs truncate mt-1 text-left">
-                          {conversation.last_message || "Start of conversation"}
-                        </p>
-                        <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1 text-left">
-                          {formatDate(conversation.created_at)}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 h-7 w-7 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmDelete(conversation.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide text-left">
+                        {conversation.mode_title}
+                      </h3>
+                      <p className="text-[#E9E7E2]/60 text-xs truncate mt-1 text-left">
+                        {conversation.last_message || "Start of conversation"}
+                      </p>
+                      <p className="text-[#E9E7E2]/40 text-[10px] uppercase tracking-wider mt-1 text-left">
+                        {formatDate(conversation.created_at)}
+                      </p>
+                    </div>
+                    <Button 
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 h-7 w-7 text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDelete(conversation.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </nav>
         
         <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>

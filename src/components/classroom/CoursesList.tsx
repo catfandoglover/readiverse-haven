@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Hexagon, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import { useCourses, Course } from "@/hooks/useCourses";
 
@@ -24,7 +24,7 @@ const CoursesList: React.FC = () => {
       {/* Header with divider */}
       <div className="mb-6">
         <div className="h-px w-full my-6 bg-[#9F9EA1]/20"></div>
-        <h2 className="font-baskerville text-lg font-bold text-[#E9E7E2] px-1">
+        <h2 className="font-oxanium text-base font-bold text-[#E9E7E2] px-1 uppercase tracking-wider">
           My Courses
         </h2>
       </div>
@@ -39,22 +39,17 @@ const CoursesList: React.FC = () => {
           {courses.map((course) => (
             <div key={course.id}>
               <div 
-                className="rounded-xl p-4 pb-1.5 bg-[#E9E7E2]/10 shadow-inner cursor-pointer"
-                style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
+                className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
                 onClick={() => handleCourseClick(course)}
               >
                 <div className="flex items-center mb-3">
                   <div className="flex items-center flex-1">
                     <div className="relative mr-4">
-                      <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-9 w-9 rounded-full overflow-hidden">
                         <img 
                           src={course.image} 
                           alt={course.title}
-                          className="h-9 w-9 object-cover rounded-none"
-                          style={{ 
-                            clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                          }}
+                          className="h-9 w-9 object-cover"
                         />
                       </div>
                     </div>
@@ -64,11 +59,11 @@ const CoursesList: React.FC = () => {
                     </div>
                   </div>
                   
-                  <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${course.completed ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
+                  <button className={`h-9 w-9 rounded-full flex items-center justify-center ml-4 ${course.completed ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/75'}`}>
                     {course.completed ? (
                       <Check className="h-4 w-4 text-[#19352F]" />
                     ) : (
-                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                      <ArrowRight className="h-4 w-4 text-[#19352F]" />
                     )}
                   </button>
                 </div>
@@ -80,8 +75,6 @@ const CoursesList: React.FC = () => {
                   className="mb-3" 
                 />
               </div>
-              
-              <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{course.description}</p>
             </div>
           ))}
         </div>

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { ArrowUp, Mic, MicOff, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 import { ThemeColors } from './VirgilChatThemes';
@@ -38,14 +38,32 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
   // Show send button only when there's text in the input
   const showSendButton = inputMessage.trim().length > 0;
 
+  // Determine shadow color based on theme
+  const getShadowColor = () => {
+    // Extract the border color from the theme
+    const borderColorMatch = themeColors.border.match(/border-\[(.*?)\]/);
+    if (borderColorMatch && borderColorMatch[1]) {
+      const color = borderColorMatch[1];
+      // For opacity colors that end with numbers like /50, make them more visible
+      return color.replace(/\/\d+$/, '');
+    }
+    // Default shadow color
+    return 'rgba(51,46,56,0.8)';
+  };
+
+  const shadowColor = getShadowColor();
+  const formStyle = {
+    boxShadow: `0 0 0 2px ${shadowColor}`
+  };
+
   return (
     <form 
       onSubmit={handleSubmit} 
       className={cn(
-        "flex items-center gap-2 p-4 border-t rounded-t-0 rounded-t-2xl",
-        themeColors.border,
-        themeColors.inputBackground
+        "flex items-center gap-2 p-4 rounded-t-0 rounded-t-2xl border-none",
+        "bg-[#E9E7E2]/80"
       )}
+      style={formStyle}
     >
       <AutoResizeTextarea
         ref={textareaRef}
@@ -55,9 +73,8 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
         placeholder={isRecording ? "Recording..." : disabled ? "Chat is disabled while your results are ready" : "Message Virgil..."}
         className={cn(
           "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] font-libre-baskerville",
-          themeColors.inputBackground,
-          themeColors.inputText,
-          themeColors.inputPlaceholder
+          "bg-transparent text-[#332E38]",
+          "placeholder:text-[#332E38]"
         )}
         disabled={isProcessing || isRecording || disabled}
         minRows={1}
@@ -72,20 +89,22 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
         <>
           <Button 
             type="button" 
-            variant={isRecording ? "default" : "ghost"} 
+            variant="ghost"
             size="icon"
             onClick={toggleRecording}
             className={cn(
-              "h-10 w-10 rounded-full flex-shrink-0",
-              isRecording && "bg-[#CCFF23] hover:bg-[#CCFF23]/90"
+              "h-9 w-9 rounded-full flex-shrink-0",
+              isRecording ? "bg-[#373763] text-[#E9E7E2]" : "",
+              "transition-colors duration-200",
+              "hover:bg-[#373763] hover:text-[#E9E7E2]"
             )}
             aria-label={isRecording ? "Stop recording" : "Start recording"}
             disabled={disabled}
           >
             {isRecording ? (
-              <MicOff className="h-4 w-4 text-[#282828]" />
+              <MicOff className="h-4 w-4" />
             ) : (
-              <Mic className={cn("h-4 w-4", themeColors.text)} />
+              <Mic className="h-4 w-4" />
             )}
           </Button>
           
@@ -96,10 +115,10 @@ const ChatInputForm: React.FC<ChatInputFormProps> = ({
               variant="ghost" 
               size="icon"
               disabled={!inputMessage.trim() || disabled}
-              className="h-10 w-10 rounded-full flex-shrink-0"
+              className="h-9 w-9 rounded-full flex-shrink-0 bg-[#373763] flex items-center justify-center"
               aria-label="Send message"
             >
-              <Send className="h-4 w-4 text-[#9b87f5]" />
+              <ArrowUp className="h-4 w-4 text-transparent stroke-white" />
             </Button>
           )}
         </>

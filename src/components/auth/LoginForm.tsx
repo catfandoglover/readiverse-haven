@@ -58,8 +58,8 @@ const LoginForm: React.FC = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          placeholder="ENTER EMAIL"
-          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
+          placeholder="EMAIL"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border-none shadow-[0_0_0_1px_rgba(51,46,56,0.15)] focus:ring-1 focus:ring-[#332E38]/20 focus:shadow-none focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
 
         <Input
@@ -68,8 +68,8 @@ const LoginForm: React.FC = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          placeholder="ENTER PASSWORD"
-          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border border-[#373763]/20 focus:ring-2 focus:ring-[#373763]/30 focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
+          placeholder="PASSWORD"
+          className="w-full p-4 rounded-2xl bg-[#E9E7E2] text-[#373763] placeholder-[#282828] border-none shadow-[0_0_0_1px_rgba(51,46,56,0.15)] focus:ring-1 focus:ring-[#332E38]/20 focus:shadow-none focus:border-transparent font-oxanium text-sm font-bold uppercase-placeholder h-[52px]"
         />
 
         <Button
