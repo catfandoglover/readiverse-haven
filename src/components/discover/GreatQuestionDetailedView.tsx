@@ -13,6 +13,7 @@ import VirgilChatButton from "./VirgilChatButton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingVirgilButton from "./FloatingVirgilButton";
+import useFavorites from '@/hooks/useFavorites';
 
 interface CarouselItem {
   id: string;
@@ -323,52 +324,15 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
     }
   };
 
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleFavorite = async () => {
+    if (!data?.id) return;
     
-    if (!user) {
-      openLogin();
-      return;
-    }
+    const { toggleFavorite } = useFavorites(data.id, 'question');
+    await toggleFavorite();
     
-    try {
-      if (isFavorite) {
-        const { error } = await supabase
-          .from('user_favorites')
-          .delete()
-          .eq('item_id', combinedData.id)
-          .eq('user_id', user.id)
-          .eq('item_type', 'question');
-          
-        if (error) throw error;
-        
-        setIsFavorite(false);
-        toast({
-          description: "Question removed from favorites",
-        });
-      } else {
-        const { error } = await supabase
-          .from('user_favorites')
-          .insert({
-            item_id: combinedData.id,
-            user_id: user.id,
-            item_type: 'question',
-            added_at: new Date().toISOString()
-          });
-          
-        if (error) throw error;
-        
-        setIsFavorite(true);
-        toast({
-          description: "Question added to favorites",
-        });
-      }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast({
-        variant: "destructive",
-        description: "Failed to update favorites. Please try again.",
-      });
+    // Refetch favorites if needed
+    if (refreshFavorites) {
+      refreshFavorites();
     }
   };
 
@@ -490,7 +454,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
               shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
             )}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            onClick={toggleFavorite}
+            onClick={handleToggleFavorite}
           >
             <Star 
               className="h-5 w-5" 

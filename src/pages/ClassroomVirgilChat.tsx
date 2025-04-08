@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ interface CourseData {
   isDNA?: boolean;
 }
 
-const ClassroomVirgilChat: React.FC = () => {
+const ClassroomVirgilChat = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,21 +22,20 @@ const ClassroomVirgilChat: React.FC = () => {
   
   const courseData = location.state?.courseData as CourseData;
   
-  // Initial message based on course data
-  const initialMessage = `Welcome, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Ready for today's lesson on ${courseData?.title || 'philosophy'}?`;
+  const userName = user ? (user.user_metadata?.full_name || user.email) : 'Student';
+  
+  const initialMessage = `Welcome, ${userName}! Ready for today's lesson on ${courseData?.title || 'philosophy'}?`;
 
-  // Initial animation timing
   useEffect(() => {
     const timer = setTimeout(() => {
       setState('transitioning');
       
-      // Allow time for header transition before showing chat
       const chatTimer = setTimeout(() => {
         setState('chat');
-      }, 500); // 500ms for the header transition
+      }, 500);
 
       return () => clearTimeout(chatTimer);
-    }, 2000); // 2 seconds for initial display
+    }, 2000);
 
     return () => {
       clearTimeout(timer);
@@ -49,7 +48,6 @@ const ClassroomVirgilChat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#1D3A35] text-[#E9E7E2] overflow-hidden">
-      {/* Header - initially invisible, appears during transition */}
       <div 
         className={cn(
           "flex items-center pt-4 px-4 h-14",
@@ -72,9 +70,7 @@ const ClassroomVirgilChat: React.FC = () => {
         <div className="w-10 h-10" />
       </div>
       
-      {/* Main content area */}
       <div className="flex-1 flex items-center justify-center relative">
-        {/* Initial centered text */}
         <div 
           className={cn(
             "flex flex-col items-center justify-center text-center transition-all duration-500 px-6",
@@ -89,7 +85,6 @@ const ClassroomVirgilChat: React.FC = () => {
           </p>
         </div>
         
-        {/* Chat interface - only shows after transition */}
         {state === 'chat' && (
           <div className="absolute inset-0 flex flex-col pt-6">
             <VirgilFullScreenChat 

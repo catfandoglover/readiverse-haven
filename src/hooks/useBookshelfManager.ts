@@ -1,127 +1,103 @@
-import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
+
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { useState, useEffect } from 'react';
-
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  cover_url: string;
-  description: string;
-  created_at: string;
-  updated_at: string | null;
-}
-
-interface UserBook {
-  id: string;
-  book_id: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string | null;
-  books: Book;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function useBookshelfManager() {
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    async function fetchBooks() {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('user_books')
-          .select('*, books(*)')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        // Type assertion to handle the books data
-        const userBooks = data as unknown as UserBook[];
-        setBooks(userBooks.map(item => item.books));
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch books'));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchBooks();
-  }, [user?.id]);
-
-  const addToBookshelf = useMutation({
-    mutationFn: async (bookId: string) => {
-      if (!user?.id) {
-        throw new Error('User must be logged in to add books to bookshelf');
-      }
-
-      const { data: existingBook } = await supabase
-        .from('user_books')
-        .select('*')
-        .eq('book_id', bookId)
-        .eq('user_id', user.id)
-        .single();
-      
-      if (existingBook) {
-        throw new Error('Book already in bookshelf');
-      }
-
-      const { error } = await supabase
-        .from('user_books')
-        .insert({
-          book_id: bookId,
-          user_id: user.id,
-          status: 'reading'
-        });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'Book added to your bookshelf',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const checkBookInShelf = async (bookId: string): Promise<boolean> => {
-    if (!user?.id) return false;
-    
-    try {
-      const { data } = await supabase
-        .from('user_books')
-        .select('*')
-        .eq('book_id', bookId)
-        .eq('user_id', user.id)
-        .single();
-        
-      return !!data;
-    } catch (error) {
+  const addBookToLibrary = useCallback(async (bookId: string) => {
+    if (!user) {
+      toast.error('You must be logged in to add books to your library');
       return false;
     }
-  };
 
-  return {
-    books,
-    loading,
-    error,
-    addToBookshelf: addToBookshelf.mutate,
-    checkBookInShelf
-  };
+    try {
+      setIsProcessing(true);
+      
+      // Check if the book is already in the user's library
+      const { data: existingBook, error: fetchError } = await supabase
+        .from('user_books')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .eq('book_id', bookId)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error('Error checking book status:', fetchError);
+        toast.error('Failed to check if book is already in your library');
+        return false;
+      }
+      
+      if (existingBook) {
+        toast.info('This book is already in your library');
+        return true;
+      }
+      
+      // Add the book to the user's library
+      const { error: insertError } = await supabase
+        .from('user_books')
+        .insert({ 
+          user_id: user.id, 
+          book_id: bookId, 
+          status: 'reading',
+          outseta_user_id: '' // Required field with default value
+        });
+      
+      if (insertError) {
+        console.error('Error adding book to library:', insertError);
+        toast.error('Failed to add book to your library');
+        return false;
+      }
+      
+      toast.success('Book added to your library');
+      return true;
+      
+    } catch (error) {
+      console.error('Exception adding book to library:', error);
+      toast.error('An unexpected error occurred');
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [user]);
+
+  const removeBookFromLibrary = useCallback(async (bookId: string) => {
+    if (!user) {
+      toast.error('You must be logged in to remove books from your library');
+      return false;
+    }
+
+    try {
+      setIsProcessing(true);
+      
+      const { error } = await supabase
+        .from('user_books')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('book_id', bookId);
+      
+      if (error) {
+        console.error('Error removing book from library:', error);
+        toast.error('Failed to remove book from your library');
+        return false;
+      }
+      
+      toast.success('Book removed from your library');
+      return true;
+      
+    } catch (error) {
+      console.error('Exception removing book from library:', error);
+      toast.error('An unexpected error occurred');
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [user]);
+
+  return { addBookToLibrary, removeBookFromLibrary, isProcessing };
 }
+
+export default useBookshelfManager;

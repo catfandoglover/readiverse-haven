@@ -1,52 +1,80 @@
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/SupabaseAuthContext";
 
-export const useUpdateReadingStatus = (bookId: string | null, currentLocation: string | null) => {
+import { useState, useCallback } from 'react';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export function useUpdateReadingStatus() {
   const { user } = useAuth();
-  const userId = user?.id;
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    async function updateStatus() {
-      if (!userId || !bookId || !currentLocation) return;
-
-      try {
-        // First check if the book exists in user_books
-        const { data: existingBook } = await supabase
-          .from('user_books')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('book_id', bookId)
-          .single();
-
-        if (existingBook) {
-          // Update existing record
-          const { error } = await supabase
-            .from('user_books')
-            .update({
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId)
-            .eq('book_id', bookId);
-
-          if (error) throw error;
-        } else {
-          // Insert new record
-          const { error } = await supabase
-            .from('user_books')
-            .insert({
-              user_id: userId,
-              book_id: bookId,
-              created_at: new Date().toISOString()
-            });
-
-          if (error) throw error;
-        }
-      } catch (error) {
-        console.error('Error updating reading status:', error);
-      }
+  const updateReadingStatus = useCallback(async (bookId: string, status: string = 'reading') => {
+    if (!user) {
+      toast.error('You must be logged in to update reading status');
+      return false;
     }
 
-    updateStatus();
-  }, [userId, bookId, currentLocation]);
-};
+    try {
+      setIsUpdating(true);
+      
+      // Check if the book is already in the user's library
+      const { data: existingBook, error: fetchError } = await supabase
+        .from('user_books')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('book_id', bookId)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error('Error checking book status:', fetchError);
+        toast.error('Failed to check book status');
+        return false;
+      }
+      
+      let result;
+      
+      if (existingBook) {
+        // Update existing record
+        result = await supabase
+          .from('user_books')
+          .update({ 
+            status, 
+            last_read_at: new Date().toISOString() 
+          })
+          .eq('id', existingBook.id);
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('user_books')
+          .insert({ 
+            user_id: user.id,
+            book_id: bookId,
+            status,
+            created_at: new Date().toISOString(),
+            last_read_at: new Date().toISOString(),
+            outseta_user_id: '' // Required field with default value
+          });
+      }
+      
+      if (result.error) {
+        console.error('Error updating reading status:', result.error);
+        toast.error('Failed to update reading status');
+        return false;
+      }
+      
+      toast.success(`Book marked as "${status}"`);
+      return true;
+      
+    } catch (error) {
+      console.error('Exception updating reading status:', error);
+      toast.error('An unexpected error occurred');
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [user]);
+
+  return { updateReadingStatus, isUpdating };
+}
+
+export default useUpdateReadingStatus;

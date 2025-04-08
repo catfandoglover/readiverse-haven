@@ -1,38 +1,50 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { createSupabaseClient } from '@/integrations/supabase/client';
-import { exchangeToken } from '@/integrations/supabase/token-exchange';
-import { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Session, User, AuthError, SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-interface OutsetaUser {
-  email: string;
-  Uid: string;
+// Define profile interface to include vanity_url
+interface Profile {
   id: string;
-  Account: {
-    Uid: string;
-    Name: string;
-  };
+  user_id: string;
+  outseta_user_id?: string;
+  email?: string;
+  full_name?: string;
+  created_at?: string;
+  updated_at?: string;
+  landscape_image?: string;
+  profile_image?: string;
+  assessment_id?: string;
+  vanity_url?: string;
 }
 
-interface AuthContextType {
-  user: OutsetaUser | null;
+interface AuthContextValue {
+  user: User | null;
+  session: Session | null;
   isLoading: boolean;
-  logout: () => void;
-  openLogin: (options?: any) => void;
-  openSignup: (options?: any) => void;
-  openProfile: (options?: any) => void;
-  supabase: SupabaseClient<Database> | null;
+  error: AuthError | null;
+  signOut: () => Promise<void>;
   
   // DNA properties
   hasCompletedDNA: boolean;
-  hasDNA: boolean; // Alias for hasCompletedDNA for compatibility
   checkDNAStatus: () => Promise<boolean>;
+
+  // Auth UI helpers
+  openLogin: (destination?: string) => void;
+  openSignup: (destination?: string) => void;
+
+  // Profile helpers
+  ensureVanityUrl: () => Promise<string | null>;
+  
+  supabase: SupabaseClient;
+  openProfile: (options?: { tab?: string }) => void;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -44,37 +56,49 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-interface OutsetaWindow extends Window {
-  Outseta?: any;
-  outsetaSettings?: {
-    domain: string;
-  };
-}
-
-declare const window: OutsetaWindow;
-
-function getOutseta() {
-  if (window.Outseta) {
-    return window.Outseta;
-  } else {
-    throw new Error("Outseta is missing, have you added the script to head?");
-  }
-}
-
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [status, setStatus] = useState<'init' | 'ready'>('init');
-  const [user, setUser] = useState<OutsetaUser | null>(null);
-  const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null);
-  // Add new state
-  const [hasCompletedDNA, setHasCompletedDNA] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  
-  const outsetaRef = useRef(getOutseta());
-  
-  // Add function to check DNA status
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedDNA, setHasCompletedDNA] = useState(false);
+  const [error, setError] = useState<AuthError | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        setError(sessionError);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setError(null);
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Check DNA status when user changes
+  useEffect(() => {
+    if (user) {
+      checkDNAStatus().catch(console.error);
+    } else {
+      setHasCompletedDNA(false);
+    }
+  }, [user]);
+
   const checkDNAStatus = async (): Promise<boolean> => {
-    if (!user || !supabase) return false;
+    if (!user) return false;
     
     try {
       setIsLoading(true);
@@ -91,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('assessment_id')
-        .eq('outseta_user_id', user.Uid)
+        .eq('user_id', user.id)
         .maybeSingle();
         
       if (error) throw error;
@@ -109,291 +133,130 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Effect to check DNA status when user or Supabase client changes
-  useEffect(() => {
-    if (user && supabase) {
-      checkDNAStatus().catch(console.error);
-    } else {
-      // Reset DNA status when user logs out
-      setHasCompletedDNA(false);
-    }
-  }, [user, supabase]);
-
-  const updateUser = async () => {
+  const signOut = async () => {
     try {
-      setIsLoading(true);
-      console.log('Auth State Check:', {
-        storedToken: localStorage.getItem('outseta_token'),
-        hasOutsetaClient: !!window.Outseta,
-        currentToken: outsetaRef.current?.getAccessToken?.(),
-        location: window.location.pathname
-      });
-
-      const storedToken = localStorage.getItem('outseta_token');
-      if (storedToken) {
-        outsetaRef.current.setAccessToken(storedToken);
-      }
-
-      const currentToken = outsetaRef.current.getAccessToken();
-      if (currentToken) {
-        localStorage.setItem('outseta_token', currentToken);
-        
-        const outsetaUser = await outsetaRef.current.getUser();
-        console.log('Outseta user info:', outsetaUser);
-        
-        try {
-          console.log('Exchanging token...');
-          const supabaseJwt = await exchangeToken(currentToken);
-          console.log('Token exchanged successfully');
-          const supabaseClient = createSupabaseClient(supabaseJwt);
-          setSupabase(supabaseClient);
-          
-          // Check if there's a pending DNA assessment ID to associate with the profile
-          const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
-          const assessmentToSave = sessionStorage.getItem('dna_assessment_to_save');
-          
-          if ((pendingAssessmentId || assessmentToSave) && supabaseClient) {
-            // Use pending assessment or the one to save
-            const assessmentId = pendingAssessmentId || assessmentToSave;
-            try {
-              console.log('Checking for existing profile...');
-              
-              // First check if the user already has a profile
-              const { data: existingProfile, error: profileError } = await supabaseClient
-                .from('profiles')
-                .select('id')
-                .eq('outseta_user_id', outsetaUser.Uid)
-                .maybeSingle();
-                
-              if (profileError) {
-                console.error('Error checking for existing profile:', profileError);
-              }
-              
-              if (!existingProfile) {
-                // Create a new profile if it doesn't exist
-                console.log('Creating new profile...');
-                const { data: newProfile, error: insertError } = await supabaseClient
-                  .from('profiles')
-                  .insert([{
-                    outseta_user_id: outsetaUser.Uid,
-                    email: outsetaUser.email,
-                    full_name: outsetaUser.Account?.Name || null
-                  }])
-                  .select('id')
-                  .single();
-                  
-                if (insertError) {
-                  console.error('Failed to create profile:', insertError);
-                } else if (newProfile) {
-                  console.log('Profile created, associating assessment...');
-                  // Associate the assessment with the new profile
-                  const { error: updateError } = await supabaseClient
-                    .from('dna_assessment_results')
-                    .update({ 
-                      // Using a type assertion to avoid TypeScript error
-                      // since profile_id is added in the database but might not be in the TypeScript types
-                      profile_id: newProfile.id 
-                    } as any)
-                    .eq('id', assessmentId);
-                    
-                  // Also save assessment_id to the profile
-                  const { error: profileUpdateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
-                    })
-                    .eq('id', newProfile.id);
-                    
-                  if (profileUpdateError) {
-                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
-                  } else {
-                    console.log('Successfully saved assessment_id to profile:', {
-                      profileId: newProfile.id,
-                      assessmentId
-                    });
-                  }
-                    
-                  if (updateError) {
-                    console.error('Failed to associate assessment with profile:', updateError);
-                  } else {
-                    // Clear the pending assessment IDs since they're now associated
-                    localStorage.removeItem('pending_dna_assessment_id');
-                    sessionStorage.removeItem('dna_assessment_to_save');
-                    console.log('Assessment successfully associated with new profile');
-                  }
-                }
-              } else {
-                console.log('Profile found, associating assessment...');
-                // Associate the assessment with the existing profile
-                const { error: updateError } = await supabaseClient
-                    .from('dna_assessment_results')
-                    .update({ 
-                      // Using a type assertion to avoid TypeScript error
-                      profile_id: existingProfile.id 
-                    } as any)
-                    .eq('id', assessmentId);
-                    
-                  // Also save assessment_id to the profile
-                  const { error: profileUpdateError } = await supabaseClient
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
-                    })
-                    .eq('id', existingProfile.id);
-                    
-                  if (profileUpdateError) {
-                    console.error('Failed to save assessment_id to profile:', profileUpdateError);
-                  } else {
-                    console.log('Successfully saved assessment_id to profile:', {
-                      profileId: existingProfile.id,
-                      assessmentId
-                    });
-                  }
-                  
-                if (updateError) {
-                  console.error('Failed to associate assessment with profile:', updateError);
-                } else {
-                  // Clear the pending assessment IDs since they're now associated
-                  localStorage.removeItem('pending_dna_assessment_id');
-                  sessionStorage.removeItem('dna_assessment_to_save');
-                  console.log('Assessment successfully associated with existing profile');
-                }
-              }
-            } catch (error) {
-              console.error('Error associating assessment with profile:', error);
-            }
-          }
-          
-          // Set the user
-          setUser(outsetaUser);
-        } catch (error) {
-          console.error('Failed to exchange token:', error);
-          setSupabase(null);
-          setIsLoading(false);
-        }
-      } else {
-        // No token, user is not logged in
-        setUser(null);
-        setSupabase(null);
-        setHasCompletedDNA(false);
-        setIsLoading(false);
-      }
+      // Clear any auth-related local storage first
+      localStorage.removeItem('pending_dna_assessment_id');
+      sessionStorage.removeItem('dna_assessment_id');
+      sessionStorage.removeItem('dna_assessment_to_save');
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear the auth state
+      setUser(null);
+      setSession(null);
+      setHasCompletedDNA(false);
+      
+      // Navigate to DNA assessment page
+      navigate('/dna');
     } catch (error) {
-      console.error('Error updating user:', error);
-      setIsLoading(false);
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
-  useEffect(() => {
-    const handleOutsetaUserEvents = (onEvent: () => void) => {
-      const outseta = outsetaRef.current;
-      outseta.on("subscription.update", onEvent);
-      outseta.on("profile.update", onEvent);
-      outseta.on("account.update", onEvent);
-    };
-
-    const accessToken = searchParams.get('access_token');
-
-    if (accessToken) {
-      console.log('Received Outseta access token:', accessToken);
-      outsetaRef.current.setAccessToken(accessToken);
-      setSearchParams({});
+  const openLogin = (destination?: string) => {
+    if (destination) {
+      localStorage.setItem('authRedirectTo', destination);
     }
+    navigate('/login');
+  };
 
-    handleOutsetaUserEvents(updateUser);
-
-    if (outsetaRef.current.getAccessToken() || localStorage.getItem('outseta_token')) {
-      updateUser();
-    } else {
-      setStatus('ready');
+  const openSignup = (destination?: string) => {
+    if (destination) {
+      localStorage.setItem('authRedirectTo', destination);
     }
+    navigate('/register');
+  };
 
-    return () => {
-      handleOutsetaUserEvents(() => {});
-    };
-  }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'outseta_token') {
-        console.log('Storage changed in another tab:', {
-          newValue: e.newValue,
-          oldValue: e.oldValue
-        });
-        updateUser();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  const openProfile = (options?: { tab?: string }) => {
+    // Implement profile modal or redirect
+  };
 
   const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Function to ensure a profile has a vanity URL
+  const ensureVanityUrl = async (): Promise<string | null> => {
+    if (!user) return null;
+    
     try {
-      console.log('Starting logout process...');
+      // Check if profile exists with this user_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, user_id, vanity_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (profileError) throw profileError;
       
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      outsetaRef.current.setAccessToken('');
-      await outsetaRef.current.auth.logout();
-
-      if (supabase) {
-        await supabase.auth.signOut();
+      // If no profile exists, can't create vanity URL yet
+      if (!profileData) {
+        console.log('No profile found for user, cannot create vanity URL');
+        return null;
       }
-
-      setUser(null);
-      setSupabase(null);
-
-      console.log('Logout completed, reloading page...');
       
-      window.location.replace('/');
+      const profile = profileData as Profile;
+      
+      // If profile already has vanity_url, return it
+      if (profile.vanity_url) {
+        console.log('Existing vanity URL found:', profile.vanity_url);
+        return profile.vanity_url;
+      }
+      
+      // Generate new vanity URL
+      const fullName = profile.full_name || user.user_metadata?.full_name || 'User';
+      const userIdSuffix = user.id.substring(0, 4);
+      const formattedName = fullName.replace(/\s+/g, '-');
+      const vanityUrl = `${formattedName}-${userIdSuffix}`;
+      
+      console.log('Generated new vanity URL:', vanityUrl);
+      
+      // Update profile with new vanity_url
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ vanity_url: vanityUrl })
+        .eq('id', profile.id);
+        
+      if (updateError) {
+        console.error('Error updating profile with vanity URL:', updateError);
+        return null;
+      }
+      
+      return vanityUrl;
     } catch (error) {
-      console.error('Error during logout:', error);
-      window.location.replace('/');
+      console.error('Error ensuring vanity URL:', error);
+      return null;
     }
   };
 
-  const openLogin = (options = {}) => {
-    outsetaRef.current.auth.open({
-      widgetMode: 'login|register',
-      authenticationCallbackUrl: window.location.href,
-      ...options,
-    });
-  };
+  // Call ensureVanityUrl when user changes
+  useEffect(() => {
+    if (user) {
+      ensureVanityUrl().catch(console.error);
+    }
+  }, [user]);
 
-  const openSignup = (options = {}) => {
-    outsetaRef.current.auth.open({
-      widgetMode: 'register',
-      authenticationCallbackUrl: window.location.href,
-      ...options,
-    });
-  };
-
-  const openProfile = (options = {}) => {
-    outsetaRef.current.profile.open({
-      tab: 'profile',
-      ...options,
-    });
+  const value: AuthContextValue = {
+    user,
+    session,
+    isLoading,
+    error,
+    signOut,
+    hasCompletedDNA,
+    checkDNAStatus,
+    openLogin,
+    openSignup,
+    ensureVanityUrl,
+    supabase,
+    openProfile,
+    logout,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        logout,
-        openLogin,
-        openSignup,
-        openProfile,
-        supabase,
-        
-        // DNA values
-        hasCompletedDNA,
-        hasDNA: hasCompletedDNA, // Alias for compatibility with ProtectedRoute
-        checkDNAStatus,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

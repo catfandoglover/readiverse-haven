@@ -70,12 +70,12 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
           return [];
         }
         
-        // Ensure we're returning an array that matches the BookData interface
-        return (data || []).map(item => ({
-          id: item.id || '',
-          title: item.title || '',
-          author: item.author || '',
-          cover_url: item.cover_url || ''
+        // Safely handle data and map to expected format
+        return (Array.isArray(data) ? data : []).map(item => ({
+          id: item?.id || '',
+          title: item?.title || '',
+          author: item?.author || '',
+          cover_url: item?.cover_url || ''
         })) as BookData[];
       } catch (error) {
         console.error("Exception fetching domain books:", error);

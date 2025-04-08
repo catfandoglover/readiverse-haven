@@ -1,138 +1,79 @@
 
-import React, { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart } from "lucide-react";
-import { saveLastVisited, sections } from "@/utils/navigationHistory";
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Home, Book, User, School, Hash, Compass, Grid } from 'lucide-react';
 
-type TabType = "discover" | "dna" | "dashboard" | "profile" | "bookshelf" | "counselor";
+type NavSection = 'dna' | 'discover' | 'bookshelf' | 'profile' | 'dashboard' | 'classroom' | 'counselor';
 
 interface BottomNavProps {
-  activeTab: TabType;
+  className?: string;
 }
 
-const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
-  const navigate = useNavigate();
+const BottomNav: React.FC<BottomNavProps> = ({ className }) => {
   const location = useLocation();
-  
-  // Save current location when it changes
-  useEffect(() => {
-    const currentPath = location.pathname;
-    
-    // Map current path to a section
-    let currentSection: keyof typeof sections | null = null;
-    
-    if (currentPath.startsWith('/discover')) {
-      currentSection = 'discover';
-    } else if (currentPath === '/dna' || currentPath.startsWith('/dna')) {
-      currentSection = 'dna';
-    } else if (currentPath.startsWith('/bookshelf')) {
-      currentSection = 'bookshelf';
-    } else if (currentPath.startsWith('/profile')) {
-      currentSection = 'profile';
-    } else if (currentPath.startsWith('/dashboard')) {
-      currentSection = 'dashboard';
-    } else if (currentPath.startsWith('/book-counselor')) {
-      currentSection = 'counselor';
-    }
-    
-    // Save the last visited path for this section
-    if (currentSection) {
-      saveLastVisited(currentSection, currentPath);
-    }
-  }, [location.pathname]);
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
 
-  const handleNavigation = (tab: TabType, path: string) => {
-    navigate(path, { state: { fromSection: tab } });
+  const getActiveSection = (): NavSection => {
+    if (currentPath.includes('/dna')) return 'dna';
+    if (currentPath.includes('/discover') || currentPath.includes('/search') || 
+        currentPath.includes('/icons') || currentPath.includes('/concepts') || 
+        currentPath.includes('/texts')) return 'discover';
+    if (currentPath.includes('/bookshelf')) return 'bookshelf';
+    if (currentPath.includes('/profile')) return 'profile';
+    if (currentPath.includes('/dashboard')) return 'dashboard';
+    if (currentPath.includes('/classroom')) return 'classroom';
+    if (currentPath.includes('/book-counselor')) return 'counselor';
+    return 'discover'; // Default
   };
 
+  const activeSection = getActiveSection();
+
+  const navItems = [
+    { 
+      name: 'Discover', 
+      icon: <Compass size={20} />, 
+      section: 'discover' as NavSection, 
+      path: '/discover' 
+    },
+    { 
+      name: 'Library', 
+      icon: <Book size={20} />, 
+      section: 'bookshelf' as NavSection, 
+      path: '/bookshelf' 
+    },
+    { 
+      name: 'Classroom', 
+      icon: <School size={20} />, 
+      section: 'classroom' as NavSection, 
+      path: '/classroom' 
+    },
+    { 
+      name: 'Profile', 
+      icon: <User size={20} />, 
+      section: 'profile' as NavSection, 
+      path: '/profile' 
+    },
+  ];
+
   return (
-    <div 
-      className="w-full bg-[#2A282A]/90 backdrop-blur-sm py-2 border-t border-[#E9E7E2]/10"
-      style={{ 
-        aspectRatio: "1290/152", 
-        maxHeight: "152px",
-        boxShadow: "0px -4px 4px rgba(0, 0, 0, 0.1)"
-      }}
-    >
-      <div className="flex justify-between items-center max-w-sm mx-auto px-2 h-full">
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "discover" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("discover", "/discover")}
-        >
-          <Compass className="h-5 w-5" />
-          <span className="text-xs font-oxanium">Discover</span>
-        </button>
-        
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "dna" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("dna", "/dna")}
-        >
-          <Hexagon className="h-5 w-5" />
-          <span className="text-xs font-oxanium">DNA</span>
-        </button>
-        
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "dashboard" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("dashboard", "/dashboard")}
-        >
-          <LineChart className="h-5 w-5" />
-          <span className="text-xs font-oxanium">Dashboard</span>
-        </button>
-        
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "profile" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("profile", "/profile")}
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          <span className="text-xs font-oxanium">Profile</span>
-        </button>
-        
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "bookshelf" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("bookshelf", "/bookshelf")}
-        >
-          <BookOpen className="h-5 w-5" />
-          <span className="text-xs font-oxanium">Study</span>
-        </button>
-        
-        <button 
-          className={`flex flex-col items-center justify-center gap-1 text-[#E9E7E2] transition-all duration-200 ${
-            activeTab === "counselor" ? "relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9]" : "text-[#E9E7E2]/60"
-          }`}
-          onClick={() => handleNavigation("counselor", "/book-counselor")}
-        >
-          <svg
-            className="h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+    <div className={cn("fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#333] z-50", className)}>
+      <nav className="flex justify-around max-w-lg mx-auto">
+        {navItems.map((item) => (
+          <button
+            key={item.name}
+            onClick={() => navigate(item.path)}
+            className={cn(
+              "flex flex-col items-center py-3 flex-1 text-xs transition-colors",
+              activeSection === item.section ? "text-white" : "text-gray-400"
+            )}
           >
-            <path d="M12 2a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="22" />
-          </svg>
-          <span className="text-xs font-oxanium">Talk to Human</span>
-        </button>
-      </div>
-      
-      {activeTab === "counselor" && (
-        <div className="text-center mt-1">
-          <span className="text-[10px] text-[#E9E7E2]/70 italic">Book an intellectual genetic counseling session</span>
-        </div>
-      )}
+            {item.icon}
+            <span className="mt-1">{item.name}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

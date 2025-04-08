@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
@@ -11,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import TokenUsageDisplay from '@/components/subscription/TokenUsageDisplay';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 
 const ProfileSettings: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -501,13 +503,7 @@ const ProfileSettings: React.FC = () => {
                 
                 <div className="flex flex-col space-y-3">
                   {subscriptionInfo.tier !== 'surge' ? (
-                    <Button
-                      onClick={handleUpgradeClick}
-                      className="w-full bg-[#CCFF23] hover:bg-[#CCFF23]/90 text-[#2A282A] font-oxanium uppercase tracking-wider"
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      Upgrade to SURGE
-                    </Button>
+                    <UpgradePrompt variant="large" />
                   ) : (
                     <Button
                       onClick={handleBillingPortal}
@@ -530,22 +526,6 @@ const ProfileSettings: React.FC = () => {
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#373741] border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Billing</CardTitle>
-              <CardDescription className="text-[#E9E7E2]/70">Manage your billing information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleBillingPortal}
-                className="bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] flex items-center gap-2"
-              >
-                <CreditCard size={16} />
-                Access Billing Portal
-              </Button>
             </CardContent>
           </Card>
           

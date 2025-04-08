@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -346,7 +346,7 @@ const DNAAssessment = () => {
       answerLabel
     );
 
-    const userId = sessionStorage.getItem('user_id');
+    const userId = user?.id;
     const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
     
     console.log('Preparing to save conversation:', {

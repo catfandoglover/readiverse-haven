@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { X, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,13 +37,11 @@ const ShareBadgePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [resourceType, setResourceType] = useState<"icon" | "concept" | "classic" | null>(null);
   
-  // Use resource from location state if available, otherwise fetch it
   const initialResource = location.state?.resource;
   
   useEffect(() => {
     const fetchBadgeData = async () => {
       if (initialResource) {
-        // Use the data passed from navigation
         setBadgeData(initialResource);
         setResourceType(initialResource.resourceType || null);
         setIsLoading(false);
@@ -56,7 +54,6 @@ const ShareBadgePage: React.FC = () => {
       }
       
       try {
-        // Try to get badge data from user_badges table
         const { data, error } = await supabase
           .from('user_badges')
           .select('*')
@@ -75,7 +72,6 @@ const ShareBadgePage: React.FC = () => {
         }
         
         if (data) {
-          // Determine resource type based on badge data
           let type: "icon" | "concept" | "classic" | null = null;
           
           if (data.entry_icon) {
@@ -83,7 +79,6 @@ const ShareBadgePage: React.FC = () => {
           } else if (data.entry_concepts) {
             type = "concept";
           } else {
-            // Try to determine type by checking different tables
             const promises = [
               supabase.from('icons').select('id').eq('id', resourceId).maybeSingle(),
               supabase.from('concepts').select('id').eq('id', resourceId).maybeSingle(),
@@ -114,7 +109,6 @@ const ShareBadgePage: React.FC = () => {
             resourceType: type
           });
         } else {
-          // Fallback to default data
           setBadgeData({
             id: resourceId,
             title: "Philosophy Badge",
@@ -136,27 +130,22 @@ const ShareBadgePage: React.FC = () => {
   
   useEffect(() => {
     const currentUrl = window.location.origin;
-    // Include the user's name in the share URL for uniqueness
     const userNameSegment = userName ? `/${userName}` : '';
     const badgeShareUrl = `${currentUrl}/badge/${domainId}/${resourceId}${userNameSegment}`;
     setShareUrl(badgeShareUrl);
   }, [domainId, resourceId, userName]);
   
   const handleClose = () => {
-    // If user is not authenticated, redirect to the discover detail view
     if (!user) {
-      // Determine the correct detail view URL based on the resource type
       if (resourceType && resourceId) {
         navigate(`/view/${resourceType}/${resourceId}`);
       } else {
-        // Fallback to discover if we couldn't determine the type
         navigate('/discover');
       }
       return;
     }
     
     const previousPage = getPreviousPage();
-    // Navigate back to the previous page or to index if there's no valid previous page
     navigate(previousPage || "/index");
   };
   
@@ -201,18 +190,15 @@ const ShareBadgePage: React.FC = () => {
     );
   }
   
-  const fullName = user?.Account?.Name || "Philosophy Student";
-  const firstName = fullName.split(' ')[0];
-  const lastName = fullName.split(' ').slice(1).join(' ');
+  const userDisplayName = user ? user.user_metadata?.full_name || user.email : 'Anonymous User';
+  const fullName = userDisplayName.split(' ')[0];
+  const lastName = userDisplayName.split(' ').slice(1).join(' ');
   
-  // Get the badge level color
   const badgeColor = getHexagonColor(badgeData.score);
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      {/* Hero section with badge image as background - slightly reduced height */}
       <div className="relative w-full h-[45vh]">
-        {/* Background image */}
         <div className="absolute inset-0 overflow-hidden">
           <img 
             src={badgeData.image} 
@@ -221,10 +207,8 @@ const ShareBadgePage: React.FC = () => {
           />
         </div>
         
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#2A282A]"></div>
         
-        {/* Close button */}
         <Button 
           onClick={handleClose}
           className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
@@ -233,7 +217,6 @@ const ShareBadgePage: React.FC = () => {
           <X className="h-6 w-6 text-[#E9E7E2]" />
         </Button>
         
-        {/* Share button */}
         <Button 
           onClick={handleShare}
           className="absolute top-4 left-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
@@ -242,16 +225,13 @@ const ShareBadgePage: React.FC = () => {
           <Share2 className="h-5 w-5 text-[#E9E7E2]" />
         </Button>
         
-        {/* Title - moved up to overlap with the hero image */}
         <div className="absolute bottom-[67%] left-0 w-full px-6 z-10">
           <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
         </div>
       </div>
       
-      {/* User badge section - moved up to overlap with hero */}
       <div className="w-full px-6 py-8 flex flex-col items-center -mt-32 relative z-10">
         <div className="relative h-36 w-36 mb-2">
-          {/* Colored hexagon with badge score */}
           <svg 
             viewBox="0 0 24 24" 
             height="100%" 
@@ -266,7 +246,6 @@ const ShareBadgePage: React.FC = () => {
             <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
           </svg>
           
-          {/* Badge level number */}
           <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-black">
             {badgeData.score}
           </span>
@@ -277,7 +256,6 @@ const ShareBadgePage: React.FC = () => {
           {getStageName(badgeData.score || 6)}
         </p>
         
-        {/* Badge summary - increased text size */}
         <div className="max-w-lg mt-8 text-center px-4">
           <p className="text-xl font-oxanium text-[#E9E7E2]/90 leading-relaxed">
             {badgeData.summary ? `"${badgeData.summary}"` : 
@@ -286,7 +264,6 @@ const ShareBadgePage: React.FC = () => {
         </div>
       </div>
       
-      {/* Footer section - moved up */}
       <div className="mt-auto w-full px-6 py-6 flex flex-col items-center">
         <a 
           href="https://www.lightninginspiration.com" 
