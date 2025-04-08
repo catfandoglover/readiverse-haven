@@ -1,13 +1,29 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Sparkles, CheckCircle, Clock } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const SubscriptionCard: React.FC = () => {
   const { isLoading, isSubscribed, tier, status, createCheckoutSession, createPortalSession } = useSubscription();
+  const location = useLocation();
+
+  // Check for subscription success/cancel URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    
+    if (params.get('subscription_success') === 'true') {
+      toast.success('Subscription successful! Welcome to SURGE!');
+    }
+    
+    if (params.get('subscription_cancelled') === 'true') {
+      toast.info('Subscription checkout was cancelled');
+    }
+  }, [location.search]);
 
   if (isLoading) {
     return (

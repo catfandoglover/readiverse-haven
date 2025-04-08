@@ -17,6 +17,9 @@ serve(async (req) => {
   try {
     const { price_id, billing_interval } = await req.json();
     
+    // Set up logging to help with debugging
+    console.log(`Received request with price_id: ${price_id}, billing_interval: ${billing_interval}`);
+    
     if (!price_id) {
       throw new Error("Price ID is required");
     }
@@ -33,10 +36,12 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !userData.user) {
+      console.error("Auth error:", userError);
       throw new Error("Unauthorized");
     }
     
     const user = userData.user;
+    console.log(`User authenticated: ${user.id}`);
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -49,13 +54,19 @@ serve(async (req) => {
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();
+    
+    if (customerError) {
+      console.error("Error fetching customer:", customerError);
+    }
 
     let customerId;
     
     if (customerData?.stripe_customer_id) {
       customerId = customerData.stripe_customer_id;
+      console.log(`Found existing customer: ${customerId}`);
     } else {
       // Create a new customer in Stripe
+      console.log("Creating new Stripe customer...");
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
@@ -64,36 +75,35 @@ serve(async (req) => {
       });
       
       customerId = customer.id;
+      console.log(`Created new customer: ${customerId}`);
       
       // Save the customer ID in the database
-      await supabaseClient.from("customers").insert({
+      const { error: insertError } = await supabaseClient.from("customers").insert({
         user_id: user.id,
         email: user.email,
         stripe_customer_id: customerId,
         subscription_status: "inactive",
         subscription_tier: "free",
       });
+      
+      if (insertError) {
+        console.error("Error inserting customer record:", insertError);
+        throw new Error("Failed to create customer record");
+      }
     }
 
-    // Get the appropriate price ID based on billing interval
-    const lookupPriceId = billing_interval === 'annual' 
-      ? '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a'  // Annual billing
-      : 'fe95c5c4-2246-4d99-915b-06655ca6fcce'; // Monthly billing
+    // Direct Stripe price IDs for SURGE subscription
+    // Monthly and annual prices for SURGE subscription
+    const monthlyPriceId = "price_1Peb2dBRtVcdCm81cbzn1c2Q"; // Monthly price ID
+    const annualPriceId = "price_1Peb2dBRtVcdCm81ObCd0nk1"; // Annual price ID
     
-    // Get the actual Stripe price ID from the revenue_items table
-    const { data: priceData, error: priceError } = await supabaseClient
-      .from("revenue_items")
-      .select("purpose")  // purpose field contains the Stripe price ID
-      .eq("id", lookupPriceId)
-      .single();
+    // Determine which price to use based on billing interval
+    const stripePriceId = billing_interval === 'annual' ? annualPriceId : monthlyPriceId;
     
-    if (priceError || !priceData?.purpose) {
-      throw new Error("Price not found");
-    }
-
-    const stripePriceId = priceData.purpose;
+    console.log(`Using Stripe price ID: ${stripePriceId}`);
 
     // Create checkout session
+    console.log("Creating checkout session...");
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -110,6 +120,8 @@ serve(async (req) => {
       client_reference_id: user.id,
     });
 
+    console.log(`Checkout session created: ${session.id}, URL: ${session.url}`);
+    
     return new Response(
       JSON.stringify({ url: session.url }),
       {

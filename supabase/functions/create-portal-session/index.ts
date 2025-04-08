@@ -15,6 +15,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Portal session request received");
+    
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -24,13 +26,17 @@ serve(async (req) => {
     // Get the user from the auth header
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
+    console.log("Authenticating user...");
+    
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !userData.user) {
+      console.error("Authentication error:", userError);
       throw new Error("Unauthorized");
     }
     
     const user = userData.user;
+    console.log(`User authenticated: ${user.id}`);
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -38,21 +44,33 @@ serve(async (req) => {
     });
 
     // Find the customer in our database
+    console.log(`Looking up Stripe customer for user ${user.id}`);
     const { data: customerData, error: customerError } = await supabaseClient
       .from("customers")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (customerError || !customerData?.stripe_customer_id) {
+    if (customerError) {
+      console.error("Error fetching customer:", customerError);
+      throw new Error("Error fetching customer data");
+    }
+
+    if (!customerData?.stripe_customer_id) {
+      console.error("No customer record found");
       throw new Error("Customer not found");
     }
 
+    console.log(`Found customer: ${customerData.stripe_customer_id}`);
+
     // Create a billing portal session
+    console.log("Creating Stripe portal session...");
     const session = await stripe.billingPortal.sessions.create({
       customer: customerData.stripe_customer_id,
       return_url: `${req.headers.get("origin")}/profile-settings`,
     });
+
+    console.log(`Portal session created: ${session.id}, URL: ${session.url}`);
 
     return new Response(
       JSON.stringify({ url: session.url }),
