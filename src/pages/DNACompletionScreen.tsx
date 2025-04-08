@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { toast } from "sonner";
 import { LightningSpinner } from "@/components/ui/lightning-spinner";
+import { storeAssessmentId, getStoredAssessmentId } from "@/utils/dnaAssessmentUtils";
 
 const DNACompletionScreen = () => {
   const navigate = useNavigate();
@@ -14,8 +15,18 @@ const DNACompletionScreen = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   
-  // Store that DNA assessment is complete to redirect after auth
+  // Ensure the assessment ID is stored in all storage mechanisms
   useEffect(() => {
+    // Make sure the assessment ID is properly stored in all storage locations
+    const assessmentId = getStoredAssessmentId();
+    if (assessmentId) {
+      console.log('DNACompletionScreen: Reinforcing assessment ID storage for login/registration:', assessmentId);
+      storeAssessmentId(assessmentId);
+    } else {
+      console.warn('DNACompletionScreen: No assessment ID found to store!');
+    }
+    
+    // Store that DNA assessment is complete to redirect after auth
     localStorage.setItem('dnaAssessmentComplete', 'true');
     localStorage.setItem('authRedirectTo', '/dna/welcome');
   }, []);
@@ -30,6 +41,15 @@ const DNACompletionScreen = () => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
+      // Double-check the assessment ID is properly stored before redirecting
+      const assessmentId = getStoredAssessmentId();
+      if (assessmentId) {
+        console.log('Reinforcing assessment ID storage before Google login:', assessmentId);
+        storeAssessmentId(assessmentId);
+      } else {
+        console.warn('No assessment ID found before Google login!');
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -49,6 +69,15 @@ const DNACompletionScreen = () => {
   };
 
   const handleEmailAuth = () => {
+    // Double-check the assessment ID is properly stored before navigation
+    const assessmentId = getStoredAssessmentId();
+    if (assessmentId) {
+      console.log('Reinforcing assessment ID storage before email registration:', assessmentId);
+      storeAssessmentId(assessmentId);
+    } else {
+      console.warn('No assessment ID found before email registration!');
+    }
+    
     navigate('/register', { state: { showEmailForm: true } });
   };
 

@@ -1,21 +1,53 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { LightningSpinner } from '@/components/ui/lightning-spinner';
 import { toast } from 'sonner';
+import { linkPendingAssessmentToUser, getStoredAssessmentId, storeAssessmentId, clearStoredAssessmentId } from '@/utils/dnaAssessmentUtils';
+
+// Helper function to get assessment ID from cookies
+const getAssessmentIdFromCookie = () => {
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith('dna_assessment_id=')) {
+      return cookie.substring('dna_assessment_id='.length);
+    }
+  }
+  return null;
+};
 
 export function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     // Handle the auth callback from Supabase
     const handleAuthCallback = async () => {
       try {
+        // Extract assessment ID from URL query parameters if present
+        const queryParams = new URLSearchParams(location.search);
+        const queryAssessmentId = queryParams.get('assessment_id');
+        
         // Check if this callback is from the DNA assessment flow
         const isDnaFlow = localStorage.getItem('dnaAssessmentComplete') === 'true';
-        const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
+        
+        // Get the assessment ID from all potential sources
+        const pendingAssessmentId = getStoredAssessmentId() || queryAssessmentId;
+        
+        // If we have an assessment ID from query but not storage, store it properly
+        if (queryAssessmentId && !getStoredAssessmentId()) {
+          console.log('Found assessment ID in URL query, storing it properly:', queryAssessmentId);
+          storeAssessmentId(queryAssessmentId);
+        }
+        
+        console.log('Assessment ID in auth callback:', {
+          finalChoice: pendingAssessmentId,
+          isDnaFlow,
+          url: window.location.href
+        });
         
         const { data: sessionData, error } = await supabase.auth.getSession();
         
@@ -47,41 +79,28 @@ export function AuthCallback() {
         }
         
         // If we have a pending assessment ID and a valid user, link them now
-        if (isDnaFlow && pendingAssessmentId && user) {
-          console.log('Auth callback: Found pending assessment to link:', pendingAssessmentId);
+        if (pendingAssessmentId && user) {
+          console.log('Auth callback: Found assessment ID to link:', pendingAssessmentId);
           
+          // Ensure it's stored in all storage mechanisms for redundancy
+          storeAssessmentId(pendingAssessmentId);
+          
+          // Instead of manually updating the profile, use the utility with retries
           try {
-            // First get the user's profile
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('user_id', user.id)
-              .maybeSingle();
-              
-            if (profileError) {
-              console.error('Error fetching profile:', profileError);
-              // Continue with navigation anyway
-            } else if (profileData) {
-              // Update the profile with the assessment ID
-              console.log(`Updating profile ${profileData.id} with assessment ID: ${pendingAssessmentId}`);
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ assessment_id: pendingAssessmentId })
-                .eq('id', profileData.id);
-                
-              if (updateError) {
-                console.error('Error updating profile:', updateError);
-              } else {
-                console.log('Successfully linked assessment to profile!');
-                toast.success('Your assessment results are ready to view!');
-                
-                // Clear storage now that we've successfully linked
-                localStorage.removeItem('pending_dna_assessment_id');
-                sessionStorage.removeItem('dna_assessment_to_save');
-              }
+            const linkResult = await linkPendingAssessmentToUser(user.id, 5, 2000);
+            
+            if (linkResult.success) {
+              console.log('Successfully linked assessment to profile using utility!');
+              toast.success('Your assessment results are ready to view!');
+            } else if (linkResult.hasExistingAssessment) {
+              console.log('User already has an existing assessment:', linkResult.existingAssessmentId);
+              toast.info(linkResult.message || 'You already have a completed assessment.');
+            } else {
+              console.error('Failed to link assessment:', linkResult.message);
+              toast.error(linkResult.message || 'Failed to link your assessment results');
             }
           } catch (err) {
-            console.error('Error linking assessment:', err);
+            console.error('Error in assessment linking process:', err);
           }
         }
         
@@ -107,7 +126,7 @@ export function AuthCallback() {
     };
     
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, location]);
   
   if (error) {
     // Map error messages to user-friendly text

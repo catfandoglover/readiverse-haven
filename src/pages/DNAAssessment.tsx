@@ -31,6 +31,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
+import { storeAssessmentId } from '@/utils/dnaAssessmentUtils';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -502,7 +503,7 @@ const DNAAssessment = () => {
             console.log('Assessment complete, finishing assessment...');
             
             setCompletedAssessmentId(assessmentId);
-            localStorage.setItem('pending_dna_assessment_id', assessmentId);
+            storeAssessmentId(assessmentId);
             
             // Force immediate redirect after 50ms regardless of analysis
             setTimeout(() => {
@@ -781,11 +782,9 @@ const DNAAssessment = () => {
       setShowLoginPrompt(true);
       console.log("TEST BUTTON: User is anonymous. Setting showLoginPrompt state to true.");
 
-      // Also save to session storage as a backup/consistency
-      sessionStorage.setItem('dna_assessment_id', currentAssessmentId);
-      sessionStorage.setItem('dna_assessment_to_save', currentAssessmentId);
-      localStorage.setItem('pending_dna_assessment_id', currentAssessmentId);
-      console.log("TEST BUTTON: Saved assessment ID to session and local storage.");
+      // Use the new storage utility instead of manually setting in multiple places
+      storeAssessmentId(currentAssessmentId);
+      console.log("TEST BUTTON: Saved assessment ID to all storage mechanisms.");
 
       // Navigate to the completion screen
       console.log("TEST BUTTON: Navigating to /dna/completion to show login/signup prompt.");

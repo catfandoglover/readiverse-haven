@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LightningSpinner } from "@/components/ui/lightning-spinner";
 import { toast } from "sonner";
+import { storeAssessmentId, getStoredAssessmentId } from "@/utils/dnaAssessmentUtils";
 
 const SignUpForm: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -14,11 +15,27 @@ const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Ensure assessment ID is preserved when component mounts
+  useEffect(() => {
+    const assessmentId = getStoredAssessmentId();
+    if (assessmentId) {
+      console.log('SignUpForm: Reinforcing assessment ID storage for email signup:', assessmentId);
+      storeAssessmentId(assessmentId);
+    }
+  }, []);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Preserve assessment ID before submitting
+      const assessmentId = getStoredAssessmentId();
+      if (assessmentId) {
+        console.log('SignUpForm: Reinforcing assessment ID storage before form submission:', assessmentId);
+        storeAssessmentId(assessmentId);
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
