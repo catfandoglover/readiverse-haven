@@ -389,7 +389,7 @@ const IntellectualDNACourse: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "kindred" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -406,7 +406,7 @@ const IntellectualDNACourse: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "challenging" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"

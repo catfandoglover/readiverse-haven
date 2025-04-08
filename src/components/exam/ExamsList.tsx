@@ -92,8 +92,7 @@ const ExamsList: React.FC = () => {
         {exams.map((exam) => (
           <div 
             key={exam.id}
-            className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
-            style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
+            className="rounded-2xl p-4 pb-1.5 bg-[#373763]/80 shadow-inner cursor-pointer hover:bg-[#373763] transition-colors"
             onClick={() => handleSelectExam(exam)}
           >
             <div className="flex items-center mb-3">
