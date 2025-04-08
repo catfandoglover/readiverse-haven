@@ -539,39 +539,19 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   }
 }
 
-// Function to validate entities using the validate-dna-entities function
+// This function used to validate entities using validate-dna-entities
+// It has been removed as that edge function is no longer used
 async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
-  try {
-    console.log('Validating DNA entities from analysis results');
-    console.log('Analysis data keys:', Object.keys(analysisData));
-    
-    // Call the validate-dna-entities function with the analysis data
-    const response = await fetch(`${supabaseUrl}/functions/v1/validate-dna-entities`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        analysisData,
-        assessment_id
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Validation API error:', errorData);
-      throw new Error(`Validation API error! Status: ${response.status}`);
+  console.log('Entity validation skipped - function has been removed');
+  return { 
+    summary: { 
+      hasErrors: false,
+      totalEntities: 0,
+      totalMatched: 0,
+      totalUnmatched: 0,
+      matchRate: "0%"
     }
-    
-    const validationData = await response.json();
-    console.log('Validation results:', validationData);
-    
-    return validationData;
-  } catch (error) {
-    console.error('Error in validateDNAEntities:', error);
-    throw error;
-  }
+  };
 }
 
 serve(async (req) => {
