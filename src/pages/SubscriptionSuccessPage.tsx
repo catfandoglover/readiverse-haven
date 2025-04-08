@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import confetti from 'canvas-confetti';
 import { supabase } from '@/integrations/supabase/client';
 
 const SubscriptionSuccessPage: React.FC = () => {
@@ -18,37 +17,59 @@ const SubscriptionSuccessPage: React.FC = () => {
 
   useEffect(() => {
     // Show confetti effect
-    const duration = 3 * 1000;
-    const animationEnd = Date.now() + duration;
+    let confettiInterval: number | null = null;
+    
+    const showConfetti = async () => {
+      try {
+        // Dynamically import confetti for better error handling
+        const confettiModule = await import('canvas-confetti');
+        const confetti = confettiModule.default;
+        
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
 
-    const randomInRange = (min: number, max: number) => {
-      return Math.random() * (max - min) + min;
+        const randomInRange = (min: number, max: number) => {
+          return Math.random() * (max - min) + min;
+        };
+
+        confettiInterval = window.setInterval(() => {
+          const timeLeft = animationEnd - Date.now();
+          
+          if (timeLeft <= 0) {
+            if (confettiInterval) {
+              clearInterval(confettiInterval);
+            }
+            return;
+          }
+          
+          const particleCount = 50 * (timeLeft / duration);
+          
+          confetti({
+            startVelocity: 30,
+            particleCount,
+            spread: 360,
+            ticks: 60,
+            origin: {
+              x: randomInRange(0.1, 0.9),
+              y: randomInRange(0.1, 0.5)
+            },
+            colors: ['#CCFF23', '#373763', '#9b87f5'],
+            disableForReducedMotion: true
+          });
+        }, 250);
+      } catch (error) {
+        console.error('Failed to load confetti:', error);
+        // Silently fail - confetti is not critical to the page functionality
+      }
     };
 
-    const interval = setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
-      
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-      
-      const particleCount = 50 * (timeLeft / duration);
-      
-      confetti({
-        startVelocity: 30,
-        particleCount,
-        spread: 360,
-        ticks: 60,
-        origin: {
-          x: randomInRange(0.1, 0.9),
-          y: randomInRange(0.1, 0.5)
-        },
-        colors: ['#CCFF23', '#373763', '#9b87f5'],
-        disableForReducedMotion: true
-      });
-    }, 250);
+    showConfetti();
 
-    return () => clearInterval(interval);
+    return () => {
+      if (confettiInterval) {
+        clearInterval(confettiInterval);
+      }
+    };
   }, []);
 
   useEffect(() => {
