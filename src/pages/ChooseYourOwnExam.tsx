@@ -307,7 +307,7 @@ const ChooseYourOwnExam: React.FC = () => {
             placeholder="Search for inspiration..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 bg-[#373763]/70 border-[#4D4D8F] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl"
+            className="w-full pl-10 bg-[#373763]/70 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl border-none shadow-[0_0_0_1px_rgba(77,77,143,0.3)] focus:ring-1 focus:ring-[#4D4D8F]/40 focus:shadow-none focus:border-transparent"
           />
         </div>
         

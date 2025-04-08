@@ -316,7 +316,7 @@ const ChooseYourOwnCourse: React.FC = () => {
             placeholder="Search for inspiration..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 bg-[#19352F]/70 border-[#356E61] text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl"
+            className="w-full pl-10 bg-[#19352F]/70 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl border-none shadow-[0_0_0_1px_rgba(53,110,97,0.3)] focus:ring-1 focus:ring-[#356E61]/40 focus:shadow-none focus:border-transparent"
           />
         </div>
         
