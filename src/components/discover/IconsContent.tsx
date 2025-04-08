@@ -8,6 +8,8 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { getPreviousPage } from "@/utils/navigationHistory";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { useIsMobile } from "@/hooks/use-mobile";
+import VerticalSwiper from "../common/VerticalSwiper";
 
 interface Icon {
   id: string;
@@ -53,6 +55,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const location = useLocation();
   const params = useParams();
   const { saveSourcePath, getSourcePath } = useNavigationState();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -186,6 +189,14 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
+  const handleIndexChange = (index: number) => {
+    setDisplayIndex(index);
+    
+    if (index >= loadedCount - 5 && loadedCount < allIconsCount) {
+      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
+    }
+  };
+
   const handlePrevious = () => {
     if (displayIndex > 0) {
       setDisplayIndex(displayIndex - 1);
@@ -217,7 +228,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const handleCloseDetailedView = () => {
     setSelectedIcon(null);
     
-    // Check all possible storage locations for source path
     const sourcePaths = {
       localStorage: localStorage.getItem('sourcePath'),
       sessionStorage: sessionStorage.getItem('sourcePath'),
@@ -227,7 +237,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     
     console.log("[IconsContent] Available source paths for back navigation:", sourcePaths);
     
-    // First try localStorage detailedViewSourcePath (most specific)
     if (sourcePaths.localDetailedView && sourcePaths.localDetailedView !== location.pathname) {
       console.log("[IconsContent] Navigating to source path from localStorage (detailedViewSourcePath):", sourcePaths.localDetailedView);
       navigate(sourcePaths.localDetailedView, { replace: true });
@@ -237,7 +246,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
-    // Then try sessionStorage detailedViewSourcePath
     if (sourcePaths.sessionDetailedView && sourcePaths.sessionDetailedView !== location.pathname) {
       console.log("[IconsContent] Navigating to source path from sessionStorage (detailedViewSourcePath):", sourcePaths.sessionDetailedView);
       navigate(sourcePaths.sessionDetailedView, { replace: true });
@@ -247,7 +255,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
-    // Then try localStorage sourcePath
     if (sourcePaths.localStorage && sourcePaths.localStorage !== location.pathname) {
       console.log("[IconsContent] Navigating to source path from localStorage:", sourcePaths.localStorage);
       navigate(sourcePaths.localStorage, { replace: true });
@@ -257,7 +264,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
-    // Then try sessionStorage sourcePath
     if (sourcePaths.sessionStorage && sourcePaths.sessionStorage !== location.pathname) {
       console.log("[IconsContent] Navigating to source path from sessionStorage:", sourcePaths.sessionStorage);
       navigate(sourcePaths.sessionStorage, { replace: true });
@@ -267,7 +273,6 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
-    // Fall back to previous page from history
     const previousPath = getPreviousPage();
     console.log("[IconsContent] Falling back to previous page from history:", previousPath);
     navigate(previousPath, { replace: true });
@@ -305,6 +310,46 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       <div className="h-full">
         <IconLoadingSkeleton />
       </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <VerticalSwiper
+          initialIndex={displayIndex}
+          onIndexChange={handleIndexChange}
+          preloadCount={2}
+        >
+          {icons.map((icon, index) => (
+            <div key={icon.id} className="h-full w-full">
+              <ContentCard
+                image={icon.illustration}
+                title={icon.name}
+                about={icon.about || ""}
+                itemId={icon.id}
+                itemType="icon"
+                onLearnMore={() => handleLearnMore(icon)}
+                onImageClick={() => handleLearnMore(icon)}
+                onPrevious={index > 0 ? () => setDisplayIndex(index - 1) : undefined}
+                onNext={index < icons.length - 1 ? () => setDisplayIndex(index + 1) : undefined}
+                hasPrevious={index > 0}
+                hasNext={index < icons.length - 1}
+                swiperMode={false}
+              />
+            </div>
+          ))}
+        </VerticalSwiper>
+        
+        {selectedIcon && (
+          <DetailedView
+            key={`icon-detail-${selectedIcon.id}`}
+            type="icon"
+            data={selectedIcon}
+            onBack={handleCloseDetailedView}
+          />
+        )}
+      </>
     );
   }
 
