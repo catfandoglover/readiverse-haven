@@ -8,11 +8,13 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import VerticalSwiper from "@/components/common/VerticalSwiper";
 
 interface Concept {
   id: string;
   title: string;
   illustration: string;
+  image?: string;
   description?: string;
   about?: string;
   genealogy?: string;
@@ -250,44 +252,45 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  if (isLoading || concepts.length === 0) {
+  if (isLoading || !concepts || concepts.length === 0) {
     return (
-      <div className="flex flex-col h-full justify-center items-center">
-        <Skeleton className="h-64 w-full mb-4" />
-        <Skeleton className="h-8 w-2/3 mb-2" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-3/4" />
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-gray-400">Loading...</div>
       </div>
     );
   }
 
-  const currentConcept = concepts[conceptIndex % concepts.length];
-
   return (
     <>
-      <div className="h-full">
-        <ContentCard
-          image={currentConcept.illustration}
-          title={currentConcept.title}
-          about={currentConcept.about || ""}
-          itemId={currentConcept.id}
-          itemType="concept"
-          onLearnMore={() => handleLearnMore(currentConcept)}
-          onImageClick={() => handleLearnMore(currentConcept)}
-          onPrevious={handlePrevConcept}
-          onNext={handleNextConcept}
-          hasPrevious={concepts.length > 1}
-          hasNext={concepts.length > 1}
-        />
-      </div>
+      <VerticalSwiper 
+        initialIndex={conceptIndex}
+        onIndexChange={setConceptIndex}
+      >
+        {concepts.map((concept, index) => (
+          <div key={concept.id} className="h-full">
+            <ContentCard
+              image={concept.image || concept.illustration}
+              title={concept.title}
+              about={concept.about || ''}
+              itemId={concept.id}
+              itemType="concept"
+              onLearnMore={() => handleLearnMore(concept)}
+              onImageClick={() => handleLearnMore(concept)}
+              onPrevious={handlePrevConcept}
+              onNext={handleNextConcept}
+              hasPrevious={index > 0}
+              hasNext={index < concepts.length - 1}
+            />
+          </div>
+        ))}
+      </VerticalSwiper>
 
       {selectedConcept && (
         <DetailedView
           type="concept"
           data={{
             ...selectedConcept,
-            image: selectedConcept.illustration
+            image: selectedConcept.image || selectedConcept.illustration
           }}
           onBack={handleCloseDetailedView}
         />
