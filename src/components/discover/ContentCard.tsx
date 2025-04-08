@@ -19,6 +19,7 @@ interface ContentCardProps {
   onNext?: () => void;
   hasPrevious?: boolean;
   hasNext?: boolean;
+  swiperMode?: boolean;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
@@ -33,6 +34,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   onNext,
   hasPrevious = true,
   hasNext = true,
+  swiperMode = false,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { user, openLogin, isLoading: isAuthLoading } = useAuth();
@@ -119,12 +121,15 @@ const ContentCard: React.FC<ContentCardProps> = ({
           description: `${itemType === 'classic' ? 'Book' : itemType} removed from favorites`,
         });
       } else {
+        const outseta_user_id = user.user_metadata?.outseta_id || '';
+        
         const { error } = await supabase
           .from('user_favorites')
           .insert({
             item_id: itemId,
             user_id: user.id,
             item_type: itemType,
+            outseta_user_id: outseta_user_id,
             added_at: new Date().toISOString()
           });
           

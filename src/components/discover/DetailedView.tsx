@@ -328,27 +328,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     console.log("[DetailedView] Back button clicked", {
       onBack: !!onBack,
       locationState: location.state,
+      type,
       pathname: location.pathname
     });
 
-    // Check for from_question parameter in URL
-    const searchParams = new URLSearchParams(location.search);
-    const fromQuestionId = searchParams.get('from_question');
-    
-    if (fromQuestionId) {
-      // If we have a question ID in the URL, navigate back to that question
-      console.log("[DetailedView] Navigating back to question from URL parameter:", fromQuestionId);
-      navigate(`/view/question/${fromQuestionId}`, { replace: true });
-      return;
-    }
-    
-    // Check for saved question path in localStorage
-    const lastQuestionPath = localStorage.getItem('last_question_path');
-    const lastQuestionId = localStorage.getItem('last_question_id');
-    
-    if (lastQuestionPath && lastQuestionId) {
-      console.log("[DetailedView] Navigating back to question from localStorage:", lastQuestionPath);
-      navigate(lastQuestionPath, { replace: true });
+    // If we have a callback, use it first (this is most reliable)
+    if (onBack) {
+      console.log("[DetailedView] Using onBack callback");
+      onBack();
       return;
     }
 
@@ -360,14 +347,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       return;
     }
 
-    // If we have a callback, use it
-    if (onBack) {
-      console.log("[DetailedView] Using onBack callback");
-      onBack();
+    // Only check for question params if we actually have them
+    const searchParams = new URLSearchParams(location.search);
+    const fromQuestionId = searchParams.get('from_question');
+    
+    // Only navigate to question if we have a direct link
+    if (fromQuestionId && location.search.includes('from_question')) {
+      console.log("[DetailedView] Navigating back to question from URL parameter:", fromQuestionId);
+      navigate(`/view/question/${fromQuestionId}`, { replace: true });
       return;
     }
 
-    // Get source path from the navigation state hook (this is more robust)
+    // Get source path from the navigation state hook (this is robust)
     const sourcePath = getSourcePath();
     if (sourcePath && sourcePath !== location.pathname) {
       console.log("[DetailedView] Navigating to source path from hook:", sourcePath);
