@@ -58,8 +58,11 @@ import TestUpload from "@/pages/TestUpload";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
       refetchOnWindowFocus: false,
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });

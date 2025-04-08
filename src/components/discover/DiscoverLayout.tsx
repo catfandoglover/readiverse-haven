@@ -9,8 +9,80 @@ import { useLocation, useNavigate } from "react-router-dom";
 import MainMenu from "../navigation/MainMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
+
+// Define a function to fetch minimal ForYou content for prefetching
+const fetchMinimalForYouContent = async () => {
+  // Only fetch essential fields to improve performance
+  const minimalFields = {
+    books: "id, title, author, icon_illustration, Cover_super, slug, about", 
+    icons: "id, name, illustration, slug, about",
+    concepts: "id, title, illustration, slug, about"
+  };
+  
+  let items = [];
+  
+  try {
+    // Fetch books
+    const booksResponse = await supabase
+      .from("books")
+      .select(minimalFields.books)
+      .order("randomizer")
+      .limit(5);
+    
+    const books = (booksResponse.data || []).map((book: any) => ({
+      id: book.id,
+      title: book.title,
+      type: "classic",
+      image: book.icon_illustration || book.Cover_super || "",
+      author: book.author,
+      about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
+      slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
+    }));
+    
+    // Fetch icons
+    const iconsResponse = await supabase
+      .from("icons")
+      .select(minimalFields.icons)
+      .order("randomizer")
+      .limit(5);
+    
+    const icons = (iconsResponse.data || []).map((icon: any) => ({
+      id: icon.id,
+      title: icon.name,
+      type: "icon",
+      image: icon.illustration,
+      about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
+      slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
+    }));
+    
+    // Fetch concepts
+    const conceptsResponse = await supabase
+      .from("concepts")
+      .select(minimalFields.concepts)
+      .limit(5);
+    
+    const concepts = (conceptsResponse.data || []).map((concept: any) => ({
+      id: concept.id,
+      title: concept.title,
+      type: "concept",
+      image: concept.illustration,
+      about: concept.about || `${concept.title} is a significant philosophical concept.`,
+      slug: concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id,
+    }));
+    
+    items = [...books, ...icons, ...concepts];
+    
+    // Simple randomization
+    return items.sort(() => Math.random() - 0.5).slice(0, 10);
+  } catch (error) {
+    console.error("Error prefetching For You content:", error);
+    return [];
+  }
+};
 
 const DiscoverLayout = () => {
   const [activeTab, setActiveTab] = useState<TabType>("for-you");
@@ -25,6 +97,29 @@ const DiscoverLayout = () => {
   const location = useLocation();
   const { getContentType, saveSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+
+  // Prefetch ForYou content when component mounts
+  useEffect(() => {
+    const prefetchForYouContent = async () => {
+      console.log("[DiscoverLayout] Prefetching FOR YOU content");
+      
+      try {
+        // Prefetch the data and store it in the query cache
+        await queryClient.prefetchQuery({
+          queryKey: ["for-you-content", 0],
+          queryFn: fetchMinimalForYouContent,
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        });
+        
+        console.log("[DiscoverLayout] FOR YOU content prefetched successfully");
+      } catch (error) {
+        console.error("[DiscoverLayout] Error prefetching FOR YOU content:", error);
+      }
+    };
+
+    prefetchForYouContent();
+  }, [queryClient]);
 
   // Log mobile detection
   useEffect(() => {

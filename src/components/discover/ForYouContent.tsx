@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Loader2, RefreshCw } from "lucide-react";
 
 interface ForYouContentItem {
   id: string;
@@ -30,6 +32,7 @@ interface ForYouContentProps {
 const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
   const [displayIndex, setDisplayIndex] = useState(currentIndex);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,19 +46,80 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     setDisplayIndex(currentIndex);
   }, [currentIndex]);
 
-  const { data: forYouItems = [], isLoading } = useQuery({
-    queryKey: ["for-you-content"],
+  const handleRetry = () => {
+    setRetryAttempt(prev => prev + 1);
+    toast({
+      title: "Retrying",
+      description: "Attempting to reload content...",
+    });
+  };
+
+  const { data: forYouItems = [], isLoading, isError } = useQuery({
+    queryKey: ["for-you-content", retryAttempt],
     queryFn: async () => {
       try {
-        const [booksResponse, iconsResponse, conceptsResponse] = await Promise.all([
-          supabase.from("books").select("id, title, author, icon_illustration, Cover_super, about, epub_file_url, slug").order("randomizer").limit(5),
-          supabase.from("icons").select("id, name, illustration, about, great_conversation, anecdotes, slug").order("randomizer").limit(5),
-          supabase.from("concepts").select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer").limit(5),
-        ]);
-
-        const books = booksResponse.data || [];
-        const icons = iconsResponse.data || [];
-        const concepts = conceptsResponse.data || [];
+        // Fetch minimal fields initially to improve load time
+        // Only fetch essential display fields
+        const minimalFields = {
+          books: "id, title, author, icon_illustration, Cover_super, slug, about", 
+          icons: "id, name, illustration, slug, about",
+          concepts: "id, title, illustration, slug, about"
+        };
+        
+        let books = [];
+        let icons = [];
+        let concepts = [];
+        
+        try {
+          const booksResponse = await supabase
+            .from("books")
+            .select(minimalFields.books)
+            .order("randomizer")
+            .limit(5);
+          
+          if (booksResponse.error) {
+            console.error("Error fetching books:", booksResponse.error);
+          } else {
+            books = booksResponse.data || [];
+          }
+        } catch (booksError) {
+          console.error("Exception fetching books:", booksError);
+        }
+        
+        try {
+          const iconsResponse = await supabase
+            .from("icons")
+            .select(minimalFields.icons)
+            .order("randomizer")
+            .limit(5);
+          
+          if (iconsResponse.error) {
+            console.error("Error fetching icons:", iconsResponse.error);
+          } else {
+            icons = iconsResponse.data || [];
+          }
+        } catch (iconsError) {
+          console.error("Exception fetching icons:", iconsError);
+        }
+        
+        try {
+          const conceptsResponse = await supabase
+            .from("concepts")
+            .select(minimalFields.concepts)
+            .limit(5);
+          
+          if (conceptsResponse.error) {
+            console.error("Error fetching concepts:", conceptsResponse.error);
+          } else {
+            concepts = conceptsResponse.data || [];
+          }
+        } catch (conceptsError) {
+          console.error("Exception fetching concepts:", conceptsError);
+        }
+        
+        if (books.length === 0 && icons.length === 0 && concepts.length === 0) {
+          throw new Error("Failed to fetch any content");
+        }
 
         const forYouItems: ForYouContentItem[] = [
           ...books.map((book: any) => ({
@@ -65,10 +129,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             image: book.icon_illustration || book.Cover_super || "",
             about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
             author: book.author,
-            great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
-            Cover_super: book.Cover_super,
-            epub_file_url: book.epub_file_url,
             slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
+            // Other fields can be loaded on demand when user selects the item
           })),
           ...icons.map((icon: any) => ({
             id: icon.id,
@@ -76,9 +138,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             type: "icon" as const,
             image: icon.illustration,
             about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-            great_conversation: `${icon.name}'s contributions to philosophical discourse were substantial.`,
-            anecdotes: `Various interesting stories surround ${icon.name}'s life and work.`,
             slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
+            // Other fields can be loaded on demand when user selects the item
           })),
           ...concepts.map((concept: any) => ({
             id: concept.id,
@@ -86,17 +147,12 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             type: "concept" as const,
             image: concept.illustration,
             about: concept.about || `${concept.title} is a significant philosophical concept.`,
-            genealogy: `The historical development of ${concept.title} spans multiple philosophical traditions.`,
-            great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
             slug: concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id,
+            // Other fields can be loaded on demand when user selects the item
           })),
         ];
 
-        return forYouItems.sort((a, b) => {
-          const aRandomizer = a.randomizer || 0;
-          const bRandomizer = b.randomizer || 0;
-          return aRandomizer - bRandomizer;
-        });
+        return forYouItems.sort(() => Math.random() - 0.5).slice(0, 10); // Simplify sort for speed and limit to 10
       } catch (error) {
         console.error("Error fetching For You content:", error);
         toast({
@@ -104,9 +160,14 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           title: "Error",
           description: "Failed to load personalized content",
         });
-        return [];
+        throw error;
       }
     },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 15000),
+    // Add caching to prevent frequent refetching
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep data in cache for 30 minutes (was previously called cacheTime)
   });
 
   useEffect(() => {
@@ -228,10 +289,30 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     ],
   };
 
-  if (isLoading || !forYouItems || forYouItems.length === 0) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="flex flex-col items-center justify-center h-full gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="text-gray-400">Loading your personalized recommendations...</div>
+      </div>
+    );
+  }
+
+  if (isError || !forYouItems || forYouItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4">
+        <div className="text-red-500 text-lg font-semibold">Content could not be loaded</div>
+        <p className="text-gray-600 mb-4">
+          We're having trouble loading your personalized content. Please try again.
+        </p>
+        <Button 
+          onClick={handleRetry} 
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reload Content
+        </Button>
       </div>
     );
   }
