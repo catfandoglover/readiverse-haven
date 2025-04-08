@@ -1,7 +1,6 @@
-
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart, HeadsetIcon } from "lucide-react";
+import { BookOpen, Compass, Hexagon, LayoutDashboard, LineChart } from "lucide-react";
 import { saveLastVisited, sections } from "@/utils/navigationHistory";
 
 type TabType = "discover" | "dna" | "dashboard" | "profile" | "bookshelf" | "counselor";
@@ -111,7 +110,19 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab }) => {
           }`}
           onClick={() => handleNavigation("counselor", "/book-counselor")}
         >
-          <Headset className="h-5 w-5" />
+          <svg
+            className="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 2a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+          </svg>
           <span className="text-xs font-oxanium">Talk to Human</span>
         </button>
       </div>

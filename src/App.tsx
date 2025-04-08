@@ -56,6 +56,7 @@ import ProfileSettings from "@/pages/ProfileSettings";
 import TestUpload from "@/pages/TestUpload";
 import UpgradePage from '@/pages/UpgradePage';
 import SubscriptionSuccessPage from '@/pages/SubscriptionSuccessPage';
+import BookshelfBookView from '@/components/BookshelfBookView';
 
 const queryClient = new QueryClient({
   defaultOptions: {
