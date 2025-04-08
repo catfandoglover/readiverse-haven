@@ -12,7 +12,7 @@ interface SubscriptionStatus {
 }
 
 export function useSubscription() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionStatus>({
     isLoading: true,
     isSubscribed: false,
@@ -77,20 +77,23 @@ export function useSubscription() {
 
   const createCheckoutSession = async (billingInterval: 'monthly' | 'annual' = 'monthly') => {
     try {
-      if (!user) {
+      if (!user || !session) {
         toast.error('You must be logged in to subscribe');
         return false;
       }
       
       // Use the price_id directly based on billing interval
       const priceId = billingInterval === 'annual' 
-        ? '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a'  // Internal reference for Annual billing
-        : 'fe95c5c4-2246-4d99-915b-06655ca6fcce'; // Internal reference for Monthly billing
+        ? 'price_1Peb2dBRtVcdCm81ObCd0nk1'  // Annual price ID
+        : 'price_1Peb2dBRtVcdCm81cbzn1c2Q'; // Monthly price ID
       
       toast.info('Creating checkout session...');
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: { price_id: priceId, billing_interval: billingInterval }
+        body: { price_id: priceId, billing_interval: billingInterval },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (error) {
@@ -117,14 +120,18 @@ export function useSubscription() {
 
   const createPortalSession = async () => {
     try {
-      if (!user) {
+      if (!user || !session) {
         toast.error('You must be logged in to manage your subscription');
         return false;
       }
       
       toast.info('Opening subscription management...');
       
-      const { data, error } = await supabase.functions.invoke('create-portal-session', {});
+      const { data, error } = await supabase.functions.invoke('create-portal-session', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
       
       if (error) {
         console.error('Error from create-portal-session function:', error);
