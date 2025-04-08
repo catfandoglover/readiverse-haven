@@ -15,10 +15,21 @@ serve(async (req) => {
   }
 
   try {
-    const { price_id, billing_interval } = await req.json();
+    // Log request information
+    console.log(`Request received with method: ${req.method}`);
+    console.log(`Authorization header present: ${req.headers.has("Authorization")}`);
     
-    // Set up logging to help with debugging
-    console.log(`Received request with price_id: ${price_id}, billing_interval: ${billing_interval}`);
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log(`Request body: ${JSON.stringify(body, null, 2)}`);
+    } catch (e) {
+      console.error("Error parsing request body:", e);
+      throw new Error("Invalid request body");
+    }
+    
+    const { price_id, billing_interval } = body;
     
     if (!price_id) {
       throw new Error("Price ID is required");
@@ -41,23 +52,34 @@ serve(async (req) => {
     console.log("Token received, authenticating user...");
     
     // Get the user from the auth header
-    // Using getUser() instead of relying on the session
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError || !userData?.user) {
+    if (userError) {
       console.error("Auth error:", userError);
-      throw new Error("Unauthorized");
+      throw new Error(`Authentication failed: ${userError.message}`);
+    }
+    
+    if (!userData?.user) {
+      console.error("No user data returned");
+      throw new Error("User not found");
     }
     
     const user = userData.user;
-    console.log(`User authenticated: ${user.id}`);
+    console.log(`User authenticated: ${user.id}, Email: ${user.email}`);
 
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      console.error("Stripe secret key not configured");
+      throw new Error("Stripe configuration error");
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
     // Check if user has an existing Stripe customer ID
+    console.log(`Looking for customer record for user: ${user.id}`);
     const { data: customerData, error: customerError } = await supabaseClient
       .from("customers")
       .select("stripe_customer_id")
@@ -76,28 +98,33 @@ serve(async (req) => {
     } else {
       // Create a new customer in Stripe
       console.log("Creating new Stripe customer...");
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabase_user_id: user.id,
-        },
-      });
-      
-      customerId = customer.id;
-      console.log(`Created new customer: ${customerId}`);
-      
-      // Save the customer ID in the database
-      const { error: insertError } = await supabaseClient.from("customers").insert({
-        user_id: user.id,
-        email: user.email,
-        stripe_customer_id: customerId,
-        subscription_status: "inactive",
-        subscription_tier: "free",
-      });
-      
-      if (insertError) {
-        console.error("Error inserting customer record:", insertError);
-        throw new Error("Failed to create customer record");
+      try {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: {
+            supabase_user_id: user.id,
+          },
+        });
+        
+        customerId = customer.id;
+        console.log(`Created new customer: ${customerId}`);
+        
+        // Save the customer ID in the database
+        const { error: insertError } = await supabaseClient.from("customers").insert({
+          user_id: user.id,
+          email: user.email,
+          stripe_customer_id: customerId,
+          subscription_status: "inactive",
+          subscription_tier: "free",
+        });
+        
+        if (insertError) {
+          console.error("Error inserting customer record:", insertError);
+          throw new Error("Failed to create customer record");
+        }
+      } catch (stripeError) {
+        console.error("Stripe customer creation error:", stripeError);
+        throw new Error(`Stripe error: ${stripeError.message}`);
       }
     }
 
@@ -113,31 +140,36 @@ serve(async (req) => {
 
     // Create checkout session
     console.log("Creating checkout session...");
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: stripePriceId,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      success_url: `${req.headers.get("origin")}/profile-settings?subscription_success=true`,
-      cancel_url: `${req.headers.get("origin")}/profile-settings?subscription_cancelled=true`,
-      allow_promotion_codes: true, // Enable promo codes
-      client_reference_id: user.id,
-    });
+    try {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price: stripePriceId,
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        success_url: `${req.headers.get("origin")}/profile-settings?subscription_success=true`,
+        cancel_url: `${req.headers.get("origin")}/profile-settings?subscription_cancelled=true`,
+        allow_promotion_codes: true, // Enable promo codes
+        client_reference_id: user.id,
+      });
 
-    console.log(`Checkout session created: ${session.id}, URL: ${session.url}`);
-    
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+      console.log(`Checkout session created: ${session.id}, URL: ${session.url}`);
+      
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (stripeError) {
+      console.error("Stripe checkout session creation error:", stripeError);
+      throw new Error(`Stripe checkout error: ${stripeError.message}`);
+    }
   } catch (error) {
     console.error("Subscription error:", error.message);
     return new Response(

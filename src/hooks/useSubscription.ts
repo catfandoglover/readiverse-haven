@@ -79,8 +79,16 @@ export function useSubscription() {
     try {
       if (!user || !session) {
         toast.error('You must be logged in to subscribe');
+        console.error('No user or session available');
         return false;
       }
+      
+      console.log('Creating checkout session with:', {
+        billingInterval,
+        userId: user.id,
+        hasSession: !!session,
+        accessToken: session.access_token ? 'Available (not shown)' : 'Missing'
+      });
       
       // Use the price_id directly based on billing interval
       const priceId = billingInterval === 'annual' 
@@ -96,10 +104,12 @@ export function useSubscription() {
         }
       });
       
+      console.log('Checkout response:', { data, error });
+      
       if (error) {
         console.error('Error from create-subscription function:', error);
-        toast.error('Failed to create checkout session');
-        throw error;
+        toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`);
+        return false;
       }
       
       if (data?.url) {
@@ -108,12 +118,12 @@ export function useSubscription() {
         return true;
       } else {
         console.error('No URL returned from checkout session', data);
-        toast.error('Failed to create checkout session');
+        toast.error('Failed to create checkout session: No checkout URL returned');
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout session:', error);
-      toast.error('Failed to create checkout session');
+      toast.error(`Failed to create checkout session: ${error?.message || 'Unknown error'}`);
       return false;
     }
   };
@@ -122,8 +132,11 @@ export function useSubscription() {
     try {
       if (!user || !session) {
         toast.error('You must be logged in to manage your subscription');
+        console.error('No user or session available for portal');
         return false;
       }
+      
+      console.log('Creating portal session for user:', user.id);
       
       toast.info('Opening subscription management...');
       
@@ -133,10 +146,12 @@ export function useSubscription() {
         }
       });
       
+      console.log('Portal response:', { data, error });
+      
       if (error) {
         console.error('Error from create-portal-session function:', error);
-        toast.error('Failed to open subscription management');
-        throw error;
+        toast.error(`Failed to open subscription management: ${error.message || 'Unknown error'}`);
+        return false;
       }
       
       if (data?.url) {
@@ -145,12 +160,12 @@ export function useSubscription() {
         return true;
       } else {
         console.error('No URL returned from portal session', data);
-        toast.error('Failed to open subscription management');
+        toast.error('Failed to open subscription management: No portal URL returned');
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating portal session:', error);
-      toast.error('Failed to manage subscription');
+      toast.error(`Failed to manage subscription: ${error?.message || 'Unknown error'}`);
       return false;
     }
   };

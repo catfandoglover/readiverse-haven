@@ -48,9 +48,9 @@ gcp_jwt_path = "supabase-service-account.json"
 
 [functions]
 analyze-dna = {}
-create-portal-session = {}
+create-portal-session = { verify_jwt = false }
 create-stripe-checkout = {}
-create-subscription = {}
+create-subscription = { verify_jwt = false }
 exchange = {}
 get-booking-cost = {}
 stripe-webhook = { verify_jwt = false }
