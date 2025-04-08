@@ -5,7 +5,7 @@ import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, Hexagon, LogOut } from "lucide-react";
+import { ArrowRight, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useProfileData } from "@/contexts/ProfileDataContext";
 
@@ -118,15 +118,11 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                   <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="relative mr-4">
-                        <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full overflow-hidden">
                           <img 
                             src={isLoading ? "" : getIconByName(dnaAnalysisData?.most_kindred_spirit)} 
                             alt={isLoading ? "Loading" : dnaAnalysisData?.most_kindred_spirit?.split(' - ')[0] || "Kindred Spirit"} 
-                            className="h-10 w-10 object-cover"
-                            style={{ 
-                              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                            }}
+                            className="h-9 w-9 object-cover"
                           />
                         </div>
                       </div>
@@ -141,7 +137,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                         <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
                       </div>
                     </div>
-                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                    <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
                       <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                     </button>
                   </div>
@@ -152,15 +148,11 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                   <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="relative mr-4">
-                        <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full overflow-hidden">
                           <img 
                             src={isLoading ? "" : getIconByName(dnaAnalysisData?.most_challenging_voice)} 
                             alt={isLoading ? "Loading" : dnaAnalysisData?.most_challenging_voice?.split(' - ')[0] || "Challenging Voice"} 
-                            className="h-10 w-10 object-cover"
-                            style={{ 
-                              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                            }}
+                            className="h-9 w-9 object-cover"
                           />
                         </div>
                       </div>
@@ -175,7 +167,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                         <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
                       </div>
                     </div>
-                    <button className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                    <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
                       <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                     </button>
                   </div>

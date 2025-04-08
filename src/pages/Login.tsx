@@ -63,37 +63,36 @@ export function Login() {
   }
   
   return (
-    <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col justify-between p-6">
-      {/* Top section with logo and title */}
-      <div className="flex flex-col items-center mt-24 mb-12">
-        <div className="absolute top-4 left-4">
+    <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] grid grid-rows-[auto_1fr_auto] py-6">
+      {/* Top nav section */}
+      <div className="px-6">
+        <div className="relative">
           <MainMenu />
         </div>
-        <div className="w-28 h-28 mb-10">
+      </div>
+
+      {/* Center content with vertical alignment */}
+      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto px-6">
+        <div className="w-36 h-36 mb-10">
           <img 
             src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning%20Hexagon.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZyBIZXhhZ29uLnBuZyIsImlhdCI6MTc0MzczODUzMiwiZXhwIjo4ODE0MzY1MjEzMn0.nqjOMHSqPwcszVHj-OUBxUHDP1OEMBkkg8GceJiY0TY"
             alt="Lightning logo"
-            width={112}
-            height={112}
+            width={144}
+            height={144}
             className="w-full h-full"
           />
         </div>
         <h1 className="text-4xl font-libre-baskerville font-bold text-[#373763] mb-6">Login</h1>
-        <h2 className="font-oxanium text-[#332E38]/50 text-center uppercase tracking-wider text-sm font-bold">
+        <h2 className="font-oxanium text-[#332E38]/50 text-center uppercase tracking-wider text-sm font-bold mb-8">
           WELCOME BACK TO THE GREAT CONVERSATION
         </h2>
       </div>
 
-      {/* Middle content area */}
-      <div className="flex-grow flex items-center justify-center w-full max-w-md mx-auto">
-        {showEmailForm && (
-          <LoginForm />
-        )}
-      </div>
-
       {/* Bottom section with buttons - positioned at bottom */}
       <div className="w-full max-w-md mx-auto mb-16 px-6">
-        {!showEmailForm && (
+        {showEmailForm ? (
+          <LoginForm />
+        ) : (
           <>
             <button
               onClick={handleGoogleLogin}

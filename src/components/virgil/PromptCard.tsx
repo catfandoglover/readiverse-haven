@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
@@ -94,7 +93,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
           <IconComponent size={isMobile ? 14 : 16} />
         </div>
         <div className="flex-1">
-          <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold">
+          <h3 className="font-oxanium text-sm text-[#F9F9F9] uppercase tracking-wider font-bold">
             {prompt.user_title}
           </h3>
         </div>
@@ -115,7 +114,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
       >
         <IconComponent size={isMobile ? 18 : 22} />
       </div>
-      <h3 className="font-oxanium text-sm text-[#E9E7E2] uppercase tracking-wider font-bold mb-2">
+      <h3 className="font-oxanium text-sm text-[#F9F9F9] uppercase tracking-wider font-bold mb-2">
         {prompt.user_title}
       </h3>
       {prompt.user_subtitle && (
@@ -130,7 +129,7 @@ const PromptCard: React.FC<PromptCardProps> = ({ prompt, viewMode, onSelect }) =
        {/* Section label at bottom left */}
        {prompt.section && (
          <div className="mt-4">
-           <p className="uppercase text-xs tracking-wider opacity-70">
+           <p className="uppercase text-[10px] tracking-wider opacity-70">
              {prompt.section}
            </p>
          </div>

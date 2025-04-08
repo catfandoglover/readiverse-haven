@@ -64,24 +64,21 @@ const BookCounselor = () => {
 
   return (
     <div className="min-h-[100dvh] bg-[#301630] text-[#E9E7E2]">
-      <div className="flex items-center pt-4 px-4">
-        <MainMenu />
-        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+      <div className="flex items-center pt-4 px-4 relative">
+        <div className="z-10">
+          <MainMenu />
+        </div>
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold w-full text-center absolute left-0 right-0">
           BOOK A COUNSELOR
         </h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <div className="ml-auto invisible">
+          <MainMenu />
+        </div>
       </div>
       
       <div className="max-w-lg mx-auto p-6">
-        <h1 className="text-2xl font-baskerville leading-none tracking-tight text-white font-bold pt-2 pb-4">
-          Book a DNA Assessment Discussion
+        <h1 className="text-2xl font-libre-baskerville leading-none tracking-tight text-white font-bold pt-2 pb-4">
+          Intellectual Counseling
         </h1>
         
         <p className="text-sm text-gray-300 mb-6">

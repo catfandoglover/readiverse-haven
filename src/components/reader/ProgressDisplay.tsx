@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 
@@ -25,7 +24,7 @@ const ProgressDisplay = ({
           <span>{Math.round(displayProgress)}%</span>
         </div>
       )}
-      <Progress value={displayProgress} className="h-1.5" />
+      <Progress value={displayProgress} className="h-1" />
     </div>
   );
 };

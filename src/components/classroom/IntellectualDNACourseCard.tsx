@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,14 +11,15 @@ const IntellectualDNACourseCard: React.FC = () => {
 
   return (
     <div 
-      className="w-full bg-[#E9E7E2]/10 rounded-2xl cursor-pointer hover:opacity-90 transition-opacity p-6"
-      style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
+      className="w-full bg-[#19352F]/80 rounded-2xl cursor-pointer hover:bg-[#19352F] transition-colors p-6"
       onClick={handleClick}
     >
-      <h3 className="font-oxanium font-bold uppercase text-xs text-[#E9E7E2] tracking-wider mb-1">
-        Intellectual DNA course
-      </h3>
-      <p className="font-oxanium text-[#E9E7E2]/50 text-xs mb-3 mt-2">
+      <div className="flex items-center gap-2 mb-1">
+        <h3 className="font-oxanium uppercase text-xs text-[#E9E7E2] tracking-wider font-bold">
+          Intellectual DNA
+        </h3>
+      </div>
+      <p className="font-oxanium text-[#E9E7E2]/50 text-xs mt-2">
         Uncover your worldview.
       </p>
     </div>

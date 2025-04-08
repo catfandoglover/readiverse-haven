@@ -93,13 +93,13 @@ const IntellectualDNA = () => {
     <div className="flex flex-col min-h-screen bg-[#E9E7E2]">
       <header className="w-full pt-4 px-4 flex justify-between items-center">
         <div>
-          <MainMenu />
+          <MainMenu dnaStyling={true} />
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-4">
           {!user ? (
             <button 
               onClick={() => navigate('/register')}
-              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold"
+              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
               type="button"
             >
               SIGN UP
@@ -107,7 +107,7 @@ const IntellectualDNA = () => {
           ) : !hasCompletedDNA ? (
             <button 
               onClick={signOut}
-              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold"
+              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
               type="button"
             >
               SIGN OUT

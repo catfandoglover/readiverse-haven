@@ -8,7 +8,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 
-const MainMenu: React.FC = () => {
+interface MainMenuProps {
+  dnaStyling?: boolean;
+}
+
+const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -17,6 +21,11 @@ const MainMenu: React.FC = () => {
   // Determine which path is active
   const isActive = (path: string) => {
     return location.pathname.startsWith(path);
+  };
+
+  // Check if we're on a page that needs special styling (DNA, Login, Register)
+  const shouldUseSpecialStyling = () => {
+    return dnaStyling || isActive('/register') || isActive('/login');
   };
 
   // Get the default highlighted menu item based on user status
@@ -93,9 +102,14 @@ const MainMenu: React.FC = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-[#E9E7E2] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] p-1">
-          <Menu className="h-7.5 w-7.5" />
-        </Button>
+        <button 
+          className={cn(
+            "inline-flex items-center justify-center w-10 h-10 rounded-md p-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] focus:outline-none",
+            shouldUseSpecialStyling() ? "text-[#332E38]/90" : "text-[#E9E7E2]"
+          )}
+        >
+          <Menu className="h-7 w-7" />
+        </button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[320px] bg-[#2A282A] text-[#E9E7E2] border-r border-[#E9E7E2]/10 p-0">
         <div className="p-6 pt-10">

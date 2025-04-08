@@ -1,4 +1,3 @@
-
 import { conversationManager } from './ConversationManager';
 import audioTranscriptionService from './AudioTranscriptionService';
 import { toast } from 'sonner';
@@ -234,7 +233,7 @@ class AIService {
       
       // Provide a fallback response rather than throwing an error
       return {
-        text: "I'm sorry, I encountered an error while processing your request. Please check that your Gemini API key is valid and properly configured in the environment variables.",
+        text: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again?",
       };
     }
   }

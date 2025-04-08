@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,7 +17,7 @@ const SuggestedExamHero: React.FC = () => {
   };
 
   return (
-    <div className="relative h-44 w-full rounded-2xl overflow-hidden cursor-pointer"
+    <div className="relative h-52 w-full rounded-2xl overflow-hidden cursor-pointer"
       onClick={handleStartExam}
     >
       {/* Background Image with Blur and Dark Overlay */}

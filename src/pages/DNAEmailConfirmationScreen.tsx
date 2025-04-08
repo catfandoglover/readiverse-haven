@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
-import { Inbox } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { LightningSpinner } from '@/components/ui/lightning-spinner';
@@ -56,29 +55,30 @@ const DNAEmailConfirmationScreen = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#E9E7E2] flex flex-col items-center justify-between overflow-hidden z-50">
-      {/* No back button in header */}
-      <header className="sticky top-0 w-full px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
-        <div className="flex-1"></div> {/* Spacer */}
-      </header>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-xl w-full px-6">
-        <div className="flex justify-center mb-8">
-          <div className="rounded-full bg-[#373763]/10 p-4">
-            <Inbox className="h-8 w-8 text-[#373763]" />
-          </div>
+    <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] grid grid-rows-[auto_1fr_auto] py-6">
+      {/* Top nav section */}
+      <div className="px-6">
+        <div className="relative">
+          {/* No back button in header */}
         </div>
-        <h2 className="font-oxanium uppercase text-[#332E38]/50 tracking-wider text-sm font-bold mb-4">
-          CHECK YOUR EMAIL
-        </h2>
-        <h1 className="font-libre-baskerville font-bold text-[#373763] text-3xl md:text-4xl leading-tight mb-8">
-          Confirm your email to view your results
-        </h1>
       </div>
 
-      {/* Continue button */}
-      <div className="w-full max-w-md mb-16 px-6">
+      {/* Center content with vertical alignment */}
+      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto px-6">
+        <div className="w-36 h-36 mb-10">
+          <img 
+            src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning%20Hexagon.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZyBIZXhhZ29uLnBuZyIsImlhdCI6MTc0MzczODUzMiwiZXhwIjo4ODE0MzY1MjEzMn0.nqjOMHSqPwcszVHj-OUBxUHDP1OEMBkkg8GceJiY0TY"
+            alt="Lightning logo"
+            width={144}
+            height={144}
+            className="w-full h-full"
+          />
+        </div>
+        <h1 className="text-3xl font-libre-baskerville font-bold text-[#373763] mb-6 text-center">Confirm your email to gain access</h1>
+      </div>
+
+      {/* Bottom section with buttons - positioned at bottom */}
+      <div className="w-full max-w-md mx-auto mb-16 px-6">
         <Button 
           onClick={handleContinue}
           disabled={isLoading}

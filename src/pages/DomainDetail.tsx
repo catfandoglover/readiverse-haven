@@ -605,13 +605,6 @@ const DomainDetail: React.FC = () => {
         <div className="space-y-6">
           {resourcesWithStatus.map((resource, idx) => {
             const resourceLevel = getProgressLevel(resource.progress);
-            let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
-            
-            if (resource.status === "completed") {
-              StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
-            } else if (resource.status === "locked") {
-              StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
-            }
             
             return (
               <div key={idx}>
@@ -622,7 +615,7 @@ const DomainDetail: React.FC = () => {
                   <div className="flex items-center mb-3">
                     <div className="flex items-center flex-1">
                       <div className="relative mr-4">
-                        <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
+                        <Hexagon className="h-10 w-10 text-[#3D3D6F]" strokeWidth={3} />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <img 
                             src={resource.image} 
@@ -640,8 +633,8 @@ const DomainDetail: React.FC = () => {
                       </div>
                     </div>
                     
-                    <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${resource.status === "completed" ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
-                      <StatusIcon />
+                    <button className="h-8 w-8 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/20">
+                      <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
                     </button>
                   </div>
                   

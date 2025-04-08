@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -25,15 +24,13 @@ const VirgilOffice: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Virgil's Office
         </h2>
-        <Button
-          variant="ghost" 
-          size="icon"
-          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50"
-          aria-label="Chat History"
+        <button
           onClick={() => setIsHistorySidebarOpen(true)}
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
+          aria-label="Chat History"
         >
-          <MessageCircleMore className="h-5 w-5" />
-        </Button>
+          <MessageCircleMore className="h-7 w-7" />
+        </button>
       </div>
       
       <main className={cn(
@@ -42,14 +39,15 @@ const VirgilOffice: React.FC = () => {
       )}>
         <div className={cn(
           "flex flex-col items-center h-full",
-          isMobile ? "justify-start pt-[20vh]" : "justify-center px-6 py-10"
+          isMobile ? "justify-start pt-[25vh]" : "justify-start pt-[15vh] px-6 py-10"
         )}>
           <div className="max-w-md w-full mx-auto text-center px-6">
             <h1 
               className="font-libre-baskerville bold text-[#E9E7E2] text-3xl md:text-4xl" 
               style={{ textShadow: "0 4px 8px rgba(0,0,0,0.5)" }}
             >
-              What brings you here today?
+              What brings you<br />
+              here today?
             </h1>
             
             <div className={cn(
@@ -57,21 +55,21 @@ const VirgilOffice: React.FC = () => {
               isMobile ? "mt-6" : "mt-8"
             )}>
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/80 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => navigate("/virgil-modes")}
               >
                 CHAT WITH VIRGIL
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/80 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => navigate("/classroom")}
               >
                 TAKE A COURSE
               </Button>
               
               <Button
-                className="w-full py-4 rounded-2xl bg-[#332E38]/50 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                className="w-full py-4 rounded-2xl bg-[#332E38]/80 hover:bg-[#332E38] hover:outline hover:outline-1 hover:outline-[#CCFF23] text-[#E9E7E2] font-oxanium text-sm uppercase font-bold tracking-wider transition-all shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
                 onClick={() => navigate("/exam-room")}
               >
                 TEST MY KNOWLEDGE

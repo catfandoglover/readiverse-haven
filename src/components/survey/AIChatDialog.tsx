@@ -249,7 +249,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       );
       setMessages(prevMessages => [
         ...prevMessages, 
-        { id: uuidv4(), content: 'Sorry, I encountered an error while processing your message.', role: 'assistant' }
+        { id: uuidv4(), content: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again?", role: 'assistant' }
       ]);
     } finally {
       setIsProcessing(false);
@@ -316,7 +316,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         ...prevMessages, 
         { 
           id: uuidv4(), 
-          content: 'I encountered an issue processing your voice message. Please try sending a text message instead.', 
+          content: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again? You might want to try a text message instead.", 
           role: 'assistant' 
         }
       ]);

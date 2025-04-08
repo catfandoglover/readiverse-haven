@@ -333,32 +333,19 @@ const IntellectualDNACourse: React.FC = () => {
   };
   
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
-    let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
-    
-    if (resource.status === "completed") {
-      StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
-    } else if (resource.status === "locked") {
-      StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
-    }
-    
     return (
       <div>
         <div 
-          className="rounded-xl p-4 pb-1.5 shadow-inner"
-          style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(25, 53, 47, 0.1))' }}
+          className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
         >
           <div className="flex items-center mb-3">
             <div className="flex items-center flex-1">
               <div className="relative mr-4">
-                <Hexagon className="h-10 w-10 text-[#CCFF23]" strokeWidth={3} />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-9 w-9 rounded-full overflow-hidden">
                   <img 
                     src={resource.image} 
                     alt={resource.title}
-                    className="h-9 w-9 object-cover rounded-none"
-                    style={{ 
-                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    }}
+                    className="h-9 w-9 object-cover"
                   />
                 </div>
               </div>
@@ -368,8 +355,8 @@ const IntellectualDNACourse: React.FC = () => {
               </div>
             </div>
             
-            <button className={`h-8 w-8 rounded-full flex items-center justify-center ml-4 ${resource.status === "completed" ? 'bg-[#CCFF23]' : 'bg-[#E9E7E2]/10'}`}>
-              <StatusIcon />
+            <button className="h-9 w-9 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/75">
+              <ArrowRight className="h-4 w-4 text-[#19352F]" />
             </button>
           </div>
           
@@ -379,8 +366,6 @@ const IntellectualDNACourse: React.FC = () => {
             className="mb-3" 
           />
         </div>
-        
-        <p className="text-xs text-[#9F9EA1] ml-2 font-oxanium mt-3 mb-4">{resource.description}</p>
       </div>
     );
   };
@@ -395,7 +380,7 @@ const IntellectualDNACourse: React.FC = () => {
       <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
           <h1 className="font-libre-baskerville font-bold uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
-          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domain.subtitle}</p>
+          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35] text-lg">{domain.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5] mb-10">
             {getDomainIntroduction(domain.id)}
           </p>
@@ -404,7 +389,7 @@ const IntellectualDNACourse: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "kindred" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -421,7 +406,7 @@ const IntellectualDNACourse: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "challenging" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -449,51 +434,48 @@ const IntellectualDNACourse: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-[#1D3A35] text-[#E9E7E2] relative">
-      <header className="sticky top-0 z-10 flex items-center pt-4 px-4 bg-[#1D3A35]">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+      <header className="sticky top-0 z-10 flex items-center pt-4 px-4 bg-[#1D3A35] text-[#E9E7E2]">
+        <button
           onClick={() => navigate(-1)}
-          className="p-0 h-auto w-auto hover:bg-transparent"
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
+          aria-label="Back"
         >
-          <ArrowLeft className="h-6 w-6 text-white" />
-        </Button>
-        
-        <h1 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
-          Intellectual DNA Course
-        </h1>
-        
+          <ArrowLeft className="h-7 w-7" />
+        </button>
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+          INTELLECTUAL DNA COURSE
+        </h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
-              <SlidersHorizontal className="h-6 w-6 text-[#E9E7E2]" />
-            </Button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none">
+              <SlidersHorizontal className="h-6 w-6" />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-[#1D3A35] border-[#356E61] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer font-libre-baskerville"
+              className="flex items-center cursor-pointer font-libre-baskerville uppercase"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
               ) : (
                 <div className="w-4 mr-2" />
               )}
-              All Domains
+              ALL DOMAINS
             </DropdownMenuItem>
             
             {domains.map(domain => (
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer font-libre-baskerville"
+                className="flex items-center cursor-pointer font-libre-baskerville uppercase"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />
                 ) : (
                   <div className="w-4 mr-2" />
                 )}
-                {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
+                {domain.title}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

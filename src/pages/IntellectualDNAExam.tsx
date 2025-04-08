@@ -332,17 +332,13 @@ const IntellectualDNAExam: React.FC = () => {
   };
   
   const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
-    let StatusIcon = () => <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />;
-    
-    if (resource.status === "completed") {
-      StatusIcon = () => <Check className="h-5 w-5 text-[#1A1A1A]" />;
-    } else if (resource.status === "locked") {
-      StatusIcon = () => <Lock className="h-4 w-4 text-[#E9E7E2]/70" />;
-    }
-    
     const handleClick = () => {
       if (resource.score > 0) {
-        setSelectedResource({...resource, domainId});
+        setSelectedResource({
+          ...resource,
+          domainId,
+          about: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent in magna vitae enim tincidunt facilisis sed in tellus."
+        });
         setIsDialogOpen(true);
       }
     };
@@ -350,10 +346,9 @@ const IntellectualDNAExam: React.FC = () => {
     return (
       <div 
         className={cn(
-          "rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors",
-          resource.score > 0 ? "cursor-pointer" : "cursor-default"
+          "rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763] transition-colors",
+          resource.score > 0 ? "bg-[#373763]/80" : "bg-[#373763]/50 opacity-70"
         )}
-        style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
         onClick={handleClick}
       >
         <div className="flex items-center mb-3">
@@ -430,7 +425,7 @@ const IntellectualDNAExam: React.FC = () => {
       <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
           <h1 className="font-baskerville uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
-          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35]">{domain.subtitle}</p>
+          <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35] text-lg">{domain.subtitle}</p>
           <p className="font-oxanium text-[#E9E7E2] opacity-[0.5] mb-10">
             {getDomainIntroduction(domain.id)}
           </p>
@@ -439,7 +434,7 @@ const IntellectualDNAExam: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "kindred" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -456,7 +451,7 @@ const IntellectualDNAExam: React.FC = () => {
             <Button
               variant="ghost"
               className={cn(
-                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0",
+                "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
                 activeTab === "challenging" 
                   ? "text-[#E9E7E2]" 
                   : "text-[#E9E7E2]/60"
@@ -484,51 +479,50 @@ const IntellectualDNAExam: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-[#3D3D6F] text-[#E9E7E2] relative">
-      <header className="sticky top-0 z-10 flex items-center pt-4 px-4 bg-[#3D3D6F]">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+      <header className="sticky top-0 z-10 flex items-center pt-4 px-4 bg-[#3D3D6F] text-[#E9E7E2]">
+        <button
           onClick={() => navigate("/exam-room")}
-          className="p-0 h-auto w-auto hover:bg-transparent"
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
+          aria-label="Back"
         >
-          <ArrowLeft className="h-6 w-6 text-white" />
-        </Button>
+          <ArrowLeft className="h-7 w-7" />
+        </button>
         
-        <h1 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           Intellectual DNA
-        </h1>
+        </h2>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
-              <SlidersHorizontal className="h-6 w-6 text-[#E9E7E2]" />
-            </Button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none">
+              <SlidersHorizontal className="h-6 w-6" />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-[#373763] border-[#4D4D8F] text-[#E9E7E2]">
             <DropdownMenuItem 
               onClick={() => setDomainFilter("all")}
-              className="flex items-center cursor-pointer font-libre-baskerville"
+              className="flex items-center cursor-pointer font-libre-baskerville uppercase"
             >
               {!domainFilter || domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
               ) : (
                 <div className="w-4 mr-2" />
               )}
-              All Domains
+              ALL DOMAINS
             </DropdownMenuItem>
             
             {domains.map(domain => (
               <DropdownMenuItem 
                 key={domain.id} 
                 onClick={() => setDomainFilter(domain.id)}
-                className="flex items-center cursor-pointer font-libre-baskerville"
+                className="flex items-center cursor-pointer font-libre-baskerville uppercase"
               >
                 {domainFilter === domain.id ? (
                   <Check className="h-4 w-4 mr-2" />
                 ) : (
                   <div className="w-4 mr-2" />
                 )}
-                {domain.title.charAt(0) + domain.title.slice(1).toLowerCase()}
+                {domain.title}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Hexagon } from "lucide-react";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
 import BadgeDialog from "./BadgeDialog";
 
@@ -84,8 +83,8 @@ const ExamsList: React.FC = () => {
     <div className="space-y-4">
       <div className="mb-6">
         <div className="h-px w-full my-6 bg-[#9F9EA1]/20"></div>
-        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold">
-          MY BADGES
+        <h2 className="font-oxanium text-base font-bold text-[#E9E7E2] px-1 uppercase tracking-wider">
+          My Badges
         </h2>
       </div>
       
@@ -93,22 +92,17 @@ const ExamsList: React.FC = () => {
         {exams.map((exam) => (
           <div 
             key={exam.id}
-            className="rounded-2xl p-4 pb-1.5 shadow-inner cursor-pointer hover:bg-[#373763]/70 transition-colors"
-            style={{ background: 'linear-gradient(rgba(233, 231, 226, 0.1), rgba(55, 55, 99, 0.1))' }}
+            className="rounded-2xl p-4 pb-1.5 bg-[#373763]/80 shadow-inner cursor-pointer hover:bg-[#373763] transition-colors"
             onClick={() => handleSelectExam(exam)}
           >
             <div className="flex items-center mb-3">
               <div className="flex items-center flex-1">
                 <div className="relative mr-4">
-                  <Hexagon className="h-10 w-10 text-[#3D3D6F]" strokeWidth={3} />
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-9 w-9 rounded-full overflow-hidden">
                     <img 
                       src={exam.image} 
                       alt={exam.title}
-                      className="h-9 w-9 object-cover rounded-2xl"
-                      style={{ 
-                        clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                      }}
+                      className="h-9 w-9 object-cover"
                     />
                   </div>
                 </div>
@@ -121,11 +115,11 @@ const ExamsList: React.FC = () => {
               </div>
               <div className="relative flex flex-col items-center min-w-[80px]">
                 <div className="relative flex flex-col items-center justify-center">
-                  {/* Hexagon with solid fill */}
+                  {/* Score badge */}
                   <div 
                     style={{ 
-                      height: '2rem', 
-                      width: '2rem', 
+                      height: '2.25rem', 
+                      width: '2.25rem', 
                       position: 'relative' 
                     }}
                   >
