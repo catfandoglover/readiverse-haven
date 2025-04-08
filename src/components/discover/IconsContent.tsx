@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import VerticalSwiper from "../common/VerticalSwiper";
+import { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 
 interface Icon {
   id: string;
@@ -56,6 +57,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const params = useParams();
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
+  const swiperRef = useRef<VerticalSwiperHandle>(null);
   
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -197,17 +199,23 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
-  const handlePrevious = () => {
-    if (displayIndex > 0) {
-      setDisplayIndex(displayIndex - 1);
+  const handlePrevious = useCallback(() => {
+    console.log("IconsContent - Previous button clicked, index:", displayIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goPrevious();
+    } else if (displayIndex > 0) {
+      setDisplayIndex(prevIndex => prevIndex - 1);
     }
-  };
+  }, [displayIndex]);
 
-  const handleNext = () => {
-    if (icons.length > 0 && displayIndex < icons.length - 1) {
-      setDisplayIndex(displayIndex + 1);
+  const handleNext = useCallback(() => {
+    console.log("IconsContent - Next button clicked, index:", displayIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goNext();
+    } else if (icons.length > 0 && displayIndex < icons.length - 1) {
+      setDisplayIndex(prevIndex => prevIndex + 1);
     }
-  };
+  }, [displayIndex, icons.length]);
 
   const handleLearnMore = (icon: Icon) => {
     if (!icon.slug) {
@@ -317,6 +325,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     return (
       <>
         <VerticalSwiper
+          ref={swiperRef}
           initialIndex={displayIndex}
           onIndexChange={handleIndexChange}
           preloadCount={2}
@@ -367,8 +376,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             itemType="icon"
             onLearnMore={() => handleLearnMore(iconToShow)}
             onImageClick={() => handleLearnMore(iconToShow)}
-            onPrevious={displayIndex > 0 ? () => setDisplayIndex(displayIndex - 1) : undefined}
-            onNext={displayIndex < icons.length - 1 ? () => setDisplayIndex(displayIndex + 1) : undefined}
+            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
+            onNext={displayIndex < icons.length - 1 ? handleNext : undefined}
             hasPrevious={displayIndex > 0}
             hasNext={displayIndex < icons.length - 1}
           />

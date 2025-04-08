@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import VerticalSwiper from "@/components/common/VerticalSwiper";
+import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 
 interface Concept {
   id: string;
@@ -41,6 +41,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const location = useLocation();
   const params = useParams();
   const { saveSourcePath, getSourcePath } = useNavigationState();
+  const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -196,15 +197,21 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   }, [location.pathname, saveSourcePath]);
 
   const handleNextConcept = () => {
-    if (concepts.length === 0) return;
-    const newIndex = (conceptIndex + 1) % concepts.length;
-    setConceptIndex(newIndex);
+    console.log("ConceptsContent - Next button clicked, index:", conceptIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goNext();
+    } else if (concepts.length > 0 && conceptIndex < concepts.length - 1) {
+      setConceptIndex(prevIndex => prevIndex + 1);
+    }
   };
 
   const handlePrevConcept = () => {
-    if (concepts.length === 0) return;
-    const newIndex = (conceptIndex - 1 + concepts.length) % concepts.length;
-    setConceptIndex(newIndex);
+    console.log("ConceptsContent - Previous button clicked, index:", conceptIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goPrevious();
+    } else if (conceptIndex > 0) {
+      setConceptIndex(prevIndex => prevIndex - 1);
+    }
   };
 
   const handleLearnMore = (concept: Concept) => {
@@ -252,6 +259,9 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
+  // Get current item function
+  const getCurrentItem = () => concepts[conceptIndex % Math.max(1, concepts.length)] || null;
+
   if (isLoading || !concepts || concepts.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -260,30 +270,70 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     );
   }
 
+  // Mobile version
+  if (isMobile) {
+    return (
+      <>
+        <VerticalSwiper 
+          ref={swiperRef}
+          initialIndex={conceptIndex}
+          onIndexChange={setConceptIndex}
+        >
+          {concepts.map((concept, index) => (
+            <div key={concept.id} className="h-full">
+              <ContentCard
+                image={concept.image || concept.illustration}
+                title={concept.title}
+                about={concept.about || ''}
+                itemId={concept.id}
+                itemType="concept"
+                onLearnMore={() => handleLearnMore(concept)}
+                onImageClick={() => handleLearnMore(concept)}
+                onPrevious={handlePrevConcept}
+                onNext={handleNextConcept}
+                hasPrevious={index > 0}
+                hasNext={index < concepts.length - 1}
+              />
+            </div>
+          ))}
+        </VerticalSwiper>
+  
+        {selectedConcept && (
+          <DetailedView
+            type="concept"
+            data={{
+              ...selectedConcept,
+              image: selectedConcept.image || selectedConcept.illustration
+            }}
+            onBack={handleCloseDetailedView}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Desktop version
+  const currentConcept = getCurrentItem();
+  
   return (
     <>
-      <VerticalSwiper 
-        initialIndex={conceptIndex}
-        onIndexChange={setConceptIndex}
-      >
-        {concepts.map((concept, index) => (
-          <div key={concept.id} className="h-full">
-            <ContentCard
-              image={concept.image || concept.illustration}
-              title={concept.title}
-              about={concept.about || ''}
-              itemId={concept.id}
-              itemType="concept"
-              onLearnMore={() => handleLearnMore(concept)}
-              onImageClick={() => handleLearnMore(concept)}
-              onPrevious={handlePrevConcept}
-              onNext={handleNextConcept}
-              hasPrevious={index > 0}
-              hasNext={index < concepts.length - 1}
-            />
-          </div>
-        ))}
-      </VerticalSwiper>
+      <div className="h-full">
+        {currentConcept && (
+          <ContentCard
+            image={currentConcept.image || currentConcept.illustration}
+            title={currentConcept.title}
+            about={currentConcept.about || ''}
+            itemId={currentConcept.id}
+            itemType="concept"
+            onLearnMore={() => handleLearnMore(currentConcept)}
+            onImageClick={() => handleLearnMore(currentConcept)}
+            onPrevious={conceptIndex > 0 ? handlePrevConcept : undefined}
+            onNext={conceptIndex < concepts.length - 1 ? handleNextConcept : undefined}
+            hasPrevious={conceptIndex > 0}
+            hasNext={conceptIndex < concepts.length - 1}
+          />
+        )}
+      </div>
 
       {selectedConcept && (
         <DetailedView

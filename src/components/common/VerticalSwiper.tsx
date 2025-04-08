@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode, useImperativeHandle, forwardRef } from 'react';
 import { useSwipeable } from 'react-swipeable';
 
 interface VerticalSwiperProps {
@@ -8,15 +8,38 @@ interface VerticalSwiperProps {
   preloadCount?: number;
 }
 
-const VerticalSwiper: React.FC<VerticalSwiperProps> = ({
+export interface VerticalSwiperHandle {
+  goNext: () => void;
+  goPrevious: () => void;
+}
+
+const VerticalSwiper = forwardRef<VerticalSwiperHandle, VerticalSwiperProps>(({
   children,
   initialIndex = 0,
   onIndexChange,
   preloadCount = 1
-}) => {
+}, ref) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [height, setHeight] = useState(window.innerHeight);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Expose navigation methods to parent components
+  useImperativeHandle(ref, () => ({
+    goNext: () => {
+      if (!isTransitioning && currentIndex < React.Children.count(children) - 1) {
+        setIsTransitioning(true);
+        setCurrentIndex(prevIndex => prevIndex + 1);
+        setTimeout(() => setIsTransitioning(false), 300); // Match transition duration
+      }
+    },
+    goPrevious: () => {
+      if (!isTransitioning && currentIndex > 0) {
+        setIsTransitioning(true);
+        setCurrentIndex(prevIndex => prevIndex - 1);
+        setTimeout(() => setIsTransitioning(false), 300); // Match transition duration
+      }
+    }
+  }));
 
   // Update parent when index changes
   useEffect(() => {
@@ -92,6 +115,6 @@ const VerticalSwiper: React.FC<VerticalSwiperProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default VerticalSwiper; 

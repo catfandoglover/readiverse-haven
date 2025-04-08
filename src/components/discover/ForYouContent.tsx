@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,8 @@ import { getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useNavigationState } from "@/hooks/useNavigationState";
-import VerticalSwiper from "@/components/common/VerticalSwiper";
+import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ForYouContentItem {
   id: string;
@@ -35,6 +36,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const { addToBookshelf } = useBookshelfManager();
   const { user } = useAuth();
   const { saveSourcePath, getSourcePath } = useNavigationState();
+  const swiperRef = useRef<VerticalSwiperHandle>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setDisplayIndex(currentIndex);
@@ -132,18 +135,25 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   }, [location.pathname, forYouItems, onDetailedViewShow]);
 
   const handlePrevious = () => {
-    if (displayIndex > 0) {
-      setDisplayIndex(displayIndex - 1);
+    console.log("Previous button clicked, index:", displayIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goPrevious();
+    } else if (displayIndex > 0) {
+      setDisplayIndex(prevIndex => prevIndex - 1);
     }
   };
 
   const handleNext = () => {
-    if (forYouItems.length > 0 && displayIndex < forYouItems.length - 1) {
-      setDisplayIndex(displayIndex + 1);
+    console.log("Next button clicked, index:", displayIndex);
+    if (swiperRef.current) {
+      swiperRef.current.goNext();
+    } else if (forYouItems.length > 0 && displayIndex < forYouItems.length - 1) {
+      setDisplayIndex(prevIndex => prevIndex + 1);
     }
   };
 
-  const itemToShow = forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
+  // Define getCurrentItem function to avoid duplicate code
+  const getCurrentItem = () => forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     // Save the current path before navigation
@@ -226,30 +236,70 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     );
   }
 
+  // Conditionally render based on mobile vs desktop
+  if (isMobile) {
+    return (
+      <>
+        <VerticalSwiper 
+          ref={swiperRef}
+          initialIndex={displayIndex}
+          onIndexChange={setDisplayIndex}
+        >
+          {forYouItems.map((item, index) => (
+            <div key={item.id} className="h-full">
+              <ContentCard
+                image={item.image}
+                title={item.title}
+                about={item.about}
+                itemId={item.id}
+                itemType={item.type}
+                onLearnMore={() => handleLearnMore(item)}
+                onImageClick={() => handleLearnMore(item)}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                hasPrevious={index > 0}
+                hasNext={index < forYouItems.length - 1}
+              />
+            </div>
+          ))}
+        </VerticalSwiper>
+  
+        {selectedItem && (
+          <DetailedView
+            type={selectedItem.type}
+            data={{
+              ...selectedItem,
+              ...mockRelatedData
+            }}
+            onBack={handleCloseDetailedView}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Desktop view - use getCurrentItem instead of redefining itemToShow
+  const currentItem = getCurrentItem();
+  
   return (
     <>
-      <VerticalSwiper 
-        initialIndex={displayIndex}
-        onIndexChange={setDisplayIndex}
-      >
-        {forYouItems.map((item, index) => (
-          <div key={item.id} className="h-full">
-            <ContentCard
-              image={item.image}
-              title={item.title}
-              about={item.about}
-              itemId={item.id}
-              itemType={item.type}
-              onLearnMore={() => handleLearnMore(item)}
-              onImageClick={() => handleLearnMore(item)}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              hasPrevious={index > 0}
-              hasNext={index < forYouItems.length - 1}
-            />
-          </div>
-        ))}
-      </VerticalSwiper>
+      <div className="h-full">
+        {currentItem && (
+          <ContentCard
+            image={currentItem.image}
+            title={currentItem.title}
+            about={currentItem.about}
+            itemId={currentItem.id}
+            itemType={currentItem.type}
+            onLearnMore={() => handleLearnMore(currentItem)}
+            onImageClick={() => handleLearnMore(currentItem)}
+            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
+            onNext={displayIndex < forYouItems.length - 1 ? handleNext : undefined}
+            hasPrevious={displayIndex > 0}
+            hasNext={displayIndex < forYouItems.length - 1}
+          />
+        )}
+      </div>
 
       {selectedItem && (
         <DetailedView
