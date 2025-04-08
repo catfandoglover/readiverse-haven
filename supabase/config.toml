@@ -1,1 +1,11 @@
+
 project_id = "myeyoafugkrkwcnfedlu"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-subscription]
+verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true

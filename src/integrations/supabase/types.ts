@@ -1837,39 +1837,6 @@ export type Database = {
         }
         Relationships: []
       }
-      promo_codes: {
-        Row: {
-          active: boolean
-          code: string
-          created_at: string
-          current_uses: number
-          discount_percent: number
-          expires_at: string | null
-          id: string
-          max_uses: number | null
-        }
-        Insert: {
-          active?: boolean
-          code: string
-          created_at?: string
-          current_uses?: number
-          discount_percent: number
-          expires_at?: string | null
-          id?: string
-          max_uses?: number | null
-        }
-        Update: {
-          active?: boolean
-          code?: string
-          created_at?: string
-          current_uses?: number
-          discount_percent?: number
-          expires_at?: string | null
-          id?: string
-          max_uses?: number | null
-        }
-        Relationships: []
-      }
       prompts: {
         Row: {
           context: string | null
@@ -2314,35 +2281,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      user_promo_codes: {
-        Row: {
-          applied_at: string
-          id: string
-          promo_code_id: string
-          user_id: string
-        }
-        Insert: {
-          applied_at?: string
-          id?: string
-          promo_code_id: string
-          user_id: string
-        }
-        Update: {
-          applied_at?: string
-          id?: string
-          promo_code_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_promo_codes_promo_code_id_fkey"
-            columns: ["promo_code_id"]
-            isOneToOne: false
-            referencedRelation: "promo_codes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       virgil_conversations: {
         Row: {
