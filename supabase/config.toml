@@ -1,1 +1,23 @@
+
 project_id = "myeyoafugkrkwcnfedlu"
+
+[functions.create-stripe-checkout]
+verify_jwt = true
+
+[functions.create-stripe-portal]
+verify_jwt = true
+
+[functions.get-token-usage]
+verify_jwt = true
+
+[functions.stripe-subscription-webhook]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.tidycal-api]
+verify_jwt = false
+
+[functions.track-token-usage]
+verify_jwt = true

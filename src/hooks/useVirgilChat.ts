@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/types/chat';
@@ -7,12 +6,14 @@ import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
 import conversationManager from '@/services/ConversationManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useVirgilChat = (initialMessage?: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [tokenLimitReached, setTokenLimitReached] = useState(false);
   const sessionId = useRef(uuidv4()).current;
 
   useEffect(() => {
@@ -80,6 +81,10 @@ export const useVirgilChat = (initialMessage?: string) => {
       
       const response = await aiService.generateResponse(sessionId, userMessage);
       
+      if (response.tokenLimitReached) {
+        setTokenLimitReached(true);
+      }
+      
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
@@ -117,6 +122,10 @@ export const useVirgilChat = (initialMessage?: string) => {
       ]);
       
       const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
+      
+      if (response.tokenLimitReached) {
+        setTokenLimitReached(true);
+      }
       
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
@@ -224,6 +233,7 @@ export const useVirgilChat = (initialMessage?: string) => {
     setInputMessage,
     isRecording,
     isProcessing,
+    tokenLimitReached,
     toggleRecording,
     handleSubmitMessage,
     addAssistantMessage,

@@ -8,6 +8,7 @@ import ChatInputForm from './ChatInputForm';
 import { ChatVariant } from '@/types/chat';
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
+import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 
 interface VirgilFullScreenChatProps {
   variant?: ChatVariant;
@@ -31,6 +32,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     setInputMessage,
     isRecording,
     isProcessing,
+    tokenLimitReached,
     toggleRecording,
     handleSubmitMessage,
     addAssistantMessage
@@ -85,12 +87,18 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
           </div>
         )}
         
+        {tokenLimitReached && (
+          <div className="my-6">
+            <UpgradePrompt variant="large" showReason={true} />
+          </div>
+        )}
+        
         <div ref={messagesEndRef} className="h-4" />
       </div>
 
       <div className={cn(
         "mt-auto fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-in-out z-10",
-        resultsReady 
+        (resultsReady || tokenLimitReached)
           ? "transform translate-y-full opacity-0 pointer-events-none" 
           : "opacity-100"
       )}>
@@ -103,7 +111,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
             isProcessing={isProcessing}
             toggleRecording={toggleRecording}
             themeColors={themeColors}
-            disabled={disableChat}
+            disabled={disableChat || tokenLimitReached}
           />
         </div>
       </div>

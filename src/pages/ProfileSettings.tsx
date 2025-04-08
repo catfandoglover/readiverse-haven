@@ -6,10 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Upload, CreditCard, LogOut } from "lucide-react";
+import { ArrowLeft, Upload, CreditCard, LogOut, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import TokenUsageDisplay from '@/components/subscription/TokenUsageDisplay';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 
 const ProfileSettings: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -47,14 +49,12 @@ const ProfileSettings: React.FC = () => {
     setIsUpdatingName(true);
     
     try {
-      // Update user_metadata in auth
       const { error: authError } = await supabase.auth.updateUser({
         data: { full_name: fullName }
       });
       
       if (authError) throw authError;
       
-      // Update profile in database
       const { error: dbError } = await supabase
         .from('profiles')
         .update({ full_name: fullName })
@@ -112,7 +112,6 @@ const ProfileSettings: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
     
-    // Check file size (limit to 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
         title: "Error",
@@ -127,26 +126,21 @@ const ProfileSettings: React.FC = () => {
     console.log('File details:', { name: file.name, type: file.type, size: file.size });
     
     try {
-      // Generate a unique timestamp-based file name to avoid conflicts
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const fileName = `profile-${timestamp}.${fileExt}`;
       
       console.log('File path for upload:', fileName);
       
-      // First, check if we can access the bucket
       const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('profile_images');
       
       if (bucketError) {
         console.error('Error accessing bucket:', bucketError);
-        // Try creating a public URL directly without checking bucket
         console.log('Proceeding with upload despite bucket access error');
       } else {
         console.log('Successfully accessed bucket:', bucketData);
       }
       
-      // Attempt direct upload
-      console.log('Uploading to profile_images bucket...');
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('profile_images')
         .upload(fileName, file, {
@@ -161,7 +155,6 @@ const ProfileSettings: React.FC = () => {
       
       console.log('Upload successful:', uploadData);
       
-      // Get the public URL
       const { data: publicURLData } = supabase.storage
         .from('profile_images')
         .getPublicUrl(fileName);
@@ -173,11 +166,6 @@ const ProfileSettings: React.FC = () => {
       
       const publicUrl = publicURLData.publicUrl;
       console.log('Public URL:', publicUrl);
-      
-      // Update the profile with the new image URL
-      console.log('Updating profile record...');
-      console.log('User ID:', user.id);
-      console.log('URL to save:', publicUrl);
       
       const { error: updateError } = await supabase
         .from('profiles')
@@ -199,7 +187,6 @@ const ProfileSettings: React.FC = () => {
     } catch (error) {
       console.error("Error uploading avatar:", error);
       
-      // Try fallback approach with temporary URL
       try {
         console.log("Trying fallback approach with direct URL...");
         const objectURL = URL.createObjectURL(file);
@@ -239,14 +226,8 @@ const ProfileSettings: React.FC = () => {
         description: "Connecting to billing portal...",
       });
       
-      console.log("Opening billing portal for user:", user.id);
-      
-      // Get the current origin for return URL
       const returnUrl = `${window.location.origin}/profile/settings`;
-      console.log("Return URL:", returnUrl);
       
-      // Call our Supabase Edge Function to create a billing portal session
-      console.log("Calling create-stripe-portal function...");
       const { data, error } = await supabase.functions.invoke('create-stripe-portal', {
         body: { 
           userId: user.id,
@@ -276,12 +257,7 @@ const ProfileSettings: React.FC = () => {
         return;
       }
       
-      // Redirect to the Stripe billing portal
-      console.log("Redirecting to Stripe billing portal:", data.url);
-      
-      // Use window.open to ensure it's not blocked by popup blockers
       window.open(data.url, '_blank');
-      
     } catch (error) {
       console.error("Exception accessing billing portal:", error);
       toast({
@@ -306,13 +282,11 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
-  // Fetch the user's subscription information
   useEffect(() => {
     const fetchSubscriptionInfo = async () => {
       if (!user) return;
       
       try {
-        // @ts-ignore - Ignoring TypeScript errors for the new customers table
         const { data, error } = await supabase
           .from('customers')
           .select('subscription_status, subscription_tier')
@@ -328,7 +302,6 @@ const ProfileSettings: React.FC = () => {
             isLoading: false
           });
         } else {
-          // No subscription info found
           setSubscriptionInfo({
             isLoading: false
           });
@@ -344,7 +317,6 @@ const ProfileSettings: React.FC = () => {
     fetchSubscriptionInfo();
   }, [user]);
 
-  // Get the display tier name
   const getCurrentTierName = () => {
     if (subscriptionInfo.isLoading) return "Loading...";
     if (!subscriptionInfo.tier) return "Library Card";
@@ -359,7 +331,6 @@ const ProfileSettings: React.FC = () => {
     }
   };
   
-  // Get the subscription status display message
   const getSubscriptionStatusMessage = () => {
     if (subscriptionInfo.isLoading) return "";
     if (!subscriptionInfo.status) return "Free access to basic features";
@@ -393,7 +364,6 @@ const ProfileSettings: React.FC = () => {
         <h1 className="text-2xl font-bold mb-8 font-libre-baskerville">Profile Settings</h1>
         
         <div className="grid gap-6">
-          {/* Profile Picture */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Profile Picture</CardTitle>
@@ -446,7 +416,6 @@ const ProfileSettings: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Name */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Name</CardTitle>
@@ -472,7 +441,6 @@ const ProfileSettings: React.FC = () => {
             </CardFooter>
           </Card>
           
-          {/* Password */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Password</CardTitle>
@@ -494,7 +462,6 @@ const ProfileSettings: React.FC = () => {
             </CardFooter>
           </Card>
           
-          {/* Subscription Plan */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Subscription Plan</CardTitle>
@@ -511,75 +478,82 @@ const ProfileSettings: React.FC = () => {
                   <div className="bg-[#2A282A] p-4 rounded-md">
                     <h3 className="font-oxanium uppercase mb-2">{getCurrentTierName()}</h3>
                     <p className="text-[#E9E7E2]/70 text-sm mb-4">{getSubscriptionStatusMessage()}</p>
+                    
+                    {subscriptionInfo.tier !== 'surge' && (
+                      <div className="mb-4">
+                        <TokenUsageDisplay />
+                      </div>
+                    )}
+                    
                     <ul className="space-y-2 text-sm text-[#E9E7E2]/80">
-                      {subscriptionInfo.tier === 'scholar' ? (
+                      {subscriptionInfo.tier === 'surge' ? (
                         <>
-                          <li>• Full DNA analysis</li>
-                          <li>• Personalized recommendations</li>
-                          <li>• Unlimited reading list</li>
-                          <li>• Advanced insights</li>
+                          <li>• Unlimited Virgil conversations</li>
+                          <li>• Premium features</li>
                           <li>• Priority support</li>
-                        </>
-                      ) : subscriptionInfo.tier === 'philosopher' ? (
-                        <>
-                          <li>• Full DNA analysis</li>
-                          <li>• Personalized recommendations</li>
-                          <li>• Unlimited reading list</li>
-                          <li>• Advanced insights</li>
-                          <li>• Priority support</li>
-                          <li>• Exclusive content</li>
-                          <li>• 1-on-1 counseling sessions</li>
-                          <li>• Advanced analytics</li>
                         </>
                       ) : (
                         <>
-                          <li>• Full DNA analysis</li>
-                          <li>• Personalized recommendations</li>
-                          <li>• Limited reading list</li>
+                          <li>• Limited monthly conversations</li>
+                          <li>• Basic features</li>
+                          <li>• Standard support</li>
                         </>
                       )}
                     </ul>
+                    
+                    {subscriptionInfo.tier !== 'surge' && (
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => navigate('/upgrade')}
+                          className="w-full bg-[#CCFF23] hover:bg-[#CCFF23]/90 text-[#2A282A] font-oxanium uppercase tracking-wider"
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Upgrade to SURGE
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="upgrade">
                   <div className="space-y-4">
-                    <div className="bg-[#2A282A] p-4 rounded-md border border-[#CCFF23]">
-                      <h3 className="font-oxanium uppercase mb-2">Scholar</h3>
-                      <p className="text-[#E9E7E2]/70 text-sm mb-1">$9.99/month</p>
-                      <p className="text-[#E9E7E2]/80 text-sm mb-4">Enhanced intellectual experience</p>
-                      <ul className="space-y-2 text-sm text-[#E9E7E2]/80 mb-4">
-                        <li>• Everything in Library Card</li>
-                        <li>• Unlimited reading list</li>
-                        <li>• Advanced insights</li>
-                        <li>• Priority support</li>
-                      </ul>
-                      <Button className="w-full bg-[#CCFF23] text-[#2A282A] hover:bg-[#CCFF23]/90">
-                        Upgrade to Scholar
-                      </Button>
-                    </div>
-                    
-                    <div className="bg-[#2A282A] p-4 rounded-md">
-                      <h3 className="font-oxanium uppercase mb-2">Philosopher</h3>
-                      <p className="text-[#E9E7E2]/70 text-sm mb-1">$19.99/month</p>
-                      <p className="text-[#E9E7E2]/80 text-sm mb-4">Ultimate intellectual journey</p>
-                      <ul className="space-y-2 text-sm text-[#E9E7E2]/80 mb-4">
-                        <li>• Everything in Scholar</li>
-                        <li>• Exclusive content</li>
-                        <li>• 1-on-1 counseling sessions</li>
-                        <li>• Advanced analytics</li>
-                      </ul>
-                      <Button className="w-full bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2]">
-                        Upgrade to Philosopher
-                      </Button>
-                    </div>
+                    {subscriptionInfo.tier !== 'surge' ? (
+                      <div className="bg-[#2A282A] p-4 rounded-md border border-[#CCFF23]">
+                        <h3 className="font-oxanium uppercase mb-2">SURGE</h3>
+                        <p className="text-[#E9E7E2]/70 text-sm mb-1">$8.99/month</p>
+                        <p className="text-[#E9E7E2]/80 text-sm mb-4">Unlimited AI conversations</p>
+                        <ul className="space-y-2 text-sm text-[#E9E7E2]/80 mb-4">
+                          <li>• Unlimited Virgil conversations</li>
+                          <li>• Premium features</li>
+                          <li>• Priority support</li>
+                          <li>• Cancel anytime</li>
+                        </ul>
+                        <Button 
+                          className="w-full bg-[#CCFF23] text-[#2A282A] hover:bg-[#CCFF23]/90"
+                          onClick={() => navigate('/upgrade')}
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Upgrade to SURGE
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="bg-[#2A282A] p-4 rounded-md">
+                        <h3 className="font-oxanium uppercase mb-2">SURGE (Current Plan)</h3>
+                        <p className="text-[#E9E7E2]/70 text-sm mb-1">$8.99/month</p>
+                        <p className="text-[#E9E7E2]/80 text-sm mb-4">You're enjoying unlimited AI conversations</p>
+                        <ul className="space-y-2 text-sm text-[#E9E7E2]/80">
+                          <li>• Unlimited Virgil conversations</li>
+                          <li>• Premium features</li>
+                          <li>• Priority support</li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
           
-          {/* Billing */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Billing</CardTitle>
@@ -596,7 +570,6 @@ const ProfileSettings: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Logout */}
           <Card className="bg-[#373741] border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-[#E9E7E2] font-oxanium uppercase">Account</CardTitle>
@@ -614,7 +587,6 @@ const ProfileSettings: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Debug Tools - only shown in development */}
           {process.env.NODE_ENV !== 'production' && (
             <div className="mt-8 p-4 border border-dashed border-gray-600 rounded-md">
               <h3 className="text-sm font-bold mb-3">Developer Debug Tools</h3>
@@ -644,4 +616,4 @@ const ProfileSettings: React.FC = () => {
   );
 };
 
-export default ProfileSettings; 
+export default ProfileSettings;

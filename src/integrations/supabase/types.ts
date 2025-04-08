@@ -712,7 +712,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id: string | null
           theology_kindred_spirit_5_db_id: string | null
           theology_kindred_spirit_5_rationale: string | null
-          validation_summary: Json | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
@@ -1049,7 +1048,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id?: string | null
           theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
-          validation_summary?: Json | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
@@ -1386,7 +1384,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id?: string | null
           theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
-          validation_summary?: Json | null
         }
         Relationships: [
           {
@@ -1840,6 +1837,39 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          current_uses: number
+          discount_percent: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          current_uses?: number
+          discount_percent: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          current_uses?: number
+          discount_percent?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+        }
+        Relationships: []
+      }
       prompts: {
         Row: {
           context: string | null
@@ -2003,18 +2033,21 @@ export type Database = {
           created_at: string
           id: string
           purpose: string | null
+          token_limit: number | null
         }
         Insert: {
           cost?: number | null
           created_at?: string
           id?: string
           purpose?: string | null
+          token_limit?: number | null
         }
         Update: {
           cost?: number | null
           created_at?: string
           id?: string
           purpose?: string | null
+          token_limit?: number | null
         }
         Relationships: []
       }
@@ -2060,6 +2093,33 @@ export type Database = {
           created_at?: string | null
           id?: number
           person_uid?: string | null
+        }
+        Relationships: []
+      }
+      token_usage: {
+        Row: {
+          created_at: string
+          id: string
+          month_year: string
+          tokens_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month_year: string
+          tokens_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month_year?: string
+          tokens_used?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2255,6 +2315,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_promo_codes: {
+        Row: {
+          applied_at: string
+          id: string
+          promo_code_id: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: string
+          promo_code_id: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          id?: string
+          promo_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_promo_codes_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       virgil_conversations: {
         Row: {
           created_at: string | null
@@ -2305,6 +2394,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_token_availability: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       debug_auth_state: {
         Args: Record<PropertyKey, never>
         Returns: {

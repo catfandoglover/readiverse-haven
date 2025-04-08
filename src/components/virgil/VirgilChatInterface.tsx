@@ -7,6 +7,7 @@ import { useVirgilChat } from '@/hooks/useVirgilChat';
 import MessageBubble from './MessageBubble';
 import ChatInputForm from './ChatInputForm';
 import { ChatVariant } from '@/types/chat';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 
 interface VirgilChatInterfaceProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
     setInputMessage,
     isRecording,
     isProcessing,
+    tokenLimitReached,
     toggleRecording,
     handleSubmitMessage
   } = useVirgilChat(initialMessage);
@@ -84,10 +86,20 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
               themeColors={themeColors} 
             />
           ))}
+          
+          {tokenLimitReached && (
+            <div className="my-6">
+              <UpgradePrompt variant="large" showReason={true} />
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mb-0 rounded-t-2xl overflow-hidden">
+        <div className={cn(
+          "mb-0 rounded-t-2xl overflow-hidden",
+          tokenLimitReached ? "opacity-0 pointer-events-none" : ""
+        )}>
           <ChatInputForm
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
@@ -96,6 +108,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
             isProcessing={isProcessing}
             toggleRecording={toggleRecording}
             themeColors={themeColors}
+            disabled={tokenLimitReached}
           />
         </div>
       </SheetContent>

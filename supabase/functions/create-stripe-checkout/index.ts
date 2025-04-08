@@ -1,120 +1,161 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@12.0.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.37.0";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2023-10-16",
-});
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    const { bookingData, returnUrl } = await req.json();
+    const { promoCode } = await req.json();
     
-    if (!bookingData || !returnUrl) {
-      throw new Error("Missing required booking information or return URL");
+    // Get auth token from request header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Missing authorization header");
     }
 
-    console.log("Creating Stripe checkout session with data:", {
-      bookingType: bookingData.bookingTypeId,
-      name: bookingData.name,
-      email: bookingData.email,
-      timeSlot: bookingData.time_slot_id,
+    // Initialize Supabase client with service role
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Validate auth token and get user
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !userData.user) {
+      throw new Error("Invalid user token");
+    }
+    
+    const user = userData.user;
+    console.log(`Creating checkout session for user: ${user.id}`);
+
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2023-10-16",
     });
 
-    // Create a Supabase client to fetch the cost
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Check for existing customer record
+    let customerId;
+    const { data: customerData } = await supabase
+      .from("customers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    console.log("Fetching booking cost from database...");
+    if (customerData?.stripe_customer_id) {
+      customerId = customerData.stripe_customer_id;
+      console.log(`Found existing Stripe customer: ${customerId}`);
+    } else {
+      // Create a new customer in Stripe
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          supabase_user_id: user.id
+        }
+      });
+      customerId = customer.id;
+      console.log(`Created new Stripe customer: ${customerId}`);
+      
+      // Save customer ID in Supabase
+      await supabase
+        .from("customers")
+        .insert({
+          user_id: user.id,
+          stripe_customer_id: customerId,
+          email: user.email
+        });
+    }
     
-    // Get the booking cost from the revenue_items table
-    const { data: costData, error: costError } = await supabaseClient
-      .from('revenue_items')
-      .select('cost')
-      .eq('id', '50041043-d04b-4826-97bd-83bd3e6bf34e')
-      .single();
-
-    // Default to $59.00 if there's an error or no data
-    const cost = costError || !costData ? 5900 : Math.round(parseFloat(costData.cost) * 100);
+    // Handle promo code if provided
+    let discountPercent = 0;
+    let promoCodeId = null;
     
-    console.log("Using price:", cost, "cents", costError ? "(default - database error)" : "");
+    if (promoCode) {
+      console.log(`Validating promo code: ${promoCode}`);
+      const { data: promoData, error: promoError } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", promoCode)
+        .eq("active", true)
+        .single();
+      
+      if (promoError) {
+        console.log(`Invalid promo code: ${promoCode}`);
+      } else if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
+        console.log(`Expired promo code: ${promoCode}`);
+      } else if (promoData.max_uses && promoData.current_uses >= promoData.max_uses) {
+        console.log(`Promo code usage limit reached: ${promoCode}`);
+      } else {
+        // Valid promo code
+        discountPercent = promoData.discount_percent;
+        promoCodeId = promoData.id;
+        console.log(`Valid promo code with ${discountPercent}% discount`);
+      }
+    }
     
-    // Store the booking data in the metadata so we can retrieve it in the webhook
-    console.log("Creating Stripe checkout session...");
+    // Calculate price based on discount
+    const basePrice = 899; // $8.99 per month
+    const discountedPrice = Math.max(1, Math.round(basePrice * (100 - discountPercent) / 100));
+    
+    // Create checkout session
     const session = await stripe.checkout.sessions.create({
+      customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "DNA Assessment Discussion",
-              description: "30-minute session with an intellectual genetic counselor",
+              name: "SURGE Subscription",
+              description: "Unlimited Virgil chat and advanced features",
             },
-            unit_amount: cost, // Use the dynamic cost
+            unit_amount: discountedPrice,
+            recurring: {
+              interval: "month",
+            },
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
-      success_url: `${returnUrl}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${returnUrl}/book-counselor`,
+      mode: "subscription",
+      success_url: `${req.headers.get("origin")}/profile/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/profile/settings`,
       metadata: {
-        booking_data: JSON.stringify(bookingData),
-      },
-      customer_email: bookingData.email,
+        user_id: user.id,
+        promo_code_id: promoCodeId || "",
+        discount_percent: discountPercent.toString()
+      }
     });
 
-    console.log("Session created:", session.id);
-    
-    // Record the pending booking in the database
-    try {
-      const { error: bookingError } = await supabaseClient
-        .from('bookings')
-        .insert({
-          stripe_session_id: session.id,
-          booking_type_id: bookingData.bookingTypeId,
-          name: bookingData.name,
-          email: bookingData.email,
-          time_slot_id: bookingData.time_slot_id,
-          timezone: bookingData.timezone,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        });
-        
-      if (bookingError) {
-        console.error("Error recording pending booking:", bookingError);
-      }
-    } catch (bookingStoreError) {
-      console.error("Exception recording pending booking:", bookingStoreError);
-    }
+    console.log(`Created checkout session: ${session.id}`);
     
     return new Response(
-      JSON.stringify({ 
-        sessionId: session.id,
-        url: session.url 
+      JSON.stringify({
+        url: session.url,
+        sessionId: session.id
       }),
-      { 
+      {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, 
+        status: 200,
       }
     );
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    console.error(`Error creating checkout session: ${error.message}`);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400, 
+        status: 400,
       }
     );
   }
