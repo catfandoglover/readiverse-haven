@@ -1,6 +1,4 @@
 
-# This file controls the configuration settings for your Supabase project.
-
 project_id = "myeyoafugkrkwcnfedlu"
 
 [api]

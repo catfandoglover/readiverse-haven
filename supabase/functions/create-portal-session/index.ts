@@ -26,15 +26,17 @@ serve(async (req) => {
     // Extract token from Authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("Missing Authorization header");
       throw new Error("Authorization header is required");
     }
     
     const token = authHeader.replace("Bearer ", "");
     console.log("Authenticating user...");
     
+    // Using getUser() instead of relying on the session
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError || !userData.user) {
+    if (userError || !userData?.user) {
       console.error("Authentication error:", userError);
       throw new Error("Unauthorized");
     }

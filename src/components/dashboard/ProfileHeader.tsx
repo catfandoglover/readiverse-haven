@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Share, Pen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "../ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface ProfileData {
   id: string;
@@ -34,7 +35,6 @@ const ProfileHeader: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<DNAAnalysisResult | null>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(true);
-  const { toast } = useToast();
   
   const fullName = profileData?.full_name || user?.user_metadata?.full_name || "Explorer";
   const firstName = fullName.split(' ')[0] || "Explorer";
@@ -131,7 +131,11 @@ const ProfileHeader: React.FC = () => {
   
   const handleShareClick = async () => {
     if (!user?.id) {
-      toast.error("Cannot share profile: User not found");
+      toast({
+        title: "Cannot share profile",
+        description: "User not found",
+        variant: "destructive"
+      });
       return;
     }
 
