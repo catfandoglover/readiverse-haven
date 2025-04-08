@@ -5,7 +5,11 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import SignUpForm from '@/components/auth/SignUpForm';
 import { toast } from "sonner";
+<<<<<<< HEAD
 import MainMenu from '@/components/navigation/MainMenu';
+=======
+import { storeAssessmentId, getStoredAssessmentId } from '@/utils/dnaAssessmentUtils';
+>>>>>>> 4427e8d9 (fixed assessment id and tested on logins, account creations, and removed the assessment_id hardcoding)
 
 export function Register() {
   const location = useLocation();
@@ -14,6 +18,15 @@ export function Register() {
   const { user, isLoading } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(state?.showEmailForm || false);
+  
+  // Preserve assessment ID on component mount
+  useEffect(() => {
+    const assessmentId = getStoredAssessmentId();
+    if (assessmentId) {
+      console.log('Register: Reinforcing assessment ID storage for registration:', assessmentId);
+      storeAssessmentId(assessmentId);
+    }
+  }, []);
   
   useEffect(() => {
     if (authError) {
@@ -34,6 +47,13 @@ export function Register() {
   const handleGoogleSignup = async () => {
     setGoogleLoading(true);
     try {
+      // Preserve assessment ID before redirecting
+      const assessmentId = getStoredAssessmentId();
+      if (assessmentId) {
+        console.log('Register: Reinforcing assessment ID storage before Google signup:', assessmentId);
+        storeAssessmentId(assessmentId);
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

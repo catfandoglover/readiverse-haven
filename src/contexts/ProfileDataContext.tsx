@@ -71,9 +71,18 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
           success: true
         });
         
-        // STEP 2: Try multiple DNA data lookup strategies
+        // STEP 2: Check if profile has an assessment_id
         if (!profile.assessment_id) {
-          throw new Error("Profile has no assessment_id");
+          debug.steps.push({
+            step: 3,
+            description: "Profile has no assessment_id",
+            success: false
+          });
+          
+          // No assessment ID - this is okay, just no DNA data to show
+          debug.dnaDataFound = "None - profile has no assessment_id";
+          debug.success = false;
+          return;
         }
         
         debug.steps.push({
@@ -83,97 +92,41 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
           success: true
         });
         
-        // APPROACH 1: Try direct lookup by assessment_id field
-        const { data: dnaData1, error: dnaError1 } = await supabase
+        // Look up DNA data using assessment_id field
+        const { data: dnaData, error: dnaError } = await supabase
           .from('dna_analysis_results')
           .select('*')
           .eq('assessment_id', profile.assessment_id)
           .maybeSingle();
           
-        if (!dnaError1 && dnaData1) {
-          // Success with direct assessment_id match
-          setDnaAnalysisData(dnaData1);
+        if (dnaError || !dnaData) {
           debug.steps.push({
             step: 4,
-            description: "Found DNA data using assessment_id field (correct approach)",
-            dnaId: dnaData1.id,
-            dnaAssessmentId: dnaData1.assessment_id,
-            success: true
+            description: "Could not find DNA data for assessment_id",
+            assessmentId: profile.assessment_id,
+            error: dnaError?.message || "No data found",
+            success: false
           });
           
-          await fetchThinkerIcons(dnaData1);
-          debug.dnaDataFound = "By assessment_id field match";
-          debug.success = true;
+          // No matching DNA data found - return without setting any data
+          debug.dnaDataFound = "None - no matching DNA data for assessment_id";
+          debug.success = false;
           return;
         }
         
-        // APPROACH 2: Try legacy lookup by record ID
-        const { data: dnaData2, error: dnaError2 } = await supabase
-          .from('dna_analysis_results')
-          .select('*')
-          .eq('id', profile.assessment_id)
-          .maybeSingle();
-          
-        if (!dnaError2 && dnaData2) {
-          // Success with ID match (legacy approach)
-          setDnaAnalysisData(dnaData2);
-          debug.steps.push({
-            step: 4,
-            description: "Found DNA data using ID field (legacy approach)",
-            dnaId: dnaData2.id,
-            dnaAssessmentId: dnaData2.assessment_id || "Not set",
-            success: true,
-            warning: "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id"
-          });
-          
-          await fetchThinkerIcons(dnaData2);
-          debug.dnaDataFound = "By ID field match (legacy approach)";
-          debug.success = true;
-          debug.warning = "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id";
-          return;
-        }
+        // Success with direct assessment_id match
+        setDnaAnalysisData(dnaData);
+        debug.steps.push({
+          step: 4,
+          description: "Found DNA data using assessment_id field",
+          dnaId: dnaData.id,
+          dnaAssessmentId: dnaData.assessment_id,
+          success: true
+        });
         
-        // APPROACH 3: As a last resort, find ANY DNA record that exists
-        const { data: anyDnaData, error: anyDnaError } = await supabase
-          .from('dna_analysis_results')
-          .select('*')
-          .limit(1)
-          .maybeSingle();
-          
-        if (!anyDnaError && anyDnaData) {
-          // Success with fallback to any record
-          setDnaAnalysisData(anyDnaData);
-          debug.steps.push({
-            step: 4,
-            description: "Found DNA data using fallback to any record (emergency approach)",
-            dnaId: anyDnaData.id,
-            dnaAssessmentId: anyDnaData.assessment_id || "Not set",
-            success: true,
-            warning: "Using EMERGENCY fallback: No matching record found, using first available DNA record"
-          });
-          
-          await fetchThinkerIcons(anyDnaData);
-          debug.dnaDataFound = "By emergency fallback (first available record)";
-          debug.success = true;
-          debug.warning = "EMERGENCY FALLBACK: No matching record found, using first available DNA record";
-          
-          // Also update the profile with this assessment_id to fix the relationship
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ assessment_id: anyDnaData.id })
-            .eq('id', profile.id);
-            
-          if (updateError) {
-            debug.warning += ` (Failed to update profile: ${updateError.message})`;
-          } else {
-            debug.warning += " (Updated profile.assessment_id to match this record)";
-          }
-          
-          return;
-        }
-        
-        // All attempts failed
-        throw new Error(`No DNA analysis data found. Tried assessment_id: ${profile.assessment_id}`);
+        await fetchThinkerIcons(dnaData);
+        debug.dnaDataFound = "By assessment_id field match";
+        debug.success = true;
         
       } catch (err) {
         console.error('Error in data flow:', err);
