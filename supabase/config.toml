@@ -1,11 +1,61 @@
 
+# This file controls the configuration settings for your Supabase project.
+
 project_id = "myeyoafugkrkwcnfedlu"
 
-[functions.stripe-webhook]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
-[functions.create-subscription]
-verify_jwt = true
+[db]
+port = 5432
+shadow_port = 5431
+major_version = 15
 
-[functions.create-portal-session]
-verify_jwt = true
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[realtime]
+enabled = true
+
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+gcp_project_id = ""
+gcp_project_number = ""
+gcp_jwt_path = "supabase-service-account.json"
+
+[functions]
+analyze-dna = {}
+create-portal-session = {}
+create-stripe-checkout = {}
+create-subscription = {}
+exchange = {}
+get-booking-cost = {}
+stripe-webhook = { verify_jwt = false }
+sync-notion-questions = {}
+tidycal-api = {}
+validate-dna-entities = {}
