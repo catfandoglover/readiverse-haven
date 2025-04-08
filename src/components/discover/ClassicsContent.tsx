@@ -10,6 +10,7 @@ import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import VerticalSwiper from "@/components/common/VerticalSwiper";
 
 interface ForYouContentItem {
   id: string;
@@ -298,49 +299,49 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     }
   }, [selectedItem]);
 
-  if (isLoading) {
+  if (isLoading || !classicsItems || classicsItems.length === 0) {
     return (
-      <div className="flex flex-col h-full justify-center items-center">
-        <Skeleton className="h-64 w-full mb-4" />
-        <Skeleton className="h-8 w-2/3 mb-2" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-full mb-1" />
-        <Skeleton className="h-4 w-3/4" />
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-gray-400">Loading...</div>
       </div>
     );
   }
 
   console.log("ClassicsContent render - selectedItem:", selectedItem?.title, "location:", location.pathname);
 
-  // If we have a selected item, prioritize showing the DetailedView
-  if (selectedItem) {
-    console.log("Rendering DetailedView for:", selectedItem.title);
-    return (
-      <DetailedView
-        type={selectedItem.type}
-        data={selectedItem}
-        onBack={handleCloseDetailedView}
-      />
-    );
-  }
-
-  // Otherwise show the regular content card
   return (
-    <div className="h-full">
-      <ContentCard
-        image={itemToShow.image}
-        title={itemToShow.title}
-        about={itemToShow.about}
-        itemId={itemToShow.id}
-        itemType={itemToShow.type}
-        onLearnMore={() => handleLearnMore(itemToShow)}
-        onImageClick={() => handleLearnMore(itemToShow)}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-        hasPrevious={displayIndex > 0}
-        hasNext={displayIndex < classicsItems.length - 1}
-      />
-    </div>
+    <>
+      <VerticalSwiper 
+        initialIndex={displayIndex}
+        onIndexChange={setDisplayIndex}
+      >
+        {classicsItems.map((item, index) => (
+          <div key={item.id} className="h-full">
+            <ContentCard
+              image={item.image}
+              title={item.title}
+              about={item.about}
+              itemId={item.id}
+              itemType={item.type}
+              onLearnMore={() => handleLearnMore(item)}
+              onImageClick={() => handleLearnMore(item)}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              hasPrevious={index > 0}
+              hasNext={index < classicsItems.length - 1}
+            />
+          </div>
+        ))}
+      </VerticalSwiper>
+
+      {selectedItem && (
+        <DetailedView
+          type={selectedItem.type}
+          data={selectedItem}
+          onBack={handleCloseDetailedView}
+        />
+      )}
+    </>
   );
 };
 

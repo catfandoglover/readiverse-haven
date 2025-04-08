@@ -9,6 +9,7 @@ import { getPreviousPage } from "@/utils/navigationHistory";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import VerticalSwiper from "@/components/common/VerticalSwiper";
 
 interface ForYouContentItem {
   id: string;
@@ -217,7 +218,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     ],
   };
 
-  if (isLoading || !itemToShow) {
+  if (isLoading || !forYouItems || forYouItems.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-gray-400">Loading...</div>
@@ -227,21 +228,28 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
   return (
     <>
-      <div className="h-full">
-        <ContentCard
-          image={itemToShow.image}
-          title={itemToShow.title}
-          about={itemToShow.about}
-          itemId={itemToShow.id}
-          itemType={itemToShow.type}
-          onLearnMore={() => handleLearnMore(itemToShow)}
-          onImageClick={() => handleLearnMore(itemToShow)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          hasPrevious={displayIndex > 0}
-          hasNext={displayIndex < forYouItems.length - 1}
-        />
-      </div>
+      <VerticalSwiper 
+        initialIndex={displayIndex}
+        onIndexChange={setDisplayIndex}
+      >
+        {forYouItems.map((item, index) => (
+          <div key={item.id} className="h-full">
+            <ContentCard
+              image={item.image}
+              title={item.title}
+              about={item.about}
+              itemId={item.id}
+              itemType={item.type}
+              onLearnMore={() => handleLearnMore(item)}
+              onImageClick={() => handleLearnMore(item)}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              hasPrevious={index > 0}
+              hasNext={index < forYouItems.length - 1}
+            />
+          </div>
+        ))}
+      </VerticalSwiper>
 
       {selectedItem && (
         <DetailedView

@@ -90,56 +90,6 @@ const VerticalSwiper: React.FC<VerticalSwiperProps> = ({
           </div>
         ))}
       </div>
-
-      {/* Navigation indicators (small dots on the right side) */}
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-50 pointer-events-auto">
-        {React.Children.map(children, (_, index) => (
-          <div 
-            onClick={() => {
-              // Add direct click navigation for testing
-              if (!isTransitioning) {
-                setIsTransitioning(true);
-                setCurrentIndex(index);
-                setTimeout(() => setIsTransitioning(false), 300);
-              }
-            }}
-            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-              index === currentIndex ? 'bg-white scale-125' : 'bg-white/40'
-            } cursor-pointer`}
-          />
-        ))}
-      </div>
-      
-      {/* Add testing controls */}
-      <div className="absolute bottom-28 right-3 flex flex-col gap-2 z-50 bg-black/30 p-2 rounded-md pointer-events-auto">
-        <div className="text-white text-xs mb-1">Test Controls</div>
-        <button
-          onClick={() => {
-            if (!isTransitioning && currentIndex > 0) {
-              setIsTransitioning(true);
-              setCurrentIndex(prev => prev - 1);
-              setTimeout(() => setIsTransitioning(false), 300);
-            }
-          }}
-          disabled={currentIndex === 0}
-          className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-xs"
-        >
-          Up (prev)
-        </button>
-        <button
-          onClick={() => {
-            if (!isTransitioning && currentIndex < React.Children.count(children) - 1) {
-              setIsTransitioning(true);
-              setCurrentIndex(prev => prev + 1);
-              setTimeout(() => setIsTransitioning(false), 300);
-            }
-          }}
-          disabled={currentIndex === React.Children.count(children) - 1}
-          className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-xs"
-        >
-          Down (next)
-        </button>
-      </div>
     </div>
   );
 };
