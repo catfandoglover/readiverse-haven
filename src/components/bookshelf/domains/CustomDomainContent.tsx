@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -69,7 +70,13 @@ const CustomDomainContent: React.FC<CustomDomainContentProps> = ({ domainId, dom
           return [];
         }
         
-        return (data || []) as BookData[];
+        // Ensure we're returning an array that matches the BookData interface
+        return (data || []).map(item => ({
+          id: item.id || '',
+          title: item.title || '',
+          author: item.author || '',
+          cover_url: item.cover_url || ''
+        })) as BookData[];
       } catch (error) {
         console.error("Exception fetching domain books:", error);
         return [];
