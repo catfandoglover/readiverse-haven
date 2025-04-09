@@ -261,6 +261,63 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   }, [enhancedData, isEnhancedDataLoading]);
 
+  // Add a new useEffect to load book directly from the URL parameter when coming from reader
+  useEffect(() => {
+    // If we already have data, don't do anything
+    if (combinedData && Object.keys(combinedData).length > 1 && combinedData.about) {
+      return;
+    }
+    
+    // Extract the slug from the URL for direct loading
+    const pathParts = location.pathname.split('/');
+    const isTextsPage = pathParts.includes('texts');
+    const slug = isTextsPage ? pathParts[pathParts.indexOf('texts') + 1] : null;
+    
+    if (type === 'classic' && slug) {
+      console.log("[DetailedView] Attempting direct load for book with slug:", slug);
+      
+      const fetchBookDirectly = async () => {
+        try {
+          // First try by slug
+          let { data, error } = await supabase
+            .from("books")
+            .select("*")
+            .eq("slug", slug)
+            .single();
+            
+          // If that fails, try by ID
+          if (error) {
+            console.log("[DetailedView] Trying to load by ID instead of slug");
+            const { data: dataById, error: errorById } = await supabase
+              .from("books")
+              .select("*")
+              .eq("id", slug)
+              .single();
+              
+            if (!errorById && dataById) {
+              data = dataById;
+              error = null;
+            }
+          }
+          
+          if (data) {
+            console.log("[DetailedView] Successfully loaded book directly:", data.title);
+            setCombinedData({ 
+              ...data,
+              type: 'classic',
+              image: data.cover_url || data.Cover_super || data.icon_illustration || '',
+            });
+            setIsDataLoaded(true);
+          }
+        } catch (err) {
+          console.error("[DetailedView] Error in direct book loading fallback:", err);
+        }
+      };
+      
+      fetchBookDirectly();
+    }
+  }, [location.pathname, type, combinedData]);
+
   useEffect(() => {
     const viewportMeta = document.createElement('meta');
     viewportMeta.name = 'viewport';
@@ -324,6 +381,48 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   }, [user, itemData.id, type]);
 
+  useEffect(() => {
+    // Check if we're navigating from reader with bookId
+    const locationState = location.state as { fromReader?: boolean, bookId?: string } | null;
+    const comingFromReader = locationState?.fromReader;
+    const bookId = locationState?.bookId;
+    
+    // If we're coming from the reader with a bookId, fetch the book data directly
+    if (comingFromReader && bookId && type === 'classic') {
+      console.log("[DetailedView] Coming from reader with book ID:", bookId);
+      
+      const fetchBookDirectly = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("books")
+            .select("*")
+            .eq("id", bookId)
+            .single();
+            
+          if (error) {
+            console.error("[DetailedView] Error fetching book data:", error);
+            return;
+          }
+          
+          if (data) {
+            console.log("[DetailedView] Successfully fetched book data:", data.title);
+            // Update combined data with the fetched book data
+            setCombinedData({ 
+              ...data,
+              type: 'classic',
+              image: data.icon_illustration || data.Cover_super || data.cover_url || '',
+            });
+            setIsDataLoaded(true);
+          }
+        } catch (err) {
+          console.error("[DetailedView] Error in fetchBookDirectly:", err);
+        }
+      };
+      
+      fetchBookDirectly();
+    }
+  }, [location.state, type]);
+
   const handleBack = () => {
     console.log("[DetailedView] Back button clicked", {
       onBack: !!onBack,
@@ -386,17 +485,71 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     navigate('/discover', { replace: true });
   };
 
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      openLogin();
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('item_id', combinedData.id)
+          .eq('user_id', user.id)
+          .eq('item_type', type);
+
+        if (error) throw error;
+
+        setIsFavorite(false);
+        toast({
+          description: `Removed from favorites`,
+        });
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('user_favorites')
+          .upsert({
+            item_id: combinedData.id,
+            user_id: user.id,
+            item_type: type,
+            added_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,item_id,item_type'
+          });
+
+        if (error) throw error;
+
+        setIsFavorite(true);
+        toast({
+          description: `Added to favorites`,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update favorites"
+      });
+    }
+  };
+
   const handleReadNow = async () => {
     try {
       if (user && combinedData.id) {
         if (!isFavorite) {
+          // Add to favorites when reading
           const { error } = await supabase
             .from('user_favorites')
-            .insert({
+            .upsert({
               item_id: combinedData.id,
               user_id: user.id,
               item_type: type,
               added_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,item_id,item_type'
             });
             
           if (!error) {
@@ -406,13 +559,32 @@ const DetailedView: React.FC<DetailedViewProps> = ({
             });
           }
         }
+        
+        // Add to user_books when reading
+        const { error: booksError } = await supabase
+          .from('user_books')
+          .upsert({
+            book_id: combinedData.id,
+            user_id: user.id,
+            status: 'reading',
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,book_id'
+          });
+          
+        if (booksError) {
+          console.error("Error adding to bookshelf:", booksError);
+        }
       }
       
       if (combinedData.epub_file_url) {
         navigate(`/read/${combinedData.id}`, { 
           state: { 
             bookUrl: combinedData.epub_file_url,
-            metadata: { Cover_super: combinedData.Cover_super || combinedData.cover_url }
+            metadata: { 
+              Cover_super: combinedData.Cover_super || combinedData.cover_url,
+              id: combinedData.id
+            }
           } 
         });
       } else {
@@ -431,46 +603,6 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
-  const handleAuthorClick = () => {
-    if (combinedData.author_id) {
-      console.log("[DetailedView] Navigating to author by ID:", combinedData.author_id);
-      
-      // Get the current location
-      const currentPath = location.pathname;
-      
-      // Store the current path as source path in all relevant places
-      localStorage.setItem('sourcePath', currentPath);
-      sessionStorage.setItem('sourcePath', currentPath);
-      localStorage.setItem('detailedViewSourcePath', currentPath);
-      sessionStorage.setItem('detailedViewSourcePath', currentPath);
-      
-      console.log("[DetailedView] Saved source paths before author navigation:", {
-        localStorage: currentPath,
-        sessionStorage: currentPath
-      });
-      
-      // We should always have the author data with slug from the authorIconData query
-      if (authorIconData?.slug) {
-        console.log("[DetailedView] Navigating to author slug:", authorIconData.slug);
-        navigate(`/icons/${authorIconData.slug}`, {
-          replace: true,
-          state: { 
-            fromSection: 'classic-detail',
-            sourcePath: currentPath
-          }
-        });
-      } else {
-        // This should almost never happen since authorIconData is pre-fetched
-        console.error("[DetailedView] Missing authorIconData for author_id:", combinedData.author_id);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not navigate to author page"
-        });
-      }
-    }
-  };
-
   const handleAddToLibrary = async () => {
     if (!user) {
       openLogin();
@@ -480,15 +612,16 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     try {
       const { error } = await supabase
         .from('user_books')
-        .insert({
+        .upsert({
           book_id: combinedData.id,
           user_id: user.id,
-          status: 'reading'
+          status: 'reading',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,book_id'
         });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -499,7 +632,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add book to your library"
+        description: "Failed to add book to library"
       });
     }
   };
@@ -559,93 +692,43 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   };
 
-  const addToBookshelf = async (itemId: string) => {
-    if (!user) return;
-    
-    try {
-      const { data: existingBook, error: checkError } = await supabase
-        .from('user_books')
-        .select('*')
-        .eq('book_id', itemId)
-        .eq('user_id', user.id)
-        .single();
+  const handleAuthorClick = () => {
+    if (combinedData.author_id) {
+      console.log("[DetailedView] Navigating to author by ID:", combinedData.author_id);
       
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error("Error checking bookshelf:", checkError);
-        return;
-      }
+      // Get the current location
+      const currentPath = location.pathname;
       
-      if (!existingBook) {
-        const { error } = await supabase
-          .from('user_books')
-          .insert({
-            book_id: itemId,
-            user_id: user.id,
-            status: 'reading'
-          });
-
-        if (error) {
-          console.error("Error adding book to bookshelf:", error);
-          return;
-        }
-        
-        console.log("Book added to bookshelf:", itemId);
-      }
-    } catch (error) {
-      console.error("Error in add to bookshelf process:", error);
-    }
-  };
-
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      openLogin();
-      return;
-    }
-    
-    try {
-      if (isFavorite) {
-        const { error } = await supabase
-          .from('user_favorites')
-          .delete()
-          .eq('item_id', combinedData.id)
-          .eq('user_id', user.id)
-          .eq('item_type', type);
-          
-        if (error) throw error;
-        
-        setIsFavorite(false);
-        toast({
-          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
+      // Store the current path as source path in all relevant places
+      localStorage.setItem('sourcePath', currentPath);
+      sessionStorage.setItem('sourcePath', currentPath);
+      localStorage.setItem('detailedViewSourcePath', currentPath);
+      sessionStorage.setItem('detailedViewSourcePath', currentPath);
+      
+      console.log("[DetailedView] Saved source paths before author navigation:", {
+        localStorage: currentPath,
+        sessionStorage: currentPath
+      });
+      
+      // We should always have the author data with slug from the authorIconData query
+      if (authorIconData?.slug) {
+        console.log("[DetailedView] Navigating to author slug:", authorIconData.slug);
+        navigate(`/icons/${authorIconData.slug}`, {
+          replace: true,
+          state: { 
+            fromSection: 'classic-detail',
+            sourcePath: currentPath
+          }
         });
       } else {
-        const { error } = await supabase
-          .from('user_favorites')
-          .insert({
-            item_id: combinedData.id,
-            user_id: user.id,
-            item_type: type,
-            added_at: new Date().toISOString()
-          });
-          
-        if (error) throw error;
-        
-        setIsFavorite(true);
+        // This should almost never happen since authorIconData is pre-fetched
+        console.error("[DetailedView] Missing authorIconData for author_id:", combinedData.author_id);
         toast({
-          description: `${type === 'classic' ? 'Book' : type} added to favorites`,
+          variant: "destructive",
+          title: "Error",
+          description: "Could not navigate to author page"
         });
-        
-        if (type === 'classic') {
-          await addToBookshelf(combinedData.id);
-        }
       }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast({
-        variant: "destructive",
-        description: "Failed to update favorites. Please try again.",
-      });
     }
   };
 
@@ -751,7 +834,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               )}
               <ClassicActionsMenu
                 isFavorite={isFavorite}
-                toggleFavorite={toggleFavorite}
+                toggleFavorite={handleToggleFavorite}
                 handleOrder={handleOrder}
                 handleShare={handleShare}
                 shouldBlurHeader={shouldBlurHeader}
@@ -765,7 +848,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
                   shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
                 )}
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                onClick={toggleFavorite}
+                onClick={handleToggleFavorite}
               >
                 <Star 
                   className="h-5 w-5" 

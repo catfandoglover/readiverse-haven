@@ -61,9 +61,6 @@ const ConceptsFavoritesContent: React.FC = () => {
         <h2 className="font-baskerville text-base font-bold text-[#E9E7E2]">
           CONCEPTS
         </h2>
-        <p className="font-baskerville text-[#E9E7E2]/50 text-base">
-          Your favorite philosophical ideas
-        </p>
       </div>
       <FavoritesCarousel 
         queryKey="concepts-favorites-carousel" 

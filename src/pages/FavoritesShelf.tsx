@@ -34,7 +34,9 @@ const FavoritesShelf: React.FC = () => {
       {/* Main Content - using overflow-auto directly */}
       <div className="flex-1 overflow-auto pb-20 px-4">
         {/* Classics */}
-        <ClassicsFavoritesContent />
+        <div className="pt-6">
+          <ClassicsFavoritesContent />
+        </div>
         
         {/* Icons */}
         <IconsFavoritesContent />

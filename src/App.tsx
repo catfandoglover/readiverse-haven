@@ -92,16 +92,20 @@ const DnaRouteHandler: React.FC = () => {
 const ReaderWrapper = () => {
   const location = useLocation();
   const slug = location.pathname.split('/read/')[1];
-  const state = location.state as { bookUrl: string; metadata: { Cover_super: string | null } };
+  const state = location.state as { bookUrl: string; metadata: { Cover_super: string | null, id?: string } };
   
   const { data: book, isLoading } = useBook(slug);
 
   const bookUrl = state?.bookUrl || book?.epub_file_url;
   const coverSuper = state?.metadata?.Cover_super || book?.Cover_super;
+  const bookId = state?.metadata?.id || slug;
 
   return (
     <Reader 
-      metadata={{ Cover_super: coverSuper }}
+      metadata={{ 
+        Cover_super: coverSuper,
+        id: bookId 
+      }}
       preloadedBookUrl={bookUrl}
       isLoading={isLoading}
     />

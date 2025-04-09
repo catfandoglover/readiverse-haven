@@ -206,7 +206,13 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
                   
                   // Try to navigate to the book detail view if we have a slug
                   if (slug && slug.length > 0) {
-                    navigate(`/texts/${slug}`);
+                    // Add state information to ensure the book detail view can load the data
+                    navigate(`/texts/${slug}`, {
+                      state: { 
+                        fromReader: true,
+                        bookId: slug
+                      }
+                    });
                   } else {
                     // If we couldn't extract the slug, fall back to bookshelf
                     navigate('/bookshelf');
