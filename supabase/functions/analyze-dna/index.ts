@@ -516,10 +516,11 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   try {
     console.log(`Checking if analysis already exists for assessment ${assessment_id}`);
     
+    // Cast the assessment_id string to UUID type for proper comparison
     const { data, error, count } = await supabase
       .from('dna_analysis_results')
       .select('id', { count: 'exact' })
-      .eq('assessment_id', assessment_id);
+      .filter('assessment_id', 'eq', assessment_id);
       
     if (error) {
       console.error('Error checking for existing analysis:', error);
@@ -590,7 +591,7 @@ serve(async (req) => {
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('dna_assessment_results')
         .select('name')
-        .eq('id', assessment_id)
+        .filter('id', 'eq', assessment_id)
         .maybeSingle();
 
       if (assessmentError) {
