@@ -5,11 +5,8 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import SignUpForm from '@/components/auth/SignUpForm';
 import { toast } from "sonner";
-<<<<<<< HEAD
 import MainMenu from '@/components/navigation/MainMenu';
-=======
 import { storeAssessmentId, getStoredAssessmentId } from '@/utils/dnaAssessmentUtils';
->>>>>>> 4427e8d9 (fixed assessment id and tested on logins, account creations, and removed the assessment_id hardcoding)
 
 export function Register() {
   const location = useLocation();
