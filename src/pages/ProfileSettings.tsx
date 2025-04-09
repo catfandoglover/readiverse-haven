@@ -235,9 +235,9 @@ const ProfileSettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#2A282A] text-[#E9E7E2] grid grid-rows-[auto_1fr_auto]">
-      {/* Standardized Header */}
-      <div className="flex items-center pt-4 px-4 bg-[#2A282A] text-[#E9E7E2]">
+    <div className="min-h-[100dvh] bg-[#2A282A] text-[#E9E7E2] flex flex-col">
+      {/* Fixed Header */}
+      <div className="flex items-center pt-4 px-4 bg-[#2A282A] text-[#E9E7E2] sticky top-0 z-10 h-16">
         <button
           onClick={handleBack}
           className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] focus:outline-none"
@@ -253,60 +253,60 @@ const ProfileSettings: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container max-w-md mx-auto pt-10 px-4 flex flex-col items-center">
-        {/* Profile Picture */}
-        <div className="relative h-32 w-32 mb-8">
-          <svg 
-            viewBox="0 0 100 100" 
-            className="absolute inset-0 h-full w-full text-[#CCFF23]"
-          >
-            <polygon 
-              points="50 5, 90 30, 90 70, 50 95, 10 70, 10 30" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="3"
-            />
-          </svg>
-          
-          <div 
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ 
-              clipPath: 'polygon(50% 5%, 90% 30%, 90% 70%, 50% 95%, 10% 70%, 10% 30%)',
-            }}
-          >
-            <div className="relative w-40 h-40 mx-auto mb-4">
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+      {/* Scrollable Content Container */}
+      <div className="flex-1 overflow-auto">
+        <div className="flex flex-col space-y-8 max-w-md mx-auto px-4 py-8 pb-24">
+          {/* Profile Picture */}
+          <div className="relative h-32 w-32 mx-auto">
+            <svg 
+              viewBox="0 0 100 100" 
+              className="absolute inset-0 h-full w-full text-[#CCFF23]"
+            >
+              <polygon 
+                points="50 5, 90 30, 90 70, 50 95, 10 70, 10 30" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="3"
+              />
+            </svg>
+            
+            <div 
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ 
+                clipPath: 'polygon(50% 5%, 90% 30%, 90% 70%, 50% 95%, 10% 70%, 10% 30%)',
+              }}
+            >
+              <div className="relative w-40 h-40 mx-auto mb-4">
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
             </div>
+            
+            <label 
+              className="absolute bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+              style={{
+                bottom: '25%',
+                right: '-1px',
+              }}
+              aria-label="Upload new picture"
+            >
+              <Camera size={18} className="text-gray-700" />
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={isUploading}
+              />
+            </label>
           </div>
-          
-          <label 
-            className="absolute bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
-            style={{
-              bottom: '25%',
-              right: '-1px',
-            }}
-            aria-label="Upload new picture"
-          >
-            <Camera size={18} className="text-gray-700" />
-            <input 
-              type="file" 
-              className="hidden" 
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              disabled={isUploading}
-            />
-          </label>
-        </div>
 
-        <div className="w-full space-y-8">
           {/* Name */}
-          <div>
+          <div className="w-full">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold">NAME</h3>
               <Button 
@@ -345,7 +345,7 @@ const ProfileSettings: React.FC = () => {
           </div>
 
           {/* Email */}
-          <div>
+          <div className="w-full">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold">EMAIL</h3>
             </div>
@@ -361,7 +361,7 @@ const ProfileSettings: React.FC = () => {
           </div>
 
           {/* Membership */}
-          <div>
+          <div className="w-full">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold">MEMBERSHIP</h3>
             </div>
@@ -380,34 +380,35 @@ const ProfileSettings: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="w-full max-w-md mx-auto mb-16 px-6 space-y-3">
-        <Button 
-          variant="destructive" 
-          onClick={handleLogout}
-          className="w-full h-[52px] rounded-2xl bg-red-600 hover:bg-red-700 font-oxanium uppercase text-sm font-bold"
-        >
-          SIGN OUT
-        </Button>
+          {/* Sign Out Button */}
+          <div className="w-full pt-4">
+            <Button 
+              variant="destructive" 
+              onClick={handleLogout}
+              className="w-full h-[52px] rounded-2xl bg-red-600 hover:bg-red-700 font-oxanium uppercase text-sm font-bold"
+            >
+              SIGN OUT
+            </Button>
+          </div>
 
-        <div className="flex justify-between w-full">
-          <button
-            onClick={handleBillingPortal}
-            className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
-          >
-            MANAGE BILLING
-          </button>
+          {/* Footer Links */}
+          <div className="flex justify-between w-full">
+            <button
+              onClick={handleBillingPortal}
+              className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
+            >
+              MANAGE BILLING
+            </button>
 
-          <button
-            onClick={handleResetPassword}
-            disabled={isUpdatingPassword}
-            className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
-          >
-            {isUpdatingPassword ? "SENDING..." : "RESET PASSWORD"}
-          </button>
+            <button
+              onClick={handleResetPassword}
+              disabled={isUpdatingPassword}
+              className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
+            >
+              {isUpdatingPassword ? "SENDING..." : "RESET PASSWORD"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
