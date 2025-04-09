@@ -4,16 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 // Constants for plan IDs
 const PLAN_IDS = {
   FREE: 1,
-  SURGE_MONTHLY: 2,
-  SURGE_ANNUAL: 3
+  SURGE: 3
 };
 
-// Constants for revenue item IDs
+// Constants for revenue item IDs - these should match your Stripe Price IDs
 const SURGE_PLAN_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
 
 // Default pricing if API call fails
 const DEFAULT_PRICING = {
-  id: PLAN_IDS.SURGE_MONTHLY,
+  id: PLAN_IDS.SURGE,
   title: 'Surge',
   yearlyPrice: 169,
   monthlyPrice: 20,
@@ -40,13 +39,19 @@ export function useMembershipPricing() {
         if (pricingResponse) {
           console.log('Edge function response:', pricingResponse);
           
+          // Create a valid Stripe price ID format if one isn't provided
+          const monthlyPriceId = pricingResponse.monthly?.price_id || SURGE_PLAN_ID;
+          const yearlyPriceId = pricingResponse.annual?.price_id || SURGE_PLAN_ID;
+          
+          console.log('Price IDs being used:', { monthlyPriceId, yearlyPriceId });
+          
           setPricingData({
-            id: PLAN_IDS.SURGE_MONTHLY,
+            id: PLAN_IDS.SURGE,
             title: 'Surge',
-            yearlyPrice: pricingResponse.annual.price,
-            monthlyPrice: pricingResponse.monthly.price,
-            yearlyPriceId: SURGE_PLAN_ID,
-            monthlyPriceId: SURGE_PLAN_ID
+            yearlyPrice: pricingResponse.annual?.price || 169,
+            monthlyPrice: pricingResponse.monthly?.price || 20,
+            yearlyPriceId: yearlyPriceId,
+            monthlyPriceId: monthlyPriceId
           });
         }
       } catch (err) {

@@ -6,15 +6,59 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Camera, CreditCard, LogOut, Pencil, ArrowUp } from "lucide-react";
+import { ArrowLeft, Camera, CreditCard, LogOut, Pencil, ArrowUp, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const ProfileSettings: React.FC = () => {
   const { user, signOut } = useAuth();
   const { profileData, refreshProfileData } = useProfileData();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { subscription, isLoading: subscriptionLoading, refresh: refreshSubscription } = useSubscription();
+  
+  // Add console log to debug subscription data
+  useEffect(() => {
+    console.log("Subscription data:", subscription);
+
+    // Directly check the database to compare with the hook data
+    const checkDatabaseSubscription = async () => {
+      if (!user) return;
+      
+      try {
+        // Make a direct API call to verify the data
+        const { data, error } = await supabase
+          .from('customers')
+          .select('subscription_status, subscription_tier')
+          .eq('user_id', user.id)
+          .single();
+          
+        console.log("Direct database check - Customer data:", data, error);
+        
+        // Try a direct fetch to the debug endpoint
+        try {
+          const debugResponse = await fetch(
+            `https://myeyoafugkrkwcnfedlu.supabase.co/functions/v1/get-membership-prices?check_user=${user.id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          const debugDataDirect = await debugResponse.json();
+          console.log("Debug endpoint via direct fetch - Customer data:", debugDataDirect);
+        } catch (fetchError) {
+          console.error("Error in direct fetch to debug endpoint:", fetchError);
+        }
+      } catch (err) {
+        console.error("Error in debug check:", err);
+      }
+    };
+    
+    checkDatabaseSubscription();
+  }, [subscription, user]);
   
   const [fullName, setFullName] = useState(profileData?.full_name || user?.user_metadata?.full_name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -369,7 +413,15 @@ const ProfileSettings: React.FC = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">FREE PLAN</p>
+                    {subscriptionLoading ? (
+                      <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">LOADING...</p>
+                    ) : (
+                      <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">
+                        {subscription.isActive 
+                          ? (subscription.tier?.toLowerCase() === 'surge' ? 'SURGE' : 'FREE') 
+                          : 'FREE'}
+                      </p>
+                    )}
                   </div>
                   <Button 
                     className="h-9 w-9 rounded-full flex-shrink-0 bg-[#373763] flex items-center justify-center"
