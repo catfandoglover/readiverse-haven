@@ -6,6 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Check, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useMembershipPricing } from "@/hooks/useMembershipPricing";
+
+// Constants for plan IDs
+const PLAN_IDS = {
+  FREE: 1,
+  SURGE_MONTHLY: 2,
+  SURGE_ANNUAL: 3
+};
+
+// Constants for revenue item IDs
+const SURGE_PLAN_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
 
 interface PricingOption {
   id: number;
@@ -22,76 +33,35 @@ const MembershipManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"free" | "surge">("free");
   const [selectedPlan, setSelectedPlan] = useState<"yearly" | "monthly" | null>(null);
   const [pricingData, setPricingData] = useState<PricingOption | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { pricingData: pricingDataFromHook } = useMembershipPricing();
 
+  // Update pricing data when tab changes
   useEffect(() => {
-    const fetchPricingData = async () => {
-      setIsLoading(true);
-      try {
-        if (activeTab === "surge") {
-          // Direct query for SURGE MONTHLY using the specific revenue_items ID
-          const monthlyPriceId = 'fe95c5c4-2246-4d99-915b-06655ca6fcce';
-          const annualPriceId = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
-          
-          const { data: monthlyRevenueData, error: monthlyRevenueError } = await supabase
-            .from('revenue_items')
-            .select('cost')
-            .eq('id', monthlyPriceId)
-            .single();
-              
-          // Direct query for SURGE ANNUAL using the specific revenue_items ID
-          const { data: annualRevenueData, error: annualRevenueError } = await supabase
-            .from('revenue_items')
-            .select('cost')
-            .eq('id', annualPriceId)
-            .single();
-              
-          if (monthlyRevenueError) {
-            console.error("Error fetching monthly price:", monthlyRevenueError);
-          }
-          
-          if (annualRevenueError) {
-            console.error("Error fetching annual price:", annualRevenueError);
-          }
-          
-          // Set pricing with fallbacks if queries fail
-          setPricingData({
-            id: 2,
-            title: "Surge",
-            yearlyPrice: annualRevenueData?.cost || 169,
-            monthlyPrice: monthlyRevenueData?.cost || 20,
-            yearlyPriceId: annualPriceId,
-            monthlyPriceId: monthlyPriceId
-          });
-        } else {
-          // For FREE plan, hardcode pricing to 0
-          setPricingData({
-            id: 1,
-            title: "Free",
-            yearlyPrice: 0,
-            monthlyPrice: 0,
-            yearlyPriceId: "",
-            monthlyPriceId: ""
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching pricing data:", error);
-        // Set fallback pricing data if fetch fails
-        setPricingData({
-          id: activeTab === "free" ? 1 : 2,
-          title: activeTab === "free" ? "Free" : "Surge",
-          yearlyPrice: activeTab === "free" ? 0 : 169,
-          monthlyPrice: activeTab === "free" ? 0 : 20,
-          yearlyPriceId: activeTab === "free" ? "" : "072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a",
-          monthlyPriceId: activeTab === "free" ? "" : "fe95c5c4-2246-4d99-915b-06655ca6fcce"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (activeTab === "surge") {
+      setPricingData({
+        id: PLAN_IDS.SURGE_MONTHLY,
+        title: "Surge",
+        yearlyPrice: pricingDataFromHook.yearlyPrice,
+        monthlyPrice: pricingDataFromHook.monthlyPrice,
+        yearlyPriceId: pricingDataFromHook.yearlyPriceId,
+        monthlyPriceId: pricingDataFromHook.monthlyPriceId
+      });
+    } else {
+      setPricingData({
+        id: PLAN_IDS.FREE,
+        title: "Free",
+        yearlyPrice: 0,
+        monthlyPrice: 0,
+        yearlyPriceId: "",
+        monthlyPriceId: ""
+      });
+    }
+  }, [activeTab, pricingDataFromHook]);
 
-    fetchPricingData();
-  }, [activeTab]);
+  // Add a log to verify what pricing data we're using
+  useEffect(() => {
+    console.log('Current pricing data:', pricingData);
+  }, [pricingData]);
 
   const handleBack = () => {
     navigate('/profile/settings');
@@ -108,9 +78,7 @@ const MembershipManagement: React.FC = () => {
 
   const handleJoin = () => {
     // Log the selected plan and its ID
-    const priceId = selectedPlan === "yearly" 
-      ? pricingData?.yearlyPriceId 
-      : pricingData?.monthlyPriceId;
+    const priceId = SURGE_PLAN_ID;
       
     console.log(`Join ${activeTab} plan with ${selectedPlan} billing. Price ID: ${priceId}`);
   };
@@ -292,7 +260,7 @@ const MembershipManagement: React.FC = () => {
                   )}
                 >
                   <span className="font-oxanium text-xs uppercase">
-                    <span className="font-bold text-base">{isLoading ? "..." : formatPrice(pricingData?.yearlyPrice || 169)}</span>
+                    <span className="font-bold text-base">{formatPrice(pricingData?.yearlyPrice || 169)}</span>
                   </span>
                   <span className="font-oxanium text-[10px] uppercase text-[#E9E7E2]/60">per year</span>
                 </button>
@@ -308,7 +276,7 @@ const MembershipManagement: React.FC = () => {
                   )}
                 >
                   <span className="font-oxanium text-xs uppercase">
-                    <span className="font-bold text-base">{isLoading ? "..." : formatPrice(pricingData?.monthlyPrice || 20)}</span>
+                    <span className="font-bold text-base">{formatPrice(pricingData?.monthlyPrice || 20)}</span>
                   </span>
                   <span className="font-oxanium text-[10px] uppercase text-[#E9E7E2]/60">per month</span>
                 </button>
