@@ -109,44 +109,6 @@ function ensureRequiredFields(jsonObject: Record<string, string>, section: numbe
   return result;
 }
 
-// Function to ensure all fields follow the correct naming pattern (with numeric suffixes)
-function validateFieldNames(content: Record<string, string>): Record<string, string> {
-  const correctedContent: Record<string, string> = {};
-  
-  // First copy all existing fields to the new object
-  Object.keys(content).forEach(key => {
-    correctedContent[key] = content[key];
-  });
-  
-  // Check for any base domain/relation fields without numeric suffix (incorrect format)
-  const domainTypes = ['theology', 'ontology', 'epistemology', 'ethics', 'politics', 'aesthetics'];
-  const relationTypes = ['kindred_spirit', 'challenging_voice'];
-  const suffixes = ['', '_classic', '_rationale'];
-  
-  for (const domain of domainTypes) {
-    for (const relation of relationTypes) {
-      const baseFieldName = `${domain}_${relation}`;
-      
-      // Check if the incorrect base field exists
-      if (content[baseFieldName] !== undefined) {
-        console.log(`Found incorrect field name: ${baseFieldName}, removing it`);
-        delete correctedContent[baseFieldName];
-      }
-      
-      for (const suffix of suffixes) {
-        const baseFieldWithSuffix = `${baseFieldName}${suffix}`;
-        if (content[baseFieldWithSuffix] !== undefined) {
-          console.log(`Found incorrect field name: ${baseFieldWithSuffix}, removing it`);
-          delete correctedContent[baseFieldWithSuffix];
-        }
-      }
-    }
-  }
-  
-  // Return all fields as individual columns
-  return correctedContent;
-}
-
 function repairJson(jsonString: string): string {
   try {
     JSON.parse(jsonString);
@@ -409,10 +371,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
       console.log(`Successfully parsed JSON for section ${section}`);
       
       // If this is section 1, ensure all required fields are present
-      let validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
-      
-      // Add the new step to validate field names and remove any incorrectly formatted fields
-      validatedContent = validateFieldNames(validatedContent);
+      const validatedContent = section === 1 ? ensureRequiredFields(parsed, section) : parsed;
       
       return {
         content: validatedContent,
@@ -438,10 +397,7 @@ async function generateAnalysis(answers_json: string, section: number): Promise<
         console.log(`Successfully parsed JSON after repairs for section ${section}`);
         
         // Ensure all required fields are present, especially for section 1
-        let validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
-        
-        // Add the new step to validate field names and remove any incorrectly formatted fields
-        validatedResult = validateFieldNames(validatedResult);
+        const validatedResult = section === 1 ? ensureRequiredFields(parsedResult, section) : parsedResult;
         
         return {
           content: validatedResult,
@@ -516,11 +472,10 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
   try {
     console.log(`Checking if analysis already exists for assessment ${assessment_id}`);
     
-    // Cast the assessment_id string to UUID type for proper comparison
     const { data, error, count } = await supabase
       .from('dna_analysis_results')
       .select('id', { count: 'exact' })
-      .filter('assessment_id', 'eq', assessment_id);
+      .eq('assessment_id', assessment_id);
       
     if (error) {
       console.error('Error checking for existing analysis:', error);
@@ -538,21 +493,6 @@ async function checkExistingAnalysis(assessment_id: string): Promise<boolean> {
     console.error('Error in checkExistingAnalysis:', error);
     return false;
   }
-}
-
-// This function used to validate entities using validate-dna-entities
-// It has been removed as that edge function is no longer used
-async function validateDNAEntities(analysisData: Record<string, string>, assessment_id: string): Promise<any> {
-  console.log('Entity validation skipped - function has been removed');
-  return { 
-    summary: { 
-      hasErrors: false,
-      totalEntities: 0,
-      totalMatched: 0,
-      totalUnmatched: 0,
-      matchRate: "0%"
-    }
-  };
 }
 
 serve(async (req) => {
@@ -591,7 +531,7 @@ serve(async (req) => {
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('dna_assessment_results')
         .select('name')
-        .filter('id', 'eq', assessment_id)
+        .eq('id', assessment_id)
         .maybeSingle();
 
       if (assessmentError) {
@@ -630,36 +570,26 @@ serve(async (req) => {
         combinedAnalysisTexts.push(section.analysis);
       }
       
-      // Perform entity validation before storing the analysis
-      console.log('Validating entities before storing analysis...');
-      const validationResults = await validateDNAEntities(combinedAnalysis, assessment_id);
-      
-      // Store the validation summary as a JSONB field
-      combinedAnalysis['validation_summary'] = validationResults.summary || {};
-      
-      // Double-check for any non-indexed fields that might cause insertion errors
-      const correctedAnalysis = validateFieldNames(combinedAnalysis);
-      
-      // Log all keys to help with debugging
-      console.log('Final analysis keys:', Object.keys(correctedAnalysis).join(', ').substring(0, 200) + '...');
-      
-      // Proceed to store the analysis results with validation data
       const analysisRecord = {
         assessment_id,
         name: assessmentData.name,
         raw_response: combinedRawResponses,
         analysis_text: JSON.stringify(combinedAnalysisTexts),
         analysis_type: 'section_1',
-        validation_summary: validationResults.summary,
-        ...correctedAnalysis
+        ...combinedAnalysis
       };
 
+      // Debug logging to see the full objects before saving
+      console.log('===== DEBUG: combinedAnalysis keys =====');
+      console.log(Object.keys(combinedAnalysis));
+      
+      console.log('===== DEBUG: Full analysisRecord =====');
+      console.log(JSON.stringify(analysisRecord, null, 2));
+      
       console.log('Storing combined analysis in database...');
-      const { data: analysisData, error: storeError } = await supabase
+      const { error: storeError } = await supabase
         .from('dna_analysis_results')
-        .insert(analysisRecord)
-        .select('id')
-        .single();
+        .insert(analysisRecord);
 
       if (storeError) {
         console.error('Error storing analysis:', storeError);
@@ -668,40 +598,10 @@ serve(async (req) => {
       
       console.log('Combined analysis stored successfully');
       
-      // If we have an analysis ID now, store the unmatched entities for later review
-      if (analysisData?.id && 
-          (validationResults.thinkers?.unmatched?.length > 0 || 
-           validationResults.classics?.unmatched?.length > 0)) {
-        
-        try {
-          const unmatchedData = {
-            analysis_id: analysisData.id,
-            unmatched_thinkers: validationResults.thinkers?.unmatched || [],
-            unmatched_classics: validationResults.classics?.unmatched || [],
-            status: 'pending'
-          };
-          
-          const { error: unmatchedError } = await supabase
-            .from('dna_unmatched_entities')
-            .upsert([unmatchedData], { onConflict: 'analysis_id' });
-            
-          if (unmatchedError) {
-            console.error('Error storing unmatched entities:', unmatchedError);
-          }
-        } catch (unmatchedErr) {
-          console.error('Exception storing unmatched entities:', unmatchedErr);
-        }
-      }
-
-      // Add a small delay to ensure the database transaction is complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Combined analysis stored successfully',
-          analysis_id: analysisData?.id,
-          validation_summary: validationResults.summary
+          message: 'Combined analysis stored successfully'
         }),
         { 
           headers: {
