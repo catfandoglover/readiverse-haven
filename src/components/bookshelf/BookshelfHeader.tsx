@@ -1,5 +1,5 @@
 import React from "react";
-import { Heart } from "lucide-react";
+import { Star } from "lucide-react";
 import MainMenu from "../navigation/MainMenu";
 import { useNavigate } from "react-router-dom";
 
@@ -26,9 +26,9 @@ const BookshelfHeader: React.FC<BookshelfHeaderProps> = ({
         <button 
           onClick={handleFavoritesClick}
           aria-label="View Favorites"
-          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#4A4351]/50 flex items-center justify-center"
+          className="w-10 h-10 rounded-md text-[#E9E7E2] flex items-center justify-center"
         >
-          <Heart className="h-5 w-5 fill-current" />
+          <Star className="h-5 w-5 fill-[#CCFF23] text-[#CCFF23]" />
         </button>
       </div>
     </div>

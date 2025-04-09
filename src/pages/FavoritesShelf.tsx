@@ -1,5 +1,4 @@
 import React from "react";
-import { BookOpenText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import ClassicsFavoritesContent from "@/components/bookshelf/favorites/ClassicsFavoritesContent";
@@ -23,12 +22,9 @@ const FavoritesShelf: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           FAVORITES
         </h2>
-        <button 
-          onClick={handleStudyClick}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
-        >
-          <BookOpenText className="h-5 w-5" />
-        </button>
+        <div className="w-10 h-10">
+          {/* Empty div to balance the layout */}
+        </div>
       </div>
       
       {/* Main Content - using overflow-auto directly */}

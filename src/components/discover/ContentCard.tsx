@@ -192,10 +192,10 @@ const ContentCard: React.FC<ContentCardProps> = ({
             }}
           />
         </div>
-        <div className="p-4 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[32%] relative z-10 min-h-[52vh]">
+        <div className="p-6 bg-[#E9E7E2] text-[#2A282A] flex-1 flex flex-col rounded-t-3xl -mt-[32%] relative z-10 min-h-[52vh]">
           <div className="mb-4">
             <div className="flex justify-between items-start mb-2">
-              <h2 className="text-xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
+              <h2 className="text-lg font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
               <div className="flex gap-2 items-center shrink-0">
                 {itemId && (
                   <VirgilChatButton
@@ -222,7 +222,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           
           <div className="py-1 flex items-center justify-start">
             <button
-              className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-base"
+              className="uppercase tracking-wider flex items-center gap-1 font-oxanium text-[#282828]/50 pl-0 font-bold text-sm"
               onClick={onLearnMore}
             >
               <span className="flex items-center">

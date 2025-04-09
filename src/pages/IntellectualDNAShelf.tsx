@@ -1,5 +1,4 @@
 import React from "react";
-import { ArrowLeft, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import EthicsContent from "@/components/bookshelf/domains/EthicsContent";
@@ -18,10 +17,6 @@ const IntellectualDNAShelf: React.FC = () => {
     navigate("/bookshelf");
   };
 
-  const handleFavoritesClick = () => {
-    navigate("/favorites-shelf");
-  };
-
   return (
     <div className="flex flex-col h-screen bg-[#332E38] text-[#E9E7E2]">
       {/* Header - fixed at top */}
@@ -30,12 +25,9 @@ const IntellectualDNAShelf: React.FC = () => {
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           INTELLECTUAL DNA SHELF
         </h2>
-        <button 
-          onClick={handleFavoritesClick}
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#4A4351]/50"
-        >
-          <Heart className="h-5 w-5" />
-        </button>
+        <div className="w-10 h-10">
+          {/* Empty div to balance the layout */}
+        </div>
       </div>
       
       {/* Main Content - using overflow-auto directly */}
@@ -46,7 +38,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               ETHICS
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on the good
             </p>
           </div>
@@ -59,7 +51,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               EPISTEMOLOGY
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on knowledge
             </p>
           </div>
@@ -72,7 +64,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               POLITICS
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on power
             </p>
           </div>
@@ -85,7 +77,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               THEOLOGY
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on the divine
             </p>
           </div>
@@ -98,7 +90,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               ONTOLOGY
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on reality
             </p>
           </div>
@@ -111,7 +103,7 @@ const IntellectualDNAShelf: React.FC = () => {
             <h2 className="font-libre-baskerville text-base font-bold text-[#E9E7E2]">
               AESTHETICS
             </h2>
-            <p className="font-baskerville text-[#E9E7E2]/50 text-base">
+            <p className="font-baskerville text-[#E9E7E2]/50 text-lg">
               Your view on beauty
             </p>
           </div>
