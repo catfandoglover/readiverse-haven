@@ -18,6 +18,7 @@ import ClassicActionsMenu from "./ClassicActionsMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingVirgilButton from "./FloatingVirgilButton";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface CarouselItem {
   id: string;
@@ -793,23 +794,23 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       "bg-transparent fixed top-0 left-0 right-0 z-10 transition-all duration-200",
       shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : ""
     )}>
-      <div className="flex items-center px-4 py-4">
+      <div className="flex items-center px-4 py-4 relative">
         {/* Left section - Back button */}
         <button
           onClick={handleBack}
           className={cn(
-            "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            "h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors",
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
           aria-label="Back to Discover"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-7 w-7" />
         </button>
         
-        {/* Middle section - Title */}
-        <div className="flex-1 text-center mx-2">
+        {/* Middle section - Title (absolute positioned for full-width centering) */}
+        <div className="absolute left-0 right-0 mx-auto flex justify-center pointer-events-none">
           <h1 className={cn(
-            "font-oxanium text-sm uppercase tracking-wider font-bold truncate",
+            "font-oxanium text-sm uppercase tracking-wider font-bold px-2 max-w-[70%] truncate",
             shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}>
             {combinedData?.title || combinedData?.name || type.toUpperCase()}
@@ -817,14 +818,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         </div>
         
         {/* Right section - Action buttons */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
           {type === "classic" ? (
             <>
               {combinedData?.epub_file_url && (
                 <button
                   className={cn(
                     "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                    shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                    shouldBlurHeader ? "text-[#2A282A]" : "text-white"
                   )}
                   aria-label="Read"
                   onClick={handleReadNow}
@@ -845,7 +846,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               <button
                 className={cn(
                   "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                  shouldBlurHeader ? "text-[#2A282A]" : "text-white"
                 )}
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                 onClick={handleToggleFavorite}
@@ -859,7 +860,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               <button
                 className={cn(
                   "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-                  shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+                  shouldBlurHeader ? "text-[#2A282A]" : "text-white"
                 )}
                 aria-label="Share"
                 onClick={handleShare}
@@ -876,11 +877,21 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderHorizontalSlider = (title: string, items: CarouselItem[], imageKey: string = 'illustration', textKey: string = 'title', itemType: "classic" | "concept" | "question" | "icon") => {
     if (!items || items.length === 0) return null;
     
+    // Set options for better mobile display - same as BookshelfCarousel and SearchPage
+    const carouselOptions = {
+      align: "start" as const,
+      loop: false,
+      dragFree: true
+    };
+    
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
-        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
-          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
+        <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
+        <Carousel 
+          opts={carouselOptions} 
+          className="w-full pb-10 overflow-visible"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
             {items.map((item) => {
               // Determine the correct image source for different item types
               let imageSrc = item[imageKey];
@@ -891,33 +902,40 @@ const DetailedView: React.FC<DetailedViewProps> = ({
               }
               
               return (
-                <div
-                  key={item.id}
-                  className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
-                  onClick={() => handleCarouselItemClick(item, itemType)}
+                <CarouselItem 
+                  key={item.id} 
+                  className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"
                 >
-                  <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
-                    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                  <div
+                    className="w-full h-full cursor-pointer group"
+                    onClick={() => handleCarouselItemClick(item, itemType)}
+                  >
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden mb-2">
                       <img
                         src={imageSrc || ''}
                         alt={item[textKey] || ""}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         draggable="false"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/placeholder.svg";
+                        }}
                       />
                     </div>
+                    <h4 className={cn(
+                      "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
+                      "w-full break-words line-clamp-2",
+                      "text-[#2A282A]"
+                    )}>
+                      {item[textKey]}
+                    </h4>
                   </div>
-                  <h4 className={cn(
-                    "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
-                    "w-full break-words line-clamp-2",
-                    "text-[#2A282A]"
-                  )}>
-                    {item[textKey]}
-                  </h4>
-                </div>
+                </CarouselItem>
               );
             })}
-          </div>
-        </ScrollArea>
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-2" />
+          <CarouselNext className="hidden md:flex -right-2" />
+        </Carousel>
       </div>
     );
   };
@@ -949,7 +967,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
+        <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">ANECDOTES</h3>
         <ul className="list-disc pl-5 space-y-2 text-gray-800 font-baskerville text-lg">
           {anecdotesArray.map((anecdote, index) => (
             <li key={index}>{formatText(anecdote)}</li>
@@ -964,7 +982,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+        <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
         <p className="text-gray-800 font-baskerville text-lg">
           {formatText(combinedData.great_conversation)}
         </p>
@@ -976,13 +994,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     if (type !== "classic") return null;
     
     return (
-      <h2 className="text-xl font-libre-baskerville font-bold mb-6 text-[#2A282A]/70">
+      <h2 className="text-2xl font-libre-baskerville font-bold mb-6 text-[#2A282A]">
         by {combinedData?.author_id ? (
           <button 
             onClick={handleAuthorClick}
             className="inline-flex items-center relative hover:text-[#9b87f5] transition-colors"
           >
-            <span className="relative">
+            <span className="relative border-b border-[#332E38]">
               {combinedData.author}
               <span 
                 className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] transform origin-bottom-left scale-x-0 transition-transform duration-300"
@@ -1006,36 +1024,53 @@ const DetailedView: React.FC<DetailedViewProps> = ({
   const renderClassicsByIcon = () => {
     if (type !== "icon" || authorClassics.length === 0) return null;
     
+    // Set options for better mobile display - same as other carousels
+    const carouselOptions = {
+      align: "start" as const,
+      loop: false,
+      dragFree: true
+    };
+    
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">
+        <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">
           CLASSICS FROM {combinedData.name?.toUpperCase()}
         </h3>
-        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
-          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
+        <Carousel 
+          opts={carouselOptions} 
+          className="w-full pb-10 overflow-visible"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
             {authorClassics.map((classic) => (
-              <div
-                key={classic.id}
-                className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
-                onClick={() => handleCarouselItemClick(classic, "classic")}
+              <CarouselItem 
+                key={classic.id} 
+                className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"
               >
-                <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
-                  <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                <div
+                  className="w-full h-full cursor-pointer group"
+                  onClick={() => handleCarouselItemClick(classic, "classic")}
+                >
+                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden mb-2">
                     <img
                       src={classic.cover_url || classic.Cover_super || ''}
                       alt={classic.title || ""}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       draggable="false"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
                     />
                   </div>
+                  <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5] w-full break-words">
+                    {classic.title}
+                  </h4>
                 </div>
-                <h4 className="text-sm text-[#2A282A] font-oxanium uppercase line-clamp-2 transition-colors group-hover:text-[#9b87f5] w-full break-words">
-                  {classic.title}
-                </h4>
-              </div>
+              </CarouselItem>
             ))}
-          </div>
-        </ScrollArea>
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-2" />
+          <CarouselNext className="hidden md:flex -right-2" />
+        </Carousel>
       </div>
     );
   };
@@ -1118,12 +1153,12 @@ const DetailedView: React.FC<DetailedViewProps> = ({
 
             {isEnhancedDataLoading ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
                 <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
               </div>
             ) : combinedData.great_question_connection ? (
               <div className="mb-8">
-                <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
+                <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">THE GREAT CONVERSATION</h3>
                 <p className="text-gray-800 font-baskerville text-lg">
                   {formatText(combinedData.great_question_connection)}
                 </p>

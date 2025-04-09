@@ -82,11 +82,11 @@ const ExamVirgilChat: React.FC = () => {
         <Button
           variant="ghost" 
           size="icon"
-          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#373763]/50"
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none hover:bg-transparent"
           onClick={handleBack}
           aria-label="Back"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-7 w-7" />
         </Button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
           {examData?.title || "EXAM"}
@@ -132,12 +132,12 @@ const ExamVirgilChat: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelExit}>
-              Stay Here
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmExit}>
+            <AlertDialogAction onClick={handleConfirmExit} className="bg-[#E9E7E2] text-[#3D3D6F] hover:bg-[#E9E7E2]/90 border border-[#373763]">
               Exit Exam
             </AlertDialogAction>
+            <AlertDialogCancel onClick={handleCancelExit} className="bg-[#3D3D6F] text-[#E9E7E2] hover:bg-[#373763]">
+              Stay Here
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

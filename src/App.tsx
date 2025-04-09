@@ -41,6 +41,7 @@ import ClassroomVirgilChat from "./pages/ClassroomVirgilChat";
 import ExamRoom from "./pages/ExamRoom";
 import ExamWelcome from "./pages/ExamWelcome";
 import ExamVirgilChat from "./pages/ExamVirgilChat";
+import BadgeInfoPage from "./components/exam/BadgeInfoPage";
 import BookCounselor from "./pages/BookCounselor";
 import BookingSuccess from "./pages/BookingSuccess";
 import Login from "./pages/Login";
@@ -343,6 +344,11 @@ const App = () => (
                   <Route path="/exam-virgil-chat" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <ExamVirgilChat />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/exam/badge-info" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
+                      <BadgeInfoPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/bookshelf" element={

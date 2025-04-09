@@ -42,40 +42,67 @@ const ContentCard: React.FC<ContentCardProps> = ({
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
 
+  // Throttle API requests to avoid excessive calls
+  const throttledCheckFavoriteStatus = React.useCallback(async (retryCount = 0) => {
+    if (isCheckingFavorite || !user || !itemId || !itemType) return;
+    
+    setIsCheckingFavorite(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_favorites')
+        .select('*')
+        .eq('item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('item_type', itemType)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        
+        // Retry logic - maximum 3 retries with exponential backoff
+        if (retryCount < 3) {
+          const backoffDelay = Math.pow(2, retryCount) * 500; // 500ms, 1000ms, 2000ms
+          console.log(`Retrying favorite check (attempt ${retryCount + 1}) after ${backoffDelay}ms`);
+          
+          setTimeout(() => {
+            setIsCheckingFavorite(false);
+            throttledCheckFavoriteStatus(retryCount + 1);
+          }, backoffDelay);
+        }
+        return;
+      }
+      
+      setIsFavorite(!!data);
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      
+      // Also retry on exceptions
+      if (retryCount < 3) {
+        const backoffDelay = Math.pow(2, retryCount) * 500;
+        setTimeout(() => {
+          setIsCheckingFavorite(false);
+          throttledCheckFavoriteStatus(retryCount + 1);
+        }, backoffDelay);
+      }
+    } finally {
+      if (retryCount === 3) {
+        setIsCheckingFavorite(false);
+      }
+    }
+  }, [user, itemId, itemType, isCheckingFavorite]);
+  
   React.useEffect(() => {
     if (!isAuthLoading && user && itemId && itemType) {
-      const checkFavoriteStatus = async () => {
-        try {
-          console.log('Checking favorite status with:', {
-            itemId,
-            userId: user.id,
-            itemType,
-            itemTypeType: typeof itemType
-          });
-          
-          const { data, error } = await supabase
-            .from('user_favorites')
-            .select('*')
-            .eq('item_id', itemId)
-            .eq('user_id', user.id)
-            .eq('item_type', itemType)
-            .maybeSingle();
-          
-          if (error) {
-            console.error('Supabase error:', error);
-            return;
-          }
-          
-          setIsFavorite(!!data);
-        } catch (error) {
-          console.error("Error checking favorite status:", error);
-        }
-      };
+      // Add a small delay to stagger API calls
+      const timeoutId = setTimeout(() => {
+        throttledCheckFavoriteStatus();
+      }, Math.random() * 1000); // Random delay between 0-1000ms
       
-      checkFavoriteStatus();
+      return () => clearTimeout(timeoutId);
     }
-  }, [user, itemId, itemType, isAuthLoading]);
+  }, [user, itemId, itemType, isAuthLoading, throttledCheckFavoriteStatus]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
