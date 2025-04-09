@@ -1,4 +1,3 @@
-
 import { 
   PollyClient, 
   SynthesizeSpeechCommand,
@@ -10,13 +9,17 @@ import {
 import { getSynthesizeSpeechUrl } from "@aws-sdk/polly-request-presigner";
 import useAudioStore, { createAudioContext } from './AudioContext';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
 
 class SpeechService {
   private pollyClient: PollyClient | null = null;
   private initialized: boolean = false;
+  private supabase: any = null;
+  private useEdgeFunction: boolean = false;
 
   constructor() {
     this.initializePolly();
+    this.initializeSupabase();
   }
 
   private initializePolly() {
@@ -27,7 +30,7 @@ class SpeechService {
       
       // Check if we have the necessary credentials
       if (!region || !accessKeyId || !secretAccessKey) {
-        console.warn('Missing AWS credentials for Polly service');
+        console.warn('Missing AWS credentials for Polly service, will try edge function');
         return;
       }
       
@@ -48,13 +51,46 @@ class SpeechService {
     }
   }
 
+  private initializeSupabase() {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.warn('Missing Supabase credentials, edge functions will not be available');
+        return;
+      }
+      
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      this.useEdgeFunction = true;
+      console.log('Supabase client initialized for edge functions');
+    } catch (error) {
+      console.error('Error initializing Supabase client:', error);
+      this.useEdgeFunction = false;
+    }
+  }
+
   public isInitialized(): boolean {
-    return this.initialized;
+    return this.initialized || this.useEdgeFunction;
   }
 
   public async synthesizeSpeech(text: string): Promise<string> {
+    // Try edge function first if available
+    if (this.useEdgeFunction) {
+      try {
+        const url = await this.synthesizeSpeechViaEdge(text);
+        if (url) {
+          return url;
+        }
+      } catch (edgeError) {
+        console.warn('Edge function failed, falling back to direct AWS SDK', edgeError);
+        // Fall through to direct AWS SDK method
+      }
+    }
+    
+    // Fall back to direct AWS SDK method
     if (!this.initialized || !this.pollyClient) {
-      console.warn('Polly service not initialized');
+      console.warn('Polly service not initialized and edge function failed');
       return '';
     }
 
@@ -84,6 +120,32 @@ class SpeechService {
       console.error('Error synthesizing speech:', error);
       return '';
     }
+  }
+
+  private async synthesizeSpeechViaEdge(text: string): Promise<string> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+    
+    const { data, error } = await this.supabase.functions.invoke('api-proxy', {
+      method: 'POST',
+      body: { 
+        service: 'polly', 
+        action: 'synthesize', 
+        params: { text } 
+      }
+    });
+    
+    if (error) {
+      throw new Error(`Edge function error: ${error.message}`);
+    }
+    
+    if (!data || !data.url) {
+      throw new Error('No URL returned from edge function');
+    }
+    
+    console.info('Successfully got Polly URL via edge function:', data.url);
+    return data.url;
   }
 
   public async playAudio(url: string): Promise<void> {

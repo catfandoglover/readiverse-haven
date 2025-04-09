@@ -10,6 +10,7 @@ class AIService {
   private siteUrl: string = 'readiverse-haven.vercel.app';
   private siteName: string = 'Readiverse Haven';
   private isLoadingKey: boolean = false;
+  private useEdgeFunction: boolean = false;
 
   constructor() {
     this.initializeFromEnvironment();
@@ -55,6 +56,26 @@ class AIService {
   }
 
   private async initializeFromEnvironment(): Promise<void> {
+    try {
+      // Check if we can use edge functions
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseKey) {
+        this.useEdgeFunction = true;
+        this.initialized = true;
+        console.log('AI Service will use edge functions');
+      }
+    } catch (edgeError) {
+      console.warn('Error checking edge function availability', edgeError);
+    }
+
+    // If edge functions are available, we can stop here
+    if (this.useEdgeFunction && this.initialized) {
+      return;
+    }
+    
+    // Otherwise fall back to direct API access
     // First try environment variable
     const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
     
@@ -105,7 +126,7 @@ class AIService {
 
   // Check if the service is initialized
   isInitialized(): boolean {
-    return this.initialized && this.apiKey.trim() !== '';
+    return this.initialized;
   }
 
   // Generate a response from the AI using Gemini
@@ -170,36 +191,22 @@ class AIService {
       // Add the current user message to the conversation history
       conversationManager.addMessage(sessionId, 'user', finalUserMessage);
       
-      // Create request payload for Gemini
-      const requestPayload = {
-        contents: formattedMessages,
-        generation_config: {
-          temperature: 0.7,
-          top_p: 0.95,
-          top_k: 40,
-          max_output_tokens: 1000,
+      let responseData;
+      
+      // Try using edge function first if available
+      if (this.useEdgeFunction) {
+        try {
+          responseData = await this.generateResponseViaEdge(formattedMessages);
+        } catch (edgeError) {
+          console.warn('Error using edge function, falling back to direct API call', edgeError);
+          // Fall through to direct API call
         }
-      };
-      
-      console.log('Gemini request payload:', JSON.stringify(requestPayload));
-      
-      // Make API request to Gemini
-      const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestPayload)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Gemini API error:", errorData);
-        throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
       }
       
-      const responseData = await response.json();
-      console.log("Gemini response:", responseData);
+      // Fall back to direct API call if edge function failed or is unavailable
+      if (!responseData) {
+        responseData = await this.generateResponseViaDirectAPI(formattedMessages);
+      }
       
       // Extract the response text
       let responseText = '';
@@ -236,6 +243,75 @@ class AIService {
         text: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again?",
       };
     }
+  }
+  
+  private async generateResponseViaEdge(messages: any[]): Promise<any> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data, error } = await supabase.functions.invoke('api-proxy', {
+      method: 'POST',
+      body: { 
+        service: 'gemini', 
+        action: 'chat', 
+        params: { 
+          messages,
+          temperature: 0.7,
+          maxTokens: 1000
+        } 
+      }
+    });
+    
+    if (error) {
+      throw new Error(`Edge function error: ${error.message}`);
+    }
+    
+    if (!data) {
+      throw new Error('Empty response from edge function');
+    }
+    
+    return data;
+  }
+  
+  private async generateResponseViaDirectAPI(messages: any[]): Promise<any> {
+    // Create request payload for Gemini
+    const requestPayload = {
+      contents: messages,
+      generation_config: {
+        temperature: 0.7,
+        top_p: 0.95,
+        top_k: 40,
+        max_output_tokens: 1000,
+      }
+    };
+    
+    console.log('Gemini request payload:', JSON.stringify(requestPayload));
+    
+    // Make API request to Gemini
+    const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestPayload)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Gemini API error:", errorData);
+      throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
+    }
+    
+    const responseData = await response.json();
+    console.log("Gemini response:", responseData);
+    
+    return responseData;
   }
   
   // Truncate text to be under 600 characters
