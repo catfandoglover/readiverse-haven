@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User, AuthError, SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { linkPendingAssessmentToUser } from '@/utils/dnaAssessmentUtils';
 
@@ -44,6 +44,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Utility function to check if a path is a DNA assessment path
+const isDNAAssessmentPath = (path: string): boolean => {
+  const dnaAssessmentPaths = ['/dna/ethics', '/dna/epistemology', 
+    '/dna/politics', '/dna/theology', '/dna/ontology', '/dna/aesthetics'];
+  return dnaAssessmentPaths.some(dnaPath => path === dnaPath);
+};
+
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [hasCompletedDNA, setHasCompletedDNA] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     // Get initial session
@@ -76,7 +84,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(null);
         
         // If we have a user, immediately try to link any pending assessment
-        if (session?.user) {
+        // But skip during DNA assessment navigation
+        if (session?.user && !isDNAAssessmentPath(location.pathname)) {
           linkPendingAssessmentToUser(session.user.id)
             .then(result => {
               if (result.success) {
@@ -103,7 +112,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null);
       
       // If we have a user, immediately try to link any pending assessment
-      if (session?.user) {
+      // But skip during DNA assessment navigation
+      if (session?.user && !isDNAAssessmentPath(location.pathname)) {
         linkPendingAssessmentToUser(session.user.id)
           .then(result => {
             if (result.success) {
@@ -125,16 +135,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
-  // Check DNA status when user changes
+  // Check DNA status when user changes, but skip during DNA category transitions
   useEffect(() => {
-    if (user) {
+    if (user && !isDNAAssessmentPath(location.pathname)) {
       checkDNAStatus().catch(console.error);
-    } else {
+    } else if (!user) {
       setHasCompletedDNA(false);
     }
-  }, [user]);
+  }, [user, location.pathname]);
 
   const checkDNAStatus = async (): Promise<boolean> => {
     if (!user) return false;
