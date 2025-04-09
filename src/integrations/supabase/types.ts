@@ -2018,6 +2018,35 @@ export type Database = {
         }
         Relationships: []
       }
+      lightning_membership: {
+        Row: {
+          id: number
+          plan_title: string
+          revenue_item_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          plan_title: string
+          revenue_item_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          plan_title?: string
+          revenue_item_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lightning_membership_revenue_item_id_fkey"
+            columns: ["revenue_item_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       share_messages: {
         Row: {
           created_at: string
