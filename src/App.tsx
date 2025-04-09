@@ -56,6 +56,7 @@ import ProfileSettings from "@/pages/ProfileSettings";
 import TestUpload from "@/pages/TestUpload";
 import ChooseYourOwnExam from "./pages/ChooseYourOwnExam";
 import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
+import MembershipManagement from "./pages/MembershipManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -252,6 +253,11 @@ const App = () => (
                   <Route path="/profile/settings" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <ProfileSettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/membership" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
+                      <MembershipManagement />
                     </ProtectedRoute>
                   } />
                   <Route path="/test-upload" element={

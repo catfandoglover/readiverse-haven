@@ -332,11 +332,11 @@ const ProfileSettings: React.FC = () => {
                         type="text" 
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="bg-[#2A282A] border-[#4D4955] text-[#E9E7E2] font-oxanium uppercase font-bold"
+                        className="bg-[#2A282A] border-[#4D4955] text-[#E9E7E2] font-oxanium uppercase font-bold text-sm"
                         placeholder="Full Name"
                       />
                     ) : (
-                      <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold">{fullName}</p>
+                      <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">{fullName}</p>
                     )}
                   </div>
                 </div>
@@ -353,7 +353,7 @@ const ProfileSettings: React.FC = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold">{email}</p>
+                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">{email}</p>
                   </div>
                 </div>
               </CardContent>
@@ -369,10 +369,11 @@ const ProfileSettings: React.FC = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold">FREE PLAN</p>
+                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold text-sm">FREE PLAN</p>
                   </div>
                   <Button 
                     className="h-9 w-9 rounded-full flex-shrink-0 bg-[#373763] flex items-center justify-center"
+                    onClick={() => navigate('/membership')}
                   >
                     <ArrowUp className="h-4 w-4 text-transparent stroke-white" />
                   </Button>
