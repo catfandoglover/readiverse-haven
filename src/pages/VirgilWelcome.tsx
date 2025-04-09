@@ -52,7 +52,7 @@ const VirgilWelcome: React.FC = () => {
             
             // Navigate to profile
             navigate('/profile');
-          }, 2000);
+          }, 120000); // 2 minutes 
           
           return;
         }
