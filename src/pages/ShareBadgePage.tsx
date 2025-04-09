@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { X, Share2 } from "lucide-react";
+import { Share, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStageName, getHexagonColor } from "@/components/reader/MasteryScore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getPreviousPage } from "@/utils/navigationHistory";
+
+// Helper function to get roman numeral
+const getRomanNumeral = (level: number): string => {
+  switch(level) {
+    case 1: return "I";
+    case 2: return "II";
+    case 3: return "III";
+    case 4: return "IV";
+    case 5: return "V";
+    case 6: return "VI";
+    default: return "I";
+  }
+};
 
 interface BadgeData {
   id: string;
@@ -17,6 +30,7 @@ interface BadgeData {
   image: string;
   domainId?: string;
   resourceType?: "icon" | "concept" | "classic";
+  userId?: string;
 }
 
 interface ShareBadgeParams {
@@ -36,9 +50,37 @@ const ShareBadgePage: React.FC = () => {
   const [badgeData, setBadgeData] = useState<BadgeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [resourceType, setResourceType] = useState<"icon" | "concept" | "classic" | null>(null);
+  const [fullName, setFullName] = useState<string>("Philosophy Student");
+  const [isOwnBadge, setIsOwnBadge] = useState<boolean>(false);
   
   // Use resource from location state if available, otherwise fetch it
   const initialResource = location.state?.resource;
+  
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          // Get user's profile data
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching profile:", error);
+          } else if (data && data.full_name) {
+            setFullName(data.full_name);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
   
   useEffect(() => {
     const fetchBadgeData = async () => {
@@ -46,6 +88,12 @@ const ShareBadgePage: React.FC = () => {
         // Use the data passed from navigation
         setBadgeData(initialResource);
         setResourceType(initialResource.resourceType || null);
+        
+        // Check if this badge belongs to the current user
+        if (user && initialResource.userId === user.id) {
+          setIsOwnBadge(true);
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -103,15 +151,33 @@ const ShareBadgePage: React.FC = () => {
           
           setResourceType(type);
           
+          // Determine image field based on resource type
+          let imageField = data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+          if (type === "classic") {
+            // Use a type assertion to handle possible missing properties
+            const extendedData = data as any;
+            imageField = extendedData.entry_icon_illustration || data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+          } else {
+            // Use a type assertion to handle possible missing properties
+            const extendedData = data as any;
+            imageField = extendedData.entry_illustration || data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+          }
+          
+          // Check if this badge belongs to the current user
+          if (user && data.userid === user.id) {
+            setIsOwnBadge(true);
+          }
+          
           setBadgeData({
             id: resourceId,
             title: data.one_sentence || "Philosophy Badge",
             subtitle: data.one_sentence || "Knowledge Mastery",
             summary: data.summary || "",
             score: parseInt(data.score) || 6,
-            image: data.entry_icon || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+            image: imageField,
             domainId: domainId,
-            resourceType: type
+            resourceType: type,
+            userId: data.userid
           });
         } else {
           // Fallback to default data
@@ -132,7 +198,7 @@ const ShareBadgePage: React.FC = () => {
     };
     
     fetchBadgeData();
-  }, [resourceId, initialResource, domainId, toast]);
+  }, [resourceId, initialResource, domainId, toast, user]);
   
   useEffect(() => {
     const currentUrl = window.location.origin;
@@ -143,21 +209,8 @@ const ShareBadgePage: React.FC = () => {
   }, [domainId, resourceId, userName]);
   
   const handleClose = () => {
-    // If user is not authenticated, redirect to the discover detail view
-    if (!user) {
-      // Determine the correct detail view URL based on the resource type
-      if (resourceType && resourceId) {
-        navigate(`/view/${resourceType}/${resourceId}`);
-      } else {
-        // Fallback to discover if we couldn't determine the type
-        navigate('/discover');
-      }
-      return;
-    }
-    
-    const previousPage = getPreviousPage();
-    // Navigate back to the previous page or to index if there's no valid previous page
-    navigate(previousPage || "/index");
+    // Always navigate to /dna when X is clicked
+    navigate('/dna');
   };
   
   const handleShare = async () => {
@@ -201,17 +254,12 @@ const ShareBadgePage: React.FC = () => {
     );
   }
   
-  const fullName = user?.Account?.Name || "Philosophy Student";
-  const firstName = fullName.split(' ')[0];
-  const lastName = fullName.split(' ').slice(1).join(' ');
-  
-  // Get the badge level color
   const badgeColor = getHexagonColor(badgeData.score);
   
   return (
     <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden">
-      {/* Hero section with badge image as background - slightly reduced height */}
-      <div className="relative w-full h-[45vh]">
+      {/* Hero section with badge image as background - takes full height minus content section */}
+      <div className="relative w-full h-1/2">
         {/* Background image */}
         <div className="absolute inset-0 overflow-hidden">
           <img 
@@ -220,88 +268,95 @@ const ShareBadgePage: React.FC = () => {
             className="w-full h-full object-cover"
           />
         </div>
-        
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-[#2A282A]"></div>
-        
-        {/* Close button */}
-        <Button 
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
-          aria-label="Close"
-        >
-          <X className="h-6 w-6 text-[#E9E7E2]" />
-        </Button>
-        
-        {/* Share button */}
-        <Button 
-          onClick={handleShare}
-          className="absolute top-4 left-4 z-20 h-10 w-10 rounded-full bg-[#2A282A]/50 p-0 hover:bg-[#2A282A]/70"
-          aria-label="Share"
-        >
-          <Share2 className="h-5 w-5 text-[#E9E7E2]" />
-        </Button>
-        
-        {/* Title - moved up to overlap with the hero image */}
-        <div className="absolute bottom-[67%] left-0 w-full px-6 z-10">
-          <h1 className="text-3xl font-serif text-[#E9E7E2] mb-2">{badgeData.title}</h1>
+
+        {/* Header overlay - positioned absolutely on top of the image */}
+        <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-center px-4 z-20">
+          {/* Back button */}
+          <div className="absolute left-4">
+            <Button 
+              onClick={handleClose}
+              className="h-10 w-10 rounded-full bg-transparent p-0 hover:bg-transparent"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-7 w-7 text-[#E9E7E2] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] stroke-[1.5]" />
+            </Button>
+          </div>
+          
+          {/* Header title - student name with enhanced visibility */}
+          <h1 className="font-oxanium uppercase font-bold text-sm tracking-wider text-[#E9E7E2] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+            {fullName}
+          </h1>
+          
+          {/* Share button - always in top right */}
+          <div className="absolute right-4">
+            <Button 
+              onClick={handleShare}
+              className="h-10 w-10 rounded-full bg-transparent p-0 hover:bg-transparent"
+              aria-label="Share"
+            >
+              <Share className="h-7 w-7 text-[#E9E7E2] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] stroke-[1.5]" />
+            </Button>
+          </div>
         </div>
       </div>
       
-      {/* User badge section - moved up to overlap with hero */}
-      <div className="w-full px-6 py-8 flex flex-col items-center -mt-32 relative z-10">
-        <div className="relative h-36 w-36 mb-2">
-          {/* Colored hexagon with badge score */}
-          <svg 
-            viewBox="0 0 24 24" 
-            height="100%" 
-            width="100%" 
-            xmlns="http://www.w3.org/2000/svg" 
-            fill={badgeColor}
-            stroke="#CCFF23"
-            strokeWidth="1"
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
-          </svg>
+      {/* Content container - takes up the rest of the screen */}
+      <div className="relative flex-1 bg-[#2A282A] flex flex-col items-center z-10">
+        {/* Badge hexagon - positioned to overlap equally and centered horizontally */}
+        <div className="absolute -top-[80px] left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+          <div className="relative" style={{ height: '160px', width: '160px' }}>
+            <svg 
+              viewBox="0 0 24 24" 
+              height="100%" 
+              width="100%" 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill={badgeColor}
+              stroke="#E9E7E2"
+              strokeWidth="0.5"
+            >
+              <path d="M21 16.05V7.95C20.9988 7.6834 20.9344 7.4209 20.811 7.18465C20.6875 6.94841 20.5088 6.74591 20.29 6.6L12.71 2.05C12.4903 1.90551 12.2376 1.82883 11.98 1.82883C11.7224 1.82883 11.4697 1.90551 11.25 2.05L3.67 6.6C3.45124 6.74591 3.27248 6.94841 3.14903 7.18465C3.02558 7.4209 2.96118 7.6834 2.96 7.95V16.05C2.96118 16.3166 3.02558 16.5791 3.14903 16.8153C3.27248 17.0516 3.45124 17.2541 3.67 17.4L11.25 21.95C11.4697 22.0945 11.7224 22.1712 11.98 22.1712C12.2376 22.1712 12.4903 22.0945 12.71 21.95L20.29 17.4C20.5088 17.2541 20.6875 17.0516 20.811 16.8153C20.9344 16.5791 20.9988 16.3166 21 16.05Z"></path>
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center font-libre-baskerville font-bold text-4xl" style={{ color: badgeData.score === 6 ? "#FFFFFF" : "#3D3D6F" }}>
+              {getRomanNumeral(badgeData.score)}
+            </span>
+          </div>
           
-          {/* Badge level number */}
-          <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-black">
-            {badgeData.score}
-          </span>
-        </div>
-        
-        <h2 className="text-4xl font-serif text-center mt-8">{fullName}</h2>
-        <p className="text-2xl font-oxanium text-[#E9E7E2] uppercase mt-2">
-          {getStageName(badgeData.score || 6)}
-        </p>
-        
-        {/* Badge summary - increased text size */}
-        <div className="max-w-lg mt-8 text-center px-4">
-          <p className="text-xl font-oxanium text-[#E9E7E2]/90 leading-relaxed">
-            {badgeData.summary ? `"${badgeData.summary}"` : 
-              `"Created novel framework for modern problems. Extended concepts into unexplored domains."`}
+          {/* Badge level name */}
+          <p className="text-center font-libre-baskerville italic text-base mt-2" style={{ color: badgeColor }}>
+            {getStageName(badgeData.score || 6)}
           </p>
         </div>
-      </div>
-      
-      {/* Footer section - moved up */}
-      <div className="mt-auto w-full px-6 py-6 flex flex-col items-center">
-        <a 
-          href="https://www.lightninginspiration.com" 
-          className="font-oxanium uppercase text-xl font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
-        >
-          BECOME WHO YOU ARE
-        </a>
-        <a 
-          href="https://www.lightninginspiration.com" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="justify-center font-oxanium uppercase text-lg text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
-        >
-          WWW.LIGHTNINGINSPIRATION.COM
-        </a>
+        
+        {/* Badge title - increased text size */}
+        <h1 className="font-libre-baskerville font-bold text-lg mt-32 mb-6 text-center">
+          {badgeData.title}
+        </h1>
+        
+        {/* Badge summary - smaller size, no quotes, centered in the available space */}
+        <div className="max-w-lg flex-1 flex items-center justify-center px-6">
+          <p className="text-sm font-oxanium text-[#E9E7E2]/90 leading-relaxed text-center">
+            {badgeData.summary || 
+              "Created novel framework for modern problems. Extended concepts into unexplored domains."}
+          </p>
+        </div>
+        
+        {/* Footer section */}
+        <div className="w-full px-6 py-4 flex flex-col items-center">
+          <a 
+            href="https://www.lightninginspiration.com" 
+            className="font-oxanium uppercase text-sm font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-1"
+          >
+            BECOME WHO YOU ARE
+          </a>
+          <a 
+            href="https://www.lightninginspiration.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="justify-center font-oxanium uppercase text-xs text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          >
+            WWW.LIGHTNINGINSPIRATION.COM
+          </a>
+        </div>
       </div>
     </div>
   );

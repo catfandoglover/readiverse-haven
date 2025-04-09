@@ -60,11 +60,11 @@ const ClassroomVirgilChat: React.FC = () => {
         <Button
           variant="ghost" 
           size="icon"
-          className="w-10 h-10 rounded-md text-[#E9E7E2]/70 hover:text-[#E9E7E2] hover:bg-[#19352F]/50"
+          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none hover:bg-transparent"
           onClick={handleBack}
           aria-label="Back"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-7 w-7" />
         </Button>
         <h2 className="font-oxanium uppercase text-[#E9E7E2]/70 tracking-wider text-sm font-bold mx-auto">
           {courseData?.title || "COURSE"}

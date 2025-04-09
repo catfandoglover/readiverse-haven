@@ -301,33 +301,33 @@ const ProfileSettings: React.FC = () => {
       <div className="flex-1 overflow-auto">
         <div className="flex flex-col space-y-8 max-w-md mx-auto px-4 py-8 pb-24">
           {/* Profile Picture */}
-          <div className="relative h-32 w-32 mx-auto">
+          <div className="relative h-28 w-28 mx-auto p-0.5">
             <svg 
-              viewBox="0 0 100 100" 
+              viewBox="-5 -5 110 110" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
+              preserveAspectRatio="xMidYMid meet"
             >
               <polygon 
-                points="50 5, 90 30, 90 70, 50 95, 10 70, 10 30" 
+                points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
                 fill="none" 
                 stroke="currentColor" 
-                strokeWidth="3"
+                strokeWidth="5"
+                strokeLinejoin="round"
               />
             </svg>
             
             <div 
               className="absolute inset-0 flex items-center justify-center"
               style={{ 
-                clipPath: 'polygon(50% 5%, 90% 30%, 90% 70%, 50% 95%, 10% 70%, 10% 30%)',
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
             >
-              <div className="relative w-40 h-40 mx-auto mb-4">
-                <Avatar className="h-full w-full overflow-hidden rounded-none">
-                  <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
-                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+              <Avatar className="h-full w-full overflow-hidden rounded-none">
+                <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
+                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
             </div>
             
             <label 
@@ -439,7 +439,7 @@ const ProfileSettings: React.FC = () => {
             <Button 
               variant="destructive" 
               onClick={handleLogout}
-              className="w-full h-[52px] rounded-2xl bg-red-600 hover:bg-red-700 font-oxanium uppercase text-sm font-bold"
+              className="w-full h-[52px] rounded-2xl bg-[#e9e7e2] text-[#332e38] hover:bg-[#e9e7e2]/90 font-oxanium uppercase text-sm font-bold"
             >
               SIGN OUT
             </Button>
@@ -447,43 +447,12 @@ const ProfileSettings: React.FC = () => {
 
           {/* Footer Links */}
           <div className="flex justify-between w-full">
-            <div className="flex space-x-4">
+            <div className="flex">
               <button
                 onClick={handleBillingPortal}
                 className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
               >
                 MANAGE BILLING
-              </button>
-              
-              <button
-                onClick={async () => {
-                  if (!user) return;
-                  try {
-                    const { error } = await supabase.functions.invoke('fix-customer-record', {
-                      body: { userId: user.id }
-                    });
-                    
-                    if (error) throw error;
-                    
-                    toast({
-                      title: "Success",
-                      description: "Subscription record fixed. Refreshing data...",
-                    });
-                    
-                    // Refresh subscription data
-                    refreshSubscription();
-                  } catch (error) {
-                    console.error("Error fixing subscription:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to fix subscription record",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                className="font-oxanium text-amber-500 uppercase tracking-wider text-sm font-bold hover:text-amber-400 underline"
-              >
-                FIX
               </button>
             </div>
 

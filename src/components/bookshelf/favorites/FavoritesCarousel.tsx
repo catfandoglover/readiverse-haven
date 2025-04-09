@@ -76,12 +76,10 @@ const FavoritesCarousel: React.FC<FavoritesCarouselProps> = ({
                     e.currentTarget.src = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png";
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-3">
-                  <h4 className="text-white font-baskerville text-base drop-shadow-lg">
-                    {item.title}
-                  </h4>
-                </div>
               </div>
+              <h4 className="text-[#E9E7E2] font-oxanium text-base mt-2 uppercase">
+                {item.title}
+              </h4>
             </div>
           </CarouselItem>
         ))}

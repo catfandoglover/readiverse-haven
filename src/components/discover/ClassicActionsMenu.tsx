@@ -29,7 +29,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
         <button
           className={cn(
             "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
           aria-label="More options"
         >
@@ -47,7 +47,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
           onClick={toggleFavorite} 
           className={cn(
             "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
         >
           <Star className="h-5 w-5" fill={isFavorite ? "#EFFE91" : "none"} />
@@ -57,7 +57,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
           onClick={handleOrder} 
           className={cn(
             "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
         >
           <ShoppingCart className="h-5 w-5" />
@@ -67,7 +67,7 @@ const ClassicActionsMenu: React.FC<ClassicActionsMenuProps> = ({
           onClick={handleShare} 
           className={cn(
             "flex items-center justify-center h-10 w-10 p-0 m-1 rounded-md transition-colors self-end",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
         >
           <Share className="h-5 w-5" />

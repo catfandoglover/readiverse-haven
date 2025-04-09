@@ -13,6 +13,7 @@ import VirgilChatButton from "./VirgilChatButton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingVirgilButton from "./FloatingVirgilButton";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 
 interface CarouselItem {
   id: string;
@@ -331,12 +332,17 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       return;
     }
     
+    if (!itemData.id) {
+      console.error("Missing itemId for favorite operation");
+      return;
+    }
+    
     try {
       if (isFavorite) {
         const { error } = await supabase
           .from('user_favorites')
           .delete()
-          .eq('item_id', combinedData.id)
+          .eq('item_id', itemData.id)
           .eq('user_id', user.id)
           .eq('item_type', 'question');
           
@@ -347,12 +353,15 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           description: "Question removed from favorites",
         });
       } else {
+        const outseta_user_id = user.user_metadata?.outseta_id || '';
+        
         const { error } = await supabase
           .from('user_favorites')
           .insert({
-            item_id: combinedData.id,
+            item_id: itemData.id,
             user_id: user.id,
             item_type: 'question',
+            outseta_user_id: outseta_user_id,
             added_at: new Date().toISOString()
           });
           
@@ -464,30 +473,35 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
       "bg-transparent fixed top-0 left-0 right-0 z-10 transition-all duration-200",
       shouldBlurHeader ? "backdrop-blur-md bg-[#E9E7E2]/80" : ""
     )}>
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="flex items-center px-4 py-4 relative">
+        {/* Left section - Back button */}
         <button
           onClick={handleBack}
           className={cn(
-            "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-            shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+            "h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors",
+            shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}
           aria-label="Back to previous page"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-7 w-7" />
         </button>
-        <div className="flex-1 text-center">
+        
+        {/* Middle section - Title (absolute positioned for full-width centering) */}
+        <div className="absolute left-0 right-0 mx-auto flex justify-center pointer-events-none">
           <h1 className={cn(
-            "font-oxanium text-sm uppercase tracking-wider font-bold",
+            "font-oxanium text-sm uppercase tracking-wider font-bold px-2 max-w-[70%] truncate",
             shouldBlurHeader ? "text-[#2A282A]" : "text-white"
           )}>
             GREAT QUESTION
           </h1>
         </div>
-        <div className="flex items-center space-x-2">
+        
+        {/* Right section - Action buttons */}
+        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+              shouldBlurHeader ? "text-[#2A282A]" : "text-white"
             )}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
             onClick={toggleFavorite}
@@ -501,7 +515,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
           <button
             className={cn(
               "h-10 w-10 inline-flex items-center justify-center rounded-md transition-colors",
-              shouldBlurHeader ? "text-[#2A282A] hover:bg-[#2A282A]/10" : "text-white hover:bg-white/10"
+              shouldBlurHeader ? "text-[#2A282A]" : "text-white"
             )}
             aria-label="Share"
             onClick={handleShare}
@@ -516,11 +530,21 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
   const renderHorizontalSlider = (title: string, items: CarouselItem[], imageKey: string = 'illustration', textKey: string = 'title', itemType: "classic" | "concept" | "question" | "icon") => {
     if (!items || items.length === 0) return null;
     
+    // Set options for better mobile display - same as other carousels
+    const carouselOptions = {
+      align: "start" as const,
+      loop: false,
+      dragFree: true
+    };
+    
     return (
       <div className="mt-8">
-        <h3 className="text-2xl font-libre-baskerville font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
-        <ScrollArea className="w-full pb-4" enableDragging orientation="horizontal">
-          <div className="flex space-x-4 min-w-max px-0.5 py-0.5">
+        <h3 className="text-lg font-oxanium font-bold mb-4 text-[#2A282A] uppercase">{title}</h3>
+        <Carousel 
+          opts={carouselOptions} 
+          className="w-full pb-10 overflow-visible"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
             {items.map((item) => {
               let imageSrc = item[imageKey];
               
@@ -529,33 +553,42 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
               }
               
               return (
-                <div
-                  key={item.id}
-                  className="relative flex-none cursor-pointer group w-36 sm:w-40 md:w-48 lg:w-52"
-                  onClick={() => handleCarouselItemClick(item, itemType)}
+                <CarouselItem 
+                  key={item.id} 
+                  className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"
                 >
-                  <div className="aspect-square w-full rounded-2xl overflow-hidden mb-2">
-                    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                  <div
+                    className="w-full h-full cursor-pointer group"
+                    onClick={() => handleCarouselItemClick(item, itemType)}
+                  >
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden mb-2">
                       <img
                         src={imageSrc || ''}
                         alt={item[textKey] || ""}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         draggable="false"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/placeholder.svg";
+                        }}
                       />
                     </div>
+                    {itemType !== "classic" && (
+                      <h4 className={cn(
+                        "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
+                        "w-full break-words line-clamp-2",
+                        "text-[#2A282A]"
+                      )}>
+                        {item[textKey]}
+                      </h4>
+                    )}
                   </div>
-                  <h4 className={cn(
-                    "text-sm font-oxanium uppercase group-hover:text-[#9b87f5] transition-colors",
-                    "w-full break-words line-clamp-2",
-                    "text-[#2A282A]"
-                  )}>
-                    {item[textKey]}
-                  </h4>
-                </div>
+                </CarouselItem>
               );
             })}
-          </div>
-        </ScrollArea>
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-2" />
+          <CarouselNext className="hidden md:flex -right-2" />
+        </Carousel>
       </div>
     );
   };
@@ -591,7 +624,7 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
               isMobile ? "p-6" : "px-[18%] py-8"
             )}
           >
-            <h2 className="text-2xl font-baskerville mb-6 text-[#2A282A]">
+            <h2 className="text-2xl font-libre-baskerville font-bold mb-6 text-[#2A282A]">
               {combinedData?.question}
             </h2>
             

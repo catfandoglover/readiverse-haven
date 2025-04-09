@@ -354,15 +354,11 @@ const IntellectualDNAExam: React.FC = () => {
         <div className="flex items-center mb-3">
           <div className="flex items-center flex-1">
             <div className="relative mr-4">
-              <Hexagon className="h-10 w-10 text-[#3D3D6F]" strokeWidth={3} />
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-full overflow-hidden">
                 <img 
                   src={resource.image} 
                   alt={resource.title}
-                  className="h-9 w-9 object-cover rounded-2xl"
-                  style={{ 
-                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                  }}
+                  className="h-9 w-9 object-cover"
                 />
               </div>
             </div>

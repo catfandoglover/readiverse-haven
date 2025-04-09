@@ -79,10 +79,13 @@
     width: 100%;
     position: relative;
     -webkit-overflow-scrolling: touch;
+    background-color: #2A282A;
   }
 
   html {
     height: -webkit-fill-available;
+    min-height: 100%;
+    background-color: #2A282A;
   }
 
   .epub-view {
