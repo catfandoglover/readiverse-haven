@@ -390,7 +390,6 @@ const MembershipManagement: React.FC = () => {
                     data-price-id={pricingData?.yearlyPriceId}
                     className={cn(
                       "rounded-xl p-3 flex flex-col items-start text-left transition-all",
-                      "border border-[#E9E7E2]/10",
                       selectedPlan === "yearly"
                         ? "bg-[#413A54]" 
                         : "bg-[#231923]/50 backdrop-blur-sm hover:bg-[#2A2030]/70"
@@ -406,7 +405,6 @@ const MembershipManagement: React.FC = () => {
                     data-price-id={pricingData?.monthlyPriceId}
                     className={cn(
                       "rounded-xl p-3 flex flex-col items-start text-left transition-all",
-                      "border border-[#E9E7E2]/10",
                       selectedPlan === "monthly"
                         ? "bg-[#413A54]" 
                         : "bg-[#231923]/50 backdrop-blur-sm hover:bg-[#2A2030]/70"
@@ -420,31 +418,28 @@ const MembershipManagement: React.FC = () => {
                 </div>
               )}
               
-              <Button 
-                onClick={handleJoin}
-                disabled={(subscription.isActive && subscription.tier === 'surge') || (!selectedPlan && (!subscription.isActive || subscription.tier !== 'surge'))}
-                className={cn(
-                  "w-full h-[52px] mb-3 rounded-xl font-oxanium uppercase text-sm font-bold flex justify-center items-center transition-colors",
-                  (subscription.isActive && subscription.tier === 'surge')
-                    ? "bg-[#3B4777] text-[#E9E7E2]"
-                    : selectedPlan 
+              {/* Show JOIN button if user is on free plan */}
+              {(!subscription.isActive || subscription.tier !== 'surge') ? (
+                <Button 
+                  onClick={handleJoin}
+                  disabled={!selectedPlan}
+                  className={cn(
+                    "w-full h-[52px] mb-3 rounded-xl font-oxanium uppercase text-sm font-bold flex justify-center items-center transition-colors",
+                    selectedPlan 
                       ? "bg-[#3B4777] hover:bg-[#3B4777]/90 text-[#E9E7E2]" 
                       : "bg-[#231923]/50 backdrop-blur-sm text-[#E9E7E2]/70"
-                )}
-              >
-                {isProcessing && (
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                )}
-                {(subscription.isActive && subscription.tier === 'surge')
-                  ? 'CURRENT PLAN'
-                  : 'JOIN THE CONVERSATION'}
-              </Button>
-              
-              {/* Show manage subscription button if already subscribed */}
-              {subscription.isActive && subscription.tier === 'surge' && (
+                  )}
+                >
+                  {isProcessing && (
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  )}
+                  JOIN THE CONVERSATION
+                </Button>
+              ) : (
+                /* Show MANAGE SUBSCRIPTION button for paid users */
                 <Button 
                   onClick={handleDowngrade}
-                  className="w-full h-[52px] mb-3 rounded-xl bg-[#231923]/80 hover:bg-[#231923] text-[#E9E7E2] font-oxanium uppercase text-sm font-bold flex justify-center items-center"
+                  className="w-full h-[52px] mb-3 rounded-xl bg-[#373763] hover:bg-[#373763]/90 text-[#E9E7E2] font-oxanium uppercase text-sm font-bold flex justify-center items-center"
                 >
                   {isProcessing && (
                     <Loader2 className="h-5 w-5 animate-spin mr-2" />
