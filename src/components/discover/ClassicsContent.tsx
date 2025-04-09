@@ -105,10 +105,45 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       const pathSlug = location.pathname.split('/texts/')[1];
       console.log("Loading text by slug:", pathSlug);
       
+      // Check if we have state information from navigation (e.g., from reader)
+      const locationState = location.state as { fromReader?: boolean, bookId?: string } | null;
+      const comingFromReader = locationState?.fromReader;
+      const bookId = locationState?.bookId;
+      
       // Direct database fetch for the specific book by slug - bypassing any issues with the main data loading
       const fetchBookDirectly = async () => {
         try {
           console.log("Directly querying DB for book with slug:", pathSlug);
+          
+          // If we have the book ID from reader navigation, try that first
+          if (comingFromReader && bookId) {
+            console.log("Coming from reader with book ID:", bookId);
+            const { data: dataById, error: errorById } = await supabase
+              .from("books")
+              .select("*")
+              .eq("id", bookId)
+              .single();
+              
+            if (dataById) {
+              console.log("Found book by ID from reader navigation:", dataById.title);
+              const book = {
+                id: dataById.id,
+                title: dataById.title,
+                type: "classic" as const,
+                image: dataById.icon_illustration || dataById.Cover_super || "",
+                about: dataById.about || `A classic work by ${dataById.author || 'Unknown Author'}.`,
+                author: dataById.author,
+                great_conversation: `${dataById.title} has played an important role in shaping intellectual discourse.`,
+                Cover_super: dataById.Cover_super,
+                epub_file_url: dataById.epub_file_url,
+                slug: dataById.slug || pathSlug,
+              };
+              
+              setSelectedItem(book);
+              if (onDetailedViewShow) onDetailedViewShow();
+              return;
+            }
+          }
           
           // First, try to match the exact slug
           let { data, error } = await supabase

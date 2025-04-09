@@ -35,7 +35,12 @@ const MinimalistTopBar: React.FC<MinimalistTopBarProps> = ({
       const slug = hasBooksPath ? pathParts[pathParts.indexOf('read') + 1] : pathParts[pathParts.length - 1];
       
       if (slug && slug.length > 0) {
-        navigate(`/texts/${slug}`);
+        navigate(`/texts/${slug}`, {
+          state: { 
+            fromReader: true,
+            bookId: slug
+          }
+        });
         return;
       }
     }
