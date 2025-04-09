@@ -39,6 +39,8 @@ import type { Highlight, HighlightColor } from '@/types/highlight';
 import type { SearchResult } from '@/types/reader';
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from '@/hooks/useNotes';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReaderSettingsMenuProps {
   open: boolean;
@@ -142,6 +144,32 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
     };
   }, []);
 
+  // Fetch book details using the slug from the URL
+  const { data: bookDetails } = useQuery({
+    queryKey: ['book-details', bookKey],
+    queryFn: async () => {
+      // Extract the book slug from the current URL
+      const pathParts = window.location.pathname.split('/');
+      const hasBooksPath = pathParts.includes('read');
+      const slug = hasBooksPath ? pathParts[pathParts.indexOf('read') + 1] : pathParts[pathParts.length - 1];
+      
+      if (!slug) return null;
+
+      const { data, error } = await supabase
+        .from('books')
+        .select('about, title')
+        .eq('slug', slug)
+        .single();
+
+      if (error) {
+        console.error('Error fetching book details:', error);
+        return null;
+      }
+
+      return data;
+    }
+  });
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-md bg-[#221F26] text-white border-l border-white/10 rounded-l-2xl">
@@ -182,7 +210,7 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
             <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
               <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
               <p className="text-sm text-white/80 mt-3 mb-4">
-                Mary Shelley's groundbreaking novel explores scientific ambition, creation, and responsibility through the story of Victor Frankenstein and his monstrous creation. Written when Shelley was just 18, this Gothic masterpiece raises profound questions about the limits of science and the nature of humanity.
+                {bookDetails?.about || "No description available."}
               </p>
               <Button
                 variant="outline"

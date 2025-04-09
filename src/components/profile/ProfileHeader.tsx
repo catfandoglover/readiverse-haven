@@ -105,7 +105,7 @@ const ProfileHeader: React.FC = () => {
                 className="absolute inset-0 h-full w-full text-[#CCFF23]"
               >
                 <polygon 
-                  points="50 0, 93.3 25, 93.3 75, 50 100, 6.7 75, 6.7 25" 
+                  points="50 5, 90 30, 90 70, 50 95, 10 70, 10 30" 
                   fill="none" 
                   stroke="currentColor" 
                   strokeWidth="3"
@@ -115,7 +115,7 @@ const ProfileHeader: React.FC = () => {
               <div 
                 className="absolute inset-0 flex items-center justify-center"
                 style={{ 
-                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                  clipPath: 'polygon(50% 5%, 90% 30%, 90% 70%, 50% 95%, 10% 70%, 10% 30%)',
                 }}
               >
                 <Avatar className="h-full w-full overflow-hidden rounded-none">
@@ -128,7 +128,11 @@ const ProfileHeader: React.FC = () => {
               
               <button 
                 onClick={handleProfileEditClick}
-                className="absolute -bottom-0 -right-1 bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                className="absolute bg-white rounded-full p-1 shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                style={{
+                  bottom: '25%',
+                  right: '-1px',
+                }}
                 aria-label="Edit profile settings"
               >
                 <Settings size={12} className="text-gray-700" />
