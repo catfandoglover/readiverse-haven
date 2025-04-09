@@ -12,7 +12,7 @@ export const corsHeaders = {
 const SURGE_PLAN_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
 
 // Stripe price IDs
-const STRIPE_MONTHLY_PRICE_ID = Deno.env.get("STRIPE_SURGE_MONTHLY_PRICE_ID") || "price_1RBtwjE88XN52LqVvhU2GSrg";
+const STRIPE_MONTHLY_PRICE_ID = Deno.env.get("STRIPE_SURGE_MONTHLY_PRICE_ID") || "price_1RBw2iE88XN52LqVnr33i6xP";
 const STRIPE_YEARLY_PRICE_ID = Deno.env.get("STRIPE_SURGE_YEARLY_PRICE_ID") || "price_1RBu1XE88XN52LqVmRNu37w6";
 
 // Default fallback pricing

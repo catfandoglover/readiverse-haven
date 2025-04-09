@@ -18,7 +18,8 @@ const PLAN_IDS = {
 };
 
 // Constants for revenue item IDs
-const SURGE_PLAN_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
+const SURGE_PLAN_YEARLY_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
+const SURGE_PLAN_MONTHLY_ID = 'price_1RBw2iE88XN52LqVnr33i6xP';
 
 interface PricingOption {
   id: number;

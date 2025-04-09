@@ -8,7 +8,8 @@ const PLAN_IDS = {
 };
 
 // Constants for revenue item IDs - these should match your Stripe Price IDs
-const SURGE_PLAN_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
+const SURGE_PLAN_YEARLY_ID = '072e9c5b-7ecd-4dd1-9a8f-c7cb58fa028a';
+const SURGE_PLAN_MONTHLY_ID = 'price_1RBw2iE88XN52LqVnr33i6xP';
 
 // Default pricing if API call fails
 const DEFAULT_PRICING = {
@@ -16,8 +17,8 @@ const DEFAULT_PRICING = {
   title: 'Surge',
   yearlyPrice: 169,
   monthlyPrice: 20,
-  yearlyPriceId: SURGE_PLAN_ID,
-  monthlyPriceId: SURGE_PLAN_ID
+  yearlyPriceId: SURGE_PLAN_YEARLY_ID,
+  monthlyPriceId: SURGE_PLAN_MONTHLY_ID
 };
 
 export function useMembershipPricing() {
@@ -40,8 +41,8 @@ export function useMembershipPricing() {
           console.log('Edge function response:', pricingResponse);
           
           // Create a valid Stripe price ID format if one isn't provided
-          const monthlyPriceId = pricingResponse.monthly?.price_id || SURGE_PLAN_ID;
-          const yearlyPriceId = pricingResponse.annual?.price_id || SURGE_PLAN_ID;
+          const monthlyPriceId = pricingResponse.monthly?.price_id || SURGE_PLAN_MONTHLY_ID;
+          const yearlyPriceId = pricingResponse.annual?.price_id || SURGE_PLAN_YEARLY_ID;
           
           console.log('Price IDs being used:', { monthlyPriceId, yearlyPriceId });
           

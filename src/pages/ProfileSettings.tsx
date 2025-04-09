@@ -447,12 +447,45 @@ const ProfileSettings: React.FC = () => {
 
           {/* Footer Links */}
           <div className="flex justify-between w-full">
-            <button
-              onClick={handleBillingPortal}
-              className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
-            >
-              MANAGE BILLING
-            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={handleBillingPortal}
+                className="font-oxanium text-[#E9E7E2]/70 uppercase tracking-wider text-sm font-bold hover:text-[#E9E7E2] underline"
+              >
+                MANAGE BILLING
+              </button>
+              
+              <button
+                onClick={async () => {
+                  if (!user) return;
+                  try {
+                    const { error } = await supabase.functions.invoke('fix-customer-record', {
+                      body: { userId: user.id }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    toast({
+                      title: "Success",
+                      description: "Subscription record fixed. Refreshing data...",
+                    });
+                    
+                    // Refresh subscription data
+                    refreshSubscription();
+                  } catch (error) {
+                    console.error("Error fixing subscription:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to fix subscription record",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="font-oxanium text-amber-500 uppercase tracking-wider text-sm font-bold hover:text-amber-400 underline"
+              >
+                FIX
+              </button>
+            </div>
 
             <button
               onClick={handleResetPassword}
