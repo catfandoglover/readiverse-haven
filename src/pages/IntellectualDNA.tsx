@@ -97,13 +97,22 @@ const IntellectualDNA = () => {
         </div>
         <div className="flex space-x-4">
           {!user ? (
-            <button 
-              onClick={() => navigate('/register')}
-              className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
-              type="button"
-            >
-              SIGN UP
-            </button>
+            <>
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
+                type="button"
+              >
+                LOG IN
+              </button>
+              <button 
+                onClick={() => navigate('/register')}
+                className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
+                type="button"
+              >
+                SIGN UP
+              </button>
+            </>
           ) : !hasCompletedDNA ? (
             <button 
               onClick={signOut}

@@ -42,7 +42,7 @@ const VirgilWelcome: React.FC = () => {
           setPendingAssessmentId(pendingId);
           setShowExistingAssessmentDialog(true);
           
-          // Show dialog for 2 seconds, then route to profile
+          // Show dialog for 3 seconds, then route to profile
           setTimeout(() => {
             setShowExistingAssessmentDialog(false);
             
@@ -52,7 +52,7 @@ const VirgilWelcome: React.FC = () => {
             
             // Navigate to profile
             navigate('/profile');
-          }, 120000); // 2 minutes 
+          }, 3000); // 3 seconds
           
           return;
         }
@@ -106,7 +106,7 @@ const VirgilWelcome: React.FC = () => {
           // Navigate to profile page
           navigate('/profile?tab=profile');
         }, 3000); // 3 second delay
-      }, 6000); // 2 minutes (120,000 ms)
+      }, 120000); // 2 minutes (120,000 ms)
       
       return () => clearTimeout(resultsTimer);
     }
