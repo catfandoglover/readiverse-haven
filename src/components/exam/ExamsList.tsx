@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProgressLevel, getStageName } from "../reader/MasteryScore";
 import BadgeDialog from "./BadgeDialog";
+import { Share } from "lucide-react";
 
 interface ExamItem {
   id: string;
@@ -23,6 +24,19 @@ const getHexagonColor = (level: number): string => {
     case 5: return "#D5B8FF"; // Judge
     case 6: return "#000000"; // Creator
     default: return "#F9F9F9";
+  }
+};
+
+// Helper function to get roman numeral
+const getRomanNumeral = (level: number): string => {
+  switch(level) {
+    case 1: return "I";
+    case 2: return "II";
+    case 3: return "III";
+    case 4: return "IV";
+    case 5: return "V";
+    case 6: return "VI";
+    default: return "I";
   }
 };
 
@@ -92,58 +106,50 @@ const ExamsList: React.FC = () => {
         {exams.map((exam) => (
           <div 
             key={exam.id}
-            className="rounded-2xl p-4 pb-1.5 bg-[#373763]/80 shadow-inner cursor-pointer hover:bg-[#373763] transition-colors"
+            className="rounded-2xl py-4 pr-4 pl-0 bg-[#373763]/80 shadow-inner cursor-pointer hover:bg-[#373763] transition-colors"
             onClick={() => handleSelectExam(exam)}
           >
-            <div className="flex items-center mb-3">
-              <div className="flex items-center flex-1">
-                <div className="relative mr-4">
-                  <div className="h-9 w-9 rounded-full overflow-hidden">
-                    <img 
-                      src={exam.image} 
-                      alt={exam.title}
-                      className="h-9 w-9 object-cover"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{exam.title}</h3>
-                  <p className="text-xs text-[#E9E7E2]/70 font-oxanium">
-                    {exam.description}
-                  </p>
-                </div>
-              </div>
-              <div className="relative flex flex-col items-center min-w-[80px]">
-                <div className="relative flex flex-col items-center justify-center">
-                  {/* Score badge */}
-                  <div 
-                    style={{ 
-                      height: '2.25rem', 
-                      width: '2.25rem', 
-                      position: 'relative' 
-                    }}
+            <div className="flex items-center">
+              {/* Left side: Badge icon with level name - fixed width container */}
+              <div className="flex flex-col items-center w-[70px]">
+                <div 
+                  style={{ 
+                    height: '40px', 
+                    width: '40px', 
+                    position: 'relative' 
+                  }}
+                >
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    height="100%" 
+                    width="100%" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill={getHexagonColor(exam.score)}
+                    stroke="#E9E7E2"
+                    strokeWidth="0.5"
                   >
-                    <svg 
-                      viewBox="0 0 24 24" 
-                      height="100%" 
-                      width="100%" 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      fill={getHexagonColor(exam.score)}
-                      stroke="none" 
-                      strokeWidth="0" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    >
-                      <path d="m21 16.2-9 5.1-9-5.1V7.8l9-5.1 9 5.1v8.4Z"></path>
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#000000]">
-                      {exam.score}
-                    </span>
-                  </div>
-                  <span className="text-xs font-oxanium mt-1 whitespace-nowrap" style={{ color: getHexagonColor(exam.score) }}>
-                    {getStageName(exam.score)}
+                    <path d="M21 16.05V7.95C20.9988 7.6834 20.9344 7.4209 20.811 7.18465C20.6875 6.94841 20.5088 6.74591 20.29 6.6L12.71 2.05C12.4903 1.90551 12.2376 1.82883 11.98 1.82883C11.7224 1.82883 11.4697 1.90551 11.25 2.05L3.67 6.6C3.45124 6.74591 3.27248 6.94841 3.14903 7.18465C3.02558 7.4209 2.96118 7.6834 2.96 7.95V16.05C2.96118 16.3166 3.02558 16.5791 3.14903 16.8153C3.27248 17.0516 3.45124 17.2541 3.67 17.4L11.25 21.95C11.4697 22.0945 11.7224 22.1712 11.98 22.1712C12.2376 22.1712 12.4903 22.0945 12.71 21.95L20.29 17.4C20.5088 17.2541 20.6875 17.0516 20.811 16.8153C20.9344 16.5791 20.9988 16.3166 21 16.05Z"></path>
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center font-libre-baskerville font-bold text-sm" style={{ color: exam.score === 6 ? "#FFFFFF" : "#3D3D6F" }}>
+                    {getRomanNumeral(exam.score)}
                   </span>
                 </div>
+                <span className="text-[6px] font-oxanium mt-1 text-center" style={{ color: getHexagonColor(exam.score) }}>
+                  {getStageName(exam.score)}
+                </span>
+              </div>
+              
+              {/* Middle: Title and description - flex grow to take available space */}
+              <div className="flex-1">
+                <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{exam.title}</h3>
+                <p className="text-xs text-[#E9E7E2]/70 font-oxanium mt-1">
+                  {exam.description}
+                </p>
+              </div>
+              
+              {/* Right side: Share icon - fixed width for consistency */}
+              <div className="w-10 flex justify-center">
+                <Share className="h-5 w-5 text-[#E9E7E2]/70" />
               </div>
             </div>
           </div>
