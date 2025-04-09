@@ -19,11 +19,16 @@ const ProfileSettings: React.FC = () => {
   const [fullName, setFullName] = useState(profileData?.full_name || user?.user_metadata?.full_name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isUpdatingName, setIsUpdatingName] = useState(false);
-  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Update local state when profileData changes
+  useEffect(() => {
+    if (profileData) {
+      setFullName(profileData.full_name || user?.user_metadata?.full_name || "");
+    }
+  }, [profileData, user]);
   
   const fullNameParts = fullName ? fullName.split(' ') : ["", ""];
   const firstName = fullNameParts[0];
@@ -57,6 +62,7 @@ const ProfileSettings: React.FC = () => {
       if (dbError) throw dbError;
       
       await refreshProfileData();
+      setFullName(fullName);
       setIsEditingName(false);
       
       toast({
@@ -72,36 +78,6 @@ const ProfileSettings: React.FC = () => {
       });
     } finally {
       setIsUpdatingName(false);
-    }
-  };
-
-  const handleUpdateEmail = async () => {
-    if (!user || !email) return;
-    
-    setIsUpdatingEmail(true);
-    
-    try {
-      const { error } = await supabase.auth.updateUser({
-        email: email
-      });
-      
-      if (error) throw error;
-      
-      setIsEditingEmail(false);
-      
-      toast({
-        title: "Success",
-        description: "Email update verification sent. Please check your inbox.",
-      });
-    } catch (error) {
-      console.error("Error updating email:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update email",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingEmail(false);
     }
   };
 
@@ -177,6 +153,20 @@ const ProfileSettings: React.FC = () => {
         .eq('user_id', user.id);
       
       if (updateError) throw updateError;
+      
+      // Create a temporary URL for immediate display
+      const tempImageUrl = URL.createObjectURL(file);
+      
+      // Update the profile image in state immediately
+      if (profileData) {
+        const updatedProfileData = { ...profileData, profile_image: tempImageUrl };
+        // Apply the new image URL to any UI elements that use profileData
+        document.querySelectorAll('[data-profile-image="true"]').forEach((element) => {
+          if (element instanceof HTMLImageElement) {
+            element.src = tempImageUrl;
+          }
+        });
+      }
       
       await refreshProfileData();
       
@@ -285,12 +275,14 @@ const ProfileSettings: React.FC = () => {
               clipPath: 'polygon(50% 5%, 90% 30%, 90% 70%, 50% 95%, 10% 70%, 10% 30%)',
             }}
           >
-            <Avatar className="h-full w-full overflow-hidden rounded-none">
-              <AvatarImage src={profileImage || FALLBACK_ICON} />
-              <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative w-40 h-40 mx-auto mb-4">
+              <Avatar className="h-full w-full overflow-hidden rounded-none">
+                <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
+                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
           
           <label 
@@ -356,35 +348,12 @@ const ProfileSettings: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold">EMAIL</h3>
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={isEditingEmail ? handleUpdateEmail : () => setIsEditingEmail(true)}
-                disabled={isUpdatingEmail}
-                className="text-[#E9E7E2] hover:text-[#E9E7E2] hover:bg-transparent underline font-oxanium uppercase text-sm font-bold"
-              >
-                {isEditingEmail ? (
-                  isUpdatingEmail ? "SAVING..." : "SAVE"
-                ) : (
-                  "EDIT"
-                )}
-              </Button>
             </div>
             <Card className="bg-[#373741] border-0 shadow-xl rounded-2xl">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    {isEditingEmail ? (
-                      <Input 
-                        type="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="bg-[#2A282A] border-[#4D4955] text-[#E9E7E2] font-oxanium uppercase font-bold"
-                        placeholder="Email"
-                      />
-                    ) : (
-                      <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold">{email}</p>
-                    )}
+                    <p className="text-[#E9E7E2]/50 font-oxanium uppercase font-bold">{email}</p>
                   </div>
                 </div>
               </CardContent>
