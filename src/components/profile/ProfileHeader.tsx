@@ -144,7 +144,7 @@ const ProfileHeader: React.FC = () => {
           {/* Hexagon profile image - removed settings button */}
           <div className="relative h-28 w-28 p-0.5">
             <svg 
-              viewBox="-2 -2 104 104" 
+              viewBox="-5 -5 110 110" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
               preserveAspectRatio="xMidYMid meet"
             >

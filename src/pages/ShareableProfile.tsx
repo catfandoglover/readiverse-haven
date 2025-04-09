@@ -379,16 +379,16 @@ function ShareableProfile(): JSX.Element {
             </div>
           </div>
           
-          {/* Name and archetype */}
-          <h1 className="text-2xl font-serif text-center">{fullName}</h1>
-          <p className="text-sm font-oxanium text-[#E9E7E2]/70 italic text-center">
-            {archetype}
+          {/* Name above archetype but with swapped styling */}
+          <p className="text-sm font-libre-baskerville italic text-[#E9E7E2]/70 text-center mb-1">
+            {fullName}
           </p>
+          <h1 className="text-xl font-libre-baskerville font-bold text-center">{archetype}</h1>
         </div>
       </div>
       
-      {/* Content area below the landscape image */}
-      <div className="w-full px-6 py-8 flex flex-col items-center">
+      {/* Content area below the landscape image - Minimal top padding */}
+      <div className="w-full px-6 pt-1 pb-4 flex flex-col items-center">
         {/* Share Summary text */}
         <div className="max-w-lg mb-8">
           <p className="text-sm font-oxanium text-[#E9E7E2]/50">
@@ -406,15 +406,11 @@ function ShareableProfile(): JSX.Element {
           >
             <div className="flex items-center">
               <div className="relative mr-4">
-                <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full overflow-hidden">
                   <img 
                     src={kindredSpiritIconUrl} 
                     alt={kindredSpiritName} 
-                    className="h-10 w-10 object-cover"
-                    style={{ 
-                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    }}
+                    className="h-full w-full object-cover"
                   />
                 </div>
               </div>
@@ -422,7 +418,7 @@ function ShareableProfile(): JSX.Element {
                 <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
                   {kindredSpiritName}
                 </h3>
-                <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Kindred Spirit</p>
+                <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">MOST KINDRED SPIRIT</p>
               </div>
             </div>
             <div className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
@@ -441,15 +437,11 @@ function ShareableProfile(): JSX.Element {
           >
             <div className="flex items-center">
               <div className="relative mr-4">
-                <Hexagon className="h-14 w-14 text-[#CCFF23]" strokeWidth={.75} />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full overflow-hidden">
                   <img 
                     src={challengingVoiceIconUrl} 
                     alt={challengingVoiceName} 
-                    className="h-10 w-10 object-cover"
-                    style={{ 
-                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    }}
+                    className="h-full w-full object-cover"
                   />
                 </div>
               </div>
@@ -457,7 +449,7 @@ function ShareableProfile(): JSX.Element {
                 <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
                   {challengingVoiceName}
                 </h3>
-                <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Most Challenging Voice</p>
+                <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">MOST CHALLENGING VOICE</p>
               </div>
             </div>
             <div className="h-8 w-8 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
