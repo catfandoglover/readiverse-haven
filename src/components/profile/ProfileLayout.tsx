@@ -24,7 +24,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2]">
+    <div className="flex flex-col min-h-screen bg-[#2A282A] text-[#E9E7E2]">
       <main className="flex-1">
         <div className="absolute top-4 left-4 z-20">
           <MainMenu />
