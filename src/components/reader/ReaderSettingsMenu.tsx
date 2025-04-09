@@ -39,6 +39,7 @@ import type { Highlight, HighlightColor } from '@/types/highlight';
 import type { SearchResult } from '@/types/reader';
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from '@/hooks/useNotes';
+import { useBook } from '@/hooks/useBook';
 
 interface ReaderSettingsMenuProps {
   open: boolean;
@@ -101,6 +102,14 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
   
   // Get notes using the useNotes hook
   const { notes, removeNote } = useNotes(bookKey);
+  
+  // Extract the book slug from the current URL
+  const pathParts = window.location.pathname.split('/');
+  const hasBooksPath = pathParts.includes('read');
+  const slug = hasBooksPath ? pathParts[pathParts.indexOf('read') + 1] : pathParts[pathParts.length - 1];
+  
+  // Fetch the book data using the useBook hook
+  const { data: book } = useBook(slug);
   
   // Debug logs
   useEffect(() => {
@@ -182,7 +191,7 @@ const ReaderSettingsMenu: React.FC<ReaderSettingsMenuProps> = ({
             <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
               <h3 className="text-sm font-oxanium uppercase tracking-wider font-bold">Book Details</h3>
               <p className="text-sm text-white/80 mt-3 mb-4">
-                Mary Shelley's groundbreaking novel explores scientific ambition, creation, and responsibility through the story of Victor Frankenstein and his monstrous creation. Written when Shelley was just 18, this Gothic masterpiece raises profound questions about the limits of science and the nature of humanity.
+                {book?.about || "No book description available."}
               </p>
               <Button
                 variant="outline"

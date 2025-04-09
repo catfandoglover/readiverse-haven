@@ -247,6 +247,8 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
     if (!user) return;
     
     try {
+      setIsLoading(true);
+      
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -257,9 +259,67 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
         throw new Error(profileError?.message || "No profile found for user");
       }
       
+      // Update the profile data in state
       setProfileData(profile);
+      
+      // If the DNA data was already loaded, no need to reload it
+      if (!dnaAnalysisData && profile.assessment_id) {
+        // Try fetching DNA data if we don't have it yet
+        const { data: dnaData, error: dnaError } = await supabase
+          .from('dna_analysis_results')
+          .select('*')
+          .eq('assessment_id', profile.assessment_id)
+          .maybeSingle();
+          
+        if (!dnaError && dnaData) {
+          setDnaAnalysisData(dnaData);
+          
+          // Fetch thinker icons
+          if (dnaData) {
+            const thinkerNames = [];
+            
+            if (dnaData.most_kindred_spirit) {
+              const name = dnaData.most_kindred_spirit.split(' - ')[0].trim();
+              thinkerNames.push(name);
+            }
+            
+            if (dnaData.most_challenging_voice) {
+              const name = dnaData.most_challenging_voice.split(' - ')[0].trim();
+              thinkerNames.push(name);
+            }
+            
+            // Fetch icons for all thinker names at once
+            if (thinkerNames.length > 0) {
+              const orConditions = thinkerNames.map(name => `name.ilike.%${name}%`).join(',');
+              
+              const { data, error } = await supabase
+                .from('icons')
+                .select('name, illustration')
+                .or(orConditions);
+                
+              if (!error && data) {
+                const iconMap: Record<string, string> = {};
+                
+                // Build map of thinker name to icon URL
+                data.forEach(icon => {
+                  thinkerNames.forEach(name => {
+                    if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
+                        name.toLowerCase().includes(icon.name.toLowerCase())) {
+                      iconMap[name] = icon.illustration;
+                    }
+                  });
+                });
+                
+                setThinkerIcons(iconMap);
+              }
+            }
+          }
+        }
+      }
     } catch (err) {
       console.error('Error refreshing profile data:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
