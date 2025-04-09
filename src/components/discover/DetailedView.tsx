@@ -261,6 +261,63 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
   }, [enhancedData, isEnhancedDataLoading]);
 
+  // Add a new useEffect to load book directly from the URL parameter when coming from reader
+  useEffect(() => {
+    // If we already have data, don't do anything
+    if (combinedData && Object.keys(combinedData).length > 1 && combinedData.about) {
+      return;
+    }
+    
+    // Extract the slug from the URL for direct loading
+    const pathParts = location.pathname.split('/');
+    const isTextsPage = pathParts.includes('texts');
+    const slug = isTextsPage ? pathParts[pathParts.indexOf('texts') + 1] : null;
+    
+    if (type === 'classic' && slug) {
+      console.log("[DetailedView] Attempting direct load for book with slug:", slug);
+      
+      const fetchBookDirectly = async () => {
+        try {
+          // First try by slug
+          let { data, error } = await supabase
+            .from("books")
+            .select("*")
+            .eq("slug", slug)
+            .single();
+            
+          // If that fails, try by ID
+          if (error) {
+            console.log("[DetailedView] Trying to load by ID instead of slug");
+            const { data: dataById, error: errorById } = await supabase
+              .from("books")
+              .select("*")
+              .eq("id", slug)
+              .single();
+              
+            if (!errorById && dataById) {
+              data = dataById;
+              error = null;
+            }
+          }
+          
+          if (data) {
+            console.log("[DetailedView] Successfully loaded book directly:", data.title);
+            setCombinedData({ 
+              ...data,
+              type: 'classic',
+              image: data.cover_url || data.Cover_super || data.icon_illustration || '',
+            });
+            setIsDataLoaded(true);
+          }
+        } catch (err) {
+          console.error("[DetailedView] Error in direct book loading fallback:", err);
+        }
+      };
+      
+      fetchBookDirectly();
+    }
+  }, [location.pathname, type, combinedData]);
+
   useEffect(() => {
     const viewportMeta = document.createElement('meta');
     viewportMeta.name = 'viewport';
@@ -323,6 +380,48 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       checkFavoriteStatus();
     }
   }, [user, itemData.id, type]);
+
+  useEffect(() => {
+    // Check if we're navigating from reader with bookId
+    const locationState = location.state as { fromReader?: boolean, bookId?: string } | null;
+    const comingFromReader = locationState?.fromReader;
+    const bookId = locationState?.bookId;
+    
+    // If we're coming from the reader with a bookId, fetch the book data directly
+    if (comingFromReader && bookId && type === 'classic') {
+      console.log("[DetailedView] Coming from reader with book ID:", bookId);
+      
+      const fetchBookDirectly = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("books")
+            .select("*")
+            .eq("id", bookId)
+            .single();
+            
+          if (error) {
+            console.error("[DetailedView] Error fetching book data:", error);
+            return;
+          }
+          
+          if (data) {
+            console.log("[DetailedView] Successfully fetched book data:", data.title);
+            // Update combined data with the fetched book data
+            setCombinedData({ 
+              ...data,
+              type: 'classic',
+              image: data.icon_illustration || data.Cover_super || data.cover_url || '',
+            });
+            setIsDataLoaded(true);
+          }
+        } catch (err) {
+          console.error("[DetailedView] Error in fetchBookDirectly:", err);
+        }
+      };
+      
+      fetchBookDirectly();
+    }
+  }, [location.state, type]);
 
   const handleBack = () => {
     console.log("[DetailedView] Back button clicked", {
