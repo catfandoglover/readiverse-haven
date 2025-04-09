@@ -31,6 +31,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
+import { storeAssessmentId } from '@/utils/dnaAssessmentUtils';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -64,6 +65,31 @@ const DNAAssessment = () => {
   const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
+  const [isAssessmentComplete, setIsAssessmentComplete] = React.useState(false);
+
+  // Utility function to safely check if a user is logged in
+  const safeRedirectToCompletionScreen = () => {
+    try {
+      // Try to get the current user, but handle potential errors
+      supabase.auth.getUser()
+        .then(({ data, error }) => {
+          if (error || !data.user) {
+            console.log('No authenticated user detected, redirecting to completion screen');
+            navigate('/dna/completion', { replace: true });
+          } else {
+            console.log('Authenticated user detected, redirecting to welcome screen');
+            navigate('/dna/welcome', { replace: true });
+          }
+        })
+        .catch(error => {
+          console.log('Error checking auth state, defaulting to completion screen:', error);
+          navigate('/dna/completion', { replace: true });
+        });
+    } catch (error) {
+      console.log('Exception in redirect check, defaulting to completion screen:', error);
+      navigate('/dna/completion', { replace: true });
+    }
+  };
 
   const initAnalysis = async (answers: Record<string, string>, assessmentId: string) => {
     console.log('Starting DNA analysis...');
@@ -84,9 +110,11 @@ const DNAAssessment = () => {
       }
 
       toast.success('Analysis completed successfully');
+      setIsAssessmentComplete(true);
     } catch (error) {
       console.error('Error in DNA analysis:', error);
       toast.error('Error analyzing results');
+      setIsAssessmentComplete(true); // Still mark as complete so user can proceed
     }
   };
 
@@ -115,7 +143,18 @@ const DNAAssessment = () => {
             return;
           }
           
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          let userData = null;
+          let userError = null;
+          
+          try {
+            // This call can throw AuthSessionMissingError
+            const authResult = await supabase.auth.getUser();
+            userData = authResult.data;
+            userError = authResult.error;
+          } catch (authError) {
+            console.log('Auth error caught during initialization:', authError);
+            userError = authError;
+          }
           
           if (userError) {
             console.error('Error getting user:', userError);
@@ -136,7 +175,7 @@ const DNAAssessment = () => {
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
               .select('id')
-              .eq('outseta_user_id', userData.user.id)
+              .eq('user_id', userData.user.id)
               .maybeSingle();
               
             if (profileError) {
@@ -229,6 +268,18 @@ const DNAAssessment = () => {
       
       if (!upperCategory) {
         throw new Error('Category is required');
+      }
+
+      // Safety check to prevent trying to load Q31 and beyond
+      if (currentPosition === 'Q31' || currentQuestionNumber > TOTAL_QUESTIONS) {
+        console.log('Attempted to load question beyond limit:', currentPosition);
+        // Redirect to completion or welcome based on user status
+        if (!user) {
+          navigate('/dna/completion', { replace: true });
+        } else {
+          navigate('/dna/welcome', { replace: true });
+        }
+        throw new Error('Question beyond limit');
       }
 
       const { data, error } = await supabase
@@ -435,21 +486,41 @@ const DNAAssessment = () => {
             return;
           }
 
-          if (!nextCategory) {
-            console.log('Assessment complete, navigating to completion screen...');
+          // Add detailed logging for debugging
+          console.log('Category completion check:', {
+            currentCategory: upperCategory,
+            isAesthetics: upperCategory === "AESTHETICS",
+            hasNextCategory: !!nextCategory,
+            nextCategory,
+            currentCategoryIndex,
+            totalCategories: categoryOrder.length,
+            questionNumber: currentQuestionNumber,
+            isLastQuestion: currentQuestionNumber === TOTAL_QUESTIONS
+          });
+
+          // Check if this is the last category (AESTHETICS) or we've reached the final question
+          if (upperCategory === "AESTHETICS" || !nextCategory || currentQuestionNumber === TOTAL_QUESTIONS) {
+            console.log('Assessment complete, finishing assessment...');
             
             setCompletedAssessmentId(assessmentId);
+            storeAssessmentId(assessmentId);
             
-            localStorage.setItem('pending_dna_assessment_id', assessmentId);
+            // Force immediate redirect after 50ms regardless of analysis
+            setTimeout(() => {
+              safeRedirectToCompletionScreen();
+            }, 50);
             
-            setIsTransitioning(false);
+            await initAnalysis(updatedAnswers, assessmentId);
+            
+            // Force navigation to completion for anonymous users or welcome for logged-in users
+            safeRedirectToCompletionScreen();
             
             if (user) {
               try {
                 const { data: profileData, error: profileError } = await supabase
                   .from('profiles')
                   .select('id')
-                  .eq('outseta_user_id', user.Uid)
+                  .eq('user_id', user.id)
                   .maybeSingle();
                 
                 if (!profileError && profileData) {
@@ -473,10 +544,8 @@ const DNAAssessment = () => {
                 console.error('Error saving assessment ID to profile:', error);
               }
             }
-
-            await initAnalysis(updatedAnswers, assessmentId);
             
-            navigate('/dna/completion');
+            setIsTransitioning(false);
             return;
           } else {
             await queryClient.prefetchQuery({
@@ -537,6 +606,20 @@ const DNAAssessment = () => {
           return;
         }
 
+        // If we're about to exceed the total questions limit, redirect instead of loading next question
+        const nextQuestionNumber = currentQuestionNumber + 1;
+        if (nextQuestionNumber > TOTAL_QUESTIONS) {
+          console.log(`Reached question limit (${TOTAL_QUESTIONS}), redirecting...`);
+          
+          // Redirect based on user status with replace:true to prevent back navigation
+          if (!user) {
+            navigate('/dna/completion', { replace: true });
+          } else {
+            navigate('/dna/welcome', { replace: true });
+          }
+          return;
+        }
+
         setCurrentPosition(nextQuestion.tree_position);
         setCurrentQuestionNumber(prev => prev + 1);
         setSelectedAnswer(null);
@@ -570,7 +653,18 @@ const DNAAssessment = () => {
         console.log('No user_id found in sessionStorage, attempting to set it');
         
         try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          let userData = null;
+          let userError = null;
+          
+          try {
+            // This call can throw AuthSessionMissingError
+            const authResult = await supabase.auth.getUser();
+            userData = authResult.data;
+            userError = authResult.error;
+          } catch (authError) {
+            console.log('Auth error caught:', authError);
+            userError = authError;
+          }
           
           if (userError) {
             console.log('User is not authenticated, using anonymous ID');
@@ -667,54 +761,61 @@ const DNAAssessment = () => {
     navigate('/dna');
   }
 
-  React.useEffect(() => {
-    const saveAssessmentId = async () => {
-      if (!showLoginPrompt) return;
-      
-      const assessmentId = completedAssessmentId || sessionStorage.getItem('dna_assessment_id');
-      if (assessmentId) {
-        localStorage.setItem('pending_dna_assessment_id', assessmentId);
-        console.log('Saved assessment ID for login/signup:', assessmentId);
-        
-        sessionStorage.setItem('dna_assessment_to_save', assessmentId);
-        
-        try {
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          if (!userError && userData?.user) {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('outseta_user_id', userData.user.id)
-              .maybeSingle();
-            
-            if (!profileError && profileData) {
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                  assessment_id: assessmentId 
-                } as any)
-                .eq('id', profileData.id);
-                
-              if (updateError) {
-                console.error('Error updating profile with assessment ID:', updateError);
-              } else {
-                console.log('Successfully saved assessment ID to profile:', {
-                  profileId: profileData.id,
-                  assessmentId
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error saving assessment ID to profile:', error);
-        }
-      }
-    };
-    
-    saveAssessmentId();
-  }, [showLoginPrompt, completedAssessmentId, supabase]);
+  const handleTestCompletionClick = () => {
+    const currentAssessmentId = assessmentId || sessionStorage.getItem('dna_assessment_id');
+
+    if (!currentAssessmentId) {
+      console.error("TEST BUTTON ERROR: No assessmentId available (state or sessionStorage) to mark as complete.");
+      toast.error("Error: Cannot simulate completion without an active assessment ID.");
+      return;
+    }
+
+    console.log(`TEST BUTTON: Simulating completion for assessment ID: ${currentAssessmentId}`);
+
+    // Set the completedAssessmentId state
+    setCompletedAssessmentId(currentAssessmentId);
+    console.log(`TEST BUTTON: Set completedAssessmentId state to: ${currentAssessmentId}`);
+
+    // Check if the user is currently anonymous
+    if (!user) {
+      // If anonymous, set showLoginPrompt to true
+      setShowLoginPrompt(true);
+      console.log("TEST BUTTON: User is anonymous. Setting showLoginPrompt state to true.");
+
+      // Use the new storage utility instead of manually setting in multiple places
+      storeAssessmentId(currentAssessmentId);
+      console.log("TEST BUTTON: Saved assessment ID to all storage mechanisms.");
+
+      // Navigate to the completion screen
+      console.log("TEST BUTTON: Navigating to /dna/completion to show login/signup prompt.");
+      navigate('/dna/completion');
+
+      toast.info("Simulated anonymous completion. Navigating to completion screen.");
+
+    } else {
+      console.log("TEST BUTTON: User is already logged in. Not setting showLoginPrompt.");
+      toast.warning("Simulating completion for logged-in user. This test focuses on the anonymous flow.");
+       // Optionally navigate logged-in users elsewhere if needed for testing
+       // navigate('/dna/welcome');
+    }
+  };
 
   if ((questionLoading || isTransitioning || isInitializing) && !showLoginPrompt) {
+    // Add immediate redirection when we've reached the end (question 30/AESTHETICS category)
+    if (currentQuestionNumber > TOTAL_QUESTIONS) {
+      console.log('End of assessment detected during loading state - redirecting...');
+      
+      // Force immediate redirection with 50ms timeout
+      setTimeout(() => {
+        safeRedirectToCompletionScreen();
+      }, 50);
+      
+      // Force immediate redirection based on user status with replace:true
+      safeRedirectToCompletionScreen();
+      
+      return null; // Return null to prevent rendering while redirecting
+    }
+    
     return (
       <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] flex flex-col">
         <header className="sticky top-0 px-6 py-4 flex items-center justify-between relative z-50 bg-[#E9E7E2]">
@@ -835,12 +936,17 @@ const DNAAssessment = () => {
                 I HAVE MORE TO SAY
               </button>
               
-              <button 
-                className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
-                onClick={() => navigate('/dna/completion')}
-              >
-                TEST COMPLETION SCREEN
-              </button>
+              {/* Development/Testing Buttons */}
+              {process.env.NODE_ENV === 'development' && (
+                <>
+                  <button
+                    onClick={handleTestCompletionClick}
+                    className="font-oxanium text-[#332E38]/50 uppercase tracking-wider text-sm font-bold ml-4 p-2 border border-dashed border-[#332E38]/30"
+                  >
+                    Simulate Anonymous Finish & Go To Completion Screen
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

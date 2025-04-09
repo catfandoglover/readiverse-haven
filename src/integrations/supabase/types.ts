@@ -316,30 +316,27 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          outseta_user_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          outseta_user_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          outseta_user_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "fk_custom_domains_profile"
-            columns: ["outseta_user_id"]
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["outseta_user_id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1806,10 +1803,9 @@ export type Database = {
           full_name: string | null
           id: string
           landscape_image: string | null
-          outseta_user_id: string | null
           profile_image: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           vanity_url: string | null
         }
         Insert: {
@@ -1819,10 +1815,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           vanity_url?: string | null
         }
         Update: {
@@ -1832,10 +1827,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
-          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           vanity_url?: string | null
         }
         Relationships: []
@@ -2161,10 +2155,9 @@ export type Database = {
           current_page: number | null
           id: string
           last_read_at: string | null
-          outseta_user_id: string
           status: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           book_id: string
@@ -2173,10 +2166,9 @@ export type Database = {
           current_page?: number | null
           id?: string
           last_read_at?: string | null
-          outseta_user_id: string
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           book_id?: string
@@ -2185,10 +2177,9 @@ export type Database = {
           current_page?: number | null
           id?: string
           last_read_at?: string | null
-          outseta_user_id?: string
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -2199,12 +2190,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_books_outseta_user_id_fkey"
-            columns: ["outseta_user_id"]
+            foreignKeyName: "user_books_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["outseta_user_id"]
-          },
+            referencedColumns: ["user_id"]
+          }
         ]
       }
       user_courses: {
@@ -2253,7 +2244,7 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["outseta_user_id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2263,26 +2254,31 @@ export type Database = {
           id: string
           item_id: string
           item_type: string
-          outseta_user_id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           added_at?: string
           id?: string
           item_id: string
           item_type: string
-          outseta_user_id: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           added_at?: string
           id?: string
           item_id?: string
           item_type?: string
-          outseta_user_id?: string
-          user_id?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
       }
       virgil_conversations: {
         Row: {

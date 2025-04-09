@@ -152,13 +152,13 @@ const DetailedView: React.FC<DetailedViewProps> = ({
       const { data, error } = await supabase
         .from("user_books")
         .select(`
-          outseta_user_id,
+          user_id,
           status,
           last_read_at,
-          profiles:outseta_user_id(full_name, email)
+          profiles:user_id(full_name, email)
         `)
         .eq("book_id", itemData.id)
-        .order("outseta_user_id", { ascending: true });
+        .order("user_id", { ascending: true });
       
       if (error) {
         console.error("Error fetching readers:", error);
@@ -509,18 +509,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         });
       } else {
         // Add to favorites
-        const { error } = await supabase
-          .from('user_favorites')
-          .upsert({
+        const { data: favoriteData, error: favoriteError } = await supabase
+          .from("user_favorites")
+          .insert({
             item_id: combinedData.id,
             user_id: user.id,
             item_type: type,
             added_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id,item_id,item_type'
-          });
+          })
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (favoriteError) throw favoriteError;
 
         setIsFavorite(true);
         toast({
@@ -528,7 +528,7 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         });
       }
     } catch (error) {
-      console.error("Error toggling favorite status:", error);
+      console.error("Error toggling favorite:", error);
       toast({
         variant: "destructive",
         description: "Failed to update favorites"
@@ -540,19 +540,18 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     try {
       if (user && combinedData.id) {
         if (!isFavorite) {
-          // Add to favorites when reading
-          const { error } = await supabase
-            .from('user_favorites')
-            .upsert({
+          const { data: favoriteData, error: favoriteError } = await supabase
+            .from("user_favorites")
+            .insert({
               item_id: combinedData.id,
               user_id: user.id,
               item_type: type,
               added_at: new Date().toISOString()
-            }, {
-              onConflict: 'user_id,item_id,item_type'
-            });
-            
-          if (!error) {
+            })
+            .select()
+            .single();
+
+          if (!favoriteError) {
             setIsFavorite(true);
             toast({
               description: `Added to favorites`,
@@ -610,18 +609,17 @@ const DetailedView: React.FC<DetailedViewProps> = ({
     }
 
     try {
-      const { error } = await supabase
-        .from('user_books')
-        .upsert({
+      const { error: libraryError } = await supabase
+        .from("user_books")
+        .insert({
           book_id: combinedData.id,
           user_id: user.id,
-          status: 'reading',
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,book_id'
+          status: "want_to_read"
         });
 
-      if (error) throw error;
+      if (libraryError) {
+        throw libraryError;
+      }
 
       toast({
         title: "Success",
@@ -729,6 +727,54 @@ const DetailedView: React.FC<DetailedViewProps> = ({
           description: "Could not navigate to author page"
         });
       }
+    }
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+    
+    try {
+      if (isFavorite) {
+        const { error: favoriteError } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('item_id', combinedData.id)
+          .eq('user_id', user.id)
+          .eq('item_type', type);
+          
+        if (favoriteError) throw favoriteError;
+        
+        setIsFavorite(false);
+        toast({
+          description: `${type === 'classic' ? 'Book' : type} removed from favorites`,
+        });
+      } else {
+        const { data: favoriteData, error: favoriteError } = await supabase
+          .from("user_favorites")
+          .insert({
+            item_id: combinedData.id,
+            user_id: user.id,
+            item_type: type,
+            added_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+          
+        if (favoriteError) throw favoriteError;
+        
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update favorites"
+      });
     }
   };
 

@@ -1,14 +1,68 @@
-
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 import conversationManager from '@/services/ConversationManager';
+import ExistingAssessmentDialog from '@/components/dna/ExistingAssessmentDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 
 const VirgilWelcome: React.FC = () => {
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const [resultsReady, setResultsReady] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // State for existing assessment dialog
+  const [showExistingAssessmentDialog, setShowExistingAssessmentDialog] = useState(false);
+  const [existingAssessmentId, setExistingAssessmentId] = useState<string>('');
+  const [pendingAssessmentId, setPendingAssessmentId] = useState<string>('');
+
+  // Check for existing assessment on component mount
+  useEffect(() => {
+    const checkForExistingAssessment = async () => {
+      if (!user) return;
+      
+      try {
+        // Check profile for assessment_id
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('assessment_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        // Check for pending assessment
+        const pendingId = localStorage.getItem('pending_dna_assessment_id');
+        
+        // If user has both existing and pending assessments, show dialog
+        if (profileData?.assessment_id && pendingId) {
+          setExistingAssessmentId(profileData.assessment_id);
+          setPendingAssessmentId(pendingId);
+          setShowExistingAssessmentDialog(true);
+          
+          // Show dialog for 2 seconds, then route to profile
+          setTimeout(() => {
+            setShowExistingAssessmentDialog(false);
+            
+            // Clear pending assessment ID
+            localStorage.removeItem('pending_dna_assessment_id');
+            sessionStorage.removeItem('dna_assessment_to_save');
+            
+            // Navigate to profile
+            navigate('/profile');
+          }, 120000); // 2 minutes 
+          
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking for existing assessment:', error);
+      }
+    };
+    
+    checkForExistingAssessment();
+  }, [user, navigate]);
 
   // Initial animation timing
   useEffect(() => {
@@ -31,13 +85,32 @@ const VirgilWelcome: React.FC = () => {
   // Two-minute timer for DNA results
   useEffect(() => {
     if (state === 'chat') {
-      const resultsTimer = setTimeout(() => {
+      const resultsTimer = setTimeout(async () => {
         setResultsReady(true);
-      }, 120000); // 2 minutes (120,000 ms)
+        
+        // Wait 3 seconds after showing the completion message before navigating
+        setTimeout(async () => {
+          // Automatically save conversation and navigate
+          try {
+            const sessionId = Math.random().toString(36).substring(2, 15);
+            await conversationManager.saveConversationToSupabase(
+              sessionId,
+              "dna-welcome",
+              null,
+              "welcome"
+            );
+          } catch (error) {
+            console.error('Error saving conversation:', error);
+          }
+          
+          // Navigate to profile page
+          navigate('/profile?tab=profile');
+        }, 3000); // 3 second delay
+      }, 6000); // 2 minutes (120,000 ms)
       
       return () => clearTimeout(resultsTimer);
     }
-  }, [state]);
+  }, [state, navigate]);
 
   // Save conversation and handle navigation
   const handleViewResults = async () => {
@@ -102,6 +175,14 @@ const VirgilWelcome: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Existing Assessment Dialog */}
+      <ExistingAssessmentDialog
+        open={showExistingAssessmentDialog}
+        onOpenChange={setShowExistingAssessmentDialog}
+        existingAssessmentId={existingAssessmentId}
+        pendingAssessmentId={pendingAssessmentId}
+      />
     </div>
   );
 };

@@ -78,7 +78,7 @@ const Home = () => {
 
   const addToBookshelf = useMutation({
     mutationFn: async (bookId: string) => {
-      if (!user?.Account?.Uid) {
+      if (!user?.id) {
         throw new Error('You must be logged in to add books to your bookshelf');
       }
 
@@ -88,14 +88,14 @@ const Home = () => {
 
       console.log('Adding book to bookshelf:', {
         bookId,
-        userId: user.Account.Uid
+        userId: user.id
       });
 
       const { error } = await authenticatedSupabase
         .from('user_books')
         .insert({
           book_id: bookId,
-          outseta_user_id: user.Account.Uid,
+          user_id: user.id,
           status: 'reading',
           current_page: 0
         });

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -190,8 +189,8 @@ export const useCourses = () => {
       // Get user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('outseta_user_id')
-        .eq('id', session.user.id)
+        .select('id, user_id')
+        .eq('user_id', session.user.id)
         .single();
         
       if (profileError) {
@@ -206,7 +205,7 @@ export const useCourses = () => {
         .from('user_courses')
         .insert({
           user_id: session.user.id,
-          profile_id: profileData?.outseta_user_id,
+          profile_id: profileData?.id,
           entry_id: entryId,
           entry_type: entryType,
           progress: 0,

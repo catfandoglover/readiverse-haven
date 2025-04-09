@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { useAuth } from '@/contexts/OutsetaAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 
 export function SupabaseAuthTest() {
@@ -17,7 +16,7 @@ export function SupabaseAuthTest() {
       const { data: insertData, error: insertError } = await supabase
         .from('test_auth')
         .insert([
-          { content: 'Test content', person_uid: user.Account.Uid }
+          { content: 'Test content', person_uid: user.id }
         ])
         .select()
         .single();
@@ -28,7 +27,7 @@ export function SupabaseAuthTest() {
       const { data: readData, error: readError } = await supabase
         .from('test_auth')
         .select('*')
-        .eq('person_uid', user.Account.Uid);
+        .eq('person_uid', user.id);
 
       console.log('Read result:', { readData, readError });
     } catch (error) {
