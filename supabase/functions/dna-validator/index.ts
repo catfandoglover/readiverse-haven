@@ -1,4 +1,5 @@
 // supabase/functions/dna-validator/index.ts
+// NOTE: This function has JWT verification disabled via the supabase.json config file
 
 // --- Imports ---
 // Using slightly newer std version, adjust if needed
@@ -360,8 +361,8 @@ function extractNamesFromDnaResult(dnaResult: DnaAnalysisResult): {
     const processedNames = { icons: new Set<string>(), books: new Set<string>() }
 
     // TESTING ONLY: For testing, only check a small subset of fields instead of all 120+ fields
-    const testingOnly = true; // Set to false to check all fields in production
-
+    const testingOnly = false; // Set to false for production to check all DNA fields, true for testing/development
+    
     // IMPORTANT: Ensure these field names exactly match your table schema
     let iconFields = [
         'most_kindred_spirit', 'most_challenging_voice',
@@ -374,10 +375,19 @@ function extractNamesFromDnaResult(dnaResult: DnaAnalysisResult): {
         ),
     ]
     
-    // For testing, only check a few key fields
+    // For testing, check a reasonable subset of fields to avoid timeouts while still being useful in production
     if (testingOnly) {
-        iconFields = ['most_kindred_spirit', 'most_challenging_voice', 'politics_kindred_spirit_1', 'ethics_challenging_voice_1'];
-        console.log("TESTING MODE: Only checking a limited set of fields for validation");
+        const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+        iconFields = [
+            'most_kindred_spirit', 'most_challenging_voice',
+            // Include the first kindred spirit and challenging voice from each domain
+            ...domains.map(dom => `${dom}_kindred_spirit_1`),
+            ...domains.map(dom => `${dom}_challenging_voice_1`),
+            // Also include the second level for a few domains to get wider coverage without processing all fields
+            'politics_kindred_spirit_2', 'politics_challenging_voice_2',
+            'ethics_kindred_spirit_2', 'ethics_challenging_voice_2'
+        ];
+        console.log("OPTIMIZED MODE: Checking a strategic subset of fields for validation");
     }
     
     // Generate book field names by adding '_classic' suffix to icon fields
@@ -514,96 +524,130 @@ serve(async (req) => {
 
 // New function to process validation in background
 async function processValidationInBackground(dnaResult: DnaAnalysisResult, assessmentId: string): Promise<void> {
+    // Add processing timeout protection
+    const timeoutMs = 20000; // 20 seconds
+    const timeoutPromise = new Promise<void>((_, reject) => {
+        setTimeout(() => {
+            reject(new Error(`Processing timeout exceeded (${timeoutMs}ms) for assessment ${assessmentId}`));
+        }, timeoutMs);
+    });
+
     try {
-        // 2. Fetch Reference Data (Uses global client)
-        console.time("fetchReferenceData"); // Start timer
-        const [icons, books] = await Promise.all([
-            fetchIcons(),
-            fetchBooks()
-        ])
-        console.timeEnd("fetchReferenceData"); // End timer
-
-        if (icons.length === 0 && books.length === 0) {
-             console.warn("No icon or book data available. Cannot perform matching.")
-             return;
-        }
-
-        // 3. Extract Names
-        const { icons: extractedIcons, books: extractedBooks } = extractNamesFromDnaResult(dnaResult)
-
-        const matchedResults: MatchResult[] = []
-        const unmatchedResults: UnmatchResult[] = []
-
-        // 4. Process Icons (Uses global client indirectly via findItemMatch)
-        console.time("processIcons");
-        if (icons.length > 0 && extractedIcons.names.length > 0) {
-            console.log(`\n-- Validating ${extractedIcons.names.length} Icons --`)
-            for (let i = 0; i < extractedIcons.names.length; i++) {
-                const name = extractedIcons.names[i]
-                const column = extractedIcons.columns[i]
-                console.log(` -> Validating Icon: '${name}' (from column: ${column})`)
-                // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
-                const match = await findItemMatch(name, icons, LLM_MATCH_BATCH_SIZE, 'icons')
-                if (match) {
-                    matchedResults.push({
-                        assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
-                        dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
-                    })
-                } else {
-                    unmatchedResults.push({
-                        assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
-                        dna_analysis_name: name,
-                    })
-                }
-            }
-        } else {
-             console.log("Skipping icon validation (no icons loaded or none extracted).")
-        }
-         console.timeEnd("processIcons");
-
-        // 5. Process Books (Uses global client indirectly via findItemMatch)
-        console.time("processBooks");
-        if (books.length > 0 && extractedBooks.names.length > 0) {
-             console.log(`\n-- Validating ${extractedBooks.names.length} Books --`)
-            for (let i = 0; i < extractedBooks.names.length; i++) {
-                const name = extractedBooks.names[i]
-                const column = extractedBooks.columns[i]
-                console.log(` -> Validating Book: '${name}' (from column: ${column})`)
-                 // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
-                const match = await findItemMatch(name, books, LLM_MATCH_BATCH_SIZE, 'books')
-                if (match) {
-                    matchedResults.push({
-                        assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
-                        dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
-                    })
-                } else {
-                    unmatchedResults.push({
-                        assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
-                        dna_analysis_name: name,
-                    })
-                }
-            }
-        } else {
-            console.log("Skipping book validation (no books loaded or none extracted).")
-        }
-        console.timeEnd("processBooks");
-
-        // 6. Write Results (Uses global client)
-        console.time("writeResults");
-        console.log("\n--- Writing Results ---")
-        await Promise.all([
-             writeResultsToSupabase('dna_analysis_results_matched', matchedResults, SUPABASE_WRITE_BATCH_SIZE),
-             writeResultsToSupabase('dna_analysis_results_unmatched', unmatchedResults, SUPABASE_WRITE_BATCH_SIZE)
-        ])
-        console.timeEnd("writeResults");
-
-        console.log(`--- Processing Complete for Assessment ID: ${assessmentId} ---`)
-        console.log(`Matches Found: ${matchedResults.length}`)
-        console.log(`Unmatched Items: ${unmatchedResults.length}`)
-
+        console.log(`Starting background processing for assessmentId: ${assessmentId}`);
+        
+        // Set up a race between normal processing and the timeout
+        await Promise.race([
+            processValidationCore(dnaResult, assessmentId),
+            timeoutPromise
+        ]);
+        
+        console.log(`Background processing completed successfully for assessmentId: ${assessmentId}`);
     } catch (error) {
-        console.error(`Unhandled error during DNA validation for assessment ${assessmentId}:`, error)
+        console.error(`Critical error in background processing for assessment ${assessmentId}:`, error);
+        
+        // Try to log error to Supabase for monitoring
+        try {
+            await supabaseAdmin.from('dna_validation_errors').insert({
+                assessment_id: assessmentId,
+                error_message: error instanceof Error ? error.message : String(error),
+                error_stack: error instanceof Error ? error.stack : undefined,
+                created_at: new Date().toISOString()
+            });
+        } catch (logError) {
+            // If we can't even log the error, just output to console as last resort
+            console.error(`Failed to log error to database:`, logError);
+        }
     }
+}
+
+// Core validation logic extracted to separate function
+async function processValidationCore(dnaResult: DnaAnalysisResult, assessmentId: string): Promise<void> {
+    // 2. Fetch Reference Data (Uses global client)
+    console.time("fetchReferenceData"); // Start timer
+    const [icons, books] = await Promise.all([
+        fetchIcons(),
+        fetchBooks()
+    ])
+    console.timeEnd("fetchReferenceData"); // End timer
+
+    if (icons.length === 0 && books.length === 0) {
+         console.warn("No icon or book data available. Cannot perform matching.")
+         return;
+    }
+
+    // 3. Extract Names
+    const { icons: extractedIcons, books: extractedBooks } = extractNamesFromDnaResult(dnaResult)
+    console.log(`Total extracted: ${extractedIcons.names.length} icons, ${extractedBooks.names.length} books`);
+
+    const matchedResults: MatchResult[] = []
+    const unmatchedResults: UnmatchResult[] = []
+
+    // 4. Process Icons (Uses global client indirectly via findItemMatch)
+    console.time("processIcons");
+    if (icons.length > 0 && extractedIcons.names.length > 0) {
+        console.log(`\n-- Validating ${extractedIcons.names.length} Icons --`)
+        for (let i = 0; i < extractedIcons.names.length; i++) {
+            const name = extractedIcons.names[i]
+            const column = extractedIcons.columns[i]
+            console.log(` -> Validating Icon: '${name}' (from column: ${column})`)
+            // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
+            const match = await findItemMatch(name, icons, LLM_MATCH_BATCH_SIZE, 'icons')
+            if (match) {
+                matchedResults.push({
+                    assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
+                    dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
+                })
+            } else {
+                unmatchedResults.push({
+                    assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
+                    dna_analysis_name: name,
+                })
+            }
+        }
+    } else {
+         console.log("Skipping icon validation (no icons loaded or none extracted).")
+    }
+     console.timeEnd("processIcons");
+
+    // 5. Process Books (Uses global client indirectly via findItemMatch)
+    console.time("processBooks");
+    if (books.length > 0 && extractedBooks.names.length > 0) {
+         console.log(`\n-- Validating ${extractedBooks.names.length} Books --`)
+        for (let i = 0; i < extractedBooks.names.length; i++) {
+            const name = extractedBooks.names[i]
+            const column = extractedBooks.columns[i]
+            console.log(` -> Validating Book: '${name}' (from column: ${column})`)
+             // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
+            const match = await findItemMatch(name, books, LLM_MATCH_BATCH_SIZE, 'books')
+            if (match) {
+                matchedResults.push({
+                    assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
+                    dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
+                })
+            } else {
+                unmatchedResults.push({
+                    assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
+                    dna_analysis_name: name,
+                })
+            }
+        }
+    } else {
+        console.log("Skipping book validation (no books loaded or none extracted).")
+    }
+    console.timeEnd("processBooks");
+
+    // 6. Write Results (Uses global client)
+    console.time("writeResults");
+    console.log("\n--- Writing Results ---")
+    await Promise.all([
+         writeResultsToSupabase('dna_analysis_results_matched', matchedResults, SUPABASE_WRITE_BATCH_SIZE),
+         writeResultsToSupabase('dna_analysis_results_unmatched', unmatchedResults, SUPABASE_WRITE_BATCH_SIZE)
+    ])
+    console.timeEnd("writeResults");
+
+    console.log(`--- Processing Complete for Assessment ID: ${assessmentId} ---`)
+    console.log(`Matches Found: ${matchedResults.length}`)
+    console.log(`Unmatched Items: ${unmatchedResults.length}`)
 }
 
 /*a
