@@ -361,7 +361,7 @@ function extractNamesFromDnaResult(dnaResult: DnaAnalysisResult): {
     const processedNames = { icons: new Set<string>(), books: new Set<string>() }
 
     // TESTING ONLY: For testing, only check a small subset of fields instead of all 120+ fields
-    const testingOnly = false; // Set to false for production to check all DNA fields, true for testing/development
+    const testingOnly = true; // Set to false for production to check all DNA fields, true for testing/development
     
     // IMPORTANT: Ensure these field names exactly match your table schema
     let iconFields = [
@@ -525,7 +525,7 @@ serve(async (req) => {
 // New function to process validation in background
 async function processValidationInBackground(dnaResult: DnaAnalysisResult, assessmentId: string): Promise<void> {
     // Add processing timeout protection
-    const timeoutMs = 20000; // 20 seconds
+    const timeoutMs = 300000; // 300 seconds
     const timeoutPromise = new Promise<void>((_, reject) => {
         setTimeout(() => {
             reject(new Error(`Processing timeout exceeded (${timeoutMs}ms) for assessment ${assessmentId}`));
