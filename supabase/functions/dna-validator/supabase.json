@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "dna-validator": {
+      "verify_jwt": false
+    }
+  }
+} 
