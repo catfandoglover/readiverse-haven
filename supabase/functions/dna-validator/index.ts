@@ -2,103 +2,149 @@
 // NOTE: This function has JWT verification disabled via the supabase.json config file
 
 // --- Imports ---
-// Using slightly newer std version, adjust if needed
-import { serve } from 'https://deno.land/std@0.208.0/http/server.ts'; // Updated std version
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'; // Match example version or use latest
-import { corsHeaders } from '../_shared/cors.ts'; // Assuming this file exists as in example
+import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
+import { corsHeaders } from '../_shared/cors.ts';
 
 // --- Secrets / Environment Variables (Loaded at module level) ---
 const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
-// IMPORTANT: Use the Service Role Key for functions that need to bypass RLS or have broad write access
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 // --- Initialize Supabase Client (using Service Role Key) ---
-// Use non-null assertion (!) assuming secrets are set in the environment
-// RLS is bypassed when using the service_role key.
-const supabaseAdmin: SupabaseClient = createClient(supabaseUrl!, supabaseServiceRoleKey!, {
-    auth: {
-        // Required settings for backend/server-side usage
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
+let supabaseAdmin: SupabaseClient;
+try {
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+        throw new Error("Supabase URL or Service Role Key environment variables are not set.");
     }
-});
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    });
+    console.log("Supabase admin client initialized at module level.");
+} catch (error) {
+    console.error("Failed to initialize Supabase admin client:", error);
+    // If Supabase fails to initialize, we might not be able to log errors there later
+    // Consider how to handle this critical failure - perhaps the function should not serve requests.
+}
 
-console.log("Supabase admin client initialized at module level.");
 // Basic check if keys were loaded - helps debugging deployment issues
 if (!openrouterApiKey) console.warn("OPENROUTER_API_KEY secret not found!");
-if (!supabaseUrl) console.warn("SUPABASE_URL secret not found!");
-if (!supabaseServiceRoleKey) console.warn("SUPABASE_SERVICE_ROLE_KEY secret not found!");
 
 
-// --- Interfaces (Keep these as they are good practice) ---
+// --- Interfaces ---
 interface Icon {
-  id: string // UUID as string
-  name: string
+    id: string // UUID as string
+    name: string
 }
 
 interface Book {
-  id: string // UUID as string
-  name: string // Using 'name' consistently, mapped from 'title'
+    id: string // UUID as string
+    name: string // Using 'name' consistently, mapped from 'title'
 }
 
 interface DnaAnalysisResult {
-  id: string // UUID as string
-  created_at: string
-  user_id?: string
-  archetype?: string
-  most_kindred_spirit?: string
-  most_challenging_voice?: string
-  most_kindred_spirit_classic?: string
-  most_challenging_voice_classic?: string
-  // Add ALL other potential thinker/classic fields here...
-  // Example:
-  politics_kindred_spirit_1?: string
-  politics_challenging_voice_1?: string
-  politics_kindred_spirit_1_classic?: string
-  politics_challenging_voice_1_classic?: string
-  // ... (ensure all fields match your schema)
-  [key: string]: any // Allow arbitrary properties
+    id: string // UUID as string
+    created_at: string
+    user_id?: string
+    // ... Add ALL other potential thinker/classic fields from your schema ...
+    // Ensure these match your actual dna_analysis_results table columns
+    most_kindred_spirit?: string
+    most_challenging_voice?: string
+    most_kindred_spirit_classic?: string
+    most_challenging_voice_classic?: string
+    politics_kindred_spirit_1?: string
+    politics_challenging_voice_1?: string
+    politics_kindred_spirit_1_classic?: string
+    politics_challenging_voice_1_classic?: string
+     // Add all 6 domains, 5 levels each for kindred/challenging + classics
+    ethics_kindred_spirit_1?: string; ethics_kindred_spirit_2?: string; ethics_kindred_spirit_3?: string; ethics_kindred_spirit_4?: string; ethics_kindred_spirit_5?: string;
+    ethics_challenging_voice_1?: string; ethics_challenging_voice_2?: string; ethics_challenging_voice_3?: string; ethics_challenging_voice_4?: string; ethics_challenging_voice_5?: string;
+    epistemology_kindred_spirit_1?: string; epistemology_kindred_spirit_2?: string; epistemology_kindred_spirit_3?: string; epistemology_kindred_spirit_4?: string; epistemology_kindred_spirit_5?: string;
+    epistemology_challenging_voice_1?: string; epistemology_challenging_voice_2?: string; epistemology_challenging_voice_3?: string; epistemology_challenging_voice_4?: string; epistemology_challenging_voice_5?: string;
+    ontology_kindred_spirit_1?: string; ontology_kindred_spirit_2?: string; ontology_kindred_spirit_3?: string; ontology_kindred_spirit_4?: string; ontology_kindred_spirit_5?: string;
+    ontology_challenging_voice_1?: string; ontology_challenging_voice_2?: string; ontology_challenging_voice_3?: string; ontology_challenging_voice_4?: string; ontology_challenging_voice_5?: string;
+    theology_kindred_spirit_1?: string; theology_kindred_spirit_2?: string; theology_kindred_spirit_3?: string; theology_kindred_spirit_4?: string; theology_kindred_spirit_5?: string;
+    theology_challenging_voice_1?: string; theology_challenging_voice_2?: string; theology_challenging_voice_3?: string; theology_challenging_voice_4?: string; theology_challenging_voice_5?: string;
+    aesthetics_kindred_spirit_1?: string; aesthetics_kindred_spirit_2?: string; aesthetics_kindred_spirit_3?: string; aesthetics_kindred_spirit_4?: string; aesthetics_kindred_spirit_5?: string;
+    aesthetics_challenging_voice_1?: string; aesthetics_challenging_voice_2?: string; aesthetics_challenging_voice_3?: string; aesthetics_challenging_voice_4?: string; aesthetics_challenging_voice_5?: string;
+    // Classic versions
+    politics_kindred_spirit_2_classic?: string; politics_challenging_voice_2_classic?: string;
+    ethics_kindred_spirit_1_classic?: string; ethics_kindred_spirit_2_classic?: string; ethics_kindred_spirit_3_classic?: string; ethics_kindred_spirit_4_classic?: string; ethics_kindred_spirit_5_classic?: string;
+    ethics_challenging_voice_1_classic?: string; ethics_challenging_voice_2_classic?: string; ethics_challenging_voice_3_classic?: string; ethics_challenging_voice_4_classic?: string; ethics_challenging_voice_5_classic?: string;
+    epistemology_kindred_spirit_1_classic?: string; epistemology_kindred_spirit_2_classic?: string; epistemology_kindred_spirit_3_classic?: string; epistemology_kindred_spirit_4_classic?: string; epistemology_kindred_spirit_5_classic?: string;
+    epistemology_challenging_voice_1_classic?: string; epistemology_challenging_voice_2_classic?: string; epistemology_challenging_voice_3_classic?: string; epistemology_challenging_voice_4_classic?: string; epistemology_challenging_voice_5_classic?: string;
+    ontology_kindred_spirit_1_classic?: string; ontology_kindred_spirit_2_classic?: string; ontology_kindred_spirit_3_classic?: string; ontology_kindred_spirit_4_classic?: string; ontology_kindred_spirit_5_classic?: string;
+    ontology_challenging_voice_1_classic?: string; ontology_challenging_voice_2_classic?: string; ontology_challenging_voice_3_classic?: string; ontology_challenging_voice_4_classic?: string; ontology_challenging_voice_5_classic?: string;
+    theology_kindred_spirit_1_classic?: string; theology_kindred_spirit_2_classic?: string; theology_kindred_spirit_3_classic?: string; theology_kindred_spirit_4_classic?: string; theology_kindred_spirit_5_classic?: string;
+    theology_challenging_voice_1_classic?: string; theology_challenging_voice_2_classic?: string; theology_challenging_voice_3_classic?: string; theology_challenging_voice_4_classic?: string; theology_challenging_voice_5_classic?: string;
+    aesthetics_kindred_spirit_1_classic?: string; aesthetics_kindred_spirit_2_classic?: string; aesthetics_kindred_spirit_3_classic?: string; aesthetics_kindred_spirit_4_classic?: string; aesthetics_kindred_spirit_5_classic?: string;
+    aesthetics_challenging_voice_1_classic?: string; aesthetics_challenging_voice_2_classic?: string; aesthetics_challenging_voice_3_classic?: string; aesthetics_challenging_voice_4_classic?: string; aesthetics_challenging_voice_5_classic?: string;
+    [key: string]: any // Allow arbitrary properties
 }
 
 interface MatchResult {
-  assessment_id: string
-  type: 'icons' | 'books'
-  dna_analysis_column: string
-  dna_analysis_name: string
-  matched_name: string
-  matched_id: string
+    assessment_id: string
+    type: 'icons' | 'books'
+    dna_analysis_column: string
+    dna_analysis_name: string
+    matched_name: string
+    matched_id: string
 }
 
 interface UnmatchResult {
-  assessment_id: string
-  type: 'icons' | 'books'
-  dna_analysis_column: string
-  dna_analysis_name: string
+    assessment_id: string
+    type: 'icons' | 'books'
+    dna_analysis_column: string
+    dna_analysis_name: string
 }
+
+interface MatchAttemptResult {
+    match: Icon | Book | null;
+    originalName: string;
+    originalColumn: string;
+}
+
 
 // --- Constants ---
 const LLM_MATCH_BATCH_SIZE = 500
-const SUPABASE_WRITE_BATCH_SIZE = 20
+const SUPABASE_WRITE_BATCH_SIZE = 50 // Increased batch size for potential performance improvement
 
-// --- Helper Functions (Keep these as they are the core logic) ---
+// --- Module-Level Reference Data Cache (Idea 4) ---
+let iconsList: Icon[] = [];
+let booksList: Book[] = [];
+// Maps for fast exact lookups (Idea 1)
+let iconsMap = new Map<string, Icon>(); // Key: lowercase name
+let booksMap = new Map<string, Book>(); // Key: cleaned lowercase name
+let referenceDataLoaded = false;
+let referenceDataLoadingPromise: Promise<void> | null = null;
 
-// async function fetchAllSupabaseData<T>(supabaseClient: SupabaseClient, tableName: string, selectQuery = '*'): Promise<T[]> {
-// Modified slightly to accept the already initialized client
-async function fetchAllSupabaseData<T>(client: SupabaseClient, tableName: string, selectQuery = '*'): Promise<T[]> {
+
+// --- Helper Functions ---
+
+function cleanBookTitle(title: string): string {
+    if (!title) return title
+    // Removes year in parentheses like (1984) or (430 BC) or (Penguin Classics, 2003)
+    const pattern = /\s+\([\d\s\wBCE.-]+(?:\s*ed\.?)?(?:,\s*\d{4})?\)$/i;
+    return title.replace(pattern, '').trim()
+}
+
+// Fetches all data with pagination (internal use)
+async function fetchAllSupabaseDataInternal<T>(client: SupabaseClient, tableName: string, selectQuery = '*'): Promise<T[]> {
     const allData: T[] = []
     const pageSize = 1000
     let offset = 0
     let hasMoreData = true
-    console.log(`Fetching all data from ${tableName}...`)
+    // console.log(`Fetching all data from ${tableName}...`) // Keep logging minimal unless debugging
 
     while (hasMoreData) {
         try {
-            // Use the passed client instance
-            const { data, error, count } = await client
+            const { data, error } = await client
                 .from(tableName)
-                .select(selectQuery, { count: 'exact' })
+                .select(selectQuery) // Count not strictly needed here
                 .range(offset, offset + pageSize - 1)
 
             if (error) {
@@ -108,7 +154,7 @@ async function fetchAllSupabaseData<T>(client: SupabaseClient, tableName: string
 
             if (data && data.length > 0) {
                 allData.push(...data as T[])
-                console.log(`Fetched ${data.length} rows from ${tableName}. Total: ${allData.length}`)
+                // console.log(`Fetched ${data.length} rows from ${tableName}. Total: ${allData.length}`)
                 if (data.length < pageSize) {
                     hasMoreData = false
                 } else {
@@ -119,87 +165,162 @@ async function fetchAllSupabaseData<T>(client: SupabaseClient, tableName: string
             }
         } catch (e) {
             console.error(`Exception during fetch from ${tableName}:`, e)
-            throw e
+            throw e // Rethrow to be caught by loader
         }
     }
-    console.log(`Finished fetching from ${tableName}. Total rows: ${allData.length}`)
+    // console.log(`Finished fetching from ${tableName}. Total rows: ${allData.length}`)
     return allData
 }
 
-// Modified to use the global supabaseAdmin client
-async function fetchIcons(): Promise<Icon[]> {
-    console.log("Fetching icons from Supabase...")
+// Internal fetchers for loading data into module cache
+async function fetchIconsInternal(): Promise<Icon[]> {
+    if (!supabaseAdmin) throw new Error("Supabase client not initialized");
+    console.log("Fetching icons from Supabase for cache...");
     try {
-        const icons = await fetchAllSupabaseData<Icon>(supabaseAdmin, 'icons', 'id::text, name')
-        console.log(`Successfully fetched ${icons.length} icons.`)
+        const icons = await fetchAllSupabaseDataInternal<Icon>(supabaseAdmin, 'icons', 'id::text, name')
+        console.log(`Fetched ${icons.length} icons into cache.`);
         return icons
     } catch (error) {
-        console.error("Error fetching icons:", error)
-        return []
+        console.error("Error fetching icons for cache:", error)
+        return [] // Return empty on error
     }
 }
 
-// Modified to use the global supabaseAdmin client
-async function fetchBooks(): Promise<Book[]> {
-    console.log("Fetching books from Supabase...")
+async function fetchBooksInternal(): Promise<Book[]> {
+    if (!supabaseAdmin) throw new Error("Supabase client not initialized");
+    console.log("Fetching books from Supabase for cache...");
     try {
-        const rawBooks = await fetchAllSupabaseData<{ id: string; title: string }>(supabaseAdmin, 'books', 'id::text, title')
+        // Fetch raw books with 'title' column
+        const rawBooks = await fetchAllSupabaseDataInternal<{ id: string; title: string }>(supabaseAdmin, 'books', 'id::text, title')
+        // Map 'title' to 'name' for consistency
         const books: Book[] = rawBooks.map(b => ({ id: b.id, name: b.title }))
-        console.log(`Successfully fetched ${books.length} books.`)
+        console.log(`Fetched ${books.length} books into cache.`);
         return books
     } catch (error) {
-        console.error("Error fetching books:", error)
-        return []
+        console.error("Error fetching books for cache:", error)
+        return [] // Return empty on error
     }
 }
 
+// Function to load reference data if not already loaded (Idea 4)
+async function loadReferenceDataIfNeeded(): Promise<void> {
+    if (referenceDataLoaded) {
+        // console.log("Reference data already loaded in this instance.");
+        return;
+    }
 
-function cleanBookTitle(title: string): string {
-    if (!title) return title
-    const pattern = /\s+\(\d{3,4}(?:[\s\w.-]+)?\)$/
-    return title.replace(pattern, '').trim()
-}
+    // Prevent concurrent loading attempts within the same instance
+    if (referenceDataLoadingPromise) {
+        console.log("Reference data loading already in progress, awaiting completion...");
+        return referenceDataLoadingPromise;
+    }
 
-function findExactMatch(name: string, itemList: (Icon | Book)[], entityType: 'icons' | 'books'): Icon | Book | null {
-    if (!name) return null
-    const searchNameCleaned = entityType === 'books' ? cleanBookTitle(name) : name
-    const searchNameLower = searchNameCleaned.toLowerCase()
+    console.log("Reference data not loaded, initiating fetch...");
+    const loadingPromise = (async () => {
+        try {
+            console.time("loadReferenceData");
+            const [fetchedIcons, fetchedBooks] = await Promise.all([
+                fetchIconsInternal(),
+                fetchBooksInternal()
+            ]);
 
-    for (const item of itemList) {
-        const itemNameOriginal = item.name || ''
-        const itemNameForCompare = entityType === 'books' ? cleanBookTitle(itemNameOriginal) : itemNameOriginal
-        if (itemNameForCompare && itemNameForCompare.toLowerCase() === searchNameLower) {
-            return item
+            iconsList = fetchedIcons;
+            booksList = fetchedBooks;
+
+            // Populate maps for fast exact matching (Idea 1)
+            iconsMap.clear();
+            iconsList.forEach(icon => {
+                if (icon.name) {
+                    iconsMap.set(icon.name.toLowerCase(), icon);
+                }
+            });
+
+            booksMap.clear();
+            booksList.forEach(book => {
+                if (book.name) {
+                    // Use cleaned title for map key
+                    const cleanedName = cleanBookTitle(book.name);
+                    if (cleanedName) {
+                         booksMap.set(cleanedName.toLowerCase(), book);
+                    } else {
+                        // Handle cases where cleaning might result in empty string?
+                         console.warn(`Book with ID ${book.id} resulted in empty name after cleaning: '${book.name}'`);
+                    }
+                }
+            });
+
+            referenceDataLoaded = true;
+            console.log(`Reference data loaded successfully: ${iconsList.length} icons (map: ${iconsMap.size}), ${booksList.length} books (map: ${booksMap.size})`);
+            console.timeEnd("loadReferenceData");
+        } catch (error) {
+            console.error("Failed to load reference data:", error);
+            // Reset state so next invocation might try again
+            referenceDataLoaded = false;
+            iconsList = [];
+            booksList = [];
+            iconsMap.clear();
+            booksMap.clear();
+            throw error; // Re-throw to indicate failure
+        } finally {
+            referenceDataLoadingPromise = null; // Clear the promise regardless of outcome
         }
-    }
-    return null
+    })();
+
+    referenceDataLoadingPromise = loadingPromise;
+    return loadingPromise;
 }
 
-// Uses the global openrouterApiKey
-async function findBestMatchLLM(name: string, itemBatch: (Icon | Book)[], entityType: 'icons' | 'books'): Promise<string> {
-    // Check if the key was loaded at module level
-    if (!openrouterApiKey) {
-        console.error("OpenRouter API Key was not loaded. Cannot make API call.")
-        return "ERROR" // Or throw, depending on desired behavior
+
+// --- Matching Logic Functions ---
+
+// Optimized exact match using Map (Idea 1)
+function findExactMatch(name: string, itemMap: Map<string, Icon | Book>, entityType: 'icons' | 'books'): Icon | Book | null {
+    if (!name) return null;
+
+    let searchNameCleanedLower: string;
+    if (entityType === 'books') {
+        searchNameCleanedLower = cleanBookTitle(name).toLowerCase();
+    } else {
+        searchNameCleanedLower = name.toLowerCase();
     }
 
-    let potentialMatches: string[]
-    let cleanedNameForPrompt: string
-    let entityDescription: string
+    if (!searchNameCleanedLower) return null; // Handle empty names after cleaning
 
+    const match = itemMap.get(searchNameCleanedLower);
+    return match || null; // Return the found item or null
+}
+
+// LLM matching function (remains largely the same, uses module-level key)
+async function findBestMatchLLM(name: string, itemBatch: (Icon | Book)[], entityType: 'icons' | 'books'): Promise<string> {
+    if (!openrouterApiKey) {
+        console.error("OpenRouter API Key was not loaded. Cannot make API call.");
+        return "ERROR";
+    }
+
+    let potentialMatches: string[];
+    let cleanedNameForPrompt: string;
+    let entityDescription: string;
+
+    // Prepare names for the prompt (clean books)
     if (entityType === "books") {
-        potentialMatches = itemBatch.map(item => cleanBookTitle(item.name)).filter(Boolean)
-        cleanedNameForPrompt = cleanBookTitle(name)
-        entityDescription = "classic texts"
+        potentialMatches = itemBatch.map(item => cleanBookTitle(item.name)).filter(Boolean);
+        cleanedNameForPrompt = cleanBookTitle(name);
+        entityDescription = "classic texts";
     } else { // icons
-        potentialMatches = itemBatch.map(item => item.name).filter(Boolean)
-        cleanedNameForPrompt = name
-        entityDescription = "thinkers"
+        potentialMatches = itemBatch.map(item => item.name).filter(Boolean);
+        cleanedNameForPrompt = name;
+        entityDescription = "thinkers";
     }
 
     if (potentialMatches.length === 0) {
-        console.warn(`No valid potential matches in batch for '${name}'.`)
-        return "NO MATCH"
+        // console.warn(`No valid potential matches in batch for '${name}'.`); // Reduce noise
+        return "NO MATCH";
+    }
+
+    // Filter out potentially empty strings after cleaning
+    potentialMatches = potentialMatches.filter(p => p.trim().length > 0);
+    if (potentialMatches.length === 0) {
+        return "NO MATCH";
     }
 
     const promptText = `
@@ -209,305 +330,331 @@ If no name in the list is a confident match for the input name, respond ONLY wit
 
 List of known ${entityDescription}:
 ${potentialMatches.join(', ')}
-`
+`;
 
     const headers = {
-        // Use the top-level variable
         "Authorization": `Bearer ${openrouterApiKey}`,
         "Content-Type": "application/json",
-        // Match headers from your example if needed
-        "HTTP-Referer": "https://alexandria.org", // Or your specific referer
-        "X-Title": "Alexandria DNA Validator Edge" // Or your specific title
-    }
+        "HTTP-Referer": "https://alexandria.org", // Optional: Adjust if needed
+        "X-Title": "Alexandria DNA Validator Edge" // Optional: Adjust if needed
+    };
 
     const payload = {
-        // "model": "google/gemini-flash-1.5",
-        "model": "mistralai/mistral-7b-instruct", // Or match your example's model if preferred
-        "messages": [
-            { "role": "user", "content": promptText }
-        ],
-        // Add other parameters like temperature or max_tokens if needed
-        // "temperature": 0.5,
-        // "max_tokens": 150,
-    }
+        "model": "google/gemini-2.0-flash-001",
+        "messages": [{ "role": "user", "content": promptText }],
+        // "temperature": 0.3, // Lower temperature for more deterministic matching
+        // "max_tokens": 100, // Limit response length
+    };
 
     try {
-        console.log(`Calling OpenRouter for '${cleanedNameForPrompt}' (type: ${entityType})...`)
+        // console.log(`Calling OpenRouter for '${cleanedNameForPrompt}' (type: ${entityType})...`); // Reduce noise
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: headers,
             body: JSON.stringify(payload),
-        })
+        });
 
         if (response.ok) {
-            const result = await response.json()
-            // Use optional chaining for safer access
-            const match = result?.choices?.[0]?.message?.content?.trim()
+            const result = await response.json();
+            const match = result?.choices?.[0]?.message?.content?.trim();
 
             if (!match) {
-                console.warn(`Empty response content from OpenRouter for '${cleanedNameForPrompt}'. Response:`, result)
-                return "NO MATCH"
+                // console.warn(`Empty response content from OpenRouter for '${cleanedNameForPrompt}'. Response:`, result); // Reduce noise
+                return "NO MATCH";
             }
 
-            console.log(`OpenRouter potential match for '${cleanedNameForPrompt}': '${match}'`)
+            // console.log(`OpenRouter potential match for '${cleanedNameForPrompt}': '${match}'`) // Reduce noise
 
             if (match === "NO MATCH") {
-                return "NO MATCH"
+                return "NO MATCH";
+            // Check if the LLM response exactly matches one of the *cleaned* potential names (case-insensitive)
             } else if (potentialMatches.some(p => p.toLowerCase() === match.toLowerCase())) {
+                 // Return the matched name exactly as it was in the potentialMatches list
                  const matchedPotential = potentialMatches.find(p => p.toLowerCase() === match.toLowerCase()) || match;
-                 return matchedPotential
+                 return matchedPotential;
             } else {
-                console.warn(`OpenRouter returned '${match}' which is not in the provided list (${potentialMatches.length} items) or 'NO MATCH'. Treating as no match.`)
-                return "NO MATCH"
+                // console.warn(`OpenRouter returned '${match}' which is not in the provided list or 'NO MATCH'. Treating as no match.`); // Reduce noise
+                return "NO MATCH";
             }
         } else {
-            const errorBody = await response.text()
-            console.error(`OpenRouter API error: ${response.status} - ${errorBody}`)
-            // Log specific errors like in your example
-            if (response.status === 401) {
-                 console.error("***** OpenRouter Authentication Error (401): Check your OPENROUTER_API_KEY secret. *****")
-            } else if (response.status === 429) {
-                 console.error("***** OpenRouter Rate Limit Error (429): Too many requests. *****")
-            }
-             else if (response.status === 502 || response.status === 503) {
-                 console.error(`***** OpenRouter Provider Error (${response.status}): Issue with the underlying model provider. Might be temporary. *****`)
-             }
-            return "ERROR"
+            const errorBody = await response.text();
+            console.error(`OpenRouter API error: ${response.status} - ${errorBody.substring(0, 500)}...`); // Log truncated error body
+             if (response.status === 401) console.error("***** OpenRouter Authentication Error (401) *****");
+             else if (response.status === 429) console.error("***** OpenRouter Rate Limit Error (429) *****");
+             else if (response.status >= 500) console.error(`***** OpenRouter Server Error (${response.status}) *****`);
+            return "ERROR";
         }
     } catch (error) {
-        console.error(`Error calling OpenRouter API for '${cleanedNameForPrompt}':`, error)
-        return "ERROR"
+        console.error(`Network/fetch error calling OpenRouter for '${cleanedNameForPrompt}':`, error);
+        return "ERROR";
     }
 }
 
-// --- processNameWithBatchedItems, findItemMatch remain the same logic ---
-// ... (they internally call findBestMatchLLM which now uses the global key)
-async function processNameWithBatchedItems(
+async function processNameWithBatchedItemsLLM(
     name: string,
-    itemList: (Icon | Book)[],
+    itemList: (Icon | Book)[], // Full list passed here
     batchSize: number,
     entityType: 'icons' | 'books'
 ): Promise<Icon | Book | null> {
-    console.log(`LLM Matching '${name}' (${entityType}) against ${itemList.length} items...`)
+    // console.log(`LLM Matching '${name}' (${entityType}) against ${itemList.length} items...`); // Reduce noise
     for (let i = 0; i < itemList.length; i += batchSize) {
-        const itemBatch = itemList.slice(i, i + batchSize)
+        const itemBatch = itemList.slice(i, i + batchSize);
         // console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(itemList.length / batchSize)} (size: ${itemBatch.length})`) // Verbose logging
 
-        const bestMatchNameFromLLM = await findBestMatchLLM(name, itemBatch, entityType) // Uses global key indirectly
+        const bestMatchNameFromLLM = await findBestMatchLLM(name, itemBatch, entityType);
 
         if (bestMatchNameFromLLM === "ERROR") {
-            console.error(`LLM API error occurred while processing '${name}'. Stopping LLM search for this item.`)
-            return null
+            console.error(`LLM API error occurred while processing '${name}'. Stopping LLM search for this item.`);
+            return null; // Don't continue searching if LLM errored
         }
 
         if (bestMatchNameFromLLM !== "NO MATCH") {
-            const matchedItem = itemBatch.find(item => {
+            // Find the original item in the batch whose *cleaned* name matches the LLM response
+             const matchedItem = itemBatch.find(item => {
                 const itemNameOriginal = item.name || '';
                 const itemNameForCompare = entityType === "books" ? cleanBookTitle(itemNameOriginal) : itemNameOriginal;
+                // Case-insensitive comparison with the cleaned name from the batch
                 return itemNameForCompare.toLowerCase() === bestMatchNameFromLLM.toLowerCase();
             });
 
+
             if (matchedItem) {
-                console.log(`LLM Match found for '${name}': '${matchedItem.name}' (ID: ${matchedItem.id}).`)
-                return matchedItem
+                console.log(`LLM Match found for '${name}': '${matchedItem.name}' (ID: ${matchedItem.id}).`);
+                return matchedItem;
             } else {
-                 console.warn(`LLM returned '${bestMatchNameFromLLM}', but couldn't find corresponding item in batch. Continuing search.`);
+                 // This *shouldn't* happen if findBestMatchLLM logic is correct, but log if it does
+                 console.warn(`LLM returned '${bestMatchNameFromLLM}', but couldn't find corresponding item in batch whose cleaned name matched. Input: '${name}'.`);
             }
         }
+        // If "NO MATCH", continue to the next batch
     }
-    console.log(`No LLM match found for '${name}' after checking all batches.`)
-    return null
+    // console.log(`No LLM match found for '${name}' after checking all batches.`); // Reduce noise
+    return null;
 }
 
+// Function to check previous matches (remains the same logic, uses module client)
+async function findPreviousMatch(name: string, entityType: 'icons' | 'books'): Promise<{ matched_id: string, matched_name: string } | null> {
+    if (!name || !supabaseAdmin) return null;
+    const searchName = name.trim().toLowerCase();
+    if (!searchName) return null;
+
+    // console.log(`Checking for previous matches for '${searchName}' (${entityType})...`); // Reduce noise
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('dna_analysis_results_matched') // Ensure this table name is correct
+            .select('matched_id, matched_name')
+            .eq('type', entityType)
+            .ilike('dna_analysis_name', searchName) // Match against the original name stored
+            .limit(1);
+
+        if (error) {
+            console.error(`Error checking previous matches for '${searchName}':`, error);
+            return null;
+        }
+
+        if (data && data.length > 0) {
+            // console.log(`Found previous match for '${searchName}': '${data[0].matched_name}' (ID: ${data[0].matched_id})`); // Reduce noise
+            return data[0];
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`Exception checking previous matches for '${searchName}':`, error);
+        return null;
+    }
+}
+
+// Main matching function for a single item
 async function findItemMatch(
     itemName: string,
-    itemList: (Icon | Book)[],
+    itemList: (Icon | Book)[], // Full list for LLM/previous ID lookup
+    itemMap: Map<string, Icon | Book>, // Map for exact match
     batchSize: number,
     entityType: 'icons' | 'books'
 ): Promise<Icon | Book | null> {
     if (!itemName || !itemName.trim()) {
-        console.log("Skipping empty item name.")
-        return null
+        // console.log("Skipping empty item name.") // Reduce noise
+        return null;
     }
-    const nameToSearch = itemName.trim()
+    const nameToSearch = itemName.trim();
 
-    const exactMatch = findExactMatch(nameToSearch, itemList, entityType)
+    // 1. Try exact matching using the Map (Idea 1)
+    const exactMatch = findExactMatch(nameToSearch, itemMap, entityType);
     if (exactMatch) {
-        console.log(`Found exact match for '${nameToSearch}' (${entityType}): '${exactMatch.name}' (ID: ${exactMatch.id})`)
-        return exactMatch
+        // console.log(`Found exact match for '${nameToSearch}' (${entityType}): '${exactMatch.name}'`); // Reduce noise
+        return exactMatch;
     }
 
-    console.log(`No exact match for '${nameToSearch}' (${entityType}). Trying LLM...`)
-    const llmMatch = await processNameWithBatchedItems(nameToSearch, itemList, batchSize, entityType) // Uses global key indirectly
-    if (llmMatch) {
-         console.log(`Found LLM match for '${nameToSearch}' (${entityType}): '${llmMatch.name}' (ID: ${llmMatch.id})`)
-        return llmMatch
+    // 2. Check previous matches in the database
+    const previousMatch = await findPreviousMatch(nameToSearch, entityType);
+    if (previousMatch) {
+        // Find the corresponding item in our *current full itemList* using the matched_id
+        // This ensures we return the item object from the current cache
+        const itemFromPreviousMatch = itemList.find(item => item.id === previousMatch.matched_id);
+        if (itemFromPreviousMatch) {
+            // console.log(`Using previous match for '${nameToSearch}' (${entityType}): '${itemFromPreviousMatch.name}'`); // Reduce noise
+            return itemFromPreviousMatch;
+        } else {
+            // This could happen if the previously matched item was deleted from the icons/books table
+            console.warn(`Found previous match ID ${previousMatch.matched_id} for '${nameToSearch}', but item not in current reference list. Continuing to LLM...`);
+        }
     }
 
-    console.log(`No exact or LLM match found for '${nameToSearch}' (${entityType}).`)
-    return null
+    // 3. Use LLM for matching if other methods failed
+    // console.log(`No exact or previous match for '${nameToSearch}' (${entityType}). Trying LLM...`); // Reduce noise
+    const llmMatch = await processNameWithBatchedItemsLLM(nameToSearch, itemList, batchSize, entityType);
+    // LLM function already logs success/failure
+    return llmMatch; // Return the LLM match result (which could be null)
 }
 
 
-// --- extractNamesFromDnaResult remains the same logic ---
+// Extracts names, remains the same logic
 function extractNamesFromDnaResult(dnaResult: DnaAnalysisResult): {
     icons: { names: string[], columns: string[] },
     books: { names: string[], columns: string[] }
 } {
-    const extracted = {
+     const extracted = {
         icons: { names: [] as string[], columns: [] as string[] },
         books: { names: [] as string[], columns: [] as string[] }
-    }
-    const processedNames = { icons: new Set<string>(), books: new Set<string>() }
+    };
+    const processedNames = { icons: new Set<string>(), books: new Set<string>() };
 
-    // TESTING ONLY: For testing, only check a small subset of fields instead of all 120+ fields
-    const testingOnly = false; // Set to false for production to check all DNA fields, true for testing/development
-    
-    // IMPORTANT: Ensure these field names exactly match your table schema
-    let iconFields = [
-        'most_kindred_spirit', 'most_challenging_voice',
-        // Dynamically generate field names for all domains/levels
-        ...['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'].flatMap(dom =>
-            Array.from({ length: 5 }, (_, i) => `${dom}_kindred_spirit_${i + 1}`)
-        ),
-        ...['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'].flatMap(dom =>
-            Array.from({ length: 5 }, (_, i) => `${dom}_challenging_voice_${i + 1}`)
-        ),
-    ]
-    
-    // For testing, check a reasonable subset of fields to avoid timeouts while still being useful in production
-    if (testingOnly) {
-        const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
-        iconFields = [
-            'most_kindred_spirit', 'most_challenging_voice',
-            // Include the first kindred spirit and challenging voice from each domain
-            ...domains.map(dom => `${dom}_kindred_spirit_1`),
-            ...domains.map(dom => `${dom}_challenging_voice_1`),
-            // Also include the second level for a few domains to get wider coverage without processing all fields
-            'politics_kindred_spirit_2', 'politics_challenging_voice_2',
-            'ethics_kindred_spirit_2', 'ethics_challenging_voice_2'
-        ];
-        console.log("OPTIMIZED MODE: Checking a strategic subset of fields for validation");
-    }
-    
-    // Generate book field names by adding '_classic' suffix to icon fields
-    let bookFields: string[] = [];
-    
-    // In testing mode, explicitly check for the same limited set of book fields
-    if (testingOnly) {
-        const testBookFields = iconFields.map(f => f + '_classic');
-        bookFields = testBookFields.filter(field => dnaResult.hasOwnProperty(field));
-    } else {
-        // Normal operation: assumes book fields consistently end with '_classic' based on icon fields
-        bookFields = iconFields.map(f => dnaResult.hasOwnProperty(f + '_classic') ? f + '_classic' : null).filter(Boolean) as string[];
-    }
+    // Define all potential fields (ensure these match your DnaAnalysisResult interface/schema)
+    const domains = ['politics', 'ethics', 'epistemology', 'ontology', 'theology', 'aesthetics'];
+    const levels = [1, 2, 3, 4, 5];
+    const voiceTypes = ['kindred_spirit', 'challenging_voice'];
+
+    const baseIconFields = ['most_kindred_spirit', 'most_challenging_voice'];
+    domains.forEach(dom => {
+        voiceTypes.forEach(vt => {
+            levels.forEach(lvl => {
+                baseIconFields.push(`${dom}_${vt}_${lvl}`);
+            });
+        });
+    });
+
+    const allPotentialIconFields = baseIconFields;
+    const allPotentialBookFields = baseIconFields.map(f => `${f}_classic`);
 
     // Process icon fields
-    for (const fieldName of iconFields) {
-        const value = dnaResult[fieldName]
+    for (const fieldName of allPotentialIconFields) {
+        const value = dnaResult[fieldName];
         if (value && typeof value === 'string') {
-            const name = value.trim()
+            const name = value.trim();
             if (name && !processedNames.icons.has(name.toLowerCase())) {
-                extracted.icons.names.push(name)
-                extracted.icons.columns.push(fieldName)
-                processedNames.icons.add(name.toLowerCase())
+                extracted.icons.names.push(name);
+                extracted.icons.columns.push(fieldName);
+                processedNames.icons.add(name.toLowerCase());
             }
         }
     }
 
     // Process book fields
-    for (const fieldName of bookFields) {
-         const value = dnaResult[fieldName]; // Already checked for existence when creating bookFields list
+    for (const fieldName of allPotentialBookFields) {
+         const value = dnaResult[fieldName];
          if (value && typeof value === 'string') {
              const name = value.trim();
-             if (name && !processedNames.books.has(name.toLowerCase())) {
-                 extracted.books.names.push(name);
+             // Use cleaned book title for uniqueness check
+             const cleanedNameLower = cleanBookTitle(name).toLowerCase();
+             if (name && cleanedNameLower && !processedNames.books.has(cleanedNameLower)) {
+                 extracted.books.names.push(name); // Store original name
                  extracted.books.columns.push(fieldName);
-                 processedNames.books.add(name.toLowerCase());
+                 processedNames.books.add(cleanedNameLower); // Track uniqueness by cleaned name
              }
          }
     }
 
-    console.log(`Extracted ${extracted.icons.names.length} unique icon names and ${extracted.books.names.length} unique book titles.`)
-    return extracted
+    console.log(`Extracted ${extracted.icons.names.length} unique icon names and ${extracted.books.names.length} unique book titles.`);
+    return extracted;
 }
 
-// Modified to use the global supabaseAdmin client
+// Writes results, remains the same logic, uses module client
 async function writeResultsToSupabase<T>(tableName: string, results: T[], batchSize: number): Promise<void> {
      if (!results || results.length === 0) {
+        return;
+    }
+    if (!supabaseAdmin) {
+        console.error(`Cannot write to ${tableName}, Supabase client not initialized.`);
         return;
     }
     console.log(`Writing ${results.length} results to Supabase table '${tableName}'...`);
 
     for (let i = 0; i < results.length; i += batchSize) {
         const batch = results.slice(i, i + batchSize);
-        console.log(`Writing batch ${Math.floor(i / batchSize) + 1} (${batch.length} rows) to ${tableName}...`);
+        // console.log(`Writing batch ${Math.floor(i / batchSize) + 1} (${batch.length} rows) to ${tableName}...`); // Reduce noise
 
         try {
-            // Use the global client
             const { error } = await supabaseAdmin.from(tableName).insert(batch);
 
             if (error) {
                 console.error(`Error inserting batch into ${tableName}:`, error);
                  if (error.message.includes("permission denied") || error.code === '42501') {
-                     console.error(`***** Supabase Write Permission Error on ${tableName}: Check SERVICE_ROLE_KEY and RLS policies. *****`);
+                     console.error(`***** Supabase Write Permission Error on ${tableName} *****`);
                  }
-                 // Consider if you should throw here or just log
+                 // Optional: Implement retry logic for transient errors?
             } else {
-                console.log(`Successfully inserted batch of ${batch.length} rows into ${tableName}.`);
+                // console.log(`Successfully inserted batch of ${batch.length} rows into ${tableName}.`); // Reduce noise
             }
         } catch (e) {
             console.error(`Exception during Supabase insert to ${tableName}:`, e);
         }
     }
+     console.log(`Finished writing ${results.length} results to ${tableName}.`);
 }
 
 
 // --- Main Server Logic ---
 
 serve(async (req) => {
-    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
-        // Use corsHeaders from top level
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: corsHeaders });
     }
 
-    console.log("--- DNA Validator Edge Function Invoked ---")
+     if (!supabaseAdmin) {
+        console.error("FATAL: Supabase client failed to initialize. Cannot process request.");
+        return new Response(JSON.stringify({ error: "Server configuration error." }), {
+            status: 500, // Internal Server Error
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
 
-    // 1. Get the new row data from the request body
-    let dnaResult: DnaAnalysisResult | null = null
+    console.log("--- DNA Validator Edge Function Invoked ---");
+
+    let dnaResult: DnaAnalysisResult | null = null;
+    let assessmentId: string | null = null;
+
     try {
-        const payload = await req.json()
-        // Check structure for Database Webhook payload
-        if (payload.type === 'INSERT' && payload.table === 'dna_analysis_results' && payload.record) {
-             dnaResult = payload.record as DnaAnalysisResult
-             console.log(`Processing new DNA result ID: ${dnaResult?.id}`)
+        const payload = await req.json();
+        if (payload.type === 'INSERT' && payload.table === 'dna_analysis_results' && payload.record && payload.record.id) {
+            dnaResult = payload.record as DnaAnalysisResult;
+            assessmentId = dnaResult.id; // Extract ID here
+            console.log(`Processing new DNA result ID: ${assessmentId}`);
         } else {
-            console.warn("Received payload doesn't match expected INSERT event for dna_analysis_results:", payload)
+            console.warn("Received payload doesn't match expected INSERT event:", payload);
             return new Response(JSON.stringify({ error: "Invalid payload structure or event type." }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            })
+            });
         }
     } catch (error) {
-        console.error("Error parsing request body:", error)
+        console.error("Error parsing request body:", error);
         return new Response(JSON.stringify({ error: "Failed to parse request body." }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        });
     }
 
-    if (!dnaResult || !dnaResult.id) {
-         console.error("No valid DNA result data found in payload.")
-         return new Response(JSON.stringify({ error: "Missing DNA result data in payload." }), {
+    // We absolutely need dnaResult and assessmentId to proceed
+    if (!dnaResult || !assessmentId) {
+         console.error("No valid DNA result data or ID found in payload.");
+         return new Response(JSON.stringify({ error: "Missing DNA result data or ID in payload." }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        });
     }
 
-    const assessmentId = dnaResult.id
-    
-    // Return 200 immediately to acknowledge receipt
+    // Acknowledge receipt immediately
     const response = new Response(JSON.stringify({
         message: "DNA validation request received. Processing in background.",
         assessmentId: assessmentId
@@ -515,146 +662,198 @@ serve(async (req) => {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-    
-    // Process asynchronously
-    processValidationInBackground(dnaResult, assessmentId);
-    
-    return response;
-})
 
-// New function to process validation in background
+    // Don't await this - let it run in the background
+    processValidationInBackground(dnaResult, assessmentId);
+
+    return response;
+});
+
+// Background processing wrapper
 async function processValidationInBackground(dnaResult: DnaAnalysisResult, assessmentId: string): Promise<void> {
-    // Add processing timeout protection
-    const timeoutMs = 300000; // 300 seconds .... Phil: after testing I think the max is 60 seconds. 
+    // Note: Edge function execution time limits still apply (default ~15-60s depending on plan/region)
+    const timeoutMs = 55000; // Set slightly below typical 60s limit
+    let timeoutId: number | undefined;
+
     const timeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
             reject(new Error(`Processing timeout exceeded (${timeoutMs}ms) for assessment ${assessmentId}`));
         }, timeoutMs);
     });
 
     try {
         console.log(`Starting background processing for assessmentId: ${assessmentId}`);
-        
-        // Set up a race between normal processing and the timeout
         await Promise.race([
             processValidationCore(dnaResult, assessmentId),
             timeoutPromise
         ]);
-        
         console.log(`Background processing completed successfully for assessmentId: ${assessmentId}`);
     } catch (error) {
-        console.error(`Critical error in background processing for assessment ${assessmentId}:`, error);
-        
-        // Try to log error to Supabase for monitoring
-        try {
-            await supabaseAdmin.from('dna_validation_errors').insert({
-                assessment_id: assessmentId,
-                error_message: error instanceof Error ? error.message : String(error),
-                error_stack: error instanceof Error ? error.stack : undefined,
-                created_at: new Date().toISOString()
-            });
-        } catch (logError) {
-            // If we can't even log the error, just output to console as last resort
-            console.error(`Failed to log error to database:`, logError);
+        console.error(`Critical error or timeout in background processing for assessment ${assessmentId}:`, error);
+        // Attempt to log the error to a dedicated table
+        if (supabaseAdmin) {
+             try {
+                await supabaseAdmin.from('dna_validation_errors').insert({ // Ensure this table exists
+                    assessment_id: assessmentId,
+                    error_message: error instanceof Error ? error.message : String(error),
+                    error_stack: error instanceof Error ? error.stack : undefined,
+                    created_at: new Date().toISOString()
+                });
+            } catch (logError) {
+                console.error(`Failed to log error to database for assessment ${assessmentId}:`, logError);
+            }
         }
+    } finally {
+       clearTimeout(timeoutId); // Clean up the timer
     }
 }
 
-// Core validation logic extracted to separate function
+// Core validation logic
 async function processValidationCore(dnaResult: DnaAnalysisResult, assessmentId: string): Promise<void> {
-    // 2. Fetch Reference Data (Uses global client)
-    console.time("fetchReferenceData"); // Start timer
-    const [icons, books] = await Promise.all([
-        fetchIcons(),
-        fetchBooks()
-    ])
-    console.timeEnd("fetchReferenceData"); // End timer
+    // 1. Ensure Reference Data is Loaded (Uses module cache - Idea 4)
+    try {
+        await loadReferenceDataIfNeeded();
+    } catch (loadError) {
+        console.error(`Failed to load reference data for assessment ${assessmentId}, cannot proceed.`);
+        // Error is logged within loadReferenceDataIfNeeded, re-throw to report critical failure
+        throw new Error(`Reference data loading failed: ${loadError.message}`);
+    }
 
-    if (icons.length === 0 && books.length === 0) {
-         console.warn("No icon or book data available. Cannot perform matching.")
+    if (iconsList.length === 0 && booksList.length === 0) {
+         console.warn(`No icon or book reference data available for assessment ${assessmentId}. Cannot perform matching.`);
+         // Don't throw, just exit gracefully as there's nothing to match against.
          return;
     }
 
-    // 3. Extract Names
-    const { icons: extractedIcons, books: extractedBooks } = extractNamesFromDnaResult(dnaResult)
-    console.log(`Total extracted: ${extractedIcons.names.length} icons, ${extractedBooks.names.length} books`);
+    // 2. Extract Names from the input DNA result
+    const { icons: extractedIcons, books: extractedBooks } = extractNamesFromDnaResult(dnaResult);
 
-    const matchedResults: MatchResult[] = []
-    const unmatchedResults: UnmatchResult[] = []
+    const matchedResults: MatchResult[] = [];
+    const unmatchedResults: UnmatchResult[] = [];
 
-    // 4. Process Icons (Uses global client indirectly via findItemMatch)
-    console.time("processIcons");
-    if (icons.length > 0 && extractedIcons.names.length > 0) {
-        console.log(`\n-- Validating ${extractedIcons.names.length} Icons --`)
-        for (let i = 0; i < extractedIcons.names.length; i++) {
-            const name = extractedIcons.names[i]
-            const column = extractedIcons.columns[i]
-            console.log(` -> Validating Icon: '${name}' (from column: ${column})`)
-            // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
-            const match = await findItemMatch(name, icons, LLM_MATCH_BATCH_SIZE, 'icons')
-            if (match) {
+    // 3. Process Icons in Parallel (Idea 2)
+    console.time(`processIconsParallel_${assessmentId}`);
+    if (iconsList.length > 0 && extractedIcons.names.length > 0) {
+        console.log(`\n-- Validating ${extractedIcons.names.length} Icons in Parallel --`);
+        const iconMatchPromises = extractedIcons.names.map((name, index) =>
+            findItemMatch(
+                name,
+                iconsList, // Pass full list for LLM/previous check
+                iconsMap,  // Pass map for exact check
+                LLM_MATCH_BATCH_SIZE,
+                'icons'
+            ).then(match => ({ // Wrap result to keep track of original name/column
+                 match: match,
+                 originalName: name,
+                 originalColumn: extractedIcons.columns[index]
+            }))
+            // Add basic catch block per promise to prevent Promise.all from rejecting early
+            .catch(error => {
+                 console.error(`Error processing icon '${name}':`, error);
+                 return { match: null, originalName: name, originalColumn: extractedIcons.columns[index] };
+            })
+        );
+
+        // Wait for all icon matching attempts to settle
+        const iconProcessingResults = await Promise.all(iconMatchPromises);
+
+        // Process results after all promises complete
+        iconProcessingResults.forEach(result => {
+            if (result.match) {
                 matchedResults.push({
-                    assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
-                    dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
-                })
+                    assessment_id: assessmentId, type: 'icons', dna_analysis_column: result.originalColumn,
+                    dna_analysis_name: result.originalName, matched_name: result.match.name, matched_id: result.match.id,
+                });
             } else {
-                unmatchedResults.push({
-                    assessment_id: assessmentId, type: 'icons', dna_analysis_column: column,
-                    dna_analysis_name: name,
-                })
+                 if (result.originalName.trim()) { // Only add non-empty names to unmatched
+                    unmatchedResults.push({
+                        assessment_id: assessmentId, type: 'icons', dna_analysis_column: result.originalColumn,
+                        dna_analysis_name: result.originalName,
+                    });
+                 }
             }
-        }
+        });
     } else {
-         console.log("Skipping icon validation (no icons loaded or none extracted).")
+         console.log("Skipping icon validation (no icons loaded or none extracted).");
     }
-     console.timeEnd("processIcons");
+     console.timeEnd(`processIconsParallel_${assessmentId}`);
 
-    // 5. Process Books (Uses global client indirectly via findItemMatch)
-    console.time("processBooks");
-    if (books.length > 0 && extractedBooks.names.length > 0) {
-         console.log(`\n-- Validating ${extractedBooks.names.length} Books --`)
-        for (let i = 0; i < extractedBooks.names.length; i++) {
-            const name = extractedBooks.names[i]
-            const column = extractedBooks.columns[i]
-            console.log(` -> Validating Book: '${name}' (from column: ${column})`)
-             // Uses findItemMatch -> processNameWithBatchedItems -> findBestMatchLLM -> global openrouterApiKey
-            const match = await findItemMatch(name, books, LLM_MATCH_BATCH_SIZE, 'books')
-            if (match) {
-                matchedResults.push({
-                    assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
-                    dna_analysis_name: name, matched_name: match.name, matched_id: match.id,
-                })
-            } else {
-                unmatchedResults.push({
-                    assessment_id: assessmentId, type: 'books', dna_analysis_column: column,
-                    dna_analysis_name: name,
-                })
-            }
-        }
+    // 4. Process Books in Parallel (Idea 2)
+    console.time(`processBooksParallel_${assessmentId}`);
+    if (booksList.length > 0 && extractedBooks.names.length > 0) {
+        console.log(`\n-- Validating ${extractedBooks.names.length} Books in Parallel --`);
+        const bookMatchPromises = extractedBooks.names.map((name, index) =>
+             findItemMatch(
+                name,
+                booksList, // Pass full list
+                booksMap,  // Pass map
+                LLM_MATCH_BATCH_SIZE,
+                'books'
+             ).then(match => ({
+                 match: match,
+                 originalName: name,
+                 originalColumn: extractedBooks.columns[index]
+            }))
+            .catch(error => {
+                 console.error(`Error processing book '${name}':`, error);
+                 return { match: null, originalName: name, originalColumn: extractedBooks.columns[index] };
+            })
+        );
+
+        const bookProcessingResults = await Promise.all(bookMatchPromises);
+
+        bookProcessingResults.forEach(result => {
+             if (result.match) {
+                 matchedResults.push({
+                     assessment_id: assessmentId, type: 'books', dna_analysis_column: result.originalColumn,
+                     dna_analysis_name: result.originalName, matched_name: result.match.name, matched_id: result.match.id,
+                 });
+             } else {
+                 if (result.originalName.trim()) { // Only add non-empty names to unmatched
+                    unmatchedResults.push({
+                        assessment_id: assessmentId, type: 'books', dna_analysis_column: result.originalColumn,
+                        dna_analysis_name: result.originalName,
+                    });
+                 }
+             }
+         });
     } else {
-        console.log("Skipping book validation (no books loaded or none extracted).")
+         console.log("Skipping book validation (no books loaded or none extracted).");
     }
-    console.timeEnd("processBooks");
+    console.timeEnd(`processBooksParallel_${assessmentId}`);
 
-    // 6. Write Results (Uses global client)
-    console.time("writeResults");
-    console.log("\n--- Writing Results ---")
-    await Promise.all([
-         writeResultsToSupabase('dna_analysis_results_matched', matchedResults, SUPABASE_WRITE_BATCH_SIZE),
-         writeResultsToSupabase('dna_analysis_results_unmatched', unmatchedResults, SUPABASE_WRITE_BATCH_SIZE)
-    ])
-    console.timeEnd("writeResults");
+    // 5. Write Results
+    console.time(`writeResults_${assessmentId}`);
+    console.log("\n--- Writing Results ---");
+    // Run writes sequentially to potentially avoid overwhelming DB connection pool, though parallel could be slightly faster
+    await writeResultsToSupabase('dna_analysis_results_matched', matchedResults, SUPABASE_WRITE_BATCH_SIZE);
+    await writeResultsToSupabase('dna_analysis_results_unmatched', unmatchedResults, SUPABASE_WRITE_BATCH_SIZE);
+    // Alternatively, use Promise.all for parallel writes if DB handles it well:
+    // await Promise.all([
+    //      writeResultsToSupabase('dna_analysis_results_matched', matchedResults, SUPABASE_WRITE_BATCH_SIZE),
+    //      writeResultsToSupabase('dna_analysis_results_unmatched', unmatchedResults, SUPABASE_WRITE_BATCH_SIZE)
+    // ]);
+    console.timeEnd(`writeResults_${assessmentId}`);
 
-    console.log(`--- Processing Complete for Assessment ID: ${assessmentId} ---`)
-    console.log(`Matches Found: ${matchedResults.length}`)
-    console.log(`Unmatched Items: ${unmatchedResults.length}`)
+    console.log(`--- Processing Complete for Assessment ID: ${assessmentId} ---`);
+    console.log(`Matches Found: ${matchedResults.length}`);
+    console.log(`Unmatched Items: ${unmatchedResults.length}`);
 }
 
-/*a
-Reminder: Ensure you have a _shared/cors.ts file like this in the parent directory:
-// supabase/functions/_shared/cors.ts
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Or restrict to your frontend domain
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+/*
+Reminder:
+1. Ensure you have a _shared/cors.ts file.
+2. Ensure the table `dna_validation_errors` exists in Supabase if you want error logging:
+   CREATE TABLE public.dna_validation_errors (
+       id bigint generated by default as identity primary key,
+       assessment_id uuid references public.dna_analysis_results(id) on delete cascade,
+       error_message text,
+       error_stack text,
+       created_at timestamp with time zone default timezone('utc'::text, now()) not null
+   );
+   ALTER TABLE public.dna_validation_errors ENABLE ROW LEVEL SECURITY;
+   -- Add appropriate RLS policies or ensure service role key bypasses RLS.
+3. Ensure your `dna_analysis_results` table schema matches the fields used in `extractNamesFromDnaResult`.
+4. Set environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENROUTER_API_KEY.
+5. Configure the Database Webhook on the `dna_analysis_results` table for INSERT events, pointing to this function.
 */
