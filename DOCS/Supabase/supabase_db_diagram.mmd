@@ -165,6 +165,26 @@ erDiagram
         dna_result_type analysis_type
     }
     
+    dna_analysis_results_matched {
+        uuid id PK
+        uuid assessment_id FK
+        text type
+        text dna_analysis_column
+        text dna_analysis_name
+        text matched_name
+        uuid matched_id
+        timestamp created_at
+    }
+    
+    dna_analysis_results_unmatched {
+        uuid id PK
+        uuid assessment_id FK
+        text type
+        text dna_analysis_column
+        text dna_analysis_name
+        timestamp created_at
+    }
+    
     dna_tree_structure {
         uuid id PK
         uuid question_id FK
@@ -287,3 +307,5 @@ erDiagram
     dna_assessment_results ||--o{ dna_conversations : "belongs_to"
     profiles }|--o{ custom_domains : "owns"
     dna_assessment_results ||--|| profiles : "associated_with"
+    dna_analysis_results ||--o{ dna_analysis_results_matched : "has_matches"
+    dna_analysis_results ||--o{ dna_analysis_results_unmatched : "has_unmatched"
