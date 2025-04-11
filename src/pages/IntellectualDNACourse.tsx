@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
+import { getThinkerImageByParams } from "@/utils/thinkerImages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ const IntellectualDNACourse: React.FC = () => {
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>({});
+  const [resourceImages, setResourceImages] = useState<Record<string, string>>({});
   
   const domains = [
     {
@@ -266,13 +268,49 @@ const IntellectualDNACourse: React.FC = () => {
     }
   };
   
-  // Helper function to get icon URL for a philosopher
-  const getIconUrl = (dbId: string | null): string | null => {
-    if (!dbId) return "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
-    
-    return "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"; // Default fallback
+  // Replace getIconUrl with using cached images
+  const getIconUrl = (domainId: string, tabType: "kindred" | "challenging", index: number): string => {
+    const imageKey = `${domainId}_${tabType}_${index}`;
+    return resourceImages[imageKey] || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
   };
   
+  // Add function to load all images
+  const loadResourceImages = async () => {
+    if (!domainAnalysis || !domainAnalysis.assessment_id) return;
+    
+    try {
+      const newImages: Record<string, string> = {};
+      
+      // Load images for all domains and both types
+      for (const domain of domains) {
+        for (const type of ['kindred', 'challenging'] as const) {
+          for (let i = 1; i <= 5; i++) {
+            const key = `${domain.id}_${type}_${i}`;
+            const imageUrl = await getThinkerImageByParams(
+              domainAnalysis.assessment_id,
+              domain.id,
+              type,
+              i
+            );
+            newImages[key] = imageUrl;
+          }
+        }
+      }
+      
+      setResourceImages(newImages);
+    } catch (err) {
+      console.error('Error loading resource images:', err);
+    }
+  };
+  
+  // Load images when domainAnalysis is available
+  useEffect(() => {
+    if (!isLoading && domainAnalysis && domainAnalysis.assessment_id) {
+      loadResourceImages();
+    }
+  }, [isLoading, domainAnalysis]);
+  
+  // Update getResourcesForTab to use cached images
   const getResourcesForTab = (domainId: string, tab: "kindred" | "challenging") => {
     if (isLoading || !domainAnalysis) {
       return Array(5).fill({
@@ -311,16 +349,18 @@ const IntellectualDNACourse: React.FC = () => {
       const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
       const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
-      const dbId = domainAnalysis[dbIdKey as keyof DNAAnalysisResult];
       
       let status = "locked";
       if (i === 1) status = "completed";
       else if (i === 2) status = "active";
       else status = "locked";
       
+      // Use the cached image
+      const image = getIconUrl(domainId, tab, i);
+      
       resources.push({
         id: `resource-${i}`,
-        image: getIconUrl(dbId as string) || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
+        image,
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
         description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,

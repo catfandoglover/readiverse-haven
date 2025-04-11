@@ -131,8 +131,23 @@ const BadgeInfoPage: React.FC = () => {
             Why Exams?
           </h1>
           <p className="font-libre-baskerville text-[#E9E7E2]/80 text-sm mt-1">
-            Exams with Virgil help you understand the depth of your knowledge across various domains of philosophy. Each badge represents a level of comprehension, from recognition to transformation, illustrating your journey through philosophical understanding and mastery.
+            Challenges are powerful learning tools that consolidate knowledge through retrieval practice. Remarkably, taking assessments <em><strong>before</strong></em> learning new material pre-trains and wires the brain to better recognize important concepts—it's like magic! 
           </p>
+          <p className="font-libre-baskerville text-[#E9E7E2]/80 text-sm mt-2">
+            Unfortunately, contemporary education has transformed these experiences into anxiety-inducing measurements that sort rather than support. Our approach reclaims exams as opportunities that leverage the brain's natural learning mechanisms, turning assessment into a catalyst for deeper learning.
+          </p>
+          
+          {/* Simple signature */}
+          <div className="mb-2 mt-1">
+            <img 
+              src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Alex%20signature-Picsart-BackgroundRemover.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0FsZXggc2lnbmF0dXJlLVBpY3NhcnQtQmFja2dyb3VuZFJlbW92ZXIucG5nIiwiaWF0IjoxNzQ0MzM2NDgzLCJleHAiOjI2MDgyNTAwODN9._wv00tIBnMNzKoFab4dmEOmC-ihHrcOoP6PFSw36I5A" 
+              alt="Signature" 
+              className="h-[134px]"
+            />
+            <p className="font-libre-baskerville text-[#E9E7E2]/90 text-sm mt-1">
+              Alex Jakubowski, Lightning COO
+            </p>
+          </div>
         </div>
       </div>
     </div>

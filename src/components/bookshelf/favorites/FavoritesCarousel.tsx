@@ -3,9 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious
+  CarouselItem
 } from "@/components/ui/carousel";
 import { useNavigate } from "react-router-dom";
 
@@ -84,8 +82,6 @@ const FavoritesCarousel: React.FC<FavoritesCarouselProps> = ({
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex -left-2" />
-      <CarouselNext className="hidden md:flex -right-2" />
     </Carousel>
   );
 };

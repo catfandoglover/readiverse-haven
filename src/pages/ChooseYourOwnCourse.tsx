@@ -19,6 +19,7 @@ interface ContentItem {
   illustration?: string;
   about?: string | null;
   icon_illustration?: string;
+  one_line?: string;
 }
 
 const ChooseYourOwnCourse: React.FC = () => {
@@ -107,7 +108,7 @@ const ChooseYourOwnCourse: React.FC = () => {
     
     const { data, error } = await supabase
       .from('icons')
-      .select('id, name, illustration, about')
+      .select('id, name, illustration, about, one_line')
       .order('randomizer', { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1);
     
@@ -118,7 +119,8 @@ const ChooseYourOwnCourse: React.FC = () => {
         id: icon.id,
         title: icon.name,
         illustration: icon.illustration,
-        about: icon.about
+        about: icon.about,
+        one_line: icon.one_line
       }));
       
       if (loadMore) {
@@ -138,7 +140,7 @@ const ChooseYourOwnCourse: React.FC = () => {
     
     const { data, error } = await supabase
       .from('concepts')
-      .select('id, title, illustration, about')
+      .select('id, title, illustration, about, one_line')
       .order('randomizer', { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1);
     
@@ -253,11 +255,15 @@ const ChooseYourOwnCourse: React.FC = () => {
           <h3 className="text-[#E9E7E2] font-baskerville text-base truncate">
             {item.title || item.name}
           </h3>
-          {item.author && (
+          {item.author ? (
             <p className="text-[#E9E7E2]/70 text-sm truncate">
               {item.author}
             </p>
-          )}
+          ) : item.one_line ? (
+            <p className="text-[#E9E7E2]/70 text-sm truncate">
+              {item.one_line}
+            </p>
+          ) : null}
         </div>
         
         {(type === "book" && item.cover_url) ? (
@@ -472,7 +478,7 @@ const ChooseYourOwnCourse: React.FC = () => {
                           </div>
                           <div>
                             <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{item.title}</h3>
-                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Icon</p>
+                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{item.one_line}</p>
                           </div>
                         </div>
                         
@@ -529,7 +535,7 @@ const ChooseYourOwnCourse: React.FC = () => {
                           </div>
                           <div>
                             <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{item.title}</h3>
-                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Concept</p>
+                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{item.one_line}</p>
                           </div>
                         </div>
                         

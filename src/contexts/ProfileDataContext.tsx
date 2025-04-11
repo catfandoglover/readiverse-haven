@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getMatchedThinkerImage } from '@/utils/thinkerImages';
 
 // Default fallback for icon images
 const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzNjI4OTkwLCJleHAiOjg2NTc0MzU0MjU5MH0.iC8ooiUUENlvy-6ZtRexi_3jIJS5lBy2Y5FnUM82p9o";
@@ -139,44 +140,72 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
     }
     
     async function fetchThinkerIcons(dnaData: any) {
-      if (!dnaData) return;
+      if (!dnaData || !dnaData.assessment_id) return;
       
-      const thinkerNames = [];
-      
-      if (dnaData.most_kindred_spirit) {
-        const name = dnaData.most_kindred_spirit.split(' - ')[0].trim();
-        thinkerNames.push(name);
-      }
-      
-      if (dnaData.most_challenging_voice) {
-        const name = dnaData.most_challenging_voice.split(' - ')[0].trim();
-        thinkerNames.push(name);
-      }
-      
-      // Fetch icons for all thinker names at once
-      if (thinkerNames.length > 0) {
-        const orConditions = thinkerNames.map(name => `name.ilike.%${name}%`).join(',');
+      try {
+        const iconMap: Record<string, string> = {};
         
-        const { data, error } = await supabase
-          .from('icons')
-          .select('name, illustration')
-          .or(orConditions);
+        // Process most kindred spirit
+        if (dnaData.most_kindred_spirit) {
+          const name = dnaData.most_kindred_spirit.split(' - ')[0].trim();
+          // Determine field name from most_kindred_spirit_field if available
+          const fieldName = dnaData.most_kindred_spirit_field || '';
           
-        if (!error && data) {
-          const iconMap: Record<string, string> = {};
-          
-          // Build map of thinker name to icon URL
-          data.forEach(icon => {
-            thinkerNames.forEach(name => {
-              if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
-                  name.toLowerCase().includes(icon.name.toLowerCase())) {
-                iconMap[name] = icon.illustration;
-              }
-            });
-          });
-          
-          setThinkerIcons(iconMap);
+          if (fieldName) {
+            const imageUrl = await getMatchedThinkerImage(dnaData.assessment_id, fieldName);
+            iconMap[name] = imageUrl;
+          } else {
+            // Fallback to traditional search
+            const orConditions = `name.ilike.%${name}%`;
+            
+            const { data, error } = await supabase
+              .from('icons')
+              .select('name, illustration')
+              .or(orConditions);
+              
+            if (!error && data && data.length > 0) {
+              data.forEach(icon => {
+                if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
+                    name.toLowerCase().includes(icon.name.toLowerCase())) {
+                  iconMap[name] = icon.illustration;
+                }
+              });
+            }
+          }
         }
+        
+        // Process most challenging voice
+        if (dnaData.most_challenging_voice) {
+          const name = dnaData.most_challenging_voice.split(' - ')[0].trim();
+          // Determine field name from most_challenging_voice_field if available
+          const fieldName = dnaData.most_challenging_voice_field || '';
+          
+          if (fieldName) {
+            const imageUrl = await getMatchedThinkerImage(dnaData.assessment_id, fieldName);
+            iconMap[name] = imageUrl;
+          } else {
+            // Fallback to traditional search
+            const orConditions = `name.ilike.%${name}%`;
+            
+            const { data, error } = await supabase
+              .from('icons')
+              .select('name, illustration')
+              .or(orConditions);
+              
+            if (!error && data && data.length > 0) {
+              data.forEach(icon => {
+                if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
+                    name.toLowerCase().includes(icon.name.toLowerCase())) {
+                  iconMap[name] = icon.illustration;
+                }
+              });
+            }
+          }
+        }
+        
+        setThinkerIcons(iconMap);
+      } catch (err) {
+        console.error('Error fetching thinker icons:', err);
       }
     }
 
