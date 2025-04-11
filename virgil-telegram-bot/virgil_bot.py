@@ -7,6 +7,15 @@ import httpx
 from typing import Dict, Any, List, Optional
 import json
 
+try:
+    from openai import OpenAI
+except ImportError:
+    print("OpenAI package not found. Installing it now...")
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "openai"])
+    from openai import OpenAI
+
 # Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -159,13 +168,6 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
     Returns:
         Claude's response
     """
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://readiverse-haven.com",  # Site URL for rankings
-        "X-Title": "Virgil_readbot"  # Site title for rankings
-    }
-    
     # Log the API key being used (just the first and last few characters for security)
     key_preview = f"{OPENROUTER_API_KEY[:5]}...{OPENROUTER_API_KEY[-5:]}"
     logger.info(f"Using OpenRouter API key: {key_preview}")
@@ -227,36 +229,62 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
         messages.extend(conversation_context[-10:])
     
     # Add the new content as user message
-    user_content = ""
-    if context_text:
-        user_content += f"{context_text}\n\n"
+    full_prompt = f"{context_text}\n\nUser: {prompt}" if context_text else f"User: {prompt}"
+    messages.append({"role": "user", "content": full_prompt})
     
-    user_content += f"User: {prompt}"
-    messages.append({"role": "user", "content": user_content})
-    
-    # Prepare the request payload
-    payload = {
-        "model": "anthropic/claude-3.7-sonnet",  # Updated to Claude 3.7 Sonnet
-        "messages": messages,
-        "max_tokens": 1000
-    }
-    
+    # Method 1: Using fetch (like analyze-dna edge function)
     try:
+        logger.info("Attempting to call OpenRouter API using direct HTTP request")
+        
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
-                headers=headers,
-                json=payload,
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY.strip()}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://readiverse-haven.com",
+                    "X-Title": "Virgil_readbot"
+                },
+                json={
+                    "model": "anthropic/claude-3-5-sonnet-20240620",  # Using Claude 3.5 which might be more reliable
+                    "messages": messages,
+                    "max_tokens": 1000,
+                    "temperature": 0.7
+                },
                 timeout=60.0
             )
             
-            response.raise_for_status()
-            result = response.json()
+            if response.status_code != 200:
+                logger.error(f"HTTP request failed with status {response.status_code}: {response.text}")
+                
+                # Try Method 2 if Method 1 fails
+                logger.info("Attempting to call OpenRouter API using OpenAI client")
+                client = OpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=OPENROUTER_API_KEY.strip(),
+                )
+                
+                completion = client.chat.completions.create(
+                    extra_headers={
+                        "HTTP-Referer": "https://readiverse-haven.com",
+                        "X-Title": "Virgil_readbot",
+                    },
+                    model="anthropic/claude-3-5-sonnet-20240620",
+                    messages=[msg for msg in messages],
+                    max_tokens=1000,
+                    temperature=0.7
+                )
+                
+                return completion.choices[0].message.content
             
-            return result.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
+            result = response.json()
+            response_content = result.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
+            logger.info(f"Received response from OpenRouter API: {response_content[:100]}...")
+            
+            return response_content
     
     except Exception as e:
-        logger.error(f"Error querying Claude: {str(e)}")
+        logger.error(f"Error querying Claude: {str(e)}", exc_info=True)
         return f"Sorry, I encountered an error when trying to process your question: {str(e)}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
