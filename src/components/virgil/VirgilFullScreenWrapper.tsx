@@ -6,7 +6,8 @@ import { virgilConfig } from '@/config/virgilConfig';
 // Assume a UI component exists for rendering the chat
 import VirgilChatUI from './VirgilChatUI'; // Adjust path if necessary
 import { VirgilInstanceType } from '@/types/virgil';
-import { fetchPromptByPurposeOrId } from '@/utils/promptUtils'; // Assume a utility exists to fetch prompts
+// Remove unused import for promptUtils
+// import { fetchPromptByPurposeOrId } from '@/utils/promptUtils'; 
 import LoadingSpinner from '@/components/common/LoadingSpinner'; // Assume a loading component
 
 interface VirgilFullScreenWrapperProps {

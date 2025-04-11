@@ -1,3 +1,7 @@
+
+
+
+
 <!-- commit 1d29e531c1645f1dd72a860a48861d78d34e171b.  <!-- Both ConversationManager.ts and ServicesContext.tsx are now updated to use the generated Supabase types. -->
  -->
 

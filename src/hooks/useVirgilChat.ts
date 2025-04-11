@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatMessage } from '@/types/virgil'; // Base type { role, content }
+// Base type for DB { role, content }
+import { ChatMessage as DbChatMessage } from '@/types/virgil';
+// Type expected by AIService and used internally by this hook
+import { ChatMessage as AIChatMessage } from '@/types/chat';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import audioTranscriptionService from '@/services/AudioTranscriptionService';
@@ -9,11 +12,8 @@ import { useServices } from '@/contexts/ServicesContext';
 import { toast } from 'sonner';
 import { Database } from '@/types/supabase'; // Import Database type for table names
 
-// Internal type for UI state, extending the base DB type
-type UIMessage = ChatMessage & {
-  id: string;
-  audioUrl?: string;
-};
+// Internal type for UI state matches AIChatMessage from chat.d.ts
+type UIMessage = AIChatMessage;
 
 // Type for the conversation table names from generated types
 type ConversationTableName = keyof Database['public']['Tables'];
@@ -28,8 +28,8 @@ interface UseVirgilChatProps {
   isResumable?: boolean;
 }
 
-// Helper function to strip UI-specific fields for saving/sending to AI
-const mapToDbMessages = (uiMessages: UIMessage[]): ChatMessage[] => {
+// Helper function to strip UI/AI-specific fields for saving to DB
+const mapToDbMessages = (uiMessages: UIMessage[]): DbChatMessage[] => {
   return uiMessages.map(({ role, content }) => ({ role, content }));
 };
 
@@ -43,7 +43,7 @@ export const useVirgilChat = ({
   isResumable = true,
 }: UseVirgilChatProps) => {
   const { aiService, conversationManager } = useServices();
-  // Use the internal UIMessage type for state
+  // Use the UIMessage type (same as AIChatMessage) for state
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -69,21 +69,28 @@ export const useVirgilChat = ({
           // TODO: (Low Priority) Implement fetch by specific ID
         } else if (isResumable) {
           const { data: existingConvo, error } = await conversationManager.fetchConversation(
-            validStorageTable, // Use casted table name
+            validStorageTable,
             userId,
             contextIdentifiers
           );
           if (error) {
             toast.error('Error loading previous conversation history.');
-          } else if (existingConvo?.messages) {
-            // Map messages from DB structure (ChatMessage) to state structure (UIMessage)
-            loadedMessages = existingConvo.messages.map((dbMsg) => ({
+          } else if (
+            existingConvo &&
+            // Type guard: Check if messages property exists and is an array
+            'messages' in existingConvo && 
+            Array.isArray(existingConvo.messages) &&
+            // Check if id property exists (should exist on all table rows)
+            'id' in existingConvo &&
+            typeof existingConvo.id === 'string' // Ensure id is a string
+          ) {
+            // Now safe to access messages and id
+            loadedMessages = existingConvo.messages.map((dbMsg: DbChatMessage) => ({
               ...dbMsg,
-              id: uuidv4(), // Generate an ID for the state
-              // audioUrl is added later if needed
+              id: uuidv4(),
             }));
             loadedConversationId = existingConvo.id;
-          }
+          } // else: No valid existing conversation found
         }
 
         if (loadedMessages.length === 0 && initialMessageOverride) {
@@ -134,8 +141,6 @@ export const useVirgilChat = ({
 
   const saveConversation = useCallback(async (currentUIMessages: UIMessage[]) => {
     if (!conversationManager || !userId || currentUIMessages.length === 0) return;
-
-    // Map UIMessages back to basic ChatMessages for saving
     const messagesToSave = mapToDbMessages(currentUIMessages);
     
     try {
@@ -148,14 +153,18 @@ export const useVirgilChat = ({
         if (error) throw error;
       } else {
         const { data: newConvo, error } = await conversationManager.createConversation(
-          validStorageTable, // Use casted table name
+          validStorageTable,
           userId,
           messagesToSave,
           contextIdentifiers
         );
         if (error) throw error;
-        if (newConvo) {
+        // Type guard: Check if newConvo and its id exist before setting state
+        if (newConvo && 'id' in newConvo && typeof newConvo.id === 'string') {
           setCurrentConversationId(newConvo.id);
+        } else {
+          console.error('Created conversation data is missing an ID:', newConvo);
+          toast.error('Error saving conversation: Invalid data received.');
         }
       }
     } catch (error) {
@@ -186,8 +195,8 @@ export const useVirgilChat = ({
     setMessages(prev => [...prev, thinkingMessage]);
 
     try {
-      // Map to base ChatMessage[] for AI Service
-      const responseText = await aiService.generateResponse(systemPrompt, mapToDbMessages(messagesWithUser));
+      // Pass UIMessage[] (AIChatMessage[]) directly to AI Service
+      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
 
       const assistantMessage: UIMessage = { // Use UIMessage
         id: thinkingMessage.id,
@@ -234,8 +243,8 @@ export const useVirgilChat = ({
     setMessages(prev => [...prev, thinkingMessage]);
 
     try {
-      // Map to base ChatMessage[] for AI Service
-      const responseText = await aiService.generateResponse(systemPrompt, mapToDbMessages(messagesWithUser));
+      // Pass UIMessage[] (AIChatMessage[]) directly to AI Service
+      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
 
       const assistantMessage: UIMessage = { // Use UIMessage
         id: thinkingMessage.id,
@@ -260,19 +269,19 @@ export const useVirgilChat = ({
     }
   }, [aiService, messages, systemPrompt, isProcessing, userId, saveConversation, generateAudioForText]);
 
-  // --- Recording Logic --- 
-  const recordingRef = useRef<MediaRecorder | null>(null);
+  // --- Recording Logic ---
+  const recordingRef = useRef<MediaRecorder | null>(null); // Keep ref for potential internal use by service?
   const audioChunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
     if (isRecording) return;
     try {
-      stopAllAudio(); // Stop any Virgil speech
-      recordingRef.current = await audioRecordingService.startRecording((chunk) => {
-        audioChunksRef.current.push(chunk);
-      });
+      stopAllAudio();
+      // Don't assign the result to recordingRef.current
+      await audioRecordingService.startRecording(); 
+      // Assume the service manages the instance internally for stop/cancel
       setIsRecording(true);
-      audioChunksRef.current = []; // Clear previous chunks
+      audioChunksRef.current = [];
     } catch (error) {
       console.error('Error starting recording:', error);
       toast.error('Failed to start recording. Check microphone permissions.');
@@ -280,22 +289,20 @@ export const useVirgilChat = ({
   };
 
   const stopRecording = async () => {
-    if (!isRecording || !recordingRef.current) return;
+    if (!isRecording) return; // Check isRecording, not ref
     try {
-      const audioBlob = await audioRecordingService.stopRecording(recordingRef.current);
-      recordingRef.current = null;
-      setIsRecording(false);
-      setIsProcessing(true); // Indicate processing starts (transcription)
+      // Call stopRecording without the ref instance
+      const audioBlob = await audioRecordingService.stopRecording();
+      setIsRecording(false); // Set recording false *before* processing
+      setIsProcessing(true);
 
       if (audioBlob && audioBlob.size > 0) {
         const blobUrl = URL.createObjectURL(audioBlob);
-        // Transcribe the audio
         const transcriptionResult = await audioTranscriptionService.transcribeAudio(audioBlob);
         if (transcriptionResult) {
-          // Process the transcribed text, passing the blob URL
           await processTranscribedAudio(transcriptionResult, blobUrl);
         } else {
-          toast.error('Transcription failed. Please try speaking again.');
+          toast.error('Transcription failed.');
           setIsProcessing(false);
         }
       } else {
@@ -307,33 +314,31 @@ export const useVirgilChat = ({
       toast.error('Failed to process recording.');
       setIsProcessing(false);
     } finally {
-       // Reset state regardless of transcription success/failure
-       audioChunksRef.current = [];
-       recordingRef.current = null; 
-       // setIsProcessing(false); // Already handled in success/error paths
+      audioChunksRef.current = [];
+      // Don't nullify ref here as we don't manage it directly
     }
   };
 
-  // Cancel recording
   const cancelRecording = () => {
-    if (isRecording && recordingRef.current) {
-      audioRecordingService.cancelRecording(recordingRef.current);
-      recordingRef.current = null;
+    if (isRecording) { // Check isRecording state
+      // Call cancelRecording without the ref instance
+      audioRecordingService.cancelRecording();
       setIsRecording(false);
       audioChunksRef.current = [];
       toast.info('Recording cancelled.');
     }
   };
 
-  // Cleanup effect
   useEffect(() => {
     return () => {
-      if (recordingRef.current) {
-        audioRecordingService.cancelRecording(recordingRef.current);
+      // If still recording on unmount, try cancelling
+      if (isRecording) {
+         audioRecordingService.cancelRecording();
       }
       stopAllAudio();
     };
-  }, []);
+  // Add isRecording to dependency array if cancel logic depends on it
+  }, [isRecording]); 
 
   // Handle text input submit
   const handleSubmitMessage = (e: React.FormEvent) => {

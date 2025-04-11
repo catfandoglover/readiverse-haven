@@ -1,6 +1,6 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 // Import the Database type from the generated file
-import { Database } from '@/types/supabase';
+import { Database, Json } from '@/types/supabase';
 
 // Assuming ChatMessage structure based on PRD FR4.2
 export interface ChatMessage {
@@ -53,11 +53,11 @@ export class ConversationManager {
    * @param contextIdentifiers An object containing key-value pairs to match (e.g., { book_id: 'xyz' }, { course_id: 'abc' }).
    * @returns The conversation object or null if not found, or throws an error.
    */
-  async fetchConversation<T extends ConversationBase>(
-    tableName: keyof Database['public']['Tables'], // Use keyof for table name safety
+  async fetchConversation(
+    tableName: keyof Database['public']['Tables'],
     userId: string,
     contextIdentifiers: Record<string, any>
-  ): Promise<{ data: T | null; error: Error | null }> {
+  ): Promise<{ data: Database['public']['Tables'][typeof tableName]['Row'] | null; error: Error | null }> {
     let query = this.supabase
       .from(tableName)
       .select('*')
@@ -70,10 +70,11 @@ export class ConversationManager {
     const { data, error } = await query.limit(1).maybeSingle();
 
     if (error) {
-      console.error(`Error fetching conversation from ${String(tableName)}:`, error); // Cast tableName for logging
+      console.error(`Error fetching conversation from ${String(tableName)}:`, error);
+      return { data: null, error: new Error(error.message) };
     }
-    // Cast to T. Consider validation if T needs stricter checking than inferred Supabase row type.
-    return { data: data as T | null, error: error ? new Error(error.message) : null };
+    // Return the data directly, type inferred from Database schema
+    return { data, error: null };
   }
 
   /**
@@ -86,14 +87,14 @@ export class ConversationManager {
    * @param ascending Order direction. Defaults to false (descending).
    * @returns An array of partial conversation objects or throws an error.
    */
-  async fetchConversationList<T extends Partial<ConversationBase>>(
-    tableName: keyof Database['public']['Tables'], // Use keyof for table name safety
+  async fetchConversationList(
+    tableName: keyof Database['public']['Tables'],
     userId: string,
     selectFields: string = 'id, updated_at, last_message_preview',
     limit: number = 50,
     orderBy: string = 'updated_at',
     ascending: boolean = false
-  ): Promise<{ data: T[] | null; error: Error | null }> {
+  ): Promise<{ data: any[] | null; error: Error | null }> {
     const { data, error } = await this.supabase
       .from(tableName)
       .select(selectFields)
@@ -102,10 +103,11 @@ export class ConversationManager {
       .limit(limit);
 
     if (error) {
-      console.error(`Error fetching conversation list from ${String(tableName)}:`, error); // Cast tableName for logging
+      console.error(`Error fetching conversation list from ${String(tableName)}:`, error);
+      return { data: null, error: new Error(error.message) };
     }
-    // Cast to T[]. Consider validation.
-    return { data: data as T[] | null, error: error ? new Error(error.message) : null };
+    // Caller might need to type assert the returned data array
+    return { data, error: null };
   }
 
   /**
@@ -116,21 +118,21 @@ export class ConversationManager {
    * @param metadata An object containing additional fields specific to the table (e.g., { book_id: 'xyz', prompt_id: '123' }).
    * @returns The newly created conversation object or throws an error.
    */
-  async createConversation<T extends ConversationBase>(
-    tableName: keyof Database['public']['Tables'], // Use keyof for table name safety
+  async createConversation(
+    tableName: keyof Database['public']['Tables'],
     userId: string,
     initialMessages: ChatMessage[],
     metadata: Record<string, any>
-  ): Promise<{ data: T | null; error: Error | null }> {
+  ): Promise<{ data: Database['public']['Tables'][typeof tableName]['Row'] | null; error: Error | null }> {
     const now = new Date().toISOString();
     const last_message_preview = this.getLastMessagePreview(initialMessages);
 
-    // Infer Insert type from Database
     type TableInsert = Database['public']['Tables'][typeof tableName]['Insert'];
 
     const newConversationData: TableInsert = {
       user_id: userId,
-      messages: initialMessages,
+      // Cast messages to suitable Json type (e.g., unknown[] or Json)
+      messages: initialMessages as unknown as Json,
       created_at: now,
       updated_at: now,
       last_message_preview: last_message_preview,
@@ -144,10 +146,10 @@ export class ConversationManager {
       .single();
 
     if (error) {
-      console.error(`Error creating conversation in ${String(tableName)}:`, error); // Cast tableName for logging
+      console.error(`Error creating conversation in ${String(tableName)}:`, error);
+      return { data: null, error: new Error(error.message) };
     }
-    // Cast to T. Consider validation.
-    return { data: data as T | null, error: error ? new Error(error.message) : null };
+    return { data, error: null };
   }
 
   /**
@@ -157,24 +159,28 @@ export class ConversationManager {
    * @param updates An object containing fields to update. Must include `messages` array. Can include others like `status`, `progress_percentage`.
    * @returns The updated conversation object or throws an error.
    */
-  async updateConversation<T extends ConversationBase>(
-    tableName: keyof Database['public']['Tables'], // Use keyof for table name safety
+  async updateConversation(
+    tableName: keyof Database['public']['Tables'],
     conversationId: string,
     updates: { messages: ChatMessage[] } & Record<string, any>
-  ): Promise<{ data: T | null; error: Error | null }> {
+  ): Promise<{ data: Database['public']['Tables'][typeof tableName]['Row'] | null; error: Error | null }> {
 
-    if (!updates.messages) {
-         console.warn(`Updating conversation ${conversationId} in ${String(tableName)} without providing 'messages' array.`);
-    }
-
-    // Infer Update type from Database
-    type TableUpdate = Database['public']['Tables'][typeof tableName]['Update'];
-
-    const updatePayload: TableUpdate = {
+    const updatePayload: Partial<Database['public']['Tables'][typeof tableName]['Update']> = {
       ...updates,
+      // Cast messages to suitable Json type
+      messages: updates.messages as unknown as Json,
       updated_at: new Date().toISOString(),
-      last_message_preview: this.getLastMessagePreview(updates.messages || []),
     };
+
+    // Only add last_message_preview if the messages array is actually provided
+    if (updates.messages) {
+      updatePayload.last_message_preview = this.getLastMessagePreview(updates.messages);
+    } else {
+         console.warn(`Updating conversation ${conversationId} in ${String(tableName)} without providing 'messages' array.`);
+         // Remove preview if messages aren't being updated? Or leave as is?
+         // For now, we don't set it if messages are absent in the update.
+         delete updatePayload.last_message_preview;
+    }
 
     const { data, error } = await this.supabase
       .from(tableName)
@@ -184,10 +190,10 @@ export class ConversationManager {
       .single();
 
     if (error) {
-      console.error(`Error updating conversation ${conversationId} in ${String(tableName)}:`, error); // Cast tableName for logging
+      console.error(`Error updating conversation ${conversationId} in ${String(tableName)}:`, error);
+       return { data: null, error: new Error(error.message) };
     }
-    // Cast to T. Consider validation.
-    return { data: data as T | null, error: error ? new Error(error.message) : null };
+    return { data, error: null };
   }
 
   /**
@@ -198,35 +204,19 @@ export class ConversationManager {
    * @returns PostgrestError or null if successful.
    */
   async deleteConversation(
-    tableName: keyof Database['public']['Tables'], // Use keyof for table name safety
+    tableName: keyof Database['public']['Tables'],
     conversationId: string,
-    userId: string // Keep userId param for potential future checks, though RLS handles primary auth
+    userId: string
   ): Promise<{ error: Error | null }> {
-
-     // Basic check to prevent accidental deletion if userId doesn't match, although RLS is the main guard
-     // const { data: checkData, error: checkError } = await this.supabase
-     //    .from(tableName)
-     //    .select('id')
-     //    .eq('id', conversationId)
-     //    .eq('user_id', userId)
-     //    .maybeSingle();
-     //
-     // if (checkError || !checkData) {
-     //     console.error(`Pre-delete check failed or conversation ${conversationId} not found/owned by user ${userId} in ${tableName}.`, checkError);
-     //     return { error: checkError ?? { message: "Conversation not found or access denied.", details: "", hint:"", code: "404" } };
-     // }
-
-
     const { error } = await this.supabase
       .from(tableName)
       .delete()
       .eq('id', conversationId);
-      // RLS policy should enforce ownership based on auth.uid() matching user_id column
 
     if (error) {
-      console.error(`Error deleting conversation ${conversationId} from ${String(tableName)}:`, error); // Cast tableName for logging
+      console.error(`Error deleting conversation ${conversationId} from ${String(tableName)}:`, error);
+      return { error: new Error(error.message) };
     }
-
-     return { error: error ? new Error(error.message) : null };
+     return { error: null };
   }
 }
