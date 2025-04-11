@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import { useProfileData } from "@/contexts/ProfileDataContext";
+import { getThinkerImageByParams } from "@/utils/thinkerImages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ const BecomeWhoYouAre: React.FC = () => {
   const { user } = useAuth();
   const { dnaAnalysisData, isLoading, getIconByName } = useProfileData();
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
+  const [resourceImages, setResourceImages] = useState<Record<string, string>>({});
   
   const domains = [
     {
@@ -104,17 +106,49 @@ const BecomeWhoYouAre: React.FC = () => {
     }
   };
   
-  const getIconUrl = (dbId: string | null): string | null => {
-    if (!dbId) return "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0MjMzMDMwLCJleHAiOjg4MTQ0MTQ2NjMwfQ.rVgAMWNvwuJiEYBf1bUO51iQSH7pcm5YrjMcuJ7BcO8";
-    
-    return "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png"; // Default fallback
+  const getIconUrl = (domainId: string, tabType: "kindred" | "challenging", index: number): string => {
+    const imageKey = `${domainId}_${tabType}_${index}`;
+    return resourceImages[imageKey] || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
   };
+  
+  const loadResourceImages = async () => {
+    if (!dnaAnalysisData || !dnaAnalysisData.assessment_id) return;
+    
+    try {
+      const newImages: Record<string, string> = {};
+      
+      for (const domain of domains) {
+        for (const type of ['kindred', 'challenging'] as const) {
+          for (let i = 1; i <= 5; i++) {
+            const key = `${domain.id}_${type}_${i}`;
+            const imageUrl = await getThinkerImageByParams(
+              dnaAnalysisData.assessment_id,
+              domain.id,
+              type,
+              i
+            );
+            newImages[key] = imageUrl;
+          }
+        }
+      }
+      
+      setResourceImages(newImages);
+    } catch (err) {
+      console.error('Error loading resource images:', err);
+    }
+  };
+  
+  useEffect(() => {
+    if (!isLoading && dnaAnalysisData && dnaAnalysisData.assessment_id) {
+      loadResourceImages();
+    }
+  }, [isLoading, dnaAnalysisData]);
   
   const getResourcesForTab = (domainId: string, tab: "kindred" | "challenging") => {
     if (isLoading || !dnaAnalysisData) {
       return Array(5).fill({
         id: "origin",
-        image: "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0MjMzMDMwLCJleHAiOjg4MTQ0MTQ2NjMwfQ.rVgAMWNvwuJiEYBf1bUO51iQSH7pcm5YrjMcuJ7BcO8",
+        image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
         title: "ORIGIN",
         subtitle: "DE PRINCIPIIS (230)",
         description: "Divine truth requires both rational inquiry and mystical insight.",
@@ -149,16 +183,17 @@ const BecomeWhoYouAre: React.FC = () => {
       const title = dnaAnalysisData[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
       const subtitle = dnaAnalysisData[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       const rationale = dnaAnalysisData[rationaleKey as keyof DNAAnalysisResult];
-      const dbId = dnaAnalysisData[dbIdKey as keyof DNAAnalysisResult];
       
       let status = "locked";
       if (i === 1) status = "completed";
       else if (i === 2) status = "active";
       else status = "locked";
       
+      const image = getIconUrl(domainId, tab, i);
+      
       resources.push({
         id: `resource-${i}`,
-        image: getIconUrl(dbId as string) || "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0MjMzMDMwLCJleHAiOjg4MTQ0MTQ2NjMwfQ.rVgAMWNvwuJiEYBf1bUO51iQSH7pcm5YrjMcuJ7BcO8",
+        image,
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
         description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
