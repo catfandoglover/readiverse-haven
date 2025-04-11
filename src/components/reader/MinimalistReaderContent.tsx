@@ -187,7 +187,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
     <div className="flex flex-col h-screen relative">
       <div 
         className={`flex flex-col transition-all duration-300 ${
-          showVirgilChat ? 'h-[50vh]' : 'h-[calc(100vh-64px)]'
+          showVirgilChat ? 'h-[calc(50vh-env(safe-area-inset-bottom))]' : 'h-[calc(100vh-64px)]'
         }`}
       >
         <MinimalistTopBar 
@@ -270,8 +270,14 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
         </div>
       )}
       
-      <div className={`transition-all duration-300 ${showVirgilChat ? 'h-[50vh]' : 'h-0 overflow-hidden'}`}>
-        <VirgilDrawer bookTitle={metadata?.title || currentChapterTitle} />
+      <div 
+        className={`fixed bottom-0 left-0 right-0 transition-all duration-300 ${
+          showVirgilChat 
+            ? 'h-[calc(50vh+env(safe-area-inset-bottom))] translate-y-0' 
+            : 'h-[calc(50vh+env(safe-area-inset-bottom))] translate-y-full'
+        }`}
+      >
+        <VirgilDrawer bookTitle={currentChapterTitle} />
       </div>
 
       <BookmarkDialog

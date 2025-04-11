@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { Textarea } from './textarea';
@@ -59,10 +58,15 @@ const AutoResizeTextarea = React.forwardRef<HTMLTextAreaElement, AutoResizeTexta
         ref={assignRef}
         className={cn(
           "resize-none overflow-hidden transition-height duration-100 py-2.5",
+          "text-base", // Ensure minimum 16px font size to prevent zoom
           className
         )}
         onChange={handleChange}
         rows={minRows}
+        style={{
+          fontSize: '16px', // Explicit font size to prevent zoom
+          lineHeight: '1.5',
+        }}
         {...props}
       />
     );

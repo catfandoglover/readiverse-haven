@@ -345,8 +345,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       onClose={() => onOpenChange(false)}
       theme="light"
     >
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto" style={{ paddingBottom: "60px" }}>
+      <div className="flex flex-col h-full relative">
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto pb-[76px]">
           {messages.map((msg, index) => {
             const previousMessage = index > 0 ? messages[index - 1] : null;
             const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
@@ -366,8 +366,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 w-full z-10">
-          <div className="mb-0 rounded-t-2xl overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 bg-[#E7E4DB]">
+          <div className="rounded-t-2xl overflow-hidden">
             <form 
               onSubmit={handleSubmit} 
               className={cn(

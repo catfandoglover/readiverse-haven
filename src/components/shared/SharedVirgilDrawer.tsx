@@ -28,9 +28,10 @@ const SharedVirgilDrawer: React.FC<SharedVirgilDrawerProps> = ({
       className={`fixed bottom-0 left-0 w-full z-50 transition-transform duration-300 ease-in-out ${bgColor} border-t ${borderColor} shadow-lg rounded-t-xl ${
         isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
       }`}
-      style={{ height: '50vh' }}
+      style={{ height: '35vh' }}
     >
-      <div className="flex items-center justify-center px-4 py-3 relative">
+      {/* Header with handle and close button */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-center px-4 py-3">
         <div className={`absolute left-1/2 transform -translate-x-1/2 w-12 h-1 ${handleColor} rounded-full my-1`} />
         <button
           onClick={onClose}
@@ -41,7 +42,8 @@ const SharedVirgilDrawer: React.FC<SharedVirgilDrawerProps> = ({
         </button>
       </div>
       
-      <div className="relative h-[calc(50vh-3rem)] overflow-hidden">
+      {/* Content area with proper scrolling */}
+      <div className="absolute top-12 bottom-0 left-0 right-0 overflow-hidden">
         {children}
       </div>
     </div>

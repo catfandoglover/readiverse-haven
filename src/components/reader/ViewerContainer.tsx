@@ -66,15 +66,38 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
     }
   }, [setContainer]);
 
-  // Add effect to handle resize when drawer state changes
+  // Enhanced effect to handle resize when drawer state changes
   useEffect(() => {
     const iframe = containerRef.current?.querySelector('iframe');
     if (iframe) {
       try {
-        // Trigger resize event on the iframe's window
-        iframe.contentWindow?.dispatchEvent(new Event('resize'));
-        // Also trigger resize on the main window
-        window.dispatchEvent(new Event('resize'));
+        // Give time for the transition to complete
+        setTimeout(() => {
+          // Force a reflow of the content
+          if (iframe.contentWindow) {
+            // Trigger resize on the iframe's window
+            iframe.contentWindow.dispatchEvent(new Event('resize'));
+            
+            // Force reflow by temporarily modifying a style
+            const doc = iframe.contentDocument;
+            if (doc && doc.body) {
+              doc.body.style.display = 'none';
+              doc.body.offsetHeight; // Force reflow
+              doc.body.style.display = '';
+              
+              // Additional reflow for epub.js
+              const viewportElement = doc.querySelector('[name="viewport"]');
+              if (viewportElement) {
+                viewportElement.setAttribute('content', 
+                  'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+                );
+              }
+            }
+          }
+          
+          // Also trigger resize on the main window
+          window.dispatchEvent(new Event('resize'));
+        }, 300); // Wait for transition to complete
       } catch (e) {
         console.error('Error triggering resize:', e);
       }
