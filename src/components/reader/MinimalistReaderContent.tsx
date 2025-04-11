@@ -100,7 +100,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const showControlsTimer = useRef<NodeJS.Timeout | null>(null);
-  const { showVirgilChat } = useVirgilReader();
+  const { showVirgilChat, shouldMoveContent } = useVirgilReader();
 
   // Check if current location is bookmarked
   useEffect(() => {
@@ -184,82 +184,80 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
   }, [handleTouchStart]);
 
   return (
-    <div 
-      className="flex flex-col h-full w-full relative bg-[#332E38]"
-      style={{
-        height: showVirgilChat ? 'calc(50vh)' : '100vh',
-        transition: 'height 0.3s ease-in-out'
-      }}
-    >
-      <MinimalistTopBar 
-        title={metadata?.title || currentChapterTitle} 
-        externalLink={externalLink}
-        showControls={showControls}
-        onMenuClick={() => setShowSettingsMenu(true)}
-        isBookmarked={isBookmarked}
-        onBookmarkClick={onBookmarkClick}
-      />
-
-      {/* Progress Bar - Only visible in hover state */}
-      <div className={`w-full px-4 md:px-6 lg:px-8 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-        <Progress 
-          value={progress.book} 
-          className="h-1" 
-        />
-      </div>
-
-      <div className="flex-grow relative">
-        <BookViewer
-          book={book}
-          currentLocation={currentLocation}
-          onLocationChange={onLocationChange}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-          textAlign={textAlign}
-          onRenditionReady={onRenditionReady}
-          highlights={highlights}
-          onTextSelect={onTextSelect}
-        />
-        
-        <ReaderEdgeControls
-          show={showControls}
-          book={book}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-          textAlign={textAlign}
-          brightness={brightness}
-          currentLocation={currentLocation}
-          progress={progress}
-          pageInfo={pageInfo}
-          sessionTime={sessionTime}
-          highlights={highlights}
-          selectedColor={selectedColor}
-          toc={toc}
-          currentChapterTitle={currentChapterTitle}
-          onFontSizeChange={onFontSizeChange}
-          onFontFamilyChange={onFontFamilyChange}
-          onTextAlignChange={onTextAlignChange}
-          onBrightnessChange={onBrightnessChange}
+    <div className="flex flex-col h-screen relative">
+      <div className={`flex-grow flex flex-col transition-transform duration-300 ${
+        showVirgilChat && shouldMoveContent ? 'transform translate-y-[-25vh]' : ''
+      }`}>
+        <MinimalistTopBar 
+          title={metadata?.title || currentChapterTitle} 
+          externalLink={externalLink}
+          showControls={showControls}
+          onMenuClick={() => setShowSettingsMenu(true)}
+          isBookmarked={isBookmarked}
           onBookmarkClick={onBookmarkClick}
-          onLocationChange={onLocationChange}
-          onPrevPage={onPrevPage}
-          onNextPage={onNextPage}
-          onTocNavigate={onTocNavigate}
-          setSelectedColor={setSelectedColor}
-          removeHighlight={removeHighlight}
-          bookKey={bookKey}
-          onSearch={onSearch}
-          onSearchResultClick={onSearchResultClick}
-          showSettingsMenu={showSettingsMenu}
-          setShowSettingsMenu={setShowSettingsMenu}
+        />
+
+        {/* Progress Bar - Only visible in hover state */}
+        <div className={`w-full px-4 md:px-6 lg:px-8 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+          <Progress 
+            value={progress.book} 
+            className="h-1" 
+          />
+        </div>
+
+        <div className="flex-grow relative">
+          <BookViewer
+            book={book}
+            currentLocation={currentLocation}
+            onLocationChange={onLocationChange}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            textAlign={textAlign}
+            onRenditionReady={onRenditionReady}
+            highlights={highlights}
+            onTextSelect={onTextSelect}
+          />
+          
+          <ReaderEdgeControls
+            show={showControls}
+            book={book}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            textAlign={textAlign}
+            brightness={brightness}
+            currentLocation={currentLocation}
+            progress={progress}
+            pageInfo={pageInfo}
+            sessionTime={sessionTime}
+            highlights={highlights}
+            selectedColor={selectedColor}
+            toc={toc}
+            currentChapterTitle={currentChapterTitle}
+            onFontSizeChange={onFontSizeChange}
+            onFontFamilyChange={onFontFamilyChange}
+            onTextAlignChange={onTextAlignChange}
+            onBrightnessChange={onBrightnessChange}
+            onBookmarkClick={onBookmarkClick}
+            onLocationChange={onLocationChange}
+            onPrevPage={onPrevPage}
+            onNextPage={onNextPage}
+            onTocNavigate={onTocNavigate}
+            setSelectedColor={setSelectedColor}
+            removeHighlight={removeHighlight}
+            bookKey={bookKey}
+            onSearch={onSearch}
+            onSearchResultClick={onSearchResultClick}
+            showSettingsMenu={showSettingsMenu}
+            setShowSettingsMenu={setShowSettingsMenu}
+          />
+        </div>
+
+        <PageIndicator 
+          currentPage={pageInfo.chapterCurrent} 
+          totalPages={pageInfo.chapterTotal} 
+          show={showControls} 
         />
       </div>
-
-      <PageIndicator 
-        currentPage={pageInfo.chapterCurrent} 
-        totalPages={pageInfo.chapterTotal} 
-        show={showControls} 
-      />
 
       {!showVirgilChat && <VirgilChatButton />}
       
