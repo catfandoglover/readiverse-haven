@@ -71,9 +71,9 @@ const DNAAssessment = () => {
   // Utility function to safely check if a user is logged in
   const safeRedirectToCompletionScreen = () => {
     try {
-      // Try to get the current user, but handle potential errors
-      supabase.auth.getUser()
-        .then(({ data, error }) => {
+      // Cast supabase to any for auth check
+      (supabase as any).auth.getUser()
+        .then(({ data, error }: { data: { user: any | null }, error: any }) => {
           if (error || !data.user) {
             console.log('No authenticated user detected, redirecting to completion screen');
             navigate('/dna/completion', { replace: true });
@@ -82,7 +82,7 @@ const DNAAssessment = () => {
             navigate('/dna/welcome', { replace: true });
           }
         })
-        .catch(error => {
+        .catch((error: any) => {
           console.log('Error checking auth state, defaulting to completion screen:', error);
           navigate('/dna/completion', { replace: true });
         });
@@ -148,8 +148,8 @@ const DNAAssessment = () => {
           let userError = null;
           
           try {
-            // This call can throw AuthSessionMissingError
-            const authResult = await supabase.auth.getUser();
+            // Cast supabase to any for auth check
+            const authResult = await (supabase as any).auth.getUser();
             userData = authResult.data;
             userError = authResult.error;
           } catch (authError) {
@@ -173,7 +173,8 @@ const DNAAssessment = () => {
           } else if (userData && userData.user) {
             console.log('Current user:', userData.user);
             
-            const { data: profileData, error: profileError } = await supabase
+            // Cast supabase to any for profile fetch
+            const { data: profileData, error: profileError } = await (supabase as any)
               .from('profiles')
               .select('id')
               .eq('user_id', userData.user.id)
@@ -213,7 +214,8 @@ const DNAAssessment = () => {
             delete assessmentData.profile_id;
           }
           
-          const { data: newAssessment, error: createError } = await supabase
+          // Cast supabase to any for assessment insert
+          const { data: newAssessment, error: createError } = await (supabase as any)
             .from('dna_assessment_results')
             .insert([assessmentData])
             .select()
@@ -235,7 +237,8 @@ const DNAAssessment = () => {
           console.log('Created new assessment with ID:', newAssessment.id);
           sessionStorage.setItem('dna_assessment_id', newAssessment.id);
           
-          const { data: verifyData, error: verifyError } = await supabase
+          // Cast supabase to any for assessment verification
+          const { data: verifyData, error: verifyError } = await (supabase as any)
             .from('dna_assessment_results')
             .select('*')
             .eq('id', newAssessment.id)
@@ -260,7 +263,7 @@ const DNAAssessment = () => {
     };
 
     initializeAssessment();
-  }, [assessmentId, currentCategoryIndex]);
+  }, [assessmentId, currentCategoryIndex, supabase]);
 
   const { data: currentQuestion, isLoading: questionLoading } = useQuery({
     queryKey: ['dna-question', upperCategory, currentPosition],
@@ -391,246 +394,95 @@ const DNAAssessment = () => {
       ? (currentQuestion.question?.answer_a || "Yes") 
       : (currentQuestion.question?.answer_b || "No");
     
-    if (!conversationManager) {
-      console.warn("ConversationManager not available yet for saving answer.");
-      // Handle error or wait
-    } else {
-      // Example: Replace old call if it existed
-      // await conversationManager.updateConversation(...) // Use new methods
-    }
-
-    const userId = sessionStorage.getItem('user_id');
-    const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-    
-    console.log('Preparing to save conversation:', {
-      sessionId,
-      assessmentId,
-      userId,
-      currentPosition
-    });
+    const answerKey = currentQuestion.id;
+    const answerValue = selectedAnswer === "A" ? currentQuestion.answer_a : currentQuestion.answer_b;
+    const sequenceValue = selectedAnswer;
     
     try {
-      await conversationManager.saveConversationToSupabase(
-        sessionId,
-        assessmentId,
-        userId,
-        currentPosition
-      );
-    } catch (error) {
-      console.error('Error in saveConversationToSupabase:', error);
-    }
+      // Cast supabase to any for sequence fetch
+      const { data: existingData, error: fetchError } = await (supabase as any)
+        .from('dna_assessment_results')
+        .select(`${upperCategory.toLowerCase()}_sequence`)
+        .eq('id', assessmentId)
+        .maybeSingle();
 
-    try {
-      console.log('Storing question response:', {
-        assessment_id: assessmentId,
-        category: upperCategory,
-        question_id: currentQuestion.id,
-        answer
-      });
+      if (fetchError) throw fetchError;
 
-      const { error: responseError } = await supabase
-        .from('dna_question_responses')
-        .insert({
-          assessment_id: assessmentId,
-          category: upperCategory,
-          question_id: currentQuestion.id,
-          answer
-        });
+      const existingSequence = (existingData?.[`${upperCategory.toLowerCase()}_sequence`] as string) || '';
+      const updatedSequence = existingSequence + sequenceValue;
 
-      if (responseError) {
-        console.error('Error storing question response:', responseError);
-        toast.error('Error saving your answer');
-        return;
-      }
+      const updatePayload: Partial<Database["public"]["Tables"]["dna_assessment_results"]["Update"]> = {};
+      updatePayload[`${upperCategory.toLowerCase()}_sequence`] = updatedSequence;
 
-      const nextQuestionId = answer === "A" 
-        ? currentQuestion.next_question_a_id 
-        : currentQuestion.next_question_b_id;
+      // Cast supabase to any for sequence update
+      const { error: updateError } = await (supabase as any)
+        .from('dna_assessment_results')
+        .update(updatePayload)
+        .eq('id', assessmentId);
 
-      if (!nextQuestionId) {
+      if (updateError) throw updateError;
+
+      console.log(`Updated sequence for ${upperCategory} on assessment ${assessmentId}`);
+
+      // Move to next question or category
+      if (currentQuestionNumber < TOTAL_QUESTIONS) {
+        setCurrentQuestionNumber(prev => prev + 1);
+        setCurrentPosition(`Q${currentQuestionNumber + 1}`);
+        setSelectedAnswer(null);
+        setShowAIChat(false);
+      } else if (nextCategory) {
         setIsTransitioning(true);
-
+        setTimeout(() => {
+          navigate(`/dna/${nextCategory.toLowerCase()}`);
+          setCurrentQuestionNumber(1); // Reset for next category
+          setCurrentPosition("Q1");
+          setSelectedAnswer(null);
+          setShowAIChat(false);
+          setIsTransitioning(false);
+        }, 300); // Short delay for transition effect
+      } else {
+        // Assessment finished - trigger analysis and redirect
+        console.log('Assessment finished. Preparing final answers...');
+        // Need to ensure `answers` state is fully updated before calling initAnalysis
+        // Since setState is async, use the updated payload directly or refetch final assessment
         try {
-          const { data: currentData, error: fetchError } = await supabase
+          // Cast supabase to any for final answers fetch
+          const { data: finalAssessmentData, error: finalFetchError } = await (supabase as any)
             .from('dna_assessment_results')
             .select('answers')
             .eq('id', assessmentId)
-            .maybeSingle();
+            .single();
 
-          if (fetchError) {
-            console.error('Error fetching current answers:', fetchError);
-            toast.error('Error updating results');
-            return;
-          }
+          if (finalFetchError) throw finalFetchError;
 
-          const currentAnswers = (currentData?.answers as Record<string, string>) || {};
-          const updatedAnswers = {
-            ...currentAnswers,
-            [upperCategory]: newAnswers
+          // Merge final answer into the fetched answers object
+          const finalAnswersPayload = { 
+            ...(finalAssessmentData.answers as Record<string, string>), 
+            [answerKey]: answerValue 
           };
-
-          const sequenceColumnName = `${upperCategory.toLowerCase()}_sequence` as const;
-          const updateData = {
-            answers: updatedAnswers,
-            [sequenceColumnName]: newAnswers
-          };
-
-          console.log('Updating assessment with:', updateData);
-
-          const { error: updateError } = await supabase
+          
+          // Cast supabase to any for final answers update
+          const { error: finalUpdateError } = await (supabase as any)
             .from('dna_assessment_results')
-            .update(updateData)
+            .update({ answers: finalAnswersPayload })
             .eq('id', assessmentId);
 
-          if (updateError) {
-            console.error('Error updating assessment results:', updateError);
-            toast.error('Error saving category results');
-            return;
-          }
-
-          // Add detailed logging for debugging
-          console.log('Category completion check:', {
-            currentCategory: upperCategory,
-            isAesthetics: upperCategory === "AESTHETICS",
-            hasNextCategory: !!nextCategory,
-            nextCategory,
-            currentCategoryIndex,
-            totalCategories: categoryOrder.length,
-            questionNumber: currentQuestionNumber,
-            isLastQuestion: currentQuestionNumber === TOTAL_QUESTIONS
-          });
-
-          // Check if this is the last category (AESTHETICS) or we've reached the final question
-          if (upperCategory === "AESTHETICS" || !nextCategory || currentQuestionNumber === TOTAL_QUESTIONS) {
-            console.log('Assessment complete, finishing assessment...');
-            
-            setCompletedAssessmentId(assessmentId);
-            storeAssessmentId(assessmentId);
-            
-            // Force immediate redirect after 50ms regardless of analysis
-            setTimeout(() => {
-              safeRedirectToCompletionScreen();
-            }, 50);
-            
-            await initAnalysis(updatedAnswers, assessmentId);
-            
-            // Force navigation to completion for anonymous users or welcome for logged-in users
-            safeRedirectToCompletionScreen();
-            
-            if (user) {
-              try {
-                const { data: profileData, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('id')
-                  .eq('user_id', user.id)
-                  .maybeSingle();
-                
-                if (!profileError && profileData) {
-                  const { error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ 
-                      assessment_id: assessmentId 
-                    } as any)
-                    .eq('id', profileData.id);
-                  
-                  if (updateError) {
-                    console.error('Error updating profile with assessment ID:', updateError);
-                  } else {
-                    console.log('Successfully saved assessment ID to profile:', {
-                      profileId: profileData.id,
-                      assessmentId
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error('Error saving assessment ID to profile:', error);
-              }
-            }
-            
-            setIsTransitioning(false);
-            return;
-          } else {
-            await queryClient.prefetchQuery({
-              queryKey: ['dna-question', nextCategory, 'Q1'],
-              queryFn: async () => {
-                const { data, error } = await supabase
-                  .from('dna_tree_structure')
-                  .select(`
-                    *,
-                    question:great_questions!dna_tree_structure_question_id_fkey (
-                      question,
-                      category_number,
-                      answer_a,
-                      answer_b
-                    )
-                  `)
-                  .eq('category', nextCategory)
-                  .eq('tree_position', 'Q1')
-                  .maybeSingle();
-
-                if (error) throw error;
-                return data;
-              },
-            });
-
-            navigate(`/dna/${nextCategory.toLowerCase()}`);
-            setCurrentPosition("Q1");
-            setCurrentQuestionNumber(prev => prev + 1);
-            setAnswers("");
-            setSelectedAnswer(null);
-          }
-        } catch (error) {
-          console.error('Error updating assessment:', error);
-          toast.error('Error saving your progress');
-          if (!nextCategory) {
-            navigate('/dna');
-          }
-        } finally {
-          setIsTransitioning(false);
-        }
-        return;
-      }
-
-      try {
-        const { data: nextQuestion, error: nextQuestionError } = await supabase
-          .from('dna_tree_structure')
-          .select('tree_position')
-          .eq('id', nextQuestionId)
-          .maybeSingle();
-
-        if (nextQuestionError) {
-          console.error('Error fetching next question:', nextQuestionError);
-          return;
-        }
-
-        if (!nextQuestion) {
-          console.error('Next question not found for ID:', nextQuestionId);
-          return;
-        }
-
-        // If we're about to exceed the total questions limit, redirect instead of loading next question
-        const nextQuestionNumber = currentQuestionNumber + 1;
-        if (nextQuestionNumber > TOTAL_QUESTIONS) {
-          console.log(`Reached question limit (${TOTAL_QUESTIONS}), redirecting...`);
+          if (finalUpdateError) throw finalUpdateError;
           
-          // Redirect based on user status with replace:true to prevent back navigation
-          if (!user) {
-            navigate('/dna/completion', { replace: true });
-          } else {
-            navigate('/dna/welcome', { replace: true });
-          }
-          return;
+          console.log('Final answers updated. Triggering analysis...');
+          await initAnalysis(finalAnswersPayload, assessmentId);
+          setCompletedAssessmentId(assessmentId);
+        } catch (err) {
+          console.error('Error finalizing assessment answers or triggering analysis:', err);
+          toast.error('Error finishing assessment.');
+          // Maybe still navigate or show an error state?
+          setIsAssessmentComplete(true); // Mark as complete even on final save/analysis error
         }
-
-        setCurrentPosition(nextQuestion.tree_position);
-        setCurrentQuestionNumber(prev => prev + 1);
-        setSelectedAnswer(null);
-      } catch (error) {
-        console.error('Error in question transition:', error);
       }
-    } catch (error) {
-      console.error('Error handling answer:', error);
-      toast.error('Error processing your answer');
+    } catch (err) {
+      console.error('Error updating assessment sequence:', err);
+      toast.error('Failed to save progress.');
+      // Optionally revert state or handle error further
     }
   };
 
@@ -659,8 +511,8 @@ const DNAAssessment = () => {
           let userError = null;
           
           try {
-            // This call can throw AuthSessionMissingError
-            const authResult = await supabase.auth.getUser();
+            // Cast supabase to any for auth check
+            const authResult = await (supabase as any).auth.getUser();
             userData = authResult.data;
             userError = authResult.error;
           } catch (authError) {
@@ -675,7 +527,8 @@ const DNAAssessment = () => {
           } else if (userData && userData.user) {
             console.log('Found authenticated user:', userData.user.id);
             
-            const { data: profileData, error: profileError } = await supabase
+            // Cast supabase to any for profile fetch
+            const { data: profileData, error: profileError } = await (supabase as any)
               .from('profiles')
               .select('id')
               .eq('user_id', userData.user.id)
@@ -710,53 +563,6 @@ const DNAAssessment = () => {
 
     ensureUserId();
   }, []);
-
-  React.useEffect(() => {
-    (window as any).debugDNAConversation = () => {
-      console.log('Debug info:');
-      console.log('assessmentId (state):', assessmentId);
-      console.log('assessmentId (sessionStorage):', sessionStorage.getItem('dna_assessment_id'));
-      console.log('userId (sessionStorage):', sessionStorage.getItem('user_id'));
-      console.log('sessionId (dna_assessment_name):', sessionStorage.getItem('dna_assessment_name'));
-      console.log('currentPosition:', currentPosition);
-      
-      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-      const conversation = conversationManager.getHistory(sessionId);
-      const questionPath = conversationManager.getQuestionPath(sessionId);
-      console.log('Conversation:', conversation);
-      console.log('QuestionPath:', questionPath);
-    };
-    
-    (window as any).manualSaveConversation = async () => {
-      const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-      const assessmentIdToUse = assessmentId || sessionStorage.getItem('dna_assessment_id');
-      const userIdToUse = sessionStorage.getItem('user_id') || 'temp-' + Math.random().toString(36).substring(2, 15);
-      
-      if (!assessmentIdToUse) {
-        console.error('No assessment ID available for manual save');
-        return;
-      }
-      
-      console.log('Manual save with:', {
-        sessionId,
-        assessmentId: assessmentIdToUse,
-        userId: userIdToUse,
-        questionId: currentPosition
-      });
-      
-      try {
-        await conversationManager.saveConversationToSupabase(
-          sessionId,
-          assessmentIdToUse,
-          userIdToUse,
-          currentPosition
-        );
-        console.log('Manual save completed');
-      } catch (error) {
-        console.error('Error in manual save:', error);
-      }
-    };
-  }, [assessmentId, currentPosition]);
 
   const handleViewResults = () => {
     setShowLoginPrompt(false);

@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useServices } from '@/contexts/ServicesContext';
 
 const VirgilWelcome: React.FC = () => {
-  const { conversationManager } = useServices();
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const [resultsReady, setResultsReady] = useState(false);
   const navigate = useNavigate();
@@ -90,29 +89,9 @@ const VirgilWelcome: React.FC = () => {
         
         // Wait 3 seconds after showing the completion message before navigating
         setTimeout(async () => {
-          // Automatically save conversation and navigate
-          // TODO: This conversation saving logic needs to be updated.
-          // The concept of saving a "dna-welcome" conversation with a random sessionId
-          // needs reconsideration based on the new ConversationManager (create/update) 
-          // and the overall chat architecture defined in the PRD.
-          // It likely should use the user ID and save to virgil_general_chat_conversations
-          // with a specific 'welcome' prompt_id.
-          try {
-            if (conversationManager && user) {
-              // Example (needs correct implementation based on PRD/ConversationManager):
-              // await conversationManager.createConversation(
-              //   'virgil_general_chat_conversations',
-              //   user.id,
-              //   [], // Need actual messages from chat component state
-              //   { prompt_id: 'YOUR_WELCOME_PROMPT_ID' } // Need the welcome prompt ID
-              // );
-              console.log('Placeholder: Save welcome chat conversation using new manager');
-            } else {
-              console.warn('ConversationManager or user not available for saving welcome chat');
-            }
-          } catch (error) {
-            console.error('Error saving welcome conversation:', error);
-          }
+          // Saving logic is likely handled within VirgilFullScreenChat now.
+          // Remove placeholder saving logic from here.
+          console.log('Welcome chat timer finished, navigating to profile.');
           
           // Navigate to profile page
           navigate('/profile?tab=profile');
@@ -121,27 +100,14 @@ const VirgilWelcome: React.FC = () => {
       
       return () => clearTimeout(resultsTimer);
     }
-  }, [state, navigate, conversationManager, user]);
+  }, [state, navigate]); // Removed conversationManager, user from dependencies
 
-  // Save conversation and handle navigation
+  // Handle navigation when user clicks View Results
   const handleViewResults = async () => {
-    // TODO: This conversation saving logic needs the same update as the timer above.
-    // It should likely save the current state of the welcome chat.
-    try {
-      if (conversationManager && user) {
-         // Example (needs correct implementation):
-         // await conversationManager.updateConversation(...) or createConversation(...)
-         console.log('Placeholder: Save welcome chat on view results using new manager');
-      } else {
-        console.warn('ConversationManager or user not available for saving welcome chat on view results');
-      }
-      
-      // Navigate to the profile page with profile tab
-      navigate('/profile?tab=profile');
-    } catch (error) {
-      console.error('Error saving welcome conversation on view results:', error);
-      navigate('/profile?tab=profile'); // Navigate even on error
-    }
+    // Saving logic should be handled within VirgilFullScreenChat.
+    // This handler only needs to navigate.
+    console.log('View results clicked, navigating to profile.');
+    navigate('/profile?tab=profile');
   };
 
   return (

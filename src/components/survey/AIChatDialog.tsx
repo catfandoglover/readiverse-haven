@@ -1,100 +1,87 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, X, ArrowUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
-import ChatMessage from './ChatMessage';
+import audioTranscriptionService from '@/services/AudioTranscriptionService';
+import ChatMessageDisplay from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 import SharedVirgilDrawer from '../shared/SharedVirgilDrawer';
 import { useServices } from '@/contexts/ServicesContext';
-
-interface DialogMessage {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  audioUrl?: string;
-  isNew?: boolean;
-  transcribedText?: string;
-}
+import { toast } from 'sonner';
+import { ChatMessage } from '@/types/chat';
 
 interface AIChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentQuestion: string;
-  sessionId?: string;
+  storageTable?: string;
+  contextIdentifiers?: Record<string, any>;
+  systemPrompt?: string;
 }
+
+const DEFAULT_STORAGE_TABLE = 'virgil_dna_conversations';
+const DEFAULT_CONTEXT_IDENTIFIERS = { question: 'unknown' };
+const DEFAULT_SYSTEM_PROMPT = "You are Virgil, an AI assistant helping a user reflect on a specific question as part of their Intellectual DNA assessment. Guide them through their thoughts.";
 
 const AIChatDialog: React.FC<AIChatDialogProps> = ({
   open,
   onOpenChange,
   currentQuestion,
-  sessionId: providedSessionId
+  storageTable = DEFAULT_STORAGE_TABLE,
+  contextIdentifiers = { question: currentQuestion },
+  systemPrompt = DEFAULT_SYSTEM_PROMPT,
 }) => {
   const { aiService, conversationManager } = useServices();
   const [inputMessage, setInputMessage] = useState('');
-  const [messages, setMessages] = useState<DialogMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFirstOpen, setIsFirstOpen] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
+  const [lastQuestion, setLastQuestion] = useState(currentQuestion);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const initialGreetings = [
-    "Tell me more",
-    "What's on your mind?",
-    "What's your perspective on this?",
-    "What comes to mind as you reflect on this question?", 
-    "How do you find yourself approaching this question?", 
-    "What elements of this question resonate most with you?",
-    "What aspects would you like to explore further?",
-    "Which considerations feel most significant to you?",
-    "How does this question connect with your own experience?",
-    "What dimensions of this question intrigue you?"
+    "Tell me more about your thoughts on this.",
+    "What's your initial perspective?",
+    "How does this question make you feel?",
+    "Let's explore this together."
   ];
 
-  const [lastQuestion, setLastQuestion] = useState(currentQuestion);
-
   useEffect(() => {
-    if (open && conversationManager) {
+    if (open && conversationManager && aiService?.isInitialized()) {
       const questionChanged = lastQuestion !== currentQuestion;
-      
-      const userId = providedSessionId || sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
-      
+      const effectiveContext = { ...contextIdentifiers, question: currentQuestion };
+
       if (questionChanged || isFirstOpen) {
-        setIsFirstOpen(true);
+        console.log('AIChatDialog: Initializing or question changed');
+        setIsFirstOpen(false);
         setLastQuestion(currentQuestion);
         setMessages([]);
-        
+        setCurrentConversationId(null);
+
         const randomIndex = Math.floor(Math.random() * initialGreetings.length);
         const greeting = initialGreetings[randomIndex];
-        
-        const initialMsg: DialogMessage = {
+        const initialMsg: ChatMessage = {
           id: uuidv4(),
           content: greeting,
           role: 'assistant',
-          isNew: true
         };
         setMessages([initialMsg]);
-        
-        setTimeout(() => {
-          generateAudioForText(greeting);
-        }, 100);
-        
-        setIsFirstOpen(false);
+        setTimeout(() => generateAudioForText(greeting), 100);
+
       }
-      
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 100);
+
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [open, currentQuestion, lastQuestion, conversationManager, providedSessionId, isFirstOpen, initialGreetings]);
+  }, [open, currentQuestion, conversationManager, aiService]);
 
   useEffect(() => {
     if (open && isMobile) {
@@ -117,7 +104,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const generateAudioForText = async (text: string) => {
+  const generateAudioForText = useCallback(async (text: string) => {
     try {
       stopAllAudio();
       
@@ -139,7 +126,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     } catch (error) {
       console.error('Error generating audio:', error);
     }
-  };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -148,7 +135,140 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const saveConversation = useCallback(async (currentMessages: ChatMessage[]) => {
+    if (!conversationManager || !currentMessages || currentMessages.length === 0) return;
+    const userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+        console.warn("Cannot save conversation, user ID not found.");
+        return;
+    }
+
+    const effectiveContext = { ...contextIdentifiers, question: currentQuestion }; 
+
+    try {
+      if (currentConversationId) {
+        const { error } = await conversationManager.updateConversation(
+          storageTable, currentConversationId, { messages: currentMessages }
+        );
+        if (error) throw error;
+      } else {
+        const { data: newConvo, error } = await conversationManager.createConversation(
+          storageTable, userId, currentMessages, effectiveContext
+        );
+        if (error) throw error;
+        if (newConvo) setCurrentConversationId(newConvo.id);
+      }
+    } catch (error) {
+      console.error('Error saving DNA chat conversation:', error);
+      toast.error('Failed to save chat progress.');
+    }
+  }, [conversationManager, currentConversationId, storageTable, contextIdentifiers, currentQuestion]);
+
+  const processTextMessage = useCallback(async (userMessageContent: string) => {
+    if (!userMessageContent.trim() || isProcessing || !aiService?.isInitialized()) return;
+
+    setIsProcessing(true);
+    stopAllAudio();
+
+    const newUserMessage: ChatMessage = { id: uuidv4(), role: 'user', content: userMessageContent.trim() };
+    const messagesWithUser = [...messages, newUserMessage];
+    setMessages(messagesWithUser);
+
+    const thinkingMessage: ChatMessage = { id: uuidv4(), role: 'assistant', content: 'Thinking...' };
+    setMessages(prev => [...prev, thinkingMessage]);
+
+    try {
+      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
+      const assistantMessage: ChatMessage = { id: thinkingMessage.id, role: 'assistant', content: responseText };
+      const finalMessages = [...messagesWithUser.filter(m => m.id !== thinkingMessage.id), assistantMessage];
+      setMessages(finalMessages);
+      generateAudioForText(responseText);
+      await saveConversation(finalMessages);
+    } catch (error) {
+      console.error('Error processing message:', error);
+      toast.error("Virgil encountered an error. Please try again.");
+      setMessages(prev => prev.filter(msg => msg.id !== thinkingMessage.id));
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [aiService, messages, systemPrompt, isProcessing, saveConversation, generateAudioForText]);
+
+  const processTranscribedAudio = useCallback(async (transcribedText: string, audioUrl?: string) => {
+     if (!transcribedText.trim() || isProcessing || !aiService?.isInitialized()) return;
+
+    setIsProcessing(true);
+    stopAllAudio();
+
+    const newUserMessage: ChatMessage = { id: uuidv4(), role: 'user', content: transcribedText.trim(), audioUrl };
+    const messagesWithUser = [...messages, newUserMessage];
+    setMessages(messagesWithUser);
+
+    const thinkingMessage: ChatMessage = { id: uuidv4(), role: 'assistant', content: 'Thinking...' };
+    setMessages(prev => [...prev, thinkingMessage]);
+
+    try {
+      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
+      const assistantMessage: ChatMessage = { id: thinkingMessage.id, role: 'assistant', content: responseText };
+      const finalMessages = [...messagesWithUser.filter(m => m.id !== thinkingMessage.id), assistantMessage];
+      setMessages(finalMessages);
+      generateAudioForText(responseText);
+      await saveConversation(finalMessages);
+    } catch (error) {
+      console.error('Error processing transcribed audio:', error);
+      toast.error("Virgil encountered an error responding. Please try again.");
+      setMessages(prev => prev.filter(msg => msg.id !== thinkingMessage.id));
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [aiService, messages, systemPrompt, isProcessing, saveConversation, generateAudioForText]);
+
+  const handleAudioInput = useCallback(async (audioBlob: Blob) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
+    try {
+      if (!audioTranscriptionService.isInitialized()) throw new Error('Transcription service unavailable.');
+      const transcription = await audioTranscriptionService.transcribeAudio(audioBlob);
+      if (transcription && transcription.trim()) {
+         await processTranscribedAudio(transcription, tempAudioUrl);
+      } else {
+         toast.info("Couldn't hear clearly, please try speaking again.");
+         setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      toast.error("Failed to process audio. Please try again.");
+      setIsProcessing(false);
+    } 
+  }, [isProcessing, processTranscribedAudio]);
+
+  const toggleRecording = useCallback(async () => {
+    if (isRecording) {
+      await stopAndProcessRecording();
+    } else {
+      stopAllAudio();
+      
+      try {
+        await audioRecordingService.startRecording();
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Error starting recording:', error);
+      }
+    }
+  }, [isRecording, handleAudioInput]);
+
+  const stopAndProcessRecording = useCallback(async () => {
+    setIsRecording(false);
+    try {
+      const audioBlob = await audioRecordingService.stopRecording();
+      
+      await handleAudioInput(audioBlob);
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+    }
+  }, [handleAudioInput]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isRecording) {
@@ -163,148 +283,8 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     const userMessage = inputMessage.trim();
     setInputMessage('');
     
-    const newUserMessage: DialogMessage = {
-      id: uuidv4(),
-      content: userMessage,
-      role: 'user'
-    };
-    setMessages(prevMessages => [...prevMessages, newUserMessage]);
-    
-    await processMessage(userMessage);
-  };
-
-  const toggleRecording = async () => {
-    if (isRecording) {
-      await stopAndProcessRecording();
-    } else {
-      stopAllAudio();
-      
-      try {
-        await audioRecordingService.startRecording();
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Error starting recording:', error);
-      }
-    }
-  };
-
-  const stopAndProcessRecording = async () => {
-    setIsRecording(false);
-    try {
-      const audioBlob = await audioRecordingService.stopRecording();
-      
-      await processAudio(audioBlob);
-    } catch (error) {
-      console.error('Error stopping recording:', error);
-    }
-  };
-
-  const processMessage = async (userMessage: string) => {
-    setIsProcessing(true);
-    try {
-      stopAllAudio();
-      
-      const loadingId = uuidv4();
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { id: loadingId, content: 'Thinking...', role: 'assistant' }
-      ]);
-      
-      const responseText = await aiService.generateResponse('placeholder_system_prompt', messages);
-      
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.id === loadingId 
-            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true } 
-            : msg
-        )
-      );
-      
-      generateAudioForText(responseText);
-
-    } catch (error) {
-      console.error('Error processing message:', error);
-      setMessages(prevMessages => 
-        prevMessages.filter(msg => msg.content !== 'Thinking...')
-      );
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { id: uuidv4(), content: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again?", role: 'assistant' }
-      ]);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const processAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-    try {
-      stopAllAudio();
-      
-      const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
-      
-      console.log(`Processing audio: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
-      
-      const transcriptionLoadingId = uuidv4();
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
-      ]);
-      
-      const responseText = await aiService.generateResponse('placeholder_system_prompt', [...messages, { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'user' }]);
-      
-      setMessages(prevMessages => 
-        prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
-      );
-      
-      let displayContent = responseText || "Voice message";
-      
-      console.log('Final cleaned transcription:', displayContent);
-      
-      const newUserMessage: DialogMessage = {
-        id: uuidv4(),
-        content: displayContent,
-        role: 'user',
-        audioUrl: tempAudioUrl
-      };
-      setMessages(prevMessages => [...prevMessages, newUserMessage]);
-      
-      const loadingId = uuidv4();
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { id: loadingId, content: 'Processing your message...', role: 'assistant' }
-      ]);
-      
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.id === loadingId 
-            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true } 
-            : msg
-        )
-      );
-      
-      generateAudioForText(responseText);
-
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      setMessages(prevMessages => 
-        prevMessages.filter(msg => 
-          msg.content !== 'Transcribing your voice message...' && 
-          msg.content !== 'Processing your message...'
-        )
-      );
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { 
-          id: uuidv4(), 
-          content: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again? You might want to try a text message instead.", 
-          role: 'assistant' 
-        }
-      ]);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    await processTextMessage(userMessage);
+  }, [isRecording, inputMessage, processTextMessage, isProcessing]);
 
   useEffect(() => {
     if (!open) {
@@ -330,12 +310,12 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
           {messages.map((msg, index) => {
             const isPreviousMessageSameRole = index > 0 && messages[index - 1].role === msg.role;
             return (
-              <ChatMessage 
+              <ChatMessageDisplay 
                 key={msg.id}
                 content={msg.content}
                 role={msg.role}
                 audioUrl={msg.audioUrl}
-                isNewMessage={msg.isNew}
+                isNewMessage={false}
                 dialogOpen={open}
                 isPreviousMessageSameRole={isPreviousMessageSameRole}
               />
