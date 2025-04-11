@@ -6,23 +6,12 @@ import { virgilConfig } from '@/config/virgilConfig';
 // Assume a UI component exists for rendering the chat
 import VirgilChatUI from './VirgilChatUI'; // Adjust path if necessary
 import { VirgilInstanceType } from '@/types/virgil';
-// Remove unused import for promptUtils
-// import { fetchPromptByPurposeOrId } from '@/utils/promptUtils'; 
+// Import the prompt fetching utility
+import { fetchPromptByPurposeOrId } from '@/utils/promptUtils'; 
 import LoadingSpinner from '@/components/common/LoadingSpinner'; // Assume a loading component
 
 interface VirgilFullScreenWrapperProps {
   // Add any specific props needed, e.g., maybe course data is passed directly
-}
-
-// Example: Fetching a course-specific prompt (replace with actual logic)
-// This might involve a dedicated hook or fetching from a specific table/endpoint.
-async function getCourseSystemPrompt(courseId: string): Promise<string> {
-  // Option 1: Fetch from prompts table using a specific purpose/context related to the course
-  // const promptData = await fetchPromptByPurposeOrId({ purpose: `course_${courseId}_prompt` });
-  // return promptData?.prompt || "You are a helpful assistant for this course.";
-
-  // Option 2: Construct dynamically (Placeholder)
-  return `You are Virgil, an AI assistant guiding the user through course ${courseId}. Help them understand the material and achieve their learning objectives.`;
 }
 
 const VirgilFullScreenWrapper: React.FC<VirgilFullScreenWrapperProps> = (props) => {
@@ -36,21 +25,26 @@ const VirgilFullScreenWrapper: React.FC<VirgilFullScreenWrapperProps> = (props) 
   const instanceType: VirgilInstanceType = 'COURSE_CHAT';
   const config = virgilConfig[instanceType];
 
-  // Fetch the system prompt based on the course context
+  // Fetch the system prompt using the utility
   useEffect(() => {
     let isMounted = true;
     setIsLoadingPrompt(true);
     if (course_id && config.promptSource === 'course_context') {
-      getCourseSystemPrompt(course_id)
-        .then((prompt) => {
+      // Fetch prompt using course_id as purpose and 'classroom' as context
+      fetchPromptByPurposeOrId({ 
+        purpose: course_id, 
+        context: 'classroom' // Assuming 'classroom' context for courses
+      })
+        .then((promptData) => {
           if (isMounted) {
-            setSystemPrompt(prompt);
+            // Use fetched prompt or a fallback
+            setSystemPrompt(promptData?.prompt || `Default prompt for course ${course_id}.`);
           }
         })
         .catch((err) => {
           console.error("Error fetching course system prompt:", err);
           if (isMounted) {
-            setSystemPrompt('Error loading prompt. Using default.'); // Fallback prompt
+            setSystemPrompt('Error loading prompt. Using default.');
           }
         })
         .finally(() => {

@@ -3,7 +3,8 @@ import { aiService } from '@/services/AIService'; // Import existing singleton
 import { ConversationManager } from '@/services/ConversationManager'; // Import class
 import { useAuth } from '@/contexts/SupabaseAuthContext'; // For Supabase client access
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/supabase';
+// No Database import needed when using <any>
+// import { Database } from '@/types/supabase';
 
 interface AppServices {
   aiService: typeof aiService; // Type is the instance type
@@ -28,10 +29,8 @@ export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children }) 
   // Use useMemo to ensure it's only created once per client instance
   const conversationManager = useMemo(() => {
     if (supabase) {
-      // Pass the client, ensuring it's typed as SupabaseClient<Database>
-      // The useAuth hook should ideally provide a typed client.
-      // If not, we might need to cast, but let's assume it provides the correct type for now.
-      return new ConversationManager(supabase as SupabaseClient<Database>);
+      // Cast to SupabaseClient<any> when passing to the constructor
+      return new ConversationManager(supabase as SupabaseClient<any>);
     } 
     return null; // Return null if client isn't ready
   }, [supabase]);
