@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
+import { useVirgilReader } from '@/contexts/VirgilReaderContext';
 
 interface ViewerContainerProps {
-  theme: Theme;
-  setContainer: (element: Element | null) => void;
+  theme: {
+    text: string;
+  };
+  setContainer: (node: HTMLDivElement | null) => void;
 }
 
 const ViewerContainer: React.FC<ViewerContainerProps> = ({ 
@@ -11,6 +14,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   setContainer 
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { showVirgilChat } = useVirgilReader();
   
   useEffect(() => {
     if (containerRef.current) {
@@ -37,6 +41,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
                   margin: 0 !important;
                   padding: 0 !important;
                   height: 100% !important;
+                  overflow: hidden !important;
                 }
                 
                 body > * {
@@ -61,10 +66,32 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
     }
   }, [setContainer]);
 
+  // Force a resize when the Virgil drawer state changes
+  useEffect(() => {
+    const iframe = containerRef.current?.querySelector('iframe');
+    if (iframe) {
+      // Give time for the transition to complete
+      setTimeout(() => {
+        try {
+          // Force iframe to resize
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (iframeDoc) {
+            const resizeEvent = new Event('resize');
+            iframeDoc.defaultView?.dispatchEvent(resizeEvent);
+          }
+          // Also resize the window
+          window.dispatchEvent(new Event('resize'));
+        } catch (e) {
+          console.error('Error triggering resize:', e);
+        }
+      }, 300);
+    }
+  }, [showVirgilChat]);
+
   return (
     <div 
       ref={containerRef}
-      className="epub-view h-[80vh] overflow-hidden w-full" 
+      className={`epub-view w-full h-full overflow-hidden transition-all duration-300`}
       style={{ 
         background: "#332E38",
         color: theme.text,
