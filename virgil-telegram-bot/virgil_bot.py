@@ -25,9 +25,11 @@ logger = logging.getLogger(__name__)
 
 # Configuration - replace with your actual keys
 TELEGRAM_BOT_TOKEN = "7932386214:AAH_UDOG74dIpzJN5ldifquOKlJtNIWkfRg"  # Telegram bot token
-OPENROUTER_API_KEY = "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"  # Make sure there are no spaces or quotes in the key
+OPENROUTER_API_KEY = "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"  # Make sure there are no spaces or quotes in the key
 TURBOPUFFER_API_KEY = "tpuf_Aj4e0ABRMlq5Qzoh5IOZFcQzrn4snfXu"
 TURBOPUFFER_NAMESPACE = "alexandria_test"
+# Use GPT-3.5-Turbo instead of Claude
+LLM_MODEL = "openai/gpt-3.5-turbo"
 
 # Set up a memory for conversation history
 conversation_history = {}
@@ -158,7 +160,7 @@ async def search_turbopuffer(query: str, top_k: int = 5) -> List[Dict[str, Any]]
 
 async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = None, user_id: int = None) -> str:
     """
-    Query Claude LLM via OpenRouter API with Virgil system prompt.
+    Query LLM via OpenRouter API with Virgil system prompt.
     
     Args:
         prompt: The user prompt
@@ -166,11 +168,12 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
         user_id: User ID for conversation history
         
     Returns:
-        Claude's response
+        LLM's response
     """
     # Log the API key being used (just the first and last few characters for security)
     key_preview = f"{OPENROUTER_API_KEY[:5]}...{OPENROUTER_API_KEY[-5:]}"
     logger.info(f"Using OpenRouter API key: {key_preview}")
+    logger.info(f"Using model: {LLM_MODEL}")
     
     # Prepare the context from Turbopuffer results if available
     context_text = ""
@@ -232,60 +235,68 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
     full_prompt = f"{context_text}\n\nUser: {prompt}" if context_text else f"User: {prompt}"
     messages.append({"role": "user", "content": full_prompt})
     
-    # Method 1: Using fetch (like analyze-dna edge function)
+    # Try to use the OpenAI client method
     try:
-        logger.info("Attempting to call OpenRouter API using direct HTTP request")
+        logger.info("Using OpenAI client to call OpenRouter API")
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=OPENROUTER_API_KEY.strip(),
+        )
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY.strip()}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://readiverse-haven.com",
-                    "X-Title": "Virgil_readbot"
-                },
-                json={
-                    "model": "anthropic/claude-3-5-sonnet-20240620",  # Using Claude 3.5 which might be more reliable
-                    "messages": messages,
-                    "max_tokens": 1000,
-                    "temperature": 0.7
-                },
-                timeout=60.0
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"HTTP request failed with status {response.status_code}: {response.text}")
-                
-                # Try Method 2 if Method 1 fails
-                logger.info("Attempting to call OpenRouter API using OpenAI client")
-                client = OpenAI(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=OPENROUTER_API_KEY.strip(),
-                )
-                
-                completion = client.chat.completions.create(
-                    extra_headers={
-                        "HTTP-Referer": "https://readiverse-haven.com",
-                        "X-Title": "Virgil_readbot",
-                    },
-                    model="anthropic/claude-3-5-sonnet-20240620",
-                    messages=[msg for msg in messages],
-                    max_tokens=1000,
-                    temperature=0.7
-                )
-                
-                return completion.choices[0].message.content
-            
-            result = response.json()
-            response_content = result.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
-            logger.info(f"Received response from OpenRouter API: {response_content[:100]}...")
-            
-            return response_content
+        logger.info("Sending chat completion request...")
+        completion = client.chat.completions.create(
+            extra_headers={
+                "HTTP-Referer": "https://readiverse-haven.com",
+                "X-Title": "Virgil_readbot",
+            },
+            model=LLM_MODEL,  # Using GPT-3.5 instead of Claude
+            messages=[msg for msg in messages],
+            max_tokens=1000,
+            temperature=0.7
+        )
+        
+        response_content = completion.choices[0].message.content
+        logger.info(f"Received response from OpenRouter API: {response_content[:100]}...")
+        
+        return response_content
     
     except Exception as e:
-        logger.error(f"Error querying Claude: {str(e)}", exc_info=True)
-        return f"Sorry, I encountered an error when trying to process your question: {str(e)}"
+        logger.error(f"Error querying LLM: {str(e)}", exc_info=True)
+        
+        # Try direct HTTP request as fallback
+        try:
+            logger.info("Falling back to direct HTTP request")
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY.strip()}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://readiverse-haven.com",
+                        "X-Title": "Virgil_readbot"
+                    },
+                    json={
+                        "model": LLM_MODEL,
+                        "messages": messages,
+                        "max_tokens": 1000,
+                        "temperature": 0.7
+                    },
+                    timeout=60.0
+                )
+                
+                if response.status_code != 200:
+                    error_msg = f"API Error: {response.status_code} - {response.text}"
+                    logger.error(error_msg)
+                    return f"Sorry, I encountered an error when trying to process your question: {error_msg}"
+                
+                result = response.json()
+                response_content = result.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
+                logger.info(f"Received response from OpenRouter API (fallback): {response_content[:100]}...")
+                
+                return response_content
+        except Exception as e2:
+            logger.error(f"Error in fallback method: {str(e2)}", exc_info=True)
+            return f"Sorry, I encountered an error when trying to process your question: {str(e)} (Fallback error: {str(e2)})"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
