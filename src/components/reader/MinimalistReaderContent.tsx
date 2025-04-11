@@ -185,9 +185,9 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
 
   return (
     <div className="flex flex-col h-screen relative">
-      <div className={`flex-grow flex flex-col transition-transform duration-300 ${
-        showVirgilChat && shouldMoveContent ? 'transform translate-y-[-25vh]' : ''
-      }`}>
+      <div className={`flex flex-col transition-all duration-300 ${
+        showVirgilChat ? 'h-[50vh]' : 'h-[calc(100vh-64px)]'
+      }`} style={{ minHeight: showVirgilChat ? '50vh' : 'calc(100vh - 64px)' }}>
         <MinimalistTopBar 
           title={metadata?.title || currentChapterTitle} 
           externalLink={externalLink}
@@ -205,7 +205,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
           />
         </div>
 
-        <div className="flex-grow relative">
+        <div className="flex-grow relative overflow-hidden">
           <BookViewer
             book={book}
             currentLocation={currentLocation}
@@ -251,15 +251,22 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
             setShowSettingsMenu={setShowSettingsMenu}
           />
         </div>
-
-        <PageIndicator 
-          currentPage={pageInfo.chapterCurrent} 
-          totalPages={pageInfo.chapterTotal} 
-          show={showControls} 
-        />
       </div>
 
-      {!showVirgilChat && <VirgilChatButton />}
+      {!showVirgilChat && (
+        <div className="relative h-16">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <VirgilChatButton />
+          </div>
+          <div className="absolute inset-0 pointer-events-none">
+            <PageIndicator 
+              currentPage={pageInfo.chapterCurrent} 
+              totalPages={pageInfo.chapterTotal} 
+              show={showControls} 
+            />
+          </div>
+        </div>
+      )}
       
       <VirgilDrawer bookTitle={metadata?.title || currentChapterTitle} />
 
