@@ -1,7 +1,12 @@
-import { conversationManager } from './ConversationManager';
-import audioTranscriptionService from './AudioTranscriptionService';
 import { toast } from 'sonner';
 import { createClient } from '@supabase/supabase-js';
+import { ChatMessage } from '@/types/chat';
+
+// Define the structure expected by the Gemini API's 'contents' field
+interface GeminiContent {
+  role: 'user' | 'model';
+  parts: [{ text: string }];
+}
 
 class AIService {
   private apiKey: string = '';
@@ -15,7 +20,7 @@ class AIService {
     this.initializeFromEnvironment();
   }
 
-  private async fetchSecretFromEdgeFunction() {
+  private async fetchSecretFromEdgeFunction(): Promise<string | null> {
     try {
       this.isLoadingKey = true;
       
@@ -74,12 +79,18 @@ class AIService {
       return;
     }
     
-    // Fallback for development
+    // Fallback for development - REMOVE THIS IN PRODUCTION IF KEY IS ALWAYS PROVIDED VIA ENV/EDGE
     if (import.meta.env.DEV) {
       // Use the previously hardcoded key for development only
-      const devKey = 'AIzaSyC_eHbaco22arhTPHJ2ZAYyud2tG5QWCNk';
-      this.initialize(devKey);
-      console.log('Running in development mode with provided Gemini API key');
+      const devKey = 'YOUR_DEV_API_KEY_HERE'; // Replace with your actual dev key or remove
+      if (devKey !== 'YOUR_DEV_API_KEY_HERE') { // Basic check to avoid committing a placeholder
+         this.initialize(devKey);
+         console.log('Running in development mode with provided Gemini API key');
+      } else {
+         console.error('DEV MODE: Gemini API key placeholder found. Please provide a real key.');
+         toast.error('AI service requires API key setup for development.');
+         this.initialized = false;
+      }
     } else {
       console.error('Could not get Gemini API key from any source');
       toast.error('AI service initialization failed. Please check your API key configuration.');
@@ -110,79 +121,42 @@ class AIService {
 
   // Generate a response from the AI using Gemini
   async generateResponse(
-    sessionId: string,
-    userMessage: string,
-    audioData?: Blob
-  ): Promise<{ text: string; audioUrl?: string; transcribedText?: string }> {
-    // Check initialization state with better message
+    systemPrompt: string,
+    messages: ChatMessage[]
+  ): Promise<string> {
     if (!this.isInitialized()) {
       console.error('AI service not initialized or API key is missing.');
-      
-      // Try to initialize one more time
-      if (!this.isLoadingKey) {
-        await this.initializeFromEnvironment();
-        
-        // If still not initialized, return error message
-        if (!this.isInitialized()) {
-          return { 
-            text: "I'm sorry, I'm having trouble connecting to my AI services at the moment. Please check that you have set up the Google Gemini API key correctly in your environment variables or edge function.", 
-          };
-        }
-      } else {
-        return { 
-          text: "I'm currently loading my API key. Please try again in a moment.", 
-        };
-      }
+      // Throw an error or return a specific error message string
+      // Throwing might be better for the caller (useVirgilChat) to handle
+      // throw new Error("AI service is not initialized.");
+      return "Error: AI service is not initialized. Please check configuration.";
+    }
+    if (this.isLoadingKey) {
+       console.warn('AI service is still loading the API key.');
+       return "Error: AI service is initializing. Please try again shortly.";
     }
 
     try {
-      // If we have audio data, transcribe it first
-      let finalUserMessage = userMessage;
-      let transcribedText: string | undefined = undefined;
-      
-      if (audioData) {
-        try {
-          // Check if transcription service is initialized
-          if (!audioTranscriptionService.isInitialized()) {
-            console.warn('Audio transcription service not initialized, using fallback text');
-          } else {
-            // Transcribe the audio
-            console.log('Transcribing audio before sending to Gemini');
-            const transcription = await audioTranscriptionService.transcribeAudio(audioData);
-            
-            if (transcription && transcription.trim()) {
-              finalUserMessage = transcription;
-              transcribedText = finalUserMessage;
-              console.log('Using transcribed text:', finalUserMessage);
-            } else {
-              console.warn('Empty transcription received, using fallback text');
-            }
-          }
-        } catch (error) {
-          console.error('Error transcribing audio:', error);
-          // Continue with original message if transcription fails
-        }
-      }
-      
-      // Format messages for Gemini
-      const formattedMessages = await this._formatMessagesForGemini(sessionId, finalUserMessage);
-      
-      // Add the current user message to the conversation history
-      conversationManager.addMessage(sessionId, 'user', finalUserMessage);
-      
+      // Format message history for Gemini API
+      const formattedMessages = this._formatMessagesForGemini(messages);
+
       // Create request payload for Gemini
+      // Including systemPrompt via system_instruction if the API supports it
       const requestPayload = {
         contents: formattedMessages,
+        system_instruction: {
+           parts: [{ text: systemPrompt }]
+        },
         generation_config: {
-          temperature: 0.7,
+          temperature: 0.7, // Keep previous settings, adjust as needed
           top_p: 0.95,
           top_k: 40,
-          max_output_tokens: 1000,
+          max_output_tokens: 1000, // Keep previous settings, adjust as needed
         }
       };
-      
-      console.log('Gemini request payload:', JSON.stringify(requestPayload));
-      
+
+      // console.log('Gemini request payload:', JSON.stringify(requestPayload, null, 2)); // More readable log
+
       // Make API request to Gemini
       const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
         method: "POST",
@@ -191,131 +165,46 @@ class AIService {
         },
         body: JSON.stringify(requestPayload)
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Gemini API error:", errorData);
-        throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
+        console.error("Gemini API error:", response.status, errorData);
+        // Provide more specific error feedback if possible
+        const errorDetail = errorData?.error?.message || JSON.stringify(errorData);
+        throw new Error(`Gemini API Error (${response.status}): ${errorDetail}`);
       }
-      
+
       const responseData = await response.json();
-      console.log("Gemini response:", responseData);
-      
-      // Extract the response text
-      let responseText = '';
-      if (responseData.candidates && 
-          responseData.candidates[0] && 
-          responseData.candidates[0].content && 
-          responseData.candidates[0].content.parts && 
-          responseData.candidates[0].content.parts[0] && 
-          responseData.candidates[0].content.parts[0].text) {
-        responseText = responseData.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error('Failed to extract response from Gemini');
+      // console.log("Gemini response:", JSON.stringify(responseData, null, 2)); // More readable log
+
+      // Extract the response text safely
+      const responseText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (typeof responseText !== 'string') {
+         console.error("Failed to extract valid text from Gemini response:", responseData);
+        throw new Error('Invalid response format from Gemini API');
       }
-      
-      // If response is too long, truncate it
-      const finalResponse = responseText.length > 600 
-        ? this._truncateText(responseText)
-        : responseText;
-      
-      // Add the assistant response to conversation history
-      conversationManager.addMessage(sessionId, 'assistant', finalResponse);
-      
-      // We no longer save the conversation here, as it will be saved when the user answers the question
-      
-      return { 
-        text: finalResponse,
-        transcribedText 
-      };
+
+      return responseText;
+
     } catch (error) {
       console.error('Error generating AI response:', error);
-      
-      // Provide a fallback response rather than throwing an error
-      return {
-        text: "I'm sorry, it seems like Charon might have throttled my wifi down here and I came upon an error. Let me investigate and get back to you, or maybe try your message again?",
-      };
-    }
-  }
-  
-  // Truncate text to be under 600 characters
-  private _truncateText(text: string): string {
-    // Find the last sentence end before 550 characters to leave room for a question
-    const lastEnd = text.substring(0, 550).lastIndexOf('.');
-    if (lastEnd === -1) {
-      // No sentence end found, just truncate
-      return text.substring(0, 550) + "... What are your thoughts on this?";
-    } else {
-      // Add a follow-up question if there isn't one
-      const truncated = text.substring(0, lastEnd + 1);
-      if (!truncated.includes('?')) {
-        return truncated + " What do you think about this perspective?";
-      }
-      return truncated;
+      // Return a generic error message or re-throw for the caller to handle
+      return "I'm sorry, an unexpected error occurred while generating a response. Please try again.";
     }
   }
 
   // Format messages for Gemini API
-  private async _formatMessagesForGemini(sessionId: string, userMessage: string): Promise<any[]> {
-    const messages = conversationManager.getHistory(sessionId);
-    const formattedMessages = [];
-    
-    // Create a content object for the conversation
-    let conversationText = '';
-    
-    // Add system prompt
-    const systemPrompt = conversationManager.generateDynamicSystemPrompt(sessionId);
-    conversationText += `System: ${systemPrompt}\n\n`;
-    
-    // Add conversation history
-    if (messages.length > 0) {
-      messages.forEach(msg => {
-        const role = msg.role === 'user' ? 'User' : 'Assistant';
-        conversationText += `${role}: ${msg.content}\n\n`;
-      });
-    } else {
-      // If there are no existing messages, we need to start with the current question
-      const currentQuestion = conversationManager.getCurrentQuestion(sessionId);
-      conversationText += `User: I'd like to discuss: ${currentQuestion}\n\n`;
-    }
-    
-    // Add the current user message if it's not already included in the history
-    if (userMessage && (messages.length === 0 || 
-        messages[messages.length - 1].role !== 'user' || 
-        messages[messages.length - 1].content !== userMessage)) {
-      
-      conversationText += `User: ${userMessage}\n\n`;
-    }
-    
-    // Add prompt for assistant response
-    conversationText += 'Assistant:';
-    
-    // Create the content object
-    formattedMessages.push({
-      role: 'user',
-      parts: [{ text: conversationText }]
-    });
-    
-    return formattedMessages;
+  // Takes ChatMessage[] and returns GeminiContent[]
+  private _formatMessagesForGemini(messages: ChatMessage[]): GeminiContent[] {
+    return messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user', // Map 'assistant' to 'model'
+      parts: [{ text: msg.content }]
+    }));
   }
 
-  // Convert a blob to base64
-  private async _blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        } else {
-          reject(new Error('Failed to convert blob to base64'));
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
+  // _truncateText is removed as per requirements
+  // _blobToBase64 is removed as per requirements
 }
 
 // Create a singleton instance

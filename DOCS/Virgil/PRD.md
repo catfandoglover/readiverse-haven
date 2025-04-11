@@ -294,47 +294,59 @@ CREATE POLICY "Allow users to select own badges" ON public.badges FOR SELECT USI
 **10. Implementation Prioritization (Suggested Order)**
 
 1.  **Foundation - Core Services:**
-    *   Implement/Finalize `AIService.ts`.
+    *   Implement/Finalize `AIService.ts` (DONE)
 
 
-Looking at your AIService.ts, it partially aligns with the PRD requirements but needs some adjustments to fully comply with the architecture design in section 10.
+Okay, I have reviewed the `LLM_INSTRUCTIONS.md` and `PRD.md` documents, focusing on the requirements for `AIService.ts`.
 
-According to your PRD, AIService should be responsible *only* for communicating with the Gemini API - sending prompts+history, receiving responses, and basic error handling.
+Here's an in-depth explanation of how `src/services/AIService.ts` needs to be updated to align with the plan outlined in your PRD:
 
-Current issues:
+**1. Core Responsibility Mismatch (PRD FR1.1):**
 
-1. **Tight coupling with ConversationManager**: Your AIService directly calls conversationManager methods like `addMessage()`, `getHistory()`, and `generateDynamicSystemPrompt()`. This violates the separation of concerns outlined in your PRD.
+*   **PRD Requirement:** `AIService.ts` must be responsible *only* for communicating with the Gemini API. It should take a prompt and message history, send them to the API, and return the raw response. It should *not* manage conversation state or interact directly with data storage (`ConversationManager`).
+*   **Current `AIService.ts`:** The current implementation violates this principle significantly.
+    *   It **imports and directly calls** methods from `conversationManager` (e.g., `addMessage`, `getHistory`, `generateDynamicSystemPrompt`). This creates a tight coupling and mixes responsibilities.
+    *   It **manages conversation state indirectly** by formatting messages based on history fetched from `conversationManager` and adding new messages back to it.
+    *   It uses a `sessionId` concept, which is tied to the old way of managing conversations via `ConversationManager`, rather than receiving context-agnostic message history.
 
-2. **Conversation handling**: AIService shouldn't manage conversation history - that's ConversationManager's responsibility. The service should just handle API communication.
+**2. Unnecessary Functionality:**
 
-3. **Session management**: The current implementation uses a "sessionId" but the PRD structure uses different tables for different conversation types.
+*   **Audio Transcription:** The service currently includes logic to handle audio blobs and call `audioTranscriptionService`. While audio input is a feature (PRD FR2.2), the PRD assigns `AIService` only the LLM communication task. Transcription should happen *before* `AIService` is called, likely within the `useVirgilChat` hook or the UI component handling the microphone input. The `generateResponse` method should expect plain text.
+*   **Text Truncation:** The `_truncateText` method adds presentation logic (limiting response length and adding follow-up questions). This logic doesn't belong in the core API service; it should be handled by the consumer of the response (e.g., `useVirgilChat` or `VirgilChatUI`) based on UI requirements.
+*   **Dynamic System Prompt Generation:** It calls `conversationManager.generateDynamicSystemPrompt`. According to the PRD (FR1.3, FR3.1, FR3.2), the system prompt determination logic resides higher up (in wrapper components or configuration) and should be passed *into* the service.
 
-Recommended changes:
-- Make AIService focused purely on API communication
-- Remove dependencies on ConversationManager
-- Make the service accept properly formatted messages and return responses
-- Keep the singleton instance, which aligns with the PRD
+**3. Required Refactoring Steps:**
+
+To align `AIService.ts` with the PRD:
+
+*   **Decouple from `ConversationManager`:**
+    *   Remove the `import { conversationManager } ...`.
+    *   Remove all calls to `conversationManager` methods within `generateResponse` and `_formatMessagesForGemini`.
+*   **Modify `generateResponse` Signature:**
+    *   Remove the `sessionId` parameter.
+    *   Remove the `audioData` parameter.
+    *   Add parameters to accept the `systemPrompt: string` and the conversation `messages: ChatMessage[]` (you'll need to define or import a `ChatMessage` type like `{ role: 'user' | 'assistant', content: string }`).
+*   **Simplify `generateResponse` Logic:**
+    *   It should *not* perform transcription.
+    *   It should use the passed-in `systemPrompt` and `messages` to construct the payload for the Gemini API request. The internal `_formatMessagesForGemini` needs significant changes or removal, as the formatting will now be based on the arguments passed directly to `generateResponse`. The structure should follow the Gemini API requirements (likely converting the `messages` array and prepending the system prompt).
+    *   It should *not* call `conversationManager.addMessage`.
+    *   It should return only the raw text response from the API (e.g., `Promise<string>`). Error handling should return an error message string or throw an error, not a structured object with audio URLs.
+*   **Remove Helper Functions:**
+    *   Remove the `_truncateText` method.
+    *   Remove the `_blobToBase64` method (as audio handling is removed).
+    *   Refactor or remove `_formatMessagesForGemini` as its purpose changes fundamentally. It will no longer fetch history or prompts itself.
+*   **Maintain Initialization:** The existing logic for fetching and initializing the API key (`initializeFromEnvironment`, `fetchSecretFromEdgeFunction`, `initialize`, `isInitialized`, `isLoadingKey`) is appropriate as it directly relates to the core responsibility of communicating with the API.
+*   **Maintain Singleton:** The singleton export (`export const aiService = new AIService();`) aligns with the PRD's recommendation (Section 6).
+
+**In Summary:**
+
+The goal is to transform `AIService.ts` into a lean, focused service that acts purely as a typed wrapper around the Gemini API's `generateContent` endpoint. It receives all necessary context (system prompt, history) via arguments, makes the API call, and returns the result, delegating all other concerns (state management, transcription, UI logic) to other parts of the application as defined in the PRD.
+
+This aligns with **Implementation Prioritization Step 1 (Foundation - Core Services)** in your PRD, ensuring `AIService.ts` is finalized before implementing `ConversationManager.ts` and `useVirgilChat.ts`.
+
+Let me know when you're ready for me to draft the code edits based on this explanation.
 
 
-I've refactored the AIService to align with the requirements in your PRD, specifically:
-
-1. Removed all dependencies on ConversationManager
-2. Focused the service solely on API communication with Gemini
-3. Added a ChatMessage interface for consistent messaging
-4. Simplified the response handling
-5. Made the service accept system prompts and message history directly
-
-Key changes:
-- Removed conversation history management
-- Removed audio transcription (that should be handled separately)
-- Changed the input parameters to accept system prompt and message history
-- Simplified the response to return just the text
-- Removed text truncation (that should be handled by the consumer)
-- Kept the initialization and API key handling
-
-The service now follows the single responsibility principle and aligns with section FR1.1 in your PRD, which states the AIService should be responsible *only* for communicating with the Gemini API.
-
-Would you like to proceed with implementing the ConversationManager next, according to your implementation plan?
 
 
 

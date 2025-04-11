@@ -1,4 +1,4 @@
-import { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Assuming ChatMessage structure based on PRD FR4.2
 export interface ChatMessage {
@@ -26,6 +26,7 @@ interface ConversationBase {
 // etc.
 
 export class ConversationManager {
+  // Revert to non-generic SupabaseClient type
   private supabase: SupabaseClient;
 
   constructor(supabaseClient: SupabaseClient) {
@@ -53,7 +54,7 @@ export class ConversationManager {
     tableName: string,
     userId: string,
     contextIdentifiers: Record<string, any>
-  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+  ): Promise<{ data: T | null; error: Error | null }> {
     const query = this.supabase
       .from(tableName)
       .select('*')
@@ -63,16 +64,13 @@ export class ConversationManager {
       query.eq(key, value);
     });
 
-    // Assuming only one conversation should match the unique constraints defined in PRD
     query.limit(1).maybeSingle();
-
     const { data, error } = await query;
 
     if (error) {
       console.error(`Error fetching conversation from ${tableName}:`, error);
     }
-
-    return { data: data as T | null, error };
+    return { data: data as T | null, error: error ? new Error(error.message) : null };
   }
 
   /**
@@ -92,7 +90,7 @@ export class ConversationManager {
     limit: number = 50,
     orderBy: string = 'updated_at',
     ascending: boolean = false
-  ): Promise<{ data: T[] | null; error: PostgrestError | null }> {
+  ): Promise<{ data: T[] | null; error: Error | null }> {
     const { data, error } = await this.supabase
       .from(tableName)
       .select(selectFields)
@@ -103,8 +101,7 @@ export class ConversationManager {
     if (error) {
       console.error(`Error fetching conversation list from ${tableName}:`, error);
     }
-
-    return { data: data as T[] | null, error };
+    return { data: data as T[] | null, error: error ? new Error(error.message) : null };
   }
 
   /**
@@ -120,10 +117,9 @@ export class ConversationManager {
     userId: string,
     initialMessages: ChatMessage[],
     metadata: Record<string, any>
-  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+  ): Promise<{ data: T | null; error: Error | null }> {
     const now = new Date().toISOString();
     const last_message_preview = this.getLastMessagePreview(initialMessages);
-
     const newConversationData = {
       user_id: userId,
       messages: initialMessages,
@@ -142,8 +138,7 @@ export class ConversationManager {
     if (error) {
       console.error(`Error creating conversation in ${tableName}:`, error);
     }
-
-    return { data: data as T | null, error };
+    return { data: data as T | null, error: error ? new Error(error.message) : null };
   }
 
   /**
@@ -156,14 +151,11 @@ export class ConversationManager {
   async updateConversation<T extends ConversationBase>(
     tableName: string,
     conversationId: string,
-    // Ensure messages are always passed for preview calculation
     updates: { messages: ChatMessage[] } & Record<string, any>
-  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+  ): Promise<{ data: T | null; error: Error | null }> {
 
     if (!updates.messages) {
-        // Optional: throw an error if messages are missing, as they are needed for preview
          console.warn(`Updating conversation ${conversationId} in ${tableName} without providing 'messages' array.`);
-         // return { data: null, error: { message: "Messages array is required for update.", details: "", hint: "", code: "MISSING_MESSAGES" }};
     }
 
     const updatePayload = {
@@ -183,8 +175,7 @@ export class ConversationManager {
     if (error) {
       console.error(`Error updating conversation ${conversationId} in ${tableName}:`, error);
     }
-
-    return { data: data as T | null, error };
+    return { data: data as T | null, error: error ? new Error(error.message) : null };
   }
 
   /**
@@ -198,7 +189,7 @@ export class ConversationManager {
     tableName: string,
     conversationId: string,
     userId: string // Keep userId param for potential future checks, though RLS handles primary auth
-  ): Promise<{ error: PostgrestError | null }> {
+  ): Promise<{ error: Error | null }> {
 
      // Basic check to prevent accidental deletion if userId doesn't match, although RLS is the main guard
      // const { data: checkData, error: checkError } = await this.supabase
@@ -224,6 +215,6 @@ export class ConversationManager {
       console.error(`Error deleting conversation ${conversationId} from ${tableName}:`, error);
     }
 
-     return { error };
+     return { error: error ? new Error(error.message) : null };
   }
 }
