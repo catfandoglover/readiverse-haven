@@ -628,7 +628,7 @@ serve(async (req) => {
         const payload = await req.json();
         if (payload.type === 'INSERT' && payload.table === 'dna_analysis_results' && payload.record && payload.record.id) {
             dnaResult = payload.record as DnaAnalysisResult;
-            assessmentId = dnaResult.id; // Extract ID here
+            assessmentId = dnaResult.assessment_id; // Extract ID here
             console.log(`Processing new DNA result ID: ${assessmentId}`);
         } else {
             console.warn("Received payload doesn't match expected INSERT event:", payload);
