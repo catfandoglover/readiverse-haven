@@ -1,5 +1,5 @@
-
-
+<!-- commit 1d29e531c1645f1dd72a860a48861d78d34e171b.  <!-- Both ConversationManager.ts and ServicesContext.tsx are now updated to use the generated Supabase types. -->
+ -->
 
 
 
@@ -8,7 +8,7 @@
 <!-- 
 Okay, I've cleaned up the src/config/virgilConfig.ts file. I removed the old enum and interface definitions, the conflicting DNA_ASSESSMENT_CHAT configuration, and ensured it aligns with the VirgilInstanceType defined in src/types/virgil.ts.
 Both src/types/virgil.ts and src/config/virgilConfig.ts should now correctly reflect the requirements outlined in the PRD.
- -->
+ -->do 
 
 
 

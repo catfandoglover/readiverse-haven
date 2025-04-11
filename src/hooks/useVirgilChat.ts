@@ -1,22 +1,37 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage } from '@/types/virgil'; // Base type { role, content }
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import audioTranscriptionService from '@/services/AudioTranscriptionService';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { toast } from 'sonner';
+import { Database } from '@/types/supabase'; // Import Database type for table names
+
+// Internal type for UI state, extending the base DB type
+type UIMessage = ChatMessage & {
+  id: string;
+  audioUrl?: string;
+};
+
+// Type for the conversation table names from generated types
+type ConversationTableName = keyof Database['public']['Tables'];
 
 interface UseVirgilChatProps {
   userId: string | null | undefined;
   systemPrompt: string;
-  storageTable: string; // e.g., 'virgil_general_chat_conversations'
-  contextIdentifiers: Record<string, any>; // e.g., { book_id: '123' } or { prompt_id: 'abc' }
-  initialMessageOverride?: string; // Optional initial message from assistant
-  conversationIdToLoad?: string; // Optional ID to load specific conversation
-  isResumable?: boolean; // Default true, set false for non-resumable (like exams)
+  storageTable: string; // Received as string, cast later
+  contextIdentifiers: Record<string, any>;
+  initialMessageOverride?: string;
+  conversationIdToLoad?: string;
+  isResumable?: boolean;
 }
+
+// Helper function to strip UI-specific fields for saving/sending to AI
+const mapToDbMessages = (uiMessages: UIMessage[]): ChatMessage[] => {
+  return uiMessages.map(({ role, content }) => ({ role, content }));
+};
 
 export const useVirgilChat = ({
   userId,
@@ -28,88 +43,73 @@ export const useVirgilChat = ({
   isResumable = true,
 }: UseVirgilChatProps) => {
   const { aiService, conversationManager } = useServices();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Use the internal UIMessage type for state
+  const [messages, setMessages] = useState<UIMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // Covers transcription, AI response, saving
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
-  // Fetch initial conversation history or start new
+  // Ensure storageTable prop is a valid table name before using
+  const validStorageTable = storageTable as ConversationTableName;
+
   useEffect(() => {
     const loadConversation = async () => {
       if (!conversationManager || !userId) {
-        // console.warn("ConversationManager or userId not available yet for loading.");
-        setIsLoadingHistory(false); // Stop loading even if we can't fetch
+        setIsLoadingHistory(false);
         return;
       }
-
       setIsLoadingHistory(true);
-      let loadedMessages: ChatMessage[] = [];
+      let loadedMessages: UIMessage[] = []; // Use UIMessage here
       let loadedConversationId: string | null = null;
 
       try {
         if (conversationIdToLoad) {
-          // TODO: Implement fetch by specific ID if needed, ConversationManager doesn't have this yet
-          console.warn('Loading specific conversation by ID not fully implemented yet.');
-          // Fetch using fetchConversationList with limit 1 and ID filter?
+          // TODO: (Low Priority) Implement fetch by specific ID
         } else if (isResumable) {
-          // Fetch conversation based on context (e.g., user+book, user+course)
           const { data: existingConvo, error } = await conversationManager.fetchConversation(
-            storageTable,
+            validStorageTable, // Use casted table name
             userId,
             contextIdentifiers
           );
-
           if (error) {
             toast.error('Error loading previous conversation history.');
-            console.error('Error fetching conversation:', error);
-          } else if (existingConvo && existingConvo.messages) {
-            // Map messages from DB structure (no id) to state structure (with id)
-            loadedMessages = existingConvo.messages.map(dbMsg => ({
-              ...dbMsg, // Includes role, content
+          } else if (existingConvo?.messages) {
+            // Map messages from DB structure (ChatMessage) to state structure (UIMessage)
+            loadedMessages = existingConvo.messages.map((dbMsg) => ({
+              ...dbMsg,
               id: uuidv4(), // Generate an ID for the state
-              // audioUrl: dbMsg.audioUrl, // Include other fields if they exist on dbMsg
+              // audioUrl is added later if needed
             }));
             loadedConversationId = existingConvo.id;
-            console.log(`Resumed conversation ${loadedConversationId} from ${storageTable}`);
           }
-        } 
-        // If not resumable (exam), or no existing found, loadedMessages remains empty
+        }
 
-        // Handle initial message override or default greeting if no history
         if (loadedMessages.length === 0 && initialMessageOverride) {
-          const initialAssistantMsg: ChatMessage = {
+          const initialAssistantMsg: UIMessage = { // Use UIMessage
             id: uuidv4(),
             role: 'assistant',
             content: initialMessageOverride,
-            // isNew: true // Optional: Add flag if needed by UI
           };
           loadedMessages = [initialAssistantMsg];
-          // Don't save this initial override immediately, wait for user interaction
         }
 
         setMessages(loadedMessages);
-        setCurrentConversationId(loadedConversationId); // Store the loaded ID
+        setCurrentConversationId(loadedConversationId);
 
-        // Generate audio for the last message if it's from assistant
         if (loadedMessages.length > 0 && loadedMessages[loadedMessages.length - 1].role === 'assistant') {
-          // Delay slightly to ensure UI updates
           setTimeout(() => generateAudioForText(loadedMessages[loadedMessages.length - 1].content), 100);
         }
-
       } catch (err) {
         toast.error('Failed to load conversation data.');
-        console.error('Error in loadConversation effect:', err);
       } finally {
         setIsLoadingHistory(false);
       }
     };
-
     loadConversation();
-    // Dependencies: Trigger reload if context changes (e.g., different bookId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationManager, userId, storageTable, JSON.stringify(contextIdentifiers), conversationIdToLoad, isResumable, initialMessageOverride]);
+  }, [conversationManager, userId, validStorageTable, JSON.stringify(contextIdentifiers), conversationIdToLoad, isResumable, initialMessageOverride]);
 
   const generateAudioForText = useCallback(async (text: string) => {
     if (!text) return;
@@ -120,6 +120,7 @@ export const useVirgilChat = ({
         const lastMsgIndex = prevMessages.length - 1;
         if (lastMsgIndex >= 0 && prevMessages[lastMsgIndex].role === 'assistant') {
           const updatedMessages = [...prevMessages];
+          // Add audioUrl to the UIMessage
           updatedMessages[lastMsgIndex] = { ...updatedMessages[lastMsgIndex], audioUrl };
           return updatedMessages;
         }
@@ -129,59 +130,55 @@ export const useVirgilChat = ({
       console.error('Error generating audio:', error);
       toast.error("Failed to generate audio for Virgil's response.");
     }
-  }, []); // Removed generateAudioForText from deps as it causes infinite loops
+  }, []);
 
-  // Helper to save conversation state
-  const saveConversation = useCallback(async (currentMessages: ChatMessage[]) => {
-    if (!conversationManager || !userId || currentMessages.length === 0) return;
+  const saveConversation = useCallback(async (currentUIMessages: UIMessage[]) => {
+    if (!conversationManager || !userId || currentUIMessages.length === 0) return;
 
-    // TODO: Add optimistic updates and better error handling
+    // Map UIMessages back to basic ChatMessages for saving
+    const messagesToSave = mapToDbMessages(currentUIMessages);
+    
     try {
       if (currentConversationId) {
-        // Update existing conversation
         const { error } = await conversationManager.updateConversation(
-          storageTable,
+          validStorageTable, // Use casted table name
           currentConversationId,
-          { messages: currentMessages /*, Add other metadata if needed e.g., status */ }
+          { messages: messagesToSave }
         );
         if (error) throw error;
-        // console.log(`Conversation ${currentConversationId} updated.`);
       } else {
-        // Create new conversation
         const { data: newConvo, error } = await conversationManager.createConversation(
-          storageTable,
+          validStorageTable, // Use casted table name
           userId,
-          currentMessages,
+          messagesToSave,
           contextIdentifiers
         );
         if (error) throw error;
         if (newConvo) {
-          setCurrentConversationId(newConvo.id); // Store the new ID
-          console.log(`New conversation ${newConvo.id} created in ${storageTable}.`);
+          setCurrentConversationId(newConvo.id);
         }
       }
     } catch (error) {
       console.error('Error saving conversation:', error);
       toast.error('Failed to save conversation progress.');
     }
-  }, [conversationManager, userId, storageTable, currentConversationId, contextIdentifiers]);
+  }, [conversationManager, userId, validStorageTable, currentConversationId, contextIdentifiers]);
 
-  // Processes text input
   const processTextMessage = useCallback(async (userMessageContent: string) => {
     if (!userMessageContent.trim() || isProcessing || !userId) return;
-
     setIsProcessing(true);
     stopAllAudio();
 
-    const newUserMessage: ChatMessage = {
+    const newUserMessage: UIMessage = { // Use UIMessage
       id: uuidv4(),
       role: 'user',
       content: userMessageContent.trim(),
     };
+    // State uses UIMessage[]
     const messagesWithUser = [...messages, newUserMessage];
     setMessages(messagesWithUser);
 
-    const thinkingMessage: ChatMessage = {
+    const thinkingMessage: UIMessage = { // Use UIMessage
       id: uuidv4(),
       role: 'assistant',
       content: 'Thinking...',
@@ -189,52 +186,47 @@ export const useVirgilChat = ({
     setMessages(prev => [...prev, thinkingMessage]);
 
     try {
-      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
+      // Map to base ChatMessage[] for AI Service
+      const responseText = await aiService.generateResponse(systemPrompt, mapToDbMessages(messagesWithUser));
 
-      const assistantMessage: ChatMessage = {
-        id: thinkingMessage.id, // Replace the thinking message
+      const assistantMessage: UIMessage = { // Use UIMessage
+        id: thinkingMessage.id,
         role: 'assistant',
         content: responseText,
       };
 
-      // Update messages state, replacing 'Thinking...' with the actual response
-      const finalMessages = messagesWithUser.map(msg => 
-        msg.id === thinkingMessage.id ? assistantMessage : msg
-      );
-      // Ensure thinking message is replaced if it wasn't last
-      const finalMessagesWithResponse = [...messagesWithUser.filter(m => m.id !== thinkingMessage.id), assistantMessage];
+      const finalMessagesWithResponse = messagesWithUser.filter(m => m.id !== thinkingMessage.id);
+      finalMessagesWithResponse.push(assistantMessage);
 
       setMessages(finalMessagesWithResponse);
       generateAudioForText(responseText);
+      // Pass UIMessage[] to saveConversation, it will map internally
       await saveConversation(finalMessagesWithResponse);
 
     } catch (error) {
       console.error('Error processing message:', error);
       toast.error("Virgil encountered an error responding. Please try again.");
-      // Remove the 'Thinking...' message on error
       setMessages(prev => prev.filter(msg => msg.id !== thinkingMessage.id));
     } finally {
       setIsProcessing(false);
     }
   }, [aiService, messages, systemPrompt, isProcessing, userId, saveConversation, generateAudioForText]);
 
-  // Processes transcribed audio text
   const processTranscribedAudio = useCallback(async (transcribedText: string, audioUrl?: string) => {
     if (!transcribedText.trim() || isProcessing || !userId) return;
-
     setIsProcessing(true);
     stopAllAudio();
 
-    const newUserMessage: ChatMessage = {
+    const newUserMessage: UIMessage = { // Use UIMessage
       id: uuidv4(),
       role: 'user',
       content: transcribedText.trim(),
-      audioUrl: audioUrl, // Include the audio URL if available
+      audioUrl: audioUrl,
     };
     const messagesWithUser = [...messages, newUserMessage];
     setMessages(messagesWithUser);
 
-    const thinkingMessage: ChatMessage = {
+    const thinkingMessage: UIMessage = { // Use UIMessage
       id: uuidv4(),
       role: 'assistant',
       content: 'Thinking...',
@@ -242,17 +234,21 @@ export const useVirgilChat = ({
     setMessages(prev => [...prev, thinkingMessage]);
 
     try {
-      const responseText = await aiService.generateResponse(systemPrompt, messagesWithUser);
+      // Map to base ChatMessage[] for AI Service
+      const responseText = await aiService.generateResponse(systemPrompt, mapToDbMessages(messagesWithUser));
 
-      const assistantMessage: ChatMessage = {
-        id: thinkingMessage.id, // Replace the thinking message
+      const assistantMessage: UIMessage = { // Use UIMessage
+        id: thinkingMessage.id,
         role: 'assistant',
         content: responseText,
       };
-      
-      const finalMessagesWithResponse = [...messagesWithUser.filter(m => m.id !== thinkingMessage.id), assistantMessage];
+
+      const finalMessagesWithResponse = messagesWithUser.filter(m => m.id !== thinkingMessage.id);
+      finalMessagesWithResponse.push(assistantMessage);
+
       setMessages(finalMessagesWithResponse);
       generateAudioForText(responseText);
+      // Pass UIMessage[] to saveConversation, it will map internally
       await saveConversation(finalMessagesWithResponse);
 
     } catch (error) {
@@ -264,80 +260,111 @@ export const useVirgilChat = ({
     }
   }, [aiService, messages, systemPrompt, isProcessing, userId, saveConversation, generateAudioForText]);
 
-  // Handles audio recording and transcription
-  const handleAudioInput = useCallback(async (audioBlob: Blob) => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-    const tempAudioUrl = audioRecordingService.createAudioUrl(audioBlob);
+  // --- Recording Logic --- 
+  const recordingRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-    // Optimistically add a placeholder message?
-    // setMessages(prev => [...prev, { id: uuidv4(), role: 'user', content: 'Processing audio...', audioUrl: tempAudioUrl }]);
-
+  const startRecording = async () => {
+    if (isRecording) return;
     try {
-      if (!audioTranscriptionService.isInitialized()) {
-        throw new Error('Audio transcription service not ready.');
-      }
-      const transcription = await audioTranscriptionService.transcribeAudio(audioBlob);
-      if (transcription && transcription.trim()) {
-         // Now process the transcription as if it were text input
-         await processTranscribedAudio(transcription, tempAudioUrl);
+      stopAllAudio(); // Stop any Virgil speech
+      recordingRef.current = await audioRecordingService.startRecording((chunk) => {
+        audioChunksRef.current.push(chunk);
+      });
+      setIsRecording(true);
+      audioChunksRef.current = []; // Clear previous chunks
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording. Check microphone permissions.');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!isRecording || !recordingRef.current) return;
+    try {
+      const audioBlob = await audioRecordingService.stopRecording(recordingRef.current);
+      recordingRef.current = null;
+      setIsRecording(false);
+      setIsProcessing(true); // Indicate processing starts (transcription)
+
+      if (audioBlob && audioBlob.size > 0) {
+        const blobUrl = URL.createObjectURL(audioBlob);
+        // Transcribe the audio
+        const transcriptionResult = await audioTranscriptionService.transcribeAudio(audioBlob);
+        if (transcriptionResult) {
+          // Process the transcribed text, passing the blob URL
+          await processTranscribedAudio(transcriptionResult, blobUrl);
+        } else {
+          toast.error('Transcription failed. Please try speaking again.');
+          setIsProcessing(false);
+        }
       } else {
-         toast.info("Couldn't hear anything clearly, please try speaking again.");
-         setIsProcessing(false); // Reset processing state if transcription is empty
+        toast.info('No audio detected.');
+        setIsProcessing(false);
       }
     } catch (error) {
-      console.error('Error transcribing audio:', error);
-      toast.error("Failed to process audio. Please try again or use text input.");
+      console.error('Error stopping recording or transcribing:', error);
+      toast.error('Failed to process recording.');
       setIsProcessing(false);
-    } 
-    // No finally here, processing continues in processTranscribedAudio
-  }, [isProcessing, processTranscribedAudio]);
+    } finally {
+       // Reset state regardless of transcription success/failure
+       audioChunksRef.current = [];
+       recordingRef.current = null; 
+       // setIsProcessing(false); // Already handled in success/error paths
+    }
+  };
 
-  const toggleRecording = useCallback(async () => {
-    if (isRecording) {
+  // Cancel recording
+  const cancelRecording = () => {
+    if (isRecording && recordingRef.current) {
+      audioRecordingService.cancelRecording(recordingRef.current);
+      recordingRef.current = null;
       setIsRecording(false);
-      try {
-        const audioBlob = await audioRecordingService.stopRecording();
-        await handleAudioInput(audioBlob); // Process the blob
-      } catch (error) {
-        console.error('Error stopping recording:', error);
-        toast.error('Error stopping recording.');
-        setIsProcessing(false); // Ensure processing stops on error
-      }
-    } else {
-      stopAllAudio();
-      try {
-        await audioRecordingService.startRecording();
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Error starting recording:', error);
-        toast.error('Could not start recording. Check microphone permissions.');
-      }
+      audioChunksRef.current = [];
+      toast.info('Recording cancelled.');
     }
-  }, [isRecording, handleAudioInput]);
+  };
 
-  const handleSubmit = useCallback(async (event?: React.FormEvent) => {
-    event?.preventDefault();
-    if (isRecording) {
-       // Stop recording and let the handler process it
-       await toggleRecording(); 
-       return; 
-    }
-    // Process text input
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (recordingRef.current) {
+        audioRecordingService.cancelRecording(recordingRef.current);
+      }
+      stopAllAudio();
+    };
+  }, []);
+
+  // Handle text input submit
+  const handleSubmitMessage = (e: React.FormEvent) => {
+    e.preventDefault();
     processTextMessage(inputMessage);
-    setInputMessage(''); // Clear input after submission
-  }, [isRecording, inputMessage, processTextMessage, toggleRecording]);
+    setInputMessage(''); // Clear input after submit
+  };
+
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+  };
+
+  // Toggle recording state
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   return {
     messages,
     inputMessage,
-    setInputMessage,
     isRecording,
     isProcessing,
     isLoadingHistory,
-    currentConversationId,
+    handleInputChange,
+    handleSubmitMessage,
     toggleRecording,
-    handleSubmit,
-    // Expose other methods if needed by UI, e.g., processTextMessage directly?
+    cancelRecording,
   };
 };
