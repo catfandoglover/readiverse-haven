@@ -1,0 +1,9 @@
+# Navigate into the new directory
+cd embeddings-bge
+
+# Create requirements.txt with current dependencies
+# Make sure your virtual environment is active first!
+pip freeze > requirements.txt
+
+# Navigate back to the repo root
+cd ..
