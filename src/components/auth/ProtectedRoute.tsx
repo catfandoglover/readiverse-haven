@@ -29,8 +29,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   
   // DNA assessment paths that should be accessible without authentication
-  const dnaAssessmentPaths = ['/dna', '/dna/priming', '/dna/ethics', '/dna/epistemology', 
-    '/dna/politics', '/dna/theology', '/dna/ontology', '/dna/aesthetics', '/dna/completion'];
+  const dnaAssessmentPaths = [
+    '/dna', 
+    '/dna/priming', 
+    '/dna/ethics', 
+    '/dna/epistemology', 
+    '/dna/politics', 
+    '/dna/theology', 
+    '/dna/ontology', 
+    '/dna/aesthetics', 
+    '/dna/completion'
+  ];
   const isDNAAssessmentPath = dnaAssessmentPaths.some(path => location.pathname === path);
   
   // Only authenticate paths that actually require authentication
@@ -43,18 +52,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // DNA assessment check - only if user is logged in and DNA is required
-  // if (requireDNA && !hasCompletedDNA && user) {
-  //   // Check for pending assessment ID in localStorage
-  //   const pendingAssessmentId = localStorage.getItem('pending_dna_assessment_id');
-  //   const isDnaWelcomePath = location.pathname === '/dna/welcome';
-    
-  //   // If there's a pending assessment and we're trying to access the welcome page,
-  //   // allow it through. Otherwise, redirect to priming.
-  //   if (!pendingAssessmentId || !isDnaWelcomePath) {
-  //     return <Navigate to="/dna/priming" replace />;
-  //   }
-  // }
+  // DNA assessment check - if user is logged in with DNA, redirect from priming
+  if (user && hasCompletedDNA && location.pathname === '/dna/priming') {
+    return <Navigate to="/virgil" replace />;
+  }
   
   // All checks passed, render the protected content
   return <>{children}</>;
