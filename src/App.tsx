@@ -60,6 +60,7 @@ import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
 import MembershipManagement from "./pages/MembershipManagement";
 import TurbopufferDemo from "./pages/TurbopufferDemo";
 import TurbopufferBooksTest from "./pages/TurbopufferBooksTest";
+import IntellectualDNAShelfPage from "./pages/IntellectualDNAShelf";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -396,6 +397,11 @@ const App = () => (
                   <Route path="/:slug" element={
                     <ProtectedRoute requireAuth={false} requireDNA={false}>
                       <DiscoverLayout />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/intellectual-dna-shelf" element={
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
+                      <IntellectualDNAShelfPage />
                     </ProtectedRoute>
                   } />
                 </Routes>
