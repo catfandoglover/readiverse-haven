@@ -66,25 +66,18 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
     }
   }, [setContainer]);
 
-  // Force a resize when the Virgil drawer state changes
+  // Add effect to handle resize when drawer state changes
   useEffect(() => {
     const iframe = containerRef.current?.querySelector('iframe');
     if (iframe) {
-      // Give time for the transition to complete
-      setTimeout(() => {
-        try {
-          // Force iframe to resize
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (iframeDoc) {
-            const resizeEvent = new Event('resize');
-            iframeDoc.defaultView?.dispatchEvent(resizeEvent);
-          }
-          // Also resize the window
-          window.dispatchEvent(new Event('resize'));
-        } catch (e) {
-          console.error('Error triggering resize:', e);
-        }
-      }, 300);
+      try {
+        // Trigger resize event on the iframe's window
+        iframe.contentWindow?.dispatchEvent(new Event('resize'));
+        // Also trigger resize on the main window
+        window.dispatchEvent(new Event('resize'));
+      } catch (e) {
+        console.error('Error triggering resize:', e);
+      }
     }
   }, [showVirgilChat]);
 

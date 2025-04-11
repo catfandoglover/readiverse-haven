@@ -17,6 +17,8 @@ import ReaderControls from './ReaderControls';
 import ProgressTracker from './ProgressTracker';
 import FloatingControls from './FloatingControls';
 import BookmarkDialog from './BookmarkDialog';
+import { useVirgilReader } from '@/contexts/VirgilReaderContext';
+import VirgilDrawer from './VirgilDrawer';
 
 interface ReaderContentProps {
   book: Book;
@@ -90,6 +92,7 @@ const ReaderContent = ({
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const bookKey = book?.key() || null;
+  const { showVirgilChat } = useVirgilReader();
 
   const {
     rendition,
@@ -179,7 +182,7 @@ const ReaderContent = ({
         <div className="fixed md:absolute left-1/2 -translate-x-1/2 top-4 z-50 hidden md:block">
           <TableOfContents toc={toc} onNavigate={onTocNavigate} />
         </div>
-        <div className="relative">
+        <div className={`relative transition-all duration-300 ${showVirgilChat ? 'h-[50vh]' : 'h-[calc(100vh-64px)]'}`}>
           {isMobile && (
             <>
               <div 
@@ -224,6 +227,10 @@ const ReaderContent = ({
         onRemoveBookmark={handleRemoveBookmark}
         chapterTitle={currentChapterTitle}
       />
+
+      <div className={`transition-all duration-300 ${showVirgilChat ? 'h-[50vh]' : 'h-0 overflow-hidden'}`}>
+        <VirgilDrawer bookTitle={currentChapterTitle} />
+      </div>
 
       <BrightnessOverlay brightness={brightness} />
     </>
