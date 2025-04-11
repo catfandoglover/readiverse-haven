@@ -166,49 +166,53 @@ const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
                 </div>
               )}
               
-              {/* Virgil's Office Navigation Item */}
-              <div 
-                className={cn(
-                  "flex items-center space-x-4 shadow-md rounded-2xl p-3 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors",
-                  (isActive("/virgil") || defaultPath === '/virgil') ? "bg-[#E3E0D9]/30" : "bg-[#E3E0D9]/10"
-                )}
-                onClick={handleVirgilNavigation}
-              >
-                <div className="flex-shrink-0 rounded-full p-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
-                  </Avatar>
+              {/* Virgil's Office Navigation Item - Only show for users with DNA */}
+              {user && hasCompletedDNA && (
+                <div 
+                  className={cn(
+                    "flex items-center space-x-4 shadow-md rounded-2xl p-3 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors",
+                    (isActive("/virgil") || defaultPath === '/virgil') ? "bg-[#E3E0D9]/30" : "bg-[#E3E0D9]/10"
+                  )}
+                  onClick={handleVirgilNavigation}
+                >
+                  <div className="flex-shrink-0 rounded-full p-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={virgilImageUrl} alt="Virgil" className="object-cover" />
+                    </Avatar>
+                  </div>
+                  <div className="flex flex-col">
+                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                      Virgil
+                    </h3>
+                    <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
+                      Consult your guide
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
-                    Virgil
-                  </h3>
-                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
-                    {!user ? "Login to access" : "Consult your guide"}
-                  </p>
-                </div>
-              </div>
+              )}
             
-              {/* Study Navigation Item */}
-              <div 
-                className={cn(
-                  "flex items-center space-x-4 shadow-md rounded-2xl p-3 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors",
-                  isActive("/bookshelf") ? "bg-[#E3E0D9]/30" : "bg-[#E3E0D9]/10"
-                )}
-                onClick={handleStudyNavigation}
-              >
-                <div className="flex-shrink-0 rounded-full p-3">
-                  <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
+              {/* Study Navigation Item - Only show for users with DNA */}
+              {user && hasCompletedDNA && (
+                <div 
+                  className={cn(
+                    "flex items-center space-x-4 shadow-md rounded-2xl p-3 cursor-pointer hover:bg-[#E3E0D9]/20 transition-colors",
+                    isActive("/bookshelf") ? "bg-[#E3E0D9]/30" : "bg-[#E3E0D9]/10"
+                  )}
+                  onClick={handleStudyNavigation}
+                >
+                  <div className="flex-shrink-0 rounded-full p-3">
+                    <BookOpen className="h-6 w-6 text-[#E9E7E2]" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
+                      Study
+                    </h3>
+                    <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
+                      Read and explore
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <h3 className="font-oxanium uppercase text-[#E9E7E2] text-sm font-bold tracking-wide">
-                    Study
-                  </h3>
-                  <p className="text-[#E9E7E2]/60 text-[10px] uppercase tracking-wider mt-1">
-                    {!user ? "Login to access" : "Curate your collection"}
-                  </p>
-                </div>
-              </div>
+              )}
               
               {/* Discover Navigation Item - Show for all users */}
               <div 

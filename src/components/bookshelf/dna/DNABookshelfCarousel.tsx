@@ -170,9 +170,17 @@ const DNABookshelfCarousel: React.FC<DNABookshelfCarouselProps> = ({
         
         console.log(`[DNA SHELF DEBUG] Books fetched:`, booksData);
         
+        // Filter out books without epub_file_url
+        const validBooksData = booksData?.filter(book => !!book.epub_file_url) || [];
+        console.log(`[DNA SHELF DEBUG] Filtered out ${(booksData?.length || 0) - validBooksData.length} books without epub_file_url`);
+        
         // Combine the data to include field names
         const result = matchedResults.map(match => {
-          const bookData = booksData?.find(b => b.id === match.matched_id);
+          const bookData = validBooksData?.find(b => b.id === match.matched_id);
+          
+          // Skip books without epub_file_url
+          if (!bookData) return null;
+          
           // Extract the thinker name from the field name (e.g., ethics_kindred_spirit_1_classic)
           const fieldParts = match.dna_analysis_column.split('_');
           const position = fieldParts.findIndex(part => part === 'classic') - 1;
@@ -185,7 +193,7 @@ const DNABookshelfCarousel: React.FC<DNABookshelfCarouselProps> = ({
             isDnaBook: true,
             dna_analysis_column: match.dna_analysis_column
           };
-        });
+        }).filter(Boolean); // Remove null entries
         
         console.log(`[DNA SHELF DEBUG] Final result with ${result.length} books:`, result);
         return result;
@@ -255,7 +263,9 @@ const DNABookshelfCarousel: React.FC<DNABookshelfCarouselProps> = ({
       className="w-full pb-10 overflow-visible"
     >
       <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
-        {displayBooks.map((book) => (
+        {displayBooks
+          .filter(book => !!book.epub_file_url) // Filter out books without epub_file_url 
+          .map((book) => (
           <CarouselItem 
             key={book.id} 
             className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"

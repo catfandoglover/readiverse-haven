@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { ReaderProps } from "@/types/reader";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ import { useReaderState } from "@/hooks/useReaderState";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateReadingStatus } from "@/hooks/useUpdateReadingStatus";
-import { VirgilReaderContext } from "@/contexts/VirgilReaderContext";
+import { VirgilReaderProvider } from "@/contexts/VirgilReaderContext";
 
 interface SpineItem {
   href: string;
@@ -276,14 +275,11 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
     setShowVirgilChat(!showVirgilChat);
   };
 
-  const contextValue = {
-    showVirgilChat,
-    toggleVirgilChat,
-    bookTitle: metadata?.title || "Current Book"
-  };
-
   return (
-    <VirgilReaderContext.Provider value={contextValue}>
+    <VirgilReaderProvider 
+      initialTitle={metadata?.title || "Current Book"}
+      shouldMoveContent={true}
+    >
       <ThemeProvider>
         <div className="min-h-screen bg-[#332E38] transition-colors duration-300">
           <div className="container mx-auto px-0 py-0 max-w-6xl h-screen flex flex-col">
@@ -335,7 +331,7 @@ const Reader: React.FC<ReaderProps> = ({ metadata, preloadedBookUrl, isLoading }
           </div>
         </div>
       </ThemeProvider>
-    </VirgilReaderContext.Provider>
+    </VirgilReaderProvider>
   );
 };
 

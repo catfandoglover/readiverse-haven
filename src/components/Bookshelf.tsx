@@ -70,7 +70,12 @@ const Bookshelf = () => {
         }
 
         console.log('Books fetched successfully:', books);
-        return books || [];
+        
+        // Filter out books without epub_file_url
+        const validBooks = books?.filter(book => !!book.epub_file_url) || [];
+        console.log(`Filtered out ${(books?.length || 0) - validBooks.length} books without epub_file_url`);
+        
+        return validBooks;
       } catch (error) {
         console.error('Unexpected error in book fetching:', error);
         return [];
@@ -164,7 +169,9 @@ const Bookshelf = () => {
             </div>
           ) : isGridView ? (
             <div className={`grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
-              {books.map((book) => (
+              {books
+                .filter(book => !!book.epub_file_url)
+                .map((book) => (
                 <div
                   key={book.id}
                   className="aspect-square cursor-pointer relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 transition-all duration-300"
@@ -182,7 +189,9 @@ const Bookshelf = () => {
             </div>
           ) : (
             <div className={`space-y-6 ${isLoading ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
-              {books.map((book) => (
+              {books
+                .filter(book => !!book.epub_file_url)
+                .map((book) => (
                 <Card 
                   key={book.id} 
                   className="flex gap-4 p-4 hover:bg-accent/50 transition-all duration-300 cursor-pointer bg-card text-card-foreground relative before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-r before:from-[#9b87f5] before:to-[#7E69AB] before:opacity-0 hover:before:opacity-100 after:absolute after:inset-[1px] after:rounded-md after:bg-card after:z-[0] hover:after:bg-accent/50 [&>*]:relative [&>*]:z-[1]"

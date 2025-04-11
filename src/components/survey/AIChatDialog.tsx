@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2, X, Send } from "lucide-react";
+import { Mic, MicOff, Loader2, X, ArrowUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
 import aiService from '@/services/AIService';
@@ -11,6 +11,7 @@ import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
+import SharedVirgilDrawer from '../shared/SharedVirgilDrawer';
 
 interface Message {
   id: string;
@@ -339,104 +340,108 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   }, [open]);
 
   return (
-    <div 
-      className={`fixed bottom-0 left-0 w-full z-50 transition-transform duration-300 ease-in-out bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-lg rounded-t-xl ${
-        open ? 'transform translate-y-0' : 'transform translate-y-full'
-      }`}
-      style={{ height: '80vh' }}
+    <SharedVirgilDrawer
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      theme="light"
     >
-      <div className="flex items-center justify-center px-4 py-3 relative border-b border-[#D0CBBD]/25">
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-1 bg-[#373763] rounded-full my-1" />
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-1 p-3 w-10 h-10 flex items-center justify-center text-[#373763] hover:bg-[#373763]/10 rounded-md"
-          aria-label="Close AI Assistant"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <h3 className="font-oxanium">AI Assistant</h3>
-      </div>
-      
-      <div className={cn(
-        "h-[calc(80vh-4rem)] flex flex-col",
-        !isMobile && "max-w-2xl mx-auto"
-      )}>
-        <div className="flex-1 overflow-y-auto">
-          <div className="chat-content-container p-4 space-y-2">
-            {messages.map((msg, index) => {
-              const previousMessage = index > 0 ? messages[index - 1] : null;
-              const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
-              
-              return (
-                <ChatMessage 
-                  key={msg.id}
-                  content={msg.content}
-                  role={msg.role}
-                  audioUrl={msg.audioUrl}
-                  dialogOpen={open}
-                  isNewMessage={msg.isNew}
-                  isPreviousMessageSameRole={isPreviousMessageSameRole}
-                />
-              );
-            })}
-            <div ref={messagesEndRef} />
+      <div className="flex flex-col h-full relative">
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto pb-[76px]">
+          {messages.map((msg, index) => {
+            const previousMessage = index > 0 ? messages[index - 1] : null;
+            const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
+            
+            return (
+              <ChatMessage 
+                key={msg.id}
+                content={msg.content}
+                role={msg.role}
+                audioUrl={msg.audioUrl}
+                dialogOpen={open}
+                isNewMessage={msg.isNew}
+                isPreviousMessageSameRole={isPreviousMessageSameRole}
+              />
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 bg-[#E7E4DB]">
+          <div className="rounded-t-2xl overflow-hidden">
+            <form 
+              onSubmit={handleSubmit} 
+              className={cn(
+                "flex items-center gap-2 p-4 rounded-t-2xl border-none",
+                "bg-[#332E38]/10"
+              )}
+              style={{ 
+                boxShadow: "0 0 0 2px rgba(55, 55, 99, 0.8)" 
+              }}
+            >
+              <AutoResizeTextarea
+                ref={inputRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={isRecording ? "Recording..." : "Message..."}
+                className={cn(
+                  "flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] font-libre-baskerville",
+                  "bg-transparent text-[#332E38]",
+                  "placeholder:text-[#332E38]"
+                )}
+                disabled={isProcessing || isRecording}
+                minRows={1}
+                maxRows={4}
+                autoComplete="off"
+              />
+              {isProcessing ? (
+                <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <Button 
+                    type="button" 
+                    variant={isRecording ? "default" : "ghost"} 
+                    size="icon"
+                    onClick={toggleRecording}
+                    disabled={isProcessing}
+                    className={cn(
+                      "h-9 w-9 rounded-full flex-shrink-0",
+                      isRecording 
+                        ? "bg-[#373763] text-[#E9E7E2]" 
+                        : "",
+                      "transition-colors duration-200",
+                      "hover:bg-[#373763] hover:text-[#E9E7E2]"
+                    )}
+                    aria-label={isRecording ? "Stop recording" : "Start recording"}
+                  >
+                    {isRecording ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </Button>
+                  
+                  {inputMessage.trim().length > 0 && (
+                    <Button 
+                      type="submit" 
+                      variant="ghost" 
+                      size="icon"
+                      disabled={!inputMessage.trim() || isProcessing}
+                      className="h-9 w-9 rounded-full flex-shrink-0 bg-[#373763] flex items-center justify-center"
+                      aria-label="Send message"
+                    >
+                      <ArrowUp className="h-4 w-4 text-transparent stroke-white" />
+                    </Button>
+                  )}
+                </>
+              )}
+            </form>
           </div>
         </div>
-        
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#E7E4DB] border-t border-[#D0CBBD]/25 shadow-[inset_0px_1px_10px_rgba(255,255,255,0.3)]">
-          <AutoResizeTextarea
-            ref={inputRef}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isRecording ? "Recording..." : "Message..."}
-            className="flex-1 bg-[#E7E4DB] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground text-[#282828] font-oxanium min-h-[40px]"
-            disabled={isProcessing || isRecording}
-            minRows={1}
-            maxRows={4}
-          />
-          <Button 
-            type="button" 
-            variant={isRecording ? "default" : "ghost"} 
-            size="icon"
-            onClick={toggleRecording}
-            disabled={isProcessing}
-            className={cn(
-              "h-10 w-10 rounded-full flex-shrink-0",
-              isRecording 
-                ? "bg-[#CCFF23] hover:bg-[#CCFF23]/90" 
-                : "text-[#282828]"
-            )}
-            aria-label={isRecording ? "Stop recording" : "Start recording"}
-          >
-            {isRecording ? (
-              <MicOff className="h-4 w-4 text-[#282828]" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
-          
-          {inputMessage.trim().length > 0 && (
-            <Button 
-              type="submit" 
-              variant="ghost" 
-              size="icon"
-              disabled={!inputMessage.trim() || isProcessing}
-              className="h-10 w-10 rounded-full flex-shrink-0"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4 text-[#9b87f5]" />
-            </Button>
-          )}
-          
-          {isProcessing && (
-            <div className="flex items-center justify-center h-10 w-10 flex-shrink-0">
-              <Loader2 className="h-4 w-4 animate-spin" />
-            </div>
-          )}
-        </form>
       </div>
-    </div>
+    </SharedVirgilDrawer>
   );
 };
 

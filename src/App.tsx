@@ -123,22 +123,28 @@ const IconRedirect = ({ id }: { id: string }) => {
 
   useEffect(() => {
     const fetchSlug = async () => {
-      const { data, error } = await supabase
-        .from('icons')
-        .select('slug')
-        .eq('id', id)
-        .single();
+      try {
+        // Use type assertion to address linting error
+        const { data, error } = await (supabase as any)
+          .from('icons')
+          .select('slug')
+          .eq('id', id)
+          .single();
 
-      if (error || !data?.slug) {
-        console.error('Error fetching icon slug:', error);
+        if (error || !data?.slug) {
+          console.error('Error fetching icon slug:', error);
+          navigate('/discover', { replace: true });
+          return;
+        }
+
+        navigate(`/icons/${data.slug}`, { 
+          replace: true,
+          state: location.state
+        });
+      } catch (err) {
+        console.error('Error fetching slug:', err);
         navigate('/discover', { replace: true });
-        return;
       }
-
-      navigate(`/icons/${data.slug}`, { 
-        replace: true,
-        state: location.state
-      });
     };
 
     fetchSlug();
@@ -224,12 +230,12 @@ const App = () => (
                   <Route path="/book-counselor" element={<BookCounselor />} />
                   <Route path="/booking-success" element={<BookingSuccess />} />
                   <Route path="/dna/priming" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
                       <DNAPriming />
                     </ProtectedRoute>
                   } />
                   <Route path="/dna/:category" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={false} requireDNA={false}>
                       <DNAAssessment />
                     </ProtectedRoute>
                   } />
@@ -294,17 +300,17 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   <Route path="/virgil" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <VirgilOffice />
                     </ProtectedRoute>
                   } />
                   <Route path="/virgil-modes" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <VirgilModes />
                     </ProtectedRoute>
                   } />
                   <Route path="/virgil-chat" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <VirgilChat />
                     </ProtectedRoute>
                   } />
@@ -364,7 +370,7 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   <Route path="/bookshelf" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
+                    <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <NewBookshelf />
                     </ProtectedRoute>
                   } />

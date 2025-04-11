@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
@@ -28,6 +28,7 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
   const { dnaAnalysisData } = useProfileData();
   const isMobile = useIsMobile();
   const assessmentId = dnaAnalysisData?.assessment_id;
+  const [dnaBooksProcessed, setDnaBooksProcessed] = useState<boolean>(false);
 
   // Query for user books
   const { data: userBooks, isLoading: isLoadingUserBooks } = useQuery({
@@ -175,8 +176,12 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
           return [];
         }
         
+        // Filter out books without epub_file_url
+        const validBooksData = booksData?.filter(book => !!book.epub_file_url) || [];
+        console.log(`Filtered out ${(booksData?.length || 0) - validBooksData.length} books without epub_file_url`);
+        
         // Combine with metadata from appropriate source based on filter
-        return booksData.map(book => {
+        return validBooksData.map(book => {
           // Find user book data (reading progress, etc) if available
           const userBook = userBooks?.find(ub => ub.book_id === book.id);
           
@@ -202,12 +207,13 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
   });
 
   // Add DNA books to user_books to ensure they show up in ALL BOOKS
+  // Only run once per assessment, not on every reload
   useEffect(() => {
     const addDnaBooksToUserBooks = async () => {
-      if (!user?.id || !dnaBooks?.length) return;
+      if (!user?.id || !dnaBooks?.length || dnaBooksProcessed) return;
       
       try {
-        console.log("Adding DNA books to user_books table");
+        console.log("Adding DNA books to user_books table - one-time operation");
         
         // Process DNA books one by one instead of batch upsert
         for (const dnaBook of dnaBooks) {
@@ -225,13 +231,14 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
               continue;
             }
             
-            // Insert the book if it doesn't exist
+            // Insert the book if it doesn't exist - use 'reading' status instead of 'recommended'
+            // to comply with the user_books_status_check constraint
             const { error: insertError } = await supabaseAny
               .from('user_books')
               .insert({
                 user_id: user.id,
                 book_id: dnaBook.book_id,
-                status: 'recommended',
+                status: 'reading', // Changed from 'recommended' to match allowed values
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
@@ -243,13 +250,16 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
             console.error(`Error processing DNA book ${dnaBook.book_id}:`, bookErr);
           }
         }
+        
+        // Mark as processed so we don't run this again
+        setDnaBooksProcessed(true);
       } catch (err) {
         console.error("Error adding DNA books to user_books:", err);
       }
     };
     
     addDnaBooksToUserBooks();
-  }, [user?.id, dnaBooks]);
+  }, [user?.id, dnaBooks, dnaBooksProcessed]);
 
   const isLoading = isLoadingUserBooks || isLoadingDnaBooks || 
                    isLoadingShelfBooks || isLoadingBookDetails;
@@ -290,7 +300,9 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
       className="w-full pb-10 overflow-visible"
     >
       <CarouselContent className="-ml-2 md:-ml-4 overflow-visible">
-        {books.map((book) => (
+        {books
+          .filter(book => !!book.epub_file_url) // Filter out books without epub_file_url
+          .map((book) => (
           <CarouselItem 
             key={book.id} 
             className="pl-2 md:pl-4 basis-[57%] md:basis-1/4 lg:basis-1/5"

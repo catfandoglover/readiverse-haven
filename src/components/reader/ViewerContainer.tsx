@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import type { Theme } from '@/contexts/ThemeContext';
+import { useVirgilReader } from '@/contexts/VirgilReaderContext';
 
 interface ViewerContainerProps {
-  theme: Theme;
-  setContainer: (element: Element | null) => void;
+  theme: {
+    text: string;
+  };
+  setContainer: (node: HTMLDivElement | null) => void;
 }
 
 const ViewerContainer: React.FC<ViewerContainerProps> = ({ 
@@ -11,6 +14,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
   setContainer 
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { showVirgilChat } = useVirgilReader();
   
   useEffect(() => {
     if (containerRef.current) {
@@ -37,6 +41,7 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
                   margin: 0 !important;
                   padding: 0 !important;
                   height: 100% !important;
+                  overflow: hidden !important;
                 }
                 
                 body > * {
@@ -61,10 +66,48 @@ const ViewerContainer: React.FC<ViewerContainerProps> = ({
     }
   }, [setContainer]);
 
+  // Enhanced effect to handle resize when drawer state changes
+  useEffect(() => {
+    const iframe = containerRef.current?.querySelector('iframe');
+    if (iframe) {
+      try {
+        // Give time for the transition to complete
+        setTimeout(() => {
+          // Force a reflow of the content
+          if (iframe.contentWindow) {
+            // Trigger resize on the iframe's window
+            iframe.contentWindow.dispatchEvent(new Event('resize'));
+            
+            // Force reflow by temporarily modifying a style
+            const doc = iframe.contentDocument;
+            if (doc && doc.body) {
+              doc.body.style.display = 'none';
+              doc.body.offsetHeight; // Force reflow
+              doc.body.style.display = '';
+              
+              // Additional reflow for epub.js
+              const viewportElement = doc.querySelector('[name="viewport"]');
+              if (viewportElement) {
+                viewportElement.setAttribute('content', 
+                  'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+                );
+              }
+            }
+          }
+          
+          // Also trigger resize on the main window
+          window.dispatchEvent(new Event('resize'));
+        }, 300); // Wait for transition to complete
+      } catch (e) {
+        console.error('Error triggering resize:', e);
+      }
+    }
+  }, [showVirgilChat]);
+
   return (
     <div 
       ref={containerRef}
-      className="epub-view h-[80vh] overflow-hidden w-full" 
+      className={`epub-view w-full h-full overflow-hidden transition-all duration-300`}
       style={{ 
         background: "#332E38",
         color: theme.text,

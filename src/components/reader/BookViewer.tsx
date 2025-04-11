@@ -349,26 +349,33 @@ const BookViewer = ({
     setSelectedText(null);
   };
 
+  const handleContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node !== null) {
+      setContainer(node);
+    }
+  }, [setContainer]);
+
   return (
-    <div className="relative w-full">
-      <ViewerContainer theme={theme} setContainer={setContainer} />
-      
-      {/* Text selection options dialog */}
+    <div className="w-full h-full relative">
+      <ViewerContainer 
+        theme={theme} 
+        setContainer={handleContainerRef} 
+      />
+
+      {/* Selection Dialog */}
       <Dialog open={showTextDialog} onOpenChange={setShowTextDialog}>
-        <DialogContent className="bg-[#221F26] text-white border border-white/10">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">Text Options</DialogTitle>
-            <DialogDescription className="text-white/70">
-              Choose what you'd like to do with the selected text:
-              <div className="mt-2 p-4 bg-[#332E38] rounded-md text-white">
-                {selectedText?.text}
-              </div>
-            </DialogDescription>
+            <DialogTitle>Selected Text</DialogTitle>
+            <DialogDescription>Choose an action for the selected text.</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+          <div className="my-2 px-4 py-3 bg-muted rounded-md text-sm">
+            {selectedText?.text}
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              className="flex-1" 
+              variant="outline" 
               onClick={() => {
                 if (selectedText && onTextSelect) {
                   onTextSelect(selectedText.cfiRange, selectedText.text);
@@ -380,23 +387,20 @@ const BookViewer = ({
                 }
               }}
             >
-              <Highlighter className="h-4 w-4" />
-              Highlight
+              <Highlighter className="w-4 h-4 mr-2" /> Highlight
             </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+            <Button 
+              className="flex-1" 
               onClick={() => {
                 setShowTextDialog(false);
                 setShowNoteDialog(true);
               }}
             >
-              <StickyNote className="h-4 w-4" />
-              Add Note
+              <StickyNote className="w-4 h-4 mr-2" /> Add Note
             </Button>
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+            <Button 
+              className="flex-1" 
+              variant="outline" 
               onClick={async () => {
                 if (selectedText) {
                   try {
@@ -415,11 +419,11 @@ const BookViewer = ({
                 }
               }}
             >
-              <Copy className="h-4 w-4" />
-              Copy
+              <Copy className="w-4 h-4 mr-2" /> Copy
             </Button>
-            <Button
-              className="w-full sm:w-auto flex items-center gap-2 bg-[#CCFF33] text-[#221F26] hover:bg-[#CCFF33]/90"
+            <Button 
+              className="flex-1" 
+              variant="outline" 
               onClick={async () => {
                 if (selectedText) {
                   try {
@@ -443,47 +447,39 @@ const BookViewer = ({
                 }
               }}
             >
-              <Share2 className="h-4 w-4" />
-              Share
+              <Share2 className="w-4 h-4 mr-2" /> Share
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Add note dialog */}
+      {/* Note Dialog */}
       <Dialog open={showNoteDialog} onOpenChange={setShowNoteDialog}>
-        <DialogContent className="bg-[#221F26] text-white border border-white/10">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">Add a Note</DialogTitle>
-            <DialogDescription className="text-white/70">
-              Write a note about this text:
-              <div className="mt-2 p-4 bg-[#332E38] rounded-md text-white">
-                {selectedText?.text}
-              </div>
-            </DialogDescription>
+            <DialogTitle>Add Note</DialogTitle>
+            <DialogDescription>Write notes or thoughts about this passage.</DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Write your note here..."
+          <div className="my-2 px-4 py-3 bg-muted rounded-md text-sm">
+            {selectedText?.text}
+          </div>
+          <Textarea 
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            className="bg-[#332E38] text-white border-white/10 min-h-[100px]"
+            placeholder="Write your notes here..."
+            className="min-h-[100px]"
           />
-          <DialogFooter className="mt-4">
+          <DialogFooter>
             <Button 
-              variant="secondary"
+              variant="outline" 
               onClick={() => {
-                setShowNoteDialog(false);
                 setNoteText('');
+                setShowNoteDialog(false);
               }}
-              className="bg-transparent text-white hover:bg-white/10 border border-white/20"
             >
               Cancel
             </Button>
-            <Button 
-              onClick={saveNote}
-              className="bg-[#CCFF33] text-[#221F26] hover:bg-[#CCFF33]/90"
-              disabled={!noteText.trim()}
-            >
+            <Button onClick={saveNote}>
               Save Note
             </Button>
           </DialogFooter>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce } from "lodash";
 import type { Rendition } from "epubjs";
+import { useVirgilReader } from '@/contexts/VirgilReaderContext';
 
 export const useReaderResize = (rendition: Rendition | null) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -8,6 +9,7 @@ export const useReaderResize = (rendition: Rendition | null) => {
   const rafId = useRef<number>();
   const isResizing = useRef(false);
   const resizeTimeout = useRef<NodeJS.Timeout>();
+  const { showVirgilChat } = useVirgilReader();
 
   const debouncedResize = useCallback(
     debounce(() => {
@@ -67,6 +69,7 @@ export const useReaderResize = (rendition: Rendition | null) => {
     isResizing.current = false;
   }, [resizeObserver, debouncedContainerResize, debouncedResize]);
 
+  // Handle resize when window size changes
   useEffect(() => {
     const handleResize = () => {
       if (resizeTimeout.current) {
@@ -84,6 +87,24 @@ export const useReaderResize = (rendition: Rendition | null) => {
       cleanup();
     };
   }, [debouncedResize, cleanup]);
+
+  // Trigger resize when drawer opens/closes
+  useEffect(() => {
+    if (rendition) {
+      // Short delay to allow transition to complete
+      setTimeout(() => {
+        try {
+          // @ts-ignore - Access the rendition container in a safer way
+          const container = rendition.manager?.container || rendition.getContents()[0]?.document.defaultView.frameElement.parentNode;
+          if (container) {
+            debouncedContainerResize(container as Element);
+          }
+        } catch (error) {
+          console.error('Error accessing container for resize:', error);
+        }
+      }, 350);
+    }
+  }, [showVirgilChat, debouncedContainerResize, rendition]);
 
   return {
     isMobile,

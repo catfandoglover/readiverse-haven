@@ -896,13 +896,14 @@ const DNAAssessment = () => {
           />
         </div>
         <div className="flex-1 flex flex-col relative">
-          <div className={`flex items-center justify-center py-8 min-h-[40vh] max-h-[40vh] transform transition-transform duration-300 ${showAIChat ? 'translate-y-[-25%]' : ''}`}>
+          <div className={`flex items-center justify-center py-8 min-h-[40vh] max-h-[40vh] transform transition-transform duration-300 ${
+            showAIChat ? 'translate-y-[-10%]' : ''}`}>
             <h1 className="text-3xl md:text-4xl font-libre-baskerville font-bold text-center mx-auto max-w-md px-6 text-[#373763]">
               {currentQuestion?.question?.question}
             </h1>
           </div>
           <div className={`w-full px-6 absolute top-[40vh] z-40 transform transition-transform duration-300 ${
-            showAIChat ? 'translate-y-[calc(-40vh+10rem)]' : ''}`}>
+            showAIChat ? 'translate-y-[calc(-8vh)]' : ''}`}>
             <div className="flex flex-row gap-4 max-w-md mx-auto w-full flex-wrap">
               <button
                 onClick={() => handleAnswerSelection("A")}
@@ -928,7 +929,9 @@ const DNAAssessment = () => {
               </button>
             </div>
             
-            <div className="mt-8 text-center">
+            <div className={`mt-8 text-center absolute w-full left-0 px-6 transition-transform ${
+              showAIChat ? 'transform translate-y-[calc(35vh-100px)]' : ''
+            }`}>
               <button 
                 className="font-oxanium text-[#332E38]/25 uppercase tracking-wider text-sm font-bold"
                 onClick={() => setShowAIChat(true)}

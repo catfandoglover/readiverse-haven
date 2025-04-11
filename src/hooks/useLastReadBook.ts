@@ -26,7 +26,37 @@ export const useLastReadBook = () => {
 
       console.log('useLastReadBook - Fetching last read book for userId:', userId);
 
-      // First try to get the last read book
+      // First try to get the last read book with status 'reading'
+      const { data: lastReadingBook, error: lastReadingError } = await supabaseAny
+        .from('user_books')
+        .select(`
+          *,
+          book:books!user_books_book_id_fkey(*)
+        `)
+        .eq('user_id', userId)
+        .eq('status', 'reading') // Only consider books with 'reading' status
+        .order('last_read_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastReadingError) {
+        console.error('Error fetching last reading book:', lastReadingError);
+      }
+
+      console.log('useLastReadBook - Last reading book data:', lastReadingBook);
+
+      // If there's a last read book with status 'reading', return it
+      if (lastReadingBook?.book) {
+        return {
+          ...lastReadingBook,
+          book: lastReadingBook.book,
+          source: 'user_books'
+        };
+      }
+
+      console.log('useLastReadBook - No books with status reading found, checking any book by last_read_at');
+
+      // If no book with 'reading' status found, try to get any last read book regardless of status
       const { data: lastReadBook, error: lastReadError } = await supabaseAny
         .from('user_books')
         .select(`
@@ -39,12 +69,12 @@ export const useLastReadBook = () => {
         .maybeSingle();
 
       if (lastReadError) {
-        console.error('Error fetching last read book:', lastReadError);
+        console.error('Error fetching any last read book:', lastReadError);
       }
 
-      console.log('useLastReadBook - Last read book data:', lastReadBook);
+      console.log('useLastReadBook - Any last read book data:', lastReadBook);
 
-      // If there's a last read book, return it
+      // If there's any last read book, return it
       if (lastReadBook?.book) {
         return {
           ...lastReadBook,
@@ -53,9 +83,9 @@ export const useLastReadBook = () => {
         };
       }
 
-      console.log('useLastReadBook - No last read book found, trying last added book');
+      console.log('useLastReadBook - No book with last_read_at found, checking last added book');
 
-      // If no last read book, try to get most recently added book
+      // If no last read book found, try to get most recently added book
       const { data: lastAddedBook, error: lastAddedError } = await supabaseAny
         .from('user_books')
         .select(`
@@ -111,13 +141,13 @@ export const useLastReadBook = () => {
             } else if (dnaBook) {
               console.log('useLastReadBook - Found DNA book:', dnaBook);
               
-              // Add this book to user_books to ensure it shows up in ALL BOOKS
+              // Add this book to user_books to ensure it shows up in ALL BOOKS with status 'reading'
               const { error: addBookError } = await supabaseAny
                 .from('user_books')
                 .upsert({
                   user_id: userId,
                   book_id: dnaBook.id,
-                  status: 'recommended',
+                  status: 'reading',
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString()
                 }, {
