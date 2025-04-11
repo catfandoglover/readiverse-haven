@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration - replace with your actual keys
 TELEGRAM_BOT_TOKEN = "7932386214:AAH_UDOG74dIpzJN5ldifquOKlJtNIWkfRg"  # Telegram bot token
-OPENROUTER_API_KEY = "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"  # Make sure there are no spaces or quotes in the key
+OPENROUTER_API_KEY = "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"  # Make sure there are no spaces or quotes in the key
 TURBOPUFFER_API_KEY = "tpuf_Aj4e0ABRMlq5Qzoh5IOZFcQzrn4snfXu"
 TURBOPUFFER_NAMESPACE = "alexandria_test"
 # Use GPT-3.5-Turbo instead of Claude
@@ -235,17 +235,21 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
     # Try to use the OpenAI client method
     try:
         logger.info("Using OpenAI client to call OpenRouter API")
+        
+        # Try accessing without using Bearer prefix
+        headers = {
+            "HTTP-Referer": "https://readiverse-haven.com",
+            "X-Title": "Virgil_readbot",
+        }
+        
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=OPENROUTER_API_KEY.strip(),
+            default_headers=headers
         )
         
         logger.info("Sending chat completion request...")
         completion = client.chat.completions.create(
-            extra_headers={
-                "HTTP-Referer": "https://readiverse-haven.com",
-                "X-Title": "Virgil_readbot",
-            },
             model=LLM_MODEL,  # Using GPT-3.5 instead of Claude
             messages=[msg for msg in messages],
             max_tokens=1000,
@@ -256,7 +260,7 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
         logger.info(f"Received response from OpenRouter API: {response_content[:100]}...")
         
         return response_content
-    
+
     except Exception as e:
         logger.error(f"Error querying LLM: {str(e)}", exc_info=True)
         
@@ -264,14 +268,17 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
         try:
             logger.info("Falling back to direct HTTP request")
             async with httpx.AsyncClient() as client:
+                # Try with different auth format
+                headers = {
+                    "Authorization": OPENROUTER_API_KEY.strip(),  # Try without 'Bearer ' prefix
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://readiverse-haven.com",
+                    "X-Title": "Virgil_readbot"
+                }
+                
                 response = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY.strip()}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://readiverse-haven.com",
-                        "X-Title": "Virgil_readbot"
-                    },
+                    headers=headers,
                     json={
                         "model": LLM_MODEL,
                         "messages": messages,
@@ -282,9 +289,32 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
                 )
                 
                 if response.status_code != 200:
-                    error_msg = f"API Error: {response.status_code} - {response.text}"
-                    logger.error(error_msg)
-                    return f"Sorry, I encountered an error when trying to process your question: {error_msg}"
+                    # Try one more time with API key as a URL parameter
+                    logger.info("Trying with API key as URL parameter")
+                    url = f"https://openrouter.ai/api/v1/chat/completions?api-key={OPENROUTER_API_KEY.strip()}"
+                    
+                    headers = {
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://readiverse-haven.com",
+                        "X-Title": "Virgil_readbot"
+                    }
+                    
+                    response = await client.post(
+                        url,
+                        headers=headers,
+                        json={
+                            "model": LLM_MODEL,
+                            "messages": messages,
+                            "max_tokens": 1000,
+                            "temperature": 0.7
+                        },
+                        timeout=60.0
+                    )
+                    
+                    if response.status_code != 200:
+                        error_msg = f"API Error: {response.status_code} - {response.text}"
+                        logger.error(error_msg)
+                        return f"Sorry, I encountered an error when trying to process your question: {error_msg}"
                 
                 result = response.json()
                 response_content = result.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
