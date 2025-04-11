@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
-import conversationManager from '@/services/ConversationManager';
 import ExistingAssessmentDialog from '@/components/dna/ExistingAssessmentDialog';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useServices } from '@/contexts/ServicesContext';
 
 const VirgilWelcome: React.FC = () => {
+  const { conversationManager } = useServices();
   const [state, setState] = useState<'initial' | 'transitioning' | 'chat'>('initial');
   const [resultsReady, setResultsReady] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   
   // State for existing assessment dialog
   const [showExistingAssessmentDialog, setShowExistingAssessmentDialog] = useState(false);
@@ -21,11 +21,11 @@ const VirgilWelcome: React.FC = () => {
   // Check for existing assessment on component mount
   useEffect(() => {
     const checkForExistingAssessment = async () => {
-      if (!user) return;
+      if (!user || !supabase) return;
       
       try {
         // Check profile for assessment_id
-        const { data: profileData, error } = await supabase
+        const { data: profileData, error } = await (supabase as any)
           .from('profiles')
           .select('assessment_id')
           .eq('user_id', user.id)
@@ -62,7 +62,7 @@ const VirgilWelcome: React.FC = () => {
     };
     
     checkForExistingAssessment();
-  }, [user, navigate]);
+  }, [user, navigate, supabase]);
 
   // Initial animation timing
   useEffect(() => {
@@ -91,16 +91,27 @@ const VirgilWelcome: React.FC = () => {
         // Wait 3 seconds after showing the completion message before navigating
         setTimeout(async () => {
           // Automatically save conversation and navigate
+          // TODO: This conversation saving logic needs to be updated.
+          // The concept of saving a "dna-welcome" conversation with a random sessionId
+          // needs reconsideration based on the new ConversationManager (create/update) 
+          // and the overall chat architecture defined in the PRD.
+          // It likely should use the user ID and save to virgil_general_chat_conversations
+          // with a specific 'welcome' prompt_id.
           try {
-            const sessionId = Math.random().toString(36).substring(2, 15);
-            await conversationManager.saveConversationToSupabase(
-              sessionId,
-              "dna-welcome",
-              null,
-              "welcome"
-            );
+            if (conversationManager && user) {
+              // Example (needs correct implementation based on PRD/ConversationManager):
+              // await conversationManager.createConversation(
+              //   'virgil_general_chat_conversations',
+              //   user.id,
+              //   [], // Need actual messages from chat component state
+              //   { prompt_id: 'YOUR_WELCOME_PROMPT_ID' } // Need the welcome prompt ID
+              // );
+              console.log('Placeholder: Save welcome chat conversation using new manager');
+            } else {
+              console.warn('ConversationManager or user not available for saving welcome chat');
+            }
           } catch (error) {
-            console.error('Error saving conversation:', error);
+            console.error('Error saving welcome conversation:', error);
           }
           
           // Navigate to profile page
@@ -110,27 +121,26 @@ const VirgilWelcome: React.FC = () => {
       
       return () => clearTimeout(resultsTimer);
     }
-  }, [state, navigate]);
+  }, [state, navigate, conversationManager, user]);
 
   // Save conversation and handle navigation
   const handleViewResults = async () => {
+    // TODO: This conversation saving logic needs the same update as the timer above.
+    // It should likely save the current state of the welcome chat.
     try {
-      // Save the conversation to Supabase
-      const sessionId = Math.random().toString(36).substring(2, 15);
-      
-      // Save the conversation to Supabase
-      await conversationManager.saveConversationToSupabase(
-        sessionId,
-        "dna-welcome",
-        null, // userId 
-        "welcome"
-      );
+      if (conversationManager && user) {
+         // Example (needs correct implementation):
+         // await conversationManager.updateConversation(...) or createConversation(...)
+         console.log('Placeholder: Save welcome chat on view results using new manager');
+      } else {
+        console.warn('ConversationManager or user not available for saving welcome chat on view results');
+      }
       
       // Navigate to the profile page with profile tab
       navigate('/profile?tab=profile');
     } catch (error) {
-      console.error('Error saving conversation:', error);
-      navigate('/profile?tab=profile');
+      console.error('Error saving welcome conversation on view results:', error);
+      navigate('/profile?tab=profile'); // Navigate even on error
     }
   };
 

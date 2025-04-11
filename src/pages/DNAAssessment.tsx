@@ -26,12 +26,12 @@ import { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import AIChatButton from '@/components/survey/AIChatButton';
 import AIChatDialog from '@/components/survey/AIChatDialog';
-import conversationManager from '@/services/ConversationManager';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Check, LogIn, UserPlus, X } from "lucide-react";
 import { storeAssessmentId } from '@/utils/dnaAssessmentUtils';
+import { useServices } from '@/contexts/ServicesContext';
 
 type DNACategory = Database["public"]["Enums"]["dna_category"];
 
@@ -50,6 +50,8 @@ const DNAAssessment = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user, openLogin, openSignup, supabase } = useAuth();
+  const { conversationManager } = useServices();
   const [currentPosition, setCurrentPosition] = React.useState("Q1");
   const [currentQuestionNumber, setCurrentQuestionNumber] = React.useState(1);
   const [showExitAlert, setShowExitAlert] = React.useState(false);
@@ -62,7 +64,6 @@ const DNAAssessment = () => {
   const [profileId, setProfileId] = React.useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [completedAssessmentId, setCompletedAssessmentId] = React.useState<string | null>(null);
-  const { user, openLogin, openSignup } = useAuth();
   const isMobile = useIsMobile();
   const [selectedAnswer, setSelectedAnswer] = React.useState<"A" | "B" | null>(null);
   const [isAssessmentComplete, setIsAssessmentComplete] = React.useState(false);
@@ -390,12 +391,13 @@ const DNAAssessment = () => {
       ? (currentQuestion.question?.answer_a || "Yes") 
       : (currentQuestion.question?.answer_b || "No");
     
-    conversationManager.addQuestionToPath(
-      sessionStorage.getItem('dna_assessment_name') || 'Anonymous',
-      currentPosition,
-      questionText,
-      answerLabel
-    );
+    if (!conversationManager) {
+      console.warn("ConversationManager not available yet for saving answer.");
+      // Handle error or wait
+    } else {
+      // Example: Replace old call if it existed
+      // await conversationManager.updateConversation(...) // Use new methods
+    }
 
     const userId = sessionStorage.getItem('user_id');
     const sessionId = sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
@@ -1002,7 +1004,6 @@ const DNAAssessment = () => {
       <AIChatDialog 
         open={showAIChat}
         onOpenChange={setShowAIChat}
-        sessionId={sessionStorage.getItem('dna_assessment_name') || 'Anonymous'}
         currentQuestion={currentQuestion?.question?.question || ''}
       />
     </>

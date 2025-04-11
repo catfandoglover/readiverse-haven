@@ -3,17 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, X, ArrowUp } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '@/lib/utils';
-import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
-import conversationManager, { Message as ConversationMessage } from '@/services/ConversationManager';
 import ChatMessage from './ChatMessage';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea';
 import SharedVirgilDrawer from '../shared/SharedVirgilDrawer';
+import { useServices } from '@/contexts/ServicesContext';
 
-interface Message {
+interface DialogMessage {
   id: string;
   content: string;
   role: 'user' | 'assistant';
@@ -35,9 +34,9 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   currentQuestion,
   sessionId: providedSessionId
 }) => {
+  const { aiService, conversationManager } = useServices();
   const [inputMessage, setInputMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [sessionId, setSessionId] = useState('');
+  const [messages, setMessages] = useState<DialogMessage[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -61,53 +60,32 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
   const [lastQuestion, setLastQuestion] = useState(currentQuestion);
 
   useEffect(() => {
-    if (open) {
+    if (open && conversationManager) {
       const questionChanged = lastQuestion !== currentQuestion;
       
       const userId = providedSessionId || sessionStorage.getItem('dna_assessment_name') || 'Anonymous';
       
-      if (!sessionId || questionChanged) {
-        setSessionId(userId);
+      if (questionChanged || isFirstOpen) {
         setIsFirstOpen(true);
         setLastQuestion(currentQuestion);
         setMessages([]);
         
-        conversationManager.setCurrentQuestion(userId, currentQuestion);
-        conversationManager.initializeConversation(userId);
-        
-        const history = conversationManager.getHistory(userId);
-        const messagesWithIds = history.map(msg => ({
-          id: uuidv4(),
-          content: msg.content,
-          role: msg.role,
-          audioUrl: msg.audioUrl,
-          isNew: true
-        }));
-        setMessages(messagesWithIds);
-        
         const randomIndex = Math.floor(Math.random() * initialGreetings.length);
         const greeting = initialGreetings[randomIndex];
         
-        setMessages([
-          {
-            id: uuidv4(),
-            content: greeting,
-            role: 'assistant',
-            isNew: true
-          }
-        ]);
-        
-        if (userId) {
-          conversationManager.addMessage(userId, 'assistant', greeting);
-        }
+        const initialMsg: DialogMessage = {
+          id: uuidv4(),
+          content: greeting,
+          role: 'assistant',
+          isNew: true
+        };
+        setMessages([initialMsg]);
         
         setTimeout(() => {
           generateAudioForText(greeting);
         }, 100);
         
         setIsFirstOpen(false);
-      } else {
-        conversationManager.setCurrentQuestion(userId, currentQuestion);
       }
       
       setTimeout(() => {
@@ -116,7 +94,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         }
       }, 100);
     }
-  }, [open, sessionId, currentQuestion, lastQuestion, initialGreetings]);
+  }, [open, currentQuestion, lastQuestion, conversationManager, providedSessionId, isFirstOpen, initialGreetings]);
 
   useEffect(() => {
     if (open && isMobile) {
@@ -185,7 +163,7 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
     const userMessage = inputMessage.trim();
     setInputMessage('');
     
-    const newUserMessage: Message = {
+    const newUserMessage: DialogMessage = {
       id: uuidv4(),
       content: userMessage,
       role: 'user'
@@ -232,17 +210,18 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         { id: loadingId, content: 'Thinking...', role: 'assistant' }
       ]);
       
-      const response = await aiService.generateResponse(sessionId, userMessage);
+      const responseText = await aiService.generateResponse('placeholder_system_prompt', messages);
       
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true } 
             : msg
         )
       );
       
-      generateAudioForText(response.text);
+      generateAudioForText(responseText);
+
     } catch (error) {
       console.error('Error processing message:', error);
       setMessages(prevMessages => 
@@ -272,17 +251,17 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
         { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
       ]);
       
-      const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
+      const responseText = await aiService.generateResponse('placeholder_system_prompt', [...messages, { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'user' }]);
       
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
       );
       
-      let displayContent = response.transcribedText || "Voice message";
+      let displayContent = responseText || "Voice message";
       
       console.log('Final cleaned transcription:', displayContent);
       
-      const newUserMessage: Message = {
+      const newUserMessage: DialogMessage = {
         id: uuidv4(),
         content: displayContent,
         role: 'user',
@@ -299,12 +278,13 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true } 
             : msg
         )
       );
       
-      generateAudioForText(response.text);
+      generateAudioForText(responseText);
+
     } catch (error) {
       console.error('Error processing audio:', error);
       setMessages(prevMessages => 
@@ -348,17 +328,15 @@ const AIChatDialog: React.FC<AIChatDialogProps> = ({
       <div className="flex flex-col h-full relative">
         <div className="flex-1 p-4 space-y-2 overflow-y-auto pb-[76px]">
           {messages.map((msg, index) => {
-            const previousMessage = index > 0 ? messages[index - 1] : null;
-            const isPreviousMessageSameRole = previousMessage ? previousMessage.role === msg.role : false;
-            
+            const isPreviousMessageSameRole = index > 0 && messages[index - 1].role === msg.role;
             return (
               <ChatMessage 
                 key={msg.id}
                 content={msg.content}
                 role={msg.role}
                 audioUrl={msg.audioUrl}
-                dialogOpen={open}
                 isNewMessage={msg.isNew}
+                dialogOpen={open}
                 isPreviousMessageSameRole={isPreviousMessageSameRole}
               />
             );

@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/types/chat';
-import aiService from '@/services/AIService';
 import speechService from '@/services/SpeechService';
 import audioRecordingService from '@/services/AudioRecordingService';
 import { stopAllAudio } from '@/services/AudioContext';
-import conversationManager from '@/services/ConversationManager';
+import { useServices } from '@/contexts/ServicesContext';
 
 export const useVirgilChat = (initialMessage?: string) => {
+  const { aiService, conversationManager } = useServices();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -77,17 +77,17 @@ export const useVirgilChat = (initialMessage?: string) => {
         { id: loadingId, content: 'Thinking...', role: 'assistant' }
       ]);
       
-      const response = await aiService.generateResponse(sessionId, userMessage);
+      const responseText = await aiService.generateResponse('placeholder_system_prompt', messages);
       
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true }
             : msg
         )
       );
       
-      generateAudioForText(response.text);
+      generateAudioForText(responseText);
     } catch (error) {
       console.error('Error processing message:', error);
       setMessages(prevMessages => 
@@ -115,17 +115,20 @@ export const useVirgilChat = (initialMessage?: string) => {
         { id: transcriptionLoadingId, content: 'Transcribing your voice message...', role: 'assistant' }
       ]);
       
-      const response = await aiService.generateResponse(sessionId, "Voice message", audioBlob);
-      
+      const transcribedText = "placeholder_transcribed";
+      const messagesWithTranscription = [
+        ...messages,
+        { id: uuidv4(), role: 'user' as const, content: transcribedText }
+      ];
+      const responseText = await aiService.generateResponse('placeholder_system_prompt', messagesWithTranscription);
+
       setMessages(prevMessages => 
         prevMessages.filter(msg => msg.id !== transcriptionLoadingId)
       );
       
-      let displayContent = response.transcribedText || "Voice message";
-      
       const newUserMessage: ChatMessage = {
         id: uuidv4(),
-        content: displayContent,
+        content: transcribedText,
         role: 'user',
         audioUrl: tempAudioUrl
       };
@@ -140,12 +143,12 @@ export const useVirgilChat = (initialMessage?: string) => {
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === loadingId 
-            ? { id: msg.id, content: response.text, role: 'assistant', isNew: true } 
+            ? { id: msg.id, content: responseText, role: 'assistant', isNew: true }
             : msg
         )
       );
       
-      generateAudioForText(response.text);
+      generateAudioForText(responseText);
     } catch (error) {
       console.error('Error processing audio:', error);
       setMessages(prevMessages => 
@@ -226,6 +229,5 @@ export const useVirgilChat = (initialMessage?: string) => {
     toggleRecording,
     handleSubmitMessage,
     addAssistantMessage,
-    sessionId
   };
 };
