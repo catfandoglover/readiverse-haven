@@ -59,7 +59,6 @@ import ChooseYourOwnExam from "./pages/ChooseYourOwnExam";
 import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
 import MembershipManagement from "./pages/MembershipManagement";
 import TurbopufferDemo from "./pages/TurbopufferDemo";
-import TurbopufferBooksTest from "./pages/TurbopufferBooksTest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -279,10 +278,6 @@ const App = () => (
                       <TurbopufferDemo />
                     </ProtectedRoute>
                   } />
-                  <Route path="/turbopuffer-books-test" element={
-                    <ProtectedRoute requireAuth={true} requireDNA={false}>
-                      <TurbopufferBooksTest />
-                    </ProtectedRoute>
                   } />
                   <Route path="/dashboard" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
