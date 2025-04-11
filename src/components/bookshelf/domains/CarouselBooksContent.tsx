@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import BookCard from "../BookCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfileData } from "@/contexts/ProfileDataContext";
 import {
   Carousel,
   CarouselContent,
@@ -13,11 +14,23 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 
-const CarouselBooksContent: React.FC = () => {
-  const { user } = useAuth();
-  const isMobile = useIsMobile();
+// Type assertion to silence TypeScript errors
+const supabaseAny = supabase as any;
 
-  const { data: books, isLoading } = useQuery({
+interface CarouselBooksContentProps {
+  shelfFilter?: string;
+}
+
+const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({ 
+  shelfFilter = "all" 
+}) => {
+  const { user } = useAuth();
+  const { dnaAnalysisData } = useProfileData();
+  const isMobile = useIsMobile();
+  const assessmentId = dnaAnalysisData?.assessment_id;
+
+  // Query for user books
+  const { data: userBooks, isLoading: isLoadingUserBooks } = useQuery({
     queryKey: ["all-user-books", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -26,7 +39,7 @@ const CarouselBooksContent: React.FC = () => {
         console.log("Fetching books for user:", user.id);
         
         // First get the user books entries
-        const { data: userBooks, error: userBooksError } = await supabase
+        const { data: userBooks, error: userBooksError } = await supabaseAny
           .from("user_books")
           .select("*")
           .eq("user_id", user.id);
@@ -41,10 +54,118 @@ const CarouselBooksContent: React.FC = () => {
           return [];
         }
         
-        // Then fetch the book details for each book ID
-        const bookIds = userBooks.map(ub => ub.book_id);
+        return userBooks;
+      } catch (err) {
+        console.error("Exception fetching user books:", err);
+        return [];
+      }
+    },
+    enabled: !!user?.id,
+  });
+
+  // Query for DNA matched books
+  const { data: dnaBooks, isLoading: isLoadingDnaBooks } = useQuery({
+    queryKey: ["dna-matched-books", assessmentId],
+    queryFn: async () => {
+      if (!assessmentId) return [];
+
+      try {
+        console.log("Fetching DNA books for assessment:", assessmentId);
         
-        const { data: booksData, error: booksError } = await supabase
+        // Get all matches with "classic" suffix in field_name
+        const { data: matchedResults, error: matchError } = await supabaseAny
+          .from("dna_analysis_results_matched")
+          .select("matched_id, dna_analysis_column")
+          .eq("assessment_id", assessmentId)
+          .like("dna_analysis_column", `%_classic`);
+        
+        if (matchError) {
+          console.error("Error fetching DNA matched results:", matchError);
+          return [];
+        }
+        
+        if (!matchedResults?.length) {
+          console.log("No DNA matched books found");
+          return [];
+        }
+        
+        return matchedResults.map(match => ({
+          book_id: match.matched_id,
+          isDnaBook: true,
+          dna_analysis_column: match.dna_analysis_column
+        }));
+      } catch (err) {
+        console.error("Exception fetching DNA books:", err);
+        return [];
+      }
+    },
+    enabled: !!assessmentId,
+  });
+
+  // Query for custom shelf books
+  const { data: customShelfBooks, isLoading: isLoadingShelfBooks } = useQuery({
+    queryKey: ["custom-shelf-books", shelfFilter, user?.id],
+    queryFn: async () => {
+      if (!user?.id || shelfFilter === "all" || shelfFilter === "dna") return [];
+
+      try {
+        console.log("Fetching books for custom shelf:", shelfFilter);
+        
+        const { data: shelfBooks, error: shelfBooksError } = await supabaseAny
+          .from("shelf_books")
+          .select("book_id")
+          .eq("shelf_id", shelfFilter);
+        
+        if (shelfBooksError) {
+          console.error("Error fetching shelf books:", shelfBooksError);
+          return [];
+        }
+        
+        if (!shelfBooks?.length) {
+          console.log("No books found for shelf");
+          return [];
+        }
+        
+        return shelfBooks;
+      } catch (err) {
+        console.error("Exception fetching shelf books:", err);
+        return [];
+      }
+    },
+    enabled: !!user?.id && shelfFilter !== "all" && shelfFilter !== "dna",
+  });
+
+  // Now get the book data for all collected IDs
+  const { data: books, isLoading: isLoadingBookDetails } = useQuery({
+    queryKey: ["book-details", 
+      userBooks ? userBooks.map(b => b.book_id).join(',') : '',
+      dnaBooks ? dnaBooks.map(b => b.book_id).join(',') : '',
+      customShelfBooks ? customShelfBooks.map(b => b.book_id).join(',') : '',
+      shelfFilter
+    ],
+    queryFn: async () => {
+      // Determine which book IDs to fetch based on the filter
+      let bookIds: string[] = [];
+      
+      if (shelfFilter === "all" && userBooks) {
+        // All books - include everything from user_books
+        bookIds = userBooks.map(ub => ub.book_id);
+      } else if (shelfFilter === "dna" && dnaBooks) {
+        // DNA shelf - only include DNA books
+        bookIds = dnaBooks.map(db => db.book_id);
+      } else if (shelfFilter !== "all" && shelfFilter !== "dna" && customShelfBooks) {
+        // Custom shelf - only include books from that shelf
+        bookIds = customShelfBooks.map(sb => sb.book_id);
+      }
+      
+      if (bookIds.length === 0) {
+        return [];
+      }
+      
+      try {
+        console.log(`Fetching details for ${bookIds.length} books`);
+        
+        const { data: booksData, error: booksError } = await supabaseAny
           .from("books")
           .select("id, title, author, cover_url, slug, epub_file_url")
           .in("id", bookIds);
@@ -54,21 +175,84 @@ const CarouselBooksContent: React.FC = () => {
           return [];
         }
         
-        // Combine the data
-        return userBooks.map(ub => {
-          const bookData = booksData?.find(b => b.id === ub.book_id);
+        // Combine with metadata from appropriate source based on filter
+        return booksData.map(book => {
+          // Find user book data (reading progress, etc) if available
+          const userBook = userBooks?.find(ub => ub.book_id === book.id);
+          
+          // Determine if it's a DNA book
+          const dnaBook = dnaBooks?.find(db => db.book_id === book.id);
+          
           return {
-            ...ub,
-            ...bookData
+            ...book,
+            last_read_at: userBook?.last_read_at,
+            current_page: userBook?.current_page,
+            status: userBook?.status,
+            isDnaBook: !!dnaBook,
+            dna_analysis_column: dnaBook?.dna_analysis_column,
+            source: dnaBook ? 'dna' : 'user_books'
           };
         });
       } catch (err) {
-        console.error("Exception fetching all books:", err);
+        console.error("Exception fetching book details:", err);
         return [];
       }
     },
-    enabled: !!user?.id,
+    enabled: true,
   });
+
+  // Add DNA books to user_books to ensure they show up in ALL BOOKS
+  useEffect(() => {
+    const addDnaBooksToUserBooks = async () => {
+      if (!user?.id || !dnaBooks?.length) return;
+      
+      try {
+        console.log("Adding DNA books to user_books table");
+        
+        // Process DNA books one by one instead of batch upsert
+        for (const dnaBook of dnaBooks) {
+          try {
+            // First check if the book already exists for this user
+            const { data: existingBook } = await supabaseAny
+              .from('user_books')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('book_id', dnaBook.book_id)
+              .maybeSingle();
+              
+            if (existingBook) {
+              console.log(`Book ${dnaBook.book_id} already exists for user, skipping`);
+              continue;
+            }
+            
+            // Insert the book if it doesn't exist
+            const { error: insertError } = await supabaseAny
+              .from('user_books')
+              .insert({
+                user_id: user.id,
+                book_id: dnaBook.book_id,
+                status: 'recommended',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+              
+            if (insertError) {
+              console.error(`Error adding DNA book ${dnaBook.book_id} to user_books:`, insertError);
+            }
+          } catch (bookErr) {
+            console.error(`Error processing DNA book ${dnaBook.book_id}:`, bookErr);
+          }
+        }
+      } catch (err) {
+        console.error("Error adding DNA books to user_books:", err);
+      }
+    };
+    
+    addDnaBooksToUserBooks();
+  }, [user?.id, dnaBooks]);
+
+  const isLoading = isLoadingUserBooks || isLoadingDnaBooks || 
+                   isLoadingShelfBooks || isLoadingBookDetails;
 
   if (isLoading) {
     return (
@@ -83,8 +267,12 @@ const CarouselBooksContent: React.FC = () => {
   if (!books || books.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-[#2A282A]/60">No books found in your library</p>
-        <p className="text-[#2A282A]/60 mt-2">Start adding books to see them here</p>
+        <p className="text-[#E9E7E2]/60">No books found in this shelf</p>
+        {shelfFilter === "dna" ? (
+          <p className="text-[#E9E7E2]/60 mt-2">Visit your DNA results to get matched with books</p>
+        ) : (
+          <p className="text-[#E9E7E2]/60 mt-2">Start reading or add books to see them here</p>
+        )}
       </div>
     );
   }
@@ -114,6 +302,8 @@ const CarouselBooksContent: React.FC = () => {
               cover_url={book.cover_url}
               slug={book.slug}
               epub_file_url={book.epub_file_url}
+              isDnaBook={book.isDnaBook}
+              dna_analysis_column={book.dna_analysis_column}
             />
           </CarouselItem>
         ))}

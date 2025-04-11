@@ -181,7 +181,9 @@ const DNABookshelfCarousel: React.FC<DNABookshelfCarouselProps> = ({
           return {
             ...match,
             ...bookData,
-            type
+            type,
+            isDnaBook: true,
+            dna_analysis_column: match.dna_analysis_column
           };
         });
         
@@ -265,6 +267,8 @@ const DNABookshelfCarousel: React.FC<DNABookshelfCarouselProps> = ({
               cover_url={book.cover_url}
               slug={book.slug}
               epub_file_url={book.epub_file_url}
+              isDnaBook={true}
+              dna_analysis_column={book.dna_analysis_column}
             />
           </CarouselItem>
         ))}
