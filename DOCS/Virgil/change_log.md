@@ -3,14 +3,12 @@
 
 
 
-<!-- commit  adding the config -->
+<!-- commit 569bcfb370a5fa7816522b6285bfc142bb9ebcfd   adding the config -->
 
-
-
+<!-- 
 Okay, I've cleaned up the src/config/virgilConfig.ts file. I removed the old enum and interface definitions, the conflicting DNA_ASSESSMENT_CHAT configuration, and ensured it aligns with the VirgilInstanceType defined in src/types/virgil.ts.
 Both src/types/virgil.ts and src/config/virgilConfig.ts should now correctly reflect the requirements outlined in the PRD.
-
-
+ -->
 
 
 
