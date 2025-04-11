@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration - replace with your actual keys
 TELEGRAM_BOT_TOKEN = "7932386214:AAH_UDOG74dIpzJN5ldifquOKlJtNIWkfRg"  # Telegram bot token
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"  # Make sure there are no spaces or quotes in the key
 TURBOPUFFER_API_KEY = "tpuf_Aj4e0ABRMlq5Qzoh5IOZFcQzrn4snfXu"
 TURBOPUFFER_NAMESPACE = "alexandria_test"
 
@@ -165,6 +165,10 @@ async def query_claude(prompt: str, context: Optional[List[Dict[str, Any]]] = No
         "HTTP-Referer": "https://readiverse-haven.com",  # Site URL for rankings
         "X-Title": "Virgil_readbot"  # Site title for rankings
     }
+    
+    # Log the API key being used (just the first and last few characters for security)
+    key_preview = f"{OPENROUTER_API_KEY[:5]}...{OPENROUTER_API_KEY[-5:]}"
+    logger.info(f"Using OpenRouter API key: {key_preview}")
     
     # Prepare the context from Turbopuffer results if available
     context_text = ""
