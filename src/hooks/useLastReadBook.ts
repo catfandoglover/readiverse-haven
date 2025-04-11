@@ -117,7 +117,7 @@ export const useLastReadBook = () => {
                 .upsert({
                   user_id: userId,
                   book_id: dnaBook.id,
-                  status: 'recommended',
+                  status: 'reading',
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString()
                 }, {

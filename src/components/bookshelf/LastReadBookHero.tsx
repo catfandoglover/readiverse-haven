@@ -37,17 +37,21 @@ const LastReadBookHero = () => {
     return null;
   }
 
-  const coverUrl = lastReadBook.book.cover_url || lastReadBook.book.Cover_super || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
+  // Prefer icon_illustration over cover_url
+  const heroImageUrl = lastReadBook.book.icon_illustration || lastReadBook.book.cover_url || lastReadBook.book.Cover_super || 'https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/public/Icon_Images//Virgil.png';
   const buttonText = lastReadBook.isDefaultBook ? "RESUME" : "RESUME";
   
-  console.log('LastReadBookHero - Using cover URL:', coverUrl);
+  console.log('LastReadBookHero - Using hero image URL:', heroImageUrl);
 
   return (
     <div className="relative h-52 w-full rounded-2xl overflow-hidden cursor-pointer" onClick={handleResumeReading}>
       {/* Background Image with Blur and Dark Overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${coverUrl})` }}
+        className="absolute inset-0 bg-cover"
+        style={{ 
+          backgroundImage: `url(${heroImageUrl})`,
+          backgroundPosition: 'center 15%' // Position from 15% down from the top
+        }}
       />
       <div className="absolute inset-0 bg-black/45" />
       
