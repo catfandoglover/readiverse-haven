@@ -3,11 +3,12 @@
 
 
 
-<!-- commit  implementing the Todos created in the prior commit  -->
+<!-- commit  adding the config -->
 
 
 
-
+Okay, I've cleaned up the src/config/virgilConfig.ts file. I removed the old enum and interface definitions, the conflicting DNA_ASSESSMENT_CHAT configuration, and ensured it aligns with the VirgilInstanceType defined in src/types/virgil.ts.
+Both src/types/virgil.ts and src/config/virgilConfig.ts should now correctly reflect the requirements outlined in the PRD.
 
 
 
