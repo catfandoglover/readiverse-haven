@@ -278,7 +278,6 @@ const App = () => (
                       <TurbopufferDemo />
                     </ProtectedRoute>
                   } />
-                  } />
                   <Route path="/dashboard" element={
                     <ProtectedRoute requireAuth={true} requireDNA={true}>
                       <Dashboard />
