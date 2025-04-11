@@ -1,311 +1,840 @@
 erDiagram
+    %% === Public Schema ===
+
+    profiles {
+        uuid id PK
+        varchar outseta_user_id UK "Nullable, old system ID"
+        varchar email "User's email"
+        timestamptz created_at
+        timestamptz updated_at
+        varchar full_name
+        text profile_image "URL"
+        text landscape_image "URL"
+        uuid assessment_id FK "FK to dna_assessment_results"
+        uuid user_id FK "FK to auth.users"
+        text vanity_url UK
+    }
+
     books {
         uuid id PK
         text title
-        text slug UK "Unique"
+        text slug UK
         text author
         text cover_url
         text epub_file_url
-        timestamp created_at
-        text Cover_super
+        timestamptz created_at
+        text Cover_super "Super.so link"
         text Notion_URL
-        double randomizer
+        float8 randomizer
         text[] categories
         text amazon_link
-        text about
-        text icon_illustration
+        text about "Feed Description"
+        text icon_illustration "Author portrait URL"
         text introduction
         text bookshop_link
         text great_question_connection
-        uuid author_id FK
+        uuid author_id FK "FK to icons (Authors)"
+        text city_published
+        text country_published
+        text source
     }
-    
-    art {
-        uuid id PK
-        text title
-        text slug UK "Unique"
-        text author
-        text art_file_url
-        timestamp created_at
-        text Notion_URL
-        double randomizer
-        text about
-        text icon_illustration
-        text introduction
-    }
-    
-    icons {
+
+    reading_lists {
         uuid id PK
         text name
-        text illustration
-        double randomizer
-        timestamp created_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    reading_list_books {
+        uuid reading_list_id PK, FK
+        uuid book_id PK, FK
+        timestamptz added_at
+    }
+
+    reading_progress {
+        uuid id PK
+        uuid book_id FK
+        float8 position
+        text device_id
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    external_links {
+        uuid id PK
+        text url
+        timestamptz created_at
+    }
+
+    great_questions {
+        uuid id PK
+        text category_number
+        text category "AESTHETICS, EPISTEMOLOGY, ETHICS, ONTOLOGY, POLITICS, THEOLOGY"
+        text question
+        text notion_id UK
+        timestamptz created_at
+        text[] related_classics
+        text illustration "URL"
+        text answer_a
+        text answer_b
+        text great_conversation
+        float8 randomizer
+        text Notion_URL
+        text slug UK
+    }
+
+    book_questions {
+        uuid question_id PK, FK "FK to great_questions"
+        uuid book_id PK, FK "FK to books"
+        float8 randomizer
+        timestamptz created_at
+    }
+
+    icons {
+        uuid id PK "Thinkers/Authors/Figures"
+        text name
+        text illustration "URL"
+        float8 randomizer
+        timestamptz created_at
         text about
         text introduction
         text Notion_URL
         text[] anecdotes
         text great_conversation
         text slug
+        text one_line "Short description"
     }
-    
+
+    test_auth {
+        bigint id PK "Identity"
+        text content
+        text person_uid "Likely FK to auth.users.id (as text)"
+        timestamptz created_at
+    }
+
+    dna_tree_structure {
+        uuid id PK
+        uuid question_id FK "FK to great_questions"
+        dna_category category "ENUM: ETHICS, AESTHETICS, POLITICS, THEOLOGY, ONTOLOGY, EPISTEMOLOGY"
+        uuid next_question_a_id FK "FK to dna_tree_structure (self-ref)"
+        uuid next_question_b_id FK "FK to dna_tree_structure (self-ref)"
+        text tree_position
+        timestamptz created_at
+    }
+
+    dna_assessment_progress {
+        uuid id PK
+        uuid user_id "User ID (likely FK to auth.users)"
+        dna_category category
+        text current_position "Position in the tree"
+        jsonb responses
+        boolean completed
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
     concepts {
         uuid id PK
         text title
-        text illustration
-        text type
-        double randomizer
-        timestamp created_at
+        text illustration "URL"
+        text concept_type "Field, Subfield, Branch, etc."
+        float8 randomizer
+        timestamptz created_at
         text about
         text introduction
         text Notion_URL
+        text great_conversation
+        text slug
+        text one_line "Short description"
     }
-    
-    great_questions {
-        uuid id PK
-        text category_number
-        text category
-        text question
-        text notion_id UK "Unique"
-        timestamp created_at
-        text[] related_classics
-        text illustration
-        text answer_a
-        text answer_b
-    }
-    
-    book_questions {
-        uuid question_id PK,FK
-        uuid book_id PK,FK
-        double randomizer
-        timestamp created_at
-    }
-    
-    profiles {
-        uuid id PK
-        uuid user_id UK "Unique"
-        varchar email
-        timestamp created_at
-        timestamp updated_at
-        varchar full_name
-        text profile_image
-        text landscape_image
-        uuid assessment_id FK
-    }
-    
-    user_books {
-        uuid id PK
-        uuid book_id FK
-        uuid user_id FK
-        text status
-        integer current_page
-        text current_cfi
-        timestamp last_read_at
-        timestamp created_at
-        timestamp updated_at
-        text book_user_unique UK "Unique composite key (book_id, user_id)"
-    }
-    
-    user_favorites {
-        uuid id PK
-        uuid user_id FK
-        uuid item_id
-        text item_type
-        timestamp added_at
-        text favorite_unique UK "Unique composite key (user_id, item_id, item_type)"
-    }
-    
-    reading_lists {
-        uuid id PK
-        text name
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    reading_list_books {
-        uuid reading_list_id PK,FK
-        uuid book_id PK,FK
-        timestamp added_at
-    }
-    
-    reading_progress {
-        uuid id PK
-        uuid book_id FK
-        double position
-        text device_id
-        timestamp created_at
-        timestamp updated_at
-    }
-    
+
     dna_assessment_results {
         uuid id PK
-        timestamp created_at
-        text name
-        jsonb answers
-        text ethics_sequence
+        timestamptz created_at
+        text name "Assessment name/identifier"
+        jsonb answers "Stored answers"
+        text ethics_sequence "Sequence like 'ABAAA'"
         text epistemology_sequence
         text politics_sequence
         text theology_sequence
         text ontology_sequence
         text aesthetics_sequence
-        uuid profile_id
+        uuid profile_id FK "FK to profiles"
     }
-    
+
+    dna_question_responses {
+        uuid id PK
+        uuid assessment_id FK "FK to dna_assessment_results"
+        dna_category category
+        uuid question_id FK "FK to dna_tree_structure"
+        text answer "'A' or 'B'"
+        timestamptz created_at
+    }
+
     dna_analysis_results {
         uuid id PK
-        timestamp created_at
-        uuid assessment_id FK
+        timestamptz created_at
+        uuid assessment_id FK "FK to dna_assessment_results"
         text analysis_text
-        jsonb raw_response
+        jsonb raw_response "Raw AI response"
         text archetype
         text introduction
         text archetype_definition
         text key_tension_1
         text key_tension_2
         text key_tension_3
-        dna_result_type analysis_type
+        text natural_strength_1
+        text natural_strength_2
+        text natural_strength_3
+        text growth_edges_1
+        text growth_edges_2
+        text growth_edges_3
+        text theology_introduction
+        text ontology_introduction
+        text epistemology_introduction
+        text ethics_introduction
+        text politics_introduction
+        text aesthetics_introduction
+        text theology_kindred_spirit_1 "Name"
+        text theology_kindred_spirit_2 "Name"
+        text theology_kindred_spirit_3 "Name"
+        text theology_kindred_spirit_4 "Name"
+        text theology_kindred_spirit_5 "Name"
+        text theology_kindred_spirit_1_classic "Title (YYYY)"
+        text theology_kindred_spirit_2_classic
+        text theology_kindred_spirit_3_classic
+        text theology_kindred_spirit_4_classic
+        text theology_kindred_spirit_5_classic
+        text theology_kindred_spirit_1_rationale
+        text theology_kindred_spirit_2_rationale
+        text theology_kindred_spirit_3_rationale
+        text theology_kindred_spirit_4_rationale
+        text theology_kindred_spirit_5_rationale
+        text theology_challenging_voice_1 "Name"
+        text theology_challenging_voice_2 "Name"
+        text theology_challenging_voice_3 "Name"
+        text theology_challenging_voice_4 "Name"
+        text theology_challenging_voice_5 "Name"
+        text theology_challenging_voice_1_classic "Title (YYYY)"
+        text theology_challenging_voice_2_classic
+        text theology_challenging_voice_3_classic
+        text theology_challenging_voice_4_classic
+        text theology_challenging_voice_5_classic
+        text theology_challenging_voice_1_rationale
+        text theology_challenging_voice_2_rationale
+        text theology_challenging_voice_3_rationale
+        text theology_challenging_voice_4_rationale
+        text theology_challenging_voice_5_rationale
+        text ontology_kindred_spirit_1 "Name"
+        text ontology_kindred_spirit_2 "Name"
+        text ontology_kindred_spirit_3 "Name"
+        text ontology_kindred_spirit_4 "Name"
+        text ontology_kindred_spirit_5 "Name"
+        text ontology_kindred_spirit_1_classic "Title (YYYY)"
+        text ontology_kindred_spirit_2_classic
+        text ontology_kindred_spirit_3_classic
+        text ontology_kindred_spirit_4_classic
+        text ontology_kindred_spirit_5_classic
+        text ontology_kindred_spirit_1_rationale
+        text ontology_kindred_spirit_2_rationale
+        text ontology_kindred_spirit_3_rationale
+        text ontology_kindred_spirit_4_rationale
+        text ontology_kindred_spirit_5_rationale
+        text ontology_challenging_voice_1 "Name"
+        text ontology_challenging_voice_2 "Name"
+        text ontology_challenging_voice_3 "Name"
+        text ontology_challenging_voice_4 "Name"
+        text ontology_challenging_voice_5 "Name"
+        text ontology_challenging_voice_1_classic "Title (YYYY)"
+        text ontology_challenging_voice_2_classic
+        text ontology_challenging_voice_3_classic
+        text ontology_challenging_voice_4_classic
+        text ontology_challenging_voice_5_classic
+        text ontology_challenging_voice_1_rationale
+        text ontology_challenging_voice_2_rationale
+        text ontology_challenging_voice_3_rationale
+        text ontology_challenging_voice_4_rationale
+        text ontology_challenging_voice_5_rationale
+        text epistemology_kindred_spirit_1 "Name"
+        text epistemology_kindred_spirit_2 "Name"
+        text epistemology_kindred_spirit_3 "Name"
+        text epistemology_kindred_spirit_4 "Name"
+        text epistemology_kindred_spirit_5 "Name"
+        text epistemology_kindred_spirit_1_classic "Title (YYYY)"
+        text epistemology_kindred_spirit_2_classic
+        text epistemology_kindred_spirit_3_classic
+        text epistemology_kindred_spirit_4_classic
+        text epistemology_kindred_spirit_5_classic
+        text epistemology_kindred_spirit_1_rationale
+        text epistemology_kindred_spirit_2_rationale
+        text epistemology_kindred_spirit_3_rationale
+        text epistemology_kindred_spirit_4_rationale
+        text epistemology_kindred_spirit_5_rationale
+        text epistemology_challenging_voice_1 "Name"
+        text epistemology_challenging_voice_2 "Name"
+        text epistemology_challenging_voice_3 "Name"
+        text epistemology_challenging_voice_4 "Name"
+        text epistemology_challenging_voice_5 "Name"
+        text epistemology_challenging_voice_1_classic "Title (YYYY)"
+        text epistemology_challenging_voice_2_classic
+        text epistemology_challenging_voice_3_classic
+        text epistemology_challenging_voice_4_classic
+        text epistemology_challenging_voice_5_classic
+        text epistemology_challenging_voice_1_rationale
+        text epistemology_challenging_voice_2_rationale
+        text epistemology_challenging_voice_3_rationale
+        text epistemology_challenging_voice_4_rationale
+        text epistemology_challenging_voice_5_rationale
+        text ethics_kindred_spirit_1 "Name"
+        text ethics_kindred_spirit_2 "Name"
+        text ethics_kindred_spirit_3 "Name"
+        text ethics_kindred_spirit_4 "Name"
+        text ethics_kindred_spirit_5 "Name"
+        text ethics_kindred_spirit_1_classic "Title (YYYY)"
+        text ethics_kindred_spirit_2_classic
+        text ethics_kindred_spirit_3_classic
+        text ethics_kindred_spirit_4_classic
+        text ethics_kindred_spirit_5_classic
+        text ethics_kindred_spirit_1_rationale
+        text ethics_kindred_spirit_2_rationale
+        text ethics_kindred_spirit_3_rationale
+        text ethics_kindred_spirit_4_rationale
+        text ethics_kindred_spirit_5_rationale
+        text ethics_challenging_voice_1 "Name"
+        text ethics_challenging_voice_2 "Name"
+        text ethics_challenging_voice_3 "Name"
+        text ethics_challenging_voice_4 "Name"
+        text ethics_challenging_voice_5 "Name"
+        text ethics_challenging_voice_1_classic "Title (YYYY)"
+        text ethics_challenging_voice_2_classic
+        text ethics_challenging_voice_3_classic
+        text ethics_challenging_voice_4_classic
+        text ethics_challenging_voice_5_classic
+        text ethics_challenging_voice_1_rationale
+        text ethics_challenging_voice_2_rationale
+        text ethics_challenging_voice_3_rationale
+        text ethics_challenging_voice_4_rationale
+        text ethics_challenging_voice_5_rationale
+        text politics_kindred_spirit_1 "Name"
+        text politics_kindred_spirit_2 "Name"
+        text politics_kindred_spirit_3 "Name"
+        text politics_kindred_spirit_4 "Name"
+        text politics_kindred_spirit_5 "Name"
+        text politics_kindred_spirit_1_classic "Title (YYYY)"
+        text politics_kindred_spirit_2_classic
+        text politics_kindred_spirit_3_classic
+        text politics_kindred_spirit_4_classic
+        text politics_kindred_spirit_5_classic
+        text politics_kindred_spirit_1_rationale
+        text politics_kindred_spirit_2_rationale
+        text politics_kindred_spirit_3_rationale
+        text politics_kindred_spirit_4_rationale
+        text politics_kindred_spirit_5_rationale
+        text politics_challenging_voice_1 "Name"
+        text politics_challenging_voice_2 "Name"
+        text politics_challenging_voice_3 "Name"
+        text politics_challenging_voice_4 "Name"
+        text politics_challenging_voice_5 "Name"
+        text politics_challenging_voice_1_classic "Title (YYYY)"
+        text politics_challenging_voice_2_classic
+        text politics_challenging_voice_3_classic
+        text politics_challenging_voice_4_classic
+        text politics_challenging_voice_5_classic
+        text politics_challenging_voice_1_rationale
+        text politics_challenging_voice_2_rationale
+        text politics_challenging_voice_3_rationale
+        text politics_challenging_voice_4_rationale
+        text politics_challenging_voice_5_rationale
+        text aesthetics_kindred_spirit_1 "Name"
+        text aesthetics_kindred_spirit_2 "Name"
+        text aesthetics_kindred_spirit_3 "Name"
+        text aesthetics_kindred_spirit_4 "Name"
+        text aesthetics_kindred_spirit_5 "Name"
+        text aesthetics_kindred_spirit_1_classic "Title (YYYY)"
+        text aesthetics_kindred_spirit_2_classic
+        text aesthetics_kindred_spirit_3_classic
+        text aesthetics_kindred_spirit_4_classic
+        text aesthetics_kindred_spirit_5_classic
+        text aesthetics_kindred_spirit_1_rationale
+        text aesthetics_kindred_spirit_2_rationale
+        text aesthetics_kindred_spirit_3_rationale
+        text aesthetics_kindred_spirit_4_rationale
+        text aesthetics_kindred_spirit_5_rationale
+        text aesthetics_challenging_voice_1 "Name"
+        text aesthetics_challenging_voice_2 "Name"
+        text aesthetics_challenging_voice_3 "Name"
+        text aesthetics_challenging_voice_4 "Name"
+        text aesthetics_challenging_voice_5 "Name"
+        text aesthetics_challenging_voice_1_classic "Title (YYYY)"
+        text aesthetics_challenging_voice_2_classic
+        text aesthetics_challenging_voice_3_classic
+        text aesthetics_challenging_voice_4_classic
+        text aesthetics_challenging_voice_5_classic
+        text aesthetics_challenging_voice_1_rationale
+        text aesthetics_challenging_voice_2_rationale
+        text aesthetics_challenging_voice_3_rationale
+        text aesthetics_challenging_voice_4_rationale
+        text aesthetics_challenging_voice_5_rationale
+        text conclusion
+        text next_steps
+        dna_result_type analysis_type "ENUM: section_1, section_2, section_3"
+        text name "User name at time of analysis"
+        text profile_image_url
+        text become_who_you_are
+        text most_kindred_spirit "Name"
+        text most_challenging_voice "Name"
+        text share_summary
+        uuid theology_kindred_spirit_1_db_id FK "FK to icons/concepts/books"
+        uuid theology_kindred_spirit_2_db_id FK
+        uuid theology_kindred_spirit_3_db_id FK
+        uuid theology_kindred_spirit_4_db_id FK
+        uuid theology_kindred_spirit_5_db_id FK
+        uuid theology_challenging_voice_1_db_id FK
+        uuid theology_challenging_voice_2_db_id FK
+        uuid theology_challenging_voice_3_db_id FK
+        uuid theology_challenging_voice_4_db_id FK
+        uuid theology_challenging_voice_5_db_id FK
+        uuid epistemology_kindred_spirit_1_db_id FK
+        uuid epistemology_kindred_spirit_2_db_id FK
+        uuid epistemology_kindred_spirit_3_db_id FK
+        uuid epistemology_kindred_spirit_4_db_id FK
+        uuid epistemology_kindred_spirit_5_db_id FK
+        uuid epistemology_challenging_voice_1_db_id FK
+        uuid epistemology_challenging_voice_2_db_id FK
+        uuid epistemology_challenging_voice_3_db_id FK
+        uuid epistemology_challenging_voice_4_db_id FK
+        uuid epistemology_challenging_voice_5_db_id FK
+        uuid ethics_kindred_spirit_1_db_id FK
+        uuid ethics_kindred_spirit_2_db_id FK
+        uuid ethics_kindred_spirit_3_db_id FK
+        uuid ethics_kindred_spirit_4_db_id FK
+        uuid ethics_kindred_spirit_5_db_id FK
+        uuid ethics_challenging_voice_1_db_id FK
+        uuid ethics_challenging_voice_2_db_id FK
+        uuid ethics_challenging_voice_3_db_id FK
+        uuid ethics_challenging_voice_4_db_id FK
+        uuid ethics_challenging_voice_5_db_id FK
+        uuid politics_kindred_spirit_1_db_id FK
+        uuid politics_kindred_spirit_2_db_id FK
+        uuid politics_kindred_spirit_3_db_id FK
+        uuid politics_kindred_spirit_4_db_id FK
+        uuid politics_kindred_spirit_5_db_id FK
+        uuid politics_challenging_voice_1_db_id FK
+        uuid politics_challenging_voice_2_db_id FK
+        uuid politics_challenging_voice_3_db_id FK
+        uuid politics_challenging_voice_4_db_id FK
+        uuid politics_challenging_voice_5_db_id FK
+        uuid ontology_kindred_spirit_1_db_id FK
+        uuid ontology_kindred_spirit_2_db_id FK
+        uuid ontology_kindred_spirit_3_db_id FK
+        uuid ontology_kindred_spirit_4_db_id FK
+        uuid ontology_kindred_spirit_5_db_id FK
+        uuid ontology_challenging_voice_1_db_id FK
+        uuid ontology_challenging_voice_2_db_id FK
+        uuid ontology_challenging_voice_3_db_id FK
+        uuid ontology_challenging_voice_4_db_id FK
+        uuid ontology_challenging_voice_5_db_id FK
+        uuid aesthetics_kindred_spirit_1_db_id FK
+        uuid aesthetics_kindred_spirit_2_db_id FK
+        uuid aesthetics_kindred_spirit_3_db_id FK
+        uuid aesthetics_kindred_spirit_4_db_id FK
+        uuid aesthetics_kindred_spirit_5_db_id FK
+        uuid aesthetics_challenging_voice_1_db_id FK
+        uuid aesthetics_challenging_voice_2_db_id FK
+        uuid aesthetics_challenging_voice_3_db_id FK
+        uuid aesthetics_challenging_voice_4_db_id FK
+        uuid aesthetics_challenging_voice_5_db_id FK
+        uuid theology_kindred_spirit_1_classic_db_id FK
+        uuid theology_kindred_spirit_2_classic_db_id FK
+        uuid theology_kindred_spirit_3_classic_db_id FK
+        uuid theology_kindred_spirit_4_classic_db_id FK
+        uuid theology_kindred_spirit_5_classic_db_id FK
+        uuid theology_challenging_voice_1_classic_db_id FK
+        uuid theology_challenging_voice_2_classic_db_id FK
+        uuid theology_challenging_voice_3_classic_db_id FK
+        uuid theology_challenging_voice_4_classic_db_id FK
+        uuid theology_challenging_voice_5_classic_db_id FK
+        uuid epistemology_kindred_spirit_1_classic_db_id FK
+        uuid epistemology_kindred_spirit_2_classic_db_id FK
+        uuid epistemology_kindred_spirit_3_classic_db_id FK
+        uuid epistemology_kindred_spirit_4_classic_db_id FK
+        uuid epistemology_kindred_spirit_5_classic_db_id FK
+        uuid epistemology_challenging_voice_1_classic_db_id FK
+        uuid epistemology_challenging_voice_2_classic_db_id FK
+        uuid epistemology_challenging_voice_3_classic_db_id FK
+        uuid epistemology_challenging_voice_4_classic_db_id FK
+        uuid epistemology_challenging_voice_5_classic_db_id FK
+        uuid ethics_kindred_spirit_1_classic_db_id FK
+        uuid ethics_kindred_spirit_2_classic_db_id FK
+        uuid ethics_kindred_spirit_3_classic_db_id FK
+        uuid ethics_kindred_spirit_4_classic_db_id FK
+        uuid ethics_kindred_spirit_5_classic_db_id FK
+        uuid ethics_challenging_voice_1_classic_db_id FK
+        uuid ethics_challenging_voice_2_classic_db_id FK
+        uuid ethics_challenging_voice_3_classic_db_id FK
+        uuid ethics_challenging_voice_4_classic_db_id FK
+        uuid ethics_challenging_voice_5_classic_db_id FK
+        uuid politics_kindred_spirit_1_classic_db_id FK
+        uuid politics_kindred_spirit_2_classic_db_id FK
+        uuid politics_kindred_spirit_3_classic_db_id FK
+        uuid politics_kindred_spirit_4_classic_db_id FK
+        uuid politics_kindred_spirit_5_classic_db_id FK
+        uuid politics_challenging_voice_1_classic_db_id FK
+        uuid politics_challenging_voice_2_classic_db_id FK
+        uuid politics_challenging_voice_3_classic_db_id FK
+        uuid politics_challenging_voice_4_classic_db_id FK
+        uuid politics_challenging_voice_5_classic_db_id FK
+        uuid ontology_kindred_spirit_1_classic_db_id FK
+        uuid ontology_kindred_spirit_2_classic_db_id FK
+        uuid ontology_kindred_spirit_3_classic_db_id FK
+        uuid ontology_kindred_spirit_4_classic_db_id FK
+        uuid ontology_kindred_spirit_5_classic_db_id FK
+        uuid ontology_challenging_voice_1_classic_db_id FK
+        uuid ontology_challenging_voice_2_classic_db_id FK
+        uuid ontology_challenging_voice_3_classic_db_id FK
+        uuid ontology_challenging_voice_4_classic_db_id FK
+        uuid ontology_challenging_voice_5_classic_db_id FK
+        uuid aesthetics_kindred_spirit_1_classic_db_id FK
+        uuid aesthetics_kindred_spirit_2_classic_db_id FK
+        uuid aesthetics_kindred_spirit_3_classic_db_id FK
+        uuid aesthetics_kindred_spirit_4_classic_db_id FK
+        uuid aesthetics_kindred_spirit_5_classic_db_id FK
+        uuid aesthetics_challenging_voice_1_classic_db_id FK
+        uuid aesthetics_challenging_voice_2_classic_db_id FK
+        uuid aesthetics_challenging_voice_3_classic_db_id FK
+        uuid aesthetics_challenging_voice_4_classic_db_id FK
+        uuid aesthetics_challenging_voice_5_classic_db_id FK
+        uuid most_kindred_spirit_db_id FK
+        uuid most_challenging_voice_db_id FK
     }
-    
-    dna_analysis_results_matched {
+
+    user_books {
         uuid id PK
-        uuid assessment_id FK
-        text type
-        text dna_analysis_column
-        text dna_analysis_name
-        text matched_name
-        uuid matched_id
-        timestamp created_at
+        uuid book_id FK
+        varchar outseta_user_id "Old user ID"
+        text status "'reading', 'completed', 'on_hold', 'dropped'"
+        int current_page
+        text current_cfi "EPUB CFI location"
+        timestamptz last_read_at
+        timestamptz created_at
+        timestamptz updated_at
+        uuid user_id FK "FK to auth.users"
     }
-    
-    dna_analysis_results_unmatched {
-        uuid id PK
-        uuid assessment_id FK
-        text type
-        text dna_analysis_column
-        text dna_analysis_name
-        timestamp created_at
-    }
-    
-    dna_tree_structure {
-        uuid id PK
-        uuid question_id FK
-        dna_category category
-        uuid next_question_a_id FK
-        uuid next_question_b_id FK
-        text tree_position
-        timestamp created_at
-        text category_position UK "Unique composite key (category, tree_position)"
-        text question_category UK "Unique composite key (question_id, category)"
-    }
-    
-    dna_question_responses {
-        uuid id PK
-        uuid assessment_id FK
-        dna_category category
-        uuid question_id FK
-        text answer
-        timestamp created_at
-    }
-    
-    dna_assessment_progress {
-        uuid id PK
-        uuid user_id FK
-        dna_category category
-        text current_position
-        jsonb responses
-        boolean completed
-        timestamp created_at
-        timestamp updated_at
-        text user_category UK "Unique composite key (user_id, category)"
-    }
-    
-    custom_domain_books {
-        uuid id PK
-        uuid domain_id FK
+
+    art {
+        uuid id PK "Duplicate of books table?"
         text title
+        text slug UK
         text author
-        text cover_url
-        uuid user_id FK
-        timestamp created_at
-        text domain_book UK "Unique composite key (domain_id, title, author)"
+        text art_file_url
+        timestamptz created_at
+        text Notion_URL
+        float8 randomizer
+        text about
+        text icon_illustration
+        text introduction
     }
-    
+
+    user_favorites {
+        uuid id PK
+        varchar outseta_user_id "Old user ID"
+        uuid item_id "ID of the favorited item (book, icon, concept, etc.)"
+        text item_type "Type of item ('book', 'icon', etc.)"
+        timestamptz added_at
+        uuid user_id FK "FK to auth.users"
+    }
+
+    share_messages {
+        uuid id PK
+        share_message_type type "ENUM: classic_text, classic_art, classic_music, icon, concept, virgil, courses"
+        text message
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    dna_conversations {
+        uuid id PK
+        uuid assessment_id FK "FK to dna_assessment_results"
+        uuid user_id FK "FK to profiles"
+        text session_id
+        jsonb messages "Conversation history"
+        timestamptz created_at
+        timestamptz updated_at
+        text question_id "Identifier for the DNA question discussed"
+        jsonb metadata
+    }
+
     custom_domains {
         uuid id PK
         text name
-        uuid user_id FK
-        timestamp created_at
+        uuid user_id FK "FK to auth.users"
+        timestamptz created_at
+        text outseta_user_id FK "FK to profiles.outseta_user_id"
     }
-    
-    share_messages {
+
+    custom_domain_books {
         uuid id PK
-        share_message_type type
-        text message
-        timestamp created_at
-        timestamp updated_at
+        uuid domain_id FK "FK to custom_domains"
+        uuid user_id FK "FK to auth.users"
+        timestamptz created_at
+        uuid book_id FK "FK to books"
     }
-    
-    quotes {
-        bigint id PK
-        timestamp created_at
-        uuid icon_id FK
-        text quote
-        text icon
+
+    icon_update_temp {
+        uuid id PK
+        timestamptz created_at
+        text icon_id
+        text[] anecdotes
     }
-    
+
+    prompts {
+        bigint id PK "Identity"
+        text context "e.g., 'chat', 'course'"
+        text purpose
+        text prompt "Initial message/prompt text"
+        text section "e.g., 'intellectual', 'emotional'"
+        bigint display_order
+        text user_title "Title shown to user"
+        text user_subtitle "Subtitle shown to user"
+        text icon_display "Icon name (e.g., 'Earth')"
+    }
+
     user_badges {
-        bigint id PK
-        timestamp created_at
-        uuid user_id FK
-        uuid entry_text FK
+        bigint id PK "Identity"
+        timestamptz created_at
+        text userid "Likely FK to auth.users.id (as text)"
+        uuid entry_text FK "FK to books"
         text score
         text summary
-        uuid entry_icon FK
-        uuid entry_concepts FK
-        numeric session_duration
+        uuid entry_icon FK "FK to icons"
+        uuid entry_concepts FK "FK to concepts"
+        numeric session_duration "Seconds"
+        text one_sentence "Short summary from LLM"
     }
-    
-    external_links {
-        uuid id PK
-        text url
-        timestamp created_at
+
+    quotes {
+        bigint id PK "Identity"
+        timestamptz created_at
+        uuid icon_id FK "FK to icons"
+        text quote
+        text icon "Name of the icon (redundant?)"
     }
-    
-    dna_conversations {
+
+    revenue_items {
         uuid id PK
-        uuid assessment_id FK
-        uuid user_id FK
+        timestamptz created_at
+        text purpose
+        numeric cost
+        numeric yearly_cost
+        numeric monthly_cost
+        bigint membership_level_id FK "FK to lightning_membership"
+    }
+
+    bookings {
+        uuid id PK
+        text stripe_session_id UK
+        text booking_type_id
+        text name
+        text email
+        text time_slot_id
+        text timezone
+        text status "'pending', 'confirmed', etc."
+        text tidycal_booking_id
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    archetypes {
+        bigint id PK "Identity"
+        timestamptz created_at
+        text archetype "Name of archetype"
+        text landscape_image "URL"
+    }
+
+    dna_unmatched_entities {
+        uuid id PK
+        uuid analysis_id FK "FK to dna_analysis_results"
+        jsonb unmatched_thinkers
+        jsonb unmatched_classics
+        text status "'pending', 'resolved', etc."
+        timestamptz created_at
+        timestamptz updated_at
+        uuid assessment_id UK, FK "FK to dna_assessment_results"
+    }
+
+    customers {
+        uuid id PK
+        uuid user_id FK "FK to auth.users"
+        text email
+        text stripe_customer_id UK
+        text subscription_status
+        text subscription_tier
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    lightning_membership {
+        bigint id PK "Identity"
+        timestamptz created_at
+        uuid revenue_item_id FK "FK to revenue_items"
+        numeric monthly_token_limit
+        text plan_title
+    }
+
+    dna_analysis_results_matched {
+        uuid id PK
+        uuid assessment_id FK "FK to dna_assessment_results"
+        text type "'thinker' or 'classic'"
+        text dna_analysis_column "Column name from dna_analysis_results"
+        text dna_analysis_name "Name from analysis text"
+        text matched_name "Name from db (icons/books)"
+        uuid matched_id "ID from db (icons/books)"
+        timestamptz created_at
+    }
+
+    dna_analysis_results_unmatched {
+        uuid id PK
+        uuid assessment_id FK "FK to dna_analysis_results"
+        text type "'thinker' or 'classic'"
+        text dna_analysis_column "Column name from dna_analysis_results"
+        text dna_analysis_name "Name from analysis text"
+        timestamptz created_at
+    }
+
+    dna_validation_errors {
+      uuid id PK
+      uuid assessment_id FK "FK to dna_assessment_results"
+      text error_message
+      text error_stack
+      timestamptz created_at
+    }
+
+    virgil_course_conversations {
+        uuid id PK
+        uuid user_id FK "FK to auth.users"
+        uuid course_id "Identifier for the course"
+        jsonb messages "Conversation history"
+        timestamptz created_at
+        timestamptz updated_at
+        int progress_percentage "0-100"
+    }
+
+    virgil_conversations {
+        uuid id PK
+        timestamptz created_at
+        text last_message
+        text mode_icon "Icon name"
+        text mode_id "Prompt/Mode ID"
+        text mode_title "Prompt/Mode Title"
         text session_id
-        jsonb messages
-        timestamp created_at
-        timestamp updated_at
-        text question_id
-        jsonb metadata
+        timestamptz updated_at
+        uuid user_id FK "FK to auth.users"
     }
-    
-    books ||--o{ book_questions : "has"
-    great_questions ||--o{ book_questions : "has"
-    books ||--o{ reading_list_books : "included_in"
-    reading_lists ||--o{ reading_list_books : "contains"
-    books ||--o{ reading_progress : "tracked_in"
-    books ||--o{ user_books : "tracked_in"
-    profiles ||--o{ user_books : "owns"
-    profiles ||--o{ user_favorites : "has"
-    great_questions ||--o{ dna_tree_structure : "used_in"
-    dna_tree_structure ||--o{ dna_question_responses : "has_responses"
-    dna_assessment_results ||--o{ dna_analysis_results : "has_analysis"
-    dna_assessment_results ||--o{ dna_question_responses : "has_responses"
-    profiles ||--o{ dna_assessment_progress : "has_progress"
-    icons ||--o{ books : "authored"
-    custom_domains ||--o{ custom_domain_books : "contains"
-    icons ||--o{ quotes : "has"
-    books ||--o{ user_badges : "referenced_by"
-    icons ||--o{ user_badges : "referenced_by"
-    concepts ||--o{ user_badges : "referenced_by"
-    dna_tree_structure ||--o{ dna_tree_structure : "next_question_a"
-    dna_tree_structure ||--o{ dna_tree_structure : "next_question_b"
-    profiles ||--o{ dna_conversations : "has"
-    dna_assessment_results ||--o{ dna_conversations : "belongs_to"
-    profiles }|--o{ custom_domains : "owns"
-    dna_assessment_results ||--|| profiles : "associated_with"
-    dna_analysis_results ||--o{ dna_analysis_results_matched : "has_matches"
-    dna_analysis_results ||--o{ dna_analysis_results_unmatched : "has_unmatched"
+
+
+    %% === Auth Schema ===
+    "auth.users" {
+      uuid id PK
+      varchar aud
+      varchar role
+      varchar email
+      varchar encrypted_password
+      timestamptz email_confirmed_at
+      timestamptz invited_at
+      varchar confirmation_token
+      timestamptz confirmation_sent_at
+      varchar recovery_token
+      timestamptz recovery_sent_at
+      varchar email_change_token_new
+      varchar email_change
+      timestamptz email_change_sent_at
+      timestamptz last_sign_in_at
+      jsonb raw_app_meta_data
+      jsonb raw_user_meta_data
+      boolean is_super_admin
+      timestamptz created_at
+      timestamptz updated_at
+      text phone UK
+      timestamptz phone_confirmed_at
+      text phone_change
+      varchar phone_change_token
+      timestamptz phone_change_sent_at
+      timestamptz confirmed_at "GENERATED"
+      varchar email_change_token_current
+      smallint email_change_confirm_status
+      timestamptz banned_until
+      varchar reauthentication_token
+      timestamptz reauthentication_sent_at
+      boolean is_sso_user
+      timestamptz deleted_at
+      boolean is_anonymous
+    }
+
+    %% === Relationships ===
+
+    profiles }o--|| "auth.users" : "user_id"
+    profiles }o--o{ dna_assessment_results : "assessment_id"
+    profiles }o--o{ dna_conversations : "user_id"
+    profiles }o--o{ custom_domains : "outseta_user_id (old)"
+
+    books }o--|| icons : "author_id"
+    books ||--o{ book_questions : "book_id"
+    books ||--o{ reading_list_books : "book_id"
+    books ||--o{ reading_progress : "book_id"
+    books ||--o{ user_books : "book_id"
+    books ||--o{ user_badges : "entry_text (badge for book)"
+    books ||--o{ custom_domain_books : "book_id"
+
+    great_questions ||--o{ book_questions : "question_id"
+    great_questions ||--o{ dna_tree_structure : "question_id"
+
+    icons ||--o{ books : "author_id"
+    icons ||--o{ user_badges : "entry_icon (badge for icon)"
+    icons ||--o{ quotes : "icon_id"
+
+    concepts ||--o{ user_badges : "entry_concepts (badge for concept)"
+
+    reading_lists ||--o{ reading_list_books : "reading_list_id"
+
+    dna_assessment_results ||--o{ profiles : "assessment_id"
+    dna_assessment_results ||--o{ dna_question_responses : "assessment_id"
+    dna_assessment_results ||--o{ dna_analysis_results : "assessment_id"
+    dna_assessment_results ||--o{ dna_conversations : "assessment_id"
+    dna_assessment_results ||--o{ dna_unmatched_entities : "assessment_id"
+    dna_assessment_results ||--o{ dna_analysis_results_matched : "assessment_id"
+    dna_assessment_results ||--o{ dna_validation_errors : "assessment_id"
+
+    dna_tree_structure ||--o{ dna_question_responses : "question_id"
+    dna_tree_structure }o--o{ dna_tree_structure : "next_question_a_id"
+    dna_tree_structure }o--o{ dna_tree_structure : "next_question_b_id"
+
+    dna_analysis_results ||--o{ dna_unmatched_entities : "analysis_id"
+    dna_analysis_results ||--o{ dna_analysis_results_unmatched : "assessment_id" // Relationship might be mislabeled in source data
+
+    %% Linking analysis result entities to source tables (Conceptual Representation)
+    dna_analysis_results }o..o| books : "links to classics (via _classic_db_id)"
+    dna_analysis_results }o..o| icons : "links to thinkers (via _db_id)"
+    %% dna_analysis_results also conceptually links to concepts table
+
+    custom_domains ||--o{ custom_domain_books : "domain_id"
+    custom_domains }o--|| "auth.users" : "user_id"
+    custom_domains }o--|| profiles : "outseta_user_id"
+
+
+    "auth.users" ||--o{ profiles : "user_id"
+    "auth.users" ||--o{ user_books : "user_id"
+    "auth.users" ||--o{ user_favorites : "user_id"
+    "auth.users" ||--o{ custom_domains : "user_id"
+    "auth.users" ||--o{ custom_domain_books : "user_id"
+    "auth.users" ||--o{ customers : "user_id"
+    "auth.users" ||--o{ virgil_course_conversations : "user_id"
+    "auth.users" ||--o{ virgil_conversations : "user_id"
+
+    customers }o--|| "auth.users" : "user_id"
+
+    revenue_items ||--o{ lightning_membership : "revenue_item_id"
+    revenue_items }o--|| lightning_membership : "membership_level_id"
+
+    lightning_membership }o--|| revenue_items : "revenue_item_id"
+    lightning_membership ||--o{ revenue_items : "membership_level_id"

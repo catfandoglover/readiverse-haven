@@ -1,338 +1,229 @@
+import { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 
-import { supabase } from "@/integrations/supabase/client";
-
-export interface Message {
+// Assuming ChatMessage structure based on PRD FR4.2
+export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  audioUrl?: string;
 }
 
-export interface QuestionPath {
-  questionId: string;
-  question: string;
-  answer: string;
+// Generic type for conversation metadata, specific fields vary by table
+interface ConversationBase {
+  id: string;
+  user_id: string;
+  messages: ChatMessage[];
+  created_at: string;
+  updated_at: string;
+  last_message_preview: string | null;
 }
 
-class ConversationManager {
-  private conversations: Map<string, Message[]> = new Map();
-  private questionPaths: Map<string, QuestionPath[]> = new Map();
-  private currentQuestionIds: Map<string, string> = new Map();
-  private currentQuestions: Map<string, string> = new Map();
-  private expiryMinutes = 30;
+// Example specific conversation type - others would extend ConversationBase
+// interface GeneralChatConversation extends ConversationBase {
+//   prompt_id: string;
+// }
+// interface ReaderConversation extends ConversationBase {
+//   book_id: string;
+// }
+// etc.
 
-  // Add a message to the conversation
-  addMessage(sessionId: string, role: 'user' | 'assistant', content: string, audioUrl?: string): void {
-    if (!this.conversations.has(sessionId)) {
-      this.conversations.set(sessionId, []);
+export class ConversationManager {
+  private supabase: SupabaseClient;
+
+  constructor(supabaseClient: SupabaseClient) {
+    this.supabase = supabaseClient;
+  }
+
+  private getLastMessagePreview(messages: ChatMessage[]): string | null {
+    if (!messages || messages.length === 0) {
+      return null;
+    }
+    const lastMessage = messages[messages.length - 1];
+    // Truncate preview if necessary (e.g., 100 characters)
+    const preview = lastMessage.content.substring(0, 100);
+    return preview === lastMessage.content ? preview : `${preview}...`;
+  }
+
+  /**
+   * Fetches a single conversation based on context identifiers.
+   * @param tableName The name of the Supabase table (e.g., 'virgil_reader_conversations').
+   * @param userId The user's ID (auth.uid()).
+   * @param contextIdentifiers An object containing key-value pairs to match (e.g., { book_id: 'xyz' }, { course_id: 'abc' }).
+   * @returns The conversation object or null if not found, or throws an error.
+   */
+  async fetchConversation<T extends ConversationBase>(
+    tableName: string,
+    userId: string,
+    contextIdentifiers: Record<string, any>
+  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+    const query = this.supabase
+      .from(tableName)
+      .select('*')
+      .eq('user_id', userId);
+
+    Object.entries(contextIdentifiers).forEach(([key, value]) => {
+      query.eq(key, value);
+    });
+
+    // Assuming only one conversation should match the unique constraints defined in PRD
+    query.limit(1).maybeSingle();
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error(`Error fetching conversation from ${tableName}:`, error);
     }
 
-    const message: Message = {
-      role,
-      content,
-      timestamp: new Date(),
-      audioUrl
+    return { data: data as T | null, error };
+  }
+
+  /**
+   * Fetches a list of conversation previews for history display.
+   * @param tableName The name of the Supabase table.
+   * @param userId The user's ID (auth.uid()).
+   * @param selectFields String of fields to select (e.g., 'id, updated_at, last_message_preview, prompt_id'). Defaults to common fields.
+   * @param limit Max number of conversations to fetch. Defaults to 50.
+   * @param orderBy Field to order by. Defaults to 'updated_at'.
+   * @param ascending Order direction. Defaults to false (descending).
+   * @returns An array of partial conversation objects or throws an error.
+   */
+  async fetchConversationList<T extends Partial<ConversationBase>>(
+    tableName: string,
+    userId: string,
+    selectFields: string = 'id, updated_at, last_message_preview',
+    limit: number = 50,
+    orderBy: string = 'updated_at',
+    ascending: boolean = false
+  ): Promise<{ data: T[] | null; error: PostgrestError | null }> {
+    const { data, error } = await this.supabase
+      .from(tableName)
+      .select(selectFields)
+      .eq('user_id', userId)
+      .order(orderBy, { ascending })
+      .limit(limit);
+
+    if (error) {
+      console.error(`Error fetching conversation list from ${tableName}:`, error);
+    }
+
+    return { data: data as T[] | null, error };
+  }
+
+  /**
+   * Creates a new conversation record.
+   * @param tableName The name of the Supabase table.
+   * @param userId The user's ID (auth.uid()).
+   * @param initialMessages The initial array of messages (can be empty).
+   * @param metadata An object containing additional fields specific to the table (e.g., { book_id: 'xyz', prompt_id: '123' }).
+   * @returns The newly created conversation object or throws an error.
+   */
+  async createConversation<T extends ConversationBase>(
+    tableName: string,
+    userId: string,
+    initialMessages: ChatMessage[],
+    metadata: Record<string, any>
+  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+    const now = new Date().toISOString();
+    const last_message_preview = this.getLastMessagePreview(initialMessages);
+
+    const newConversationData = {
+      user_id: userId,
+      messages: initialMessages,
+      created_at: now,
+      updated_at: now,
+      last_message_preview: last_message_preview,
+      ...metadata, // Include context identifiers like book_id, course_id, etc.
     };
 
-    const conversation = this.conversations.get(sessionId);
-    if (conversation) {
-      conversation.push(message);
-      this._cleanExpired(sessionId);
-    }
-  }
+    const { data, error } = await this.supabase
+      .from(tableName)
+      .insert(newConversationData)
+      .select()
+      .single();
 
-  // Get conversation history
-  getHistory(sessionId: string): Message[] {
-    return this.conversations.get(sessionId) || [];
-  }
-
-  // Clear conversation history
-  clearHistory(sessionId: string): void {
-    this.conversations.delete(sessionId);
-  }
-
-  // Set the current question ID
-  setCurrentQuestionId(sessionId: string, questionId: string): void {
-    this.currentQuestionIds.set(sessionId, questionId);
-  }
-
-  // Get the current question ID
-  getCurrentQuestionId(sessionId: string): string {
-    return this.currentQuestionIds.get(sessionId) || '';
-  }
-
-  // Set the current question text
-  setCurrentQuestion(sessionId: string, questionText: string): void {
-    this.currentQuestions.set(sessionId, questionText);
-  }
-
-  // Get the current question text
-  getCurrentQuestion(sessionId: string): string {
-    return this.currentQuestions.get(sessionId) || '';
-  }
-
-  // Add a question to the path
-  addQuestionToPath(sessionId: string, questionId: string, question: string, answer: string): void {
-    if (!this.questionPaths.has(sessionId)) {
-      this.questionPaths.set(sessionId, []);
+    if (error) {
+      console.error(`Error creating conversation in ${tableName}:`, error);
     }
 
-    const path = this.questionPaths.get(sessionId);
-    if (path) {
-      path.push({ questionId, question, answer });
+    return { data: data as T | null, error };
+  }
+
+  /**
+   * Updates an existing conversation, typically adding messages.
+   * @param tableName The name of the Supabase table.
+   * @param conversationId The ID of the conversation record to update.
+   * @param updates An object containing fields to update. Must include `messages` array. Can include others like `status`, `progress_percentage`.
+   * @returns The updated conversation object or throws an error.
+   */
+  async updateConversation<T extends ConversationBase>(
+    tableName: string,
+    conversationId: string,
+    // Ensure messages are always passed for preview calculation
+    updates: { messages: ChatMessage[] } & Record<string, any>
+  ): Promise<{ data: T | null; error: PostgrestError | null }> {
+
+    if (!updates.messages) {
+        // Optional: throw an error if messages are missing, as they are needed for preview
+         console.warn(`Updating conversation ${conversationId} in ${tableName} without providing 'messages' array.`);
+         // return { data: null, error: { message: "Messages array is required for update.", details: "", hint: "", code: "MISSING_MESSAGES" }};
     }
-  }
 
-  // Get the question path
-  getQuestionPath(sessionId: string): QuestionPath[] {
-    return this.questionPaths.get(sessionId) || [];
-  }
+    const updatePayload = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+      last_message_preview: this.getLastMessagePreview(updates.messages || []), // Calculate preview from provided messages
+    };
 
-  // Clear the question path
-  clearQuestionPath(sessionId: string): void {
-    this.questionPaths.delete(sessionId);
-  }
 
-  // Generate a dynamic system prompt based on the current question and path
-  generateDynamicSystemPrompt(sessionId: string): string {
-    const currentQuestion = this.getCurrentQuestion(sessionId);
-    const questionPath = this.getQuestionPath(sessionId);
-    
-    // Create the system prompt without any greeting instructions
-    let dynamicPrompt = `
-You are Virgil, an AI assistant designed to guide users through philosophical discussions. 
+    const { data, error } = await this.supabase
+      .from(tableName)
+      .update(updatePayload)
+      .eq('id', conversationId)
+      .select()
+      .single();
 
-Your ONLY TASK is to help the user thoughtfully navigate the following subjective philosophical question, while building rapport and encouraging deeper reflection:
-
-"${currentQuestion}"
-
-When interacting with users, adhere to these guidelines:
-
-Principles
-
-Balanced Guidance
-- Remain neutral on philosophical positions
-- Value the process of reflection over specific answers
-- Honor subjective perspectives without judgment
-- Create psychological safety for authentic responses
-
-Conversation Design
-- Brief, focused responses (1-3 sentences per turn)
-- 70/30 ratio - Ensure the human speaks more than the system
-- One point per response - Focus on a single question or insight
-- Natural wisdom - Balance intellectual depth with conversational simplicity
-- Purposeful pauses - Allow space for reflection before an answer
-
-Response Patterns
-
-Listen deeply to their elaboration
-Use one of the following response types:
-
-Mirroring Response
-- Reflect back a key feeling or philosophical tension expressed
-- Capture the essence without judgment
-- Example: "You're weighing the comfort of certainty against the value of mystery."
-
-Open Question Response
-- Ask one focused question that expands awareness
-- Avoid leading questions that presume an answer
-- Example: "What experiences in your life have shaped this perspective?"
-
-Insight Response
-- Share a brief perspective that reveals depth
-- Present as an invitation to consider, not an authoritative statement
-- Example: "Perhaps our desire to prove divinity reflects our human need for certainty in an uncertain world."
-
-Voice and Tone
-
-Language Characteristics
-- Conversational wisdom - Warm, thoughtful, accessible
-- Simple profundity - Express complex ideas with straightforward language
-- Occasional metaphors - Use brief, vivid imagery to illuminate complexity
-- Implied rather than stated wisdom - Let depth emerge through questions
-
-Building Trust Techniques
-
-Creating Connection
-- Acknowledge complexity - Validate that philosophical questions resist simple answers
-- Show intellectual humility - Communicate that there are no "correct" answers
-- Respect resistance - If the user struggles, normalize difficulty without pressure
-- Recognize growth - Acknowledge insights and development throughout conversation
-
-Response Format:
-- Use 2-5 short, complete sentences only
-- Avoid bullet points and numbered lists
-- Prioritize brevity over comprehensiveness
-- NEVER exceed 600 characters total
-`;
-
-    // Add the question path history if available
-    if (questionPath.length > 0) {
-      dynamicPrompt += "\n\nThe user has answered previous questions as follows:\n";
-      
-      for (const { questionId, question, answer } of questionPath) {
-        dynamicPrompt += `- Question: "${question}"\n  Answer: ${answer}\n`;
-      }
+    if (error) {
+      console.error(`Error updating conversation ${conversationId} in ${tableName}:`, error);
     }
-    
-    return dynamicPrompt;
+
+    return { data: data as T | null, error };
   }
 
-  // Clean expired messages
-  private _cleanExpired(sessionId: string): void {
-    const conversation = this.conversations.get(sessionId);
-    if (!conversation) return;
+  /**
+   * Deletes a specific conversation.
+   * @param tableName The name of the Supabase table.
+   * @param conversationId The ID of the conversation to delete.
+   * @param userId The user's ID (auth.uid()) - used for RLS check implicitly.
+   * @returns PostgrestError or null if successful.
+   */
+  async deleteConversation(
+    tableName: string,
+    conversationId: string,
+    userId: string // Keep userId param for potential future checks, though RLS handles primary auth
+  ): Promise<{ error: PostgrestError | null }> {
 
-    const currentTime = new Date();
-    this.conversations.set(
-      sessionId,
-      conversation.filter(msg => {
-        const msgTime = msg.timestamp.getTime();
-        const expiryTime = currentTime.getTime() - this.expiryMinutes * 60 * 1000;
-        return msgTime >= expiryTime;
-      })
-    );
-  }
+     // Basic check to prevent accidental deletion if userId doesn't match, although RLS is the main guard
+     // const { data: checkData, error: checkError } = await this.supabase
+     //    .from(tableName)
+     //    .select('id')
+     //    .eq('id', conversationId)
+     //    .eq('user_id', userId)
+     //    .maybeSingle();
+     //
+     // if (checkError || !checkData) {
+     //     console.error(`Pre-delete check failed or conversation ${conversationId} not found/owned by user ${userId} in ${tableName}.`, checkError);
+     //     return { error: checkError ?? { message: "Conversation not found or access denied.", details: "", hint:"", code: "404" } };
+     // }
 
-  // Keep the random greeting method for the initial message only
-  private _getRandomGreeting(): string {
-    const greetings = [
-      "What's on your mind?",
-      "What comes to mind as you reflect on this question?", 
-      "How do you find yourself approaching this question?", 
-      "What elements of this question resonate most with you?",
-      "How does this question connect with your own experience?",
-      "What aspects would you like to explore further?",
-      "Which considerations feel most significant to you?",
-      "How do you find yourself approaching this question?"
-    ];
-    return greetings[Math.floor(Math.random() * greetings.length)];
-  }
 
-  // Add a method to initialize a conversation with a greeting
-  initializeConversation(sessionId: string): void {
-    // Clear any existing conversation
-    this.clearHistory(sessionId);
-    
-    // Add the initial greeting as an assistant message
-    const greeting = this._getRandomGreeting();
-    this.addMessage(sessionId, 'assistant', greeting);
-  }
+    const { error } = await this.supabase
+      .from(tableName)
+      .delete()
+      .eq('id', conversationId);
+      // RLS policy should enforce ownership based on auth.uid() matching user_id column
 
-  // Update the saveConversationToSupabase method to include questionId
-  async saveConversationToSupabase(
-    sessionId: string, 
-    assessmentId: string, 
-    userId: string | null, 
-    questionId: string
-  ): Promise<void> {
-    try {
-      console.log('saveConversationToSupabase called with:', {
-        sessionId,
-        assessmentId,
-        userId,
-        questionId
-      });
-      
-      const conversation = this.conversations.get(sessionId) || [];
-      const questionPath = this.questionPaths.get(sessionId) || [];
-      
-      console.log('Conversation data to save:', {
-        conversationLength: conversation.length,
-        questionPathLength: questionPath.length
-      });
-      
-      // Skip saving if there's no conversation data
-      if (conversation.length === 0 && questionPath.length === 0) {
-        console.log('No conversation data to save, skipping');
-        return;
-      }
-      
-      // Always use the anonymous user ID for non-authenticated users
-      // This ID must match the one we inserted into the profiles table
-      const effectiveUserId = '00000000-0000-0000-0000-000000000000';
-      
-      console.log('Using anonymous user ID:', effectiveUserId);
-      
-      // Store the original user identifier in the metadata
-      const originalIdentifier = userId || sessionId;
-      
-      // Check if a record already exists for this specific question and assessment
-      const { data: existingRecord, error: queryError } = await supabase
-        .from('dna_conversations')
-        .select('id')
-        .eq('assessment_id', assessmentId)
-        .eq('user_id', effectiveUserId)
-        .eq('session_id', sessionId)
-        .eq('question_id', questionId)
-        .maybeSingle();
-        
-      if (queryError) {
-        console.error('Error checking for existing record:', queryError);
-      }
-      
-      // Serialize the complex objects to JSON compatible format
-      const messagesJson = {
-        conversation: JSON.parse(JSON.stringify(conversation)),
-        questionPath: JSON.parse(JSON.stringify(questionPath)),
-        metadata: {
-          original_identifier: originalIdentifier,
-          is_anonymous: !userId
-        }
-      };
-      
-      if (existingRecord) {
-        console.log('Updating existing conversation record:', existingRecord.id);
-        const { error: updateError } = await supabase
-          .from('dna_conversations')
-          .update({
-            messages: messagesJson,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingRecord.id);
-          
-        if (updateError) {
-          console.error('Error updating conversation record:', updateError);
-        } else {
-          console.log('Successfully updated conversation record');
-        }
-      } else {
-        console.log('Creating new conversation record');
-        const { data: insertData, error: insertError } = await supabase
-          .from('dna_conversations')
-          .insert({
-            assessment_id: assessmentId,
-            user_id: effectiveUserId,
-            session_id: sessionId,
-            question_id: questionId,
-            messages: messagesJson
-          })
-          .select();
-          
-        if (insertError) {
-          console.error('Error inserting conversation record:', insertError);
-        } else {
-          console.log('Successfully created conversation record:', insertData);
-        }
-      }
-      
-      console.log(`Conversation for question ${questionId} saved to Supabase`);
-    } catch (error) {
-      console.error('Error saving conversation to Supabase:', error);
+    if (error) {
+      console.error(`Error deleting conversation ${conversationId} from ${tableName}:`, error);
     }
-  }
 
-  // Add this utility function to the ConversationManager class
-  private _generateAnonymousUUID(): string {
-    // This creates a v4 UUID
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0, 
-            v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+     return { error };
   }
 }
-
-// Singleton instance
-export const conversationManager = new ConversationManager();
-export default conversationManager;
