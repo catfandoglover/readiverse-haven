@@ -3,13 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import MainMenu from "@/components/navigation/MainMenu";
-import VirgilChatInterface from "@/components/virgil/VirgilChatInterface";
 import { MessageCircleMore } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ConversationHistorySidebar from "@/components/virgil/ConversationHistorySidebar";
 
 const VirgilOffice: React.FC = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -33,10 +31,7 @@ const VirgilOffice: React.FC = () => {
         </button>
       </div>
       
-      <main className={cn(
-        "flex-1 relative overflow-y-auto transition-transform duration-300",
-        isChatOpen && "transform -translate-y-full"
-      )}>
+      <main className="flex-1 relative overflow-y-auto">
         <div className={cn(
           "flex flex-col items-center h-full",
           isMobile ? "justify-start pt-[25vh]" : "justify-start pt-[15vh] px-6 py-10"
@@ -78,12 +73,6 @@ const VirgilOffice: React.FC = () => {
           </div>
         </div>
       </main>
-      
-      <VirgilChatInterface 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
-        variant="virgilchat"
-      />
       
       <ConversationHistorySidebar 
         open={isHistorySidebarOpen} 

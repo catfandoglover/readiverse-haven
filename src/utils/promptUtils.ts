@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'; // Assuming shared Supabase client instance
+import { supabase } from '@/integrations/supabase/client'; // Corrected import path
 import { Prompt } from '@/types/prompt'; // Assuming a Prompt type exists
 
 interface FetchPromptArgs {

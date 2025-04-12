@@ -3,34 +3,40 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { stopAllAudio } from '@/services/AudioContext';
 import { chatThemes } from './VirgilChatThemes';
-import { useVirgilChat } from '@/hooks/useVirgilChat';
 import MessageBubble from './MessageBubble';
 import ChatInputForm from './ChatInputForm';
-import { ChatVariant } from '@/types/chat';
+import { ChatVariant, ChatMessage as UIMessage } from '@/types/chat';
 
 interface VirgilChatInterfaceProps {
   isOpen: boolean;
   onClose: () => void;
   variant?: ChatVariant;
-  initialMessage?: string;
+  messages: UIMessage[];
+  inputMessage: string;
+  isRecording: boolean;
+  isProcessing: boolean;
+  isLoadingHistory: boolean;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmitMessage: (e: React.FormEvent) => void;
+  toggleRecording: () => void;
+  cancelRecording: () => void;
 }
 
 const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({ 
   isOpen, 
   onClose,
   variant = 'default',
-  initialMessage
+  messages,
+  inputMessage,
+  isRecording,
+  isProcessing,
+  isLoadingHistory,
+  handleInputChange,
+  handleSubmitMessage,
+  toggleRecording,
+  cancelRecording,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const {
-    messages,
-    inputMessage,
-    setInputMessage,
-    isRecording,
-    isProcessing,
-    toggleRecording,
-    handleSubmitMessage
-  } = useVirgilChat(initialMessage);
 
   const themeColors = chatThemes[variant];
 
@@ -48,17 +54,22 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSubmitMessage();
-  };
+  if (isLoadingHistory) {
+    return (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent side="bottom" className={cn("p-4 h-[85vh] md:h-[75vh] rounded-t-xl border-0 overflow-hidden flex items-center justify-center", themeColors.background)}>
+          <div>Loading Chat History...</div> 
+        </SheetContent>
+      </Sheet>
+    )
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="bottom"
         className={cn(
-          "p-0 h-[85vh] md:h-[75vh] rounded-t-xl border-0 overflow-hidden",
+          "p-0 h-[85vh] md:h-[75vh] rounded-t-xl border-0 overflow-hidden flex flex-col",
           themeColors.background
         )}
       >
@@ -76,7 +87,7 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
           <div className="w-6" />
         </div>
 
-        <div className="flex-1 p-4 pb-24 space-y-4 overflow-y-auto h-[calc(85vh-120px)] md:h-[calc(75vh-120px)] font-libre-baskerville scroll-p-24">
+        <div className="flex-1 p-4 pb-2 space-y-4 overflow-y-auto font-libre-baskerville scroll-p-24">
           {messages.map((message) => (
             <MessageBubble 
               key={message.id} 
@@ -84,17 +95,25 @@ const VirgilChatInterface: React.FC<VirgilChatInterfaceProps> = ({
               themeColors={themeColors} 
             />
           ))}
+          {isProcessing && !isRecording && (
+             <div className="flex justify-start pl-3">
+                 <div className="p-2 rounded-lg bg-gray-200 text-gray-500 italic text-sm">
+                     Thinking...
+                 </div>
+             </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mb-0 rounded-t-2xl overflow-hidden">
+        <div className="mt-auto border-t border-gray-200">
           <ChatInputForm
             inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            handleSubmit={handleSubmit}
+            setInputMessage={handleInputChange}
+            handleSubmit={handleSubmitMessage}
             isRecording={isRecording}
             isProcessing={isProcessing}
             toggleRecording={toggleRecording}
+            cancelRecording={cancelRecording}
             themeColors={themeColors}
           />
         </div>
