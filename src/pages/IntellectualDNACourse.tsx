@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
-import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
-import { getThinkerImageByParams } from "@/utils/thinkerImages";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,17 +14,62 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface DNAAnalysisResult {
+  id: string;
+  assessment_id: string;
   [key: string]: string | null;
+}
+
+interface MatchedEntity {
+  dna_analysis_column: string;
+  matched_id: string;
+  type: 'icon' | 'book';
+  matched_name: string;
+}
+
+interface FetchedIcon {
+  id: string;
+  name: string;
+  illustration: string | null;
+  one_line: string | null;
+}
+
+interface FetchedBook {
+  id: string;
+  title: string;
+  author: string | null;
+  cover_url: string | null;
+}
+
+interface Resource {
+  id: string;
+  matched_id: string | null;
+  type: 'icon' | 'book' | null;
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  status: string;
+}
+
+// Add type for the specific table row
+interface DnaAnalysisResultsMatchedRow {
+  dna_analysis_column: string;
+  matched_id: string;
+  type: 'icon' | 'book';
+  matched_name: string | null; // Allow null based on DB schema
 }
 
 const IntellectualDNACourse: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
+  const [domainFilter, setDomainFilter] = useState<string>("all");
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState<any>({});
-  const [resourceImages, setResourceImages] = useState<Record<string, string>>({});
+  
+  const [matchedEntitiesMap, setMatchedEntitiesMap] = useState<Record<string, MatchedEntity>>({});
+  const [fetchedIcons, setFetchedIcons] = useState<Record<string, FetchedIcon>>({});
+  const [fetchedBooks, setFetchedBooks] = useState<Record<string, FetchedBook>>({});
   
   const domains = [
     {
@@ -76,169 +120,172 @@ const IntellectualDNACourse: React.FC = () => {
     ? domains.filter(domain => domain.id === domainFilter)
     : domains;
     
-  // Fetch DNA analysis data for the current user
   useEffect(() => {
     const debug: any = { steps: [] };
     
-    const fetchDomainData = async () => {
+    const fetchAllData = async () => {
       if (!user) {
         setDebugInfo({ error: "No authenticated user" });
         setIsLoading(false);
         return;
       }
       
+      let fetchedAnalysis: DNAAnalysisResult | null = null;
+      
       try {
         setIsLoading(true);
+        setDomainAnalysis(null);
+        setMatchedEntitiesMap({});
+        setFetchedIcons({});
+        setFetchedBooks({});
         
-        // STEP 1: Get user profile
-        debug.steps.push({
-          step: 1,
-          description: "Finding user profile",
-          userId: user.id
-        });
-        
+        debug.steps.push({ step: 1, description: "Finding user profile", userId: user.id });
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .or(`user_id.eq.${user.id}`)
+          .eq('user_id', user.id)
           .maybeSingle();
           
         if (profileError || !profile) {
-          setDebugInfo({ 
-            error: profileError?.message || "No profile found for user",
-            userId: user.id
-          });
+           setDebugInfo({ error: profileError?.message || "No profile found for user", userId: user.id });
           throw new Error(profileError?.message || "No profile found for user");
         }
-        
-        debug.steps.push({
-          step: 2, 
-          description: "Found user profile",
-          profileId: profile.id,
-          success: true
-        });
-        
-        // STEP 2: Get assessment_id from profile
+        debug.steps.push({ step: 2, description: "Found user profile", profileId: profile.id, success: true });
+
         if (!profile.assessment_id) {
-          setDebugInfo({
-            error: "Profile has no assessment_id",
-            profile
-          });
+          setDebugInfo({ error: "Profile has no assessment_id", profile });
           throw new Error("Profile doesn't have an assessment_id");
         }
-        
-        debug.steps.push({
-          step: 3,
-          description: "Got assessment_id from profile",
-          assessmentId: profile.assessment_id,
-          success: true
-        });
-        
-        // STEP 3: Try multiple approaches to find DNA data
-        // Approach 1: Try direct assessment_id match
-        const { data: dnaData1, error: dnaError1 } = await supabase
+        const assessmentId = profile.assessment_id;
+        debug.steps.push({ step: 3, description: "Got assessment_id from profile", assessmentId: assessmentId, success: true });
+
+        debug.steps.push({ step: 4, description: "Fetching DNA analysis results", assessmentId: assessmentId });
+        const { data: dnaData, error: dnaError } = await supabase
           .from('dna_analysis_results')
           .select('*')
-          .eq('assessment_id', profile.assessment_id)
-          .maybeSingle();
-          
-        if (!dnaError1 && dnaData1) {
-          // Success with direct assessment_id match
-          setDomainAnalysis(dnaData1 as DNAAnalysisResult);
-          debug.steps.push({
-            step: 4,
-            description: "Found DNA data using assessment_id field (correct approach)",
-            dnaId: dnaData1.id,
-            dnaAssessmentId: dnaData1.assessment_id,
-            success: true
-          });
-          
-          debug.dnaDataFound = "By assessment_id field match";
-          debug.success = true;
-          setDebugInfo(debug);
-          return;
-        }
-        
-        // Approach 2: Try legacy lookup by record ID
-        const { data: dnaData2, error: dnaError2 } = await supabase
-          .from('dna_analysis_results')
-          .select('*')
-          .eq('id', profile.assessment_id)
-          .maybeSingle();
-          
-        if (!dnaError2 && dnaData2) {
-          // Success with ID match (legacy approach)
-          setDomainAnalysis(dnaData2 as DNAAnalysisResult);
-          debug.steps.push({
-            step: 4,
-            description: "Found DNA data using ID field (legacy approach)",
-            dnaId: dnaData2.id,
-            dnaAssessmentId: dnaData2.assessment_id || "Not set",
-            success: true,
-            warning: "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id"
-          });
-          
-          debug.dnaDataFound = "By ID field match (legacy approach)";
-          debug.success = true;
-          debug.warning = "Using legacy approach: profile.assessment_id matches dna_analysis_results.id instead of assessment_id";
-          setDebugInfo(debug);
-          return;
-        }
-        
-        // Approach 3: As a last resort, find ANY DNA record that exists
-        const { data: anyDnaData, error: anyDnaError } = await supabase
-          .from('dna_analysis_results')
-          .select('*')
+          .eq('assessment_id', assessmentId)
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
           
-        if (!anyDnaError && anyDnaData) {
-          // Success with fallback to any record
-          setDomainAnalysis(anyDnaData as DNAAnalysisResult);
-          debug.steps.push({
-            step: 4,
-            description: "Found DNA data using fallback to any record (emergency approach)",
-            dnaId: anyDnaData.id,
-            dnaAssessmentId: anyDnaData.assessment_id || "Not set",
-            success: true,
-            warning: "Using EMERGENCY fallback: No matching record found, using first available DNA record"
+        if (dnaError) {
+           setDebugInfo({ error: `DNA Fetch Error: ${dnaError.message}`, assessmentId });
+           throw new Error(`Error fetching DNA analysis: ${dnaError.message}`);
+        }
+        if (!dnaData) {
+            setDebugInfo({ error: "No DNA analysis data found for assessment ID", assessmentId });
+            throw new Error(`No DNA analysis data found for assessment ID: ${assessmentId}`);
+        }
+        fetchedAnalysis = dnaData as DNAAnalysisResult;
+        setDomainAnalysis(fetchedAnalysis);
+        debug.steps.push({ step: 5, description: "Fetched DNA analysis results", dnaId: fetchedAnalysis.id, success: true });
+
+        debug.steps.push({ step: 6, description: "Fetching matched entities", assessmentId: assessmentId });
+        const { data: matchedDataRaw, error: matchedError } = await supabase
+          .from('dna_analysis_results_matched' as any)
+          .select('dna_analysis_column, matched_id, type, matched_name')
+          .eq('assessment_id', assessmentId);
+        
+        if (matchedError) {
+          toast.warning("Could not load matched entity links. Some items may be incorrect.");
+          console.error("Error fetching matched entities:", matchedError);
+          debug.steps.push({ step: 7, description: "Error fetching matched entities", error: matchedError.message, success: false });
+        } else if (matchedDataRaw) {
+          const entityMap: Record<string, MatchedEntity> = {};
+          const iconIds = new Set<string>();
+          const bookIds = new Set<string>();
+          
+          const matchedData = matchedDataRaw as any as DnaAnalysisResultsMatchedRow[];
+          
+          matchedData.forEach((item) => {
+            if (item.dna_analysis_column && item.matched_id && item.type) {
+              entityMap[item.dna_analysis_column] = {
+                dna_analysis_column: item.dna_analysis_column,
+                matched_id: item.matched_id,
+                type: item.type as 'icon' | 'book',
+                matched_name: item.matched_name || 'Unknown Name'
+              };
+              if (item.type === 'icon') iconIds.add(item.matched_id);
+              if (item.type === 'book') bookIds.add(item.matched_id);
+            }
           });
           
-          debug.dnaDataFound = "By emergency fallback (first available record)";
-          debug.success = true;
-          debug.warning = "EMERGENCY FALLBACK: No matching record found, using first available DNA record";
+          setMatchedEntitiesMap(entityMap);
+          debug.steps.push({ step: 7, description: "Processed matched entities", count: matchedData.length, mapSize: Object.keys(entityMap).length, success: true });
           
-          // Also update the profile with this assessment_id to fix the relationship
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ assessment_id: anyDnaData.id })
-            .eq('id', profile.id);
-            
-          if (updateError) {
-            debug.warning += ` (Failed to update profile: ${updateError.message})`;
+          if (iconIds.size > 0) {
+            debug.steps.push({ step: 8, description: "Fetching icon details", ids: Array.from(iconIds) });
+            const { data: iconDataRaw, error: iconError } = await supabase
+              .from('icons')
+              .select('id, name, illustration, one_line')
+              .in('id', Array.from(iconIds));
+              
+            if (iconError) {
+               toast.warning("Could not load icon details.");
+               console.error("Error fetching icons:", iconError);
+               debug.steps.push({ step: 9, description: "Error fetching icon details", error: iconError.message, success: false });
+            } else if (iconDataRaw) {
+               const iconData = iconDataRaw as any as FetchedIcon[];
+               const iconMap: Record<string, FetchedIcon> = {};
+               iconData.forEach(icon => { iconMap[icon.id] = icon; });
+               setFetchedIcons(iconMap);
+               debug.steps.push({ step: 9, description: "Fetched icon details", count: iconData.length, success: true });
+            }
           } else {
-            debug.warning += " (Updated profile.assessment_id to match this record)";
+             debug.steps.push({ step: 8, description: "No icon IDs to fetch", success: true });
+             debug.steps.push({ step: 9, description: "Skipped fetching icon details", success: true });
           }
-          
-          setDebugInfo(debug);
-          return;
+
+          if (bookIds.size > 0) {
+            debug.steps.push({ step: 10, description: "Fetching book details", ids: Array.from(bookIds) });
+            const { data: bookDataRaw, error: bookError } = await supabase
+              .from('books')
+              .select('id, title, author, cover_url')
+              .in('id', Array.from(bookIds));
+              
+            if (bookError) {
+               toast.warning("Could not load book details.");
+               console.error("Error fetching books:", bookError);
+               debug.steps.push({ step: 11, description: "Error fetching book details", error: bookError.message, success: false });
+            } else if (bookDataRaw) {
+               const bookData = bookDataRaw as any as FetchedBook[];
+               const bookMap: Record<string, FetchedBook> = {};
+               bookData.forEach(book => { bookMap[book.id] = book; });
+               setFetchedBooks(bookMap);
+               debug.steps.push({ step: 11, description: "Fetched book details", count: bookData.length, success: true });
+            }
+          } else {
+            debug.steps.push({ step: 10, description: "No book IDs to fetch", success: true });
+            debug.steps.push({ step: 11, description: "Skipped fetching book details", success: true });
+          }
+        } else {
+           debug.steps.push({ step: 7, description: "No matched entities found", success: true });
+           debug.steps.push({ step: 8, description: "Skipped fetching icon details", success: true });
+           debug.steps.push({ step: 9, description: "Skipped fetching icon details", success: true });
+           debug.steps.push({ step: 10, description: "Skipped fetching book details", success: true });
+           debug.steps.push({ step: 11, description: "Skipped fetching book details", success: true });
         }
         
-        // All attempts failed
-        throw new Error(`No DNA analysis data found. Tried assessment_id: ${profile.assessment_id}`);
+        debug.success = true;
       } catch (err) {
-        console.error('Error in DNA course:', err);
+        console.error('Error in DNA course data fetch:', err);
         setDomainAnalysis(null);
+        setMatchedEntitiesMap({});
+        setFetchedIcons({});
+        setFetchedBooks({});
         setDebugInfo({
           ...debug,
-          error: err instanceof Error ? err.message : String(err)
+          error: err instanceof Error ? err.message : String(err),
+          success: false
         });
+        toast.error("Failed to load your DNA course data.");
       } finally {
         setIsLoading(false);
+        setDebugInfo(debug);
       }
     };
     
-    fetchDomainData();
+    fetchAllData();
   }, [user]);
   
   const getDomainIntroduction = (domainId: string) => {
@@ -268,143 +315,180 @@ const IntellectualDNACourse: React.FC = () => {
     }
   };
   
-  // Replace getIconUrl with using cached images
-  const getIconUrl = (domainId: string, tabType: "kindred" | "challenging", index: number): string => {
-    const imageKey = `${domainId}_${tabType}_${index}`;
-    return resourceImages[imageKey] || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
-  };
-  
-  // Add function to load all images
-  const loadResourceImages = async () => {
-    if (!domainAnalysis || !domainAnalysis.assessment_id) return;
-    
-    try {
-      const newImages: Record<string, string> = {};
-      
-      // Load images for all domains and both types
-      for (const domain of domains) {
-        for (const type of ['kindred', 'challenging'] as const) {
-          for (let i = 1; i <= 5; i++) {
-            const key = `${domain.id}_${type}_${i}`;
-            const imageUrl = await getThinkerImageByParams(
-              domainAnalysis.assessment_id,
-              domain.id,
-              type,
-              i
-            );
-            newImages[key] = imageUrl;
-          }
-        }
-      }
-      
-      setResourceImages(newImages);
-    } catch (err) {
-      console.error('Error loading resource images:', err);
-    }
-  };
-  
-  // Load images when domainAnalysis is available
-  useEffect(() => {
-    if (!isLoading && domainAnalysis && domainAnalysis.assessment_id) {
-      loadResourceImages();
-    }
-  }, [isLoading, domainAnalysis]);
-  
-  // Update getResourcesForTab to use cached images
-  const getResourcesForTab = (domainId: string, tab: "kindred" | "challenging") => {
+  const getResourcesForTab = useCallback((domainId: string, tab: "kindred" | "challenging"): Resource[] => {
     if (isLoading || !domainAnalysis) {
-      return Array(5).fill({
-        id: "origin",
+      return Array(5).fill(null).map((_, i) => ({
+        id: `loading-${domainId}-${tab}-${i}`,
+        matched_id: null,
+        type: null,
         image: "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png",
-        title: "ORIGIN",
-        subtitle: "DE PRINCIPIIS (230)",
-        description: "Divine truth requires both rational inquiry and mystical insight.",
-        progress: 50,
+        title: "Loading...",
+        subtitle: "Loading...",
+        description: "Loading...",
         status: "locked"
-      });
+      }));
     }
     
-    const resources = [];
-    
-    const dummyProgressValues = [85, 65, 45, 25, 15];
+    const resources: Resource[] = [];
     
     for (let i = 1; i <= 5; i++) {
-      let resourceKey = '';
-      let classicKey = '';
-      let rationaleKey = '';
-      let dbIdKey = '';
+      let analysisThinkerNameKey = '';
+      let analysisClassicKey = '';
+      let analysisRationaleKey = '';
+      let analysisDbIdKey = '';
+      let analysisClassicDbIdKey = '';
       
       if (tab === "kindred") {
-        resourceKey = `${domainId}_kindred_spirit_${i}`;
-        classicKey = `${domainId}_kindred_spirit_${i}_classic`;
-        rationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
-        dbIdKey = `${domainId}_kindred_spirit_${i}_db_id`;
+        analysisThinkerNameKey = `${domainId}_kindred_spirit_${i}`;
+        analysisClassicKey = `${domainId}_kindred_spirit_${i}_classic`;
+        analysisRationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
+        analysisDbIdKey = `${domainId}_kindred_spirit_${i}_db_id`;
+        analysisClassicDbIdKey = `${domainId}_kindred_spirit_${i}_classic_db_id`;
       } else {
-        resourceKey = `${domainId}_challenging_voice_${i}`;
-        classicKey = `${domainId}_challenging_voice_${i}_classic`;
-        rationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
-        dbIdKey = `${domainId}_challenging_voice_${i}_db_id`;
+        analysisThinkerNameKey = `${domainId}_challenging_voice_${i}`;
+        analysisClassicKey = `${domainId}_challenging_voice_${i}_classic`;
+        analysisRationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
+        analysisDbIdKey = `${domainId}_challenging_voice_${i}_db_id`;
+        analysisClassicDbIdKey = `${domainId}_challenging_voice_${i}_classic_db_id`;
+      }
+
+      const matchedEntity = matchedEntitiesMap[analysisDbIdKey];
+      const matchedClassicEntity = matchedEntitiesMap[analysisClassicDbIdKey];
+
+      let title = domainAnalysis[analysisThinkerNameKey] || `Thinker ${i}`;
+      let subtitle = domainAnalysis[analysisClassicKey] || `Classic Work`;
+      let image = "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+      let matched_id: string | null = null;
+      let type: 'icon' | 'book' | null = null;
+
+      if (matchedEntity) {
+        matched_id = matchedEntity.matched_id;
+        type = matchedEntity.type;
+        
+        if (type === 'icon' && fetchedIcons[matched_id]) {
+          const icon = fetchedIcons[matched_id];
+          title = icon.name;
+          image = icon.illustration || image;
+        } else if (type === 'book' && fetchedBooks[matched_id]) {
+          const book = fetchedBooks[matched_id];
+          title = book.title;
+          image = book.cover_url || image;
+          subtitle = book.author || subtitle;
+        } else {
+           title = matchedEntity.matched_name || title;
+           toast.warning(`Details missing for ${title}`);
+        }
+      } else {
+         console.warn(`No matched entity found for column: ${analysisDbIdKey}`);
+         title = domainAnalysis[analysisThinkerNameKey] || `Unlinked Thinker ${i}`;
+      }
+
+      if (matchedClassicEntity && matchedClassicEntity.type === 'book' && fetchedBooks[matchedClassicEntity.matched_id]) {
+         subtitle = fetchedBooks[matchedClassicEntity.matched_id].title || subtitle;
+         if (fetchedBooks[matchedClassicEntity.matched_id].author) {
+            subtitle += ` (${fetchedBooks[matchedClassicEntity.matched_id].author})`;
+         }
+      } else {
+         subtitle = domainAnalysis[analysisClassicKey] || subtitle;
       }
       
-      const title = domainAnalysis[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
-      const subtitle = domainAnalysis[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
-      const rationale = domainAnalysis[rationaleKey as keyof DNAAnalysisResult];
+      const rationale = domainAnalysis[analysisRationaleKey];
       
       let status = "locked";
       if (i === 1) status = "completed";
       else if (i === 2) status = "active";
       else status = "locked";
       
-      // Use the cached image
-      const image = getIconUrl(domainId, tab, i);
-      
       resources.push({
-        id: `resource-${i}`,
+        id: matched_id || `fallback-${domainId}-${tab}-${i}`,
+        matched_id,
+        type,
         image,
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
-        description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
-        progress: dummyProgressValues[i-1],
+        description: rationale ? String(rationale) : `This ${type || 'entry'} ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
         status
       });
     }
     
     return resources;
+  }, [isLoading, domainAnalysis, matchedEntitiesMap, fetchedIcons, fetchedBooks]);
+
+  const handleResourceClick = (resource: Resource) => {
+    if (resource.matched_id && resource.type) {
+       console.log(`Navigating to course for ${resource.type}: ${resource.matched_id}`);
+       navigate(`/courses/${resource.matched_id}`, {
+         state: {
+           courseData: {
+             entryId: resource.matched_id,
+             entryType: resource.type,
+             title: resource.title,
+             description: resource.description,
+           }
+         }
+       });
+    } else {
+       toast.info("This item is not yet linked to a course.");
+       console.warn("Clicked resource has no matched_id or type:", resource);
+    }
   };
-  
-  const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
+
+  const ResourceItem = ({ resource, domainId }: { resource: Resource, domainId: string }) => {
+    const isClickable = !!resource.matched_id && !!resource.type;
+    
     return (
       <div>
         <div 
-          className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
+          className={cn(
+            "rounded-xl p-4 pb-3 bg-[#19352F]/80 shadow-inner transition-colors", 
+            isClickable ? "cursor-pointer hover:bg-[#19352F]" : "cursor-default opacity-80"
+          )}
+          onClick={isClickable ? () => handleResourceClick(resource) : undefined}
         >
           <div className="flex items-center mb-3">
-            <div className="flex items-center flex-1">
-              <div className="relative mr-4">
-                <div className="h-9 w-9 rounded-full overflow-hidden">
+            <div className="flex items-center flex-1 min-w-0">
+              <div className="relative mr-4 flex-shrink-0">
+                 {resource.type === 'icon' ? (
+                    <div className="h-9 w-9 relative">
+                      <Hexagon className="h-full w-full text-[#356E61]/50" strokeWidth={1} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <img 
+                          src={resource.image} 
+                          alt={resource.title}
+                          className="h-6 w-6 object-cover"
+                          style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                 ) : (
+                   <div className="h-12 w-9 rounded-sm overflow-hidden bg-[#0D1C1A]">
                   <img 
                     src={resource.image} 
                     alt={resource.title}
-                    className="h-9 w-9 object-cover"
+                       className="h-full w-full object-cover"
+                       loading="lazy"
                   />
                 </div>
+                 )}
               </div>
-              <div>
-                <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{resource.title}</h3>
-                <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{resource.subtitle}</p>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold truncate">{resource.title}</h3>
+                <p className="text-xs text-[#E9E7E2]/70 font-oxanium truncate">{resource.subtitle}</p>
               </div>
             </div>
             
-            <button className="h-9 w-9 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/75">
-              <ArrowRight className="h-4 w-4 text-[#19352F]" />
+            <button 
+              className={cn(
+                 "h-9 w-9 rounded-full flex items-center justify-center ml-4 flex-shrink-0",
+                 isClickable ? "bg-[#E9E7E2]/75" : "bg-[#E9E7E2]/30 cursor-not-allowed"
+              )}
+              disabled={!isClickable}
+              aria-label={isClickable ? `Go to course for ${resource.title}` : `${resource.title} course not available`}
+            >
+              <ArrowRight className={cn("h-4 w-4", isClickable ? "text-[#19352F]" : "text-[#19352F]/50")} />
             </button>
           </div>
-          
-          <ProgressDisplay 
-            progress={resource.progress || 0} 
-            showLabel={false} 
-            className="mb-3" 
-          />
         </div>
       </div>
     );
@@ -462,9 +546,9 @@ const IntellectualDNACourse: React.FC = () => {
             </Button>
           </div>
           
-          <div className="space-y-6 mt-8">
-            {resources.map((resource, idx) => (
-              <ResourceItem key={`${domain.id}-${activeTab}-${idx}`} resource={resource} domainId={domain.id} />
+          <div className="space-y-4">
+            {resources.map((resource) => (
+              <ResourceItem key={resource.id} resource={resource} domainId={domain.id} />
             ))}
           </div>
         </div>
@@ -496,7 +580,7 @@ const IntellectualDNACourse: React.FC = () => {
               onClick={() => setDomainFilter("all")}
               className="flex items-center cursor-pointer font-libre-baskerville uppercase"
             >
-              {!domainFilter || domainFilter === "all" ? (
+              {domainFilter === "all" ? (
                 <Check className="h-4 w-4 mr-2" />
               ) : (
                 <div className="w-4 mr-2" />
@@ -523,24 +607,35 @@ const IntellectualDNACourse: React.FC = () => {
       </header>
       
       <main>
-        {filteredDomains.length > 0 ? (
-          filteredDomains.map(domain => (
-            <DomainSection key={domain.id} domain={domain} />
-          ))
-        ) : (
-          <div className="p-6 text-center">
-            <p>No domains match your filter criteria.</p>
+        {isLoading && (
+          <div className="absolute inset-0 flex justify-center items-center pt-20 bg-[#1D3A35]/50 z-20">
+            {/* Optional: Add a spinner or loading text here */}
+            <p>Loading DNA Course...</p>
           </div>
+        )}
+        {!isLoading && !domainAnalysis && (
+          <div className="p-6 text-center">
+            <p>Your Intellectual DNA Analysis is not yet available. Please complete the assessment or check back later.</p>
+          </div>
+        )}
+        {!isLoading && domainAnalysis && (
+          filteredDomains.length > 0 ? (
+            filteredDomains.map(domain => (
+              <DomainSection key={domain.id} domain={domain} />
+            ))
+          ) : (
+            <div className="p-6 text-center">
+              <p>No domains match your filter criteria.</p>
+            </div>
+          )
         )}
       </main>
       
-      {/* Debug Info (for development, can be removed in production) */}
-      {debugInfo.error && (
-        <div className="p-4 bg-red-900/30 rounded m-6">
-          <h3 className="font-bold mb-2">Error Loading DNA Data:</h3>
-          <p>{debugInfo.error}</p>
-          {debugInfo.warning && <p className="text-yellow-300 mt-2">{debugInfo.warning}</p>}
-        </div>
+      {process.env.NODE_ENV === 'development' && Object.keys(debugInfo).length > 0 && (
+        <details className="p-4 m-6 bg-gray-800/50 rounded text-xs text-gray-300 max-w-full overflow-x-auto">
+           <summary className="cursor-pointer font-bold mb-2">Debug Info</summary>
+           <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        </details>
       )}
     </div>
   );
