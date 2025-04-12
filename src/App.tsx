@@ -59,7 +59,6 @@ import TestUpload from "@/pages/TestUpload";
 import ChooseYourOwnExam from "./pages/ChooseYourOwnExam";
 import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
 import MembershipManagement from "./pages/MembershipManagement";
-import VirgilFullScreenWrapper from "./components/virgil/VirgilFullScreenWrapper";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -399,7 +398,7 @@ const App = () => (
                       path="/courses/:course_id"
                       element={ 
                         <ProtectedRoute requireAuth={true} requireDNA={false}>
-                          <VirgilFullScreenWrapper /> 
+                          <ClassroomVirgilChat /> 
                         </ProtectedRoute>
                       }
                     />
