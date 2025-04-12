@@ -1,4 +1,3 @@
-
 import { ChatVariant } from "@/types/chat";
 
 export interface ThemeColors {

@@ -105,6 +105,7 @@ export const useCourses = () => {
       // 4. Map conversations to Course objects, merging details
       const coursesList: Course[] = (courseConversations || []).map((convo: any) => {
         const details = courseDetailsMap.get(convo.course_id);
+        const entryType = (details?.type ?? 'unknown') as Course['entry_type']; // Explicit cast
         return {
           id: convo.id, // Conversation ID
           course_id: convo.course_id,
@@ -114,7 +115,7 @@ export const useCourses = () => {
           title: details?.title ?? 'Unknown Course',
           description: details?.description ?? '',
           image: details?.image ?? '/default-placeholder.png', // Use a real placeholder path
-          entry_type: details?.type ?? 'unknown',
+          entry_type: entryType, // Use the casted type
         };
       }).filter(course => course.entry_type !== 'unknown'); // Filter out courses where details couldn't be found
 
