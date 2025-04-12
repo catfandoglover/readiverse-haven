@@ -136,24 +136,44 @@ export class ConversationManager {
    * Updates an existing conversation.
    */
   async updateConversation(
-    tableName: string, // Revert to simple string
+    tableName: string, 
     conversationId: string,
-    updates: { messages: ChatMessage[] } & Record<string, any>
-  ): Promise<{ data: any | null; error: Error | null }> { // Return type is any
-
-    // No TableUpdate type needed
+    updates: { messages?: ChatMessage[] } & Record<string, any> // Make messages optional for updates that don't include it
+  ): Promise<{ data: any | null; error: Error | null }> {
+    
     const updatePayload: Record<string, any> = {
-      ...updates,
-      messages: updates.messages, // No casting needed
+      ...updates, // Include all provided updates
       updated_at: new Date().toISOString(),
     };
 
-    if (updates.messages) {
-      updatePayload.last_message_preview = this.getLastMessagePreview(updates.messages);
-    } else {
-         console.warn(`Updating conversation ${conversationId} in ${tableName} without providing 'messages' array.`);
-         delete updatePayload.last_message_preview;
+    // Remove the messages field itself from the payload if it exists,
+    // as it's often large and already handled by the DB structure. 
+    // The caller should ensure `messages` is part of the base `updates` if it *needs* to be updated.
+    // Typically, we only update metadata or timestamps here.
+    if ('messages' in updatePayload) {
+        // Optionally calculate preview IF messages are provided AND the column exists
+        // updatePayload.last_message_preview = this.getLastMessagePreview(updatePayload.messages);
+        // delete updatePayload.messages; // Decide if you want to delete messages from payload
     }
+    // Remove the specific assignment for last_message_preview entirely
+    // as the column doesn't exist.
+    delete updatePayload.last_message_preview; 
+
+    // Check if progress_percentage is included and ensure it's valid
+    if (tableName === 'virgil_course_conversations' && 'progress_percentage' in updatePayload) {
+        updatePayload.progress_percentage = Math.max(0, Math.min(100, Math.round(updatePayload.progress_percentage ?? 0)));
+    } else if (tableName === 'virgil_course_conversations') {
+         // If updating course convo without progress, remove it from payload to avoid errors
+         // if it happened to be in the 'updates' object mistakenly.
+         delete updatePayload.progress_percentage;
+    }
+
+    // Prevent trying to update messages directly if it was accidentally passed
+    // and not handled above (safer approach)
+    // delete updatePayload.messages; // REMOVE THIS LINE TO ALLOW MESSAGES UPDATE
+
+    // Filter out undefined values to avoid Supabase errors
+    Object.keys(updatePayload).forEach(key => updatePayload[key] === undefined && delete updatePayload[key]);
 
     const { data, error } = await this.supabase
       .from(tableName)
