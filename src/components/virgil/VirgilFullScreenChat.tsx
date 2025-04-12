@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { virgilConfig } from '@/config/virgilConfig';
 import { fetchPromptByPurposeOrId } from '@/utils/promptUtils';
 import { VirgilInstanceType } from '@/types/virgil';
+import { chatThemes, ThemeColors } from './VirgilChatThemes';
+import { ChatVariant } from '@/types/chat';
 
 interface VirgilFullScreenChatProps {
   variant?: 'classroom' | 'exam' | 'default';
@@ -40,6 +42,11 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
   } else if (promptId) {
     contextIdentifiers.prompt_id = promptId;
   }
+
+  const chatVariantKey: ChatVariant = variant === 'classroom' ? 'classroom' 
+                                    : variant === 'exam' ? 'examroom'
+                                    : 'default';
+  const themeColors = chatThemes[chatVariantKey];
 
   React.useEffect(() => {
     let isMounted = true;
@@ -137,6 +144,7 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
         handleSubmitMessage={handleSubmitMessage}
         toggleRecording={toggleRecording}
         cancelRecording={cancelRecording}
+        themeColors={themeColors}
       />
     </div>
   );

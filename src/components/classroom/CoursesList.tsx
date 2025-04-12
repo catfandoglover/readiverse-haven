@@ -55,7 +55,7 @@ const CoursesList: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{course.title}</h3>
-                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium">Course</p>
+                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium mt-0.5 line-clamp-2">{course.description || 'No description available.'}</p>
                     </div>
                   </div>
                   

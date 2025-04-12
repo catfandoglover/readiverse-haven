@@ -6,19 +6,24 @@ import { toast } from "sonner";
 // Use any for the client within this hook to bypass complex types
 const supabase = typedSupabase as SupabaseClient<any>;
 
-// Simplified Course interface based on data directly available 
-// from virgil_course_conversations or derivable from it.
-// Title, description, image, entry_type need to be fetched separately.
+// Expanded Course interface to include details fetched from source tables
 export interface Course {
   id: string; // The ID of the virgil_course_conversations row
-  course_id: string; // The ID of the underlying entry (book, icon, concept)
+  course_id: string; // The ID of the underlying entry (book, icon, concept, art)
   progress: number; // Mapped from progress_percentage
   completed: boolean; // Derived from progress_percentage
-  // We cannot reliably get these from virgil_course_conversations alone:
-  // title: string; 
-  // description: string;
-  // image: string;
-  // entry_type: string;
+  title: string; 
+  description: string;
+  image: string;
+  entry_type: 'book' | 'art' | 'icon' | 'concept' | 'unknown'; // Added entry type
+}
+
+// Define a type for the detailed course information fetched from source tables
+interface CourseDetails {
+    title: string;
+    description: string;
+    image: string;
+    type: 'book' | 'art' | 'icon' | 'concept';
 }
 
 export const useCourses = () => {
@@ -34,22 +39,85 @@ export const useCourses = () => {
       }
       const userId = sessionData.session.user.id;
       
-      // Fetch using the <any> client
+      // 1. Fetch course conversations
       const { data: courseConversations, error: courseConvoError } = await supabase
         .from('virgil_course_conversations')
         .select('id, course_id, progress_percentage') 
         .eq('user_id', userId);
         
       if (courseConvoError) throw courseConvoError;
+      if (!courseConversations || courseConversations.length === 0) {
+        setCourses([]); // No conversations found
+        setLoading(false);
+        return;
+      }
 
-      // Map assuming data is an array of objects with expected fields
-      const coursesList: Course[] = (courseConversations || []).map((convo: any) => ({
-        id: convo.id,
-        course_id: convo.course_id,
-        progress: convo.progress_percentage ?? 0,
-        completed: (convo.progress_percentage ?? 0) >= 100,
-      }));
-      
+      // 2. Extract unique course_ids
+      const courseIds = [...new Set((courseConversations || []).map((convo: any) => convo.course_id))];
+
+      // 3. Fetch details from source tables
+      const courseDetailsMap = new Map<string, CourseDetails>();
+
+      // Fetch Books
+      const { data: booksData, error: booksError } = await supabase
+        .from('books')
+        .select('id, title, about, cover_url')
+        .in('id', courseIds);
+      if (booksError) console.error("Error fetching books:", booksError);
+      else booksData?.forEach((item: any) => courseDetailsMap.set(item.id, { title: item.title, description: item.about || '', image: item.cover_url || '/path/to/default/book_cover.png', type: 'book' }));
+
+      // Fetch Art (if exists and needed)
+      const { data: artData, error: artError } = await supabase
+          .from('art')
+          .select('id, title, about, art_file_url')
+          .in('id', courseIds);
+      if (artError) console.error("Error fetching art:", artError);
+      else artData?.forEach((item: any) => {
+          if (!courseDetailsMap.has(item.id)) { // Avoid overwriting if ID exists in multiple tables
+              courseDetailsMap.set(item.id, { title: item.title, description: item.about || '', image: item.art_file_url || '/path/to/default/art_icon.png', type: 'art' });
+          }
+      });
+
+      // Fetch Icons
+      const { data: iconsData, error: iconsError } = await supabase
+        .from('icons')
+        .select('id, name, about, illustration')
+        .in('id', courseIds);
+      if (iconsError) console.error("Error fetching icons:", iconsError);
+      else iconsData?.forEach((item: any) => {
+        if (!courseDetailsMap.has(item.id)) {
+            courseDetailsMap.set(item.id, { title: item.name, description: item.about || '', image: item.illustration || '/path/to/default/icon.png', type: 'icon' });
+        }
+      });
+
+      // Fetch Concepts
+      const { data: conceptsData, error: conceptsError } = await supabase
+        .from('concepts')
+        .select('id, title, about, illustration')
+        .in('id', courseIds);
+      if (conceptsError) console.error("Error fetching concepts:", conceptsError);
+      else conceptsData?.forEach((item: any) => {
+        if (!courseDetailsMap.has(item.id)) {
+            courseDetailsMap.set(item.id, { title: item.title, description: item.about || '', image: item.illustration || '/path/to/default/concept_icon.png', type: 'concept' });
+        }
+      });
+
+      // 4. Map conversations to Course objects, merging details
+      const coursesList: Course[] = (courseConversations || []).map((convo: any) => {
+        const details = courseDetailsMap.get(convo.course_id);
+        return {
+          id: convo.id, // Conversation ID
+          course_id: convo.course_id,
+          progress: convo.progress_percentage ?? 0,
+          completed: (convo.progress_percentage ?? 0) >= 100,
+          // Provide defaults if details are missing
+          title: details?.title ?? 'Unknown Course',
+          description: details?.description ?? '',
+          image: details?.image ?? '/default-placeholder.png', // Use a real placeholder path
+          entry_type: details?.type ?? 'unknown',
+        };
+      }).filter(course => course.entry_type !== 'unknown'); // Filter out courses where details couldn't be found
+
       setCourses(coursesList);
     } catch (error: any) {
       console.error("Error fetching courses:", error);
@@ -139,6 +207,10 @@ export const useCourses = () => {
               course_id: data.course_id,
               progress: data.progress_percentage ?? 0,
               completed: (data.progress_percentage ?? 0) >= 100,
+              title: '',
+              description: '',
+              image: '',
+              entry_type: 'unknown',
           };
           setCourses(prev => [...prev, newCourse]);
       }
