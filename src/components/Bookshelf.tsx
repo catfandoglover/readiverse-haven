@@ -6,6 +6,8 @@ import { Compass, LibraryBig, Search, Grid, List, Dna } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveLastVisited, getLastVisited } from "@/utils/navigationHistory";
+import { fetchBooksFromSupabase } from "@/integrations/supabase/books";
+import { useBookshelfStore } from "@/store/useBookshelfStore";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 type Book = Database['public']['Tables']['books']['Row'];
@@ -13,76 +15,41 @@ type Book = Database['public']['Tables']['books']['Row'];
 const Bookshelf = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isGridView, setIsGridView] = useState(false);
+  const { isGridView, setIsGridView } = useBookshelfStore();
+  const viewportRef = React.useRef<HTMLDivElement>(null);
   const { user, supabase } = useAuth();
+
+  const { data: books, isLoading } = useQuery<Book[]>({
+    queryKey: ['books'],
+    queryFn: () => fetchBooksFromSupabase(supabase),
+    enabled: !!supabase,
+  });
 
   useEffect(() => {
     saveLastVisited('bookshelf', location.pathname);
   }, [location.pathname]);
 
-  const { data: books = [], isLoading } = useQuery({
-    queryKey: ['user-bookshelf', user?.id],
-    queryFn: async () => {
-      if (!user?.id || !supabase) {
-        console.log('No user or Supabase client available');
-        return [];
+  useEffect(() => {
+    const handleScroll = () => {
+      if (viewportRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = viewportRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 5) {
+          console.log("Reached the bottom of the scroll area!");
+        }
       }
+    };
 
-      console.log('Fetching books for user:', user.id);
+    const viewportElement = viewportRef.current;
+    if (viewportElement) {
+      viewportElement.addEventListener('scroll', handleScroll);
+    }
 
-      try {
-        // First get the book IDs
-        const { data: userBooks, error: userBooksError } = await supabase
-          .from('user_books')
-          .select('book_id')
-          .eq('user_id', user.id);
-
-        if (userBooksError) {
-          console.error('Error fetching user books:', {
-            error: userBooksError,
-            userId: user.id
-          });
-          return [];
-        }
-
-        console.log('User books fetched:', userBooks);
-
-        if (!userBooks?.length) {
-          console.log('No books found for user');
-          return [];
-        }
-
-        // Then get the books using those IDs
-        const bookIds = userBooks.map(ub => ub.book_id);
-        console.log('Fetching books with IDs:', bookIds);
-
-        const { data: books, error: booksError } = await supabase
-          .from('books')
-          .select('*')
-          .in('id', bookIds);
-
-        if (booksError) {
-          console.error('Error fetching books:', {
-            error: booksError,
-            bookIds
-          });
-          return [];
-        }
-
-        console.log('Books fetched successfully:', books);
-        
-        // Filter out books without epub_file_url
-        const validBooks = books?.filter(book => !!book.epub_file_url) || [];
-        console.log(`Filtered out ${(books?.length || 0) - validBooks.length} books without epub_file_url`);
-        
-        return validBooks;
-      } catch (error) {
-        console.error('Unexpected error in book fetching:', error);
-        return [];
+    return () => {
+      if (viewportElement) {
+        viewportElement.removeEventListener('scroll', handleScroll);
       }
-    },
-    enabled: !!user?.id && !!supabase
-  });
+    };
+  }, [isLoading]);
 
   const handleBookClick = (slug: string, epub_file_url: string) => {
     if (slug.startsWith('http')) {
@@ -92,7 +59,7 @@ const Bookshelf = () => {
         state: { 
           bookUrl: epub_file_url,
           metadata: {
-            coverUrl: null // Add any other metadata needed
+            coverUrl: null
           }
         } 
       });
@@ -160,9 +127,11 @@ const Bookshelf = () => {
         </div>
       </header>
 
-      <ScrollArea className="flex-1 h-0">
+      <ScrollArea className="flex-1 h-0" viewportRef={viewportRef}>
         <div className="px-4 py-4">
-          {!books?.length ? (
+          {isLoading ? (
+            <div className="text-center py-8">Loading books...</div>
+          ) : !books?.length ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Your bookshelf is empty.</p>
               <p>Start reading books to add them to your bookshelf!</p>

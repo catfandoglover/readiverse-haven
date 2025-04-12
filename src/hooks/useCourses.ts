@@ -116,7 +116,6 @@ export const useCourses = () => {
           course_id: entryId,
           progress_percentage: 0,
           messages: [], 
-          last_message_preview: null,
         })
         .select('id, course_id, progress_percentage')
         .single();

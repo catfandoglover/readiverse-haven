@@ -59,6 +59,7 @@ import TestUpload from "@/pages/TestUpload";
 import ChooseYourOwnExam from "./pages/ChooseYourOwnExam";
 import ChooseYourOwnCourse from "./pages/ChooseYourOwnCourse";
 import MembershipManagement from "./pages/MembershipManagement";
+import VirgilFullScreenWrapper from "./components/virgil/VirgilFullScreenWrapper";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -394,6 +395,105 @@ const App = () => (
                         <DiscoverLayout />
                       </ProtectedRoute>
                     } />
+                    <Route 
+                      path="/courses/:course_id"
+                      element={ 
+                        <ProtectedRoute requireAuth={true} requireDNA={false}>
+                          <VirgilFullScreenWrapper /> 
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/virgil/choose-exam" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <ChooseYourOwnExam />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/virgil/dna-shelf" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <IntellectualDNAShelf />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/virgil/exam-room/:examId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <ExamRoom />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/virgil/exam-welcome/:examId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <ExamWelcome />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/virgil/exam-chat/:examId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <ExamVirgilChat />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/bookshelf" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <NewBookshelf />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <Profile />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile/settings" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <ProfileSettings />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/become-who-you-are" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={true}>
+                        <BecomeWhoYouAre />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/domains/:domainId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <DomainDetail />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/favorites" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <FavoritesShelf />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/classroom" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <Classroom />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/classroom/course/:courseId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <IntellectualDNACourse />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/classroom/exam/:examId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <IntellectualDNAExam />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/classroom/chat/:courseId" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <ClassroomVirgilChat />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard/billing" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <MembershipManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/test-upload" element={
+                      <ProtectedRoute requireAuth={true} requireDNA={false}>
+                        <TestUpload />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </ErrorBoundary>
               </TooltipProvider>

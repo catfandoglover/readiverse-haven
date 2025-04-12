@@ -1,58 +1,64 @@
-
 import * as React from "react"
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 
 import { cn } from "@/lib/utils"
+
+// Define a type for the viewport ref
+type ViewportRef = React.RefObject<HTMLDivElement>;
 
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
     enableDragging?: boolean;
     orientation?: "horizontal" | "vertical";
+    viewportRef?: ViewportRef; // Add viewportRef prop
   }
->(({ className, children, enableDragging, orientation = "vertical", ...props }, ref) => {
+>(({ className, children, enableDragging, orientation = "vertical", viewportRef: externalViewportRef, ...props }, ref) => {
   const [isDragging, setIsDragging] = React.useState(false);
   const [startX, setStartX] = React.useState(0);
   const [scrollLeft, setScrollLeft] = React.useState(0);
-  const viewportRef = React.useRef<HTMLDivElement>(null);
+  const internalViewportRef = React.useRef<HTMLDivElement>(null);
+  
+  // Combine internal and external refs if needed, or prioritize external if provided
+  const combinedViewportRef = externalViewportRef || internalViewportRef;
   
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!enableDragging || !viewportRef.current) return;
+    if (!enableDragging || !combinedViewportRef.current) return;
     setIsDragging(true);
-    setStartX(e.pageX - viewportRef.current.offsetLeft);
-    setScrollLeft(viewportRef.current.scrollLeft);
-    viewportRef.current.style.cursor = 'grabbing';
-    viewportRef.current.style.userSelect = 'none';
+    setStartX(e.pageX - combinedViewportRef.current.offsetLeft);
+    setScrollLeft(combinedViewportRef.current.scrollLeft);
+    combinedViewportRef.current.style.cursor = 'grabbing';
+    combinedViewportRef.current.style.userSelect = 'none';
   };
   
   const handleMouseUp = () => {
-    if (!enableDragging || !viewportRef.current) return;
+    if (!enableDragging || !combinedViewportRef.current) return;
     setIsDragging(false);
-    viewportRef.current.style.cursor = 'grab';
-    viewportRef.current.style.removeProperty('user-select');
+    combinedViewportRef.current.style.cursor = 'grab';
+    combinedViewportRef.current.style.removeProperty('user-select');
   };
   
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !enableDragging || !viewportRef.current) return;
+    if (!isDragging || !enableDragging || !combinedViewportRef.current) return;
     e.preventDefault();
-    const x = e.pageX - viewportRef.current.offsetLeft;
+    const x = e.pageX - combinedViewportRef.current.offsetLeft;
     const walk = (x - startX) * 2; // Speed multiplier
-    viewportRef.current.scrollLeft = scrollLeft - walk;
+    combinedViewportRef.current.scrollLeft = scrollLeft - walk;
   };
 
   // Handle touch events for mobile swiping
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!enableDragging || !viewportRef.current) return;
+    if (!enableDragging || !combinedViewportRef.current) return;
     setIsDragging(true);
-    setStartX(e.touches[0].pageX - viewportRef.current.offsetLeft);
-    setScrollLeft(viewportRef.current.scrollLeft);
+    setStartX(e.touches[0].pageX - combinedViewportRef.current.offsetLeft);
+    setScrollLeft(combinedViewportRef.current.scrollLeft);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !enableDragging || !viewportRef.current) return;
-    const x = e.touches[0].pageX - viewportRef.current.offsetLeft;
+    if (!isDragging || !enableDragging || !combinedViewportRef.current) return;
+    const x = e.touches[0].pageX - combinedViewportRef.current.offsetLeft;
     const walk = (x - startX) * 2;
-    viewportRef.current.scrollLeft = scrollLeft - walk;
+    combinedViewportRef.current.scrollLeft = scrollLeft - walk;
   };
 
   const handleTouchEnd = () => {
@@ -61,10 +67,10 @@ const ScrollArea = React.forwardRef<
   };
 
   React.useEffect(() => {
-    if (enableDragging && viewportRef.current) {
-      viewportRef.current.style.cursor = 'grab';
+    if (enableDragging && combinedViewportRef.current) {
+      combinedViewportRef.current.style.cursor = 'grab';
     }
-  }, [enableDragging]);
+  }, [enableDragging, combinedViewportRef]);
 
   return (
     <ScrollAreaPrimitive.Root
@@ -73,7 +79,7 @@ const ScrollArea = React.forwardRef<
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
-        ref={viewportRef}
+        ref={combinedViewportRef}
         className={cn(
           "h-full w-full rounded-[inherit]",
           enableDragging && "cursor-grab touch-pan-x"

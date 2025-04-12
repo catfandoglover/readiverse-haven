@@ -34,162 +34,132 @@ const ChooseYourOwnCourse: React.FC = () => {
   const { createCourse } = useCourses();
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Track pagination for each tab
-  const [page, setPage] = useState({
-    classics: 0,
-    icons: 0,
-    concepts: 0
-  });
-  
-  // Track if there's more data to load
-  const [hasMore, setHasMore] = useState({
-    classics: true,
-    icons: true,
-    concepts: true
-  });
-  
+  const [page, setPage] = useState({ classics: 0, icons: 0, concepts: 0 });
+  const [hasMore, setHasMore] = useState({ classics: true, icons: true, concepts: true });
   const PAGE_SIZE = 20;
-  
+
+  // Use supabase dynamically
+  const [localSupabase, setLocalSupabase] = useState<any>(null);
   useEffect(() => {
-    fetchData();
+    import('@/integrations/supabase/client').then(client => setLocalSupabase(client.supabase));
   }, []);
   
-  const fetchData = async (loadMore = false) => {
+  // Consolidated fetch function
+  const fetchData = useCallback(async (tab: "classics" | "icons" | "concepts", loadMore = false) => {
+    if (!localSupabase) return; // Wait for supabase client
+    if (!hasMore[tab] && loadMore) return; // Don't fetch if no more data
+
     if (!loadMore) {
       setLoading(true);
     } else {
       setLoadingMore(true);
     }
-    
+
+    const currentPage = loadMore ? page[tab] + 1 : 0;
+    const offset = currentPage * PAGE_SIZE;
+    let tableName: string;
+    let selectFields: string;
+    let setData: React.Dispatch<React.SetStateAction<ContentItem[]>>;
+    let currentItems: ContentItem[]; // Keep track for potential rollback/append
+
+    switch (tab) {
+      case 'icons':
+        tableName = 'icons';
+        selectFields = 'id, name, illustration, about, one_line';
+        setData = setIcons;
+        currentItems = icons; 
+        break;
+      case 'concepts':
+        tableName = 'concepts';
+        selectFields = 'id, title, illustration, about, one_line';
+        setData = setConcepts;
+        currentItems = concepts;
+        break;
+      case 'classics':
+      default:
+        tableName = 'books';
+        selectFields = 'id, title, author, cover_url, about, icon_illustration';
+        setData = setClassics;
+        currentItems = classics;
+        break;
+    }
+
     try {
-      if (activeTab === "classics") {
-        await fetchClassics(loadMore);
-      } else if (activeTab === "icons") {
-        await fetchIcons(loadMore);
-      } else if (activeTab === "concepts") {
-        await fetchConcepts(loadMore);
+      // Reset data if it's a fresh fetch (not loadMore)
+      if (!loadMore) {
+          setData([]);
+      }
+      
+      const { data, error } = await localSupabase
+        .from(tableName)
+        .select(selectFields)
+        .order('randomizer', { ascending: false }) // Assuming randomizer exists
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) throw error;
+
+      if (Array.isArray(data)) {
+        const transformedData = data.map((item: any) => {
+          // Transform raw data to ContentItem, handling potential name/title differences
+          return {
+            id: item.id,
+            title: item.title || item.name || 'Untitled', // Use title or name
+            author: item.author,
+            // Consolidate image fields, prioritizing cover_url, then illustration, then icon_illustration
+            cover_url: item.cover_url || item.illustration || item.icon_illustration, 
+            illustration: item.illustration || item.icon_illustration, // Primarily for icons/concepts
+            about: item.about,
+            one_line: item.one_line, // Primarily for icons/concepts
+          };
+        });
+
+        if (loadMore) {
+          setData(prev => [...prev, ...transformedData]);
+        } else {
+          setData(transformedData);
+        }
+        setPage(prev => ({ ...prev, [tab]: currentPage }));
+        setHasMore(prev => ({ ...prev, [tab]: data.length === PAGE_SIZE }));
+      } else {
+        // Handle cases where data is not an array (e.g., error or empty response)
+        if (!loadMore) setData([]); // Clear if fresh fetch failed
+        setHasMore(prev => ({ ...prev, [tab]: false }));
       }
     } catch (error) {
-      console.error("Error fetching content:", error);
-      toast.error("Failed to load content");
+      console.error(`Error fetching ${tab}:`, error);
+      toast.error(`Failed to load ${tab}`);
+      // Rollback state if fetch failed during loadMore?
+      // Or just stop pagination for this tab
+      if (!loadMore) setData([]); // Clear if fresh fetch failed
+      setHasMore(prev => ({ ...prev, [tab]: false }));
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [localSupabase, page, hasMore, classics, icons, concepts]); // Updated dependencies
 
-  const fetchClassics = async (loadMore = false) => {
-    const currentPage = loadMore ? page.classics + 1 : 0;
-    const offset = currentPage * PAGE_SIZE;
-    
-    const { data, error } = await supabase
-      .from('books')
-      .select('id, title, author, cover_url, about, icon_illustration')
-      .order('randomizer', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1);
-    
-    if (error) throw error;
-    
-    if (data) {
-      if (loadMore) {
-        setClassics(prev => [...prev, ...data]);
-      } else {
-        setClassics(data);
-      }
-      
-      setPage(prev => ({ ...prev, classics: currentPage }));
-      setHasMore(prev => ({ ...prev, classics: data.length === PAGE_SIZE }));
-    }
-  };
-  
-  const fetchIcons = async (loadMore = false) => {
-    const currentPage = loadMore ? page.icons + 1 : 0;
-    const offset = currentPage * PAGE_SIZE;
-    
-    const { data, error } = await supabase
-      .from('icons')
-      .select('id, name, illustration, about, one_line')
-      .order('randomizer', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1);
-    
-    if (error) throw error;
-    
-    if (data) {
-      const transformedIcons = data.map(icon => ({
-        id: icon.id,
-        title: icon.name,
-        illustration: icon.illustration,
-        about: icon.about,
-        one_line: icon.one_line
-      }));
-      
-      if (loadMore) {
-        setIcons(prev => [...prev, ...transformedIcons]);
-      } else {
-        setIcons(transformedIcons);
-      }
-      
-      setPage(prev => ({ ...prev, icons: currentPage }));
-      setHasMore(prev => ({ ...prev, icons: data.length === PAGE_SIZE }));
-    }
-  };
-  
-  const fetchConcepts = async (loadMore = false) => {
-    const currentPage = loadMore ? page.concepts + 1 : 0;
-    const offset = currentPage * PAGE_SIZE;
-    
-    const { data, error } = await supabase
-      .from('concepts')
-      .select('id, title, illustration, about, one_line')
-      .order('randomizer', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1);
-    
-    if (error) throw error;
-    
-    if (data) {
-      if (loadMore) {
-        setConcepts(prev => [...prev, ...data]);
-      } else {
-        setConcepts(data);
-      }
-      
-      setPage(prev => ({ ...prev, concepts: currentPage }));
-      setHasMore(prev => ({ ...prev, concepts: data.length === PAGE_SIZE }));
-    }
-  };
-  
-  // Handle tab change
+  // Initial fetch and fetch on tab change
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-  
-  // Handle scroll event to implement infinite scrolling
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current || loading || loadingMore) return;
-    
-    const scrollContainer = scrollRef.current;
-    const scrollPosition = scrollContainer.scrollTop + scrollContainer.clientHeight;
-    const scrollHeight = scrollContainer.scrollHeight;
-    
-    console.log("Scroll debug:", {
-      scrollPosition,
-      scrollHeight,
-      difference: scrollHeight - scrollPosition,
-      threshold: 200,
-      hasMore: hasMore[activeTab],
-      loading,
-      loadingMore
-    });
-    
-    // When user scrolls to near bottom, load more content
-    if (scrollHeight - scrollPosition < 200) {
-      const currentTabHasMore = hasMore[activeTab];
-      if (currentTabHasMore) {
-        console.log("Triggering fetch more data");
-        fetchData(true);
-      }
+    // Only fetch if supabase client is available
+    if (localSupabase) {
+       // Reset pagination and hasMore for the new tab before fetching
+       setPage(prev => ({ ...prev, [activeTab]: 0 })); 
+       setHasMore(prev => ({ ...prev, [activeTab]: true })); 
+       fetchData(activeTab, false); 
     }
-  }, [activeTab, loading, loadingMore, hasMore, fetchData]);
+  }, [activeTab, localSupabase]); // Depend on localSupabase too
+  
+  // Handle scroll event for infinite scrolling
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current || loadingMore) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    // Fetch when near bottom
+    if (scrollHeight - scrollTop - clientHeight < 200 && hasMore[activeTab] && !loading) {
+       fetchData(activeTab, true);
+    }
+  }, [activeTab, loading, loadingMore, hasMore, fetchData]); // Ensure fetchData is a dependency
   
   // Attach scroll listener
   useEffect(() => {
@@ -200,54 +170,53 @@ const ChooseYourOwnCourse: React.FC = () => {
     }
   }, [handleScroll]);
   
+  // handleSelectItem remains largely the same, just ensure loading state is handled
   const handleSelectItem = async (item: ContentItem, type: "book" | "icon" | "concept") => {
+    let isLoadingSet = false; // Track if loading was set
     try {
+      // Avoid setting loading if already loading (e.g., fast clicks)
+      if(loading) return;
       setLoading(true);
+      isLoadingSet = true;
       
-      console.log("Creating course with:", { item, type });
-
-      const result = await createCourse(item.id, type);
+      console.log("Selected course item:", { item, type });
+      const result = await createCourse(item.id);
       console.log("Create course result:", result);
       
-      if (result.success && result.data) {
-        toast.success("Course created successfully");
-        
-        navigate("/classroom-chat", { 
-          state: { 
-            courseData: {
-              id: result.data.id,
-              title: item.title || item.name,
-              description: item.about || "A custom course based on your selection.",
-              entryId: item.id,
-              entryType: type
-            }
-          }
-        });
+      if (result.success || result.duplicate) {
+        navigate(`/courses/${item.id}`); 
       } else {
-        throw new Error(result.error?.message || "Failed to create course");
+         // Error toast is handled by createCourse
+         setLoading(false); // Reset loading state on failure
+         isLoadingSet = false;
       }
+      // If navigation happens, loading state becomes irrelevant
     } catch (error) {
-      console.error("Error creating course:", error);
-      toast.error("Failed to create course");
-      setLoading(false);
+      console.error("Error selecting course item:", error);
+      toast.error("Failed to start the course.");
+      if (isLoadingSet) setLoading(false);
     }
   };
   
+  // filterContent remains the same
   const filterContent = (items: ContentItem[]) => {
     if (!searchQuery) return items;
     return items.filter(item => 
       (item.title || item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.author || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.about || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (item.about || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.one_line || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
   
+  // ContentCard remains the same
   const ContentCard = ({ item, type }: { item: ContentItem, type: "book" | "icon" | "concept" }) => {
     return (
+      // Added margin-bottom for spacing between cards
       <div 
         className={cn(
-          "flex items-center p-4 rounded-xl bg-[#19352F]/80 hover:bg-[#19352F] cursor-pointer transition-colors",
-          loading ? "pointer-events-none opacity-70" : ""
+          "flex items-center p-4 mb-4 rounded-xl bg-[#19352F]/80 hover:bg-[#19352F] cursor-pointer transition-colors",
+          loading ? "pointer-events-none opacity-70" : "" // Apply loading style to individual card if needed, or handle globally
         )}
         onClick={() => handleSelectItem(item, type)}
       >
@@ -267,10 +236,10 @@ const ChooseYourOwnCourse: React.FC = () => {
         </div>
         
         {(type === "book" && item.cover_url) ? (
-          <div className="flex-shrink-0 h-16 w-12 rounded overflow-hidden">
+          <div className="flex-shrink-0 h-16 w-12 rounded overflow-hidden bg-[#0D1C1A]"> {/* Added bg color */}
             <img 
               src={item.cover_url} 
-              alt={item.title} 
+              alt={item.title || 'Book cover'} 
               className="h-full w-full object-cover"
               loading="lazy" 
             />
@@ -281,285 +250,159 @@ const ChooseYourOwnCourse: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
                 src={item.illustration} 
-                alt={item.title} 
+                alt={item.title || 'Illustration'} 
                 className="h-8 w-8 object-cover"
                 style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}
                 loading="lazy" 
               />
             </div>
           </div>
-        ) : null}
+        ) : (
+           // Placeholder for items without images
+           <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center bg-[#0D1C1A] rounded-md">
+              <ArrowRight className="h-6 w-6 text-[#356E61]"/>
+           </div>
+        )}
       </div>
     );
   };
   
+  // Get filtered content based on active tab and search query
+  const getFilteredContent = () => {
+    switch (activeTab) {
+      case 'icons': return filterContent(icons);
+      case 'concepts': return filterContent(concepts);
+      case 'classics':
+      default: return filterContent(classics);
+    }
+  };
+  const currentContent = getFilteredContent();
+  const currentTabHasMore = hasMore[activeTab];
+
+  // Determine current data array based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 'icons': return icons;
+      case 'concepts': return concepts;
+      case 'classics':
+      default: return classics;
+    }
+  };
+  const currentDataArray = getCurrentData();
+
   return (
-    <div className="min-h-screen bg-[#1D3A35] text-[#E9E7E2] pb-16">
-      <div className="sticky top-0 z-10 flex items-center pt-4 px-4 bg-[#1D3A35] text-[#E9E7E2]">
+    // Changed to flex-col, height full, outer bg color
+    <div className="flex flex-col h-screen bg-[#0D1C1A] text-[#E9E7E2]">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 flex items-center pt-4 pb-2 px-4 bg-[#0D1C1A]">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-md text-[#E9E7E2] focus:outline-none"
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#19352F]/70 text-[#E9E7E2] focus:outline-none transition-colors"
           aria-label="Back"
         >
-          <ArrowLeft className="h-7 w-7" />
+          <ArrowLeft className="h-6 w-6" />
         </button>
-        <h2 className="font-oxanium uppercase text-[#E9E7E2] tracking-wider text-sm font-bold mx-auto">
+        <h2 className="flex-1 text-center font-oxanium uppercase text-[#E9E7E2] tracking-wider text-base font-semibold">
           CHOOSE YOUR OWN COURSE
         </h2>
-        <div className="w-10 h-10">
-          {/* Empty div to balance the layout */}
-        </div>
+        <div className="w-10 h-10">{/* Spacer */}</div>
       </div>
       
-      <div className="px-4 py-6">
-        <p className="text-[#E9E7E2]/70 font-oxanium mb-6">
-          Select a classic, icon, or concept to create your personalized learning journey.
-        </p>
-        
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-[#E9E7E2]/50" />
+      {/* Main Content Area (Flex child, allows scrolling area to take remaining space) */}
+      <div className="flex flex-col flex-1 overflow-hidden px-4">
+        {/* Search Input */}
+        <div className="relative my-4">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#E9E7E2]/50" />
           <Input
-            placeholder="Search for inspiration..."
+            placeholder="Search Classics, Icons, or Concepts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 bg-[#19352F]/70 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-2xl border-none shadow-[0_0_0_1px_rgba(53,110,97,0.3)] focus:ring-1 focus:ring-[#356E61]/40 focus:shadow-none focus:border-transparent"
+            // Updated styling for search input
+            className="w-full pl-12 pr-4 py-3 bg-[#19352F]/70 text-[#E9E7E2] placeholder:text-[#E9E7E2]/50 rounded-xl border-none focus:ring-1 focus:ring-[#356E61]/50 focus:bg-[#19352F] shadow-sm"
           />
         </div>
         
-        <div className="flex items-center space-x-8 mb-6">
+        {/* Tabs Container */}
+        {/* Using flex container for tabs */}
+        <div className="flex border-b border-[#356E61]/30 mb-4">
           <Button
             variant="ghost"
             className={cn(
-              "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
+              "flex-1 py-3 px-1 relative whitespace-nowrap uppercase font-oxanium text-sm justify-center hover:bg-transparent hover:text-[#CCFF23] transition-colors duration-200",
               activeTab === "classics" 
-                ? "text-[#E9E7E2]" 
-                : "text-[#E9E7E2]/60"
+                ? "text-[#CCFF23] font-semibold"
+                : "text-[#E9E7E2]/70"
             )}
             onClick={() => setActiveTab("classics")}
           >
-            <span className={cn(
-              "relative",
-              activeTab === "classics" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-            )}>
-              CLASSICS
-            </span>
+            Classics
+             {/* Updated underline style */}
+            {activeTab === "classics" && <div className="absolute bottom-[-1px] left-0 h-0.5 bg-[#CCFF23] w-full"/>}
           </Button>
           <Button
             variant="ghost"
             className={cn(
-              "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
+               "flex-1 py-3 px-1 relative whitespace-nowrap uppercase font-oxanium text-sm justify-center hover:bg-transparent hover:text-[#CCFF23] transition-colors duration-200",
               activeTab === "icons" 
-                ? "text-[#E9E7E2]" 
-                : "text-[#E9E7E2]/60"
+                ? "text-[#CCFF23] font-semibold"
+                : "text-[#E9E7E2]/70"
             )}
             onClick={() => setActiveTab("icons")}
           >
-            <span className={cn(
-              "relative",
-              activeTab === "icons" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-            )}>
-              ICONS
-            </span>
+            Icons
+            {activeTab === "icons" && <div className="absolute bottom-[-1px] left-0 h-0.5 bg-[#CCFF23] w-full"/>}
           </Button>
           <Button
             variant="ghost"
             className={cn(
-              "py-2 relative whitespace-nowrap uppercase font-oxanium text-sm justify-start pl-0 hover:bg-transparent",
+               "flex-1 py-3 px-1 relative whitespace-nowrap uppercase font-oxanium text-sm justify-center hover:bg-transparent hover:text-[#CCFF23] transition-colors duration-200",
               activeTab === "concepts" 
-                ? "text-[#E9E7E2]" 
-                : "text-[#E9E7E2]/60"
+                ? "text-[#CCFF23] font-semibold"
+                : "text-[#E9E7E2]/70"
             )}
             onClick={() => setActiveTab("concepts")}
           >
-            <span className={cn(
-              "relative",
-              activeTab === "concepts" && "after:absolute after:bottom-[-6px] after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-[#9b87f5] after:to-[#8453f9] after:w-full"
-            )}>
-              CONCEPTS
-            </span>
+            Concepts
+            {activeTab === "concepts" && <div className="absolute bottom-[-1px] left-0 h-0.5 bg-[#CCFF23] w-full"/>}
           </Button>
         </div>
         
-        <div className="h-[calc(100vh-18rem)] overflow-y-auto" ref={scrollRef}>
-          {activeTab === "classics" && (
-            <div className="space-y-6">
-              {loading && page.classics === 0 ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              ) : filterContent(classics).length > 0 ? (
-                filterContent(classics).map(item => (
-                  <div key={item.id}>
-                    <div 
-                      className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
-                      onClick={() => handleSelectItem(item, "book")}
-                    >
-                      <div className="flex items-center mb-3">
-                        <div className="flex items-center flex-1">
-                          <div className="relative mr-4">
-                            <div className="h-9 w-9 rounded-full overflow-hidden">
-                              {item.icon_illustration ? (
-                                <img 
-                                  src={item.icon_illustration} 
-                                  alt={item.title}
-                                  className="h-9 w-9 object-cover"
-                                />
-                              ) : item.cover_url ? (
-                                <img 
-                                  src={item.cover_url} 
-                                  alt={item.title}
-                                  className="h-9 w-9 object-cover"
-                                />
-                              ) : (
-                                <div className="h-9 w-9 bg-[#356E61] flex items-center justify-center">
-                                  <span className="text-xs text-[#E9E7E2]">{item.title.charAt(0)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{item.title}</h3>
-                            {item.author && (
-                              <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{item.author}</p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <button className="h-9 w-9 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/75">
-                          <ArrowRight className="h-4 w-4 text-[#19352F]" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-[#E9E7E2]/70">
-                  {searchQuery ? "No classics match your search" : "No classics found"}
-                </div>
-              )}
-              
-              {loadingMore && activeTab === "classics" && (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              )}
-            </div>
-          )}
-          
-          {activeTab === "icons" && (
-            <div className="space-y-6">
-              {loading && page.icons === 0 ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              ) : filterContent(icons).length > 0 ? (
-                filterContent(icons).map(item => (
-                  <div key={item.id}>
-                    <div 
-                      className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
-                      onClick={() => handleSelectItem(item, "icon")}
-                    >
-                      <div className="flex items-center mb-3">
-                        <div className="flex items-center flex-1">
-                          <div className="relative mr-4">
-                            <div className="h-9 w-9 rounded-full overflow-hidden">
-                              {item.illustration ? (
-                                <img 
-                                  src={item.illustration} 
-                                  alt={item.title}
-                                  className="h-9 w-9 object-cover"
-                                />
-                              ) : (
-                                <div className="h-9 w-9 bg-[#356E61] flex items-center justify-center">
-                                  <span className="text-xs text-[#E9E7E2]">{item.title.charAt(0)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{item.title}</h3>
-                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{item.one_line}</p>
-                          </div>
-                        </div>
-                        
-                        <button className="h-9 w-9 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/75">
-                          <ArrowRight className="h-4 w-4 text-[#19352F]" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-[#E9E7E2]/70">
-                  {searchQuery ? "No icons match your search" : "No icons found"}
-                </div>
-              )}
-              
-              {loadingMore && activeTab === "icons" && (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              )}
-            </div>
-          )}
-          
-          {activeTab === "concepts" && (
-            <div className="space-y-6">
-              {loading && page.concepts === 0 ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              ) : filterContent(concepts).length > 0 ? (
-                filterContent(concepts).map(item => (
-                  <div key={item.id}>
-                    <div 
-                      className="rounded-xl p-4 pb-1.5 bg-[#19352F]/80 shadow-inner cursor-pointer hover:bg-[#19352F] transition-colors"
-                      onClick={() => handleSelectItem(item, "concept")}
-                    >
-                      <div className="flex items-center mb-3">
-                        <div className="flex items-center flex-1">
-                          <div className="relative mr-4">
-                            <div className="h-9 w-9 rounded-full overflow-hidden">
-                              {item.illustration ? (
-                                <img 
-                                  src={item.illustration} 
-                                  alt={item.title}
-                                  className="h-9 w-9 object-cover"
-                                />
-                              ) : (
-                                <div className="h-9 w-9 bg-[#356E61] flex items-center justify-center">
-                                  <span className="text-xs text-[#E9E7E2]">{item.title.charAt(0)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">{item.title}</h3>
-                            <p className="text-xs text-[#E9E7E2]/70 font-oxanium">{item.one_line}</p>
-                          </div>
-                        </div>
-                        
-                        <button className="h-9 w-9 rounded-full flex items-center justify-center ml-4 bg-[#E9E7E2]/75">
-                          <ArrowRight className="h-4 w-4 text-[#19352F]" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-[#E9E7E2]/70">
-                  {searchQuery ? "No concepts match your search" : "No concepts found"}
-                </div>
-              )}
-              
-              {loadingMore && activeTab === "concepts" && (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#E9E7E2]/70" />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Scrollable Content Area */}
+        {/* Using ScrollArea component, takes remaining space */}
+        <ScrollArea className="flex-1" viewportRef={scrollRef}>
+           {/* Added padding top */} 
+          <div className="pt-2 pb-6">
+            {(loading && !loadingMore) ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-[#CCFF23]" />
+              </div>
+            ) : currentContent.length > 0 ? (
+              currentContent.map(item => (
+                <ContentCard 
+                  key={`${activeTab}-${item.id}`} // Ensure key is unique across tabs
+                  item={item} 
+                  type={activeTab === 'classics' ? 'book' : activeTab === 'icons' ? 'icon' : 'concept'} 
+                />
+              ))
+            ) : !loading ? ( // Only show 'not found' if not loading initial data
+              <p className="text-center text-[#E9E7E2]/70 py-10">
+                No {activeTab} found{searchQuery ? ` matching "${searchQuery}"` : ""}.
+              </p>
+            ) : null }
+            
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <div className="flex justify-center py-4">
+                 <Loader2 className="h-6 w-6 animate-spin text-[#CCFF23]" />
+              </div>
+            )}
+            
+            {/* End of List Message */}
+            {!loading && !loadingMore && !currentTabHasMore && currentDataArray.length > 0 && (
+               <p className="text-center text-xs text-[#E9E7E2]/50 py-4">You've reached the end of the {activeTab}.</p>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
