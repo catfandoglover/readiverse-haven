@@ -184,7 +184,16 @@ const ChooseYourOwnCourse: React.FC = () => {
       console.log("Create course result:", result);
       
       if (result.success || result.duplicate) {
-        navigate(`/courses/${item.id}`); 
+        navigate(`/courses/${item.id}`, {
+          state: {
+            courseData: {
+              entryId: item.id,
+              entryType: type,
+              title: item.title || item.name,
+              description: item.about || item.one_line || "No description available.",
+            }
+          }
+        }); 
       } else {
          // Error toast is handled by createCourse
          setLoading(false); // Reset loading state on failure

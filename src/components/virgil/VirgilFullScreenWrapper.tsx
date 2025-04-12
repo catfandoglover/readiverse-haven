@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // Assuming course_id is in URL params
+import { useParams, useLocation } from 'react-router-dom'; // Assuming course_id is in URL params
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useVirgilChat } from '@/hooks/useVirgilChat';
 import { virgilConfig } from '@/config/virgilConfig';
@@ -10,6 +10,14 @@ import { VirgilInstanceType } from '@/types/virgil';
 import { fetchPromptByPurposeOrId } from '@/utils/promptUtils'; 
 import LoadingSpinner from '@/components/common/LoadingSpinner'; // Assume a loading component
 
+// *** ADDED: Define type for courseData from location state ***
+interface CourseDataState {
+  entryId: string;
+  entryType: 'book' | 'icon' | 'concept';
+  title: string;
+  description: string;
+}
+
 interface VirgilFullScreenWrapperProps {
   // Add any specific props needed, e.g., maybe course data is passed directly
 }
@@ -17,6 +25,9 @@ interface VirgilFullScreenWrapperProps {
 const VirgilFullScreenWrapper: React.FC<VirgilFullScreenWrapperProps> = (props) => {
   const { user } = useAuth();
   const { course_id } = useParams<{ course_id: string }>(); // Get course_id from route
+  // *** ADDED: Get location and courseData from state ***
+  const location = useLocation();
+  const courseData = location.state?.courseData as CourseDataState | undefined;
 
   const [systemPrompt, setSystemPrompt] = useState<string | null>(null);
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(true);
@@ -25,55 +36,31 @@ const VirgilFullScreenWrapper: React.FC<VirgilFullScreenWrapperProps> = (props) 
   const instanceType: VirgilInstanceType = 'COURSE_CHAT';
   const config = virgilConfig[instanceType];
 
-  // Fetch the system prompt using the utility
+  // *** REPLACED: useEffect to use courseData for dynamic prompt generation ***
   useEffect(() => {
-    let isMounted = true;
     setIsLoadingPrompt(true);
-    // Always use the fixed purpose for course creation prompt
-    if (config.promptSource === 'course_context') { 
-      // Fetch prompt using fixed purpose and context
-      fetchPromptByPurposeOrId({ 
-        purpose: 'course_creation', // *** CHANGED: Use fixed purpose ***
-        context: 'classroom' 
-      })
-        .then((promptData) => {
-          if (isMounted) {
-            const fetchedPrompt = promptData?.prompt;
-            // *** ADDED: Console log for verification ***
-            if (fetchedPrompt) {
-              console.log("Fetched Course Chat Prompt (start):", fetchedPrompt.substring(0, 100) + "...");
-            } else {
-              console.log("Course Chat Prompt: No specific prompt found for purpose 'course_creation', context 'classroom'. Using fallback.");
-            }
-            // Use fetched prompt or a fallback
-            setSystemPrompt(fetchedPrompt || `Default prompt for course chat.`);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching course system prompt:", err);
-          if (isMounted) {
-            // *** ADDED: Log fallback usage on error ***
-            console.log("Course Chat Prompt: Error fetching prompt. Using fallback.");
-            setSystemPrompt('Error loading prompt. Using default.');
-          }
-        })
-        .finally(() => {
-          if (isMounted) {
-            setIsLoadingPrompt(false);
-          }
-        });
+
+    const generateSystemPrompt = (data: CourseDataState): string => {
+      // More sophisticated prompt generation can be done here
+      return `You are an expert tutor discussing the ${data.entryType}: "${data.title}".\n\nKey information:\n${data.description}\n\nFocus your conversation on helping the user understand this specific topic. Guide them through the core ideas, nuances, and connections to other concepts or thinkers where relevant.`;
+    };
+
+    if (courseData) {
+      const dynamicPrompt = generateSystemPrompt(courseData);
+      console.log("Setting dynamic course prompt (start):", dynamicPrompt.substring(0, 150) + "...");
+      setSystemPrompt(dynamicPrompt);
     } else {
-       // This branch likely indicates a config issue if hit for COURSE_CHAT
-       console.error(`Invalid config promptSource '${config.promptSource}' for Course Chat wrapper`);
-       setSystemPrompt('Default course assistant prompt.'); 
-       setIsLoadingPrompt(false);
+      // Handle missing courseData - this shouldn't happen if navigation is correct
+      console.error("Course data missing in location state! Cannot generate specific prompt.");
+      // Set a generic fallback prompt or an error state
+      setSystemPrompt("Welcome to the course chat. Please ensure you've selected a course correctly."); 
     }
 
-    return () => { isMounted = false; };
-  // Dependency array no longer needs course_id for the fetch itself,
-  // but keep it if other logic depends on it, or simplify if not.
-  // Sticking with config.promptSource ensures it refetches if config changes.
-  }, [config.promptSource]);
+    setIsLoadingPrompt(false);
+
+  // Depend on courseData obtained from location state
+  // Note: course_id from params is used later for useVirgilChat context
+  }, [courseData]);
 
   const { 
     messages,
