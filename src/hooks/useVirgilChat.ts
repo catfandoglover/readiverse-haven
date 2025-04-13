@@ -43,6 +43,8 @@ export const useVirgilChat = ({
   isResumable = true,
 }: UseVirgilChatProps) => {
   const { aiService, conversationManager } = useServices();
+  console.log("[useVirgilChat] Hook initialized. conversationManager provided:", !!conversationManager); // Log manager status immediately
+
   // Use the UIMessage type (same as AIChatMessage) for state
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -55,8 +57,12 @@ export const useVirgilChat = ({
   const validStorageTable = storageTable as ConversationTableName;
 
   useEffect(() => {
+    console.log("[useVirgilChat] useEffect for loadConversation entered."); // Log effect entry
+
     const loadConversation = async () => {
+      console.log("[useVirgilChat] loadConversation async function running. conversationManager:", !!conversationManager, "userId:", userId); // Log initial state
       if (!conversationManager || !userId) {
+        console.log("[useVirgilChat] Exiting loadConversation early: conversationManager or userId missing."); // Log reason for early exit
         setIsLoadingHistory(false);
         return;
       }
@@ -85,12 +91,16 @@ export const useVirgilChat = ({
             typeof existingConvo.id === 'string' // Ensure id is a string
           ) {
             // Now safe to access messages and id
+            console.log("[useVirgilChat] Fetched existing conversation:", existingConvo); // Log fetched data
             loadedMessages = existingConvo.messages.map((dbMsg: DbChatMessage) => ({
               ...dbMsg,
-              id: uuidv4(),
+              id: uuidv4(), // Assign a new UUID for React key prop
             }));
             loadedConversationId = existingConvo.id;
-          } // else: No valid existing conversation found
+            console.log("[useVirgilChat] Mapped messages for UI:", loadedMessages); // Log mapped messages
+          } else {
+            console.log("[useVirgilChat] No valid existing conversation found or messages missing/invalid.");
+          }
         }
 
         if (loadedMessages.length === 0 && initialMessageOverride) {
@@ -116,7 +126,7 @@ export const useVirgilChat = ({
     };
     loadConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationManager, userId, validStorageTable, JSON.stringify(contextIdentifiers), conversationIdToLoad, isResumable, initialMessageOverride]);
+  }, [conversationManager, userId, validStorageTable, conversationIdToLoad, isResumable, initialMessageOverride]);
 
   const generateAudioForText = useCallback(async (text: string) => {
     if (!text) return;

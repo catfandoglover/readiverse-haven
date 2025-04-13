@@ -12,6 +12,8 @@ interface CourseData {
   description: string;
   progress?: number;
   isDNA?: boolean;
+  entryId?: string;
+  entryType?: 'book' | 'icon' | 'concept';
 }
 
 const ClassroomVirgilChat: React.FC = () => {
@@ -19,9 +21,10 @@ const ClassroomVirgilChat: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { course_id } = useParams<{ course_id: string }>();
   
   const courseDataFromState = location.state?.courseData as CourseData | undefined;
+  
+  const course_id = courseDataFromState?.id;
   
   const pageTitle = courseDataFromState?.title || "Course Chat";
   const initialDescription = courseDataFromState?.description || "Starting your lesson...";

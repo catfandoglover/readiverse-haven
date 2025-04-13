@@ -1,4 +1,5 @@
 #added as it caused issues with npm
+.env*
 pnpm-lock.yaml 
 # Logs
 logs

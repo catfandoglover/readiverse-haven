@@ -110,14 +110,22 @@ export class ConversationManager {
     const last_message_preview = this.getLastMessagePreview(initialMessages);
 
     // No TableInsert type needed
-    const newConversationData = {
+    const newConversationData: Record<string, any> = { // Use Record<string, any> for flexibility
       user_id: userId,
       messages: initialMessages, // No casting needed
       created_at: now,
       updated_at: now,
-      last_message_preview: last_message_preview,
       ...metadata,
     };
+    
+    // Conditionally remove last_message_preview if the table doesn't support it
+    // (Or simply remove it always if no tables use it anymore)
+    if (tableName === 'virgil_course_conversations' || tableName === 'virgil_exam_conversations' /* Add other tables without the column */) {
+        delete newConversationData.last_message_preview;
+    } else {
+        // Only calculate and add if the table supports it
+        newConversationData.last_message_preview = this.getLastMessagePreview(initialMessages);
+    }
 
     const { data, error } = await this.supabase
       .from(tableName)
