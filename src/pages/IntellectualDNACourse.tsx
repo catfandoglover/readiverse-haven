@@ -338,25 +338,19 @@ const IntellectualDNACourse: React.FC = () => {
       let analysisThinkerNameKey = '';
       let analysisClassicKey = '';
       let analysisRationaleKey = '';
-      let analysisDbIdKey = '';
-      let analysisClassicDbIdKey = '';
       
       if (tab === "kindred") {
         analysisThinkerNameKey = `${domainId}_kindred_spirit_${i}`;
         analysisClassicKey = `${domainId}_kindred_spirit_${i}_classic`;
         analysisRationaleKey = `${domainId}_kindred_spirit_${i}_rationale`;
-        analysisDbIdKey = `${domainId}_kindred_spirit_${i}_db_id`;
-        analysisClassicDbIdKey = `${domainId}_kindred_spirit_${i}_classic_db_id`;
       } else {
         analysisThinkerNameKey = `${domainId}_challenging_voice_${i}`;
         analysisClassicKey = `${domainId}_challenging_voice_${i}_classic`;
         analysisRationaleKey = `${domainId}_challenging_voice_${i}_rationale`;
-        analysisDbIdKey = `${domainId}_challenging_voice_${i}_db_id`;
-        analysisClassicDbIdKey = `${domainId}_challenging_voice_${i}_classic_db_id`;
       }
 
-      const matchedEntity = matchedEntitiesMap[analysisDbIdKey];
-      const matchedClassicEntity = matchedEntitiesMap[analysisClassicDbIdKey];
+      const matchedEntity = matchedEntitiesMap[analysisThinkerNameKey];
+      const matchedClassicEntity = matchedEntitiesMap[analysisClassicKey];
 
       let title = domainAnalysis[analysisThinkerNameKey] || `Thinker ${i}`;
       let subtitle = domainAnalysis[analysisClassicKey] || `Classic Work`;
@@ -379,17 +373,20 @@ const IntellectualDNACourse: React.FC = () => {
           subtitle = book.author || subtitle;
         } else {
            title = matchedEntity.matched_name || title;
-           toast.warning(`Details missing for ${title}`);
+           if (type) {
+               toast.warning(`Details missing for ${type} ${title}`);
+           }
         }
       } else {
-         console.warn(`No matched entity found for column: ${analysisDbIdKey}`);
+         console.warn(`No matched entity found for column: ${analysisThinkerNameKey}`);
          title = domainAnalysis[analysisThinkerNameKey] || `Unlinked Thinker ${i}`;
       }
 
       if (matchedClassicEntity && matchedClassicEntity.type === 'book' && fetchedBooks[matchedClassicEntity.matched_id]) {
-         subtitle = fetchedBooks[matchedClassicEntity.matched_id].title || subtitle;
-         if (fetchedBooks[matchedClassicEntity.matched_id].author) {
-            subtitle += ` (${fetchedBooks[matchedClassicEntity.matched_id].author})`;
+         const classicBook = fetchedBooks[matchedClassicEntity.matched_id];
+         subtitle = classicBook.title || subtitle;
+         if (classicBook.author) {
+            subtitle += ` (${classicBook.author})`;
          }
       } else {
          subtitle = domainAnalysis[analysisClassicKey] || subtitle;
