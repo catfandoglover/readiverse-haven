@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Check, Lock, ArrowRight, Hexagon, SlidersHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { useCourses } from "@/hooks/useCourses";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -62,9 +63,11 @@ interface DnaAnalysisResultsMatchedRow {
 const IntellectualDNACourse: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { createCourse } = useCourses();
   const [domainFilter, setDomainFilter] = useState<string>("all");
   const [domainAnalysis, setDomainAnalysis] = useState<DNAAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingCourseId, setIsCreatingCourseId] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>({});
   
   const [matchedEntitiesMap, setMatchedEntitiesMap] = useState<Record<string, MatchedEntity>>({});
@@ -414,82 +417,96 @@ const IntellectualDNACourse: React.FC = () => {
     return resources;
   }, [isLoading, domainAnalysis, matchedEntitiesMap, fetchedIcons, fetchedBooks]);
 
-  const handleResourceClick = (resource: Resource) => {
-    if (resource.matched_id && resource.type) {
-       console.log(`Navigating to course for ${resource.type}: ${resource.matched_id}`);
-       navigate(`/courses/${resource.matched_id}`, {
-         state: {
-           courseData: {
-             entryId: resource.matched_id,
-             entryType: resource.type,
-             title: resource.title,
-             description: resource.description,
-           }
-         }
-       });
-    } else {
-       toast.info("This item is not yet linked to a course.");
-       console.warn("Clicked resource has no matched_id or type:", resource);
+  const handleResourceClick = async (resource: Resource) => {
+    if (resource.matched_id && resource.type && !isCreatingCourseId) {
+      setIsCreatingCourseId(resource.id);
+      try {
+        console.log(`Attempting to create course for ${resource.type}: ${resource.matched_id}`);
+        const result = await createCourse(resource.matched_id);
+        console.log("Create course result:", result);
+
+        if (result.success || result.duplicate) {
+          navigate('/classroom-virgil-chat', {
+            state: {
+              courseData: {
+                id: resource.matched_id,
+                title: resource.title,
+                description: resource.description,
+                image: resource.image,
+                entryType: resource.type,
+                isDNA: true,
+                completed: false,
+                progress: 0,
+              }
+            }
+          });
+        } else {
+          console.error("Failed to create course via hook.");
+        }
+      } catch (error) {
+        console.error("Error creating or navigating to course:", error);
+        toast.error("Failed to start the course session.");
+      } finally {
+        setIsCreatingCourseId(null);
+      }
+    } else if (!resource.matched_id || !resource.type) {
+      toast.info("This item is not yet linked to a course.");
+      console.warn("Clicked resource has no matched_id or type:", resource);
     }
   };
 
   const ResourceItem = ({ resource, domainId }: { resource: Resource, domainId: string }) => {
-    const isClickable = !!resource.matched_id && !!resource.type;
-    
+    const hasData = !!resource.matched_id && !!resource.type;
+    const isClickable = hasData && (resource.status === 'active' || resource.status === 'completed');
+    const isLoadingThis = isCreatingCourseId === resource.id;
+
     return (
-      <div>
-        <div 
-          className={cn(
-            "rounded-xl p-4 pb-3 bg-[#19352F]/80 shadow-inner transition-colors", 
-            isClickable ? "cursor-pointer hover:bg-[#19352F]" : "cursor-default opacity-80"
-          )}
-          onClick={isClickable ? () => handleResourceClick(resource) : undefined}
-        >
-          <div className="flex items-center mb-3">
-            <div className="flex items-center flex-1 min-w-0">
-              <div className="relative mr-4 flex-shrink-0">
-                 {resource.type === 'icon' ? (
-                    <div className="h-9 w-9 relative">
-                      <Hexagon className="h-full w-full text-[#356E61]/50" strokeWidth={1} />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <img 
-                          src={resource.image} 
-                          alt={resource.title}
-                          className="h-6 w-6 object-cover"
-                          style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}
-                          loading="lazy"
-                        />
-                      </div>
-                    </div>
-                 ) : (
-                   <div className="h-12 w-9 rounded-sm overflow-hidden bg-[#0D1C1A]">
-                  <img 
-                    src={resource.image} 
-                    alt={resource.title}
-                       className="h-full w-full object-cover"
-                       loading="lazy"
-                  />
-                </div>
-                 )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold truncate">{resource.title}</h3>
-                <p className="text-xs text-[#E9E7E2]/70 font-oxanium truncate">{resource.subtitle}</p>
-              </div>
-            </div>
-            
-            <button 
-              className={cn(
-                 "h-9 w-9 rounded-full flex items-center justify-center ml-4 flex-shrink-0",
-                 isClickable ? "bg-[#E9E7E2]/75" : "bg-[#E9E7E2]/30 cursor-not-allowed"
-              )}
-              disabled={!isClickable}
-              aria-label={isClickable ? `Go to course for ${resource.title}` : `${resource.title} course not available`}
-            >
-              <ArrowRight className={cn("h-4 w-4", isClickable ? "text-[#19352F]" : "text-[#19352F]/50")} />
-            </button>
-          </div>
+      <div
+        className={cn(
+          "flex items-center p-4 mb-4 rounded-xl bg-[#19352F]/80 transition-colors",
+          isClickable && !isLoadingThis && "hover:bg-[#19352F] cursor-pointer",
+          isLoadingThis && "opacity-70 cursor-wait",
+          !isClickable && !isLoadingThis && "opacity-50 cursor-default"
+        )}
+        onClick={isClickable && !isLoadingThis ? () => handleResourceClick(resource) : undefined}
+        aria-label={resource.title}
+      >
+        <div className="flex-1 min-w-0 mr-3">
+          <h3 className="text-[#E9E7E2] font-baskerville text-base truncate">
+            {resource.title}
+          </h3>
+          <p className="text-[#E9E7E2]/70 text-sm truncate mt-0.5">
+            {resource.subtitle}
+          </p>
         </div>
+
+        {(resource.type === 'book' && resource.image) ? (
+          <div className="flex-shrink-0 h-16 w-12 rounded-sm overflow-hidden bg-[#0D1C1A]">
+            <img 
+              src={resource.image} 
+              alt={resource.title || 'Book cover'} 
+              className="h-full w-full object-cover"
+              loading="lazy" 
+            />
+          </div>
+        ) : (resource.type === 'icon' && resource.image) ? (
+          <div className="flex-shrink-0 h-12 w-12 relative">
+            <Hexagon className="h-full w-full text-[#356E61]" strokeWidth={1.5} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img 
+                src={resource.image} 
+                alt={resource.title || 'Illustration'} 
+                className="h-8 w-8 object-cover"
+                style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}
+                loading="lazy" 
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center bg-[#0D1C1A] rounded-md">
+            <ArrowRight className="h-6 w-6 text-[#356E61]"/>
+          </div>
+        )}
       </div>
     );
   };
