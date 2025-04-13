@@ -21,12 +21,15 @@ const ClassroomVirgilChat: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { course_id: courseIdFromUrl } = useParams<{ course_id: string }>();
   
   const courseDataFromState = location.state?.courseData as CourseData | undefined;
   
-  const course_id = courseDataFromState?.id;
+  const course_id = courseDataFromState?.id || courseIdFromUrl;
   
-  const pageTitle = courseDataFromState?.title || "Course Chat";
+  console.log("[ClassroomVirgilChat] Component rendering. ID from state:", courseDataFromState?.id, "ID from URL:", courseIdFromUrl, "Final course_id:", course_id);
+  
+  const pageTitle = courseDataFromState?.title || (course_id ? "Course Chat" : "Loading Chat...");
   const initialDescription = courseDataFromState?.description || "Starting your lesson...";
   const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'student';
   const initialChatMessage = `Welcome, ${userName}! Ready for today's lesson on ${pageTitle}?`;
@@ -94,7 +97,7 @@ const ClassroomVirgilChat: React.FC = () => {
           </p>
         </div>
         
-        {state === 'chat' && (
+        {state === 'chat' && course_id && (
           <div className="absolute inset-0 flex flex-col pt-6">
             <VirgilFullScreenChat 
               variant="classroom"

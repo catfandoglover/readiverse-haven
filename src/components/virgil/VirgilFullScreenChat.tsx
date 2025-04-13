@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useVirgilChat } from '@/hooks/useVirgilChat';
 import VirgilChatUI from './VirgilChatUI';
@@ -34,14 +34,18 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
                                         : 'GENERAL_CHAT';
   const config = virgilConfig[instanceType];
 
-  const contextIdentifiers: Record<string, any> = {};
-  if (courseIdFromParams) {
-    contextIdentifiers.course_id = courseIdFromParams;
-  } else if (examId) {
-    contextIdentifiers.exam_id = examId; 
-  } else if (promptId) {
-    contextIdentifiers.prompt_id = promptId;
-  }
+  // Memoize contextIdentifiers to stabilize its reference
+  const contextIdentifiers = useMemo(() => {
+    const identifiers: Record<string, any> = {};
+    if (courseIdFromParams) {
+      identifiers.course_id = courseIdFromParams;
+    } else if (examId) {
+      identifiers.exam_id = examId; 
+    } else if (promptId) {
+      identifiers.prompt_id = promptId;
+    }
+    return identifiers;
+  }, [courseIdFromParams, examId, promptId]);
 
   const chatVariantKey: ChatVariant = variant === 'classroom' ? 'classroom' 
                                     : variant === 'exam' ? 'examroom'
@@ -124,6 +128,9 @@ const VirgilFullScreenChat: React.FC<VirgilFullScreenChatProps> = ({
     contextIdentifiers,
     isResumable: config.isResumable,
     initialMessageOverride: initialMessage,
+    courseId: courseIdFromParams,
+    examId: examId,
+    promptId: promptId,
   });
 
   if (isLoadingPrompt || !systemPrompt || isLoadingHistory) {

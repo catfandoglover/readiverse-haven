@@ -26,6 +26,9 @@ interface UseVirgilChatProps {
   initialMessageOverride?: string;
   conversationIdToLoad?: string;
   isResumable?: boolean;
+  courseId?: string;
+  examId?: string;
+  promptId?: string;
 }
 
 // Helper function to strip UI/AI-specific fields for saving to DB
@@ -37,10 +40,13 @@ export const useVirgilChat = ({
   userId,
   systemPrompt,
   storageTable,
-  contextIdentifiers,
+  contextIdentifiers: contextIdentifiersFromProps, // Rename prop to avoid conflict
   initialMessageOverride,
   conversationIdToLoad,
   isResumable = true,
+  courseId,
+  examId,
+  promptId,
 }: UseVirgilChatProps) => {
   const { aiService, conversationManager } = useServices();
   console.log("[useVirgilChat] Hook initialized. conversationManager provided:", !!conversationManager); // Log manager status immediately
@@ -57,49 +63,71 @@ export const useVirgilChat = ({
   const validStorageTable = storageTable as ConversationTableName;
 
   useEffect(() => {
-    console.log("[useVirgilChat] useEffect for loadConversation entered."); // Log effect entry
+    console.log("[useVirgilChat] useEffect for loadConversation entered. Deps:", { userId, courseId, examId, promptId }); // Log deps
 
     const loadConversation = async () => {
-      console.log("[useVirgilChat] loadConversation async function running. conversationManager:", !!conversationManager, "userId:", userId); // Log initial state
+      console.log("[useVirgilChat] loadConversation async function running. userId:", userId); 
       if (!conversationManager || !userId) {
-        console.log("[useVirgilChat] Exiting loadConversation early: conversationManager or userId missing."); // Log reason for early exit
+        console.log("[useVirgilChat] Exiting loadConversation early: conversationManager or userId missing."); 
         setIsLoadingHistory(false);
         return;
       }
       setIsLoadingHistory(true);
-      let loadedMessages: UIMessage[] = []; // Use UIMessage here
+      let loadedMessages: UIMessage[] = []; 
       let loadedConversationId: string | null = null;
 
+      // Reconstruct contextIdentifiers INSIDE the effect based on current props
+      const currentContextIdentifiers: Record<string, any> = {};
+      if (courseId) currentContextIdentifiers.course_id = courseId;
+      else if (examId) currentContextIdentifiers.exam_id = examId;
+      else if (promptId) currentContextIdentifiers.prompt_id = promptId;
+      
       try {
+        if (!userId) {
+            console.warn("[useVirgilChat] userId not available yet in loadConversation (should not happen due to outer check).");
+            setIsLoadingHistory(false); 
+            return; 
+        }
+
         if (conversationIdToLoad) {
           // TODO: (Low Priority) Implement fetch by specific ID
         } else if (isResumable) {
-          const { data: existingConvo, error } = await conversationManager.fetchConversation(
-            validStorageTable,
-            userId,
-            contextIdentifiers
-          );
-          if (error) {
-            toast.error('Error loading previous conversation history.');
-          } else if (
-            existingConvo &&
-            // Type guard: Check if messages property exists and is an array
-            'messages' in existingConvo && 
-            Array.isArray(existingConvo.messages) &&
-            // Check if id property exists (should exist on all table rows)
-            'id' in existingConvo &&
-            typeof existingConvo.id === 'string' // Ensure id is a string
-          ) {
-            // Now safe to access messages and id
-            console.log("[useVirgilChat] Fetched existing conversation:", existingConvo); // Log fetched data
-            loadedMessages = existingConvo.messages.map((dbMsg: DbChatMessage) => ({
-              ...dbMsg,
-              id: uuidv4(), // Assign a new UUID for React key prop
-            }));
-            loadedConversationId = existingConvo.id;
-            console.log("[useVirgilChat] Mapped messages for UI:", loadedMessages); // Log mapped messages
+          const requiredKey = storageTable === 'virgil_course_conversations' ? 'course_id' 
+                              : storageTable === 'virgil_exam_conversations' ? 'exam_id' 
+                              : storageTable === 'virgil_reader_conversations' ? 'book_id' 
+                              : 'prompt_id'; 
+
+          // Use the locally reconstructed contextIdentifiers
+          if (currentContextIdentifiers && currentContextIdentifiers[requiredKey]) {
+            console.log(`[useVirgilChat] Calling fetchConversation for ${requiredKey}:`, currentContextIdentifiers[requiredKey], "Full context:", currentContextIdentifiers);
+            
+            const { data: existingConvo, error } = await conversationManager.fetchConversation(
+              validStorageTable,
+              userId,
+              currentContextIdentifiers // Use the locally reconstructed object
+            );
+            
+            if (error) {
+              toast.error('Error loading previous conversation history.');
+            } else if (
+              existingConvo &&
+              'messages' in existingConvo && 
+              Array.isArray(existingConvo.messages) &&
+              'id' in existingConvo &&
+              typeof existingConvo.id === 'string' 
+            ) {
+              console.log("[useVirgilChat] Fetched existing conversation:", existingConvo); 
+              loadedMessages = existingConvo.messages.map((dbMsg: DbChatMessage) => ({
+                ...dbMsg,
+                id: uuidv4(), 
+              }));
+              loadedConversationId = existingConvo.id;
+              console.log("[useVirgilChat] Mapped messages for UI:", loadedMessages); 
+            } else {
+              console.log("[useVirgilChat] No valid existing conversation found or messages missing/invalid.");
+            }
           } else {
-            console.log("[useVirgilChat] No valid existing conversation found or messages missing/invalid.");
+            console.warn(`[useVirgilChat] Required context key '${requiredKey}' missing or invalid in currentContextIdentifiers. Skipping fetch.`, currentContextIdentifiers);
           }
         }
 
@@ -125,8 +153,8 @@ export const useVirgilChat = ({
       }
     };
     loadConversation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationManager, userId, validStorageTable, conversationIdToLoad, isResumable, initialMessageOverride]);
+  // Update dependency array to use direct IDs
+  }, [conversationManager, userId, validStorageTable, courseId, examId, promptId, conversationIdToLoad, isResumable, initialMessageOverride]);
 
   const generateAudioForText = useCallback(async (text: string) => {
     if (!text) return;
@@ -166,7 +194,7 @@ export const useVirgilChat = ({
           validStorageTable,
           userId,
           messagesToSave,
-          contextIdentifiers
+          contextIdentifiersFromProps
         );
         if (error) throw error;
         // Type guard: Check if newConvo and its id exist before setting state
@@ -181,7 +209,7 @@ export const useVirgilChat = ({
       console.error('Error saving conversation:', error);
       toast.error('Failed to save conversation progress.');
     }
-  }, [conversationManager, userId, validStorageTable, currentConversationId, contextIdentifiers]);
+  }, [conversationManager, userId, validStorageTable, currentConversationId, contextIdentifiersFromProps]);
 
   const processTextMessage = useCallback(async (userMessageContent: string) => {
     if (!userMessageContent.trim() || isProcessing || !userId) return;
