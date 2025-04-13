@@ -423,17 +423,13 @@ const IntellectualDNACourse: React.FC = () => {
         console.log("Create course result:", result);
 
         if (result.success || result.duplicate) {
-          navigate('/classroom-virgil-chat', {
+          navigate(`/courses/${resource.matched_id}`, {
             state: {
               courseData: {
-                id: resource.matched_id,
+                entryId: resource.matched_id,
+                entryType: resource.type,
                 title: resource.title,
                 description: resource.description,
-                image: resource.image,
-                entryType: resource.type,
-                isDNA: true,
-                completed: false,
-                progress: 0,
               }
             }
           });
