@@ -9,8 +9,10 @@ import audioRecordingService from '@/services/AudioRecordingService';
 import audioTranscriptionService from '@/services/AudioTranscriptionService';
 import { stopAllAudio } from '@/services/AudioContext';
 import { useServices } from '@/contexts/ServicesContext';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { Database } from '@/types/supabase'; // Import Database type for table names
+import { calculateAndStoreProgress } from '@/services/course_progress';
 
 // Internal type for UI state matches AIChatMessage from chat.d.ts
 type UIMessage = AIChatMessage;
@@ -49,6 +51,7 @@ export const useVirgilChat = ({
   promptId,
 }: UseVirgilChatProps) => {
   const { aiService, conversationManager } = useServices();
+  const { supabase } = useAuth();
   console.log("[useVirgilChat] Hook initialized. conversationManager provided:", !!conversationManager); // Log manager status immediately
 
   // Use the UIMessage type (same as AIChatMessage) for state
@@ -205,11 +208,60 @@ export const useVirgilChat = ({
           toast.error('Error saving conversation: Invalid data received.');
         }
       }
+
+      // Only calculate progress for course conversations
+      if (validStorageTable === 'virgil_course_conversations' && courseId && currentConversationId) {
+        // Get API key from environment
+        const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+        console.log(`[Progress Debug] About to calculate progress for conversation ${currentConversationId} in course ${courseId}`);
+        console.log(`[Progress Debug] API Key available: ${!!apiKey}, Supabase available: ${!!supabase}`);
+        
+        if (apiKey && supabase) {
+          try {
+            console.log(`[Progress Debug] Starting progress calculation with ${currentUIMessages.length} messages`);
+            console.log(`[Progress Debug] Last message from: ${currentUIMessages[currentUIMessages.length-1]?.role}`);
+            
+            await calculateAndStoreProgress(
+              mapToDbMessages(currentUIMessages),
+              apiKey,
+              currentConversationId,
+              validStorageTable,
+              supabase
+            );
+            
+            console.log(`[Progress Debug] Progress calculation completed successfully`);
+            
+            // Fetch and show the updated progress
+            try {
+              const { data } = await supabase
+                .from(validStorageTable)
+                .select('progress_percentage')
+                .eq('id', currentConversationId)
+                .single();
+              
+              console.log(`[Progress Debug] Current progress: ${data?.progress_percentage}%`);
+            } catch (fetchErr) {
+              console.log('[Progress Debug] Could not fetch updated progress:', fetchErr);
+            }
+          } catch (progressError) {
+            console.error('[Progress Debug] Error calculating course progress:', progressError);
+            // Non-blocking - don't throw or show toast
+          }
+        } else {
+          console.log('[Progress Debug] Skipping progress calculation - missing API key or Supabase client');
+        }
+      } else {
+        console.log(`[Progress Debug] Progress calculation skipped:`, {
+          isCoursesTable: validStorageTable === 'virgil_course_conversations',
+          hasCourseId: !!courseId,
+          hasConvoId: !!currentConversationId
+        });
+      }
     } catch (error) {
       console.error('Error saving conversation:', error);
       toast.error('Failed to save conversation progress.');
     }
-  }, [conversationManager, userId, validStorageTable, currentConversationId, contextIdentifiersFromProps]);
+  }, [conversationManager, userId, validStorageTable, currentConversationId, contextIdentifiersFromProps, courseId, supabase]);
 
   const processTextMessage = useCallback(async (userMessageContent: string) => {
     if (!userMessageContent.trim() || isProcessing || !userId) return;
