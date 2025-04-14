@@ -411,7 +411,8 @@ const IntellectualDNACourse: React.FC = () => {
       });
     }
     
-    return resources;
+    // Filter resources at the end
+    return resources.filter(resource => !!resource.matched_id && !!resource.type);
   }, [isLoading, domainAnalysis, matchedEntitiesMap, fetchedIcons, fetchedBooks]);
 
   const handleResourceClick = async (resource: Resource) => {
@@ -511,7 +512,7 @@ const IntellectualDNACourse: React.FC = () => {
     const resources = activeTab === "kindred" ? kindredResources : challengingResources;
     
     return (
-      <div id={`domain-${domain.id}`} className="min-h-screen pt-6 pb-10" style={{ backgroundColor: domain.color }}>
+      <div id={`domain-${domain.id}`} className="pt-6 pb-20" style={{ backgroundColor: domain.color }}>
         <div className="px-6">
           <h1 className="font-libre-baskerville font-bold uppercase text-[#E9E7E2] text-base mb-1">{domain.title}</h1>
           <p className="font-baskerville text-[#E9E7E2] mb-4 opacity-[0.35] text-lg">{domain.subtitle}</p>
@@ -630,9 +631,15 @@ const IntellectualDNACourse: React.FC = () => {
         )}
         {!isLoading && domainAnalysis && (
           filteredDomains.length > 0 ? (
-            filteredDomains.map(domain => (
-              <DomainSection key={domain.id} domain={domain} />
-            ))
+            filteredDomains.map(domain => {
+              const hasKindred = getResourcesForTab(domain.id, "kindred").length > 0;
+              const hasChallenging = getResourcesForTab(domain.id, "challenging").length > 0;
+              
+              if (hasKindred || hasChallenging) {
+                return <DomainSection key={domain.id} domain={domain} />;
+              }
+              return null;
+            })
           ) : (
             <div className="p-6 text-center">
               <p>No domains match your filter criteria.</p>
