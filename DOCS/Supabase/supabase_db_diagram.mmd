@@ -720,6 +720,19 @@ erDiagram
         int progress_percentage "0-100"
     }
 
+
+    virgil_exam_conversations {
+        uuid id PK
+        uuid user_id FK
+        uuid course_id
+        jsonb messages
+        timestamptz created_at
+        timestamptz updated_at
+        boolean status
+        integer badge_level
+    }
+
+
     virgil_conversations {
         uuid id PK
         timestamptz created_at

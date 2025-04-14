@@ -15,6 +15,7 @@ import {
 import VirgilFullScreenChat from '@/components/virgil/VirgilFullScreenChat';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
+import { useVirgilNavigationPrompt } from "@/hooks/useVirgilNavigationPrompt";
 
 interface ExamData {
   id: string;
@@ -32,11 +33,7 @@ const ExamVirgilChat: React.FC = () => {
   const { user } = useAuth();
   
   const examData = location.state?.examData as ExamData;
-  
-  // Initial message based on exam data
-  const initialMessage = examData?.isRetake
-    ? `Welcome back, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Let's retake the ${examData?.title || 'philosophy'} exam.`
-    : `Welcome, ${user?.Account?.Name?.split(' ')[0] || 'student'}! Ready to test your knowledge on ${examData?.title || 'philosophy'}?`;
+  const examId = examData?.id;
 
   // Initial animation timing
   useEffect(() => {
@@ -115,8 +112,8 @@ const ExamVirgilChat: React.FC = () => {
         {state === 'chat' && (
           <div className="absolute inset-0 flex flex-col pt-6">
             <VirgilFullScreenChat 
-              variant="examroom"
-              initialMessage={initialMessage}
+              variant="exam"
+              contextId={examId}
             />
           </div>
         )}
