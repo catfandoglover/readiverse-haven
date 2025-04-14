@@ -450,7 +450,7 @@ const IntellectualDNACourse: React.FC = () => {
 
   const ResourceItem = ({ resource, domainId }: { resource: Resource, domainId: string }) => {
     const hasData = !!resource.matched_id && !!resource.type;
-    const isClickable = hasData && (resource.status === 'active' || resource.status === 'completed');
+    const isClickable = hasData;
     const isLoadingThis = isCreatingCourseId === resource.id;
 
     return (
