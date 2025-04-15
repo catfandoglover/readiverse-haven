@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, ArrowRight, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { ProgressDisplay } from "@/components/reader/ProgressDisplay";
 import { useProfileData } from "@/contexts/ProfileDataContext";
-import { getThinkerImageByParams } from "@/utils/thinkerImages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +22,6 @@ const BecomeWhoYouAre: React.FC = () => {
   const { user } = useAuth();
   const { dnaAnalysisData, isLoading, getIconByName } = useProfileData();
   const [domainFilter, setDomainFilter] = useState<string | undefined>(undefined);
-  const [resourceImages, setResourceImages] = useState<Record<string, string>>({});
   
   const domains = [
     {
@@ -106,44 +103,6 @@ const BecomeWhoYouAre: React.FC = () => {
     }
   };
   
-  const getIconUrl = (domainId: string, tabType: "kindred" | "challenging", index: number): string => {
-    const imageKey = `${domainId}_${tabType}_${index}`;
-    return resourceImages[imageKey] || "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
-  };
-  
-  const loadResourceImages = async () => {
-    if (!dnaAnalysisData || !dnaAnalysisData.assessment_id) return;
-    
-    try {
-      const newImages: Record<string, string> = {};
-      
-      for (const domain of domains) {
-        for (const type of ['kindred', 'challenging'] as const) {
-          for (let i = 1; i <= 5; i++) {
-            const key = `${domain.id}_${type}_${i}`;
-            const imageUrl = await getThinkerImageByParams(
-              dnaAnalysisData.assessment_id,
-              domain.id,
-              type,
-              i
-            );
-            newImages[key] = imageUrl;
-          }
-        }
-      }
-      
-      setResourceImages(newImages);
-    } catch (err) {
-      console.error('Error loading resource images:', err);
-    }
-  };
-  
-  useEffect(() => {
-    if (!isLoading && dnaAnalysisData && dnaAnalysisData.assessment_id) {
-      loadResourceImages();
-    }
-  }, [isLoading, dnaAnalysisData]);
-  
   const getResourcesForTab = (domainId: string, tab: "kindred" | "challenging") => {
     if (isLoading || !dnaAnalysisData) {
       return Array(5).fill({
@@ -180,7 +139,8 @@ const BecomeWhoYouAre: React.FC = () => {
         dbIdKey = `${domainId}_challenging_voice_${i}_db_id`;
       }
       
-      const title = dnaAnalysisData[resourceKey as keyof DNAAnalysisResult] || `THINKER ${i}`;
+      const thinkerName = dnaAnalysisData[resourceKey as keyof DNAAnalysisResult];
+      const title = thinkerName || `THINKER ${i}`;
       const subtitle = dnaAnalysisData[classicKey as keyof DNAAnalysisResult] || `CLASSIC WORK`;
       const rationale = dnaAnalysisData[rationaleKey as keyof DNAAnalysisResult];
       
@@ -189,11 +149,9 @@ const BecomeWhoYouAre: React.FC = () => {
       else if (i === 2) status = "active";
       else status = "locked";
       
-      const image = getIconUrl(domainId, tab, i);
-      
       resources.push({
         id: `resource-${i}`,
-        image,
+        thinkerName: thinkerName,
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
         description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
@@ -206,7 +164,9 @@ const BecomeWhoYouAre: React.FC = () => {
     return resources;
   };
   
-  const ResourceItem = ({ resource, domainId }: { resource: any, domainId: string }) => {
+  const ResourceItem = ({ resource }: { resource: any }) => {
+    const imageUrl = getIconByName(resource.thinkerName);
+  
     return (
       <div>
         <div 
@@ -217,7 +177,7 @@ const BecomeWhoYouAre: React.FC = () => {
               <div className="relative mr-4">
                 <div className="h-9 w-9 rounded-full overflow-hidden">
                   <img 
-                    src={resource.image} 
+                    src={imageUrl}
                     alt={resource.title}
                     className="h-9 w-9 object-cover"
                   />
@@ -240,7 +200,6 @@ const BecomeWhoYouAre: React.FC = () => {
             className="mb-3" 
           />
         </div>
-        {/* Rationale displayed underneath each resource */}
         <div className="px-4 py-2 text-sm text-[#E9E7E2]/70 font-oxanium mb-4">
           {resource.rationale}
         </div>
@@ -302,7 +261,7 @@ const BecomeWhoYouAre: React.FC = () => {
           
           <div className="space-y-2 mt-8">
             {resources.map((resource, idx) => (
-              <ResourceItem key={`${domain.id}-${activeTab}-${idx}`} resource={resource} domainId={domain.id} />
+              <ResourceItem key={`${domain.id}-${activeTab}-${idx}`} resource={resource} />
             ))}
           </div>
         </div>

@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getMatchedThinkerImage } from '@/utils/thinkerImages';
 
-// Default fallback for icon images
-const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzNjI4OTkwLCJleHAiOjg2NTc0MzU0MjU5MH0.iC8ooiUUENlvy-6ZtRexi_3jIJS5lBy2Y5FnUM82p9o";
+// Updated fallback icon URL
+const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0NzA4MzkyLCJleHAiOjg4MTQ0NjIxOTkyfQ.j00YuzyHMx4mcoOa9Sye0Vg2yssKfa4a3xSXJSszKHM";
 
 // Define context type
 type ProfileDataContextType = {
@@ -32,6 +32,80 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
   const [error, setError] = useState<Error | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>({});
   
+  // Define fetchAndCacheThinkerIcons using dna_analysis_results_matched
+  const fetchAndCacheThinkerIcons = useCallback(async (dnaData: any) => {
+    const assessmentId = dnaData?.assessment_id; // Get assessment_id from the main results
+    if (!assessmentId) {
+      console.log("No assessment_id found in dnaData, cannot fetch matched icons.");
+      setThinkerIcons({});
+      return;
+    }
+    
+    console.log(`Fetching matched icon results for assessment ID: ${assessmentId}`);
+    try {
+      // 1. Get all icon matches for this assessment
+      const { data: matchedIcons, error: matchError } = await supabase
+        .from('dna_analysis_results_matched')
+        .select('matched_id, dna_analysis_name') // Get the icon UUID and the name stored during matching
+        .eq('assessment_id', assessmentId)
+        .eq('type', 'icons'); // Ensure we only get icon matches
+
+      if (matchError) {
+        console.error('Error fetching matched icon results:', matchError);
+        setThinkerIcons({});
+        return;
+      }
+
+      if (!matchedIcons || matchedIcons.length === 0) {
+        console.log("No matched icons found for this assessment.");
+        setThinkerIcons({});
+        return;
+      }
+
+      // 2. Extract unique icon IDs
+      const uniqueIconIds = Array.from(new Set(matchedIcons.map(m => m.matched_id).filter(id => id != null))) as string[];
+
+      if (uniqueIconIds.length === 0) {
+        console.log("No valid unique icon IDs found in matched results.");
+        setThinkerIcons({});
+        return;
+      }
+      console.log("Unique matched icon IDs:", uniqueIconIds);
+
+      // 3. Fetch illustrations for these unique IDs
+      const { data: iconsData, error: iconsError } = await supabase
+        .from('icons')
+        .select('id, illustration') // Fetch ID and illustration
+        .in('id', uniqueIconIds);
+
+      if (iconsError) {
+        console.error('Error fetching icon illustrations:', iconsError);
+        // Proceed without illustrations, will use fallback
+      }
+
+      // Create a map of ID -> illustration for easy lookup
+      const illustrationMap = new Map(iconsData?.map(icon => [icon.id, icon.illustration as string]) || []);
+      console.log("Illustration map created with size:", illustrationMap.size);
+
+      // 4. Build the final state map: simpleName -> illustration URL
+      const finalIconMap: Record<string, string> = {};
+      matchedIcons.forEach(match => {
+        if (match.dna_analysis_name && match.matched_id) {
+          const simpleName = match.dna_analysis_name.split(' - ')[0].trim();
+          const illustration = illustrationMap.get(match.matched_id);
+          finalIconMap[simpleName] = illustration || FALLBACK_ICON; // Use fallback if illustration missing
+        }
+      });
+
+      console.log("Populated thinkerIcons map using matched results:", finalIconMap);
+      setThinkerIcons(finalIconMap);
+
+    } catch (err) {
+      console.error('Exception fetching and caching thinker icons:', err);
+      setThinkerIcons({});
+    }
+  }, [supabase]); // Dependencies
+
   useEffect(() => {
     const debug: any = { steps: [] };
     
@@ -125,7 +199,12 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
           success: true
         });
         
-        await fetchThinkerIcons(dnaData);
+        // Fetch icons AFTER dnaData is confirmed and set
+        if (dnaData) {
+            await fetchAndCacheThinkerIcons(dnaData);
+        } else {
+             setThinkerIcons({}); // Clear icons if no DNA data
+        }
         debug.dnaDataFound = "By assessment_id field match";
         debug.success = true;
         
@@ -139,78 +218,8 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
       }
     }
     
-    async function fetchThinkerIcons(dnaData: any) {
-      if (!dnaData || !dnaData.assessment_id) return;
-      
-      try {
-        const iconMap: Record<string, string> = {};
-        
-        // Process most kindred spirit
-        if (dnaData.most_kindred_spirit) {
-          const name = dnaData.most_kindred_spirit.split(' - ')[0].trim();
-          // Determine field name from most_kindred_spirit_field if available
-          const fieldName = dnaData.most_kindred_spirit_field || '';
-          
-          if (fieldName) {
-            const imageUrl = await getMatchedThinkerImage(dnaData.assessment_id, fieldName);
-            iconMap[name] = imageUrl;
-          } else {
-            // Fallback to traditional search
-            const orConditions = `name.ilike.%${name}%`;
-            
-            const { data, error } = await supabase
-              .from('icons')
-              .select('name, illustration')
-              .or(orConditions);
-              
-            if (!error && data && data.length > 0) {
-              data.forEach(icon => {
-                if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
-                    name.toLowerCase().includes(icon.name.toLowerCase())) {
-                  iconMap[name] = icon.illustration;
-                }
-              });
-            }
-          }
-        }
-        
-        // Process most challenging voice
-        if (dnaData.most_challenging_voice) {
-          const name = dnaData.most_challenging_voice.split(' - ')[0].trim();
-          // Determine field name from most_challenging_voice_field if available
-          const fieldName = dnaData.most_challenging_voice_field || '';
-          
-          if (fieldName) {
-            const imageUrl = await getMatchedThinkerImage(dnaData.assessment_id, fieldName);
-            iconMap[name] = imageUrl;
-          } else {
-            // Fallback to traditional search
-            const orConditions = `name.ilike.%${name}%`;
-            
-            const { data, error } = await supabase
-              .from('icons')
-              .select('name, illustration')
-              .or(orConditions);
-              
-            if (!error && data && data.length > 0) {
-              data.forEach(icon => {
-                if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
-                    name.toLowerCase().includes(icon.name.toLowerCase())) {
-                  iconMap[name] = icon.illustration;
-                }
-              });
-            }
-          }
-        }
-        
-        setThinkerIcons(iconMap);
-      } catch (err) {
-        console.error('Error fetching thinker icons:', err);
-      }
-    }
-
     fetchData();
-  }, [user]);
+  }, [user, fetchAndCacheThinkerIcons]); // Add fetchAndCacheThinkerIcons to dependency array
 
   // Helper to get icon by thinker name with fallback
   const getIconByName = (thinkerName: string | null): string => {
@@ -255,47 +264,12 @@ export function ProfileDataProvider({ children }: { children: React.ReactNode })
           
         if (!dnaError && dnaData) {
           setDnaAnalysisData(dnaData);
-          
-          // Fetch thinker icons
-          if (dnaData) {
-            const thinkerNames = [];
-            
-            if (dnaData.most_kindred_spirit) {
-              const name = dnaData.most_kindred_spirit.split(' - ')[0].trim();
-              thinkerNames.push(name);
-            }
-            
-            if (dnaData.most_challenging_voice) {
-              const name = dnaData.most_challenging_voice.split(' - ')[0].trim();
-              thinkerNames.push(name);
-            }
-            
-            // Fetch icons for all thinker names at once
-            if (thinkerNames.length > 0) {
-              const orConditions = thinkerNames.map(name => `name.ilike.%${name}%`).join(',');
-              
-              const { data, error } = await supabase
-                .from('icons')
-                .select('name, illustration')
-                .or(orConditions);
-                
-              if (!error && data) {
-                const iconMap: Record<string, string> = {};
-                
-                // Build map of thinker name to icon URL
-                data.forEach(icon => {
-                  thinkerNames.forEach(name => {
-                    if (icon.name.toLowerCase().includes(name.toLowerCase()) || 
-                        name.toLowerCase().includes(icon.name.toLowerCase())) {
-                      iconMap[name] = icon.illustration;
-                    }
-                  });
-                });
-                
-                setThinkerIcons(iconMap);
-              }
-            }
-          }
+          // Refresh icons when DNA data is refreshed
+          await fetchAndCacheThinkerIcons(dnaData); 
+        } else if (!profile.assessment_id) {
+            // Clear DNA data and icons if assessment ID was removed
+            setDnaAnalysisData(null);
+            setThinkerIcons({});
         }
       }
     } catch (err) {
