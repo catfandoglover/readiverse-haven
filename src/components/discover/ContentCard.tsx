@@ -224,6 +224,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-lg font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
               <div className="flex gap-2 items-center shrink-0">
+                {/* VirgilChatButton temporarily hidden 
                 {itemId && (
                   <VirgilChatButton
                     contentTitle={title}
@@ -232,6 +233,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
                     className="text-[#2A282A]"
                   />
                 )}
+                */}
                 <button
                   className="flex items-center justify-center text-[#2A282A]"
                   aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -318,6 +320,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-2xl font-libre-baskerville font-bold max-w-[70%]">{title}</h2>
             <div className="flex gap-3 items-center shrink-0">
+              {/* VirgilChatButton temporarily hidden 
               {itemId && (
                 <VirgilChatButton
                   contentTitle={title}
@@ -326,6 +329,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   className="text-[#2A282A] hover:scale-110 transition-transform"
                 />
               )}
+              */}
               <button
                 className="flex items-center justify-center text-[#2A282A] hover:scale-110 transition-transform"
                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}

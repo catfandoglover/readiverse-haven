@@ -111,15 +111,13 @@ const BecomeWhoYouAre: React.FC = () => {
         title: "ORIGIN",
         subtitle: "DE PRINCIPIIS (230)",
         description: "Divine truth requires both rational inquiry and mystical insight.",
-        progress: 50,
+        progress: 0,
         status: "locked",
         rationale: "Loading rationale..."
       });
     }
     
     const resources = [];
-    
-    const dummyProgressValues = [85, 65, 45, 25, 15];
     
     for (let i = 1; i <= 5; i++) {
       let resourceKey = '';
@@ -145,8 +143,8 @@ const BecomeWhoYouAre: React.FC = () => {
       const rationale = dnaAnalysisData[rationaleKey as keyof DNAAnalysisResult];
       
       let status = "locked";
-      if (i === 1) status = "completed";
-      else if (i === 2) status = "active";
+      if (i === 1) status = "locked";
+      else if (i === 2) status = "locked";
       else status = "locked";
       
       resources.push({
@@ -155,7 +153,7 @@ const BecomeWhoYouAre: React.FC = () => {
         title: String(title).toUpperCase(),
         subtitle: String(subtitle),
         description: rationale ? String(rationale) : `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`,
-        progress: dummyProgressValues[i-1],
+        progress: 0,
         status,
         rationale: rationale || `This thinker ${tab === "kindred" ? "aligns with" : "challenges"} your ${domainId} perspective.`
       });
