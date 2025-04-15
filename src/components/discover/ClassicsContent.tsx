@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
@@ -62,7 +62,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     queryKey: ["all-classics-ids"],
     queryFn: async () => {
       console.log("Fetching all classic IDs...");
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("books")
         .select("id"); // Select only IDs
       if (error) {
@@ -97,7 +97,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const fetchBookDetails = async (bookId: string | null) => {
     if (!bookId) return null;
     console.log(`Fetching details for book ID: ${bookId}`);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("books")
       .select("*")
       .eq("id", bookId)
@@ -162,15 +162,11 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       
       const fetchBookDirectly = async () => {
         try {
-          console.log("[ClassicsContent] Directly querying DB for book with slug:", pathSlug);
-          
-          // Tell the parent immediately that we're showing a detailed view
-          // This helps ensure the UI updates correctly
-          if (onDetailedViewShow) onDetailedViewShow();
+          console.log("Directly querying DB for book with slug:", pathSlug);
           
           if (comingFromReader && bookId) {
             console.log("[ClassicsContent] Coming from reader with book ID:", bookId);
-            const { data: dataById, error: errorById } = await supabase
+            const { data: dataById, error: errorById } = await supabaseClient
               .from("books")
               .select("*")
               .eq("id", bookId)
@@ -198,7 +194,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          let { data, error } = await supabase
+          let { data, error } = await supabaseClient
             .from("books")
             .select("*")
             .eq("slug", pathSlug)
@@ -206,7 +202,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             
           if (!data && error) {
             console.log("Exact slug match failed, trying case-insensitive match");
-            const { data: dataILike, error: errorILike } = await supabase
+            const { data: dataILike, error: errorILike } = await supabaseClient
               .from("books")
               .select("*")
               .ilike("slug", pathSlug)
@@ -225,7 +221,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
                                       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                                       .join(' ');
                                       
-            const { data: dataTitle, error: errorTitle } = await supabase
+            const { data: dataTitle, error: errorTitle } = await supabaseClient
               .from("books")
               .select("*")
               .eq("title", titleFromSlug)
@@ -239,7 +235,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           
           if (!data && (pathSlug === "Botchan" || pathSlug.toLowerCase() === "botchan")) {
             console.log("Special case: Trying to find Botchan by title");
-            const { data: specialData, error: specialError } = await supabase
+            const { data: specialData, error: specialError } = await supabaseClient
               .from("books")
               .select("*")
               .eq("title", "Botchan")
@@ -298,7 +294,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
         fetchBookDirectly();
       }
     }
-  }, [location.pathname, allClassicIds, onDetailedViewShow, supabase]);
+  }, [location.pathname, allClassicIds, onDetailedViewShow, supabaseClient]);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -453,8 +449,34 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   if (isMobile) {
     return (
-      <div className="flex items-center justify-center h-full p-4">
-        <p className="text-gray-400">Mobile view TBD</p>
+      <div className="h-full flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          {currentItem ? (
+            <ContentCard
+              image={currentItem.image}
+              title={currentItem.title}
+              about={currentItem.about}
+              itemId={currentItem.id}
+              itemType={currentItem.type}
+              onLearnMore={() => handleLearnMore(currentItem)}
+              onImageClick={() => handleLearnMore(currentItem)}
+              hasPrevious={false}
+              hasNext={false}
+            />
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-400">Loading classics...</p>
+              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
+            </div>
+          )}
+        </div>
+        {selectedItem && (
+          <DetailedView
+            type={selectedItem.type}
+            data={selectedItem}
+            onBack={handleCloseDetailedView}
+          />
+        )}
       </div>
     );
   }
@@ -464,7 +486,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center"> 
+      <div className="flex-1 flex items-center justify-center bg-[#2A282A]"> 
         {currentItem ? (
           <ContentCard
             image={currentItem.image}
@@ -479,12 +501,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             hasPrevious={hasPreviousDesktop}
             hasNext={hasNextDesktop}
           />
-        ) : isLoadingCombined ? ( // Still show loading if currentItem is null but we expect it
-           <div className="animate-pulse text-gray-400">Loading...</div> 
+        ) : isLoadingCombined ? (
+           <div className="animate-pulse text-[#E9E7E2]/60">Loading...</div> 
         ) : isCurrentItemError ? (
-           <p className="text-red-500">Error loading this classic.</p> // Handle item load error
+           <p className="text-red-500">Error loading this classic.</p>
         ) : (
-           <p className="text-gray-500">No classics found.</p>
+           <p className="text-[#E9E7E2]/80">No classics found.</p>
         )}
       </div>
 

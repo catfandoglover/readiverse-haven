@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
@@ -67,9 +67,9 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
       console.log("Fetching all IDs for For You...");
       try {
         const [booksRes, iconsRes, conceptsRes] = await Promise.all([
-          supabase.from("books").select("id"),
-          supabase.from("icons").select("id"),
-          supabase.from("concepts").select("id")
+          supabaseClient.from("books").select("id"),
+          supabaseClient.from("icons").select("id"),
+          supabaseClient.from("concepts").select("id")
         ]);
 
         if (booksRes.error) console.error("Error fetching book IDs:", booksRes.error);
@@ -136,7 +136,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
     console.log(`Fetching details for ${itemType} ID: ${itemId}`);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from(tableName)
         .select(selectFields)
         .eq("id", itemId)
@@ -182,7 +182,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
       console.error(`Exception fetching details for ${itemType} ${itemId}:`, error);
       return null;
     }
-  }, [supabase, toast]);
+  }, [supabaseClient, toast]);
 
   const { 
     data: currentItemData, 
@@ -327,8 +327,37 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
   if (isMobile) {
     return (
-      <div className="flex items-center justify-center h-full p-4">
-        <p className="text-gray-400">Mobile view TBD</p>
+      <div className="h-full flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          {currentItem ? (
+            <ContentCard
+              image={currentItem.image}
+              title={currentItem.title}
+              about={currentItem.about}
+              itemId={currentItem.id}
+              itemType={currentItem.type}
+              onLearnMore={() => handleLearnMore(currentItem)}
+              onImageClick={() => handleLearnMore(currentItem)}
+              hasPrevious={false}
+              hasNext={false}
+            />
+          ) : (
+            <div className="text-center">
+              <p className="text-[#E9E7E2]/60">Loading recommendations...</p>
+              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
+            </div>
+          )}
+        </div>
+        {selectedItem && (
+          <DetailedView
+            type={selectedItem.type}
+            data={{
+              ...selectedItem,
+              ...mockRelatedData
+            }}
+            onBack={handleCloseDetailedView}
+          />
+        )}
       </div>
     );
   }
@@ -338,9 +367,9 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-[#2A282A]">
         {(isLoadingCurrentItem && !currentItem) ? (
-          <div className="animate-pulse text-gray-400">Loading Item...</div>
+          <div className="animate-pulse text-[#E9E7E2]/60">Loading Item...</div>
         ) : currentItem ? (
           <ContentCard
             image={currentItem.image}
@@ -358,7 +387,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
         ) : isCurrentItemError ? (
           <p className="text-red-500">Error loading this item.</p>
         ) : (
-          <p className="text-gray-500">No recommendations found.</p>
+          <p className="text-[#E9E7E2]/80">No recommendations found.</p>
         )}
       </div>
 

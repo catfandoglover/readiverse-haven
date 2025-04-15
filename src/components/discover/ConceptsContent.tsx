@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
@@ -33,6 +33,9 @@ interface ConceptsContentProps {
   onDetailedViewHide?: () => void;
 }
 
+// Define PAGE_SIZE
+const PAGE_SIZE = 5;
+
 // Shuffle function
 function shuffleArray<T>(array: T[]): T[] {
   let currentIndex = array.length;
@@ -46,6 +49,44 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return newArray;
 }
+
+const fetchAllConceptIds = async () => {
+  try {
+    // Fetch all concept IDs
+    const { data, error } = await supabaseClient.from("concepts").select("id");
+
+    if (error) {
+      console.error("Error fetching all concept IDs:", error);
+      return [];
+    }
+
+    return data.map((item) => item.id);
+  } catch (error) {
+    console.error("Error in fetchAllConceptIds:", error);
+    return [];
+  }
+};
+
+// Direct query by slug
+const fetchConceptBySlug = async (slug: string) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from("concepts")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    if (error) {
+      console.error("Error fetching concept by slug:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in fetchConceptBySlug:", error);
+    return null;
+  }
+};
 
 const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
@@ -73,7 +114,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
       const to = from + PAGE_SIZE - 1;
       console.log(`Fetching concepts page: ${pageParam}, range: ${from}-${to}`);
       try {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await supabaseClient
           .from("concepts")
           .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer", { count: 'exact' })
           .order("title", { ascending: true })
@@ -122,7 +163,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     queryKey: ["all-concepts-ids"],
     queryFn: async () => {
       console.log("Fetching all concept IDs...");
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("concepts")
         .select("id");
       if (error) {
@@ -154,28 +195,24 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   }, [shuffledIds, desktopIndex]);
 
   // Define the query function separately for reuse
-  const fetchConceptDetails = async (conceptId: string | null) => {
-    if (!conceptId) return null;
-    console.log(`Fetching details for concept ID: ${conceptId}`);
-    const { data, error } = await supabase
-      .from("concepts")
-      .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
-      .eq("id", conceptId)
-      .single(); 
+  const fetchConceptDetails = async (conceptId: string) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from("concepts")
+        .select("*")
+        .eq("id", conceptId)
+        .single();
 
-    if (error) {
-      console.error(`Error fetching details for concept ${conceptId}:`, error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to load concept details" });
+      if (error) {
+        console.error("Error fetching concept details:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in fetchConceptDetails:", error);
       return null;
     }
-    
-    return {
-      ...data,
-      type: data.concept_type || "concept",
-      about: data.about || data.description || `${data.title} is a significant philosophical concept.`,
-      great_conversation: data.great_conversation || `${data.title} has been debated throughout philosophical history.`,
-      image: data.illustration,
-    };
   };
 
   // Query 2: Fetch details for the current Concept ID
@@ -233,7 +270,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
         if (!concept) {
           console.log("[ConceptsContent] Concept not found in memory, querying database");
           
-          let { data: exactMatchData, error: exactMatchError } = await supabase
+          let { data: exactMatchData, error: exactMatchError } = await supabaseClient
             .from("concepts")
             .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
             .eq('slug', fullPath)
@@ -242,7 +279,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           if (!exactMatchData || exactMatchData.length === 0) {
             console.log("[ConceptsContent] Trying with last segment:", lastSegment);
             
-            const { data: lastSegmentData, error: lastSegmentError } = await supabase
+            const { data: lastSegmentData, error: lastSegmentError } = await supabaseClient
               .from("concepts")
               .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
               .or(`slug.eq.${lastSegment},title.ilike.%${lastSegment}%`)
@@ -256,7 +293,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           if (!exactMatchData || exactMatchData.length === 0) {
             console.log("[ConceptsContent] Trying fuzzy match on title:", lastSegment);
             
-            const { data: fuzzyMatchData, error: fuzzyMatchError } = await supabase
+            const { data: fuzzyMatchData, error: fuzzyMatchError } = await supabaseClient
               .from("concepts")
               .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
               .ilike('title', `%${lastSegment}%`)
@@ -294,7 +331,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     };
     
     loadConceptFromUrl();
-  }, [location.pathname, allFetchedItems, onDetailedViewShow, supabase, toast]);
+  }, [location.pathname, allFetchedItems, onDetailedViewShow, supabaseClient, toast]);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -370,11 +407,37 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   // Mobile View (Placeholder/Update required)
   if (isMobile) {
-     return (
-       <div className="flex items-center justify-center h-full p-4">
-         <p className="text-gray-400">Mobile view TBD</p>
-       </div>
-     );
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          {currentItem ? (
+            <ContentCard
+              image={currentItem.image}
+              title={currentItem.title}
+              about={currentItem.about || ""}
+              itemId={currentItem.id}
+              itemType={currentItem.type}
+              onLearnMore={() => handleLearnMore(currentItem)}
+              onImageClick={() => handleLearnMore(currentItem)}
+              hasPrevious={false}
+              hasNext={false}
+            />
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-400">Loading concepts...</p>
+              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
+            </div>
+          )}
+        </div>
+        {selectedConcept && (
+          <DetailedView
+            type="concept"
+            data={selectedConcept}
+            onBack={handleCloseDetailedView}
+          />
+        )}
+      </div>
+    );
   }
 
   // Desktop: Single Card View
@@ -383,7 +446,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-[#2A282A]">
         {currentItem ? (
           <ContentCard
             image={currentItem.image || currentItem.illustration}
@@ -391,17 +454,17 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
             about={currentItem.about || ''}
             itemId={currentItem.id}
             itemType={currentItem.type || 'concept'}
+            onLearnMore={() => handleLearnMore(currentItem)}
+            onImageClick={() => handleLearnMore(currentItem)}
             onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
             onNext={hasNextDesktop ? handleNext : undefined}
             hasPrevious={hasPreviousDesktop}
             hasNext={hasNextDesktop}
-            onLearnMore={() => handleLearnMore(currentItem)}
-            onImageClick={() => handleLearnMore(currentItem)}
           />
         ) : isLoading ? (
-          <div className="animate-pulse text-gray-400">Loading...</div>
+          <div className="animate-pulse text-[#E9E7E2]/60">Loading...</div>
         ) : (
-          <p className="text-gray-500">No concepts found.</p>
+          <p className="text-[#E9E7E2]/80">No concepts found.</p>
         )}
       </div>
       {selectedConcept && (

@@ -3,7 +3,7 @@ import { ArrowUp, ArrowDown, Star, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useBookshelfManager } from "@/hooks/useBookshelfManager";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import VirgilChatButton from "./VirgilChatButton";
 
@@ -50,7 +50,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
     
     setIsCheckingFavorite(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('user_favorites')
         .select('*')
         .eq('item_id', itemId)
@@ -131,7 +131,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       });
 
       if (isFavorite) {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('user_favorites')
           .delete()
           .eq('item_id', itemId)
@@ -150,7 +150,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       } else {
         const outseta_user_id = user.user_metadata?.outseta_id || '';
         
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('user_favorites')
           .insert({
             item_id: itemId,
@@ -292,7 +292,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   return (
     <div className="flex h-full relative bg-[#2A282A] overflow-hidden">
       <div 
-        className="w-1/2 h-full cursor-pointer relative" 
+        className="w-1/2 h-full cursor-pointer relative bg-[#2A282A]" 
         onClick={onImageClick}
       >
         {!imageLoaded && (

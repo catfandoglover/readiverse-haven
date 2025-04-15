@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
 import DetailedView from "./DetailedView";
@@ -82,7 +82,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     queryKey: ["all-icons-ids"],
     queryFn: async () => {
       console.log("Fetching all icon IDs...");
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("icons")
         .select("id");
       if (error) {
@@ -113,30 +113,36 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return null;
   }, [shuffledIds, desktopIndex]);
 
-  // Fetch the details for a given icon ID
+  // Define the query function separately for reuse
   const fetchIconDetails = async (iconId: string | null) => {
     if (!iconId) return null;
-    
     console.log(`Fetching details for icon ID: ${iconId}`);
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("icons")
       .select("*" ) 
       .eq("id", iconId)
       .single(); 
-      
+
     if (error) {
-      console.error("Error fetching icon details:", error);
+      console.error(`Error fetching details for icon ${iconId}:`, error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load icon details" });
       return null;
     }
     
-    return data;
+    return {
+      ...data,
+      type: "icon" as const,
+      slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
+      about: data.about || `${data.name} was a significant figure in philosophical history.`,
+      // ... process other fields ...
+    };
   };
 
   const fetchIconDirectly = async (iconSlug: string) => {
     try {
       console.log("[IconsContent] Directly fetching icon with slug:", iconSlug);
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("icons")
         .select("*")
         .eq('slug', iconSlug)
@@ -363,22 +369,25 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   if (isMobile) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1 overflow-y-auto">
-          {shuffledIds.map((id) => (
-            <div key={id} className="p-4 border-b border-gray-700 last:border-b-0">
-              <ContentCard
-                image={currentItem?.illustration || ""}
-                title={currentItem?.name || ""}
-                about={currentItem?.about || ""}
-                itemId={id}
-                itemType="icon"
-                onLearnMore={() => handleLearnMore(currentItem as Icon)}
-                onImageClick={() => handleLearnMore(currentItem as Icon)}
-                hasPrevious={false}
-                hasNext={false}
-              />
+        <div className="flex-1 flex items-center justify-center p-4">
+          {currentItem ? (
+            <ContentCard
+              image={currentItem.illustration}
+              title={currentItem.name}
+              about={currentItem.about || ""}
+              itemId={currentItem.id}
+              itemType="icon"
+              onLearnMore={() => handleLearnMore(currentItem)}
+              onImageClick={() => handleLearnMore(currentItem)}
+              hasPrevious={false}
+              hasNext={false}
+            />
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-400">Loading icons...</p>
+              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
             </div>
-          ))}
+          )}
         </div>
         {selectedIcon && (
           <DetailedView
