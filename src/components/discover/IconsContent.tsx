@@ -113,85 +113,24 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return null;
   }, [shuffledIds, desktopIndex]);
 
-  // Define the query function separately for reuse
+  // Fetch the details for a given icon ID
   const fetchIconDetails = async (iconId: string | null) => {
     if (!iconId) return null;
+    
     console.log(`Fetching details for icon ID: ${iconId}`);
     const { data, error } = await supabase
       .from("icons")
       .select("*" ) 
       .eq("id", iconId)
       .single(); 
-
+      
     if (error) {
-      console.error(`Error fetching details for icon ${iconId}:`, error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to load icon details" });
+      console.error("Error fetching icon details:", error);
       return null;
     }
     
-    return {
-      ...data,
-      type: "icon" as const,
-      slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
-      about: data.about || `${data.name} was a significant figure in philosophical history.`,
-      // ... process other fields ...
-    };
+    return data;
   };
-
-  // Query 2: Fetch details for the current Icon ID
-  const { 
-    data: currentItemData, 
-    isLoading: isLoadingCurrentItem, 
-    isError: isCurrentItemError 
-  } = useQuery({
-    queryKey: ["icon-details", currentIconId],
-    queryFn: () => fetchIconDetails(currentIconId),
-    enabled: !!currentIconId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // Effect for Pre-fetching next items
-  useEffect(() => {
-    const prefetchCount = 3;
-    if (shuffledIds.length > 0) {
-      for (let i = 1; i <= prefetchCount; i++) {
-        const prefetchIndex = desktopIndex + i;
-        if (prefetchIndex < shuffledIds.length) {
-          const prefetchId = shuffledIds[prefetchIndex];
-          console.log(`[Prefetch Icons] Prefetching ID: ${prefetchId}`);
-          queryClient.prefetchQuery({
-            queryKey: ['icon-details', prefetchId],
-            queryFn: () => fetchIconDetails(prefetchId),
-            staleTime: 5 * 60 * 1000
-          });
-        }
-      }
-    }
-  }, [desktopIndex, shuffledIds, queryClient, fetchIconDetails]);
-
-  // Detail view logic (adapt to use currentItemData? Or fetch directly?)
-  useEffect(() => {
-     // This logic needs review - should detail view fetch its own data completely?
-     // Or can we reliably use currentItemData?
-     // For now, let's comment out the part that finds in the list
-    if (location.pathname.includes('/icons/')) {
-      const iconParam = location.pathname.split('/icons/')[1];
-      // const icon = allFetchedItems.find(i => i.slug === iconParam); // Remove this find
-      // if (icon) { ... } else { fetchIconDirectly(iconParam) } 
-      // Maybe always fetch directly in detail view? Or trigger selectedItem based on currentItemData?
-      if (currentItemData && currentItemData.slug === iconParam && !selectedIcon) {
-         console.log("Setting selected item from current data");
-         setSelectedIcon(currentItemData);
-         if (onDetailedViewShow) onDetailedViewShow();
-      } else if (!currentItemData || currentItemData.slug !== iconParam) {
-         // Optional: Fetch directly if URL doesn't match current item
-         // fetchIconDirectly(iconParam); 
-      }
-    } else if (selectedIcon) {
-      setSelectedIcon(null);
-    }
-  }, [location.pathname, currentItemData, onDetailedViewShow, selectedIcon]); // Depend on currentItemData
 
   const fetchIconDirectly = async (iconSlug: string) => {
     try {
@@ -241,6 +180,58 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       });
     }
   };
+
+  useEffect(() => {
+    const prefetchCount = 3;
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Icons] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['icon-details', prefetchId],
+            queryFn: () => fetchIconDetails(prefetchId),
+            staleTime: 5 * 60 * 1000
+          });
+        }
+      }
+    }
+  }, [desktopIndex, shuffledIds, queryClient, fetchIconDetails]);
+
+  // Query 2: Fetch details for the current Icon ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["icon-details", currentIconId],
+    queryFn: () => fetchIconDetails(currentIconId),
+    enabled: !!currentIconId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Detail view logic for direct URL navigation
+  useEffect(() => {
+    if (location.pathname.includes('/icons/')) {
+      const iconParam = location.pathname.split('/icons/')[1];
+      
+      // If we have the current icon data and it matches the URL, use it
+      if (currentItemData && currentItemData.slug === iconParam && !selectedIcon) {
+         console.log("[IconsContent] Setting selected item from current data");
+         setSelectedIcon(currentItemData);
+         if (onDetailedViewShow) onDetailedViewShow();
+      } 
+      // Otherwise, always fetch directly for URL-based navigation
+      else if (!selectedIcon) {
+         console.log("[IconsContent] Fetching icon directly from URL parameter:", iconParam);
+         fetchIconDirectly(iconParam); 
+      }
+    } else if (selectedIcon) {
+      setSelectedIcon(null);
+    }
+  }, [location.pathname, currentItemData, onDetailedViewShow, selectedIcon, fetchIconDirectly]);
 
   const handlePrevious = useCallback(() => {
     if (desktopIndex > 0) {

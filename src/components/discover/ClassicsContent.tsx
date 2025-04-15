@@ -162,10 +162,14 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       
       const fetchBookDirectly = async () => {
         try {
-          console.log("Directly querying DB for book with slug:", pathSlug);
+          console.log("[ClassicsContent] Directly querying DB for book with slug:", pathSlug);
+          
+          // Tell the parent immediately that we're showing a detailed view
+          // This helps ensure the UI updates correctly
+          if (onDetailedViewShow) onDetailedViewShow();
           
           if (comingFromReader && bookId) {
-            console.log("Coming from reader with book ID:", bookId);
+            console.log("[ClassicsContent] Coming from reader with book ID:", bookId);
             const { data: dataById, error: errorById } = await supabase
               .from("books")
               .select("*")
@@ -173,22 +177,23 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
               .single();
               
             if (dataById) {
-              console.log("Found book by ID from reader navigation:", dataById.title);
+              console.log("[ClassicsContent] Found book by ID from reader navigation:", dataById.title);
               const book = {
                 id: dataById.id,
                 title: dataById.title,
                 type: "classic" as const,
-                image: dataById.icon_illustration || dataById.Cover_super || "",
+                image: dataById.cover_url || dataById.Cover_super || dataById.icon_illustration || "",
                 about: dataById.about || `A classic work by ${dataById.author || 'Unknown Author'}.`,
                 author: dataById.author,
-                great_conversation: `${dataById.title} has played an important role in shaping intellectual discourse.`,
+                author_id: dataById.author_id,
+                great_conversation: dataById.great_conversation || `${dataById.title} has played an important role in shaping intellectual discourse.`,
                 Cover_super: dataById.Cover_super,
+                cover_url: dataById.cover_url,
                 epub_file_url: dataById.epub_file_url,
                 slug: dataById.slug || pathSlug,
               };
               
               setSelectedItem(book);
-              if (onDetailedViewShow) onDetailedViewShow();
               return;
             }
           }
@@ -345,9 +350,53 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
     
-    const previousPath = getPreviousPage();
-    console.log("[ClassicsContent] Navigating back to:", previousPath);
+    const sourcePaths = {
+      localStorage: localStorage.getItem('sourcePath'),
+      sessionStorage: sessionStorage.getItem('sourcePath'),
+      localDetailedView: localStorage.getItem('detailedViewSourcePath'),
+      sessionDetailedView: sessionStorage.getItem('detailedViewSourcePath')
+    };
     
+    console.log("[ClassicsContent] Available source paths for back navigation:", sourcePaths);
+    
+    if (sourcePaths.localDetailedView && sourcePaths.localDetailedView !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from localStorage (detailedViewSourcePath):", sourcePaths.localDetailedView);
+      navigate(sourcePaths.localDetailedView, { replace: true });
+      localStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.sessionDetailedView && sourcePaths.sessionDetailedView !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from sessionStorage (detailedViewSourcePath):", sourcePaths.sessionDetailedView);
+      navigate(sourcePaths.sessionDetailedView, { replace: true });
+      sessionStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.localStorage && sourcePaths.localStorage !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from localStorage:", sourcePaths.localStorage);
+      navigate(sourcePaths.localStorage, { replace: true });
+      localStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.sessionStorage && sourcePaths.sessionStorage !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from sessionStorage:", sourcePaths.sessionStorage);
+      navigate(sourcePaths.sessionStorage, { replace: true });
+      sessionStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    const previousPath = getPreviousPage();
+    console.log("[ClassicsContent] Falling back to previous page from history:", previousPath);
     navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();

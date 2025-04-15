@@ -1,5 +1,5 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import BookCard from "./BookCard";
@@ -11,6 +11,7 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookshelfCarouselProps {
   queryKey: string;
@@ -24,6 +25,26 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
   isLoading: providedLoading
 }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const { data: customShelves = [] } = useQuery({
+    queryKey: ["user-shelves", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("user_shelves")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (error) {
+        console.error("Error fetching custom shelves:", error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
   
   const { data: fetchedBooks, isLoading: fetchLoading } = useQuery({
     queryKey: [queryKey, user?.id],
@@ -78,6 +99,57 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
     enabled: !providedBooks && !!user?.id,
   });
 
+  const handleRemoveBook = async (bookId: string) => {
+    if (!user?.id) return;
+    try {
+      console.log(`Removing book ${bookId} for user ${user.id}`);
+      const { error } = await supabase
+        .from("user_books")
+        .delete()
+        .match({ user_id: user.id, book_id: bookId });
+
+      if (error) throw error;
+
+      toast({ title: "Book removed", description: "Successfully removed from your bookshelf." });
+      console.log(`Invalidating query: ${queryKey}`);
+      queryClient.invalidateQueries({ queryKey: [queryKey, user?.id] });
+    } catch (error: any) {
+      console.error("Error removing book:", error);
+      toast({ title: "Error", description: `Could not remove book: ${error.message}`, variant: "destructive" });
+    }
+  };
+
+  const handleAddBookToShelf = async (bookId: string, shelfId: string) => {
+    if (!user?.id) return;
+    try {
+      console.log(`Adding book ${bookId} to shelf ${shelfId} for user ${user.id}`);
+      const { data: existing, error: checkError } = await supabase
+        .from('user_shelf_books')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('shelf_id', shelfId)
+        .eq('book_id', bookId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existing) {
+        toast({ title: "Already added", description: "This book is already on that shelf." });
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from("user_shelf_books")
+        .insert({ user_id: user.id, shelf_id: shelfId, book_id: bookId });
+
+      if (insertError) throw insertError;
+
+      toast({ title: "Book added", description: "Successfully added to the shelf." });
+    } catch (error: any) {
+      console.error("Error adding book to shelf:", error);
+      toast({ title: "Error", description: `Could not add book to shelf: ${error.message}`, variant: "destructive" });
+    }
+  };
+
   const books = providedBooks || fetchedBooks;
   const isLoading = providedLoading || fetchLoading;
 
@@ -87,6 +159,15 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-52 w-36 rounded-2xl flex-shrink-0" />
         ))}
+      </div>
+    );
+  }
+  
+  if (!user?.id) {
+    console.log("BookshelfCarousel: Waiting for user ID before rendering cards...");
+    return (
+      <div className="flex space-x-4 px-4 overflow-visible">
+        <Skeleton className="h-52 w-36 rounded-2xl flex-shrink-0" />
       </div>
     );
   }
@@ -123,6 +204,9 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
     dragFree: true
   };
 
+  // Log the user object right before rendering the Carousel
+  console.log("BookshelfCarousel: About to render Carousel, user object:", user);
+
   return (
     <Carousel 
       opts={carouselOptions} 
@@ -141,6 +225,11 @@ const BookshelfCarousel: React.FC<BookshelfCarouselProps> = ({
               cover_url={book.cover_url}
               slug={book.slug}
               epub_file_url={book.epub_file_url}
+              userId={user.id}
+              customShelves={customShelves}
+              onRemoveBook={handleRemoveBook}
+              onAddBookToShelf={handleAddBookToShelf}
+              isDnaBook={false}
             />
           </CarouselItem>
         ))}

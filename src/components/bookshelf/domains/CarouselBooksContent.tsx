@@ -17,12 +17,28 @@ import {
 // Type assertion to silence TypeScript errors
 const supabaseAny = supabase as any;
 
+// Define Shelf type if not already globally available
+interface Shelf {
+  id: string;
+  name: string;
+}
+
 interface CarouselBooksContentProps {
   shelfFilter?: string;
+  userId?: string;
+  customShelves?: Shelf[];
+  onRemoveBookFromLibrary?: (bookId: string) => void;
+  onAddBookToShelf?: (bookId: string, shelfId: string) => void;
+  onRemoveBookFromShelf?: (bookId: string) => void;
 }
 
 const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({ 
-  shelfFilter = "all" 
+  shelfFilter = "all",
+  userId,
+  customShelves = [],
+  onRemoveBookFromLibrary,
+  onAddBookToShelf,
+  onRemoveBookFromShelf
 }) => {
   const { user } = useAuth();
   const { dnaAnalysisData } = useProfileData();
@@ -110,24 +126,26 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
       if (!user?.id || shelfFilter === "all" || shelfFilter === "dna") return [];
 
       try {
-        console.log("Fetching books for custom shelf:", shelfFilter);
+        console.log(`Fetching book IDs for custom shelf: ${shelfFilter} and user: ${user.id}`);
         
-        const { data: shelfBooks, error: shelfBooksError } = await supabaseAny
-          .from("shelf_books")
+        const { data: shelfBooksData, error: shelfBooksError } = await supabaseAny
+          .from("user_shelf_books")
           .select("book_id")
-          .eq("shelf_id", shelfFilter);
+          .eq("shelf_id", shelfFilter)
+          .eq("user_id", user.id);
         
         if (shelfBooksError) {
-          console.error("Error fetching shelf books:", shelfBooksError);
+          console.error("Error fetching user_shelf_books:", shelfBooksError);
           return [];
         }
         
-        if (!shelfBooks?.length) {
-          console.log("No books found for shelf");
+        if (!shelfBooksData?.length) {
+          console.log("No book IDs found for this custom shelf");
           return [];
         }
         
-        return shelfBooks;
+        // Return just the array of book_ids
+        return shelfBooksData;
       } catch (err) {
         console.error("Exception fetching shelf books:", err);
         return [];
@@ -145,6 +163,7 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
       shelfFilter
     ],
     queryFn: async () => {
+      console.log(`[book-details query] Running for shelfFilter: ${shelfFilter}`);
       // Determine which book IDs to fetch based on the filter
       let bookIds: string[] = [];
       
@@ -156,10 +175,14 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
         bookIds = dnaBooks.map(db => db.book_id);
       } else if (shelfFilter !== "all" && shelfFilter !== "dna" && customShelfBooks) {
         // Custom shelf - only include books from that shelf
+        console.log("[book-details query] Using customShelfBooks:", customShelfBooks);
         bookIds = customShelfBooks.map(sb => sb.book_id);
       }
       
+      console.log(`[book-details query] Determined bookIds:`, bookIds);
+      
       if (bookIds.length === 0) {
+        console.log("[book-details query] No book IDs found, returning empty array.");
         return [];
       }
       
@@ -172,16 +195,18 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
           .in("id", bookIds);
           
         if (booksError) {
-          console.error("Error fetching books:", booksError);
+          console.error("[book-details query] Error fetching book details:", booksError);
           return [];
         }
+        
+        console.log("[book-details query] Fetched booksData:", booksData);
         
         // Filter out books without epub_file_url
         const validBooksData = booksData?.filter(book => !!book.epub_file_url) || [];
         console.log(`Filtered out ${(booksData?.length || 0) - validBooksData.length} books without epub_file_url`);
         
         // Combine with metadata from appropriate source based on filter
-        return validBooksData.map(book => {
+        const finalBooksData = validBooksData.map(book => {
           // Find user book data (reading progress, etc) if available
           const userBook = userBooks?.find(ub => ub.book_id === book.id);
           
@@ -198,8 +223,11 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
             source: dnaBook ? 'dna' : 'user_books'
           };
         });
+        
+        console.log("[book-details query] Returning final combined book data:", finalBooksData);
+        return finalBooksData;
       } catch (err) {
-        console.error("Exception fetching book details:", err);
+        console.error("[book-details query] Exception fetching book details:", err);
         return [];
       }
     },
@@ -316,6 +344,12 @@ const CarouselBooksContent: React.FC<CarouselBooksContentProps> = ({
               epub_file_url={book.epub_file_url}
               isDnaBook={book.isDnaBook}
               dna_analysis_column={book.dna_analysis_column}
+              userId={userId}
+              customShelves={customShelves}
+              onRemoveBookFromLibrary={onRemoveBookFromLibrary}
+              onAddBookToShelf={onAddBookToShelf}
+              onRemoveBookFromShelf={onRemoveBookFromShelf}
+              shelfFilter={shelfFilter}
             />
           </CarouselItem>
         ))}

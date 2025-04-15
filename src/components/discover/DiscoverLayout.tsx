@@ -273,6 +273,26 @@ const DiscoverLayout = () => {
     }
   }, [location.pathname]);
 
+  // Force icons tab when on icon routes
+  useEffect(() => {
+    if (location.pathname.startsWith('/icons/')) {
+      console.log("[DiscoverLayout] On icon route, forcing icons tab");
+      setActiveTab("icons");
+      setDetailedViewVisible(true);
+      setContentReady(true);
+    }
+  }, [location.pathname]);
+
+  // Force concepts tab when on concept routes
+  useEffect(() => {
+    if (location.pathname.startsWith('/concepts/')) {
+      console.log("[DiscoverLayout] On concept route, forcing concepts tab");
+      setActiveTab("concepts");
+      setDetailedViewVisible(true);
+      setContentReady(true);
+    }
+  }, [location.pathname]);
+
   const handleTabChange = (tab: TabType) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
