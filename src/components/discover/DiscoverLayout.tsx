@@ -331,11 +331,11 @@ const DiscoverLayout = () => {
                "QUESTIONS"}
             </h2>
             <button 
-              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#E9E7E2] hover:bg-[#E9E7E2]/10 transition-colors drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#332E38] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E38] focus:ring-offset-[#2A282A] transition-colors"
               aria-label="Search"
               onClick={() => navigate('/discover/search')}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-6 w-6" />
             </button>
           </div>
         )}
