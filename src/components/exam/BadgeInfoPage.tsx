@@ -7,7 +7,7 @@ const BADGE_LEVELS = [
   {
     id: "scribe",
     name: "SCRIBE",
-    description: "RECOGNITION",
+    description: "RECALL",
     color: "#FFFFFF",
     backgroundColor: "#3D3D6F",
     roman: "I"
@@ -15,7 +15,7 @@ const BADGE_LEVELS = [
   {
     id: "messenger",
     name: "MESSENGER",
-    description: "UNDERSTANDING",
+    description: "COMPREHENSION",
     color: "#FFD8B1",
     backgroundColor: "#3D3D6F",
     roman: "II"
@@ -23,7 +23,7 @@ const BADGE_LEVELS = [
   {
     id: "alchemist",
     name: "ALCHEMIST",
-    description: "ACCEPTANCE",
+    description: "APPLICATION",
     color: "#F1FF91",
     backgroundColor: "#3D3D6F",
     roman: "III"
@@ -31,7 +31,7 @@ const BADGE_LEVELS = [
   {
     id: "cartographer",
     name: "CARTOGRAPHER",
-    description: "REGULATION",
+    description: "ANALYSIS",
     color: "#C0D0FF",
     backgroundColor: "#3D3D6F",
     roman: "IV"
@@ -39,7 +39,7 @@ const BADGE_LEVELS = [
   {
     id: "judge",
     name: "JUDGE",
-    description: "INTEGRATION",
+    description: "EVALUATION",
     color: "#E6BDFF",
     backgroundColor: "#3D3D6F",
     roman: "V"
@@ -47,7 +47,7 @@ const BADGE_LEVELS = [
   {
     id: "creator",
     name: "CREATOR",
-    description: "TRANSFORMATION",
+    description: "CREATION",
     color: "#000000",
     backgroundColor: "#3D3D6F",
     roman: "VI"
