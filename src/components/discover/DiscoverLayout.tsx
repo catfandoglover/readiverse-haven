@@ -331,7 +331,7 @@ const DiscoverLayout = () => {
                "QUESTIONS"}
             </h2>
             <button 
-              className="h-10 w-10 inline-flex items-center justify-center rounded-md text-[#332E38] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E38] focus:ring-offset-[#2A282A] transition-colors"
+              className={`h-10 w-10 inline-flex items-center justify-center rounded-md ${isMobile ? 'text-[#E9E7E2]' : 'text-[#332E38]'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E38] focus:ring-offset-[#2A282A] transition-colors`}
               aria-label="Search"
               onClick={() => navigate('/discover/search')}
             >
