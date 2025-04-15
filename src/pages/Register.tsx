@@ -86,9 +86,6 @@ export function Register() {
         <div className="w-12 h-12">
           <MainMenu />
         </div>
-        <h1 className="font-oxanium uppercase text-[#373763] tracking-wider text-sm font-bold">
-          Sign Up
-        </h1>
         <div className="w-12 h-12">
           {/* Empty div for balanced header */}
         </div>
