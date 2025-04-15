@@ -240,6 +240,7 @@ export type Database = {
           illustration: string
           introduction: string | null
           Notion_URL: string | null
+          one_line: string | null
           randomizer: number
           slug: string | null
           title: string
@@ -253,6 +254,7 @@ export type Database = {
           illustration: string
           introduction?: string | null
           Notion_URL?: string | null
+          one_line?: string | null
           randomizer?: number
           slug?: string | null
           title: string
@@ -266,6 +268,7 @@ export type Database = {
           illustration?: string
           introduction?: string | null
           Notion_URL?: string | null
+          one_line?: string | null
           randomizer?: number
           slug?: string | null
           title?: string
@@ -316,27 +319,30 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          outseta_user_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          outseta_user_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          outseta_user_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "fk_custom_domains_profile"
-            columns: ["user_id"]
+            columns: ["outseta_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["outseta_user_id"]
           },
         ]
       }
@@ -709,7 +715,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id: string | null
           theology_kindred_spirit_5_db_id: string | null
           theology_kindred_spirit_5_rationale: string | null
-          validation_summary: Json | null
         }
         Insert: {
           aesthetics_challenging_voice_1?: string | null
@@ -1046,7 +1051,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id?: string | null
           theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
-          validation_summary?: Json | null
         }
         Update: {
           aesthetics_challenging_voice_1?: string | null
@@ -1383,7 +1387,6 @@ export type Database = {
           theology_kindred_spirit_5_classic_db_id?: string | null
           theology_kindred_spirit_5_db_id?: string | null
           theology_kindred_spirit_5_rationale?: string | null
-          validation_summary?: Json | null
         }
         Relationships: [
           {
@@ -1391,6 +1394,82 @@ export type Database = {
             columns: ["assessment_id"]
             isOneToOne: false
             referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_analysis_results_matched: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          dna_analysis_column: string
+          dna_analysis_name: string
+          id: string
+          matched_id: string
+          matched_name: string
+          type: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          dna_analysis_column: string
+          dna_analysis_name: string
+          id?: string
+          matched_id: string
+          matched_name: string
+          type: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          dna_analysis_column?: string
+          dna_analysis_name?: string
+          id?: string
+          matched_id?: string
+          matched_name?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_analysis_results_matched_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_assessment_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_analysis_results_unmatched: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          dna_analysis_column: string
+          dna_analysis_name: string
+          id: string
+          type: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          dna_analysis_column: string
+          dna_analysis_name: string
+          id?: string
+          type: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          dna_analysis_column?: string
+          dna_analysis_name?: string
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_analysis_results_unmatched_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "dna_analysis_results"
             referencedColumns: ["id"]
           },
         ]
@@ -1663,6 +1742,30 @@ export type Database = {
           },
         ]
       }
+      dna_validation_errors: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          error_message: string
+          error_stack: string | null
+          id: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          error_message: string
+          error_stack?: string | null
+          id?: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          error_message?: string
+          error_stack?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       external_links: {
         Row: {
           created_at: string
@@ -1764,6 +1867,7 @@ export type Database = {
           introduction: string | null
           name: string
           Notion_URL: string | null
+          one_line: string | null
           randomizer: number
           slug: string | null
         }
@@ -1777,6 +1881,7 @@ export type Database = {
           introduction?: string | null
           name: string
           Notion_URL?: string | null
+          one_line?: string | null
           randomizer?: number
           slug?: string | null
         }
@@ -1790,10 +1895,43 @@ export type Database = {
           introduction?: string | null
           name?: string
           Notion_URL?: string | null
+          one_line?: string | null
           randomizer?: number
           slug?: string | null
         }
         Relationships: []
+      }
+      lightning_membership: {
+        Row: {
+          created_at: string
+          id: number
+          monthly_token_limit: number | null
+          plan_title: string | null
+          revenue_item_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          monthly_token_limit?: number | null
+          plan_title?: string | null
+          revenue_item_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          monthly_token_limit?: number | null
+          plan_title?: string | null
+          revenue_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_limits_revenue_item_id_fkey"
+            columns: ["revenue_item_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1803,9 +1941,10 @@ export type Database = {
           full_name: string | null
           id: string
           landscape_image: string | null
+          outseta_user_id: string | null
           profile_image: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           vanity_url: string | null
         }
         Insert: {
@@ -1815,9 +1954,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           vanity_url?: string | null
         }
         Update: {
@@ -1827,9 +1967,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           landscape_image?: string | null
+          outseta_user_id?: string | null
           profile_image?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           vanity_url?: string | null
         }
         Relationships: []
@@ -1996,49 +2137,37 @@ export type Database = {
           cost: number | null
           created_at: string
           id: string
+          membership_level_id: number | null
+          monthly_cost: number | null
           purpose: string | null
+          yearly_cost: number | null
         }
         Insert: {
           cost?: number | null
           created_at?: string
           id?: string
+          membership_level_id?: number | null
+          monthly_cost?: number | null
           purpose?: string | null
+          yearly_cost?: number | null
         }
         Update: {
           cost?: number | null
           created_at?: string
           id?: string
+          membership_level_id?: number | null
+          monthly_cost?: number | null
           purpose?: string | null
-        }
-        Relationships: []
-      }
-      lightning_membership: {
-        Row: {
-          id: number
-          plan_title: string
-          revenue_item_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          plan_title: string
-          revenue_item_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          plan_title?: string
-          revenue_item_id?: string
-          created_at?: string
+          yearly_cost?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "lightning_membership_revenue_item_id_fkey"
-            columns: ["revenue_item_id"]
+            foreignKeyName: "revenue_items_membership_level_id_fkey"
+            columns: ["membership_level_id"]
             isOneToOne: false
-            referencedRelation: "revenue_items"
+            referencedRelation: "lightning_membership"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       share_messages: {
@@ -2155,9 +2284,10 @@ export type Database = {
           current_page: number | null
           id: string
           last_read_at: string | null
+          outseta_user_id: string | null
           status: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           book_id: string
@@ -2166,9 +2296,10 @@ export type Database = {
           current_page?: number | null
           id?: string
           last_read_at?: string | null
+          outseta_user_id?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           book_id?: string
@@ -2177,9 +2308,10 @@ export type Database = {
           current_page?: number | null
           id?: string
           last_read_at?: string | null
+          outseta_user_id?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2189,64 +2321,49 @@ export type Database = {
             referencedRelation: "books"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_books_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          }
         ]
       }
       user_courses: {
         Row: {
           completed: boolean
           conversation_id: string | null
-          created_at: string
+          created_at: string | null
           entry_id: string
           entry_type: string
           id: string
           last_message: string | null
           profile_id: string | null
           progress: number
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           completed?: boolean
           conversation_id?: string | null
-          created_at?: string
+          created_at?: string | null
           entry_id: string
           entry_type: string
           id?: string
           last_message?: string | null
           profile_id?: string | null
           progress?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           completed?: boolean
           conversation_id?: string | null
-          created_at?: string
+          created_at?: string | null
           entry_id?: string
           entry_type?: string
           id?: string
           last_message?: string | null
           profile_id?: string | null
           progress?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_courses_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       user_favorites: {
         Row: {
@@ -2254,65 +2371,87 @@ export type Database = {
           id: string
           item_id: string
           item_type: string
-          user_id: string
+          outseta_user_id: string | null
+          user_id: string | null
         }
         Insert: {
           added_at?: string
           id?: string
           item_id: string
           item_type: string
-          user_id: string
+          outseta_user_id?: string | null
+          user_id?: string | null
         }
         Update: {
           added_at?: string
           id?: string
           item_id?: string
           item_type?: string
-          user_id?: string
+          outseta_user_id?: string | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_favorites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          }
-        ]
+        Relationships: []
       }
-      virgil_conversations: {
+      virgil_course_conversations: {
         Row: {
-          created_at: string | null
+          course_id: string
+          created_at: string
           id: string
-          last_message: string | null
-          mode_icon: string
-          mode_id: string
-          mode_title: string
-          session_id: string
-          updated_at: string | null
-          user_id: string | null
+          messages: Json
+          progress_percentage: number | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          created_at?: string | null
+          course_id: string
+          created_at?: string
           id?: string
-          last_message?: string | null
-          mode_icon: string
-          mode_id: string
-          mode_title: string
-          session_id: string
-          updated_at?: string | null
-          user_id?: string | null
+          messages?: Json
+          progress_percentage?: number | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          messages?: Json
+          progress_percentage?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      virgil_exam_conversations: {
+        Row: {
+          badge_level: number | null
+          course_id: string
+          created_at: string | null
+          id: string
+          messages: Json | null
+          status: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_level?: number | null
+          course_id: string
+          created_at?: string | null
+          id: string
+          messages?: Json | null
+          status?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_level?: number | null
+          course_id?: string
           created_at?: string | null
           id?: string
-          last_message?: string | null
-          mode_icon?: string
-          mode_id?: string
-          mode_title?: string
-          session_id?: string
+          messages?: Json | null
+          status?: boolean | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -2330,6 +2469,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_token_availability: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       debug_auth_state: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2343,18 +2486,24 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      extract_domain_from_field_name: {
+        Args: { field_name: string }
+        Returns: string
+      }
+      extract_position_from_field_name: {
+        Args: { field_name: string }
+        Returns: number
+      }
+      extract_type_from_field_name: {
+        Args: { field_name: string }
+        Returns: string
+      }
       generate_vanity_url: {
-        Args: {
-          full_name: string
-          user_id: string
-        }
+        Args: { full_name: string; user_id: string }
         Returns: string
       }
       get_files_batch: {
-        Args: {
-          last_id: string
-          page_size: number
-        }
+        Args: { last_id: string; page_size: number }
         Returns: {
           id: string
           folder: string
@@ -2363,48 +2512,34 @@ export type Database = {
         }[]
       }
       get_user_subscription: {
-        Args: {
-          user_id_param: string
-        }
+        Args: { user_id_param: string }
         Returns: {
           subscription_status: string
           subscription_tier: string
         }[]
       }
       gtrgm_compress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_decompress: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_in: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       gtrgm_options: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: undefined
       }
       gtrgm_out: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       set_limit: {
-        Args: {
-          "": number
-        }
+        Args: { "": number }
         Returns: number
       }
       show_limit: {
@@ -2412,9 +2547,7 @@ export type Database = {
         Returns: number
       }
       show_trgm: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: string[]
       }
     }
@@ -2449,27 +2582,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2477,20 +2612,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2498,20 +2635,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2519,21 +2658,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -2542,6 +2683,39 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      dna_category: [
+        "ETHICS",
+        "AESTHETICS",
+        "POLITICS",
+        "THEOLOGY",
+        "ONTOLOGY",
+        "EPISTEMOLOGY",
+      ],
+      dna_result_type: ["section_1", "section_2", "section_3"],
+      question_category: [
+        "AESTHETICS",
+        "EPISTEMOLOGY",
+        "ETHICS",
+        "ONTOLOGY",
+        "POLITICS",
+        "THEOLOGY",
+      ],
+      share_message_type: [
+        "classic_text",
+        "classic_art",
+        "classic_music",
+        "icon",
+        "concept",
+        "virgil",
+        "courses",
+      ],
+    },
+  },
+} as const
