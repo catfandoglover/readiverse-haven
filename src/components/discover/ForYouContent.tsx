@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -11,8 +11,7 @@ import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface ForYouContentItem {
   id: string;
@@ -29,10 +28,27 @@ interface ForYouContentProps {
   onDetailedViewHide?: () => void;
 }
 
+interface ShuffledItem {
+  id: string;
+  type: "classic" | "icon" | "concept";
+}
+
+// Shuffle function
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
+
 const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
-  const [retryAttempt, setRetryAttempt] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,209 +57,194 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
+  const [desktopIndex, setDesktopIndex] = useState(0);
+  const [shuffledItems, setShuffledItems] = useState<ShuffledItem[]>([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
-
-  const handleRetry = () => {
-    setRetryAttempt(prev => prev + 1);
-    toast({
-      title: "Retrying",
-      description: "Attempting to reload content...",
-    });
-  };
-
-  const { data: forYouItems = [], isLoading, isError } = useQuery({
-    queryKey: ["for-you-content", retryAttempt],
+  const { data: allItemIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["for-you-all-ids"],
     queryFn: async () => {
+      console.log("Fetching all IDs for For You...");
       try {
-        // Fetch minimal fields initially to improve load time
-        // Only fetch essential display fields
-        const minimalFields = {
-          books: "id, title, author, icon_illustration, Cover_super, slug, about", 
-          icons: "id, name, illustration, slug, about",
-          concepts: "id, title, illustration, slug, about"
-        };
-        
-        let books = [];
-        let icons = [];
-        let concepts = [];
-        
-        try {
-          const booksResponse = await supabase
-            .from("books")
-            .select(minimalFields.books)
-            .order("randomizer")
-            .limit(5);
-          
-          if (booksResponse.error) {
-            console.error("Error fetching books:", booksResponse.error);
-          } else {
-            books = booksResponse.data || [];
-          }
-        } catch (booksError) {
-          console.error("Exception fetching books:", booksError);
-        }
-        
-        try {
-          const iconsResponse = await supabase
-            .from("icons")
-            .select(minimalFields.icons)
-            .order("randomizer")
-            .limit(5);
-          
-          if (iconsResponse.error) {
-            console.error("Error fetching icons:", iconsResponse.error);
-          } else {
-            icons = iconsResponse.data || [];
-          }
-        } catch (iconsError) {
-          console.error("Exception fetching icons:", iconsError);
-        }
-        
-        try {
-          const conceptsResponse = await supabase
-            .from("concepts")
-            .select(minimalFields.concepts)
-            .limit(5);
-          
-          if (conceptsResponse.error) {
-            console.error("Error fetching concepts:", conceptsResponse.error);
-          } else {
-            concepts = conceptsResponse.data || [];
-          }
-        } catch (conceptsError) {
-          console.error("Exception fetching concepts:", conceptsError);
-        }
-        
-        if (books.length === 0 && icons.length === 0 && concepts.length === 0) {
-          throw new Error("Failed to fetch any content");
-        }
+        const [booksRes, iconsRes, conceptsRes] = await Promise.all([
+          supabase.from("books").select("id"),
+          supabase.from("icons").select("id"),
+          supabase.from("concepts").select("id")
+        ]);
 
-        const forYouItems: ForYouContentItem[] = [
-          ...books.map((book: any) => ({
-            id: book.id,
-            title: book.title,
-            type: "classic" as const,
-            image: book.icon_illustration || book.Cover_super || "",
-            about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
-            author: book.author,
-            slug: book.slug || book.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || book.id,
-            // Other fields can be loaded on demand when user selects the item
-          })),
-          ...icons.map((icon: any) => ({
-            id: icon.id,
-            title: icon.name,
-            type: "icon" as const,
-            image: icon.illustration,
-            about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-            slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
-            // Other fields can be loaded on demand when user selects the item
-          })),
-          ...concepts.map((concept: any) => ({
-            id: concept.id,
-            title: concept.title,
-            type: "concept" as const,
-            image: concept.illustration,
-            about: concept.about || `${concept.title} is a significant philosophical concept.`,
-            slug: concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id,
-            // Other fields can be loaded on demand when user selects the item
-          })),
+        if (booksRes.error) console.error("Error fetching book IDs:", booksRes.error);
+        if (iconsRes.error) console.error("Error fetching icon IDs:", iconsRes.error);
+        if (conceptsRes.error) console.error("Error fetching concept IDs:", conceptsRes.error);
+
+        const combined = [
+          ...(booksRes.data || []).map(item => ({ id: item.id, type: 'classic' as const })),
+          ...(iconsRes.data || []).map(item => ({ id: item.id, type: 'icon' as const })),
+          ...(conceptsRes.data || []).map(item => ({ id: item.id, type: 'concept' as const }))
         ];
-
-        return forYouItems.sort(() => Math.random() - 0.5).slice(0, 10); // Simplify sort for speed and limit to 10
+        console.log(`Fetched ${combined.length} total IDs for For You.`);
+        return combined;
       } catch (error) {
-        console.error("Error fetching For You content:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load personalized content",
-        });
-        throw error;
+        console.error("Error fetching combined IDs for For You:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load content IDs" });
+        return [];
       }
     },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 15000),
-    // Add caching to prevent frequent refetching
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep data in cache for 30 minutes (was previously called cacheTime)
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   useEffect(() => {
+    if (allItemIds && allItemIds.length > 0) {
+      console.log("[ShuffleEffect ForYou] Shuffling combined items...");
+      setShuffledItems(shuffleArray(allItemIds));
+      setDesktopIndex(0);
+    }
+  }, [allItemIds]);
+
+  const currentItemRef = useMemo(() => {
+    if (shuffledItems.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledItems.length) {
+      return shuffledItems[desktopIndex];
+    }
+    return null;
+  }, [shuffledItems, desktopIndex]);
+  const currentItemId = currentItemRef?.id;
+  const currentItemType = currentItemRef?.type;
+
+  const fetchItemDetails = useCallback(async (itemId: string | null | undefined, itemType: ShuffledItem['type'] | null | undefined) => {
+    if (!itemId || !itemType) return null;
+    
+    let tableName: string;
+    let selectFields: string;
+    
+    switch (itemType) {
+      case 'classic': 
+        tableName = 'books';
+        selectFields = 'id, title, author, icon_illustration, Cover_super, slug, about, epub_file_url';
+        break;
+      case 'icon': 
+        tableName = 'icons'; 
+        selectFields = 'id, name, illustration, about, slug, great_conversation, anecdotes';
+        break;
+      case 'concept': 
+        tableName = 'concepts';
+        selectFields = 'id, title, illustration, about, concept_type, introduction, slug, great_conversation';
+        break;
+      default: 
+        console.error("Unknown item type for fetching details:", itemType);
+        return null;
+    }
+
+    console.log(`Fetching details for ${itemType} ID: ${itemId}`);
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(selectFields)
+        .eq("id", itemId)
+        .single();
+
+      if (error) {
+        console.error(`Error fetching details for ${itemType} ${itemId}:`, error);
+        toast({ variant: "destructive", title: "Error", description: `Failed to load ${itemType} details` });
+        return null;
+      }
+      
+      const generateSlug = (title: string): string => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (itemType === 'classic') {
+        return {
+          ...data,
+          type: "classic" as const,
+          image: data.icon_illustration || data.Cover_super || "",
+          about: data.about || `A classic work by ${data.author || 'Unknown Author'}.`,
+          slug: data.slug || (data.title ? generateSlug(data.title) : data.id),
+        };
+      } else if (itemType === 'icon') {
+        return {
+          ...data,
+          title: data.name,
+          type: "icon" as const,
+          image: data.illustration,
+          about: data.about || `${data.name} was a significant figure in philosophical history.`,
+          slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
+        };
+      } else if (itemType === 'concept') {
+        return {
+          ...data,
+          type: data.concept_type || "concept",
+          image: data.illustration,
+          about: data.about || data.description || `${data.title} is a significant philosophical concept.`,
+          great_conversation: data.great_conversation || `${data.title} has been debated throughout philosophical history.`,
+          slug: data.slug || (data.title ? generateSlug(data.title) : data.id),
+        };
+      }
+      return null;
+
+    } catch(error) {
+      console.error(`Exception fetching details for ${itemType} ${itemId}:`, error);
+      return null;
+    }
+  }, [supabase, toast]);
+
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["item-details", currentItemId, currentItemType], 
+    queryFn: () => fetchItemDetails(currentItemId, currentItemType),
+    enabled: !!currentItemId && !!currentItemType,
+    staleTime: 5 * 60 * 1000, 
+    gcTime: 10 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    let itemToSelect: ForYouContentItem | null | undefined = null;
+    let slug: string | undefined = undefined;
+    let itemType: ForYouContentItem['type'] | undefined = undefined;
+
     if (location.pathname.includes('/icons/')) {
-      const slug = location.pathname.split('/icons/')[1];
-      const item = forYouItems.find(item => item.type === 'icon' && item.slug === slug);
-      if (item) {
-        setSelectedItem(item);
-        if (onDetailedViewShow) onDetailedViewShow();
-      }
+      slug = location.pathname.split('/icons/')[1];
+      itemType = 'icon';
     } else if (location.pathname.includes('/texts/')) {
-      const slug = location.pathname.split('/texts/')[1];
-      const item = forYouItems.find(item => item.type === 'classic' && item.slug === slug);
-      if (item) {
-        setSelectedItem(item);
-        if (onDetailedViewShow) onDetailedViewShow();
-      }
+      slug = location.pathname.split('/texts/')[1];
+      itemType = 'classic';
     } else if (location.pathname.includes('/concepts/')) {
-      const slug = location.pathname.split('/concepts/')[1];
-      const item = forYouItems.find(item => item.type === 'concept' && item.slug === slug);
-      if (item) {
-        setSelectedItem(item);
-        if (onDetailedViewShow) onDetailedViewShow();
+      slug = location.pathname.split('/concepts/')[1];
+      itemType = 'concept';
+    }
+
+    if (slug && itemType) {
+      if (currentItemData && currentItemData.slug === slug && currentItemData.type === itemType) {
+        if (!selectedItem || selectedItem.id !== currentItemData.id) {
+          console.log(`[ForYouContent] Setting selected item from current data: ${currentItemData.title}`);
+          setSelectedItem(currentItemData as ForYouContentItem);
+          if (onDetailedViewShow) onDetailedViewShow();
+        }
+      } else {
+        console.log(`[ForYouContent] ${itemType} slug ${slug} doesn't match current item or no current item data. Consider direct fetch.`);
       }
+    } else if (selectedItem){
     }
-  }, [location.pathname, forYouItems, onDetailedViewShow]);
-
-  const handlePrevious = () => {
-    console.log("Previous button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (displayIndex > 0) {
-      setDisplayIndex(prevIndex => prevIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    console.log("Next button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (forYouItems.length > 0 && displayIndex < forYouItems.length - 1) {
-      setDisplayIndex(prevIndex => prevIndex + 1);
-    }
-  };
-
-  // Define getCurrentItem function to avoid duplicate code
-  const getCurrentItem = () => forYouItems[displayIndex % Math.max(1, forYouItems.length)] || null;
+  }, [location.pathname, currentItemData, onDetailedViewShow, selectedItem]);
 
   const handleLearnMore = (item: ForYouContentItem) => {
-    // Save the current path before navigation
     const currentPath = location.pathname;
     console.log("[ForYouContent] Setting source path for detail view:", currentPath);
     
-    // Save the source path before navigation
     saveSourcePath(currentPath);
     
     setSelectedItem(item);
     
+    let targetUrl: string | null = null;
     if (item.type === 'icon' && item.slug) {
-      navigate(`/icons/${item.slug}`, { 
-        replace: true,
-        state: { 
-          fromSection: 'discover',
-          sourcePath: currentPath
-        }
-      });
+      targetUrl = `/icons/${item.slug}`;
     } else if (item.type === 'classic' && item.slug) {
-      navigate(`/texts/${item.slug}`, { 
-        replace: true,
-        state: { 
-          fromSection: 'discover',
-          sourcePath: currentPath
-        }
-      });
+      targetUrl = `/texts/${item.slug}`;
     } else if (item.type === 'concept' && item.slug) {
-      navigate(`/concepts/${item.slug}`, { 
+      targetUrl = `/concepts/${item.slug}`;
+    }
+    
+    if (targetUrl) {
+      navigate(targetUrl, { 
         replace: true,
         state: { 
           fromSection: 'discover',
@@ -251,7 +252,8 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
         }
       });
     } else {
-      console.error("Item missing slug:", item);
+      console.error("Item missing slug or unknown type:", item);
+      return;
     }
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -289,83 +291,57 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
     ],
   };
 
-  if (isLoading) {
+  const handlePrevious = useCallback(() => {
+    if (desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
+    }
+  }, [desktopIndex]);
+
+  const handleNext = useCallback(() => {
+    if (desktopIndex < shuffledItems.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
+    }
+  }, [desktopIndex, shuffledItems.length]);
+
+  const getCurrentItem = () => currentItemData;
+
+  const isLoadingCombined = isLoadingIds || (!!currentItemId && isLoadingCurrentItem);
+  const currentItem = getCurrentItem();
+
+  if (isLoadingCombined && !currentItem) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        <div className="text-gray-400">Loading your personalized recommendations...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-[#E9E7E2]/60" />
+        <p className="text-[#E9E7E2]/60">Loading recommendations...</p>
       </div>
     );
   }
 
-  if (isError || !forYouItems || forYouItems.length === 0) {
+  if (!isLoadingIds && shuffledItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4">
-        <div className="text-red-500 text-lg font-semibold">Content could not be loaded</div>
-        <p className="text-gray-600 mb-4">
-          We're having trouble loading your personalized content. Please try again.
-        </p>
-        <Button 
-          onClick={handleRetry} 
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reload Content
-        </Button>
+        <p className="text-[#E9E7E2]/80">Couldn't load recommendations at this time.</p>
       </div>
     );
   }
 
-  // Conditionally render based on mobile vs desktop
   if (isMobile) {
     return (
-      <>
-        <VerticalSwiper 
-          ref={swiperRef}
-          initialIndex={displayIndex}
-          onIndexChange={setDisplayIndex}
-        >
-          {forYouItems.map((item, index) => (
-            <div key={item.id} className="h-full">
-              <ContentCard
-                image={item.image}
-                title={item.title}
-                about={item.about}
-                itemId={item.id}
-                itemType={item.type}
-                onLearnMore={() => handleLearnMore(item)}
-                onImageClick={() => handleLearnMore(item)}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                hasPrevious={index > 0}
-                hasNext={index < forYouItems.length - 1}
-              />
-            </div>
-          ))}
-        </VerticalSwiper>
-  
-        {selectedItem && (
-          <DetailedView
-            type={selectedItem.type}
-            data={{
-              ...selectedItem,
-              ...mockRelatedData
-            }}
-            onBack={handleCloseDetailedView}
-          />
-        )}
-      </>
+      <div className="flex items-center justify-center h-full p-4">
+        <p className="text-gray-400">Mobile view TBD</p>
+      </div>
     );
   }
 
-  // Desktop view - use getCurrentItem instead of redefining itemToShow
-  const currentItem = getCurrentItem();
-  
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < shuffledItems.length - 1;
+
   return (
-    <>
-      <div className="h-full">
-        {currentItem && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center">
+        {(isLoadingCurrentItem && !currentItem) ? (
+          <div className="animate-pulse text-gray-400">Loading Item...</div>
+        ) : currentItem ? (
           <ContentCard
             image={currentItem.image}
             title={currentItem.title}
@@ -374,11 +350,15 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
             itemType={currentItem.type}
             onLearnMore={() => handleLearnMore(currentItem)}
             onImageClick={() => handleLearnMore(currentItem)}
-            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
-            onNext={displayIndex < forYouItems.length - 1 ? handleNext : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < forYouItems.length - 1}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
           />
+        ) : isCurrentItemError ? (
+          <p className="text-red-500">Error loading this item.</p>
+        ) : (
+          <p className="text-gray-500">No recommendations found.</p>
         )}
       </div>
 
@@ -392,7 +372,7 @@ const ForYouContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedV
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 

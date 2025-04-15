@@ -221,12 +221,11 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
             
             <div className="pt-4 pb-12">
               <Button 
-                variant="outline" 
-                className="w-full bg-transparent border border-[#E9E7E2]/20 text-[#E9E7E2]/80 hover:bg-[#E9E7E2]/10 hover:text-[#E9E7E2] transition-colors"
+                variant="destructive"
+                className="w-full h-[52px] rounded-2xl bg-[#e9e7e2] text-[#332e38] hover:bg-[#e9e7e2]/90 font-oxanium uppercase text-sm font-bold"
                 onClick={signOut}
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                <span className="font-oxanium">Logout</span>
+                SIGN OUT
               </Button>
             </div>
           </div>

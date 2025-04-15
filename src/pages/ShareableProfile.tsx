@@ -22,6 +22,12 @@ interface ProfileData {
   vanity_url?: string;
 }
 
+// Interface for the details we fetch for an icon
+interface IconDetails {
+  illustration: string;
+  slug: string | null;
+}
+
 interface DNAAnalysisResult {
   id: string;
   assessment_id: string;
@@ -33,12 +39,13 @@ interface DNAAnalysisResult {
   created_at: string;
 }
 
-const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQzNjI4OTkwLCJleHAiOjg2NTc0MzU0MjU5MH0.iC8ooiUUENlvy-6ZtRexi_3jIJS5lBy2Y5FnUM82p9o";
+// Updated fallback icon URL
+const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0NzA4MzkyLCJleHAiOjg4MTQ0NjIxOTkyfQ.j00YuzyHMx4mcoOa9Sye0Vg2yssKfa4a3xSXJSszKHM";
 
-// Function to get an icon URL by name
-const getIconUrlByName = async (name: string | null): Promise<string> => {
+// Function to get an icon illustration URL and slug by name
+const getIconDetailsByName = async (name: string | null): Promise<IconDetails> => {
   if (!name) {
-    return FALLBACK_ICON;
+    return { illustration: FALLBACK_ICON, slug: null };
   }
   
   // Extract just the name part before any dash or hyphen
@@ -47,19 +54,23 @@ const getIconUrlByName = async (name: string | null): Promise<string> => {
   try {
     const { data, error } = await supabase
       .from('icons')
-      .select('illustration')
+      .select('illustration, slug') // Fetch slug as well
       .ilike('name', `%${simpleName}%`)
       .limit(1);
       
-    if (error || !data || data.length === 0) {
-      console.error('Error finding icon for:', simpleName, error);
-      return FALLBACK_ICON;
+    if (error || !data || data.length === 0 || !data[0].illustration) {
+      console.error('Error finding icon details for:', simpleName, error);
+      return { illustration: FALLBACK_ICON, slug: null };
     }
     
-    return data[0].illustration;
+    // Return both illustration and slug
+    return { 
+      illustration: data[0].illustration, 
+      slug: data[0].slug 
+    };
   } catch (err) {
-    console.error('Error fetching icon by name:', err);
-    return FALLBACK_ICON;
+    console.error('Error fetching icon details by name:', err);
+    return { illustration: FALLBACK_ICON, slug: null };
   }
 };
 
@@ -75,18 +86,25 @@ function ShareableProfile(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [kindredSpiritIconUrl, setKindredSpiritIconUrl] = useState<string>("");
   const [challengingVoiceIconUrl, setChallengingVoiceIconUrl] = useState<string>("");
+  const [kindredSpiritSlug, setKindredSpiritSlug] = useState<string | null>(null);
+  const [challengingVoiceSlug, setChallengingVoiceSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Add new state and refs for scroll effects
   const [shouldBlurHeader, setShouldBlurHeader] = useState<boolean>(false);
   const imageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Function to navigate to icon detail page
-  const navigateToIconDetail = (iconName: string | null): void => {
-    if (!iconName) return;
-    // Format the name for URL (lowercase, replace spaces with hyphens)
-    const formattedName = iconName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/icons/${formattedName}`);
+  // Function to navigate to icon detail page using slug or name
+  const navigateToIconDetail = (slug: string | null, iconName: string | null): void => {
+    if (slug) {
+      navigate(`/icons/${slug}`);
+    } else if (iconName) {
+      // Fallback: Format the name for URL (lowercase, replace spaces with hyphens)
+      const formattedName = iconName.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/icons/${formattedName}`);
+    } else {
+      console.warn("Cannot navigate, no slug or name provided for icon.");
+    }
   };
 
   useEffect(() => {
@@ -245,15 +263,17 @@ function ShareableProfile(): JSX.Element {
   useEffect(() => {
     const fetchIcons = async () => {
       if (analysisResult?.most_kindred_spirit) {
-        const url = await getIconUrlByName(analysisResult.most_kindred_spirit);
-        setKindredSpiritIconUrl(url);
-        console.log("Set kindred spirit icon URL:", url);
+        const { illustration, slug } = await getIconDetailsByName(analysisResult.most_kindred_spirit);
+        setKindredSpiritIconUrl(illustration);
+        setKindredSpiritSlug(slug);
+        console.log("Set kindred spirit icon URL:", illustration);
       }
       
       if (analysisResult?.most_challenging_voice) {
-        const url = await getIconUrlByName(analysisResult.most_challenging_voice);
-        setChallengingVoiceIconUrl(url);
-        console.log("Set challenging voice icon URL:", url);
+        const { illustration, slug } = await getIconDetailsByName(analysisResult.most_challenging_voice);
+        setChallengingVoiceIconUrl(illustration);
+        setChallengingVoiceSlug(slug);
+        console.log("Set challenging voice icon URL:", illustration);
       }
     };
     
@@ -400,7 +420,7 @@ function ShareableProfile(): JSX.Element {
         {kindredSpirit && (
           <div 
             className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-6 cursor-pointer hover:bg-[#383741] transition-colors"
-            onClick={() => navigateToIconDetail(kindredSpiritName)}
+            onClick={() => navigateToIconDetail(kindredSpiritSlug, kindredSpiritName)}
             role="button"
             aria-label={`View details for ${kindredSpiritName}`}
           >
@@ -431,7 +451,7 @@ function ShareableProfile(): JSX.Element {
         {challengingVoice && (
           <div
             className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between w-full max-w-lg mb-8 cursor-pointer hover:bg-[#383741] transition-colors"
-            onClick={() => navigateToIconDetail(challengingVoiceName)}
+            onClick={() => navigateToIconDetail(challengingVoiceSlug, challengingVoiceName)}
             role="button"
             aria-label={`View details for ${challengingVoiceName}`}
           >

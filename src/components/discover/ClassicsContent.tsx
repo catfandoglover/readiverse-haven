@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -28,9 +28,22 @@ interface ForYouContentProps {
   onDetailedViewHide?: () => void;
 }
 
+// Shuffle function
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
+
 const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,84 +53,123 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const params = useParams();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
+  const [desktopIndex, setDesktopIndex] = useState(0); // Start at 0
+  const [shuffledIds, setShuffledIds] = useState<string[]>([]);
+  const queryClient = useQueryClient(); // Initialize queryClient
 
-  useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
-
-  const { data: classicsItems = [], isLoading } = useQuery({
-    queryKey: ["classics-content"],
+  // Query 1: Fetch all Classic IDs
+  const { data: allClassicIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["all-classics-ids"],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("books")
-          .select("*")
-          .order("randomizer");
-
-        if (error) {
-          console.error("Error fetching classics content:", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load classics content",
-          });
-          return [];
-        }
-
-        // Simple slug generation function
-        const generateSlug = (title: string): string => {
-          if (!title) return '';
-          return title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '');
-        };
-
-        const classics = data.map((book: any) => ({
-          id: book.id,
-          title: book.title,
-          type: "classic" as const,
-          image: book.icon_illustration || book.Cover_super || "",
-          about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
-          author: book.author,
-          great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
-          Cover_super: book.Cover_super,
-          epub_file_url: book.epub_file_url,
-          slug: book.slug || (book.title ? generateSlug(book.title) : book.id),
-        }));
-
-        return classics;
-      } catch (error) {
-        console.error("Error fetching classics content:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load classics content",
-        });
+      console.log("Fetching all classic IDs...");
+      const { data, error } = await supabase
+        .from("books")
+        .select("id"); // Select only IDs
+      if (error) {
+        console.error("Error fetching classic IDs:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load classic IDs" });
         return [];
       }
+      return data.map(item => item.id);
     },
+    staleTime: Infinity, // IDs don't change often, keep them stale indefinitely
+    gcTime: Infinity,
   });
+
+  // Effect to shuffle IDs once fetched
+  useEffect(() => {
+    if (allClassicIds && allClassicIds.length > 0) {
+      console.log("[ShuffleEffect Classics] Shuffling IDs...");
+      setShuffledIds(shuffleArray(allClassicIds));
+      setDesktopIndex(0); // Reset index when IDs are shuffled
+    }
+  }, [allClassicIds]);
+
+  // Determine the current ID based on the shuffled list and index
+  const currentBookId = useMemo(() => {
+      if (shuffledIds.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledIds.length) {
+          return shuffledIds[desktopIndex];
+      }
+      return null;
+  }, [shuffledIds, desktopIndex]);
+
+  // Define the query function separately to reuse it for prefetching
+  const fetchBookDetails = async (bookId: string | null) => {
+    if (!bookId) return null;
+    console.log(`Fetching details for book ID: ${bookId}`);
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .eq("id", bookId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching details for book ${bookId}:`, error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load book details" });
+      return null;
+    }
+    
+    const generateSlug = (title: string): string => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return {
+      ...data,
+      type: "classic" as const,
+      image: data.icon_illustration || data.Cover_super || "",
+      about: data.about || `A classic work by ${data.author || 'Unknown Author'}.`,
+      slug: data.slug || (data.title ? generateSlug(data.title) : data.id),
+    };
+  };
+
+  // Query 2: Fetch details for the *current* book ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["book-details", currentBookId],
+    queryFn: () => fetchBookDetails(currentBookId), // Use the separated function
+    enabled: !!currentBookId,
+    staleTime: 5 * 60 * 1000, 
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Effect for Pre-fetching next items
+  useEffect(() => {
+    const prefetchCount = 3; // How many items ahead to prefetch
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Classics] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['book-details', prefetchId],
+            queryFn: () => fetchBookDetails(prefetchId), // Reuse the query function
+            staleTime: 5 * 60 * 1000 // Match staleTime
+          });
+        }
+      }
+    }
+  }, [desktopIndex, shuffledIds, queryClient, fetchBookDetails]); // Add fetchBookDetails to dependency array
 
   useEffect(() => {
     if (location.pathname.includes('/texts/')) {
       const pathSlug = location.pathname.split('/texts/')[1];
       console.log("Loading text by slug:", pathSlug);
       
-      // Check if we have state information from navigation (e.g., from reader)
       const locationState = location.state as { fromReader?: boolean, bookId?: string } | null;
       const comingFromReader = locationState?.fromReader;
       const bookId = locationState?.bookId;
       
-      // Direct database fetch for the specific book by slug - bypassing any issues with the main data loading
       const fetchBookDirectly = async () => {
         try {
-          console.log("Directly querying DB for book with slug:", pathSlug);
+          console.log("[ClassicsContent] Directly querying DB for book with slug:", pathSlug);
           
-          // If we have the book ID from reader navigation, try that first
+          // Tell the parent immediately that we're showing a detailed view
+          // This helps ensure the UI updates correctly
+          if (onDetailedViewShow) onDetailedViewShow();
+          
           if (comingFromReader && bookId) {
-            console.log("Coming from reader with book ID:", bookId);
+            console.log("[ClassicsContent] Coming from reader with book ID:", bookId);
             const { data: dataById, error: errorById } = await supabase
               .from("books")
               .select("*")
@@ -125,34 +177,33 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
               .single();
               
             if (dataById) {
-              console.log("Found book by ID from reader navigation:", dataById.title);
+              console.log("[ClassicsContent] Found book by ID from reader navigation:", dataById.title);
               const book = {
                 id: dataById.id,
                 title: dataById.title,
                 type: "classic" as const,
-                image: dataById.icon_illustration || dataById.Cover_super || "",
+                image: dataById.cover_url || dataById.Cover_super || dataById.icon_illustration || "",
                 about: dataById.about || `A classic work by ${dataById.author || 'Unknown Author'}.`,
                 author: dataById.author,
-                great_conversation: `${dataById.title} has played an important role in shaping intellectual discourse.`,
+                author_id: dataById.author_id,
+                great_conversation: dataById.great_conversation || `${dataById.title} has played an important role in shaping intellectual discourse.`,
                 Cover_super: dataById.Cover_super,
+                cover_url: dataById.cover_url,
                 epub_file_url: dataById.epub_file_url,
                 slug: dataById.slug || pathSlug,
               };
               
               setSelectedItem(book);
-              if (onDetailedViewShow) onDetailedViewShow();
               return;
             }
           }
           
-          // First, try to match the exact slug
           let { data, error } = await supabase
             .from("books")
             .select("*")
             .eq("slug", pathSlug)
             .single();
             
-          // If that doesn't work, try case-insensitive match (using ilike)
           if (!data && error) {
             console.log("Exact slug match failed, trying case-insensitive match");
             const { data: dataILike, error: errorILike } = await supabase
@@ -167,7 +218,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          // If that still doesn't work, try by title using the slug converted to title format
           if (!data && error) {
             console.log("Slug matches failed, trying title match");
             const titleFromSlug = pathSlug.replace(/-/g, ' ')
@@ -187,7 +237,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          // Handle special cases directly
           if (!data && (pathSlug === "Botchan" || pathSlug.toLowerCase() === "botchan")) {
             console.log("Special case: Trying to find Botchan by title");
             const { data: specialData, error: specialError } = await supabase
@@ -220,32 +269,36 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             setSelectedItem(book);
             if (onDetailedViewShow) onDetailedViewShow();
           } else {
-            // Only log the error but don't redirect
             console.error("Failed to find book directly from database, but continuing with current view:", error);
           }
         } catch (error) {
-          // Only log the error but don't redirect
           console.error("Error fetching book directly, but continuing with current view:", error);
         }
       };
       
-      // Try to find the book in loaded data first
-      const bookInLoadedData = classicsItems.find(book => 
-        book.slug === pathSlug || 
-        book.slug?.toLowerCase() === pathSlug.toLowerCase() ||
-        book.title === "Botchan" // Special hardcoded check for Botchan
+      // Try to find the book in *allFetchedItems* first
+      const bookInLoadedData = allClassicIds.find(id => 
+        id === pathSlug || 
+        id?.toLowerCase() === pathSlug.toLowerCase() ||
+        pathSlug === "Botchan"
       );
       
       if (bookInLoadedData) {
-        console.log("Found book in loaded data:", bookInLoadedData.title);
-        setSelectedItem(bookInLoadedData);
+        console.log("Found book in loaded data:", bookInLoadedData);
+        setSelectedItem({
+          id: bookInLoadedData,
+          title: bookInLoadedData,
+          type: "classic" as const,
+          image: "",
+          about: "",
+        });
         if (onDetailedViewShow) onDetailedViewShow();
       } else {
-        // If not found in loaded data, query the database directly
+        console.log("Book not found in loaded items, fetching directly...");
         fetchBookDirectly();
       }
     }
-  }, [location.pathname, classicsItems, onDetailedViewShow, supabase]);
+  }, [location.pathname, allClassicIds, onDetailedViewShow, supabase]);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -257,24 +310,16 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   }, [location.pathname, saveSourcePath]);
 
   const handlePrevious = () => {
-    console.log("ClassicsContent - Previous button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (displayIndex > 0) {
-      setDisplayIndex(prevIndex => prevIndex - 1);
+    if (desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
     }
   };
 
   const handleNext = () => {
-    console.log("ClassicsContent - Next button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (classicsItems.length > 0 && displayIndex < classicsItems.length - 1) {
-      setDisplayIndex(prevIndex => prevIndex + 1);
+    if (desktopIndex < shuffledIds.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
     }
   };
-
-  const getCurrentItem = () => classicsItems[displayIndex % Math.max(1, classicsItems.length)] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     if (!item.slug) {
@@ -282,14 +327,22 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       return;
     }
     
+    const currentPath = location.pathname;
+    console.log("[ClassicsContent] Setting source path for detail view:", currentPath);
+    saveSourcePath(currentPath);
+
     setSelectedItem(item);
     
-    // Ensure lowercase slug for consistency with our special case handling
     const formattedSlug = item.slug.toLowerCase();
     const targetUrl = `/texts/${formattedSlug}`;
     
-    // Use direct browser navigation for consistency with other components
-    window.location.href = targetUrl;
+    navigate(targetUrl, { 
+      replace: true,
+      state: { 
+        fromSection: 'discover',
+        sourcePath: currentPath
+      }
+    });
     
     if (onDetailedViewShow) onDetailedViewShow();
   };
@@ -297,9 +350,53 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const handleCloseDetailedView = () => {
     setSelectedItem(null);
     
-    const previousPath = getPreviousPage();
-    console.log("[ClassicsContent] Navigating back to:", previousPath);
+    const sourcePaths = {
+      localStorage: localStorage.getItem('sourcePath'),
+      sessionStorage: sessionStorage.getItem('sourcePath'),
+      localDetailedView: localStorage.getItem('detailedViewSourcePath'),
+      sessionDetailedView: sessionStorage.getItem('detailedViewSourcePath')
+    };
     
+    console.log("[ClassicsContent] Available source paths for back navigation:", sourcePaths);
+    
+    if (sourcePaths.localDetailedView && sourcePaths.localDetailedView !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from localStorage (detailedViewSourcePath):", sourcePaths.localDetailedView);
+      navigate(sourcePaths.localDetailedView, { replace: true });
+      localStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.sessionDetailedView && sourcePaths.sessionDetailedView !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from sessionStorage (detailedViewSourcePath):", sourcePaths.sessionDetailedView);
+      navigate(sourcePaths.sessionDetailedView, { replace: true });
+      sessionStorage.removeItem('detailedViewSourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.localStorage && sourcePaths.localStorage !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from localStorage:", sourcePaths.localStorage);
+      navigate(sourcePaths.localStorage, { replace: true });
+      localStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    if (sourcePaths.sessionStorage && sourcePaths.sessionStorage !== location.pathname) {
+      console.log("[ClassicsContent] Navigating to source path from sessionStorage:", sourcePaths.sessionStorage);
+      navigate(sourcePaths.sessionStorage, { replace: true });
+      sessionStorage.removeItem('sourcePath');
+      
+      if (onDetailedViewHide) onDetailedViewHide();
+      return;
+    }
+    
+    const previousPath = getPreviousPage();
+    console.log("[ClassicsContent] Falling back to previous page from history:", previousPath);
     navigate(previousPath, { replace: true });
     
     if (onDetailedViewHide) onDetailedViewHide();
@@ -328,7 +425,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     ],
   };
 
-  // Add additional effect to ensure DetailedView is shown whenever we have a selectedItem
   useEffect(() => {
     if (selectedItem && onDetailedViewShow) {
       console.log("Showing DetailedView for selected item:", selectedItem.title);
@@ -336,15 +432,17 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     }
   }, [selectedItem, onDetailedViewShow]);
 
-  // Debug info for selected item
   useEffect(() => {
     if (selectedItem) {
       console.log("Selected item state updated:", selectedItem.title);
     }
   }, [selectedItem]);
 
-  if (isLoading || !classicsItems || classicsItems.length === 0) {
-    return (
+  const isLoadingCombined = isLoadingIds || (!!currentBookId && isLoadingCurrentItem);
+  const currentItem = currentItemData; // Use the fetched item directly
+
+  if (isLoadingCombined && !currentItem) { // Show loading if IDs or current item details are loading
+     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-gray-400">Loading...</div>
       </div>
@@ -353,52 +451,21 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   console.log("ClassicsContent render - selectedItem:", selectedItem?.title, "location:", location.pathname);
 
-  // Mobile version with vertical swiper
   if (isMobile) {
     return (
-      <>
-        <VerticalSwiper 
-          ref={swiperRef}
-          initialIndex={displayIndex}
-          onIndexChange={setDisplayIndex}
-        >
-          {classicsItems.map((item, index) => (
-            <div key={item.id} className="h-full">
-              <ContentCard
-                image={item.image}
-                title={item.title}
-                about={item.about}
-                itemId={item.id}
-                itemType={item.type}
-                onLearnMore={() => handleLearnMore(item)}
-                onImageClick={() => handleLearnMore(item)}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                hasPrevious={index > 0}
-                hasNext={index < classicsItems.length - 1}
-              />
-            </div>
-          ))}
-        </VerticalSwiper>
-  
-        {selectedItem && (
-          <DetailedView
-            type={selectedItem.type}
-            data={selectedItem}
-            onBack={handleCloseDetailedView}
-          />
-        )}
-      </>
+      <div className="flex items-center justify-center h-full p-4">
+        <p className="text-gray-400">Mobile view TBD</p>
+      </div>
     );
   }
 
-  // Desktop version
-  const currentItem = getCurrentItem();
-  
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < shuffledIds.length - 1;
+
   return (
-    <>
-      <div className="h-full">
-        {currentItem && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center"> 
+        {currentItem ? (
           <ContentCard
             image={currentItem.image}
             title={currentItem.title}
@@ -407,11 +474,17 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             itemType={currentItem.type}
             onLearnMore={() => handleLearnMore(currentItem)}
             onImageClick={() => handleLearnMore(currentItem)}
-            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
-            onNext={displayIndex < classicsItems.length - 1 ? handleNext : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < classicsItems.length - 1}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
           />
+        ) : isLoadingCombined ? ( // Still show loading if currentItem is null but we expect it
+           <div className="animate-pulse text-gray-400">Loading...</div> 
+        ) : isCurrentItemError ? (
+           <p className="text-red-500">Error loading this classic.</p> // Handle item load error
+        ) : (
+           <p className="text-gray-500">No classics found.</p>
         )}
       </div>
 
@@ -422,7 +495,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 

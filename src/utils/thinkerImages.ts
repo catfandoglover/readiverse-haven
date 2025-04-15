@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// Default fallback image
-const FALLBACK_ICON = "/lovable-uploads/f3e6dce2-7c4d-4ffd-8e3c-c25c8abd1207.png";
+// Updated fallback image URL
+const FALLBACK_ICON = "https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0NzA4MzkyLCJleHAiOjg4MTQ0NjIxOTkyfQ.j00YuzyHMx4mcoOa9Sye0Vg2yssKfa4a3xSXJSszKHM";
 
 // Type assertion to silence TypeScript errors
 // This is necessary because the type definitions don't include all the methods we need

@@ -9,7 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { AnalyzeDNAButton } from "@/components/AnalyzeDNAButton";
 import { Input } from "@/components/ui/input";
 import {
   Carousel,
@@ -87,11 +86,6 @@ const SearchPage = () => {
           <div className="w-10 h-10 z-20">
             {/* Empty div */}
           </div>
-        </div>
-        
-        {/* Add the DNA button below the main header */}
-        <div className="absolute top-4 right-16 z-50">
-          <AnalyzeDNAButton />
         </div>
       </header>
 

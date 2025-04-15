@@ -80,13 +80,16 @@ export function Register() {
   }
   
   return (
-    <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] grid grid-rows-[auto_1fr_auto] py-6">
-      {/* Top nav section */}
-      <div className="px-6">
-        <div className="relative">
+    <div className="min-h-[100dvh] bg-[#E9E7E2] text-[#373763] grid grid-rows-[auto_1fr_auto]">
+      {/* Header */}
+      <header className="py-4 px-4 flex items-center justify-between">
+        <div className="w-12 h-12">
           <MainMenu />
         </div>
-      </div>
+        <div className="w-12 h-12">
+          {/* Empty div for balanced header */}
+        </div>
+      </header>
 
       {/* Center content with vertical alignment */}
       <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto px-6">

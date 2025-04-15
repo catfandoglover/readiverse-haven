@@ -104,9 +104,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
       <SheetTrigger asChild>
         <button 
           className={cn(
-            "inline-flex items-center justify-center w-10 h-10 rounded-md p-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] focus:outline-none",
-            shouldUseSpecialStyling() ? "text-[#332E38]/90" : "text-[#E9E7E2]"
+            "inline-flex items-center justify-center rounded-md focus:outline-none",
+            shouldUseSpecialStyling() ? 
+              "text-[#332E38]/90 w-12 h-12 p-2" : 
+              "text-[#E9E7E2] w-12 h-12 p-2",
+            "touch-manipulation"
           )}
+          aria-label="Open main menu"
         >
           <Menu className="h-7 w-7" />
         </button>

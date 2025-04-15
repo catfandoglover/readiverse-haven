@@ -105,13 +105,6 @@ const IntellectualDNA = () => {
               >
                 LOG IN
               </button>
-              <button 
-                onClick={() => navigate('/register')}
-                className="text-[#332E38]/90 font-oxanium text-sm uppercase tracking-wider font-bold p-1"
-                type="button"
-              >
-                SIGN UP
-              </button>
             </>
           ) : !hasCompletedDNA ? (
             <button 

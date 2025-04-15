@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -33,8 +33,19 @@ interface IconsContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const INITIAL_LOAD_COUNT = 20;
-const LOAD_MORE_COUNT = 10;
+// Shuffle function (can be moved to a utility file)
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
 
 const IconLoadingSkeleton = () => (
   <div className="animate-pulse space-y-4">
@@ -48,9 +59,6 @@ const IconLoadingSkeleton = () => (
 
 const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
-  const [loadedCount, setLoadedCount] = useState(INITIAL_LOAD_COUNT);
-  const [allIconsCount, setAllIconsCount] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,11 +66,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
+  const [desktopIndex, setDesktopIndex] = useState(0);
+  const [shuffledIds, setShuffledIds] = useState<string[]>([]);
+  const queryClient = useQueryClient();
   
-  useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
-
   useEffect(() => {
     if (!location.pathname.includes('/view/')) {
       saveSourcePath(location.pathname);
@@ -70,77 +77,60 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   }, [location.pathname, saveSourcePath]);
 
-  const { data: icons = [], isLoading, refetch } = useQuery({
-    queryKey: ["icons", loadedCount],
+  // Query 1: Fetch all Icon IDs
+  const { data: allIconIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["all-icons-ids"],
     queryFn: async () => {
-      const { count, error: countError } = await supabase
-        .from("icons")
-        .select("*", { count: "exact", head: true });
-      
-      if (countError) {
-        console.error("Error counting icons:", countError);
-      } else {
-        setAllIconsCount(count || 0);
-      }
-      
+      console.log("Fetching all icon IDs...");
       const { data, error } = await supabase
         .from("icons")
-        .select("*")
-        .order("randomizer")
-        .range(0, loadedCount - 1);
-
+        .select("id");
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load icons",
-        });
+        console.error("Error fetching icon IDs:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load icon IDs" });
         return [];
       }
-
-      return data.map((icon: any) => ({
-        ...icon,
-        slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
-        about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-        great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
-        anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
-      })) as Icon[];
+      return data.map(item => item.id);
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
+  // Effect to shuffle IDs once fetched
   useEffect(() => {
-    if (displayIndex >= loadedCount - 5 && loadedCount < allIconsCount) {
-      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
+    if (allIconIds && allIconIds.length > 0) {
+      console.log("[ShuffleEffect Icons] Shuffling IDs...");
+      setShuffledIds(shuffleArray(allIconIds));
+      setDesktopIndex(0); // Reset index
     }
-  }, [displayIndex, loadedCount, allIconsCount]);
+  }, [allIconIds]);
 
-  useEffect(() => {
-    refetch();
-  }, [loadedCount, refetch]);
-
-  useEffect(() => {
-    if (location.pathname.includes('/icons/')) {
-      const iconParam = location.pathname.split('/icons/')[1];
-      console.log("[IconsContent] Icon param detected:", iconParam);
-      
-      if (!selectedIcon || selectedIcon.slug !== iconParam) {
-        console.log("[IconsContent] Loading icon from URL param");
-        const icon = icons.find(i => i.slug === iconParam);
-        
-        if (icon) {
-          console.log("[IconsContent] Found matching icon in list:", icon.name);
-          setSelectedIcon({...icon});
-          if (onDetailedViewShow) onDetailedViewShow();
-        } else {
-          console.log("[IconsContent] Icon not found in current list, fetching directly");
-          fetchIconDirectly(iconParam);
-        }
+  // Determine the current ID
+  const currentIconId = useMemo(() => {
+      if (shuffledIds.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledIds.length) {
+          return shuffledIds[desktopIndex];
       }
-    } else if (selectedIcon) {
-      setSelectedIcon(null);
+      return null;
+  }, [shuffledIds, desktopIndex]);
+
+  // Fetch the details for a given icon ID
+  const fetchIconDetails = async (iconId: string | null) => {
+    if (!iconId) return null;
+    
+    console.log(`Fetching details for icon ID: ${iconId}`);
+    const { data, error } = await supabase
+      .from("icons")
+      .select("*" ) 
+      .eq("id", iconId)
+      .single(); 
+      
+    if (error) {
+      console.error("Error fetching icon details:", error);
+      return null;
     }
-  }, [location.pathname, icons, location.key]);
+    
+    return data;
+  };
 
   const fetchIconDirectly = async (iconSlug: string) => {
     try {
@@ -191,31 +181,70 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
-  const handleIndexChange = (index: number) => {
-    setDisplayIndex(index);
-    
-    if (index >= loadedCount - 5 && loadedCount < allIconsCount) {
-      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
+  useEffect(() => {
+    const prefetchCount = 3;
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Icons] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['icon-details', prefetchId],
+            queryFn: () => fetchIconDetails(prefetchId),
+            staleTime: 5 * 60 * 1000
+          });
+        }
+      }
     }
-  };
+  }, [desktopIndex, shuffledIds, queryClient, fetchIconDetails]);
+
+  // Query 2: Fetch details for the current Icon ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["icon-details", currentIconId],
+    queryFn: () => fetchIconDetails(currentIconId),
+    enabled: !!currentIconId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Detail view logic for direct URL navigation
+  useEffect(() => {
+    if (location.pathname.includes('/icons/')) {
+      const iconParam = location.pathname.split('/icons/')[1];
+      
+      // If we have the current icon data and it matches the URL, use it
+      if (currentItemData && currentItemData.slug === iconParam && !selectedIcon) {
+         console.log("[IconsContent] Setting selected item from current data");
+         setSelectedIcon(currentItemData);
+         if (onDetailedViewShow) onDetailedViewShow();
+      } 
+      // Otherwise, always fetch directly for URL-based navigation
+      else if (!selectedIcon) {
+         console.log("[IconsContent] Fetching icon directly from URL parameter:", iconParam);
+         fetchIconDirectly(iconParam); 
+      }
+    } else if (selectedIcon) {
+      setSelectedIcon(null);
+    }
+  }, [location.pathname, currentItemData, onDetailedViewShow, selectedIcon, fetchIconDirectly]);
 
   const handlePrevious = useCallback(() => {
-    console.log("IconsContent - Previous button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (displayIndex > 0) {
-      setDisplayIndex(prevIndex => prevIndex - 1);
+    if (desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
     }
-  }, [displayIndex]);
+  }, [desktopIndex]);
 
   const handleNext = useCallback(() => {
-    console.log("IconsContent - Next button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (icons.length > 0 && displayIndex < icons.length - 1) {
-      setDisplayIndex(prevIndex => prevIndex + 1);
+    if (desktopIndex < shuffledIds.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
     }
-  }, [displayIndex, icons.length]);
+    // No fetching needed here
+  }, [desktopIndex, shuffledIds.length]);
 
   const handleLearnMore = (icon: Icon) => {
     if (!icon.slug) {
@@ -223,11 +252,18 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
+    const currentPath = location.pathname;
+    console.log("[IconsContent] Setting source path for detail view:", currentPath);
+    saveSourcePath(currentPath);
+    
     setSelectedIcon(icon);
     
     navigate(`/icons/${icon.slug}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: currentPath
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -313,7 +349,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     ],
   };
 
-  if (isLoading || !icons.length) {
+  const isLoadingCombined = isLoadingIds || (!!currentIconId && isLoadingCurrentItem);
+  const currentItem = currentItemData;
+
+  if (isLoadingCombined && !currentItem) {
     return (
       <div className="h-full">
         <IconLoadingSkeleton />
@@ -323,33 +362,24 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   if (isMobile) {
     return (
-      <>
-        <VerticalSwiper
-          ref={swiperRef}
-          initialIndex={displayIndex}
-          onIndexChange={handleIndexChange}
-          preloadCount={2}
-        >
-          {icons.map((icon, index) => (
-            <div key={icon.id} className="h-full w-full">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          {shuffledIds.map((id) => (
+            <div key={id} className="p-4 border-b border-gray-700 last:border-b-0">
               <ContentCard
-                image={icon.illustration}
-                title={icon.name}
-                about={icon.about || ""}
-                itemId={icon.id}
+                image={currentItem?.illustration || ""}
+                title={currentItem?.name || ""}
+                about={currentItem?.about || ""}
+                itemId={id}
                 itemType="icon"
-                onLearnMore={() => handleLearnMore(icon)}
-                onImageClick={() => handleLearnMore(icon)}
-                onPrevious={index > 0 ? () => setDisplayIndex(index - 1) : undefined}
-                onNext={index < icons.length - 1 ? () => setDisplayIndex(index + 1) : undefined}
-                hasPrevious={index > 0}
-                hasNext={index < icons.length - 1}
-                swiperMode={false}
+                onLearnMore={() => handleLearnMore(currentItem as Icon)}
+                onImageClick={() => handleLearnMore(currentItem as Icon)}
+                hasPrevious={false}
+                hasNext={false}
               />
             </div>
           ))}
-        </VerticalSwiper>
-        
+        </div>
         {selectedIcon && (
           <DetailedView
             key={`icon-detail-${selectedIcon.id}`}
@@ -358,32 +388,36 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             onBack={handleCloseDetailedView}
           />
         )}
-      </>
+      </div>
     );
   }
 
-  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < shuffledIds.length - 1;
 
   return (
-    <>
-      <div className="h-full">
-        {iconToShow && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center">
+        {currentItem ? (
           <ContentCard
-            image={iconToShow.illustration}
-            title={iconToShow.name}
-            about={iconToShow.about || ""}
-            itemId={iconToShow.id}
+            image={currentItem.illustration}
+            title={currentItem.name}
+            about={currentItem.about || ""}
+            itemId={currentItem.id}
             itemType="icon"
-            onLearnMore={() => handleLearnMore(iconToShow)}
-            onImageClick={() => handleLearnMore(iconToShow)}
-            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
-            onNext={displayIndex < icons.length - 1 ? handleNext : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < icons.length - 1}
+            onLearnMore={() => handleLearnMore(currentItem)}
+            onImageClick={() => handleLearnMore(currentItem)}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
           />
+        ) : isLoadingCombined ? (
+           <div className="animate-pulse text-gray-400">Loading...</div> 
+        ) : (
+           <p className="text-gray-500">No icons found.</p>
         )}
       </div>
-
       {selectedIcon && (
         <DetailedView
           key={`icon-detail-${selectedIcon.id}`}
@@ -392,7 +426,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 

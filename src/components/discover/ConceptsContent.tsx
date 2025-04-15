@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -33,9 +33,22 @@ interface ConceptsContentProps {
   onDetailedViewHide?: () => void;
 }
 
+// Shuffle function
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
+
 const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedConcept, setSelectedConcept] = useState<Concept | null>(null);
-  const [conceptIndex, setConceptIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,87 +56,189 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
+  const [desktopIndex, setDesktopIndex] = useState(0); // Start at 0
+  const [shuffledIds, setShuffledIds] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    console.log("[ConceptsContent] Mobile detection:", isMobile);
-  }, [isMobile]);
+  const { 
+    data: conceptsPages, 
+    fetchNextPage, 
+    hasNextPage, 
+    isLoading, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
+    queryKey: ["concepts-paginated"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      console.log(`Fetching concepts page: ${pageParam}, range: ${from}-${to}`);
+      try {
+        const { data, error, count } = await supabase
+          .from("concepts")
+          .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer", { count: 'exact' })
+          .order("title", { ascending: true })
+          .range(from, to);
 
-  const { data: concepts = [], isLoading } = useQuery({
-    queryKey: ["concepts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("concepts")
-        .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
-        .limit(5);
-      
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load concepts",
-        });
-        console.error("Error fetching concepts:", error);
-        return [];
+        if (error) {
+          console.error("Error fetching concepts page:", error);
+          toast({ variant: "destructive", title: "Error", description: "Failed to load concepts" });
+          throw error;
+        }
+
+        const conceptsData = data.map((concept: any) => ({
+          ...concept,
+          type: concept.concept_type || "concept",
+          about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
+          genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
+          great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
+          image: concept.illustration,
+        }));
+
+        return { data: conceptsData, count: count ?? 0 };
+
+      } catch (error) {
+        console.error("Error fetching concepts page:", error);
+        return { data: [], count: 0 };
       }
-
-      // Sort the concepts by randomizer after fetching
-      const sortedData = [...(data || [])].sort((a, b) => (a.randomizer || 0) - (b.randomizer || 0));
-
-      return sortedData.map((concept: any) => ({
-        ...concept,
-        type: concept.concept_type || "concept",
-        about: concept.about || concept.description || `${concept.title} is a significant philosophical concept.`,
-        genealogy: concept.genealogy || `The historical development of ${concept.title} spans multiple philosophical traditions.`,
-        great_conversation: concept.great_conversation || `${concept.title} has been debated throughout philosophical history.`,
-        image: concept.illustration,
-      }));
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      const totalFetched = allPages.reduce((acc, page) => acc + page.data.length, 0);
+      const totalCount = lastPage.count;
+      if (totalFetched < totalCount) {
+        return lastPageParam + 1;
+      }
+      return undefined;
     },
   });
 
-  // Update conceptIndex when props change
-  useEffect(() => {
-    setConceptIndex(currentIndex);
-  }, [currentIndex]);
+  const concepts = conceptsPages?.pages.flatMap(page => page.data) ?? [];
 
-  // Handle URL-based navigation and detailed view visibility
+  // Flatten pages (memoize potentially)
+  const allFetchedItems = useMemo(() => conceptsPages?.pages.flatMap(page => page.data) ?? [], [conceptsPages]);
+
+  // Query 1: Fetch all Concept IDs
+  const { data: allConceptIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["all-concepts-ids"],
+    queryFn: async () => {
+      console.log("Fetching all concept IDs...");
+      const { data, error } = await supabase
+        .from("concepts")
+        .select("id");
+      if (error) {
+        console.error("Error fetching concept IDs:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load concept IDs" });
+        return [];
+      }
+      return data.map(item => item.id);
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  // Effect to shuffle IDs once fetched
+  useEffect(() => {
+    if (allConceptIds && allConceptIds.length > 0) {
+      console.log("[ShuffleEffect Concepts] Shuffling IDs...");
+      setShuffledIds(shuffleArray(allConceptIds));
+      setDesktopIndex(0); // Reset index
+    }
+  }, [allConceptIds]);
+
+  // Determine the current ID
+  const currentConceptId = useMemo(() => {
+      if (shuffledIds.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledIds.length) {
+          return shuffledIds[desktopIndex];
+      }
+      return null;
+  }, [shuffledIds, desktopIndex]);
+
+  // Define the query function separately for reuse
+  const fetchConceptDetails = async (conceptId: string | null) => {
+    if (!conceptId) return null;
+    console.log(`Fetching details for concept ID: ${conceptId}`);
+    const { data, error } = await supabase
+      .from("concepts")
+      .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
+      .eq("id", conceptId)
+      .single(); 
+
+    if (error) {
+      console.error(`Error fetching details for concept ${conceptId}:`, error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load concept details" });
+      return null;
+    }
+    
+    return {
+      ...data,
+      type: data.concept_type || "concept",
+      about: data.about || data.description || `${data.title} is a significant philosophical concept.`,
+      great_conversation: data.great_conversation || `${data.title} has been debated throughout philosophical history.`,
+      image: data.illustration,
+    };
+  };
+
+  // Query 2: Fetch details for the current Concept ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["concept-details", currentConceptId],
+    queryFn: () => fetchConceptDetails(currentConceptId), // Use separated function
+    enabled: !!currentConceptId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Effect for Pre-fetching next items
+  useEffect(() => {
+    const prefetchCount = 3;
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Concepts] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['concept-details', prefetchId],
+            queryFn: () => fetchConceptDetails(prefetchId),
+            staleTime: 5 * 60 * 1000
+          });
+        }
+      }
+    }
+  }, [desktopIndex, shuffledIds, queryClient, fetchConceptDetails]); // Add fetchConceptDetails
+
   useEffect(() => {
     const loadConceptFromUrl = async () => {
       if (location.pathname.includes('/concepts/')) {
-        // Extract the entire path after /concepts/
         let fullPath = location.pathname.split('/concepts/')[1];
         
-        // Remove any trailing slashes
         fullPath = fullPath.replace(/\/$/, '');
         
         console.log("[ConceptsContent] Full path:", fullPath);
         
-        // Extract the last segment (the actual concept name)
         const segments = fullPath.split('/');
         const lastSegment = segments[segments.length - 1];
         
         console.log("[ConceptsContent] Last segment:", lastSegment);
         
-        // First try to find the concept in the cached data
-        let concept = concepts.find(c => 
+        let concept = allFetchedItems.find(c => 
           c.slug === fullPath || 
           c.slug === lastSegment || 
           c.title?.toLowerCase() === lastSegment.toLowerCase()
         );
         
-        // If not found in memory, query the database
         if (!concept) {
           console.log("[ConceptsContent] Concept not found in memory, querying database");
           
-          // Try several strategies to find the concept
-          
-          // 1. Try exact match with full path
           let { data: exactMatchData, error: exactMatchError } = await supabase
             .from("concepts")
             .select("id, title, illustration, about, concept_type, introduction, slug, great_conversation, randomizer")
             .eq('slug', fullPath)
             .limit(1);
           
-          // 2. If not found, try with the last segment
           if (!exactMatchData || exactMatchData.length === 0) {
             console.log("[ConceptsContent] Trying with last segment:", lastSegment);
             
@@ -138,7 +253,6 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
             }
           }
           
-          // 3. If still not found, use a more fuzzy match on title
           if (!exactMatchData || exactMatchData.length === 0) {
             console.log("[ConceptsContent] Trying fuzzy match on title:", lastSegment);
             
@@ -153,13 +267,11 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
             }
           }
           
-          // If we found data with any of our strategies, create a concept object
           if (exactMatchData && exactMatchData.length > 0) {
             concept = {
               ...exactMatchData[0],
               type: exactMatchData[0].concept_type || "concept",
               about: exactMatchData[0].about || `${exactMatchData[0].title} is a significant philosophical concept.`,
-              genealogy: `The historical development of ${exactMatchData[0].title} spans multiple philosophical traditions.`,
               great_conversation: exactMatchData[0].great_conversation || `${exactMatchData[0].title} has been debated throughout philosophical history.`,
               image: exactMatchData[0].illustration,
             };
@@ -182,55 +294,40 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     };
     
     loadConceptFromUrl();
-  }, [location.pathname, concepts, onDetailedViewShow, supabase, toast]);
+  }, [location.pathname, allFetchedItems, onDetailedViewShow, supabase, toast]);
 
-  // Save the current path for proper back navigation - this is critical
   useEffect(() => {
     const currentPath = location.pathname;
     
-    // Only save the source path if we're not in a detail view
     if (!currentPath.includes('/concepts/')) {
-      // This will store the current feed page as the source path
       saveSourcePath(currentPath);
       console.log('[ConceptsContent] Saved source path:', currentPath);
     }
   }, [location.pathname, saveSourcePath]);
 
-  const handleNextConcept = () => {
-    console.log("ConceptsContent - Next button clicked, index:", conceptIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (concepts.length > 0 && conceptIndex < concepts.length - 1) {
-      setConceptIndex(prevIndex => prevIndex + 1);
+  const handlePrevious = useCallback(() => {
+    if (desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
     }
-  };
+  }, [desktopIndex]);
 
-  const handlePrevConcept = () => {
-    console.log("ConceptsContent - Previous button clicked, index:", conceptIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (conceptIndex > 0) {
-      setConceptIndex(prevIndex => prevIndex - 1);
+  const handleNext = useCallback(() => {
+    if (desktopIndex < shuffledIds.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
     }
-  };
+  }, [desktopIndex, shuffledIds.length]);
 
   const handleLearnMore = (concept: Concept) => {
     setSelectedConcept(concept);
     
-    // Get the current path before navigation
     const sourcePath = location.pathname;
     console.log("[ConceptsContent] Setting source path for detail view:", sourcePath);
     
-    // Save the source path before navigation
     saveSourcePath(sourcePath);
     
-    // Navigate to concept detail view
-    // Use concept.slug if available, otherwise generate from title or id
     let slug = concept.slug;
     
-    // If the slug contains slashes (complex path), use it directly
     if (!slug || !slug.includes('/')) {
-      // For simple slugs, ensure we generate a clean version if needed
       slug = concept.slug || concept.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || concept.id;
     }
     
@@ -259,10 +356,11 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     if (onDetailedViewHide) onDetailedViewHide();
   };
 
-  // Get current item function
-  const getCurrentItem = () => concepts[conceptIndex % Math.max(1, concepts.length)] || null;
+  // --- Adapt Rendering Logic --- 
+  const isLoadingCombined = isLoadingIds || (!!currentConceptId && isLoadingCurrentItem);
+  const currentItem = currentItemData;
 
-  if (isLoading || !concepts || concepts.length === 0) {
+  if (isLoadingCombined && !currentItem) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-gray-400">Loading...</div>
@@ -270,71 +368,42 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
     );
   }
 
-  // Mobile version
+  // Mobile View (Placeholder/Update required)
   if (isMobile) {
-    return (
-      <>
-        <VerticalSwiper 
-          ref={swiperRef}
-          initialIndex={conceptIndex}
-          onIndexChange={setConceptIndex}
-        >
-          {concepts.map((concept, index) => (
-            <div key={concept.id} className="h-full">
-              <ContentCard
-                image={concept.image || concept.illustration}
-                title={concept.title}
-                about={concept.about || ''}
-                itemId={concept.id}
-                itemType="concept"
-                onLearnMore={() => handleLearnMore(concept)}
-                onImageClick={() => handleLearnMore(concept)}
-                onPrevious={handlePrevConcept}
-                onNext={handleNextConcept}
-                hasPrevious={index > 0}
-                hasNext={index < concepts.length - 1}
-              />
-            </div>
-          ))}
-        </VerticalSwiper>
-  
-        {selectedConcept && (
-          <DetailedView
-            type="concept"
-            data={{
-              ...selectedConcept,
-              image: selectedConcept.image || selectedConcept.illustration
-            }}
-            onBack={handleCloseDetailedView}
-          />
-        )}
-      </>
-    );
+     return (
+       <div className="flex items-center justify-center h-full p-4">
+         <p className="text-gray-400">Mobile view TBD</p>
+       </div>
+     );
   }
 
-  // Desktop version
-  const currentConcept = getCurrentItem();
-  
+  // Desktop: Single Card View
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < shuffledIds.length - 1;
+
   return (
-    <>
-      <div className="h-full">
-        {currentConcept && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center">
+        {currentItem ? (
           <ContentCard
-            image={currentConcept.image || currentConcept.illustration}
-            title={currentConcept.title}
-            about={currentConcept.about || ''}
-            itemId={currentConcept.id}
-            itemType="concept"
-            onLearnMore={() => handleLearnMore(currentConcept)}
-            onImageClick={() => handleLearnMore(currentConcept)}
-            onPrevious={conceptIndex > 0 ? handlePrevConcept : undefined}
-            onNext={conceptIndex < concepts.length - 1 ? handleNextConcept : undefined}
-            hasPrevious={conceptIndex > 0}
-            hasNext={conceptIndex < concepts.length - 1}
+            image={currentItem.image || currentItem.illustration}
+            title={currentItem.title}
+            about={currentItem.about || ''}
+            itemId={currentItem.id}
+            itemType={currentItem.type || 'concept'}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
+            onLearnMore={() => handleLearnMore(currentItem)}
+            onImageClick={() => handleLearnMore(currentItem)}
           />
+        ) : isLoading ? (
+          <div className="animate-pulse text-gray-400">Loading...</div>
+        ) : (
+          <p className="text-gray-500">No concepts found.</p>
         )}
       </div>
-
       {selectedConcept && (
         <DetailedView
           type="concept"
@@ -345,7 +414,7 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 
