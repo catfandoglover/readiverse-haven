@@ -407,28 +407,50 @@ const ConceptsContent: React.FC<ConceptsContentProps> = ({ currentIndex, onDetai
 
   // Mobile View (Placeholder/Update required)
   if (isMobile) {
+    // Use VerticalSwiper for mobile view - TikTok-style swiping
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          {currentItem ? (
-            <ContentCard
-              image={currentItem.image}
-              title={currentItem.title}
-              about={currentItem.about || ""}
-              itemId={currentItem.id}
-              itemType={currentItem.type}
-              onLearnMore={() => handleLearnMore(currentItem)}
-              onImageClick={() => handleLearnMore(currentItem)}
-              hasPrevious={false}
-              hasNext={false}
-            />
-          ) : (
+        {!selectedConcept && shuffledIds.length > 0 && currentItem ? (
+          <VerticalSwiper 
+            initialIndex={desktopIndex}
+            onIndexChange={(index) => setDesktopIndex(index)}
+          >
+            {shuffledIds.map((conceptId, index) => {
+              const isCurrentIndex = index === desktopIndex;
+              return (
+                <div key={conceptId} className="h-full flex items-center justify-center">
+                  {isCurrentIndex && currentItem ? (
+                    <ContentCard
+                      image={currentItem.illustration || currentItem.image || ""}
+                      title={currentItem.title}
+                      about={currentItem.about || currentItem.description || ""}
+                      itemId={currentItem.id}
+                      itemType="concept"
+                      onLearnMore={() => handleLearnMore(currentItem)}
+                      onImageClick={() => handleLearnMore(currentItem)}
+                      hasPrevious={index > 0}
+                      hasNext={index < shuffledIds.length - 1}
+                      swiperMode={true}
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-[#E9E7E2]/60">Loading item...</p>
+                      <div className="animate-pulse mt-4 h-64 w-full bg-[#3F3A46]/30 rounded-lg"></div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </VerticalSwiper>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-400">Loading concepts...</p>
-              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
+              <p className="text-[#E9E7E2]/60">Loading concepts...</p>
+              <div className="animate-pulse mt-4 h-64 w-full bg-[#3F3A46]/30 rounded-lg"></div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+        
         {selectedConcept && (
           <DetailedView
             type="concept"

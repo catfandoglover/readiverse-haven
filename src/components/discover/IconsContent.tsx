@@ -367,31 +367,46 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   }
 
   if (isMobile) {
+    // Use VerticalSwiper for mobile view - TikTok-style swiping
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          {currentItem ? (
-            <ContentCard
-              image={currentItem.illustration}
-              title={currentItem.name}
-              about={currentItem.about || ""}
-              itemId={currentItem.id}
-              itemType="icon"
-              onLearnMore={() => handleLearnMore(currentItem)}
-              onImageClick={() => handleLearnMore(currentItem)}
-              hasPrevious={false}
-              hasNext={false}
-            />
-          ) : (
-            <div className="text-center">
-              <p className="text-gray-400">Loading icons...</p>
-              <div className="animate-pulse mt-4 h-64 w-full bg-gray-700/30 rounded-lg"></div>
-            </div>
-          )}
-        </div>
+        {!selectedIcon && shuffledIds.length > 0 && currentItem ? (
+          <VerticalSwiper 
+            initialIndex={desktopIndex}
+            onIndexChange={(index) => setDesktopIndex(index)}
+          >
+            {shuffledIds.map((iconId, index) => {
+              const isCurrentIndex = index === desktopIndex;
+              return (
+                <div key={iconId} className="h-full flex items-center justify-center">
+                  {isCurrentIndex && currentItem ? (
+                    <ContentCard
+                      image={currentItem.illustration}
+                      title={currentItem.name}
+                      about={currentItem.about || ""}
+                      itemId={currentItem.id}
+                      itemType="icon"
+                      onLearnMore={() => handleLearnMore(currentItem)}
+                      onImageClick={() => handleLearnMore(currentItem)}
+                      hasPrevious={index > 0}
+                      hasNext={index < shuffledIds.length - 1}
+                      swiperMode={true}
+                    />
+                  ) : (
+                    <IconLoadingSkeleton />
+                  )}
+                </div>
+              );
+            })}
+          </VerticalSwiper>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <IconLoadingSkeleton />
+          </div>
+        )}
+        
         {selectedIcon && (
           <DetailedView
-            key={`icon-detail-${selectedIcon.id}`}
             type="icon"
             data={selectedIcon}
             onBack={handleCloseDetailedView}
