@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -11,6 +11,7 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import VerticalSwiper from "../common/VerticalSwiper";
 import { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
+import { useInView } from 'react-intersection-observer';
 
 interface Icon {
   id: string;
@@ -33,8 +34,7 @@ interface IconsContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const INITIAL_LOAD_COUNT = 20;
-const LOAD_MORE_COUNT = 10;
+const PAGE_SIZE = 10;
 
 const IconLoadingSkeleton = () => (
   <div className="animate-pulse space-y-4">
@@ -48,9 +48,6 @@ const IconLoadingSkeleton = () => (
 
 const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
-  const [loadedCount, setLoadedCount] = useState(INITIAL_LOAD_COUNT);
-  const [allIconsCount, setAllIconsCount] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,11 +55,9 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
+  const { ref: loadMoreRef, inView: loadMoreInView } = useInView();
+  const [desktopIndex, setDesktopIndex] = useState(currentIndex);
   
-  useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
-
   useEffect(() => {
     if (!location.pathname.includes('/view/')) {
       saveSourcePath(location.pathname);
@@ -70,54 +65,65 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   }, [location.pathname, saveSourcePath]);
 
-  const { data: icons = [], isLoading, refetch } = useQuery({
-    queryKey: ["icons", loadedCount],
-    queryFn: async () => {
-      const { count, error: countError } = await supabase
-        .from("icons")
-        .select("*", { count: "exact", head: true });
-      
-      if (countError) {
-        console.error("Error counting icons:", countError);
-      } else {
-        setAllIconsCount(count || 0);
-      }
-      
-      const { data, error } = await supabase
-        .from("icons")
-        .select("*")
-        .order("randomizer")
-        .range(0, loadedCount - 1);
+  const { 
+    data: iconsPages, 
+    fetchNextPage, 
+    hasNextPage, 
+    isLoading, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
+    queryKey: ["icons-paginated"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      console.log(`Fetching icons page: ${pageParam}, range: ${from}-${to}`);
+      try {
+        const { data, error, count } = await supabase
+          .from("icons")
+          .select("*", { count: 'exact' })
+          .order("name", { ascending: true })
+          .range(from, to);
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load icons",
-        });
-        return [];
-      }
+        if (error) {
+          console.error("Error fetching icons page:", error);
+          toast({ variant: "destructive", title: "Error", description: "Failed to load icons" });
+          throw error;
+        }
 
-      return data.map((icon: any) => ({
-        ...icon,
-        slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
-        about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-        great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
-        anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
-      })) as Icon[];
+        const iconsData = data.map((icon: any) => ({
+          ...icon,
+          slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
+          about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
+          great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
+          anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
+        })) as Icon[];
+
+        return { data: iconsData, count: count ?? 0 };
+
+      } catch (error) {
+        console.error("Error fetching icons page:", error);
+        return { data: [], count: 0 };
+      }
     },
-    staleTime: 5 * 60 * 1000,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      const totalFetched = allPages.reduce((acc, page) => acc + page.data.length, 0);
+      const totalCount = lastPage.count;
+      if (totalFetched < totalCount) {
+        return lastPageParam + 1;
+      }
+      return undefined;
+    },
   });
 
-  useEffect(() => {
-    if (displayIndex >= loadedCount - 5 && loadedCount < allIconsCount) {
-      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
-    }
-  }, [displayIndex, loadedCount, allIconsCount]);
+  const icons = iconsPages?.pages.flatMap(page => page.data) ?? [];
 
   useEffect(() => {
-    refetch();
-  }, [loadedCount, refetch]);
+    if (loadMoreInView && hasNextPage && !isFetchingNextPage) {
+      console.log("Load more icons triggered...");
+      fetchNextPage();
+    }
+  }, [loadMoreInView, hasNextPage, fetchNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     if (location.pathname.includes('/icons/')) {
@@ -140,7 +146,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     } else if (selectedIcon) {
       setSelectedIcon(null);
     }
-  }, [location.pathname, icons, location.key]);
+  }, [location.pathname, icons, location.key, selectedIcon]);
 
   const fetchIconDirectly = async (iconSlug: string) => {
     try {
@@ -191,31 +197,24 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   };
 
-  const handleIndexChange = (index: number) => {
-    setDisplayIndex(index);
-    
-    if (index >= loadedCount - 5 && loadedCount < allIconsCount) {
-      setLoadedCount(prev => Math.min(prev + LOAD_MORE_COUNT, allIconsCount));
-    }
-  };
-
   const handlePrevious = useCallback(() => {
-    console.log("IconsContent - Previous button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (displayIndex > 0) {
-      setDisplayIndex(prevIndex => prevIndex - 1);
+    if (!isMobile && desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
     }
-  }, [displayIndex]);
+  }, [isMobile, desktopIndex]);
 
   const handleNext = useCallback(() => {
-    console.log("IconsContent - Next button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (icons.length > 0 && displayIndex < icons.length - 1) {
-      setDisplayIndex(prevIndex => prevIndex + 1);
+    if (!isMobile) {
+      if (desktopIndex < icons.length - 1) {
+        setDesktopIndex(prevIndex => prevIndex + 1);
+      } else if (hasNextPage && !isFetchingNextPage) {
+        console.log("Desktop Next (Icons): Fetching next page...");
+        fetchNextPage();
+      }
     }
-  }, [displayIndex, icons.length]);
+  }, [isMobile, desktopIndex, icons.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const getCurrentItem = () => icons[desktopIndex] || null;
 
   const handleLearnMore = (icon: Icon) => {
     if (!icon.slug) {
@@ -223,11 +222,18 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
       return;
     }
     
+    const currentPath = location.pathname;
+    console.log("[IconsContent] Setting source path for detail view:", currentPath);
+    saveSourcePath(currentPath);
+    
     setSelectedIcon(icon);
     
     navigate(`/icons/${icon.slug}`, { 
       replace: true,
-      state: { fromSection: 'discover' }
+      state: { 
+        fromSection: 'discover',
+        sourcePath: currentPath
+      }
     });
     
     if (onDetailedViewShow) onDetailedViewShow();
@@ -313,7 +319,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     ],
   };
 
-  if (isLoading || !icons.length) {
+  if (isLoading && !icons.length) {
     return (
       <div className="h-full">
         <IconLoadingSkeleton />
@@ -323,33 +329,27 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
 
   if (isMobile) {
     return (
-      <>
-        <VerticalSwiper
-          ref={swiperRef}
-          initialIndex={displayIndex}
-          onIndexChange={handleIndexChange}
-          preloadCount={2}
-        >
-          {icons.map((icon, index) => (
-            <div key={icon.id} className="h-full w-full">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          {icons.map((item) => (
+            <div key={item.id} className="p-4 border-b border-gray-700 last:border-b-0">
               <ContentCard
-                image={icon.illustration}
-                title={icon.name}
-                about={icon.about || ""}
-                itemId={icon.id}
+                image={item.illustration}
+                title={item.name}
+                about={item.about || ""}
+                itemId={item.id}
                 itemType="icon"
-                onLearnMore={() => handleLearnMore(icon)}
-                onImageClick={() => handleLearnMore(icon)}
-                onPrevious={index > 0 ? () => setDisplayIndex(index - 1) : undefined}
-                onNext={index < icons.length - 1 ? () => setDisplayIndex(index + 1) : undefined}
-                hasPrevious={index > 0}
-                hasNext={index < icons.length - 1}
-                swiperMode={false}
+                onLearnMore={() => handleLearnMore(item)}
+                onImageClick={() => handleLearnMore(item)}
+                hasPrevious={false}
+                hasNext={false}
               />
             </div>
           ))}
-        </VerticalSwiper>
-        
+          <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
+            {/* ... Load more indicator ... */}
+          </div>
+        </div>
         {selectedIcon && (
           <DetailedView
             key={`icon-detail-${selectedIcon.id}`}
@@ -358,32 +358,37 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             onBack={handleCloseDetailedView}
           />
         )}
-      </>
+      </div>
     );
   }
 
-  const iconToShow = icons[displayIndex % Math.max(1, icons.length)] || null;
+  const currentItem = getCurrentItem();
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < icons.length - 1 || (hasNextPage && !isFetchingNextPage);
 
   return (
-    <>
-      <div className="h-full">
-        {iconToShow && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center">
+        {currentItem ? (
           <ContentCard
-            image={iconToShow.illustration}
-            title={iconToShow.name}
-            about={iconToShow.about || ""}
-            itemId={iconToShow.id}
+            image={currentItem.illustration}
+            title={currentItem.name}
+            about={currentItem.about || ""}
+            itemId={currentItem.id}
             itemType="icon"
-            onLearnMore={() => handleLearnMore(iconToShow)}
-            onImageClick={() => handleLearnMore(iconToShow)}
-            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
-            onNext={displayIndex < icons.length - 1 ? handleNext : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < icons.length - 1}
+            onLearnMore={() => handleLearnMore(currentItem)}
+            onImageClick={() => handleLearnMore(currentItem)}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
           />
+        ) : isLoading ? (
+           <div className="animate-pulse text-gray-400">Loading...</div> 
+        ) : (
+           <p className="text-gray-500">No icons found.</p>
         )}
       </div>
-
       {selectedIcon && (
         <DetailedView
           key={`icon-detail-${selectedIcon.id}`}
@@ -392,7 +397,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 

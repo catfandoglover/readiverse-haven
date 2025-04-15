@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useInView } from 'react-intersection-observer';
 
 interface ForYouContentItem {
   id: string;
@@ -28,9 +29,10 @@ interface ForYouContentProps {
   onDetailedViewHide?: () => void;
 }
 
+const PAGE_SIZE = 10;
+
 const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
-  const [displayIndex, setDisplayIndex] = useState(currentIndex);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,38 +42,37 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const params = useParams();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
+  const { ref: loadMoreRef, inView: loadMoreInView } = useInView();
+  const [desktopIndex, setDesktopIndex] = useState(currentIndex);
 
-  useEffect(() => {
-    setDisplayIndex(currentIndex);
-  }, [currentIndex]);
-
-  const { data: classicsItems = [], isLoading } = useQuery({
-    queryKey: ["classics-content"],
-    queryFn: async () => {
+  const { 
+    data: classicsPages, 
+    fetchNextPage, 
+    hasNextPage, 
+    isLoading, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
+    queryKey: ["classics-content-paginated"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      console.log(`Fetching classics page: ${pageParam}, range: ${from}-${to}`);
       try {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from("books")
-          .select("*")
-          .order("randomizer");
+          .select("*", { count: 'exact' })
+          .order("title", { ascending: true })
+          .range(from, to);
 
         if (error) {
-          console.error("Error fetching classics content:", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load classics content",
-          });
-          return [];
+          console.error("Error fetching classics content page:", error);
+          toast({ variant: "destructive", title: "Error", description: "Failed to load classics content" });
+          throw error;
         }
 
-        // Simple slug generation function
         const generateSlug = (title: string): string => {
           if (!title) return '';
-          return title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '');
+          return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         };
 
         const classics = data.map((book: any) => ({
@@ -86,36 +87,48 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           epub_file_url: book.epub_file_url,
           slug: book.slug || (book.title ? generateSlug(book.title) : book.id),
         }));
+        
+        return { data: classics, count: count ?? 0 };
 
-        return classics;
       } catch (error) {
-        console.error("Error fetching classics content:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load classics content",
-        });
-        return [];
+        console.error("Error fetching classics content page:", error);
+        return { data: [], count: 0 };
       }
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      const totalFetched = allPages.reduce((acc, page) => acc + page.data.length, 0);
+      const totalCount = lastPage.count;
+      
+      if (totalFetched < totalCount) {
+        return lastPageParam + 1;
+      }
+      return undefined;
+    },
   });
+
+  const classicsItems = classicsPages?.pages.flatMap(page => page.data) ?? [];
+
+  useEffect(() => {
+    if (loadMoreInView && hasNextPage && !isFetchingNextPage) {
+      console.log("Load more triggered...");
+      fetchNextPage();
+    }
+  }, [loadMoreInView, hasNextPage, fetchNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     if (location.pathname.includes('/texts/')) {
       const pathSlug = location.pathname.split('/texts/')[1];
       console.log("Loading text by slug:", pathSlug);
       
-      // Check if we have state information from navigation (e.g., from reader)
       const locationState = location.state as { fromReader?: boolean, bookId?: string } | null;
       const comingFromReader = locationState?.fromReader;
       const bookId = locationState?.bookId;
       
-      // Direct database fetch for the specific book by slug - bypassing any issues with the main data loading
       const fetchBookDirectly = async () => {
         try {
           console.log("Directly querying DB for book with slug:", pathSlug);
           
-          // If we have the book ID from reader navigation, try that first
           if (comingFromReader && bookId) {
             console.log("Coming from reader with book ID:", bookId);
             const { data: dataById, error: errorById } = await supabase
@@ -145,14 +158,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          // First, try to match the exact slug
           let { data, error } = await supabase
             .from("books")
             .select("*")
             .eq("slug", pathSlug)
             .single();
             
-          // If that doesn't work, try case-insensitive match (using ilike)
           if (!data && error) {
             console.log("Exact slug match failed, trying case-insensitive match");
             const { data: dataILike, error: errorILike } = await supabase
@@ -167,7 +178,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          // If that still doesn't work, try by title using the slug converted to title format
           if (!data && error) {
             console.log("Slug matches failed, trying title match");
             const titleFromSlug = pathSlug.replace(/-/g, ' ')
@@ -187,7 +197,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             }
           }
           
-          // Handle special cases directly
           if (!data && (pathSlug === "Botchan" || pathSlug.toLowerCase() === "botchan")) {
             console.log("Special case: Trying to find Botchan by title");
             const { data: specialData, error: specialError } = await supabase
@@ -220,20 +229,17 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             setSelectedItem(book);
             if (onDetailedViewShow) onDetailedViewShow();
           } else {
-            // Only log the error but don't redirect
             console.error("Failed to find book directly from database, but continuing with current view:", error);
           }
         } catch (error) {
-          // Only log the error but don't redirect
           console.error("Error fetching book directly, but continuing with current view:", error);
         }
       };
       
-      // Try to find the book in loaded data first
       const bookInLoadedData = classicsItems.find(book => 
         book.slug === pathSlug || 
         book.slug?.toLowerCase() === pathSlug.toLowerCase() ||
-        book.title === "Botchan" // Special hardcoded check for Botchan
+        book.title === "Botchan"
       );
       
       if (bookInLoadedData) {
@@ -241,7 +247,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
         setSelectedItem(bookInLoadedData);
         if (onDetailedViewShow) onDetailedViewShow();
       } else {
-        // If not found in loaded data, query the database directly
+        console.log("Book not found in loaded items, fetching directly...");
         fetchBookDirectly();
       }
     }
@@ -257,24 +263,23 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   }, [location.pathname, saveSourcePath]);
 
   const handlePrevious = () => {
-    console.log("ClassicsContent - Previous button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goPrevious();
-    } else if (displayIndex > 0) {
-      setDisplayIndex(prevIndex => prevIndex - 1);
+    if (!isMobile && desktopIndex > 0) {
+      setDesktopIndex(prevIndex => prevIndex - 1);
     }
   };
 
   const handleNext = () => {
-    console.log("ClassicsContent - Next button clicked, index:", displayIndex);
-    if (swiperRef.current) {
-      swiperRef.current.goNext();
-    } else if (classicsItems.length > 0 && displayIndex < classicsItems.length - 1) {
-      setDisplayIndex(prevIndex => prevIndex + 1);
+    if (!isMobile) {
+      if (desktopIndex < classicsItems.length - 1) {
+        setDesktopIndex(prevIndex => prevIndex + 1);
+      } else if (hasNextPage && !isFetchingNextPage) {
+        console.log("Desktop Next: Fetching next page...");
+        fetchNextPage();
+      }
     }
   };
 
-  const getCurrentItem = () => classicsItems[displayIndex % Math.max(1, classicsItems.length)] || null;
+  const getCurrentItem = () => classicsItems[desktopIndex] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     if (!item.slug) {
@@ -282,14 +287,22 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
       return;
     }
     
+    const currentPath = location.pathname;
+    console.log("[ClassicsContent] Setting source path for detail view:", currentPath);
+    saveSourcePath(currentPath);
+
     setSelectedItem(item);
     
-    // Ensure lowercase slug for consistency with our special case handling
     const formattedSlug = item.slug.toLowerCase();
     const targetUrl = `/texts/${formattedSlug}`;
     
-    // Use direct browser navigation for consistency with other components
-    window.location.href = targetUrl;
+    navigate(targetUrl, { 
+      replace: true,
+      state: { 
+        fromSection: 'discover',
+        sourcePath: currentPath
+      }
+    });
     
     if (onDetailedViewShow) onDetailedViewShow();
   };
@@ -328,7 +341,6 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     ],
   };
 
-  // Add additional effect to ensure DetailedView is shown whenever we have a selectedItem
   useEffect(() => {
     if (selectedItem && onDetailedViewShow) {
       console.log("Showing DetailedView for selected item:", selectedItem.title);
@@ -336,14 +348,13 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     }
   }, [selectedItem, onDetailedViewShow]);
 
-  // Debug info for selected item
   useEffect(() => {
     if (selectedItem) {
       console.log("Selected item state updated:", selectedItem.title);
     }
   }, [selectedItem]);
 
-  if (isLoading || !classicsItems || classicsItems.length === 0) {
+  if (isLoading && !classicsItems.length) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-gray-400">Loading...</div>
@@ -353,17 +364,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   console.log("ClassicsContent render - selectedItem:", selectedItem?.title, "location:", location.pathname);
 
-  // Mobile version with vertical swiper
   if (isMobile) {
     return (
-      <>
-        <VerticalSwiper 
-          ref={swiperRef}
-          initialIndex={displayIndex}
-          onIndexChange={setDisplayIndex}
-        >
-          {classicsItems.map((item, index) => (
-            <div key={item.id} className="h-full">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          {classicsItems.map((item) => (
+            <div key={item.id} className="p-4 border-b border-gray-700 last:border-b-0">
               <ContentCard
                 image={item.image}
                 title={item.title}
@@ -372,15 +378,23 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
                 itemType={item.type}
                 onLearnMore={() => handleLearnMore(item)}
                 onImageClick={() => handleLearnMore(item)}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                hasPrevious={index > 0}
-                hasNext={index < classicsItems.length - 1}
+                hasPrevious={false}
+                hasNext={false}
               />
             </div>
           ))}
-        </VerticalSwiper>
-  
+          
+          <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
+            {isFetchingNextPage ? (
+              <p className="text-gray-400">Loading more...</p>
+            ) : hasNextPage ? (
+              <p className="text-gray-500">Scroll down to load more</p>
+            ) : classicsItems.length > 0 ? (
+              <p className="text-gray-600">End of list</p>
+            ) : null } 
+          </div>
+        </div>
+
         {selectedItem && (
           <DetailedView
             type={selectedItem.type}
@@ -388,17 +402,18 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             onBack={handleCloseDetailedView}
           />
         )}
-      </>
+      </div>
     );
   }
 
-  // Desktop version
   const currentItem = getCurrentItem();
-  
+  const hasPreviousDesktop = desktopIndex > 0;
+  const hasNextDesktop = desktopIndex < classicsItems.length - 1 || (hasNextPage && !isFetchingNextPage);
+
   return (
-    <>
-      <div className="h-full">
-        {currentItem && (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center">
+        {currentItem ? (
           <ContentCard
             image={currentItem.image}
             title={currentItem.title}
@@ -407,11 +422,15 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             itemType={currentItem.type}
             onLearnMore={() => handleLearnMore(currentItem)}
             onImageClick={() => handleLearnMore(currentItem)}
-            onPrevious={displayIndex > 0 ? handlePrevious : undefined}
-            onNext={displayIndex < classicsItems.length - 1 ? handleNext : undefined}
-            hasPrevious={displayIndex > 0}
-            hasNext={displayIndex < classicsItems.length - 1}
+            onPrevious={hasPreviousDesktop ? handlePrevious : undefined}
+            onNext={hasNextDesktop ? handleNext : undefined}
+            hasPrevious={hasPreviousDesktop}
+            hasNext={hasNextDesktop}
           />
+        ) : isLoading ? (
+          <div className="animate-pulse text-gray-400">Loading...</div>
+        ) : (
+          <p className="text-gray-500">No classics found.</p>
         )}
       </div>
 
@@ -422,7 +441,7 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
           onBack={handleCloseDetailedView}
         />
       )}
-    </>
+    </div>
   );
 };
 
