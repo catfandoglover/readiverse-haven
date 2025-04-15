@@ -51,8 +51,8 @@ const IconsFeedPage = () => {
         </div>
       )}
       
-      <main className="flex-1 relative">
-        <div className="w-full h-full absolute inset-0">
+      <main className="flex-1">
+        <div className="w-full h-full">
           <IconsContent 
             currentIndex={0}
             onDetailedViewShow={() => setDetailedViewVisible(true)}

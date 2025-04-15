@@ -10,7 +10,7 @@ import MainMenu from "../navigation/MainMenu";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseClient } from "@/integrations/supabase/client";
 
 type TabType = "for-you" | "classics" | "icons" | "concepts" | "questions";
 
@@ -27,7 +27,7 @@ const fetchMinimalForYouContent = async () => {
   
   try {
     // Fetch books
-    const booksResponse = await supabase
+    const booksResponse = await supabaseClient
       .from("books")
       .select(minimalFields.books)
       .order("randomizer")
@@ -44,7 +44,7 @@ const fetchMinimalForYouContent = async () => {
     }));
     
     // Fetch icons
-    const iconsResponse = await supabase
+    const iconsResponse = await supabaseClient
       .from("icons")
       .select(minimalFields.icons)
       .order("randomizer")
@@ -60,7 +60,7 @@ const fetchMinimalForYouContent = async () => {
     }));
     
     // Fetch concepts
-    const conceptsResponse = await supabase
+    const conceptsResponse = await supabaseClient
       .from("concepts")
       .select(minimalFields.concepts)
       .limit(5);
@@ -293,6 +293,38 @@ const DiscoverLayout = () => {
     }
   }, [location.pathname]);
 
+  // Force explicit content loading when the detailed view should be shown based on path
+  useEffect(() => {
+    const path = location.pathname;
+    
+    // If this is a DetailView path, ensure component is ready and loaded
+    if (path.includes('/texts/') || path.includes('/icons/') || path.includes('/concepts/')) {
+      console.log("[DiscoverLayout] DetailView path detected, forcing content ready state");
+      
+      // Force set detail view visible state
+      setDetailedViewVisible(true);
+      
+      // Set content ready to true to ensure component mounts properly
+      if (!contentReady) {
+        setContentReady(true);
+      }
+      
+      // Set appropriate tab based on path type
+      if (path.includes('/texts/')) {
+        setActiveTab("classics");
+      } else if (path.includes('/icons/')) {
+        setActiveTab("icons");
+      } else if (path.includes('/concepts/')) {
+        setActiveTab("concepts");
+      }
+      
+      // Force rerender content
+      if (routeKey !== `detail-path-${path}`) {
+        setRouteKey(`detail-path-${path}`);
+      }
+    }
+  }, [location.pathname, contentReady, activeTab, routeKey]);
+
   const handleTabChange = (tab: TabType) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
@@ -334,7 +366,7 @@ const DiscoverLayout = () => {
   return (
     <div 
       ref={containerRef}
-      className="flex flex-col h-screen bg-[#E9E7E2] text-[#E9E7E2] overflow-hidden"
+      className="flex flex-col h-screen bg-[#2A282A] text-[#E9E7E2] overflow-hidden"
     >
       <main 
         className="flex-1 relative overflow-hidden" 
@@ -360,13 +392,13 @@ const DiscoverLayout = () => {
           </div>
         )}
         
-        <div className="w-full h-full relative bg-[#E9E7E2]">
+        <div className="w-full h-full">
           {!contentReady ? (
-            <div className="w-full h-full absolute inset-0 bg-[#2A282A] flex items-center justify-center">
+            <div className="w-full h-full bg-[#2A282A] flex items-center justify-center">
               <div className="animate-pulse text-[#E9E7E2]/60">Loading content...</div>
             </div>
           ) : (
-            <div className="w-full h-full absolute inset-0 bg-[#2A282A]">
+            <div className="w-full h-full bg-[#2A282A]">
               {currentContent}
             </div>
           )}
