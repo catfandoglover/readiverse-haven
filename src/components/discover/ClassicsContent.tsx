@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigationState } from "@/hooks/useNavigationState";
 import VerticalSwiper, { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useInView } from 'react-intersection-observer';
 
 interface ForYouContentItem {
   id: string;
@@ -29,7 +28,19 @@ interface ForYouContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const PAGE_SIZE = 10;
+// Shuffle function
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
 
 const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetailedViewShow, onDetailedViewHide }) => {
   const [selectedItem, setSelectedItem] = useState<ForYouContentItem | null>(null);
@@ -42,79 +53,103 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   const params = useParams();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
   const isMobile = useIsMobile();
-  const { ref: loadMoreRef, inView: loadMoreInView } = useInView();
-  const [desktopIndex, setDesktopIndex] = useState(currentIndex);
+  const [desktopIndex, setDesktopIndex] = useState(0); // Start at 0
+  const [shuffledIds, setShuffledIds] = useState<string[]>([]);
+  const queryClient = useQueryClient(); // Initialize queryClient
 
-  const { 
-    data: classicsPages, 
-    fetchNextPage, 
-    hasNextPage, 
-    isLoading, 
-    isFetchingNextPage 
-  } = useInfiniteQuery({
-    queryKey: ["classics-content-paginated"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      console.log(`Fetching classics page: ${pageParam}, range: ${from}-${to}`);
-      try {
-        const { data, error, count } = await supabase
-          .from("books")
-          .select("*", { count: 'exact' })
-          .order("title", { ascending: true })
-          .range(from, to);
-
-        if (error) {
-          console.error("Error fetching classics content page:", error);
-          toast({ variant: "destructive", title: "Error", description: "Failed to load classics content" });
-          throw error;
-        }
-
-        const generateSlug = (title: string): string => {
-          if (!title) return '';
-          return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-        };
-
-        const classics = data.map((book: any) => ({
-          id: book.id,
-          title: book.title,
-          type: "classic" as const,
-          image: book.icon_illustration || book.Cover_super || "",
-          about: book.about || `A classic work by ${book.author || 'Unknown Author'}.`,
-          author: book.author,
-          great_conversation: `${book.title} has played an important role in shaping intellectual discourse.`,
-          Cover_super: book.Cover_super,
-          epub_file_url: book.epub_file_url,
-          slug: book.slug || (book.title ? generateSlug(book.title) : book.id),
-        }));
-        
-        return { data: classics, count: count ?? 0 };
-
-      } catch (error) {
-        console.error("Error fetching classics content page:", error);
-        return { data: [], count: 0 };
+  // Query 1: Fetch all Classic IDs
+  const { data: allClassicIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["all-classics-ids"],
+    queryFn: async () => {
+      console.log("Fetching all classic IDs...");
+      const { data, error } = await supabase
+        .from("books")
+        .select("id"); // Select only IDs
+      if (error) {
+        console.error("Error fetching classic IDs:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load classic IDs" });
+        return [];
       }
+      return data.map(item => item.id);
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      const totalFetched = allPages.reduce((acc, page) => acc + page.data.length, 0);
-      const totalCount = lastPage.count;
-      
-      if (totalFetched < totalCount) {
-        return lastPageParam + 1;
-      }
-      return undefined;
-    },
+    staleTime: Infinity, // IDs don't change often, keep them stale indefinitely
+    gcTime: Infinity,
   });
 
-  const classicsItems = classicsPages?.pages.flatMap(page => page.data) ?? [];
-
+  // Effect to shuffle IDs once fetched
   useEffect(() => {
-    if (loadMoreInView && hasNextPage && !isFetchingNextPage) {
-      console.log("Load more triggered...");
-      fetchNextPage();
+    if (allClassicIds && allClassicIds.length > 0) {
+      console.log("[ShuffleEffect Classics] Shuffling IDs...");
+      setShuffledIds(shuffleArray(allClassicIds));
+      setDesktopIndex(0); // Reset index when IDs are shuffled
     }
-  }, [loadMoreInView, hasNextPage, fetchNextPage, isFetchingNextPage]);
+  }, [allClassicIds]);
+
+  // Determine the current ID based on the shuffled list and index
+  const currentBookId = useMemo(() => {
+      if (shuffledIds.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledIds.length) {
+          return shuffledIds[desktopIndex];
+      }
+      return null;
+  }, [shuffledIds, desktopIndex]);
+
+  // Define the query function separately to reuse it for prefetching
+  const fetchBookDetails = async (bookId: string | null) => {
+    if (!bookId) return null;
+    console.log(`Fetching details for book ID: ${bookId}`);
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .eq("id", bookId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching details for book ${bookId}:`, error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load book details" });
+      return null;
+    }
+    
+    const generateSlug = (title: string): string => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return {
+      ...data,
+      type: "classic" as const,
+      image: data.icon_illustration || data.Cover_super || "",
+      about: data.about || `A classic work by ${data.author || 'Unknown Author'}.`,
+      slug: data.slug || (data.title ? generateSlug(data.title) : data.id),
+    };
+  };
+
+  // Query 2: Fetch details for the *current* book ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["book-details", currentBookId],
+    queryFn: () => fetchBookDetails(currentBookId), // Use the separated function
+    enabled: !!currentBookId,
+    staleTime: 5 * 60 * 1000, 
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Effect for Pre-fetching next items
+  useEffect(() => {
+    const prefetchCount = 3; // How many items ahead to prefetch
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Classics] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['book-details', prefetchId],
+            queryFn: () => fetchBookDetails(prefetchId), // Reuse the query function
+            staleTime: 5 * 60 * 1000 // Match staleTime
+          });
+        }
+      }
+    }
+  }, [desktopIndex, shuffledIds, queryClient, fetchBookDetails]); // Add fetchBookDetails to dependency array
 
   useEffect(() => {
     if (location.pathname.includes('/texts/')) {
@@ -236,22 +271,29 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
         }
       };
       
-      const bookInLoadedData = classicsItems.find(book => 
-        book.slug === pathSlug || 
-        book.slug?.toLowerCase() === pathSlug.toLowerCase() ||
-        book.title === "Botchan"
+      // Try to find the book in *allFetchedItems* first
+      const bookInLoadedData = allClassicIds.find(id => 
+        id === pathSlug || 
+        id?.toLowerCase() === pathSlug.toLowerCase() ||
+        pathSlug === "Botchan"
       );
       
       if (bookInLoadedData) {
-        console.log("Found book in loaded data:", bookInLoadedData.title);
-        setSelectedItem(bookInLoadedData);
+        console.log("Found book in loaded data:", bookInLoadedData);
+        setSelectedItem({
+          id: bookInLoadedData,
+          title: bookInLoadedData,
+          type: "classic" as const,
+          image: "",
+          about: "",
+        });
         if (onDetailedViewShow) onDetailedViewShow();
       } else {
         console.log("Book not found in loaded items, fetching directly...");
         fetchBookDirectly();
       }
     }
-  }, [location.pathname, classicsItems, onDetailedViewShow, supabase]);
+  }, [location.pathname, allClassicIds, onDetailedViewShow, supabase]);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -263,23 +305,16 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   }, [location.pathname, saveSourcePath]);
 
   const handlePrevious = () => {
-    if (!isMobile && desktopIndex > 0) {
+    if (desktopIndex > 0) {
       setDesktopIndex(prevIndex => prevIndex - 1);
     }
   };
 
   const handleNext = () => {
-    if (!isMobile) {
-      if (desktopIndex < classicsItems.length - 1) {
-        setDesktopIndex(prevIndex => prevIndex + 1);
-      } else if (hasNextPage && !isFetchingNextPage) {
-        console.log("Desktop Next: Fetching next page...");
-        fetchNextPage();
-      }
+    if (desktopIndex < shuffledIds.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
     }
   };
-
-  const getCurrentItem = () => classicsItems[desktopIndex] || null;
 
   const handleLearnMore = (item: ForYouContentItem) => {
     if (!item.slug) {
@@ -354,8 +389,11 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
     }
   }, [selectedItem]);
 
-  if (isLoading && !classicsItems.length) {
-    return (
+  const isLoadingCombined = isLoadingIds || (!!currentBookId && isLoadingCurrentItem);
+  const currentItem = currentItemData; // Use the fetched item directly
+
+  if (isLoadingCombined && !currentItem) { // Show loading if IDs or current item details are loading
+     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-gray-400">Loading...</div>
       </div>
@@ -366,53 +404,18 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-1 overflow-y-auto">
-          {classicsItems.map((item) => (
-            <div key={item.id} className="p-4 border-b border-gray-700 last:border-b-0">
-              <ContentCard
-                image={item.image}
-                title={item.title}
-                about={item.about}
-                itemId={item.id}
-                itemType={item.type}
-                onLearnMore={() => handleLearnMore(item)}
-                onImageClick={() => handleLearnMore(item)}
-                hasPrevious={false}
-                hasNext={false}
-              />
-            </div>
-          ))}
-          
-          <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
-            {isFetchingNextPage ? (
-              <p className="text-gray-400">Loading more...</p>
-            ) : hasNextPage ? (
-              <p className="text-gray-500">Scroll down to load more</p>
-            ) : classicsItems.length > 0 ? (
-              <p className="text-gray-600">End of list</p>
-            ) : null } 
-          </div>
-        </div>
-
-        {selectedItem && (
-          <DetailedView
-            type={selectedItem.type}
-            data={selectedItem}
-            onBack={handleCloseDetailedView}
-          />
-        )}
+      <div className="flex items-center justify-center h-full p-4">
+        <p className="text-gray-400">Mobile view TBD</p>
       </div>
     );
   }
 
-  const currentItem = getCurrentItem();
   const hasPreviousDesktop = desktopIndex > 0;
-  const hasNextDesktop = desktopIndex < classicsItems.length - 1 || (hasNextPage && !isFetchingNextPage);
+  const hasNextDesktop = desktopIndex < shuffledIds.length - 1;
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center"> 
         {currentItem ? (
           <ContentCard
             image={currentItem.image}
@@ -427,10 +430,12 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
             hasPrevious={hasPreviousDesktop}
             hasNext={hasNextDesktop}
           />
-        ) : isLoading ? (
-          <div className="animate-pulse text-gray-400">Loading...</div>
+        ) : isLoadingCombined ? ( // Still show loading if currentItem is null but we expect it
+           <div className="animate-pulse text-gray-400">Loading...</div> 
+        ) : isCurrentItemError ? (
+           <p className="text-red-500">Error loading this classic.</p> // Handle item load error
         ) : (
-          <p className="text-gray-500">No classics found.</p>
+           <p className="text-gray-500">No classics found.</p>
         )}
       </div>
 

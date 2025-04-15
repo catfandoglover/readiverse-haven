@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ContentCard from "./ContentCard";
@@ -11,7 +11,6 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import VerticalSwiper from "../common/VerticalSwiper";
 import { VerticalSwiperHandle } from "@/components/common/VerticalSwiper";
-import { useInView } from 'react-intersection-observer';
 
 interface Icon {
   id: string;
@@ -34,7 +33,19 @@ interface IconsContentProps {
   onDetailedViewHide?: () => void;
 }
 
-const PAGE_SIZE = 10;
+// Shuffle function (can be moved to a utility file)
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex;
+  const newArray = [...array]; // Create a copy
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+}
 
 const IconLoadingSkeleton = () => (
   <div className="animate-pulse space-y-4">
@@ -55,8 +66,9 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   const { saveSourcePath, getSourcePath } = useNavigationState();
   const isMobile = useIsMobile();
   const swiperRef = useRef<VerticalSwiperHandle>(null);
-  const { ref: loadMoreRef, inView: loadMoreInView } = useInView();
-  const [desktopIndex, setDesktopIndex] = useState(currentIndex);
+  const [desktopIndex, setDesktopIndex] = useState(0);
+  const [shuffledIds, setShuffledIds] = useState<string[]>([]);
+  const queryClient = useQueryClient();
   
   useEffect(() => {
     if (!location.pathname.includes('/view/')) {
@@ -65,88 +77,121 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     }
   }, [location.pathname, saveSourcePath]);
 
-  const { 
-    data: iconsPages, 
-    fetchNextPage, 
-    hasNextPage, 
-    isLoading, 
-    isFetchingNextPage 
-  } = useInfiniteQuery({
-    queryKey: ["icons-paginated"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      console.log(`Fetching icons page: ${pageParam}, range: ${from}-${to}`);
-      try {
-        const { data, error, count } = await supabase
-          .from("icons")
-          .select("*", { count: 'exact' })
-          .order("name", { ascending: true })
-          .range(from, to);
-
-        if (error) {
-          console.error("Error fetching icons page:", error);
-          toast({ variant: "destructive", title: "Error", description: "Failed to load icons" });
-          throw error;
-        }
-
-        const iconsData = data.map((icon: any) => ({
-          ...icon,
-          slug: icon.slug || icon.name?.toLowerCase().replace(/\s+/g, '-') || '',
-          about: icon.about || `${icon.name} was a significant figure in philosophical history.`,
-          great_conversation: icon.great_conversation || `${icon.name}'s contributions to philosophical discourse were substantial and continue to influence modern thought.`,
-          anecdotes: icon.anecdotes || `Various interesting stories surround ${icon.name}'s life and work.`,
-        })) as Icon[];
-
-        return { data: iconsData, count: count ?? 0 };
-
-      } catch (error) {
-        console.error("Error fetching icons page:", error);
-        return { data: [], count: 0 };
+  // Query 1: Fetch all Icon IDs
+  const { data: allIconIds, isLoading: isLoadingIds } = useQuery({
+    queryKey: ["all-icons-ids"],
+    queryFn: async () => {
+      console.log("Fetching all icon IDs...");
+      const { data, error } = await supabase
+        .from("icons")
+        .select("id");
+      if (error) {
+        console.error("Error fetching icon IDs:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to load icon IDs" });
+        return [];
       }
+      return data.map(item => item.id);
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages, lastPageParam) => {
-      const totalFetched = allPages.reduce((acc, page) => acc + page.data.length, 0);
-      const totalCount = lastPage.count;
-      if (totalFetched < totalCount) {
-        return lastPageParam + 1;
-      }
-      return undefined;
-    },
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
-  const icons = iconsPages?.pages.flatMap(page => page.data) ?? [];
-
+  // Effect to shuffle IDs once fetched
   useEffect(() => {
-    if (loadMoreInView && hasNextPage && !isFetchingNextPage) {
-      console.log("Load more icons triggered...");
-      fetchNextPage();
+    if (allIconIds && allIconIds.length > 0) {
+      console.log("[ShuffleEffect Icons] Shuffling IDs...");
+      setShuffledIds(shuffleArray(allIconIds));
+      setDesktopIndex(0); // Reset index
     }
-  }, [loadMoreInView, hasNextPage, fetchNextPage, isFetchingNextPage]);
+  }, [allIconIds]);
 
+  // Determine the current ID
+  const currentIconId = useMemo(() => {
+      if (shuffledIds.length > 0 && desktopIndex >= 0 && desktopIndex < shuffledIds.length) {
+          return shuffledIds[desktopIndex];
+      }
+      return null;
+  }, [shuffledIds, desktopIndex]);
+
+  // Define the query function separately for reuse
+  const fetchIconDetails = async (iconId: string | null) => {
+    if (!iconId) return null;
+    console.log(`Fetching details for icon ID: ${iconId}`);
+    const { data, error } = await supabase
+      .from("icons")
+      .select("*" ) 
+      .eq("id", iconId)
+      .single(); 
+
+    if (error) {
+      console.error(`Error fetching details for icon ${iconId}:`, error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load icon details" });
+      return null;
+    }
+    
+    return {
+      ...data,
+      type: "icon" as const,
+      slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') || '',
+      about: data.about || `${data.name} was a significant figure in philosophical history.`,
+      // ... process other fields ...
+    };
+  };
+
+  // Query 2: Fetch details for the current Icon ID
+  const { 
+    data: currentItemData, 
+    isLoading: isLoadingCurrentItem, 
+    isError: isCurrentItemError 
+  } = useQuery({
+    queryKey: ["icon-details", currentIconId],
+    queryFn: () => fetchIconDetails(currentIconId),
+    enabled: !!currentIconId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Effect for Pre-fetching next items
   useEffect(() => {
+    const prefetchCount = 3;
+    if (shuffledIds.length > 0) {
+      for (let i = 1; i <= prefetchCount; i++) {
+        const prefetchIndex = desktopIndex + i;
+        if (prefetchIndex < shuffledIds.length) {
+          const prefetchId = shuffledIds[prefetchIndex];
+          console.log(`[Prefetch Icons] Prefetching ID: ${prefetchId}`);
+          queryClient.prefetchQuery({
+            queryKey: ['icon-details', prefetchId],
+            queryFn: () => fetchIconDetails(prefetchId),
+            staleTime: 5 * 60 * 1000
+          });
+        }
+      }
+    }
+  }, [desktopIndex, shuffledIds, queryClient, fetchIconDetails]);
+
+  // Detail view logic (adapt to use currentItemData? Or fetch directly?)
+  useEffect(() => {
+     // This logic needs review - should detail view fetch its own data completely?
+     // Or can we reliably use currentItemData?
+     // For now, let's comment out the part that finds in the list
     if (location.pathname.includes('/icons/')) {
       const iconParam = location.pathname.split('/icons/')[1];
-      console.log("[IconsContent] Icon param detected:", iconParam);
-      
-      if (!selectedIcon || selectedIcon.slug !== iconParam) {
-        console.log("[IconsContent] Loading icon from URL param");
-        const icon = icons.find(i => i.slug === iconParam);
-        
-        if (icon) {
-          console.log("[IconsContent] Found matching icon in list:", icon.name);
-          setSelectedIcon({...icon});
-          if (onDetailedViewShow) onDetailedViewShow();
-        } else {
-          console.log("[IconsContent] Icon not found in current list, fetching directly");
-          fetchIconDirectly(iconParam);
-        }
+      // const icon = allFetchedItems.find(i => i.slug === iconParam); // Remove this find
+      // if (icon) { ... } else { fetchIconDirectly(iconParam) } 
+      // Maybe always fetch directly in detail view? Or trigger selectedItem based on currentItemData?
+      if (currentItemData && currentItemData.slug === iconParam && !selectedIcon) {
+         console.log("Setting selected item from current data");
+         setSelectedIcon(currentItemData);
+         if (onDetailedViewShow) onDetailedViewShow();
+      } else if (!currentItemData || currentItemData.slug !== iconParam) {
+         // Optional: Fetch directly if URL doesn't match current item
+         // fetchIconDirectly(iconParam); 
       }
     } else if (selectedIcon) {
       setSelectedIcon(null);
     }
-  }, [location.pathname, icons, location.key, selectedIcon]);
+  }, [location.pathname, currentItemData, onDetailedViewShow, selectedIcon]); // Depend on currentItemData
 
   const fetchIconDirectly = async (iconSlug: string) => {
     try {
@@ -198,23 +243,17 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   };
 
   const handlePrevious = useCallback(() => {
-    if (!isMobile && desktopIndex > 0) {
+    if (desktopIndex > 0) {
       setDesktopIndex(prevIndex => prevIndex - 1);
     }
-  }, [isMobile, desktopIndex]);
+  }, [desktopIndex]);
 
   const handleNext = useCallback(() => {
-    if (!isMobile) {
-      if (desktopIndex < icons.length - 1) {
-        setDesktopIndex(prevIndex => prevIndex + 1);
-      } else if (hasNextPage && !isFetchingNextPage) {
-        console.log("Desktop Next (Icons): Fetching next page...");
-        fetchNextPage();
-      }
+    if (desktopIndex < shuffledIds.length - 1) {
+      setDesktopIndex(prevIndex => prevIndex + 1);
     }
-  }, [isMobile, desktopIndex, icons.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const getCurrentItem = () => icons[desktopIndex] || null;
+    // No fetching needed here
+  }, [desktopIndex, shuffledIds.length]);
 
   const handleLearnMore = (icon: Icon) => {
     if (!icon.slug) {
@@ -319,7 +358,10 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     ],
   };
 
-  if (isLoading && !icons.length) {
+  const isLoadingCombined = isLoadingIds || (!!currentIconId && isLoadingCurrentItem);
+  const currentItem = currentItemData;
+
+  if (isLoadingCombined && !currentItem) {
     return (
       <div className="h-full">
         <IconLoadingSkeleton />
@@ -331,24 +373,21 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     return (
       <div className="h-full flex flex-col">
         <div className="flex-1 overflow-y-auto">
-          {icons.map((item) => (
-            <div key={item.id} className="p-4 border-b border-gray-700 last:border-b-0">
+          {shuffledIds.map((id) => (
+            <div key={id} className="p-4 border-b border-gray-700 last:border-b-0">
               <ContentCard
-                image={item.illustration}
-                title={item.name}
-                about={item.about || ""}
-                itemId={item.id}
+                image={currentItem?.illustration || ""}
+                title={currentItem?.name || ""}
+                about={currentItem?.about || ""}
+                itemId={id}
                 itemType="icon"
-                onLearnMore={() => handleLearnMore(item)}
-                onImageClick={() => handleLearnMore(item)}
+                onLearnMore={() => handleLearnMore(currentItem as Icon)}
+                onImageClick={() => handleLearnMore(currentItem as Icon)}
                 hasPrevious={false}
                 hasNext={false}
               />
             </div>
           ))}
-          <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
-            {/* ... Load more indicator ... */}
-          </div>
         </div>
         {selectedIcon && (
           <DetailedView
@@ -362,9 +401,8 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
     );
   }
 
-  const currentItem = getCurrentItem();
   const hasPreviousDesktop = desktopIndex > 0;
-  const hasNextDesktop = desktopIndex < icons.length - 1 || (hasNextPage && !isFetchingNextPage);
+  const hasNextDesktop = desktopIndex < shuffledIds.length - 1;
 
   return (
     <div className="h-full flex flex-col">
@@ -383,7 +421,7 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
             hasPrevious={hasPreviousDesktop}
             hasNext={hasNextDesktop}
           />
-        ) : isLoading ? (
+        ) : isLoadingCombined ? (
            <div className="animate-pulse text-gray-400">Loading...</div> 
         ) : (
            <p className="text-gray-500">No icons found.</p>
