@@ -367,41 +367,60 @@ const IconsContent: React.FC<IconsContentProps> = ({ currentIndex, onDetailedVie
   }
 
   if (isMobile) {
-    // Use VerticalSwiper for mobile view - TikTok-style swiping
+    // Simplified vertical swiper implementation for mobile view
     return (
       <div className="h-full flex flex-col">
-        {!selectedIcon && shuffledIds.length > 0 && currentItem ? (
+        {!selectedIcon && shuffledIds.length > 0 ? (
           <VerticalSwiper 
             initialIndex={desktopIndex}
-            onIndexChange={(index) => setDesktopIndex(index)}
+            onIndexChange={(index) => {
+              if (index !== desktopIndex) {
+                setDesktopIndex(index);
+                
+                // Only prefetch the next item to avoid overloading
+                const nextIndex = index + 1;
+                if (nextIndex < shuffledIds.length) {
+                  const nextId = shuffledIds[nextIndex];
+                  queryClient.prefetchQuery({
+                    queryKey: ['icon-details', nextId],
+                    queryFn: () => fetchIconDetails(nextId),
+                    staleTime: 5 * 60 * 1000
+                  });
+                }
+              }
+            }}
+            preloadCount={1}
           >
-            {shuffledIds.map((iconId, index) => {
-              const isCurrentIndex = index === desktopIndex;
-              return (
-                <div key={iconId} className="h-full flex items-center justify-center">
-                  {isCurrentIndex && currentItem ? (
-                    <ContentCard
-                      image={currentItem.illustration}
-                      title={currentItem.name}
-                      about={currentItem.about || ""}
-                      itemId={currentItem.id}
-                      itemType="icon"
-                      onLearnMore={() => handleLearnMore(currentItem)}
-                      onImageClick={() => handleLearnMore(currentItem)}
-                      hasPrevious={index > 0}
-                      hasNext={index < shuffledIds.length - 1}
-                      swiperMode={true}
-                    />
-                  ) : (
-                    <IconLoadingSkeleton />
-                  )}
-                </div>
-              );
-            })}
+            {shuffledIds.map((iconId, index) => (
+              <div key={iconId} className="h-full flex items-center justify-center p-4">
+                {index === desktopIndex && currentItem ? (
+                  <ContentCard
+                    image={currentItem.illustration}
+                    title={currentItem.name}
+                    about={currentItem.about || ''}
+                    itemId={currentItem.id}
+                    itemType="icon"
+                    onLearnMore={() => handleLearnMore(currentItem)}
+                    onImageClick={() => handleLearnMore(currentItem)}
+                    hasPrevious={index > 0}
+                    hasNext={index < shuffledIds.length - 1}
+                    swiperMode={true}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-[#E9E7E2]/60">Loading...</p>
+                    <div className="animate-pulse mt-4 h-64 w-64 bg-[#3F3A46]/30 rounded-lg"></div>
+                  </div>
+                )}
+              </div>
+            ))}
           </VerticalSwiper>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <IconLoadingSkeleton />
+            <div className="text-center">
+              <p className="text-[#E9E7E2]/60">Loading icons...</p>
+              <div className="animate-pulse mt-4 h-64 w-64 bg-[#3F3A46]/30 rounded-lg"></div>
+            </div>
           </div>
         )}
         

@@ -448,46 +448,59 @@ const ClassicsContent: React.FC<ForYouContentProps> = ({ currentIndex, onDetaile
   console.log("ClassicsContent render - selectedItem:", selectedItem?.title, "location:", location.pathname);
 
   if (isMobile) {
-    // Use VerticalSwiper for mobile view - TikTok-style swiping
+    // Simplified vertical swiper implementation for mobile view
     return (
       <div className="h-full flex flex-col">
-        {!selectedItem && shuffledIds.length > 0 && currentItem ? (
+        {!selectedItem && shuffledIds.length > 0 ? (
           <VerticalSwiper 
             initialIndex={desktopIndex}
-            onIndexChange={(index) => setDesktopIndex(index)}
+            onIndexChange={(index) => {
+              if (index !== desktopIndex) {
+                setDesktopIndex(index);
+                
+                // Only prefetch the next item to avoid overloading
+                const nextIndex = index + 1;
+                if (nextIndex < shuffledIds.length) {
+                  const nextId = shuffledIds[nextIndex];
+                  queryClient.prefetchQuery({
+                    queryKey: ['book-details', nextId],
+                    queryFn: () => fetchBookDetails(nextId),
+                    staleTime: 5 * 60 * 1000
+                  });
+                }
+              }
+            }}
+            preloadCount={1}
           >
-            {shuffledIds.map((bookId, index) => {
-              const isCurrentIndex = index === desktopIndex;
-              return (
-                <div key={bookId} className="h-full flex items-center justify-center">
-                  {isCurrentIndex && currentItem ? (
-                    <ContentCard
-                      image={currentItem.image}
-                      title={currentItem.title}
-                      about={currentItem.about}
-                      itemId={currentItem.id}
-                      itemType={currentItem.type}
-                      onLearnMore={() => handleLearnMore(currentItem)}
-                      onImageClick={() => handleLearnMore(currentItem)}
-                      hasPrevious={index > 0}
-                      hasNext={index < shuffledIds.length - 1}
-                      swiperMode={true}
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <p className="text-[#E9E7E2]/60">Loading item...</p>
-                      <div className="animate-pulse mt-4 h-64 w-full bg-[#3F3A46]/30 rounded-lg"></div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {shuffledIds.map((bookId, index) => (
+              <div key={bookId} className="h-full flex items-center justify-center p-4">
+                {index === desktopIndex && currentItem ? (
+                  <ContentCard
+                    image={currentItem.image}
+                    title={currentItem.title}
+                    about={currentItem.about}
+                    itemId={currentItem.id}
+                    itemType={currentItem.type}
+                    onLearnMore={() => handleLearnMore(currentItem)}
+                    onImageClick={() => handleLearnMore(currentItem)}
+                    hasPrevious={index > 0}
+                    hasNext={index < shuffledIds.length - 1}
+                    swiperMode={true}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-[#E9E7E2]/60">Loading...</p>
+                    <div className="animate-pulse mt-4 h-64 w-64 bg-[#3F3A46]/30 rounded-lg"></div>
+                  </div>
+                )}
+              </div>
+            ))}
           </VerticalSwiper>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <p className="text-[#E9E7E2]/60">Loading classics...</p>
-              <div className="animate-pulse mt-4 h-64 w-full bg-[#3F3A46]/30 rounded-lg"></div>
+              <div className="animate-pulse mt-4 h-64 w-64 bg-[#3F3A46]/30 rounded-lg"></div>
             </div>
           </div>
         )}
