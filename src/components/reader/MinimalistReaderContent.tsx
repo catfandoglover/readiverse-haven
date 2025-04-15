@@ -255,6 +255,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
         </div>
       </div>
 
+      {/* VirgilChatButton temporarily hidden 
       {!showVirgilChat && (
         <div className="h-16">
           <div className="absolute inset-x-0 bottom-0 h-16 bg-background/80 backdrop-blur-sm flex items-center justify-center">
@@ -279,6 +280,7 @@ const MinimalistReaderContent: React.FC<MinimalistReaderContentProps> = ({
       >
         <VirgilDrawer bookTitle={currentChapterTitle} />
       </div>
+      */}
 
       <BookmarkDialog
         open={showBookmarkDialog}

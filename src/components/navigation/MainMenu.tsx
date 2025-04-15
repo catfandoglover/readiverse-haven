@@ -31,7 +31,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
   // Get the default highlighted menu item based on user status
   const getDefaultHighlight = () => {
     if (user && hasCompletedDNA) {
-      return '/virgil'; // Virgil is default for users with DNA
+      return '/discover'; // Changed from '/virgil' to '/discover' for users with DNA
     } else {
       return '/dna'; // DNA is default for unauthenticated or users without DNA
     }
@@ -171,6 +171,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
               )}
               
               {/* Virgil's Office Navigation Item - Only show for users with DNA */}
+              {/* Temporarily hidden per request
               {user && hasCompletedDNA && (
                 <div 
                   className={cn(
@@ -193,7 +194,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ dnaStyling = false }) => {
                     </p>
                   </div>
                 </div>
-              )}
+              )} */}
             
               {/* Study Navigation Item - Only show for users with DNA */}
               {user && hasCompletedDNA && (

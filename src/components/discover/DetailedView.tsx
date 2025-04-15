@@ -1233,12 +1233,14 @@ const DetailedView: React.FC<DetailedViewProps> = ({
         />
       )}
 
-      {/* Floating Virgil Button */}
+      {/* Floating Virgil Button - Temporarily hidden */}
+      {/* 
       <FloatingVirgilButton
         contentTitle={combinedData?.title || combinedData?.name || type}
         contentId={combinedData?.id || ""}
         contentType={type}
       />
+      */}
     </div>
   );
 };

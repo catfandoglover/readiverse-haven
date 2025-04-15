@@ -659,12 +659,14 @@ const GreatQuestionDetailedView: React.FC<GreatQuestionDetailedViewProps> = ({
         </div>
       </div>
 
-      {/* Floating Virgil Button */}
+      {/* Floating Virgil Button - Temporarily hidden */}
+      {/* 
       <FloatingVirgilButton
         contentTitle={combinedData?.question || "Great Question"}
         contentId={combinedData?.id || ""}
         contentType="question"
       />
+      */}
     </div>
   );
 };
