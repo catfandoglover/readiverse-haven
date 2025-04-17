@@ -824,7 +824,9 @@ patterns while remaining accessible, unique, and
   "politics_introduction": "Politics approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
   "aesthetics_introduction": "Aesthetics approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices"
   "most_kindred_spirit": "The thinker, drawn from the examples given above in this profile, who most closely aligns with the overall philosophical profile",
+  "most_kindred_spirit_rationale": "Resonance explanation for most_kindred_spirit",
   "most_challenging_voice": "The thinker, drawn from the examples given above in this profile, who most directly and forcefully challenges the overall philosophical profile",
+  "most_challenging_voice_rationale": "Resonance explanation for most_challenging_voice",
 }`;
 
     case 2:
