@@ -766,7 +766,6 @@ Verify:
 1. Archetype Criteria:
 - Must capture philosophical orientation
 - Should feel mythologically resonant
-- Must maintain consistency across profiles
 - Should be immediately evocative
 2. Combination Rules:
 - Elements must complement
@@ -797,18 +796,17 @@ e) Verify domain fit
 \`\`\`
 3. Quality Control:
 \`\`\`
-a) Check consistency
-b) Verify distinctiveness
-c) Test resonance
-d) Confirm accuracy
+a) Verify distinctiveness
+b) Test resonance
+c) Confirm accuracy
 \`\`\`
 Remember: Archetypes should be both meaningful 
 and memorable, capturing deep philosophical 
-patterns while remaining accessible and 
+patterns while remaining accessible, unique, and 
 "evocative.\u0060\u0060\u0060",
   "archetype_definition": "Brief poetic subtitle capturing essence",
-  "introduction": "Opening paragraph describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: "You are..." "Your approach...",
-  "share_summary": "Opening paragraph describing philosophical approach and how the individual moves through philosophical space - focus on how the user reconciles contradictions and approaches meaning-making - Written in 3rd person singular."
+  "introduction": "Opening 2-3 sentences describing philosophical approach and how you move through philosophical space - focus on how you reconcile contradictions and approach meaning-making - Written in direct address: "You are..." "Your approach...",
+  "share_summary": "Opening 2-3 sentences describing philosophical approach and how the individual moves through philosophical space - focus on how the user reconciles contradictions and approaches meaning-making - Written in 3rd person singular."
   "key_tension_1": "First key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...".",
   "key_tension_2": "Second key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1".",
   "key_tension_3": "Third key tension, one of three primary dialectics you navigate, written as a third person active tense bullet point such as "Wrestles with..." "Balances..." or "Navigates...". Do not repeat the dialectic theme from "key_tension_1" or "key_tension_2".",
@@ -819,12 +817,12 @@ patterns while remaining accessible and
   "growth_edges_2": "Second growth edge - one of three areas where you're called to develop, focusing on which aspect of themselves revealed by the assessment they should further develop, written as a second person, command tense bullet point such as "Develop..."",
   "growth_edges_3": "Third growth edge - one of three areas where you're called to develop, focusing on which aspect of themselves revealed by the assessment they should expand and stretch beyond their comfort zone, written as a second person, command tense bullet point such as "Expand..." or "Stretch..."",
   "become_who_you_are": "Single-sentence affirmation validating your core strength while addressing your key tension - Written as direct encouragement: "Trust your capacity to..."",
-  "theology_introduction": "Theology approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-  "ontology_introduction": "Ontology approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-  "epistemology_introduction": "Epistemology approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-  "ethics_introduction": "Ethics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-  "politics_introduction": "Politics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
-  "aesthetics_introduction": "Aesthetics approach description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices"
+  "theology_introduction": "Theology approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+  "ontology_introduction": "Ontology approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+  "epistemology_introduction": "Epistemology approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+  "ethics_introduction": "Ethics approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+  "politics_introduction": "Politics approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices",
+  "aesthetics_introduction": "Aesthetics approach 2-3 sentence description - Specific to the philosophical pattern of their assessment responses - Avoid generic characterizations - Connect to decision tree choices"
   "most_kindred_spirit": "The thinker, drawn from the examples given above in this profile, who most closely aligns with the overall philosophical profile",
   "most_challenging_voice": "The thinker, drawn from the examples given above in this profile, who most directly and forcefully challenges the overall philosophical profile",
 }`;
