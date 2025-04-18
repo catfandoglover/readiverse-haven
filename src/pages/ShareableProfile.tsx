@@ -75,6 +75,35 @@ const getIconDetailsByName = async (name: string | null): Promise<IconDetails> =
   }
 };
 
+// Add a new function to handle automatic sharing
+function attemptNativeShare(shareUrl: string, fullName: string, toast: any) {
+  // Check if the Web Share API is supported
+  if (navigator.share) {
+    navigator.share({
+      title: `${fullName}'s Intellectual DNA`,
+      text: `Check out ${fullName}'s intellectual profile on Lightning Inspiration`,
+      url: shareUrl
+    }).catch((error) => {
+      console.error("Error sharing content:", error);
+      // If sharing fails or is cancelled, copy to clipboard as fallback
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast({
+          title: "Success",
+          description: "Profile link copied to clipboard",
+        });
+      });
+    });
+  } else {
+    // If Web Share API is not supported, copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast({
+        title: "Success",
+        description: "Profile link copied to clipboard",
+      });
+    });
+  }
+}
+
 function ShareableProfile(): JSX.Element {
   const { name } = useParams() as { name: string };
   const navigate = useNavigate();
@@ -96,6 +125,9 @@ function ShareableProfile(): JSX.Element {
   const imageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
+  // New state to track if auto-share has been attempted
+  const [hasAttemptedShare, setHasAttemptedShare] = useState<boolean>(false);
+  
   // Function to navigate to icon detail page using slug or name
   const navigateToIconDetail = (slug: string | null, iconName: string | null): void => {
     if (slug) {
@@ -109,7 +141,23 @@ function ShareableProfile(): JSX.Element {
     }
   };
 
-  // Function to handle sharing profile 
+  // Add useEffect to trigger sharing when component mounts
+  useEffect(() => {
+    // Only trigger automatic sharing after data is loaded and only once
+    if (!isLoading && profileData && !hasAttemptedShare) {
+      setHasAttemptedShare(true);
+      
+      // Use current URL for sharing
+      const shareUrl = window.location.href;
+      
+      // Slight delay to ensure component is fully rendered
+      setTimeout(() => {
+        attemptNativeShare(shareUrl, profileData.full_name || "", toast);
+      }, 500);
+    }
+  }, [isLoading, profileData, hasAttemptedShare, toast]);
+
+  // Modify the existing handleShareClick function to use our new utility function
   const handleShareClick = async () => {
     try {
       if (!user?.id) {
@@ -124,16 +172,13 @@ function ShareableProfile(): JSX.Element {
       // Use the current URL for sharing
       const shareUrl = window.location.href;
       
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Success",
-        description: "Profile link copied to clipboard",
-      });
+      // Use our utility function
+      attemptNativeShare(shareUrl, profileData?.full_name || "", toast);
     } catch (error) {
-      console.error('Error copying to clipboard:', error);
+      console.error('Error handling share:', error);
       toast({
         title: "Error",
-        description: "Failed to copy profile link",
+        description: "Failed to share profile",
         variant: "destructive",
       });
     }
@@ -376,16 +421,17 @@ function ShareableProfile(): JSX.Element {
   
   return (
     <div className="flex flex-col bg-[#2A282A] text-[#E9E7E2] fixed inset-0">
-      <div className="relative w-full h-[30vh] min-h-[180px] max-h-[230px] bg-[#2A282A] flex-shrink-0">
+      {/* Header section - taller on larger screens */}
+      <div className="relative w-full h-[30vh] md:h-[40vh] min-h-[180px] md:min-h-[250px] max-h-[230px] md:max-h-[400px] bg-[#2A282A] flex-shrink-0">
         {/* Back button - only shown to authenticated users */}
         {user && (
           <Button 
             onClick={() => navigate('/profile')}
-            className="absolute top-4 left-4 z-20 h-10 w-10 rounded-full p-0 hover:bg-transparent"
+            className="absolute top-4 md:top-6 left-4 md:left-6 z-20 h-10 md:h-12 w-10 md:w-12 rounded-full p-0 hover:bg-transparent"
             aria-label="Back to profile"
             variant="ghost"
           >
-            <ArrowRight className="h-6 w-6 text-[#E9E7E2] transform rotate-180" />
+            <ArrowRight className="h-6 md:h-7 w-6 md:w-7 text-[#E9E7E2] transform rotate-180" />
           </Button>
         )}
         
@@ -394,25 +440,25 @@ function ShareableProfile(): JSX.Element {
           /* Share button for authenticated users - no background styling */
           <Button 
             onClick={handleShareClick}
-            className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full p-0 hover:bg-transparent" 
+            className="absolute top-4 md:top-6 right-4 md:right-6 z-20 h-10 md:h-12 w-10 md:w-12 rounded-full p-0 hover:bg-transparent" 
             aria-label="Share profile"
             variant="ghost"
           >
-            <Share className="h-6 w-6 text-[#E9E7E2]" />
+            <Share className="h-6 md:h-7 w-6 md:w-7 text-[#E9E7E2]" />
           </Button>
         ) : (
           /* Close button for unauthenticated users - no background */
           <Button 
             onClick={handleCloseClick}
-            className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full p-0 hover:bg-transparent"
+            className="absolute top-4 md:top-6 right-4 md:right-6 z-20 h-10 md:h-12 w-10 md:w-12 rounded-full p-0 hover:bg-transparent"
             aria-label="Close"
             variant="ghost"
           >
-            <X className="h-6 w-6 text-[#E9E7E2]" />
+            <X className="h-6 md:h-7 w-6 md:w-7 text-[#E9E7E2]" />
           </Button>
         )}
         
-        {/* Background image with overlay */}
+        {/* Background image with overlay - allow full height display on larger screens */}
         {landscapeImage && (
           <div 
             className="absolute inset-0"
@@ -426,9 +472,9 @@ function ShareableProfile(): JSX.Element {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A282A]/50 via-[#2A282A]/70 to-[#2A282A]"></div>
         
         {/* Profile content centered but moved lower in the header */}
-        <div className="absolute inset-0 flex flex-col items-center justify-end px-6 pb-4">
-          {/* Profile image in hexagon - Using the same styling as the profile page */}
-          <div className="relative h-20 w-20 mb-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-end px-6 pb-4 md:pb-6">
+          {/* Profile image in hexagon - larger on bigger screens */}
+          <div className="relative h-20 md:h-28 w-20 md:w-28 mb-2 md:mb-3">
             {/* Updated hexagon styling to match ProfileHeader */}
             <svg 
               viewBox="-5 -5 110 110" 
@@ -460,7 +506,7 @@ function ShareableProfile(): JSX.Element {
               >
                 <Avatar className="h-full w-full overflow-hidden rounded-none">
                   <AvatarImage src={profileImage || FALLBACK_ICON} />
-                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                  <AvatarFallback className="text-lg md:text-xl font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -468,37 +514,36 @@ function ShareableProfile(): JSX.Element {
             </div>
           </div>
           
-          {/* Name above archetype but with swapped styling and reduced spacing */}
-          <p className="text-sm font-libre-baskerville italic text-[#E9E7E2]/70 text-center mb-0.5">
+          {/* Name above archetype with larger text on bigger screens */}
+          <p className="text-sm md:text-base font-libre-baskerville italic text-[#E9E7E2]/70 text-center mb-0.5 md:mb-1">
             {fullName}
           </p>
-          <h1 className="text-xl font-libre-baskerville font-bold text-center">{archetype}</h1>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-libre-baskerville font-bold text-center">{archetype}</h1>
         </div>
       </div>
       
-      {/* Middle flexible section - content with reduced top padding */}
-      <div className="flex-1 flex flex-col px-6 overflow-auto">
+      {/* Middle flexible section - content with better spacing for larger screens */}
+      <div className="flex-1 flex flex-col px-6 md:px-10 lg:px-16 overflow-auto">
         {/* Reduced top spacing */}
-        <div className="pt-2"></div>
+        <div className="pt-2 md:pt-4"></div>
         
-        {/* Share Summary text - show all text without truncation and centered */}
-        <div className="max-w-lg w-full mx-auto mb-4">
-          <p className="text-sm font-oxanium text-[#E9E7E2]/50 text-center">
+        {/* Share Summary text - larger text on bigger screens */}
+        <div className="max-w-lg md:max-w-2xl lg:max-w-3xl w-full mx-auto mb-4 md:mb-6">
+          <p className="text-sm md:text-base lg:text-lg font-oxanium text-[#E9E7E2]/50 text-center">
             {shareSummary}
           </p>
         </div>
         
-        {/* Horizontal container for cards */}
-        <div className="w-full max-w-lg mx-auto mt-2">
-          <div className="flex justify-center gap-4 w-full">
+        {/* Horizontal container for cards - larger cards on bigger screens */}
+        <div className="w-full max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto mt-2 md:mt-4">
+          <div className="flex justify-center gap-4 md:gap-6 lg:gap-8 w-full">
             {/* Most Kindred Spirit Card */}
             {kindredSpirit && (
               <div 
                 onClick={() => navigateToIconDetail(kindredSpiritSlug, kindredSpiritName)}
-                className="flex-shrink-0 group relative cursor-pointer"
-                style={{ width: 'calc(42vw - 16px)', maxWidth: '170px' }}
+                className="flex-shrink-0 group relative cursor-pointer w-[calc(42vw-16px)] max-w-[170px] md:max-w-[220px] lg:max-w-[250px]"
               >
-                <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
+                <div className="relative aspect-square w-full rounded-2xl md:rounded-3xl overflow-hidden">
                   <img
                     src={kindredSpiritIconUrl || FALLBACK_ICON}
                     alt={kindredSpiritName}
@@ -508,18 +553,18 @@ function ShareableProfile(): JSX.Element {
                     }}
                   />
                   
-                  {/* Type indicator - centered at the top */}
-                  <div className="absolute top-2 left-0 right-0 flex justify-center">
-                    <div className="rounded-2xl px-3 py-1 backdrop-blur-sm bg-[#1D3A35]/90 flex justify-center items-center">
-                      <span className="font-oxanium italic uppercase text-[10px] tracking-tight text-white whitespace-nowrap text-center">
+                  {/* Type indicator - centered at the top, larger on bigger screens */}
+                  <div className="absolute top-2 md:top-3 left-0 right-0 flex justify-center">
+                    <div className="rounded-2xl px-3 py-1 md:px-4 md:py-1.5 backdrop-blur-sm bg-[#1D3A35]/90 flex justify-center items-center">
+                      <span className="font-oxanium italic uppercase text-[10px] md:text-xs tracking-tight text-white whitespace-nowrap text-center">
                         MOST KINDRED SPIRIT
                       </span>
                     </div>
                   </div>
                   
-                  {/* Name overlay - smaller font size and wrapping text */}
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <span className="font-oxanium uppercase italic text-[14px] tracking-tight text-white text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium break-words leading-tight block">
+                  {/* Name overlay - larger text on bigger screens */}
+                  <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 right-2 md:right-3">
+                    <span className="font-oxanium uppercase italic text-[14px] md:text-[16px] lg:text-[18px] tracking-tight text-white text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium break-words leading-tight block">
                       {kindredSpiritName}
                     </span>
                   </div>
@@ -531,10 +576,9 @@ function ShareableProfile(): JSX.Element {
             {challengingVoice && (
               <div
                 onClick={() => navigateToIconDetail(challengingVoiceSlug, challengingVoiceName)}
-                className="flex-shrink-0 group relative cursor-pointer"
-                style={{ width: 'calc(42vw - 16px)', maxWidth: '170px' }}
+                className="flex-shrink-0 group relative cursor-pointer w-[calc(42vw-16px)] max-w-[170px] md:max-w-[220px] lg:max-w-[250px]"
               >
-                <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
+                <div className="relative aspect-square w-full rounded-2xl md:rounded-3xl overflow-hidden">
                   <img
                     src={challengingVoiceIconUrl || FALLBACK_ICON}
                     alt={challengingVoiceName}
@@ -544,18 +588,18 @@ function ShareableProfile(): JSX.Element {
                     }}
                   />
                   
-                  {/* Type indicator - centered at the top */}
-                  <div className="absolute top-2 left-0 right-0 flex justify-center">
-                    <div className="rounded-2xl px-3 py-1 backdrop-blur-sm bg-[#301630]/90 flex justify-center items-center">
-                      <span className="font-oxanium italic uppercase text-[10px] tracking-tight text-white whitespace-nowrap text-center">
+                  {/* Type indicator - centered at the top, larger on bigger screens */}
+                  <div className="absolute top-2 md:top-3 left-0 right-0 flex justify-center">
+                    <div className="rounded-2xl px-3 py-1 md:px-4 md:py-1.5 backdrop-blur-sm bg-[#301630]/90 flex justify-center items-center">
+                      <span className="font-oxanium italic uppercase text-[10px] md:text-xs tracking-tight text-white whitespace-nowrap text-center">
                         MOST CHALLENGING VOICE
                       </span>
                     </div>
                   </div>
                   
-                  {/* Name overlay - smaller font size and wrapping text */}
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <span className="font-oxanium uppercase italic text-[14px] tracking-tight text-white text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium break-words leading-tight block">
+                  {/* Name overlay - larger text on bigger screens */}
+                  <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 right-2 md:right-3">
+                    <span className="font-oxanium uppercase italic text-[14px] md:text-[16px] lg:text-[18px] tracking-tight text-white text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium break-words leading-tight block">
                       {challengingVoiceName}
                     </span>
                   </div>
@@ -569,11 +613,11 @@ function ShareableProfile(): JSX.Element {
         <div className="flex-grow"></div>
       </div>
       
-      {/* Footer links - not fixed anymore, moves with content */}
-      <div className="w-full px-6 py-4 flex flex-col items-center flex-shrink-0 mt-4">
+      {/* Footer links - bigger text and better spacing on larger screens */}
+      <div className="w-full px-6 md:px-10 py-4 md:py-6 flex flex-col items-center flex-shrink-0 mt-4 md:mt-6">
         <a 
           href="/dna" 
-          className="font-oxanium uppercase text-base font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2"
+          className="font-oxanium uppercase text-base md:text-lg lg:text-xl font-bold text-[#E9E7E2] hover:text-[#CCFF23] transition-colors mb-2 md:mb-3"
         >
           DISCOVER YOUR INTELLECTUAL DNA
         </a>
@@ -581,7 +625,7 @@ function ShareableProfile(): JSX.Element {
           href="https://www.lightninginspiration.com" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="justify-center font-oxanium uppercase text-sm text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
+          className="justify-center font-oxanium uppercase text-sm md:text-base text-[#E9E7E2]/50 hover:text-[#E9E7E2] transition-colors"
         >
           www.lightninginspiration.com
         </a>
