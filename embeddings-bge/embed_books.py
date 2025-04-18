@@ -182,7 +182,7 @@ def epub_to_text(epub_path):
         traceback.print_exc()
         return None
 
-def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=60.0):
+def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=8.0):
     """Generate embeddings for a list of texts using the BGE-M3 model via Hugging Face API with infinite retries."""
     API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/BAAI/bge-m3"
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -195,7 +195,7 @@ def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=60.0):
         print("Warning: generate_embeddings called with empty text list.")
         return []
 
-    batch_size = 10 # Keep batching
+    batch_size = 150 # Scaled back to 150 for better reliability while still maintaining good performance
     all_embeddings = []
     print(f"Generating embeddings for {len(texts)} texts in batches of {batch_size}...")
 
@@ -203,13 +203,20 @@ def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=60.0):
         batch_texts = texts[i:i+batch_size]
         current_batch_embeddings = [None] * len(batch_texts)
         delay = initial_delay
+        first_attempt = True  # Flag to track first attempt vs retries
 
         # --- Loop indefinitely until success or non-retriable error ---
         while True:
             batch_processed = False # Flag to check if batch succeeded
             try:
                 payload = {"inputs": batch_texts}
-                response = requests.post(API_URL, headers=headers, json=payload, timeout=90) # Increased timeout slightly
+                
+                # Add a small forced delay if this is a retry after a previous failure
+                if not first_attempt:
+                    time.sleep(2)  # Give the API a 2-second break before retrying
+                
+                response = requests.post(API_URL, headers=headers, json=payload, timeout=120) # Adjusted timeout to 120s for 150-item batches
+                first_attempt = False  # Mark that we've made an attempt
 
                 if response.status_code == 200:
                     try:
@@ -258,10 +265,11 @@ def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=60.0):
 
                 # --- Handle Retriable Errors (like 503) ---
                 elif response.status_code in [500, 502, 503, 504]:
-                    print(f"  Warning: Batch {i//batch_size + 1}: API Error {response.status_code}. Retrying in {delay:.1f}s...")
+                    print(f"  Warning: Batch {i//batch_size + 1}: API Error {response.status_code}. Response: {response.text[:300]}... Retrying in {delay:.1f}s...")
                 # --- Handle Non-Retriable Client Errors (like 400, 401, 422) ---
                 elif 400 <= response.status_code < 500:
-                     print(f"  Error: Batch {i//batch_size + 1}: Client Error {response.status_code}: {response.text[:200]}... Not retrying. Skipping batch.")
+                     print(f"  Error: Batch {i//batch_size + 1}: Client Error {response.status_code}: {response.text[:300]}... Not retrying. Skipping batch.")
+                     print(f"  Batch contained {len(batch_texts)} texts with average length {sum(len(t) for t in batch_texts)/len(batch_texts):.1f} chars")
                      # Assign Nones for this batch and break the inner loop
                      current_batch_embeddings = [None] * len(batch_texts)
                      batch_processed = True # Mark as "processed" (by skipping) to exit loop
@@ -285,13 +293,27 @@ def generate_embeddings(texts, api_key, initial_delay=1.0, max_delay=60.0):
             # --- If not successful, wait and increase delay for next retry ---
             if not batch_processed:
                 print(f"    (Waiting {delay:.1f}s before next attempt for batch {i//batch_size + 1})")
-                time.sleep(delay)
-                delay = min(delay * 2, max_delay) # Exponential backoff up to max_delay
+                try:
+                    # Use a timeout approach rather than just sleeping
+                    retry_start = time.time()
+                    time.sleep(delay)
+                    retry_elapsed = time.time() - retry_start
+                    # If we've waited less than 90% of the intended delay, wait the rest
+                    if retry_elapsed < (0.9 * delay):
+                        time.sleep((0.9 * delay) - retry_elapsed)
+                except KeyboardInterrupt:
+                    print("Keyboard interrupt detected. Stopping retry loop.")
+                    return [None] * len(texts)  # Exit gracefully on keyboard interrupt
+                delay = min(delay * 1.5, max_delay) # Less aggressive backoff (1.5x instead of 2x)
 
         # Extend the main list with the results for this batch
         all_embeddings.extend(current_batch_embeddings)
         # Keep small delay between batches
-        time.sleep(0.2)
+        time.sleep(0.1)  # Reduced from 0.2s to 0.1s
+        
+        # Show progress percentage
+        progress = min(100, int((i + batch_size) / len(texts) * 100))
+        print(f"Progress: {progress}% complete", end="\r")
 
     # Final check: Ensure the final list has the same length as the input texts
     if len(all_embeddings) != len(texts):
@@ -381,6 +403,9 @@ def embed_book_to_turbopuffer(epub_path, book_uuid, hf_api_key, turbopuffer_api_
     Process an EPUB book, generate embeddings, and store in Turbopuffer.
     Includes paragraph text in attributes.
     """
+    # Start timing the process
+    start_time = time.time()
+    
     # Parse the EPUB file
     print(f"Parsing EPUB: {epub_path}")
     book_content = epub_to_text(epub_path)
@@ -466,7 +491,16 @@ def embed_book_to_turbopuffer(epub_path, book_uuid, hf_api_key, turbopuffer_api_
     # Pass API key and namespace to storage function
     result = store_embeddings_in_turbopuffer(embeddings_data, turbopuffer_api_key, turbopuffer_namespace)
 
+    # Add statistics about the process
+    end_time = time.time()
+    process_time = end_time - start_time
+    minutes = int(process_time // 60)
+    seconds = int(process_time % 60)
+    
     print("Embedding process finished.")
+    print(f"Total processing time: {minutes} minutes and {seconds} seconds")
+    print(f"Successfully embedded: {len(embeddings_data)} paragraphs")
+    print(f"Failed embeddings: {failed_embeddings}")
     print(f"Turbopuffer API Result: {result}")
     return result # Return the result from the storage function
 

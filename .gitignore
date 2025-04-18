@@ -80,3 +80,4 @@ next-env.d.ts
 
 # Python virtual environment
 epub-embeddings/
+embeddings-bge/.env
