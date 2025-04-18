@@ -33,36 +33,23 @@ const ProfileHeader: React.FC = () => {
     navigate('/profile/settings');
   };
   
-  const handleShareClick = async () => {
-    try {
-      if (!user?.id) {
-        toast({
-          title: "Error",
-          description: "User not found",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Generate a vanity URL format without relying on the database column
-      const userIdSuffix = user.id.substring(0, 4);
-      const formattedName = fullName.replace(/\s+/g, '-');
-      const shareUrl = `${window.location.origin}/profile/share/${formattedName}-${userIdSuffix}`;
-      console.log("Generated vanity URL for sharing:", `${formattedName}-${userIdSuffix}`);
-      
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Success",
-        description: "Profile link copied to clipboard",
-      });
-    } catch (error) {
-      console.error('Error copying to clipboard:', error);
+  const handleShareClick = () => {
+    if (!user?.id) {
       toast({
         title: "Error",
-        description: "Failed to copy profile link",
+        description: "User not found",
         variant: "destructive",
       });
+      return;
     }
+    
+    // Generate a vanity URL format without relying on the database column
+    const userIdSuffix = user.id.substring(0, 4);
+    const formattedName = fullName.replace(/\s+/g, '-');
+    console.log("Generated vanity URL for sharing:", `${formattedName}-${userIdSuffix}`);
+    
+    // Navigate to the share page - sharing will happen automatically in the ShareableProfile component
+    navigate(`/profile/share/${formattedName}-${userIdSuffix}`);
   };
 
   if (isLoading) {
