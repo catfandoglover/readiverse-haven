@@ -317,17 +317,25 @@ const ProfileSettings: React.FC = () => {
             </svg>
             
             <div 
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center bg-[#CCFF23]"
               style={{ 
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
             >
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              {/* Inner profile image container - slightly smaller to create border effect */}
+              <div 
+                className="absolute inset-[3px] overflow-hidden"
+                style={{ 
+                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                }}
+              >
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || FALLBACK_ICON} data-profile-image="true" />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
             </div>
             
             <label 

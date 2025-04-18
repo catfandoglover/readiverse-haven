@@ -141,8 +141,9 @@ const ProfileHeader: React.FC = () => {
       {/* Hexagon profile with name/archetype - positioned to align with the transition but moved further down */}
       <div className="absolute z-40" style={{ top: "310px", left: "1.5rem", transform: "translateY(-50%)" }}>
         <div className="flex flex-col items-start">
-          {/* Hexagon profile image - removed settings button */}
+          {/* Hexagon profile image with gradient border */}
           <div className="relative h-28 w-28 p-0.5">
+            {/* Original SVG outline */}
             <svg 
               viewBox="-5 -5 110 110" 
               className="absolute inset-0 h-full w-full text-[#CCFF23]"
@@ -157,18 +158,27 @@ const ProfileHeader: React.FC = () => {
               />
             </svg>
             
+            {/* Gradient border container */}
             <div 
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center bg-[#CCFF23]"
               style={{ 
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
               }}
             >
-              <Avatar className="h-full w-full overflow-hidden rounded-none">
-                <AvatarImage src={profileImage || FALLBACK_ICON} />
-                <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              {/* Inner profile image container - slightly smaller to create border effect */}
+              <div 
+                className="absolute inset-[3px] overflow-hidden"
+                style={{ 
+                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                }}
+              >
+                <Avatar className="h-full w-full overflow-hidden rounded-none">
+                  <AvatarImage src={profileImage || FALLBACK_ICON} />
+                  <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white rounded-none">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
             </div>
           </div>
           
