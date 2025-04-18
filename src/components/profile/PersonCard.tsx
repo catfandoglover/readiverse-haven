@@ -73,8 +73,8 @@ const PersonCard: React.FC<PersonCardProps> = ({
         
         {/* Icon name overlay - shown for MOST items or when using icon as fallback */}
         {showNameOverlay && (
-          <div className="absolute bottom-2 left-2">
-            <span className="font-oxanium uppercase italic text-[16px] tracking-tight text-white whitespace-nowrap text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium">
+          <div className="absolute bottom-2 left-2 right-2">
+            <span className="font-oxanium uppercase italic text-[16px] tracking-tight text-white text-shadow drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] font-medium break-words leading-tight block">
               {name}
             </span>
           </div>
