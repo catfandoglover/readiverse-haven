@@ -5,9 +5,9 @@ import DomainsList from "./DomainsList";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import MainMenu from "../navigation/MainMenu";
-import { ArrowRight, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { ArrowRight } from "lucide-react";
 import { useProfileData } from "@/contexts/ProfileDataContext";
+import IntellectualCarousel from "./IntellectualCarousel";
 
 interface ProfileLayoutProps {
   initialTab?: "become" | "profile";
@@ -16,11 +16,10 @@ interface ProfileLayoutProps {
 const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
   const { dnaAnalysisData, isLoading, getIconByName } = useProfileData();
   
   const handleBecomeWhoYouAreClick = () => {
-    navigate('/become-who-you-are');
+    navigate('/intellectual-dna-course');
   };
 
   return (
@@ -49,14 +48,18 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
               )}
             </p>
             
-            <div className="space-y-3 mb-6">
+            <div className="mb-0">
+              <IntellectualCarousel />
+            </div>
+            
+            <div className="mb-6">
               <div 
-                className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between cursor-pointer hover:bg-[#383741]"
+                className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center cursor-pointer hover:bg-[#383741]"
                 onClick={handleBecomeWhoYouAreClick}
               >
-                <div className="flex items-center">
+                <div className="flex items-center flex-grow">
                   <div className="relative mr-4">
-                    <div className="h-9 w-9 rounded-full overflow-hidden">
+                    <div className="h-9 w-9 rounded-full overflow-hidden flex-shrink-0">
                       <img 
                         src="https://myeyoafugkrkwcnfedlu.supabase.co/storage/v1/object/sign/app_assets/Lightning.jpeg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhcHBfYXNzZXRzL0xpZ2h0bmluZy5qcGVnIiwiaWF0IjoxNzQ0MjMzMDMwLCJleHAiOjg4MTQ0MTQ2NjMwfQ.rVgAMWNvwuJiEYBf1bUO51iQSH7pcm5YrjMcuJ7BcO8" 
                         alt="Lightning" 
@@ -64,75 +67,21 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                       />
                     </div>
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
                       BECOME WHO YOU ARE
                     </h3>
-                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">YOUR POTENTIAL</p>
+                    <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">
+                      {isLoading ? "YOUR POTENTIAL" : (dnaAnalysisData?.become_who_you_are || "YOUR POTENTIAL")}
+                    </p>
                   </div>
                 </div>
-                <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                  <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                </button>
+                <div className="ml-4 flex-shrink-0">
+                  <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
+                  </button>
+                </div>
               </div>
-              
-              {(isLoading || dnaAnalysisData?.most_kindred_spirit) && (
-                <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="relative mr-4">
-                      <div className="h-9 w-9 rounded-full overflow-hidden">
-                        <img 
-                          src={isLoading ? "" : getIconByName(dnaAnalysisData?.most_kindred_spirit)} 
-                          alt={isLoading ? "Loading" : dnaAnalysisData?.most_kindred_spirit?.split(' - ')[0] || "Kindred Spirit"} 
-                          className="h-9 w-9 object-cover"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                        {isLoading ? (
-                          <span className="inline-block">Loading...</span>
-                        ) : (
-                          dnaAnalysisData?.most_kindred_spirit?.split(' - ')[0] || ""
-                        )}
-                      </h3>
-                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">MOST KINDRED SPIRIT</p>
-                    </div>
-                  </div>
-                  <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                  </button>
-                </div>
-              )}
-              
-              {(isLoading || dnaAnalysisData?.most_challenging_voice) && (
-                <div className="rounded-xl p-4 bg-[#383741]/80 shadow-inner flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="relative mr-4">
-                      <div className="h-9 w-9 rounded-full overflow-hidden">
-                        <img 
-                          src={isLoading ? "" : getIconByName(dnaAnalysisData?.most_challenging_voice)} 
-                          alt={isLoading ? "Loading" : dnaAnalysisData?.most_challenging_voice?.split(' - ')[0] || "Challenging Voice"} 
-                          className="h-9 w-9 object-cover"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm text-[#E9E7E2] font-oxanium uppercase font-bold">
-                        {isLoading ? (
-                          <span className="inline-block">Loading...</span>
-                        ) : (
-                          dnaAnalysisData?.most_challenging_voice?.split(' - ')[0] || ""
-                        )}
-                      </h3>
-                      <p className="text-xs text-[#E9E7E2]/70 font-oxanium uppercase">MOST CHALLENGING VOICE</p>
-                    </div>
-                  </div>
-                  <button className="h-9 w-9 rounded-full bg-[#E9E7E2]/10 flex items-center justify-center">
-                    <ArrowRight className="h-4 w-4 text-[#E9E7E2]" />
-                  </button>
-                </div>
-              )}
             </div>
             
             <h2 className="text-base text-[#E9E7E2] font-oxanium uppercase mb-3 font-bold">Key Tensions</h2>
@@ -218,16 +167,6 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ initialTab }) => {
                 dnaAnalysisData?.conclusion || ""
               )}
             </p>
-            
-            <div className="pt-4 pb-12">
-              <Button 
-                variant="destructive"
-                className="w-full h-[52px] rounded-2xl bg-[#e9e7e2] text-[#332e38] hover:bg-[#e9e7e2]/90 font-oxanium uppercase text-sm font-bold"
-                onClick={signOut}
-              >
-                SIGN OUT
-              </Button>
-            </div>
           </div>
         </div>
       </main>
